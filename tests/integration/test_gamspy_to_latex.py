@@ -1563,22 +1563,30 @@ def test_latex_repr(data):
     assert i.latexRepr() == "i"
     j = Set(m, "j", domain=i, records=["i1"])
     assert j.latexRepr() == "j"
-    assert j[i].latexRepr() == "j_{i}"
-    assert j["i1"].latexRepr() == 'j_{"i1"}'
+    assert j[i].latexRepr() == "j_\\text{i}"
+    assert (
+        j["i1"].latexRepr() == r"j_\text{\textquotesingle i1\textquotesingle}"
+    )
 
     a = Parameter(m, "a")
     assert a.latexRepr() == "a"
     b = Parameter(m, "b", domain=[i, j])
     assert b.latexRepr() == "b"
-    assert b[i, j].latexRepr() == "b_{i,j}"
-    assert b[i, "i1"].latexRepr() == 'b_{i,"i1"}'
+    assert b[i, j].latexRepr() == r"b_\text{i},\text{j}"
+    assert (
+        b[i, "i1"].latexRepr()
+        == r"b_\text{i},\text{\textquotesingle i1\textquotesingle}"
+    )
 
     c = Variable(m, "c")
     assert c.latexRepr() == "c"
     d = Variable(m, "d", domain=[i, j])
     assert d.latexRepr() == "d"
-    assert d[i, j].latexRepr() == "d_{i,j}"
-    assert d[i, "i1"].latexRepr() == 'd_{i,"i1"}'
+    assert d[i, j].latexRepr() == r"d_\text{i},\text{j}"
+    assert (
+        d[i, "i1"].latexRepr()
+        == r"d_\text{i},\text{\textquotesingle i1\textquotesingle}"
+    )
 
     e = Equation(m, "e")
 
@@ -1587,4 +1595,4 @@ def test_latex_repr(data):
         e.latexRepr()
 
     e[...] = c * c - a >= 0
-    assert e.latexRepr() == "$\nc \\cdot c - a \\geq 0\n$"
+    assert e.latexRepr() == "$\n(((c \\cdot c) - a) \\geq 0)\n$"
