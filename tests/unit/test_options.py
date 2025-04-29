@@ -203,7 +203,7 @@ def test_gamspy_to_gams_options(data):
     gams_options = options._get_gams_compatible_options(output=None)
     assert gams_options["suffixalgebravars"] == "off"
     assert gams_options["suffixdlvars"] == "off"
-    assert gams_options["solveopt"] == 0
+    assert gams_options["solveopt"] == "replace"
 
 
 def test_log_option(data):
