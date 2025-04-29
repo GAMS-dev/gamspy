@@ -2,14 +2,11 @@ from __future__ import annotations
 
 import uuid
 
-# from typing import TYPE_CHECKING
 import numpy as np
 
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
-
-# from gamspy.math import dim
 
 
 class RegressionTree:
@@ -121,7 +118,7 @@ class RegressionTree:
         return node_lb, node_ub
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable
+        self, input: gp.Parameter | gp.Variable, M: float = 1e6
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         """Insert all equations here"""
 
@@ -134,42 +131,59 @@ class RegressionTree:
             raise ValidationError("number of features do not match")
 
         sample_size = len(input.domain[0])
-        s_set, f_set, l_set = gp.math._generate_dims(
+        set_of_samples, set_of_features, set_of_leafs = gp.math._generate_dims(
             self.container, dims=[sample_size, self._nfeatures, self._nleafs]
         )
-
-        # TODO: Exception: Cannot generate records unless the symbol has domain objects for all dimensions (i.e., <symbol>.domain_type == 'regular')
-        # Perhaps get rid of gp.Set objects?
-        s_set.generateRecords(1)
-        f_set.generateRecords(1)
-        l_set.generateRecords(1)
 
         out = gp.Variable(
             self.container,
             name=utils._generate_name("v", self._name_prefix, "output"),
-            domain=s_set,
+            domain=set_of_samples,
         )
+
+        _feat_vars = gp.Variable(
+            self.container,
+            name=utils._generate_name("v", self._name_prefix, "feature"),
+            domain=[set_of_samples, set_of_features],
+        )
+
+        if isinstance(input, gp.Variable):
+            _feat_vars = input
+
+        elif isinstance(input, gp.Parameter):
+            _feat_vars.fx[...] = input[...]
+
+        else:
+            raise ValidationError(
+                "Input must be either of gp.Parameter | gp.Variable"
+            )
 
         ind_vars = gp.Variable(
             self.container,
-            name="iv",
+            name=utils._generate_name("v", self._name_prefix, "indicator"),
             type="BINARY",
-            domain=[s_set, l_set],
+            domain=[set_of_samples, set_of_leafs],
             description="indicator variable for each leaf for each sample",
         )
 
-        only_one_output = gp.Equation(
+        assign_one_output = gp.Equation(
             self.container,
-            name="only_one_output",
-            domain=s_set,
+            name=utils._generate_name(
+                "e", self._name_prefix, "assign_one_output"
+            ),
+            domain=set_of_samples,
             description="Activate only one leaf per sample",
         )
-        only_one_output[s_set] = gp.Sum(l_set, ind_vars[s_set, l_set]) == 1
+        assign_one_output[set_of_samples] = (
+            gp.Sum(set_of_leafs, ind_vars[set_of_samples, set_of_leafs]) == 1
+        )
 
         out_link = gp.Parameter(
             self.container,
-            name="predicted_value",
-            domain=l_set,
+            name=utils._generate_name(
+                "p", self._name_prefix, "predicted_value"
+            ),
+            domain=set_of_leafs,
             records=[
                 (dom, val)
                 for dom, val in zip(
@@ -179,102 +193,119 @@ class RegressionTree:
             ],
         )
 
-        link_ind_out = gp.Equation(
+        link_indctr_output = gp.Equation(
             self.container,
-            name="link_ind_out",
-            domain=s_set,
+            name=utils._generate_name(
+                "e", self._name_prefix, "link_indctr_output"
+            ),
+            domain=set_of_samples,
             description="Link the indicator variable to the predicted value of the decision tree",
         )
-        link_ind_out[s_set] = (
+        link_indctr_output[set_of_samples] = (
             gp.Sum(
-                l_set,
-                out_link[l_set] * ind_vars[s_set, l_set],
+                set_of_leafs,
+                out_link[set_of_leafs]
+                * ind_vars[set_of_samples, set_of_leafs],
             )
             == out
         )
 
         ub_output = gp.Equation(
             self.container,
-            name="ub_output",
-            domain=s_set,
+            name=utils._generate_name("e", self._name_prefix, "ub_output"),
+            domain=set_of_samples,
             description="Output cannot be more than the maximum of predicted value",
         )
-        ub_output[s_set] = out <= np.max(self._tree_dict["value"])
+        ub_output[set_of_samples] = out <= np.max(self._tree_dict["value"])
 
         lb_output = gp.Equation(
             self.container,
-            name="lb_output",
-            domain=s_set,
+            name=utils._generate_name("e", self._name_prefix, "lb_output"),
+            domain=set_of_samples,
             description="Output cannot be less than the minimum of predicted value",
         )
-        lb_output[s_set] = out >= np.min(self._tree_dict["value"])
+        lb_output[set_of_samples] = out >= np.min(self._tree_dict["value"])
 
-        uni_domain = [s_set, f_set, l_set]
+        uni_domain = [set_of_samples, set_of_features, set_of_leafs]
 
         s = gp.Set(
             self.container,
-            name="s",
+            name=utils._generate_name(
+                "s", self._name_prefix, "subset_of_paths"
+            ),
             description="Dynamic subset of possible paths",
             domain=uni_domain,  # TODO: Why we cannot just pass ss here, and GAMSPy infers the domain of ss? We get `ValueError: All linked 'domain' elements must have dimension == 1`
         )
 
-        bb = gp.Set(
+        cons_type = gp.Set(
             self.container,
-            name="bb",
+            name=utils._generate_name("s", self._name_prefix, "cons_type"),
             domain=["*"],
             records=["ge", "le"],
         )
 
         feat_thresh = gp.Parameter(
             self.container,
-            name="feat_thres",
+            name=utils._generate_name(
+                "p", self._name_prefix, "feature_threshold"
+            ),
             description="feature splitting value",
-            domain=uni_domain + [bb],
+            domain=uni_domain + [cons_type],
         )
-
-        ### TODO: Case when `out` is a gp.Parameter
 
         for i, leaf in enumerate(self._leafs):
             for feat in range(self._nfeatures):
                 feat_ub = float(self._node_ub[feat, leaf])
                 feat_lb = float(self._node_lb[feat, leaf])
-                mask = (out.up[:, feat] >= feat_lb) & (
-                    out.lo[:, feat] <= feat_ub
+                mask = (_feat_vars.up[:, feat] >= feat_lb) & (
+                    _feat_vars.lo[:, feat] <= feat_ub
                 )
-                # these indicator variables will not be reached
-                ind_vars.fx[s_set, i].where[~mask] = 0
-                s[s_set, feat, i].where[mask] = True
+                ind_vars.fx[set_of_samples, i].where[~mask] = 0
                 if feat_lb > -np.inf:
+                    mask_ext = (_feat_vars.lo[:, feat] < feat_lb) & mask
+                    s[set_of_samples, feat, i].where[mask_ext] = True
                     feat_thresh[s, "ge"] = feat_lb
                 if feat_ub < np.inf:
+                    mask_ext = (_feat_vars.up[:, feat] > feat_ub) & mask
+                    s[set_of_samples, feat, i].where[mask_ext] = True
                     feat_thresh[s, "le"] = feat_ub
                 s[...] = False
 
-        s[...].where[gp.Sum(bb, feat_thresh[..., bb])] = True
+        s[...].where[gp.Sum(cons_type, feat_thresh[..., cons_type])] = True
 
         ge_cons = gp.Equation(
             self.container,
-            name="iv_feat_ge",
+            name=utils._generate_name(
+                "e", self._name_prefix, "link_indctr_feature_ge"
+            ),
             domain=uni_domain,
             description="Link the indicator variable with the feature which is Lower bounded using a big-M constraint",
+        )
+        ge_cons[s[uni_domain]].where[feat_thresh[s, "ge"] != 0] = _feat_vars[
+            set_of_samples, set_of_features
+        ].where[s[uni_domain]] >= feat_thresh[s, "ge"] - M * (
+            1 - ind_vars[set_of_samples, set_of_leafs].where[s[uni_domain]]
         )
 
         le_cons = gp.Equation(
             self.container,
-            name="iv_feat_le",
+            name=utils._generate_name(
+                "e", self._name_prefix, "link_indctr_feature_le"
+            ),
             domain=uni_domain,
             description="Link the indicator variable with the feature which is Upper bounded using a big-M constraint",
         )
+        le_cons[s[uni_domain]].where[feat_thresh[s, "le"] != 0] = _feat_vars[
+            set_of_samples, set_of_features
+        ].where[s[uni_domain]] <= feat_thresh[s, "le"] + M * (
+            1 - ind_vars[set_of_samples, set_of_leafs].where[s[uni_domain]]
+        )
 
         return out, [
-            only_one_output,
-            link_ind_out,
+            assign_one_output,
+            link_indctr_output,
             ub_output,
             lb_output,
             ge_cons,
             le_cons,
         ]
-
-    # NOTE: Use gp.Set or gp.math.dim? Ans: use _generate_dims()
-    # NOTE: Input flow? Initialize the class with input or later. Required for fixing the feature variables. User's worry
-    # NOTE: Mapping features and input. User's worry
