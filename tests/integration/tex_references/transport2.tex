@@ -58,17 +58,17 @@ demand & j & satisfy demand at market j\\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
-\textbf{min} $\sum_\text{i,j} (c_\text{i},\text{j} \cdot x_\text{i},\text{j})$\\
+\textbf{min} $\sum_\text{i,j} (c_\text{\text{i},\text{j}} \cdot x_\text{\text{i},\text{j}})$\\
 \textbf{s.t.}
 \subsubsection*{$supply_{i}$}
 $
-(\sum_\text{j} x_\text{i},\text{j} \leq a_\text{i})\hfill \forall i
+(\sum_\text{j} x_\text{\text{i},\text{j}} \leq a_\text{\text{i}})\hfill \forall i
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$demand_{j}$}
 $
-(\sum_\text{i} x_\text{i},\text{j} \geq b_\text{j})\hfill \forall j
+(\sum_\text{i} x_\text{\text{i},\text{j}} \geq b_\text{\text{j}})\hfill \forall j
 $
 \vspace{5pt}
 \hrule

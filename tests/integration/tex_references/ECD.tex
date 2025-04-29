@@ -54,11 +54,11 @@ eq2 &  & \\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
-\textbf{min} $\sum_\text{gen} ((((data_\text{gen},\text{\textquotesingle a\textquotesingle} \cdot P_\text{gen}) \cdot P_\text{gen}) + (data_\text{gen},\text{\textquotesingle b\textquotesingle} \cdot P_\text{gen})) + data_\text{gen},\text{\textquotesingle c\textquotesingle})$\\
+\textbf{min} $\sum_\text{gen} ((((data_\text{\text{gen},\text{\textquotesingle a\textquotesingle}} \cdot P_\text{\text{gen}}) \cdot P_\text{\text{gen}}) + (data_\text{\text{gen},\text{\textquotesingle b\textquotesingle}} \cdot P_\text{\text{gen}})) + data_\text{\text{gen},\text{\textquotesingle c\textquotesingle}})$\\
 \textbf{s.t.}
 \subsubsection*{$eq2$}
 $
-(\sum_\text{gen} P_\text{gen} \geq load)
+(\sum_\text{gen} P_\text{\text{gen}} \geq load)
 $
 \vspace{5pt}
 \hrule

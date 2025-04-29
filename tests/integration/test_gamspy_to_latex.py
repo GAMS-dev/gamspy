@@ -1,5 +1,6 @@
 import math
 import os
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -40,7 +41,7 @@ def data():
 
     # Cleanup
     m.close()
-    # shutil.rmtree("tmp")
+    shutil.rmtree("tmp")
 
 
 def reformat_df(dataframe):
@@ -1562,29 +1563,30 @@ def test_latex_repr(data):
     assert i.latexRepr() == "i"
     j = Set(m, "j", domain=i, records=["i1"])
     assert j.latexRepr() == "j"
-    assert j[i].latexRepr() == "j_\\text{i}"
+    assert j[i].latexRepr() == "j_\\text{\\text{i}}"
     assert (
-        j["i1"].latexRepr() == r"j_\text{\textquotesingle i1\textquotesingle}"
+        j["i1"].latexRepr()
+        == r"j_\text{\text{\textquotesingle i1\textquotesingle}}"
     )
 
     a = Parameter(m, "a")
     assert a.latexRepr() == "a"
     b = Parameter(m, "b", domain=[i, j])
     assert b.latexRepr() == "b"
-    assert b[i, j].latexRepr() == r"b_\text{i},\text{j}"
+    assert b[i, j].latexRepr() == r"b_\text{\text{i},\text{j}}"
     assert (
         b[i, "i1"].latexRepr()
-        == r"b_\text{i},\text{\textquotesingle i1\textquotesingle}"
+        == r"b_\text{\text{i},\text{\textquotesingle i1\textquotesingle}}"
     )
 
     c = Variable(m, "c")
     assert c.latexRepr() == "c"
     d = Variable(m, "d", domain=[i, j])
     assert d.latexRepr() == "d"
-    assert d[i, j].latexRepr() == r"d_\text{i},\text{j}"
+    assert d[i, j].latexRepr() == r"d_\text{\text{i},\text{j}}"
     assert (
         d[i, "i1"].latexRepr()
-        == r"d_\text{i},\text{\textquotesingle i1\textquotesingle}"
+        == r"d_\text{\text{i},\text{\textquotesingle i1\textquotesingle}}"
     )
 
     e = Equation(m, "e")

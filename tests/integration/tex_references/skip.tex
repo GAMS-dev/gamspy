@@ -129,167 +129,167 @@ heat & i & logical integer constraint\\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
-\textbf{min} $((alpha \cdot (((\sum_\text{i} ((fc_\text{i} \cdot ycol_\text{i}) + ((vc_\text{i} \cdot (tc_\text{i} - tcmin_\text{i})) \cdot f_\text{i})) + \sum_\text{zcrhx_\text{i},\text{j}} ((fchx \cdot yhx_\text{i},\text{j}) + (\frac{vchx}{htc} \cdot \frac{qcr_\text{i},\text{j}}{(((tc_\text{i} - tr_\text{j}) + 1) - ycol_\text{i})}))) + \sum_\text{i,cu} ((fchx \cdot ycu_\text{i},\text{cu}) + (\frac{vchx}{htc} \cdot \frac{qcu_\text{i},\text{cu}}{((lmtd_\text{i} + 1) - ycol_\text{i})}))) + \sum_\text{hu,j} ((fchx \cdot yhu_\text{hu},\text{j}) + (\frac{vchx}{htc} \cdot \frac{qhu_\text{hu},\text{j}}{(thu_\text{hu} - tr_\text{j})})))) + (beta \cdot (\sum_\text{i,cu} (costcw \cdot qcu_\text{i},\text{cu}) + \sum_\text{hu,j} (costhu_\text{hu} \cdot qhu_\text{hu},\text{j}))))$\\
+\textbf{min} $((alpha \cdot (((\sum_\text{i} ((fc_\text{\text{i}} \cdot ycol_\text{\text{i}}) + ((vc_\text{\text{i}} \cdot (tc_\text{\text{i}} - tcmin_\text{\text{i}})) \cdot f_\text{\text{i}})) + \sum_\text{zcrhx_\text{\text{i},\text{j}}} ((fchx \cdot yhx_\text{\text{i},\text{j}}) + (\frac{vchx}{htc} \cdot \frac{qcr_\text{\text{i},\text{j}}}{(((tc_\text{\text{i}} - tr_\text{\text{j}}) + 1) - ycol_\text{\text{i}})}))) + \sum_\text{i,cu} ((fchx \cdot ycu_\text{\text{i},\text{cu}}) + (\frac{vchx}{htc} \cdot \frac{qcu_\text{\text{i},\text{cu}}}{((lmtd_\text{\text{i}} + 1) - ycol_\text{\text{i}})}))) + \sum_\text{hu,j} ((fchx \cdot yhu_\text{\text{hu},\text{j}}) + (\frac{vchx}{htc} \cdot \frac{qhu_\text{\text{hu},\text{j}}}{(thu_\text{\text{hu}} - tr_\text{\text{j}})})))) + (beta \cdot (\sum_\text{i,cu} (costcw \cdot qcu_\text{\text{i},\text{cu}}) + \sum_\text{hu,j} (costhu_\text{\text{hu}} \cdot qhu_\text{\text{hu},\text{j}}))))$\\
 \textbf{s.t.}
 \subsubsection*{$tctrlo_{i,j}$}
 $
-((((tc_\text{i} - tr_\text{j}) + 1) - ycol_\text{i}) \geq 1)\hfill \forall zcrhx
+((((tc_\text{\text{i}} - tr_\text{\text{j}}) + 1) - ycol_\text{\text{i}}) \geq 1)\hfill \forall zcrhx
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$lmtdlo_{i}$}
 $
-(lmtd_\text{i} \geq (2 \cdot ycol_\text{i}))\hfill \forall i
+(lmtd_\text{\text{i}} \geq (2 \cdot ycol_\text{\text{i}}))\hfill \forall i
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$lmtdsn_{i}$}
 $
-(lmtd_\text{i} = ((((0.6666666666666666 \cdot ( \sqrt{((tc(i) - tcin) * (tc(i) - tcout))} )) + (0.16666666666666666 \cdot ((tc_\text{i} - tcin) + (tc_\text{i} - tcout)))) + sl1_\text{i}) - sl2_\text{i}))\hfill \forall i
+(lmtd_\text{\text{i}} = ((((0.6666666666666666 \cdot ( \sqrt{((tc(i) - tcin) * (tc(i) - tcout))} )) + (0.16666666666666666 \cdot ((tc_\text{\text{i}} - tcin) + (tc_\text{\text{i}} - tcout)))) + sl1_\text{\text{i}}) - sl2_\text{\text{i}}))\hfill \forall i
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$tempset_{i}$}
 $
-(((tc_\text{i} + lmtd_\text{i}) + \sum_\text{zcr_\text{i},\text{j}} tr_\text{j}) \leq (u \cdot ycol_\text{i}))\hfill \forall i
+(((tc_\text{\text{i}} + lmtd_\text{\text{i}}) + \sum_\text{zcr_\text{\text{i},\text{j}}} tr_\text{\text{j}}) \leq (u \cdot ycol_\text{\text{i}}))\hfill \forall i
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$artrex1_{i}$}
 $
-(((s1_\text{i} + s2_\text{i}) + sl1_\text{i}) \leq (u \cdot (1 - ycol_\text{i})))\hfill \forall i
+(((s1_\text{\text{i}} + s2_\text{\text{i}}) + sl1_\text{\text{i}}) \leq (u \cdot (1 - ycol_\text{\text{i}})))\hfill \forall i
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$artrex2_{i}$}
 $
-(((s3_\text{i} + s4_\text{i}) + sl2_\text{i}) \leq (u \cdot (1 - ycol_\text{i})))\hfill \forall i
+(((s3_\text{\text{i}} + s4_\text{\text{i}}) + sl2_\text{\text{i}}) \leq (u \cdot (1 - ycol_\text{\text{i}})))\hfill \forall i
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$material_{m}$}
 $
-(\sum_\text{pm_\text{i},\text{m}} (spltfrc_\text{i},\text{m} \cdot f_\text{i}) = \sum_\text{fm_\text{i},\text{m}} f_\text{i})\hfill \forall m
+(\sum_\text{pm_\text{\text{i},\text{m}}} (spltfrc_\text{\text{i},\text{m}} \cdot f_\text{\text{i}}) = \sum_\text{fm_\text{\text{i},\text{m}}} f_\text{\text{i}})\hfill \forall m
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$feed$}
 $
-(\sum_\text{zlead_\text{i}} f_\text{i} = totflow)
+(\sum_\text{zlead_\text{\text{i}}} f_\text{\text{i}} = totflow)
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$matlog_{i}$}
 $
-(f_\text{i} \leq (u \cdot ycol_\text{i}))\hfill \forall i
+(f_\text{\text{i}} \leq (u \cdot ycol_\text{\text{i}}))\hfill \forall i
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$duty_{i}$}
 $
-(qc_\text{i} = (((kf_\text{i},\text{\textquotesingle a\textquotesingle} + (kf_\text{i},\text{\textquotesingle b\textquotesingle} \cdot (tc_\text{i} - tcmin_\text{i}))) + s3_\text{i}) - s4_\text{i}))\hfill \forall i
+(qc_\text{\text{i}} = (((kf_\text{\text{i},\text{\textquotesingle a\textquotesingle}} + (kf_\text{\text{i},\text{\textquotesingle b\textquotesingle}} \cdot (tc_\text{\text{i}} - tcmin_\text{\text{i}}))) + s3_\text{\text{i}}) - s4_\text{\text{i}}))\hfill \forall i
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$rebcon_{i,j}$}
 $
-(qr_\text{j} = qc_\text{i})\hfill \forall zcr
+(qr_\text{\text{j}} = qc_\text{\text{i}})\hfill \forall zcr
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$conheat_{i}$}
 $
-(qc_\text{i} = (\sum_\text{zcrhx_\text{i},\text{j}} qcr_\text{i},\text{j} + \sum_\text{cu} qcu_\text{i},\text{cu}))\hfill \forall i
+(qc_\text{\text{i}} = (\sum_\text{zcrhx_\text{\text{i},\text{j}}} qcr_\text{\text{i},\text{j}} + \sum_\text{cu} qcu_\text{\text{i},\text{cu}}))\hfill \forall i
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$rebheat_{j}$}
 $
-(qr_\text{j} = (\sum_\text{zcrhx_\text{i},\text{j}} qcr_\text{i},\text{j} + \sum_\text{hu} qhu_\text{hu},\text{j}))\hfill \forall j
+(qr_\text{\text{j}} = (\sum_\text{zcrhx_\text{\text{i},\text{j}}} qcr_\text{\text{i},\text{j}} + \sum_\text{hu} qhu_\text{\text{hu},\text{j}}))\hfill \forall j
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$dtminlp_{j}$}
 $
-((dtmin - (thu_\text{\textquotesingle lp\textquotesingle} - tr_\text{j})) \leq 0)\hfill \forall j
+((dtmin - (thu_\text{\text{\textquotesingle lp\textquotesingle}} - tr_\text{\text{j}})) \leq 0)\hfill \forall j
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$dtminc_{i}$}
 $
-((tcmin_\text{i} - tc_\text{i}) \leq (u \cdot (1 - ycol_\text{i})))\hfill \forall i
+((tcmin_\text{\text{i}} - tc_\text{\text{i}}) \leq (u \cdot (1 - ycol_\text{\text{i}})))\hfill \forall i
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$trtcdef_{i,j}$}
 $
-(tr_\text{j} = (((af_\text{i},\text{\textquotesingle a\textquotesingle} + (af_\text{i},\text{\textquotesingle b\textquotesingle} \cdot (tc_\text{i} - tcmin_\text{i}))) + s1_\text{i}) - s2_\text{i}))\hfill \forall zcr
+(tr_\text{\text{j}} = (((af_\text{\text{i},\text{\textquotesingle a\textquotesingle}} + (af_\text{\text{i},\text{\textquotesingle b\textquotesingle}} \cdot (tc_\text{\text{i}} - tcmin_\text{\text{i}}))) + s1_\text{\text{i}}) - s2_\text{\text{i}}))\hfill \forall zcr
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$dtmincr_{i,j}$}
 $
-((((tr_\text{j} - tc_\text{i}) - (u \cdot (1 - yhx_\text{i},\text{j}))) + dtmin) \leq 0)\hfill \forall zcrhx
+((((tr_\text{\text{j}} - tc_\text{\text{i}}) - (u \cdot (1 - yhx_\text{\text{i},\text{j}}))) + dtmin) \leq 0)\hfill \forall zcrhx
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$dtminex_{j}$}
 $
-(((dtmin - (thu_\text{\textquotesingle ex\textquotesingle} - tr_\text{j})) - (u \cdot (1 - yhu_\text{\textquotesingle ex\textquotesingle},\text{j}))) \leq 0)\hfill \forall j
+(((dtmin - (thu_\text{\text{\textquotesingle ex\textquotesingle}} - tr_\text{\text{j}})) - (u \cdot (1 - yhu_\text{\text{\textquotesingle ex\textquotesingle},\text{j}}))) \leq 0)\hfill \forall j
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$hxclog_{i,j}$}
 $
-(qcr_\text{i},\text{j} \leq (u \cdot yhx_\text{i},\text{j}))\hfill \forall zcrhx
+(qcr_\text{\text{i},\text{j}} \leq (u \cdot yhx_\text{\text{i},\text{j}}))\hfill \forall zcrhx
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$hxhulog_{hu,j}$}
 $
-(qhu_\text{hu},\text{j} \leq (u \cdot yhu_\text{hu},\text{j}))\hfill \forall hu,j
+(qhu_\text{\text{hu},\text{j}} \leq (u \cdot yhu_\text{\text{hu},\text{j}}))\hfill \forall hu,j
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$hxculog_{i,cu}$}
 $
-(qcu_\text{i},\text{cu} \leq (u \cdot ycu_\text{i},\text{cu}))\hfill \forall i,cu
+(qcu_\text{\text{i},\text{cu}} \leq (u \cdot ycu_\text{\text{i},\text{cu}}))\hfill \forall i,cu
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$qcqrlog_{i}$}
 $
-((qc_\text{i} + \sum_\text{j ~ | ~ zcr_\text{i},\text{j}} qr_\text{j}) \leq (u \cdot ycol_\text{i}))\hfill \forall i
+((qc_\text{\text{i}} + \sum_\text{j ~ | ~ zcr_\text{\text{i},\text{j}}} qr_\text{\text{j}}) \leq (u \cdot ycol_\text{\text{i}}))\hfill \forall i
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$sequen_{m}$}
 $
-(\sum_\text{pm_\text{i},\text{m}} ycol_\text{i} = \sum_\text{fm_\text{i},\text{m}} ycol_\text{i})\hfill \forall m
+(\sum_\text{pm_\text{\text{i},\text{m}}} ycol_\text{\text{i}} = \sum_\text{fm_\text{\text{i},\text{m}}} ycol_\text{\text{i}})\hfill \forall m
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$lead$}
 $
-(\sum_\text{zlead_\text{i}} ycol_\text{i} = 1)
+(\sum_\text{zlead_\text{\text{i}}} ycol_\text{\text{i}} = 1)
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$limutil_{j}$}
 $
-(\sum_\text{hu} yhu_\text{hu},\text{j} \leq 1)\hfill \forall j
+(\sum_\text{hu} yhu_\text{\text{hu},\text{j}} \leq 1)\hfill \forall j
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$hidirect_{i,j}$}
 $
-((yhx_\text{i},\text{j} + \sum_\text{ip,jp ~ | ~ ((ord(ip) eq ord(j)) \wedge (ord(jp) eq ord(i)))} yhx_\text{ip},\text{jp}) \leq 1)\hfill \forall zlim
+((yhx_\text{\text{i},\text{j}} + \sum_\text{ip,jp ~ | ~ ((ord(ip) eq ord(j)) \wedge (ord(jp) eq ord(i)))} yhx_\text{\text{ip},\text{jp}}) \leq 1)\hfill \forall zlim
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$heat_{i}$}
 $
-(((\sum_\text{zcrhx_\text{i},\text{j}} (yhx_\text{i},\text{j} + \sum_\text{ip,jp ~ | ~ ((ord(ip) eq ord(j)) \wedge (ord(jp) eq ord(i)))} yhx_\text{ip},\text{jp}) + \sum_\text{hu,zcr_\text{i},\text{j}} yhu_\text{hu},\text{j}) + \sum_\text{cu} ycu_\text{i},\text{cu}) \leq (uint \cdot ycol_\text{i}))\hfill \forall i
+(((\sum_\text{zcrhx_\text{\text{i},\text{j}}} (yhx_\text{\text{i},\text{j}} + \sum_\text{ip,jp ~ | ~ ((ord(ip) eq ord(j)) \wedge (ord(jp) eq ord(i)))} yhx_\text{\text{ip},\text{jp}}) + \sum_\text{hu,zcr_\text{\text{i},\text{j}}} yhu_\text{\text{hu},\text{j}}) + \sum_\text{cu} ycu_\text{\text{i},\text{cu}}) \leq (uint \cdot ycol_\text{\text{i}}))\hfill \forall i
 $
 \vspace{5pt}
 \hrule

@@ -119,7 +119,7 @@ class ImplicitSymbol(ABC):
                     )
 
             domain_str = ",".join(set_strs)
-            representation = f"{representation}_{domain_str}"
+            representation = f"{representation}_\\text{{{domain_str}}}"
 
         return representation
 
