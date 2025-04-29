@@ -26,8 +26,8 @@ if TYPE_CHECKING:
     from gamspy._model import Problem
     from types import FrameType
 
-MULTI_SOLVE_MAP = {"replace": 0, "merge": 1, "clear": 2}
 SOLVE_LINK_MAP = {"disk": 2, "memory": 5}
+SOLVE_LINK_MAP_REVERSE = dict(zip(SOLVE_LINK_MAP.values(), SOLVE_LINK_MAP.keys()))
 
 # GAMSPy to GAMS option mapping
 OPTION_MAP = {
@@ -407,6 +407,12 @@ class Options(BaseModel):
         gamspy_options = {}
         for key, value in options.items():
             if key.lower() in OPTION_MAP_REVERSE:
+                if key.lower() == "solvelink":
+                    try:
+                        value = SOLVE_LINK_MAP_REVERSE[value]
+                    except KeyError:
+                        raise ValidationError(f"`{value}` is not a valid value for `{key}`. Possible values are 2 and 5.")
+
                 gamspy_options[OPTION_MAP_REVERSE[key.lower()]] = value
             else:
                 raise ValidationError(f"`{key}` is not a supported option in GAMSPy.")
@@ -428,10 +434,6 @@ class Options(BaseModel):
             gamspy_options["allow_suffix_in_limited_variables"] = (
                 "on" if allows_suffix else "off"
             )
-
-        if "merge_strategy" in gamspy_options:
-            strategy = gamspy_options["merge_strategy"]
-            gamspy_options["merge_strategy"] = MULTI_SOLVE_MAP[strategy]
 
         if "solve_link_type" in gamspy_options:
             link_type = gamspy_options["solve_link_type"]

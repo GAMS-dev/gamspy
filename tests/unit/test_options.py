@@ -959,6 +959,15 @@ def test_bypass_solver():
 
 
 def test_options_from_gams():
-    options = Options.fromGams({"reslim": 5, "lp": "cplex"})
+    options = Options.fromGams(
+        {"reslim": 5, "lp": "cplex", "solvelink": 5, "solveopt": "replace"}
+    )
     assert options.time_limit == 5
     assert options.lp == "cplex"
+    assert options.solve_link_type == "memory"
+
+    with pytest.raises(exceptions.ValidationError):
+        _ = Options.fromGams({"solvelink": 4})
+
+    with pytest.raises(exceptions.ValidationError):
+        _ = Options.fromGams({"bla": 4})
