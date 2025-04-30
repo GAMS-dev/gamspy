@@ -180,7 +180,7 @@ class ModelInstance:
     container : Container
     model : Model
     modifiables : list[Parameter  |  ImplicitParameter]
-    freeze_options : Options | dict | None, optional
+    freeze_options : Options | None, optional
     """
 
     def __init__(

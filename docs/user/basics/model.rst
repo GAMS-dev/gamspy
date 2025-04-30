@@ -565,14 +565,14 @@ To check all available options, see :meth:`gamspy.Options`.
 
 .. note::
 
-    Solve options can also be given as a dictionary of GAMS options. For example: ::
+    Solve options can also be created with a dictionary of GAMS options. For example: ::
 
         import gamspy as gp
 
         m = gp.Container()
         ... # Definition of your model
         model = gp.Model(m, equations=m.getEquations(), problem=gp.Problem.LP, sense=gp.Sense.MAX, objective=z)
-        model.solve(options={"reslim": 5, "lp": "gurobi"})
+        model.solve(options=gp.Options.fromGams({"reslim": 5, "lp": "gurobi"}))
 
 
 Solver Options

@@ -1,1 +1,1 @@
-Allow users to provide GAMS options as a dictionary.
+Allow users to create GAMSPy options from a dictionary of GAMS options.

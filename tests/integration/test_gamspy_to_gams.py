@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy.exceptions as exceptions
 import gamspy.math as gams_math
 from gamspy import (
     Alias,
@@ -153,7 +154,14 @@ def test_lp_transport(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
 
-    transport.toGams(os.path.join("tmp", "to_gams"), options={"lp": "cplex"})
+    transport.toGams(
+        os.path.join("tmp", "to_gams"),
+        options=Options.fromGams({"lp": "cplex"}),
+    )
+    with pytest.raises(exceptions.ValidationError):
+        transport.toGams(
+            os.path.join("tmp", "to_gams"), options={"lp": "cplex"}
+        )
 
     transport.toGams(
         os.path.join("tmp", "to_gams"),

@@ -1145,7 +1145,7 @@ class Model:
     def freeze(
         self,
         modifiables: list[Parameter | ImplicitParameter],
-        options: Options | dict | None = None,
+        options: Options | None = None,
     ) -> None:
         """
         Instantiates a model instance. After calling freeze, only modifiables can be modified.
@@ -1154,14 +1154,12 @@ class Model:
         ----------
         modifiables : list[Parameter  |  ImplicitParameter]
             Modifiable symbols.
-        options : Options | dict | None, optional
-            GAMSPy options or GAMS options as a dict, by default None
+        options : Options | None, optional
+            GAMSPy options, by default None
         """
         self._is_frozen = True
         if options is None:
             options = self.container._options
-        elif isinstance(options, dict):
-            options = gp.Options.fromGams(options)
 
         self.instance = ModelInstance(
             self.container, self, modifiables, options, self.container.output
@@ -1175,7 +1173,7 @@ class Model:
     def solve(
         self,
         solver: str | None = None,
-        options: Options | dict | None = None,
+        options: Options | None = None,
         solver_options: dict | None = None,
         model_instance_options: ModelInstanceOptions | None = None,
         freeze_options: FreezeOptions | None = None,
@@ -1192,7 +1190,7 @@ class Model:
         solver : str, optional
             Solver name
         options : Options, optional
-            GAMSPy options or GAMS options as a dict.
+            GAMSPy options.
         solver_options : dict, optional
             Solver options.
         model_instance_options : ModelInstanceOptions, optional
@@ -1262,8 +1260,6 @@ class Model:
 
         if options is None:
             options = self.container._options
-        elif isinstance(options, dict):
-            options = gp.Options.fromGams(options)
 
         # Only for local until GAMS Engine and NEOS Server backends adopt the new GP_SolveLine option.
         if solver == "local":
@@ -1405,7 +1401,7 @@ class Model:
     def toGams(
         self,
         path: str,
-        options: Options | dict | None = None,
+        options: Options | None = None,
         *,
         dump_gams_state: bool = False,
     ) -> None:
@@ -1416,8 +1412,8 @@ class Model:
         ----------
         path : str
             Path to the directory which will contain the GAMS model.
-        options : Options | dict | None, optional
-            GAMSPy options or GAMS options as a dict, by default None
+        options : Options | None, optional
+            GAMSPy options, by default None
         dump_gams_state : bool, optional
             Whether to dump the state as a GAMS save file, by default False
 
@@ -1426,13 +1422,10 @@ class Model:
         ValidationError
             In case the given options is not of type gp.Options or dict.
         """
-        if options is not None and not isinstance(options, (gp.Options, dict)):
+        if options is not None and not isinstance(options, gp.Options):
             raise ValidationError(
                 f"`options` must be of type gp.Options of found {type(options)}"
             )
-
-        if isinstance(options, dict):
-            options = gp.Options.fromGams(options)
 
         converter = GamsConverter(self, path, options, dump_gams_state)
         converter.convert()

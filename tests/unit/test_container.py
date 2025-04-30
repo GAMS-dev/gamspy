@@ -21,6 +21,7 @@ from gamspy import (
     Container,
     Equation,
     Model,
+    Options,
     Parameter,
     Problem,
     Sense,
@@ -78,7 +79,10 @@ def test_container(data):
 
     shutil.rmtree("a" * 205)
 
-    m = Container(options={"reslim": 5})
+    with pytest.raises(TypeError):
+        m = Container(options={"bla": "bla"})
+
+    m = Container(options=Options.fromGams({"reslim": 5}))
 
     i = gt.Set(m, "i")
     m._cast_symbols()

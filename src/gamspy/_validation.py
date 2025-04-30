@@ -475,7 +475,7 @@ def validate_solver_args(
     backend: Literal["local", "engine", "neos"],
     solver: str,
     problem: Problem | str,
-    options: Options | dict | None,
+    options: Options | None,
     output: io.TextIOWrapper | None,
     load_symbols: list[Symbol] | None,
 ) -> None:
@@ -483,7 +483,7 @@ def validate_solver_args(
         return
 
     # Check validity of options
-    if options is not None and not isinstance(options, (Options, dict)):
+    if options is not None and not isinstance(options, Options):
         raise TypeError(
             f"`options` must be of type Option or dict but found {type(options)}"
         )
@@ -570,7 +570,7 @@ def validate_equations(model: Model) -> None:
             )
 
 
-def validate_global_options(options: Options | dict | None) -> Options:
+def validate_global_options(options: Options | None) -> Options:
     if not get_option("VALIDATION"):
         if options is None:
             return Options()
@@ -578,9 +578,6 @@ def validate_global_options(options: Options | dict | None) -> Options:
             return Options.fromGams(options)
 
         return options
-
-    if isinstance(options, dict):
-        options = Options.fromGams(options)
 
     if options is not None and not isinstance(options, Options):
         raise TypeError(

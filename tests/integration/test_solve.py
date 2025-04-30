@@ -1010,7 +1010,7 @@ def test_solve(data):
         TypeError,
         transport.solve,
         None,
-        "bla",
+        {"bla": 100},
     )
 
     pytest.raises(TypeError, transport.solve, None, 5)
@@ -1684,6 +1684,10 @@ def test_invalid_arguments(data):
     # solver is not capable of solving this problem type
     with pytest.raises(ValidationError):
         transport.solve(solver="PATH")
+
+    # we do not accept dict anymore
+    with pytest.raises(TypeError):
+        transport.solve(options={"bla": "bla"})
 
 
 def test_marking_updated_symbols(data):
