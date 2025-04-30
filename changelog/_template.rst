@@ -16,11 +16,9 @@
 {% set issue_joiner = joiner(', ') %}
 - {% for value in values|sort %}{{ issue_joiner() }}{{ value }}{% endfor %}: {{ text }}
 
-
 {% endfor %}
 {% else %}
 - {{ sections[section][category]['']|sort|join(', ') }}
-
 
 {% endif %}
 {% if sections[section][category]|length == 0 %}
