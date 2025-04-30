@@ -366,8 +366,7 @@ class Options(BaseModel):
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 
-    def __init__(self, **data) -> None:
-        super().__init__(**data)
+    def model_post_init(self, context: Any) -> None:
         self._extra_options: dict[str, Any] = dict()
         self._debug_options: dict[str, Any] = dict()
         self._solver: str | None = None
