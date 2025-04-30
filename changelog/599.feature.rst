@@ -1,1 +1,0 @@
-Allow renaming on ``container.loadRecordsFromGdx`` function call.

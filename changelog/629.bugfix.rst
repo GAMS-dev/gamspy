@@ -1,1 +1,0 @@
-Allow record filtering over eq.range, eq.slacklo, eq.slackup, eq.slack, and eq.infeas attributes.

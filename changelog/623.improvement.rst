@@ -1,1 +1,0 @@
-Improve the error message in case the user does not have an internet connection or the PyPI server are down.

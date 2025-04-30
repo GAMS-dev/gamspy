@@ -1,1 +1,0 @@
-Allow users to disable all validation via ``gp.set_options({"VALIDATION": 0})``.

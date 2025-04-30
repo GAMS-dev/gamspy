@@ -1,1 +1,0 @@
-Overload __eq__ and __ne__ magic functions of the Number class to ensure the order is correct in expressions.

@@ -1,1 +1,0 @@
-Cast the type of objective value, num equations, num variables, and solver time in the summary dataframe.
