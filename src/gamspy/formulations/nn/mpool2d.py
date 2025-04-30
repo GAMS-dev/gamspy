@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import uuid
 from typing import Literal
 
 import gamspy as gp
@@ -39,7 +38,7 @@ class _MPool2d:
         self.sense = sense
 
         if name_prefix is None:
-            name_prefix = str(uuid.uuid4()).split("-")[0]
+            name_prefix = gp.utils._get_unique_name()
 
         self._name_prefix = name_prefix
 

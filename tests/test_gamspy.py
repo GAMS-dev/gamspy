@@ -17,7 +17,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 @pytest.mark.unit
 def test_version():
-    assert gp.__version__ == "1.9.0"
+    assert gp.__version__ == "1.10.0"
 
 
 @pytest.mark.unit
@@ -35,6 +35,20 @@ def test_config():
         a["i3"] = 5
 
     gp.set_options({"DOMAIN_VALIDATION": 1})
+
+    e = gp.Equation(m, "e")
+    model = gp.Model(m, "my_model", equations=[e])
+
+    # no equation definition was found. ValidationError by default.
+    with pytest.raises(ValidationError):
+        model.solve()
+
+    # no equation definition was found. Raises GamspyException because the validation is disabled.
+    gp.set_options({"VALIDATION": 0})
+    with pytest.raises(GamspyException):
+        model.solve()
+
+    gp.set_options({"VALIDATION": 1})
 
 
 @pytest.mark.unit

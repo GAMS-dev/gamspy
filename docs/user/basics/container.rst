@@ -177,13 +177,79 @@ You can load the records of a symbol from a GDX file if the symbol is already de
     m.loadRecordsFromGdx("data.gdx")
     print(i.records)
 
-The only difference between :meth:`read <gamspy.Container.read>` and :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>` is that while :meth:`read <gamspy.Container.read>` creates the symbol in the :meth:`Container <gamspy.Container>`
-if it does not already exist, :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>` requires the symbol to be declared beforehand.
+By default, :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>` loads the records of all symbols in the gdx file. 
+Alternatively, one can provide ``symbol_names`` argument to limit which symbol records to be loaded. For example: ::
+
+    .. code-block:: python
+
+    from gamspy import Container
+
+    m = Container()
+    i = Set(m, name="i", records=range(5))
+    j = Set(m, name="j", records=range(5, 10))
+    m.write("data.gdx")
+
+    m2 = Container()
+    i = Set(m, name="i")
+    j = Set(m, name="j")
+    m2.loadRecordsFromGdx("data.gdx", symbol_names=['j'])
+    print(j.records)  # prints the records of j which is retrieved from data.gdx
+    print(i.records)  # prints None
+
+In this code snippet, we write ``write.gdx`` which contains the records of ``i`` and ``j``. Then, we load the records of ``j`` only.
+
+If you want to map the symbol names in the GDX file to GAMSPy container symbols with different names, you can also provide ``symbol_names`` as a dictionary. 
+For example: ::
+
+    m = Container()
+    i = Set(m, name="i", records=range(5))
+    j = Set(m, name="j", records=range(5, 10))
+    m.write("data.gdx")
+
+    m2 = Container()
+    k = Set(m, name="k")
+    l = Set(m, name="l")
+    m2.loadRecordsFromGdx("data.gdx", symbol_names={'i': 'k', 'j': 'l'})
+    print(k.records)  # prints the records of i in data.gdx
+    print(l.records)  # prints the records of j in data.gdx
+
+Here the keys of the ``symbol_names`` argument are the names in the GDX file and values are the names in the GAMSPy container.
+
+Serialization and Deserialization
+---------------------------------
+
+Serialization is a process to convert Container objects into a zip file which 
+can be easily stored, transmitted, and reconstructed. Deserialization is the 
+opposite process to reconstruct a Container from a zip file. GAMSPy provides 
+:meth:`gp.serialize <gamspy.serialize>` and :meth:`gp.deserialize <gamspy.deserialize>` 
+functions to perform these processes. One can serialize a container as follows:
+
+.. code-block:: python
+
+    import gamspy as gp
+    m = gp.Container()
+    i = gp.Set(m, "i", records=range(3))
+    gp.serialize(m, "path_to_the_zip_file.zip")
+
+This would create a zip file with the needed information to reconstruct the Container later.
+One can reconstruct a Container from this zip file later as follows:
+
+.. code-block:: python
+
+    import gamspy as gp
+    m = gp.deserialize("path_to_the_zip_file.zip")
+    i = m["i"]
+
+This creates a new container with the information from the zip file. The symbol `i` in the 
+returned Container will be identical to the symbol `i` in the first container that was used 
+to generate the zip file.
+
 
 =================================
 Generating the Executed GAMS Code
 =================================
 
-GAMSPy utilizes the GAMS execution system and instructs it to perform certain operations. You can check these executed operations by inspecting the corresponding GAMS code at any point in the program by calling :meth:`generateGamsString <gamspy.Container.generateGamsString>`.
-This feature is available for avid GAMS users who want to see what’s being executed behind the scenes. For more details, see the 
-:ref:`generate_gams_string` section of the :doc:`/user/advanced/debugging` page. 
+GAMSPy utilizes the GAMS execution system and instructs it to perform certain operations. You can check these executed 
+operations by inspecting the corresponding GAMS code at any point in the program by calling :meth:`generateGamsString <gamspy.Container.generateGamsString>`.
+This feature is available for avid GAMS users who want to see what’s being executed behind the scenes. For more details, 
+see the :ref:`generate_gams_string` section of the :doc:`/user/advanced/debugging` page. 

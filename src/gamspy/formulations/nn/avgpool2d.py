@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import uuid
-
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
@@ -64,7 +62,7 @@ class AvgPool2d:
         self.padding = _padding
 
         if name_prefix is None:
-            name_prefix = str(uuid.uuid4()).split("-")[0]
+            name_prefix = gp.utils._get_unique_name()
 
         self._name_prefix = name_prefix
 

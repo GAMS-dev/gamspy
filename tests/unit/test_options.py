@@ -122,7 +122,7 @@ def test_options(data):
 
     assert (
         content
-        == 'limcol = "0"\nlimrow = "0"\nsolprint = "0"\nsolvelink = "2"\npreviouswork = "1"\ntraceopt = "3"\nlogoption = "0"'
+        == 'optfile = "0"\nlimcol = "0"\nlimrow = "0"\nsolprint = "0"\nsolvelink = "2"\npreviouswork = "1"\ntraceopt = "3"\nlogoption = "0"'
     )
 
 
@@ -774,7 +774,7 @@ def test_solver_options_twice(data):
 
     transport.solve(options=Options(log_file=log_file_path))
     with open(log_file_path) as file:
-        assert "OptFile 1" not in file.read()
+        assert "OptFile 0" in file.read()
 
 
 def test_debug_options():

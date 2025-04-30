@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -78,7 +77,7 @@ class Linear:
         self.bias_array = None
 
         if name_prefix is None:
-            name_prefix = str(uuid.uuid4()).split("-")[0]
+            name_prefix = gp.utils._get_unique_name()
 
         self._name_prefix = name_prefix
 

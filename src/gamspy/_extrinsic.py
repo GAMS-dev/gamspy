@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy._algebra.expression import Expression
+    pass
 
 
 class ExtrinsicFunction(operable.Operable):
@@ -19,17 +19,23 @@ class ExtrinsicFunction(operable.Operable):
         self.args: tuple = ()
         self.domain: list = []
 
+    def __eq__(self, other):
+        return expression.Expression(self, "=e=", other)
+
+    def __ne__(self, other):
+        return expression.Expression(self, "ne", other)
+
     def __len__(self):
         return len(self.__str__())
 
-    def __call__(self, *args, **kwds) -> Expression:
+    def __call__(self, *args, **kwds) -> ExtrinsicFunction:
         if kwds:
             raise ValidationError(
                 "External functions do not accept keyword arguments"
             )
 
         self.args = args
-        return expression.Expression(None, self, None)
+        return self
 
     def __str__(self) -> str:
         representation = self.name
@@ -94,7 +100,7 @@ class ExtrinsicLibrary:
     """
 
     def __init__(self, path: str, functions: dict[str, str]):
-        self.name = "ext" + str(uuid.uuid4()).replace("-", "_")
+        self.name = "ext" + utils._get_unique_name()
         self.path = path
         self.functions = functions
 

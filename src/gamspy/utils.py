@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import base64
 import os
 import platform
+import uuid
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -185,6 +187,7 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
         if solver != "GUSS":
             solvers.append(solver)
 
+    solvers.remove("CONOPT")
     solvers.sort()
     _installed_solvers[system_directory] = solvers
     return solvers
@@ -192,7 +195,7 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
 
 def getAvailableSolvers() -> list[str]:
     """
-    Returns all available solvers that can be installed.
+    Returns all available solvers.
 
     Returns
     -------
@@ -215,7 +218,46 @@ def getAvailableSolvers() -> list[str]:
         e.msg = "You must first install gamspy_base to use this functionality"
         raise e
 
-    return sorted(gamspy_base.available_solvers)
+    solvers = sorted(gamspy_base.available_solvers)
+    if "CONOPT" in solvers and "CONOPT4" in solvers:
+        solvers.remove("CONOPT")
+
+    return solvers
+
+
+def getInstallableSolvers(system_directory: str) -> list[str]:
+    """
+    Returns all installable solvers.
+
+    Parameters
+    ----------
+    system_directory : str
+
+    Returns
+    -------
+    list[str]
+
+    Raises
+    ------
+    ModuleNotFoundError
+        In case gamspy_base is not installed.
+
+    Examples
+    --------
+    >>> import gamspy_base
+    >>> import gamspy.utils as utils
+    >>> available_solvers = utils.getInstallableSolvers(gamspy_base.directory)
+
+    """
+    try:
+        import gamspy_base
+    except ModuleNotFoundError as e:  # pragma: no cover
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
+
+    return sorted(
+        list(set(getAvailableSolvers()) - set(gamspy_base.default_solvers))
+    )
 
 
 def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
@@ -295,6 +337,15 @@ def isin(symbol, sequence: Sequence) -> bool:
 def _get_scalar_data(gams2np: Gams2Numpy, gdx_handle, symbol_id: str) -> float:
     _, arrvals = gams2np.gdxReadSymbolRaw(gdx_handle, symbol_id)
     return float(arrvals[0][0])
+
+
+def _get_unique_name() -> str:
+    """
+    N= 2^122 and the collision probability is: 1 - e^(-(n^2 / 2*N))
+    """
+    u = uuid.uuid4()
+    b64 = base64.urlsafe_b64encode(u.bytes)
+    return b64.rstrip(b"=").decode("ascii").replace("-", "_")
 
 
 def _get_symbol_names_from_gdx(

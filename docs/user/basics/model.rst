@@ -619,6 +619,22 @@ The generated `.tex` file can be automatically compiled into a PDF file by using
     supplied, GAMSPy invents (ugly) names which would show up in the LaTeX source. So for this feature to be useful
     the GAMSPy set, parameter, variable, and equations should be specified with a name.
 
+Latex representation of the individual equation definitions can be retrieved with :meth:`equation.latexRepr <gamspy.Equation.latexRepr>`. 
+For example: ::
+
+    from gamspy import Container, Set, Variable, Equation
+
+    m = Container()
+    i = Set(m, "i")
+    v = Variable(m, "v", domain=i)
+    e = Equation(m, "e", domain=i)
+    e[i] = v[i] >= 5
+    print(e.latexRepr())
+    
+This would result in: ::
+
+    $v_{i} \geq 5\hfill \forall i$
+
 Limiting Domain for Variables
 =============================
 

@@ -5,7 +5,6 @@ import io
 import logging
 import os
 import threading
-import uuid
 import warnings
 from collections.abc import Sequence
 from enum import Enum
@@ -156,6 +155,7 @@ class FileFormat(Enum):
     GAMSDict = "dict.txt"
     GAMSDictMap = "dictmap.gdx"
     GAMSJacobian = "jacobian.gms"
+    GAMSPyJacobian = "jacobian.py"
     GDXJacobian = "jacobian.gdx"
     FileList = "files.txt"
     FixedMPS = "fixed.mps"
@@ -278,7 +278,7 @@ class Model:
         limited_variables: Sequence[ImplicitVariable] | None = None,
         external_module: str | None = None,
     ):
-        self._auto_id = "m" + str(uuid.uuid4()).replace("-", "_")
+        self._auto_id = "m" + utils._get_unique_name()
 
         if name is not None:
             name = validation.validate_name(name)
@@ -800,7 +800,7 @@ class Model:
         self._external_module_file = None
 
         if value is not None:
-            filename = "f" + str(uuid.uuid4()).replace("-", "_")
+            filename = "f" + utils._get_unique_name()
             self._external_module_file = filename
             self._external_module = value
             self.container._add_statement(f"File {filename} / '{value}' /;")
@@ -1227,6 +1227,14 @@ class Model:
             solver = utils.getDefaultSolvers(self.container.system_directory)[
                 str(self.problem).upper()
             ]
+        else:
+            if not isinstance(solver, str):
+                raise TypeError(
+                    f"`solver` argument must be of type `str` but given `{type(solver)}`"
+                )
+
+        if solver.upper() == "CONOPT":
+            solver = "CONOPT4"
 
         validation.validate_solver_args(
             self.container.system_directory,

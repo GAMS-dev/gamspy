@@ -4,10 +4,13 @@ dac-test-3.13:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - |
+      if [ ! -f "$HOME/.local/bin/uv" ]; then
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+      fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
-    - source "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - source "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
@@ -16,24 +19,27 @@ dac-test-3.13:
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}"
 
 dac-test-3.12:
   stage: test
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - |
+      if [ ! -f "$HOME/.local/bin/uv" ]; then
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+      fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-3.12${CI_COMMIT_SHORT_SHA}" --python 3.12
-    - source "${TMPDIR}gamspy-env-3.12${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}" --python 3.12
+    - source "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -B -m pytest -x -v -s -m 'unit or integration or model_library' tests
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-3.12${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}"
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -44,17 +50,20 @@ dac-test-3.11:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - |
+      if [ ! -f "$HOME/.local/bin/uv" ]; then
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+      fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-3.11${CI_COMMIT_SHORT_SHA}" --python 3.11
-    - source "${TMPDIR}gamspy-env-3.11${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}" --python 3.11
+    - source "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -B -m pytest -x -v -s -m 'unit or integration or model_library' tests
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-3.11${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}"
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -65,17 +74,20 @@ dac-test-3.10:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - |
+      if [ ! -f "$HOME/.local/bin/uv" ]; then
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+      fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-3.10${CI_COMMIT_SHORT_SHA}" --python 3.10
-    - source "${TMPDIR}gamspy-env-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}" --python 3.10
+    - source "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -B -m pytest -x -v -s -m 'unit or integration or model_library' tests
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-3.10${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}"
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -87,18 +99,21 @@ dac-test-3.9:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - |
+      if [ ! -f "$HOME/.local/bin/uv" ]; then
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+      fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
-    - source "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - source "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -m pytest -x -v -s -m 'unit or integration or model_library' tests
-    - python -m pytest -x -v -s -m 'doc'
+    - python -B -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -B -m pytest -x -v -s -m 'doc'
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}"
 
 #### ENGINE #####
 dac-engine-3.13:
@@ -107,14 +122,17 @@ dac-engine-3.13:
   needs: []
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - |
+      if [ ! -f "$HOME/.local/bin/uv" ]; then
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+      fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
-    - source "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - source "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
-    - python -m pytest -x -v -s -m 'engine' tests
+    - python -B -m pytest -x -v -s -m 'engine' tests
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}"
 
 dac-engine-3.9:
   stage: engine
@@ -122,14 +140,17 @@ dac-engine-3.9:
   needs: []
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - |
+      if [ ! -f "$HOME/.local/bin/uv" ]; then
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+      fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
-    - source "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}gamspy-env-engine-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - source "${TMPDIR}gamspy-env-engine-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
-    - python -m pytest -x -v -s -m 'engine' tests
+    - python -B -m pytest -x -v -s -m 'engine' tests
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-engine-3.9${CI_COMMIT_SHORT_SHA}"
 
 #### NEOS #####
 dac-neos-3.13:
@@ -138,14 +159,17 @@ dac-neos-3.13:
   needs: []
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - |
+      if [ ! -f "$HOME/.local/bin/uv" ]; then
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+      fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
-    - source "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - source "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
-    - python -m pytest -x -v -s -m 'neos' tests
+    - python -B -m pytest -x -v -s -m 'neos' tests
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}"
 
 dac-neos-3.9:
   stage: neos
@@ -153,11 +177,14 @@ dac-neos-3.9:
   needs: []
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - |
+      if [ ! -f "$HOME/.local/bin/uv" ]; then
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+      fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
-    - source "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}gamspy-env-neos-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - source "${TMPDIR}gamspy-env-neos-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
-    - python -m pytest -x -v -s -m 'neos' tests
+    - python -B -m pytest -x -v -s -m 'neos' tests
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-neos-3.9${CI_COMMIT_SHORT_SHA}"

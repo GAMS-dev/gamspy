@@ -244,42 +244,56 @@ def test_read_synch():
 
 def test_loadRecordsFromGdx(data):
     m, *_ = data
-    gdx_path = os.path.join("tmp", "test.gdx")
+    with tempfile.TemporaryDirectory() as tmp_path:
+        gdx_path = os.path.join(tmp_path, "test.gdx")
 
-    i = Set(m, name="i", records=["i1", "i2"])
-    a = Parameter(m, name="a", domain=[i], records=[("i1", 1), ("i2", 2)])
-    m.write(gdx_path)
+        i = Set(m, name="i", records=["i1", "i2"])
+        a = Parameter(m, name="a", domain=[i], records=[("i1", 1), ("i2", 2)])
+        m.write(gdx_path)
 
-    # Load all
-    new_container = Container()
-    i = Set(new_container, name="i")
-    a = Parameter(new_container, name="a", domain=[i])
-    new_container.loadRecordsFromGdx(gdx_path)
+        # Load all
+        new_container = Container()
+        i = Set(new_container, name="i")
+        a = Parameter(new_container, name="a", domain=[i])
+        new_container.loadRecordsFromGdx(gdx_path)
 
-    assert i.records.values.tolist() == [["i1", ""], ["i2", ""]]
+        assert i.records.values.tolist() == [["i1", ""], ["i2", ""]]
 
-    assert a.records.values.tolist() == [["i1", 1.0], ["i2", 2.0]]
+        assert a.records.values.tolist() == [["i1", 1.0], ["i2", 2.0]]
 
-    # Load specific symbols
-    new_container2 = Container()
-    i = Set(new_container2, name="i")
-    a = Parameter(new_container2, name="a", domain=[i])
-    new_container2.loadRecordsFromGdx(gdx_path, ["i"])
+        # Load specific symbols
+        new_container2 = Container()
+        i = Set(new_container2, name="i")
+        a = Parameter(new_container2, name="a", domain=[i])
+        new_container2.loadRecordsFromGdx(gdx_path, ["i"])
 
-    assert i.records.values.tolist() == [["i1", ""], ["i2", ""]]
-    assert a.records is None
+        assert i.records.values.tolist() == [["i1", ""], ["i2", ""]]
+        assert a.records is None
 
-    m = Container()
-    i = Set(m, "i", records=["i1", "i2", "i3"])
-    j = Set(m, "j", i, records=["i1", "i2"])
-    m.write(gdx_path)
+        m = Container()
+        i = Set(m, "i", records=["i1", "i2", "i3"])
+        j = Set(m, "j", i, records=["i1", "i2"])
+        m.write(gdx_path)
 
-    m = Container()
-    i = Set(m, "i")
-    j = Set(m, "j", i, domain_forwarding=True)
-    m.loadRecordsFromGdx(gdx_path, ["j"])
-    assert i.toList() == ["i1", "i2"]
-    assert j.toList() == ["i1", "i2"]
+        m = Container()
+        i = Set(m, "i")
+        j = Set(m, "j", i, domain_forwarding=True)
+        m.loadRecordsFromGdx(gdx_path, ["j"])
+        assert i.toList() == ["i1", "i2"]
+        assert j.toList() == ["i1", "i2"]
+
+        # Test renaming
+        m = Container()
+        i = Set(m, "i", records=range(5))
+        m.write(gdx_path)
+
+        m = Container()
+        j = Set(m, "j")
+        m.loadRecordsFromGdx(gdx_path, symbol_names={"i": "j"})
+        assert j.toList() == ["0", "1", "2", "3", "4"]
+
+        with pytest.raises(ValidationError):
+            m.loadRecordsFromGdx(gdx_path, symbol_names={"i": "k"})
 
 
 def test_enums():

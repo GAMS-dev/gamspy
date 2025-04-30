@@ -85,7 +85,7 @@ def bench(N, time_limit):
 
 def main():
     # sanity check with a small size
-    results, poi_objective, gamspy_objective = bench(10, time_limit=1e10)
+    results, poi_objective, gamspy_objective = bench(10, time_limit=0)
     assert math.isclose(poi_objective, gamspy_objective, abs_tol=1e-6), (
         f"{poi_objective=}, {gamspy_objective=}"
     )

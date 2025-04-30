@@ -143,6 +143,161 @@ else
 
 """
 
+GAMSPY_JACOBIAN = r"""import sys
+
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Options,
+    Parameter,
+    Problem,
+    Sense,
+    Set,
+    SpecialValues,
+    Sum,
+    Variable,
+    VariableType,
+)
+from gamspy.math import (
+    map_value,
+)
+
+if len(sys.argv) != 2:
+    print(f"Usage {sys.argv[0]} <jacFile.gdx>")
+    exit()
+
+m = Container()
+
+i = Set(m, "i", description="equations index")
+j = Set(m, "j", description="variable index")
+ij = Set(m, domain=[i, j], description="non-zero map")
+s = Set(m, "s", description="sos sets")
+jc = Set(m, domain=j, description="continuous variables index")
+jb = Set(m, domain=j, description="binary variables index")
+ji = Set(m, domain=j, description="integer variables index")
+jsc = Set(m, domain=j, description="semi-continuous variables index")
+jsi = Set(m, domain=j, description="semi-integer variables index")
+js1 = Set(m, domain=[s, j], description="SOS 1 variables index")
+js2 = Set(m, domain=[s, j], description="SOS 2 variables index")
+js = Set(m, domain=j, description="SOS variables index")
+jd = Set(m, domain=j, description="discrete variables index")
+jobj = Set(m, domain=j, is_singleton=True, description="Objective variable index")
+
+objcoef = Parameter(m, description="Min or Max")
+
+e = Equation(m, domain=i)
+
+xc = Variable(m, domain=j, type=VariableType.FREE, description="continuous variables")
+xb = Variable(m, domain=j, type=VariableType.BINARY, description="binary variables")
+xi = Variable(m, domain=j, type=VariableType.INTEGER, description="integer variables")
+xsc = Variable(m, domain=j, type=VariableType.SEMICONT, description="semi-continuous variables")
+xsi = Variable(m, domain=j, type=VariableType.SEMIINT, description="semi-integer variables")
+xs1 = Variable(m, domain=[s, j], type=VariableType.SOS1, description="SOS1 variables")
+xs2 = Variable(m, domain=[s, j], type=VariableType.SOS2, description="SOS2 variables")
+
+A = Parameter(m, domain=[i, j], description="Jacobian")
+
+with Container(load_from=sys.argv[1]) as md:
+    for sym in ["i", "j", "jobj", "objcoef", "e", "A"]:
+        globals()[sym].records = md[sym].records
+    xc.records = md["x"].records
+    try:
+        for sym in ["s", "jb", "ji", "jsc", "jsi", "js1", "js2"]:
+            globals()[sym].records = md[sym].records
+        mtype = Problem.MIP
+    except KeyError:
+        mtype = Problem.RMIP
+
+# Extract jc (continuous variables index)
+jd[j] = jb[j] | ji[j] | jsc[j] | jsi[j]
+js[j] = Sum(js1[s, j], True)
+jd[js] = True
+js[j] = Sum(js2[s, j], True)
+jd[js] = True
+jc[j] = True
+jc[jd] = False
+
+xb.lo[jb] = xc.lo[jb]
+xb.up[jb] = xc.up[jb]
+xb.prior[jb] = xc.scale[jb]
+
+xi.lo[ji] = xc.lo[ji]
+xi.up[ji] = xc.up[ji]
+xi.prior[ji] = xc.scale[ji]
+
+xsc.lo[jsc] = xc.lo[jsc]
+xsc.up[jsc] = xc.up[jsc]
+xsc.prior[jsc] = xc.scale[jsc]
+
+xsi.lo[jsi] = xc.lo[jsi]
+xsi.up[jsi] = xc.up[jsi]
+xsi.prior[jsi] = xc.scale[jsi]
+
+xs1.lo[js1[s, j]] = xc.lo[j]
+xs1.up[js1[s, j]] = xc.up[j]
+xs1.prior[js1[s, j]] = xc.scale[j]
+
+xs2.lo[js1[s, j]] = xc.lo[j]
+xs2.up[js1[s, j]] = xc.up[j]
+xs2.prior[js1[s, j]] = xc.scale[j]
+
+ij[i, j] = A[i, j]
+
+xslack = Variable(m, domain=i, description="slack variable to make all equations ==")
+xslack.fx[i] = 0
+xslack.lo[i].where[map_value(e.lo[i]) == 7] = SpecialValues.NEGINF
+xslack.up[i].where[map_value(e.up[i]) == 6] = SpecialValues.POSINF
+
+rhs = Parameter(m, domain=i, description="right hand side")
+AObj = Parameter(m, domain=i, description="objective coefficient in row i")
+
+# Replace old objective variable jobj by new one z
+AObj[i] = A[i, jobj]
+A[i, jobj] = 0
+
+# Extract right hand side from equation bounds
+rhs[i].where[map_value(e.up[i]) == 0] = e.up[i]
+rhs[i].where[map_value(e.lo[i]) == 0] = e.lo[i]
+
+# The model
+defi = Equation(m, domain=i)
+z = Variable(m)
+
+defi.stage[i] = e.stage[i]
+defi[i] = (
+    Sum(
+        ij[i, j],
+        Sum(jc[j], A[i, jc] * xc[jc])
+        + Sum(jb[j], A[i, jb] * xb[jb])
+        + Sum(ji[j], A[i, ji] * xi[ji])
+        + Sum(jsc[j], A[i, jsc] * xsc[jsc])
+        + Sum(jsi[j], A[i, jsi] * xsi[jsi])
+        + Sum(js1[s, j], A[i, j] * xs1[js1])
+        + Sum(js2[s, j], A[i, j] * xs2[js2]),
+    )
+    + z * AObj[i]
+    == rhs[i] + xslack[i]
+)
+
+jac = Model(
+    m,
+    equations=[defi],
+    problem=mtype,
+    sense=Sense.MAX if objcoef.toValue() < 0 else Sense.MIN,
+    objective=z,
+)
+
+options = Options(
+    variable_listing_limit=0,
+    equation_listing_limit=0,
+    report_solution=1,
+    generate_name_dict=False,
+)
+
+jac.solve(output=sys.stdout, options=options)
+"""
+
 
 def get_convert_solver_options(
     path: str,
@@ -182,10 +337,11 @@ def get_convert_solver_options(
 
             with open(os.path.join(path, value), "w") as file:
                 file.write(jacobian_gms)
-
-            continue
-
-        solver_options[name] = os.path.join(path, value)
+        elif format == FileFormat.GAMSPyJacobian:
+            with open(os.path.join(path, value), "w") as file:
+                file.write(GAMSPY_JACOBIAN)
+        else:
+            solver_options[name] = os.path.join(path, value)
 
     if options is not None:
         extra_options = options.model_dump(exclude_none=True)

@@ -10,7 +10,6 @@ import tempfile
 import threading
 import time
 import traceback
-import uuid
 import weakref
 from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING
@@ -521,7 +520,7 @@ class Container(gt.Container):
                 del self.data[name]
 
     def _setup_paths(self) -> tuple[str, str, str]:
-        suffix = "_" + str(uuid.uuid4())
+        suffix = "_" + utils._get_unique_name()
         job = os.path.join(self.working_directory, suffix)
         gdx_in = os.path.join(self.working_directory, f"{suffix}in.gdx")
         gdx_out = os.path.join(self.working_directory, f"{suffix}out.gdx")
@@ -649,6 +648,28 @@ class Container(gt.Container):
         self._options.miro_protect = original_state
         self._temp_container.data = {}
 
+    def _load_records_with_rename(
+        self, load_from: str, names: dict[str, str]
+    ) -> None:
+        self._temp_container.read(load_from, list(names.keys()))
+        original_state = self._options.miro_protect
+        self._options.miro_protect = False
+
+        for gdx_name, gamspy_name in names.items():
+            if gamspy_name in self.data:
+                updated_records = self._temp_container[gdx_name].records
+                self[gamspy_name].records = updated_records
+                self[gamspy_name].domain_labels = self[
+                    gamspy_name
+                ].domain_names
+            else:
+                raise ValidationError(
+                    f"Invalid renaming. `{gamspy_name}` does not exist in the container."
+                )
+
+        self._options.miro_protect = original_state
+        self._temp_container.data = {}
+
     def _read(
         self,
         load_from: str | Container | gt.Container,
@@ -766,7 +787,7 @@ class Container(gt.Container):
     def loadRecordsFromGdx(
         self,
         load_from: str,
-        symbol_names: Iterable[str] | None = None,
+        symbol_names: Iterable[str] | dict[str, str] | None = None,
     ) -> None:
         """
         Loads data of the given symbols from a GDX file. If no
@@ -776,8 +797,11 @@ class Container(gt.Container):
         ----------
         load_from : str
             Path to the GDX file
-        symbol_names : Iterable[str], optional
-            Symbols whose data will be load from GDX, by default None
+        symbol_names : Iterable[str], dict[str, str], optional
+            Symbol names whose data will be load from GDX, by default None.
+            Default option loads records of all symbols in the GDX file.
+            If given as a dict, keys are the symbol names in the GDX file, and
+            values are the names of the GAMSPy symbols.
 
         Examples
         --------
@@ -797,7 +821,11 @@ class Container(gt.Container):
                 self.system_directory, load_from
             )
 
-        self._load_records_from_gdx(load_from, symbol_names)
+        if isinstance(symbol_names, dict):
+            self._load_records_with_rename(load_from, symbol_names)
+        else:
+            self._load_records_from_gdx(load_from, symbol_names)
+
         self._synch_with_gams()
 
     def addGamsCode(self, gams_code: str) -> None:

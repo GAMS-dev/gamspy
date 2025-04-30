@@ -13,6 +13,8 @@ from gamspy._types import EllipsisType
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy import Set, Variable
     from gamspy._algebra.expression import Expression
 
@@ -209,6 +211,18 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         dims[-1] = dims[-2]
         dims[-2] = x
         return permute(self, dims)  # type: ignore
+
+    @property
+    def records(self) -> pd.DataFrame | float | None:
+        if self.parent.records is None:
+            return None
+
+        recs = self.parent.records
+        for idx, literal in self._scalar_domains:
+            column_name = recs.columns[idx]
+            recs = recs[recs[column_name] == literal]
+
+        return recs
 
     def __neg__(self):
         return expression.Expression(None, "-", self)

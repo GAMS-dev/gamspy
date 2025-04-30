@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-import uuid
 
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
@@ -104,7 +103,7 @@ def _flatten_dims_var(
     forwarded_domain = utils._next_domains([flattened, *x.domain], [])
     doms_to_flatten = [forwarded_domain[d + 1] for d in dims]
 
-    name = "ds_" + str(uuid.uuid4()).split("-")[0]
+    name = "ds_" + gp.utils._get_unique_name()
     subset = m.addSet(name, domain=[*doms_to_flatten, flattened])
     m.addGamsCode(
         _generate_index_matching_statement(doms_to_flatten, flattened, subset)

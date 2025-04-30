@@ -366,13 +366,12 @@ class Options(BaseModel):
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 
-    def __init__(self, **data) -> None:
-        super().__init__(**data)
+    def model_post_init(self, context: Any) -> None:
         self._extra_options: dict[str, Any] = dict()
         self._debug_options: dict[str, Any] = dict()
         self._solver: str | None = None
         self._problem: str | None = None
-        self._solver_options_file: str | None = None
+        self._solver_options_file: str = "0"
         self._frame: FrameType | None = None
 
     def _get_gams_compatible_options(
@@ -454,6 +453,8 @@ class Options(BaseModel):
                 system_directory, working_directory, solver, solver_options
             )
             self._solver_options_file = "1"
+        else:
+            self._solver_options_file = "0"
 
     def _set_extra_options(self, options: dict) -> None:
         """Set extra options of the backend"""
@@ -525,8 +526,7 @@ class Options(BaseModel):
         if self._solver is not None:
             all_options[self._problem] = self._solver
 
-        if self._solver_options_file is not None:
-            all_options["optfile"] = self._solver_options_file
+        all_options["optfile"] = self._solver_options_file
 
         # Extra options
         all_options.update(**self._extra_options)
@@ -699,7 +699,7 @@ def write_solver_options(
     ):
         return
 
-    if get_option("SOLVER_OPTION_VALIDATION"):
+    if get_option("VALIDATION") and get_option("SOLVER_OPTION_VALIDATION"):
         validate_solver_options(system_directory, options_file_name, solver)
 
 
@@ -722,12 +722,15 @@ def get_def_file(system_directory: str, solver: str) -> str:
 def validate_solver_options(
     system_directory: str, options_file_name: str, solver: str
 ) -> None:
+    if not get_option("VALIDATION"):
+        return
+
     option_handle = new_optHandle_tp()
     rc, msg = optCreateD(option_handle, system_directory, GMS_SSSIZE)
 
     # Return code 0 means there is an error. Weird but this is what we have to work with.
     if rc == 0:
-        raise Exception(msg)
+        raise RuntimeError(msg)
 
     # Check the validity of the .def file.
     solver_def_file = get_def_file(system_directory, solver)
@@ -736,7 +739,7 @@ def validate_solver_options(
         for i in range(optMessageCount(option_handle)):
             msg_list.append(optGetMessage(option_handle, i + 1))
 
-        raise ValidationError(
+        raise RuntimeError(
             f"Error while processing {solver_def_file}. Log messages: {msg_list}"
         )
 
@@ -744,7 +747,7 @@ def validate_solver_options(
 
     # Check the validity of the parameters 
     if optReadParameterFile(option_handle, options_file_name):
-        raise Exception(f"Error while reading {options_file_name}")
+        raise RuntimeError(f"Error while reading {options_file_name}")
 
     msg_list = []
     for i in range(optMessageCount(option_handle)):

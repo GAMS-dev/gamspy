@@ -54,7 +54,6 @@ def test_available_solvers(data):
     expected = [
         "BARON",
         "CBC",
-        "CONOPT",
         "CONOPT3",
         "CONOPT4",
         "CONVERT",
