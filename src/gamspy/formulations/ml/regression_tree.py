@@ -28,20 +28,24 @@ class RegressionTree:
     --------
     >>> import gamspy as gp
     >>> import numpy as np
-    >>> from sklearn.tree import DecisionTreeRegressor
     >>> from gamspy.math import dim
     >>> np.random.seed(42)
     >>> m = gp.Container()
-    >>> regressor = DecisionTreeRegressor(random_state=42)
-    >>> in_data = np.random.randint(0, 10, size=(10, 2))
-    >>> out_data = np.random.randint(1, 3, size=(10, 1))
-    >>> regressor.fit(in_data, out_data)
-    >>> dt_model = gp.formulations.RegressionTree(m, regressor)
+    >>> in_data = np.random.randint(0, 10, size=(5, 2))
+    >>> out_data = np.random.randint(1, 3, size=(5, 1))
+    >>> tree_dict = {
+    ...     "capacity": 3,
+    ...     "children_left": np.array([1, -1, -1]),
+    ...     "children_right": np.array([2, -1, -1]),
+    ...     "feature": np.array([0, -2, -2]),
+    ...     "n_features": 2,
+    ...     "threshold": np.array([4.0, -2.0, -2.0]),
+    ...     "value": np.array([[1.8], [1.0], [2.0]]),
+    ... }
+    >>> dt_model = gp.formulations.RegressionTree(m, tree_dict)
     >>> x = gp.Variable(m, "x", domain=dim((5, 2)), type="positive")
     >>> x.up[:, :] = 10
     >>> y, eqns = dt_model(x)
-    >>> [e.name for e in eqns]
-    ['e_1e9fc889_assign_one_output_c4b8ef0c', 'e_1e9fc889_link_indctr_output_b18ed147', 'e_1e9fc889_ub_output_e7b05885', 'e_1e9fc889_lb_output_99ec666d', 'e_1e9fc889_link_indctr_feature_ge_e6c1515b', 'e_1e9fc889_link_indctr_feature_le_feb66926']
     >>> [d.name for d in y.domain]
     ['DenseDim5_1']
 
