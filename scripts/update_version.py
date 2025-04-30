@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 from argparse import ArgumentParser, Namespace
 
 from gamspy import __version__
@@ -65,6 +66,10 @@ def update_release_notes(args: Namespace) -> None:
         file.write("".join(lines))
 
 
+def update_changelog(args: Namespace) -> None:
+    subprocess.run(["towncrier", "build", "--yes"])
+
+
 def main():
     parser = ArgumentParser()
     parser.add_argument("new_version")
@@ -75,6 +80,7 @@ def main():
     update_switcher(args)
     update_version_test(args)
     update_release_notes(args)
+    update_changelog(args)
 
     print("=" * 100)
     print(
