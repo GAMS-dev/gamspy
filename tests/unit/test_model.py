@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+import uuid
 
 import pandas as pd
 import pytest
@@ -1283,3 +1284,15 @@ def test_models_with_same_name():
 
     assert df_magic["Model Status"].tolist()[0] == "OptimalGlobal"
     assert df_magic_unique["Model Status"].tolist()[0] == "IntegerInfeasible"
+
+
+def test_models_with_many_equations():
+    # Number of equations must be too many that the model declaration exceeds the 80000 line length limit of GAMS.
+    m = Container()
+    for _ in range(2300):
+        name = "e" + str(uuid.uuid4()).replace("-", "_")[:35]
+        _ = Equation(m, name=name)
+
+    # This should not fail.
+    _ = Model(m, "my_model", equations=m.getEquations())
+    m.close()

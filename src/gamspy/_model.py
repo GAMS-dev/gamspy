@@ -10,6 +10,8 @@ from collections.abc import Sequence
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
+from gams.core.gdx import GMS_UEL_IDENT_SIZE
+
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
@@ -47,6 +49,16 @@ if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
     from gamspy._symbols.symbol import Symbol
 
+GMS_MAX_LINE_LENGTH = 80000
+MAX_MODEL_DECLARATION_LENGTH = 75
+MAX_SYMBOL_NAME_LENGTH = GMS_UEL_IDENT_SIZE - 1
+MAX_MATCHING_LENGTH = (
+    MAX_SYMBOL_NAME_LENGTH
+    + MAX_SYMBOL_NAME_LENGTH
+    + MAX_MODEL_DECLARATION_LENGTH
+    + 1
+)
+MAX_NUM_MODEL_ELEMS = int(GMS_MAX_LINE_LENGTH / MAX_MATCHING_LENGTH)
 IS_MIRO_INIT = os.getenv("MIRO", False)
 
 logger = logging.getLogger("MODEL")
@@ -1323,6 +1335,21 @@ class Model:
         'Model my_model / e,my_model_objective /;'
 
         """
+
+        def build_str_with_new_lines(elements: list[str]) -> str:
+            num_elements = len(elements)
+            if num_elements < MAX_NUM_MODEL_ELEMS:
+                return ",".join(elements)
+
+            count = 0
+            return_str = ""
+            while count < num_elements:
+                batch = elements[count : count + MAX_NUM_MODEL_ELEMS]
+                return_str += ",".join(batch) + "\n"
+                count += MAX_NUM_MODEL_ELEMS
+
+            return return_str
+
         equations_in_matches = []
         if self._matches is not None:
             for key in self._matches:
@@ -1339,7 +1366,7 @@ class Model:
             else:
                 equations.append(equation.name)
 
-        equations_str = ",".join(equations)
+        equations_str = build_str_with_new_lines(equations)
 
         if self._matches is not None:
             matches = []
@@ -1357,7 +1384,7 @@ class Model:
                         f"({'|'.join([equation.name for equation in key])}):{value.name}"
                     )
 
-            matches_str = ",".join(matches)
+            matches_str = build_str_with_new_lines(matches)
 
             equations_str = (
                 ",".join([equations_str, matches_str])
