@@ -57,6 +57,9 @@ class RegressionTree:
         regressor: dict,  # | DecisionTreeRegressor,
         name_prefix: str | None = None,
     ):
+        if not isinstance(container, gp.Container):
+            raise ValidationError(f"{container} is not a gp.Container.")
+
         COMPLETE_TREE_DICT = {
             "children_left",
             "children_right",
@@ -67,34 +70,48 @@ class RegressionTree:
             "n_features",
         }
         if isinstance(regressor, dict):
-            if len(check_keys := regressor.keys() - COMPLETE_TREE_DICT) != 0:
+            if len(check_keys := COMPLETE_TREE_DICT - regressor.keys()) != 0:
                 raise ValidationError(
-                    f"Dictionary containing the information from the Regression Tree is either incomplete or the keys are wrong. KEYS: {check_keys}"
+                    f"Dictionary containing the information from the Regression Tree is either incomplete or the keys are wrong. Expected Keys: {check_keys}"
                 )
+
             self._tree_dict = regressor
 
-        # TODO: Add sanity checks for populating the sklearn dictionary?
         else:
-            self._tree_dict = {
-                "children_left": regressor.tree_.children_left,
-                "children_right": regressor.tree_.children_right,
-                "feature": regressor.tree_.feature,
-                "threshold": regressor.tree_.threshold,
-                "value": regressor.tree_.value[:, :, 0],
-                "capacity": regressor.tree_.capacity,
-                "n_features": regressor.tree_.n_features,
-            }
+            try:
+                self._tree_dict = {
+                    "children_left": regressor.tree_.children_left,
+                    "children_right": regressor.tree_.children_right,
+                    "feature": regressor.tree_.feature,
+                    "threshold": regressor.tree_.threshold,
+                    "value": regressor.tree_.value[:, :, 0],
+                    "capacity": regressor.tree_.capacity,
+                    "n_features": regressor.tree_.n_features,
+                }
+            except AttributeError as e:
+                raise ValidationError(
+                    f"Tried accessing {regressor} as a `sklearn.tree.DecisionTreeRegressor` object but failed. {e}"
+                ) from e
 
         self.container = container
+        self._indicator_vars = None
 
         if name_prefix is None:
             name_prefix = str(uuid.uuid4()).split("-")[0]
 
         self._name_prefix = name_prefix
+        # TODO: Should we have sanity check for each prop. if nfeat == 0?
         self._nfeatures = self._tree_dict["n_features"]
         leafs = self._tree_dict["children_left"] < 0
         self._leafs = leafs.nonzero()[0]
         self._nleafs = len(self._leafs)
+
+        # TODO: support multi-output decision tree, i.e., the output can be a ndim vector
+        if self._tree_dict["value"].shape[-1] != 1:
+            raise ValidationError(
+                "Multi-output Decision Trees are currently not supported."
+            )
+
         self._node_lb, self._node_ub = self._node_bounds(tree=self._tree_dict)
 
     @staticmethod
@@ -157,7 +174,7 @@ class RegressionTree:
             raise ValidationError("number of features do not match")
 
         if M and not isinstance(M, (float, int)):
-            raise ValidationError("value for M should be either float or int")
+            raise ValidationError("M can either be of type float or int")
 
         sample_size = len(input.domain[0])
         set_of_samples, set_of_features, set_of_leafs = gp.math._generate_dims(
@@ -184,7 +201,7 @@ class RegressionTree:
 
         else:
             raise ValidationError(
-                "Input must be either of gp.Parameter | gp.Variable"
+                "Input must be of either type gp.Parameter | gp.Variable"
             )
 
         ind_vars = gp.Variable(
@@ -207,6 +224,7 @@ class RegressionTree:
             gp.Sum(set_of_leafs, ind_vars[set_of_samples, set_of_leafs]) == 1
         )
 
+        # TODO: We are assuming the predicted output to be a value and not a vector. multi-output decisionTree is thus not supported yet.
         out_link = gp.Parameter(
             self.container,
             name=utils._generate_name(
@@ -217,7 +235,7 @@ class RegressionTree:
                 (dom, val)
                 for dom, val in zip(
                     range(self._nleafs),
-                    self._tree_dict["value"][self._leafs, :],
+                    self._tree_dict["value"][self._leafs, 0],
                 )
             ],
         )
@@ -292,8 +310,8 @@ class RegressionTree:
         ### This generates the set of possible paths given the input data
         for i, leaf in enumerate(self._leafs):
             for feat in range(self._nfeatures):
-                feat_ub = float(self._node_ub[feat, leaf])
-                feat_lb = float(self._node_lb[feat, leaf])
+                feat_ub = self._node_ub[feat, leaf]
+                feat_lb = self._node_lb[feat, leaf]
                 mask = (_feat_vars.up[:, feat] >= feat_lb) & (
                     _feat_vars.lo[:, feat] <= feat_ub
                 )
@@ -348,6 +366,8 @@ class RegressionTree:
             s, "le"
         ] * (1 - ind_vars[set_of_samples, set_of_leafs].where[s[uni_domain]])
 
+        self._indicator_vars = ind_vars
+
         return out, [
             assign_one_output,
             link_indctr_output,
@@ -356,3 +376,7 @@ class RegressionTree:
             ge_cons,
             le_cons,
         ]
+
+    @property
+    def indicator_variable(self):
+        return self._indicator_vars
