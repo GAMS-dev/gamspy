@@ -366,7 +366,7 @@ class RegressionTree:
             s, "le"
         ] * (1 - ind_vars[set_of_samples, set_of_leafs].where[s[uni_domain]])
 
-        self._indicator_vars = ind_vars
+        self._indicator_vars = ind_vars.records
 
         return out, [
             assign_one_output,
