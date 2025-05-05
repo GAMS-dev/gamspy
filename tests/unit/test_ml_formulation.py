@@ -55,6 +55,10 @@ def test_RegressionTree_bad_init(data):
     # wrong regressor type, it must be either a dict or a sklearn.tree.DecisionTreeRegressor object
     pytest.raises(ValidationError, RegressionTree, m, [])
 
+    # multi-output decision tree check
+    tree_dict["value"] = np.resize(tree_dict["value"], (5, 2))
+    pytest.raises(ValidationError, RegressionTree, m, tree_dict)
+
 
 def test_RegressionTree_bad_call(data):
     m, tree_dict, _, _, _, x = data
