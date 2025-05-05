@@ -55,10 +55,6 @@ def test_RegressionTree_bad_init(data):
     # wrong regressor type, it must be either a dict or a sklearn.tree.DecisionTreeRegressor object
     pytest.raises(ValidationError, RegressionTree, m, [])
 
-    # multi-output decision tree check
-    tree_dict["value"] = np.resize(tree_dict["value"], (5, 2))
-    pytest.raises(ValidationError, RegressionTree, m, tree_dict)
-
 
 def test_RegressionTree_bad_call(data):
     m, tree_dict, _, _, _, x = data
@@ -101,7 +97,7 @@ def test_RegressionTree_valid_variable(data):
     )
     model.solve()
 
-    assert np.allclose(out.toDense(), output)
+    assert np.allclose(out.toDense().flatten(), output)
     assert model.status == ModelStatus(1)
 
 
@@ -120,7 +116,7 @@ def test_RegressionTree_valid_parameter(data):
     )
     model.solve()
 
-    assert np.allclose(out.toDense(), output)
+    assert np.allclose(out.toDense().flatten(), output)
     assert model.status == ModelStatus(1)
 
 
@@ -132,7 +128,7 @@ def test_RegressionTree_var_up(data):
     x.up[:, 1] = int(max(in_data[:, 1]))
 
     out, eqns = rt(x)
-    s = out.domain[0]
+    s = out.domain
 
     model_max = gp.Model(
         m,
@@ -154,13 +150,13 @@ def test_RegressionTree_var_up(data):
 
     model_max.solve()
     max_out = np.array([15, 15, 15, 15, 33])
-    assert np.allclose(out.toDense(), max_out)
+    assert np.allclose(out.toDense().flatten(), max_out)
     assert model_max.objective_value == 93
     assert model_max.status == ModelStatus(1)
 
     model_min.solve()
     min_out = np.array([10, 10, 10, 10, 33])
-    assert np.allclose(out.toDense(), min_out)
+    assert np.allclose(out.toDense().flatten(), min_out)
     assert model_min.objective_value == 73
     assert model_min.status == ModelStatus(1)
 
@@ -243,7 +239,7 @@ def test_RegressionTree_add_equation(data):
 
     out, eqns = rt(x)
 
-    s = out.domain[0]
+    s = out.domain
 
     # force second feature to be more than 26
     e1 = gp.Equation(m)
@@ -260,9 +256,109 @@ def test_RegressionTree_add_equation(data):
 
     m2 = gp.Model(
         m,
-        "regTree_add_equation",
+        "regTree_add_equation_cons",
         equations=eqns + [e1],
         sense="min",
+        problem="mip",
+        objective=gp.Sum(s, out[s]),
+    )
+
+    m1.solve()
+    o1 = out.toDense().flatten()
+
+    m2.solve()
+    o2 = out.toDense().flatten()
+
+    output = np.array([10, 10, 10, 10, 33])
+
+    assert m1.objective_value == 73
+    assert np.allclose(o1, output)
+    assert m1.status == ModelStatus(1)
+    output[0] = 15
+    assert m2.objective_value == 78
+    assert np.allclose(o2, output)
+    assert m2.status == ModelStatus(1)
+
+
+def test_RegressionTree_multi_output(data):
+    m, tree_dict, _, _, par_input, _ = data
+    tree_dict["value"] = np.array(
+        [[15.6, 14.6], [11.25, 15.5], [10.0, 14.0], [15.0, 20.0], [33.0, 11.0]]
+    )
+    output = np.array([[10, 14], [10, 14], [10, 14], [15, 20], [33, 11]])
+    rt = RegressionTree(m, tree_dict)
+
+    out, eqns = rt(par_input)
+    s = out.domain
+
+    m1 = gp.Model(
+        m,
+        "regTree_add_equation",
+        equations=eqns,
+        sense="min",
+        problem="mip",
+        objective=gp.Sum(s, out[s]),
+    )
+
+    m1.solve()
+    o1 = out.toDense()
+
+    assert len(s[1]) == output.shape[-1]
+    assert m1.objective_value == 151
+    assert np.allclose(o1, output)
+    assert m1.status == ModelStatus(1)
+
+
+def test_RegressionTree_multi_output_equation(data):
+    m, tree_dict, _, _, par_input, x = data
+
+    tree_dict["value"] = np.array(
+        [[15.6, 14.6], [11.25, 15.5], [10.0, 14.0], [15.0, 20.0], [33.0, 11.0]]
+    )
+    output1 = np.array(
+        [
+            [15.0, 20.0],
+            [15.0, 20.0],
+            [15.0, 20.0],
+            [15.0, 20.0],
+            [33.0, 11.0],
+        ]
+    )
+    output2 = np.array(
+        [
+            [10.0, 14.0],
+            [10.0, 14.0],
+            [15.0, 20.0],
+            [15.0, 20.0],
+            [33.0, 11.0],
+        ]
+    )
+    rt = RegressionTree(m, tree_dict)
+
+    x.fx[:, 0] = par_input[:, 0]
+    x.up[:, 1] = 7
+
+    out, eqns = rt(x)
+    s = out.domain
+
+    # force second feature to be less than 26
+    e1 = gp.Equation(m)
+    e1[...] = gp.Sum(s, x[..., 1]) <= 26
+
+    m1 = gp.Model(
+        m,
+        "regTree_add_equation",
+        equations=eqns,
+        sense="max",
+        problem="mip",
+        objective=gp.Sum(s, out[s]),
+    )
+
+    m2 = gp.Model(
+        m,
+        "regTree_add_equation_cons",
+        equations=eqns + [e1],
+        sense="max",
         problem="mip",
         objective=gp.Sum(s, out[s]),
     )
@@ -273,12 +369,9 @@ def test_RegressionTree_add_equation(data):
     m2.solve()
     o2 = out.toDense()
 
-    output = np.array([10, 10, 10, 10, 33])
-
-    assert m1.objective_value == 73
-    assert np.allclose(o1, output)
+    assert m1.objective_value == 184
+    assert np.allclose(o1, output1)
     assert m1.status == ModelStatus(1)
-    output[0] = 15
-    assert m2.objective_value == 78
-    assert np.allclose(o2, output)
+    assert m2.objective_value == 162
+    assert np.allclose(o2, output2)
     assert m2.status == ModelStatus(1)

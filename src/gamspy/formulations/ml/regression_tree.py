@@ -47,7 +47,7 @@ class RegressionTree:
     >>> x.up[:, :] = 10
     >>> y, eqns = dt_model(x)
     >>> [d.name for d in y.domain]
-    ['DenseDim5_1']
+    ['DenseDim5_1', 'OutputDim']
 
     """
 
@@ -177,7 +177,7 @@ class RegressionTree:
         # TODO: Cannot declare set of equal size as the names are then conflicting and the second set will be created as an alias for the first set.
         set_of_output_dim = gp.Set(
             self.container,
-            name=utils._generate_name("s", self._name_prefix, "output_shape"),
+            name="OutputDim",
             domain=gp.math.dim((self._output_dim,)),
         )
         set_of_output_dim.generateRecords(1)
