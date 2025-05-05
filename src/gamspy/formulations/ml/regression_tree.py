@@ -105,13 +105,7 @@ class RegressionTree:
         leafs = self._tree_dict["children_left"] < 0
         self._leafs = leafs.nonzero()[0]
         self._nleafs = len(self._leafs)
-
-        # TODO: support multi-output decision tree, i.e., the output can be a ndim vector
-        if self._tree_dict["value"].shape[-1] != 1:
-            raise ValidationError(
-                "Multi-output Decision Trees are currently not supported."
-            )
-
+        self._output_dim = self._tree_dict["value"].shape[-1]
         self._node_lb, self._node_ub = self._node_bounds(tree=self._tree_dict)
 
     @staticmethod
@@ -180,11 +174,18 @@ class RegressionTree:
         set_of_samples, set_of_features, set_of_leafs = gp.math._generate_dims(
             self.container, dims=[sample_size, self._nfeatures, self._nleafs]
         )
+        # TODO: Cannot declare set of equal size as the names are then conflicting and the second set will be created as an alias for the first set.
+        set_of_output_dim = gp.Set(
+            self.container,
+            name=utils._generate_name("s", self._name_prefix, "output_shape"),
+            domain=gp.math.dim((self._output_dim,)),
+        )
+        set_of_output_dim.generateRecords(1)
 
         out = gp.Variable(
             self.container,
             name=utils._generate_name("v", self._name_prefix, "output"),
-            domain=set_of_samples,
+            domain=[set_of_samples, set_of_output_dim],
         )
 
         _feat_vars = gp.Variable(
@@ -224,19 +225,22 @@ class RegressionTree:
             gp.Sum(set_of_leafs, ind_vars[set_of_samples, set_of_leafs]) == 1
         )
 
-        # TODO: We are assuming the predicted output to be a value and not a vector. multi-output decisionTree is thus not supported yet.
+        idx, jdx = np.indices((self._nleafs, self._output_dim), dtype=int)
+        mapped_values = self._tree_dict["value"][self._leafs[:, None], jdx]
         out_link = gp.Parameter(
             self.container,
             name=utils._generate_name(
                 "p", self._name_prefix, "predicted_value"
             ),
-            domain=set_of_leafs,
+            domain=[set_of_leafs, set_of_output_dim],
+            # TODO: This type conversion is required to match the set elements and the list is required o/w gp complains:
+            # User passed array with shape `(6, 3)` but anticipated shape was `(3, 2)` based on domain set information
+            # -- must reconcile before array-to-records conversion is possible.
             records=[
-                (dom, val)
-                for dom, val in zip(
-                    range(self._nleafs),
-                    self._tree_dict["value"][self._leafs, 0],
-                )
+                (int(i), int(j), v)
+                for i, j, v in np.stack(
+                    (idx, jdx, mapped_values), axis=-1
+                ).reshape(-1, 3)
             ],
         )
 
@@ -245,33 +249,46 @@ class RegressionTree:
             name=utils._generate_name(
                 "e", self._name_prefix, "link_indctr_output"
             ),
-            domain=set_of_samples,
+            domain=[set_of_samples, set_of_output_dim],
             description="Link the indicator variable to the predicted value of the decision tree",
         )
-        link_indctr_output[set_of_samples] = (
+        link_indctr_output[set_of_samples, set_of_output_dim] = (
             gp.Sum(
                 set_of_leafs,
-                out_link[set_of_leafs]
+                out_link[set_of_leafs, set_of_output_dim]
                 * ind_vars[set_of_samples, set_of_leafs],
             )
             == out
         )
 
+        max_out = gp.Parameter(
+            self.container,
+            name=utils._generate_name("p", self._name_prefix, "max_out"),
+            domain=[set_of_output_dim],
+            records=np.max(self._tree_dict["value"][self._leafs, :], axis=0),
+        )
+        min_out = gp.Parameter(
+            self.container,
+            name=utils._generate_name("p", self._name_prefix, "min_out"),
+            domain=[set_of_output_dim],
+            records=np.min(self._tree_dict["value"][self._leafs, :], axis=0),
+        )
+
         ub_output = gp.Equation(
             self.container,
             name=utils._generate_name("e", self._name_prefix, "ub_output"),
-            domain=set_of_samples,
+            domain=[set_of_samples, set_of_output_dim],
             description="Output cannot be more than the maximum of predicted value",
         )
-        ub_output[set_of_samples] = out <= np.max(self._tree_dict["value"])
+        ub_output[...] = out <= max_out
 
         lb_output = gp.Equation(
             self.container,
             name=utils._generate_name("e", self._name_prefix, "lb_output"),
-            domain=set_of_samples,
+            domain=[set_of_samples, set_of_output_dim],
             description="Output cannot be less than the minimum of predicted value",
         )
-        lb_output[set_of_samples] = out >= np.min(self._tree_dict["value"])
+        lb_output[...] = out >= min_out
 
         uni_domain = [set_of_samples, set_of_features, set_of_leafs]
 
