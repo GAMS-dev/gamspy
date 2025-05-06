@@ -112,12 +112,14 @@ class ImplicitSymbol(ABC):
             set_strs = []
             for elem in domain:
                 if isinstance(elem, (gp.Set, gp.Alias, ImplicitSet)):
-                    set_strs.append(elem.latexRepr())
+                    set_strs.append(f"\\text{{{elem.latexRepr()}}}")
                 elif isinstance(elem, str):
-                    set_strs.append("*")
+                    set_strs.append(
+                        f"\\text{{\\textquotesingle {elem}\\textquotesingle}}"
+                    )
 
             domain_str = ",".join(set_strs)
-            representation = f"{representation}_{{{domain_str}}}"
+            representation = f"{representation}_\\text{{{domain_str}}}"
 
         return representation
 
