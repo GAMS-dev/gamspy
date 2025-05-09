@@ -485,7 +485,7 @@ def validate_solver_args(
     # Check validity of options
     if options is not None and not isinstance(options, Options):
         raise TypeError(
-            f"`options` must be of type Option or dict but found {type(options)}"
+            f"`options` must be of type Option but found {type(options)}"
         )
 
     # Check validity of output

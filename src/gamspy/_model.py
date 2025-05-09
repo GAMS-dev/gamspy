@@ -1420,7 +1420,7 @@ class Model:
         Raises
         ------
         ValidationError
-            In case the given options is not of type gp.Options or dict.
+            In case the given options is not of type gp.Options.
         """
         if options is not None and not isinstance(options, gp.Options):
             raise ValidationError(
