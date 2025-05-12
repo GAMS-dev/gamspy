@@ -129,22 +129,6 @@ class Conv2d:
 
         self._name_prefix = name_prefix
 
-    def _encode_infinity(self, x):
-        """
-        Encode infinity values as complex numbers.
-        - Replace -np.inf with 0 - 1j.
-        - Replace np.inf with 0 + 1j.
-        """
-        x = np.where(x == -np.inf, 0 - 1j, x)
-        x = np.where(x == np.inf, 0 + 1j, x)
-        return x
-
-    def _decode_complex_array(self, z: np.ndarray) -> np.ndarray:
-        real = z.real.copy()
-        real[z.imag > 0] = np.inf
-        real[z.imag < 0] = -np.inf
-        return real
-
     def _propagate_bounds(self, input, output, weight, bias, stride, padding):
         # Extract input bounds
         input_bounds = gp.Parameter(
@@ -187,8 +171,8 @@ class Conv2d:
 
         if inf_exists:
             # Encode infinity values as complex numbers
-            input_lower = self._encode_infinity(input_lower)
-            input_upper = self._encode_infinity(input_upper)
+            input_lower = utils._encode_infinity(input_lower)
+            input_upper = utils._encode_infinity(input_upper)
 
         batch, out_channels, h_out, w_out = output.shape
         _, in_channels, h_k, w_k = weight.shape
@@ -295,8 +279,8 @@ class Conv2d:
 
         if inf_exists:
             # Decode complex numbers back to real numbers if infinity values were used
-            output_lower = self._decode_complex_array(output_lower)
-            output_upper = self._decode_complex_array(output_upper)
+            output_lower = utils._decode_complex_array(output_lower)
+            output_upper = utils._decode_complex_array(output_upper)
 
         out_bounds_array = np.stack([output_lower, output_upper], axis=0)
 
