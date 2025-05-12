@@ -2,33 +2,8 @@ from __future__ import annotations
 
 import math
 
-import numpy as np
-
 import gamspy as gp
 from gamspy.exceptions import ValidationError
-
-
-def _encode_infinity(x: np.ndarray) -> np.ndarray:
-    """
-    Encode infinity values as complex numbers.
-    - Replace -np.inf with 0 - 1j.
-    - Replace np.inf with 0 + 1j.
-    """
-    x = np.where(x == -np.inf, 0 - 1j, x)
-    x = np.where(x == np.inf, 0 + 1j, x)
-    return x
-
-
-def _decode_complex_array(z: np.ndarray) -> np.ndarray:
-    """
-    Decode complex numbers back to infinities
-    - Replace 0 - 1j -> -np.inf
-    - Replace 0 + 1j -> np.inf
-    """
-    real = z.real.copy()
-    real[z.imag > 0] = np.inf
-    real[z.imag < 0] = -np.inf
-    return real
 
 
 def _generate_name(sym_type: str, prefix: str, name: str) -> str:
