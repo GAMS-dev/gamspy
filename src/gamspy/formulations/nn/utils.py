@@ -88,7 +88,7 @@ def _check_padding(value: int | tuple[int, int]) -> tuple[int, int, int, int]:
     return padding
 
 
-def _calc_same_padding(
+def _calc_same_padding_2d(
     kernel_size: tuple[int, int],
 ) -> tuple[int, int, int, int]:
     # assumes stride = 1
@@ -104,6 +104,40 @@ def _calc_same_padding(
     pad_right = pad_w_total - pad_left
 
     return (pad_top, pad_left, pad_bottom, pad_right)
+
+
+def _calc_same_padding_1d(
+    kernel_size: int,
+) -> tuple[int, int]:
+    # assumes stride = 1
+    pad_w_total = max(kernel_size - 1, 0)
+
+    # Calculate padding for width
+    pad_left = pad_w_total // 2
+    pad_right = pad_w_total - pad_left
+
+    return (pad_left, pad_right)
+
+
+def _calc_w(
+    padding: int | tuple[int, int] | str,
+    kernel_size: int,
+    stride: int,
+    w_in: int,
+) -> int:
+    # same padding
+    if isinstance(padding, str):
+        return w_in
+
+    if isinstance(padding, int):
+        padding = (padding, padding)
+
+    w_out = math.floor(
+        1
+        + ((w_in + (padding[0] + padding[1]) - (kernel_size - 1) - 1) / stride)
+    )
+
+    return w_out
 
 
 def _calc_hw(

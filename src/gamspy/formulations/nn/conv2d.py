@@ -473,7 +473,7 @@ class Conv2d:
         )
 
         if isinstance(self.padding, str):
-            padding = utils._calc_same_padding(self.kernel_size)
+            padding = utils._calc_same_padding_2d(self.kernel_size)
         else:
             padding = self.padding
 
