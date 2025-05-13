@@ -3,7 +3,6 @@ from __future__ import annotations
 import itertools
 import os
 import threading
-import uuid
 from typing import TYPE_CHECKING, Any, Literal
 
 import gams.transfer as gt
@@ -658,7 +657,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 if is_miro_input or is_miro_output:
                     name = name.lower()  # type: ignore
             else:
-                name = "s" + str(uuid.uuid4()).replace("-", "_")
+                name = "s" + utils._get_unique_name() + "gpauto"
 
             self._singleton_check(is_singleton, records, domain)
             previous_state = container._options.miro_protect

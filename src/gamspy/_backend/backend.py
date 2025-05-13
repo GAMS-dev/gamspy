@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import uuid
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Literal, no_type_check
 
@@ -105,6 +104,22 @@ def backend_factory(
     )
 
 
+def _cast_values(
+    objective_value: str,
+    num_equations: str,
+    num_variables: str,
+    solver_time: str,
+) -> tuple[float, int | float, int | float, float]:
+    objective = (
+        float("nan") if objective_value == "NA" else float(objective_value)
+    )
+    equations = float("nan") if num_equations == "NA" else int(num_equations)
+    variables = float("nan") if num_variables == "NA" else int(num_variables)
+    time = float("nan") if solver_time == "NA" else float(solver_time)
+
+    return objective, equations, variables, time
+
+
 class Backend(ABC):
     def __init__(
         self,
@@ -143,7 +158,8 @@ class Backend(ABC):
 
         if self.container._debugging_level == "keep":
             job_name = os.path.join(
-                self.container.working_directory, "_" + str(uuid.uuid4())
+                self.container.working_directory,
+                "_" + utils._get_unique_name(),
             )
 
         return job_name
@@ -259,6 +275,12 @@ class Backend(ABC):
                 _,
                 _,
             ) = line.split(",")
+
+        objective_value, num_equations, num_variables, solver_time = (
+            _cast_values(
+                objective_value, num_equations, num_variables, solver_time
+            )
+        )
 
         dataframe = pd.DataFrame(
             [

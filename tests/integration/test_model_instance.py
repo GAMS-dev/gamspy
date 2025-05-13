@@ -148,7 +148,7 @@ def test_parameter_change(data):
     for b_value, result in zip(bmult_list, results):
         bmult[...] = b_value
         summary = transport.solve(solver="conopt")
-        assert summary["Solver"].item() == "conopt"
+        assert summary["Solver"].item() == "CONOPT4"
         assert "bmult_var" in m.data
         assert x.records.columns.to_list() == [
             "i",
@@ -369,17 +369,25 @@ def test_validations(data):
         )
 
     # Test solver options
-    with open("_out.txt", "w") as file:
+    with tempfile.NamedTemporaryFile("w", delete=False) as file:
         transport.solve(
             solver="conopt", output=file, solver_options={"rtmaxv": "1.e12"}
         )
+        file.close()
 
-    with open("_out.txt") as file:
-        assert ">>  rtmaxv 1.e12" in file.read()
+        with open(file.name) as f:
+            assert ">>  rtmaxv 1.e12" in f.read()
 
-    options_path = os.path.join(m.working_directory, "conopt.opt")
-    assert os.path.exists(options_path)
-    os.remove(options_path)
+        options_path = os.path.join(m.working_directory, "conopt4.opt")
+        assert os.path.exists(options_path)
+
+    with tempfile.NamedTemporaryFile("w", delete=False) as file:
+        # Test a second solve call without solver options
+        transport.solve(solver="conopt", output=file)
+        file.close()
+
+        with open(file.name) as f:
+            assert ">>  rtmaxv 1.e12" not in f.read()
 
 
 @pytest.mark.skipif(
@@ -684,7 +692,7 @@ def test_license():
     subprocess.run(
         [
             sys.executable,
-            "-m",
+            "-Bm",
             "gamspy",
             "install",
             "license",
@@ -717,7 +725,7 @@ def test_license():
     subprocess.run(
         [
             sys.executable,
-            "-m",
+            "-Bm",
             "gamspy",
             "install",
             "license",

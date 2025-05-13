@@ -276,7 +276,7 @@ class Options(BaseModel):
     solve_link_type: Optional[Literal["disk", "memory"]] = None
         Solver link option
 
-        * **disk**: Model instance saved to scratch directory, the solver is called with a spawn (if possible) or a shell (if spawn is not possible) while GAMS remains open - If this is not supported by the selected solver, it gets reset to **1** automatically
+        * **disk**: Model instance saved to scratch directory, the solver is called with a spawn (if possible) or a shell (if spawn is not possible) while GAMS remains open.
 
         * **memory**: The model instance is passed to the solver in-memory - If this is not supported by the selected solver, it gets reset to **disk** automatically.
     merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None
@@ -366,13 +366,12 @@ class Options(BaseModel):
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 
-    def __init__(self, **data) -> None:
-        super().__init__(**data)
+    def model_post_init(self, context: Any) -> None:
         self._extra_options: dict[str, Any] = dict()
         self._debug_options: dict[str, Any] = dict()
         self._solver: str | None = None
         self._problem: str | None = None
-        self._solver_options_file: str | None = None
+        self._solver_options_file: str = "0"
         self._frame: FrameType | None = None
 
     def _get_gams_compatible_options(
@@ -454,6 +453,8 @@ class Options(BaseModel):
                 system_directory, working_directory, solver, solver_options
             )
             self._solver_options_file = "1"
+        else:
+            self._solver_options_file = "0"
 
     def _set_extra_options(self, options: dict) -> None:
         """Set extra options of the backend"""
@@ -525,8 +526,7 @@ class Options(BaseModel):
         if self._solver is not None:
             all_options[self._problem] = self._solver
 
-        if self._solver_options_file is not None:
-            all_options["optfile"] = self._solver_options_file
+        all_options["optfile"] = self._solver_options_file
 
         # Extra options
         all_options.update(**self._extra_options)

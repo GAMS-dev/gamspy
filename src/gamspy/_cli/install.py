@@ -207,11 +207,19 @@ def solver(
         for item in addons:
             solver_name = item.lower()
 
-            if solver_name.upper() not in utils.getAvailableSolvers():
+            if solver_name.upper() in gamspy_base.default_solvers:
+                print(f"`{solver_name}` is a default solver, skipping...")
+                continue
+            installable_solvers = utils.getInstallableSolvers(gamspy_base.directory)
+            if solver_name.upper() not in installable_solvers:
                 raise ValidationError(
                     f'Given solver name ("{solver_name}") is not valid. Available'
-                    f" solvers that can be installed: {utils.getAvailableSolvers()}"
-                )
+                    f" solvers that can be installed: {installable_solvers}")
+            
+            installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
+            if solver_name.upper() in installed_solvers:
+                print(f"`{solver_name}` is already installed, skipping...")
+                continue
 
             if not skip_pip_install:
 
@@ -240,7 +248,7 @@ def solver(
                     _ = subprocess.run(command, check=True, stderr=subprocess.PIPE)
                 except subprocess.CalledProcessError as e:
                     raise GamspyException(
-                        f"Could not install gamspy-{solver_name}: {e.stderr.decode('utf-8')}"
+                        f"Could not install gamspy-{solver_name}. Please check your internet connection. If it's not related to your internet connection, PyPI servers might be down. Please retry it later. Here is the error message of pip:\n\n{e.stderr.decode('utf-8')}"
                     ) from e
             else:
                 try:

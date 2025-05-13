@@ -140,11 +140,16 @@ def test_model(data):
     with tempfile.TemporaryDirectory() as tmpdir:
         test_model.convert(
             tmpdir,
-            file_format=[FileFormat.GAMSJacobian, FileFormat.GDXJacobian],
+            file_format=[
+                FileFormat.GAMSJacobian,
+                FileFormat.GDXJacobian,
+                FileFormat.GAMSPyJacobian,
+            ],
             options=ConvertOptions(GDXNames=0),
         )
         assert os.path.exists(os.path.join(tmpdir, "jacobian.gms"))
         assert os.path.exists(os.path.join(tmpdir, "jacobian.gdx"))
+        assert os.path.exists(os.path.join(tmpdir, "jacobian.py"))
 
         with open(os.path.join(tmpdir, "jacobian.gms")) as file:
             assert (

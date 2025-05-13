@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import threading
-import uuid
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
@@ -150,7 +149,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             if name is not None:
                 name = validation.validate_name(name)
             else:
-                name = "a" + str(uuid.uuid4()).replace("-", "_")
+                name = "a" + utils._get_unique_name() + "gpauto"
 
             super().__init__(container, name, alias_with)
 
