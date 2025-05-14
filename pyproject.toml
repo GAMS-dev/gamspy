@@ -42,6 +42,7 @@ dependencies = [
   "certifi >= 2022.09.14",
   "urllib3 >= 2.0.7",
   "typer >= 0.15.1",
+  "click < 8.2.0",
 ]
 
 [project.urls]
