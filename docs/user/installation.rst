@@ -81,7 +81,7 @@ is as follows:
 
 1. Generate a json file which contains the node information as follows: ::
 
-    gamspy probe -o info.json
+    gamspy probe -j info.json
 
 2. Move info.json file to a machine which has an internet connection and run: ::
 

@@ -375,11 +375,17 @@ def test_show_base():
 def test_probe(teardown):
     node_info_path = os.path.join("tmp", "info.json")
     process = subprocess.run(
+        [sys.executable, "-Bm", "gamspy", "probe", "-h"],
+        capture_output=True,
+        text=True,
+    )
+    assert process.returncode == 0, process.stdout + process.stderr
+
+    process = subprocess.run(
         [sys.executable, "-Bm", "gamspy", "probe", "-j", node_info_path],
         capture_output=True,
         text=True,
     )
-
     assert process.returncode == 0, process.stdout + process.stderr
 
     process = subprocess.run(
