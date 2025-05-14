@@ -396,4 +396,12 @@ class RegressionTree:
 
     @property
     def indicator_variable(self):
+        """
+        Convenience method to inspect the indicator variables used in the formulation.
+        Returns None if variables do not yet exist.
+
+        Returns
+        -------
+        None|pandas.DataFrame
+        """
         return self._indicator_vars

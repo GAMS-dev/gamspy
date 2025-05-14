@@ -15,6 +15,7 @@ This section contains various examples demonstrating the use of GAMSPy in the co
    ./logistic
    ./nn
    ./thermal_reformer
+   ./decisiontree
 
 
 

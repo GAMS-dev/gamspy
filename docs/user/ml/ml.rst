@@ -39,4 +39,5 @@ needs or require additional information, please use our `Discourse platform <htt
 
    ./introduction
    ./formulations
+   ./classic_ml
    ./embed_nn
