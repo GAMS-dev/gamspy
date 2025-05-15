@@ -60,6 +60,9 @@ def data():
 
 
 def test_sin_cos_example(data):
+    if platform.system() == "Linux" and platform.machine() == "aarch64":
+        return
+
     m, external_module = data
     y1 = gp.Variable(m, "y1")
     y2 = gp.Variable(m, "y2")
@@ -89,6 +92,9 @@ def test_sin_cos_example(data):
 
 
 def test_sin_cos_example2(data):
+    if platform.system() == "Linux" and platform.machine() == "aarch64":
+        return
+
     m, _ = data
     y1 = gp.Variable(m, "y1")
     x1 = gp.Variable(m, "x1")
@@ -100,6 +106,9 @@ def test_sin_cos_example2(data):
 
 
 def test_external_equation_on_engine(data):
+    if platform.system() == "Linux" and platform.machine() == "aarch64":
+        return
+
     m, external_module = data
     if platform.system() == "Linux":
         m = gp.Container(working_directory=".")

@@ -17,8 +17,6 @@ from gamspy.formulations.nn import (
 )
 from gamspy.math import dim
 
-pytestmark = pytest.mark.unit
-
 
 @pytest.fixture
 def data():
@@ -80,6 +78,7 @@ def data():
     m.close()
 
 
+@pytest.mark.unit
 def test_conv2d_bad_init(data):
     m, *_ = data
     # in channel must be integer
@@ -114,6 +113,7 @@ def test_conv2d_bad_init(data):
     pytest.raises(ValidationError, Conv2d, m, 4, 4, 3, bias=10)
 
 
+@pytest.mark.unit
 def test_conv2d_load_weights(data):
     m, *_ = data
     conv1 = Conv2d(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
@@ -143,6 +143,7 @@ def test_conv2d_load_weights(data):
     pytest.raises(ValidationError, conv1.load_weights, w1, bad4)
 
 
+@pytest.mark.unit
 def test_conv2d_same_indices(data):
     m, *_ = data
     conv1 = Conv2d(m, 4, 4, 4, bias=True, name_prefix="conv1")
@@ -175,6 +176,7 @@ def test_conv2d_same_indices(data):
     conv2.load_weights(w1, b1)
 
 
+@pytest.mark.unit
 def test_conv2d_reloading_weights(data):
     m, *_ = data
     conv1 = Conv2d(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
@@ -190,6 +192,7 @@ def test_conv2d_reloading_weights(data):
     assert np.allclose(b1, conv1.bias.toDense())
 
 
+@pytest.mark.unit
 def test_conv2d_make_variable(data):
     m, *_ = data
     conv1 = Conv2d(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
@@ -203,6 +206,7 @@ def test_conv2d_make_variable(data):
     out, eqs = conv1(inp)
 
 
+@pytest.mark.unit
 def test_conv2d_load_weight_make_var(data):
     m, *_ = data
     conv1 = Conv2d(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
@@ -214,6 +218,7 @@ def test_conv2d_load_weight_make_var(data):
     pytest.raises(ValidationError, conv1.make_variable)
 
 
+@pytest.mark.unit
 def test_conv2d_call_bad(data):
     m, *_ = data
     conv1 = Conv2d(m, 4, 4, 4, bias=True)
@@ -238,6 +243,7 @@ def test_conv2d_call_bad(data):
     pytest.raises(ValidationError, conv1, inp, propagate_bounds="True")
 
 
+@pytest.mark.unit
 def test_conv2d_simple_correctness(data):
     m, w1, b1, inp, par_input, _ = data
     conv1 = Conv2d(m, 1, 2, 3)
@@ -298,6 +304,7 @@ def test_conv2d_simple_correctness(data):
     assert np.allclose(out.toDense(), expected_out)
 
 
+@pytest.mark.unit
 def test_conv2d_with_same_padding_odd_kernel(data):
     # when kernel size is odd
     m, w1, b1, inp, par_input, _ = data
@@ -331,6 +338,7 @@ def test_conv2d_with_same_padding_odd_kernel(data):
     assert np.allclose(out.toDense(), inp + 1)
 
 
+@pytest.mark.unit
 def test_conv2d_with_same_padding_even_kernel(data):
     # when kernel size is even
     m, w1, b1, inp, par_input, _ = data
@@ -362,6 +370,7 @@ def test_conv2d_with_same_padding_even_kernel(data):
     assert np.allclose(out.toDense(), inp)
 
 
+@pytest.mark.unit
 def test_conv2d_with_same_padding_even_kernel_2(data):
     # when kernel size is odd
     m, w1, b1, inp, par_input, _ = data
@@ -617,6 +626,7 @@ def test_conv2d_with_same_padding_even_kernel_2(data):
     assert np.allclose(out.toDense(), expected_out)
 
 
+@pytest.mark.unit
 def test_conv2d_with_padding(data):
     m, w1, b1, inp, par_input, _ = data
 
@@ -957,6 +967,7 @@ def test_conv2d_with_padding(data):
     assert np.allclose(out.toDense(), expected_out)
 
 
+@pytest.mark.unit
 def test_conv2d_with_stride(data):
     m, w1, b1, inp, par_input, _ = data
     conv1 = Conv2d(m, 1, 2, 3, stride=(2, 1))
@@ -1011,6 +1022,7 @@ def test_conv2d_with_stride(data):
     assert np.allclose(out.toDense(), expected_out)
 
 
+@pytest.mark.unit
 def test_conv2d_with_padding_and_stride(data):
     m, w1, b1, inp, par_input, _ = data
     conv1 = Conv2d(m, 1, 2, 3, stride=(2, 1), padding=(1, 2))
@@ -1215,6 +1227,7 @@ def test_conv2d_with_padding_and_stride(data):
     assert np.allclose(out.toDense(), expected_out)
 
 
+@pytest.mark.unit
 def test_conv2d_propagate_bounds_general(data):
     m, *_ = data
 
@@ -1269,6 +1282,7 @@ def test_conv2d_propagate_bounds_general(data):
     assert out6.lo.records is not None
 
 
+@pytest.mark.unit
 def test_conv2d_propagate_bounds_zero_weights_unbounded_input(data):
     m, *_ = data
 
@@ -1308,6 +1322,7 @@ def test_conv2d_propagate_bounds_zero_weights_unbounded_input(data):
     )
 
 
+@pytest.mark.unit
 def test_conv2d_propagate_bounds_input_bounded_by_zero(data):
     m, *_ = data
 
@@ -1351,6 +1366,7 @@ def test_conv2d_propagate_bounds_input_bounded_by_zero(data):
     )
 
 
+@pytest.mark.unit
 def test_conv2d_propagate_bounds_complex_bounds(data):
     m, *_ = data
 
@@ -1467,6 +1483,7 @@ def test_conv2d_propagate_bounds_complex_bounds(data):
     assert np.allclose(np.array(out.records.lower).reshape(out.shape), exp_lo)
 
 
+@pytest.mark.unit
 def test_conv2d_propagate_bounds_with_same_padding(data):
     m, *_ = data
 
@@ -1592,6 +1609,7 @@ def test_conv2d_propagate_bounds_with_same_padding(data):
     assert np.allclose(np.array(out.records.upper).reshape(out.shape), exp_up)
 
 
+@pytest.mark.unit
 def test_conv2d_propagate_bounds_with_same_padding_even_input(data):
     m, *_ = data
 
@@ -1641,6 +1659,7 @@ def test_conv2d_propagate_bounds_with_same_padding_even_input(data):
     assert np.allclose(np.array(out.records.upper).reshape(out.shape), exp_up)
 
 
+@pytest.mark.unit
 def test_max_pooling(data):
     m, w1, b1, inp, par_input, ii = data
 
@@ -1789,6 +1808,7 @@ def test_max_pooling(data):
     assert np.allclose(out4.toDense(), expected_out_4)
 
 
+@pytest.mark.unit
 def test_pooling_with_bounds(data):
     m, w1, b1, inp, par_input, ii = data
     mp1 = MinPool2d(m, 2)
@@ -1845,6 +1865,7 @@ def test_pooling_with_bounds(data):
         assert np.allclose(np.array(recs.lower).reshape(out4.shape), exp_lb)
 
 
+@pytest.mark.unit
 def test_mpooling_with_complex_bounds(data):
     m, *_ = data
 
@@ -1969,6 +1990,7 @@ def test_mpooling_with_complex_bounds(data):
     )
 
 
+@pytest.mark.unit
 def test_min_pooling(data):
     m, w1, b1, inp, par_input, ii = data
     mp1 = MinPool2d(m, 2)
@@ -2115,6 +2137,7 @@ def test_min_pooling(data):
     assert np.allclose(out4.toDense(), expected_out_4)
 
 
+@pytest.mark.unit
 def test_avg_pooling(data):
     m, w1, b1, inp, par_input, ii = data
     ap1 = AvgPool2d(m, 2, name_prefix="avgpool1")
@@ -2279,6 +2302,7 @@ def test_avg_pooling(data):
     assert np.allclose(out4.toDense(), expected_out_4)
 
 
+@pytest.mark.unit
 def test_avg_pool_bounds_neg(data):
     m, w1, b1, _, par_input, ii = data
     inp = np.array(
@@ -2354,6 +2378,7 @@ def test_avg_pool_bounds_neg(data):
     assert model.status == ModelStatus.OptimalGlobal
 
 
+@pytest.mark.unit
 def test_pool_call_bad(data):
     m, w1, b1, inp, par_input, ii = data
     avgpool1 = AvgPool2d(m, (2, 2))
@@ -2377,6 +2402,7 @@ def test_pool_call_bad(data):
     pytest.raises(ValidationError, _MPool2d, "sup", m, (2, 2))
 
 
+@pytest.mark.unit
 def test_flatten_bad(data):
     m, w1, b1, inp, par_input, ii = data
     # should only work for parameter or variable
@@ -2404,6 +2430,7 @@ def test_flatten_bad(data):
     pytest.raises(ValidationError, flatten_dims, var1, [1, 2])
 
 
+@pytest.mark.unit
 def test_flatten_par(data):
     m, w1, b1, inp, par_input, ii = data
     # 3x1x5x5 -> 3x25
@@ -2434,6 +2461,7 @@ def test_flatten_par(data):
     assert eqs == []  # for parameters no equation needed
 
 
+@pytest.mark.unit
 def test_flatten_par_with_no_records(data):
     m, *_ = data
 
@@ -2447,6 +2475,7 @@ def test_flatten_par_with_no_records(data):
     assert eqs == []  # for parameters no equation needed
 
 
+@pytest.mark.requires_license
 def test_flatten_var_copied_domain(data):
     m, w1, b1, inp, par_input, ii = data
 
@@ -2485,6 +2514,7 @@ def test_flatten_var_copied_domain(data):
     assert np.allclose(out_data_2, data.reshape(400 * 400))
 
 
+@pytest.mark.requires_license
 def test_flatten_2d_propagate_bounds(data):
     m, *_ = data
     i = gp.Set(m, name="i", records=[f"i{i}" for i in range(1, 41)])
@@ -2525,6 +2555,7 @@ def test_flatten_2d_propagate_bounds(data):
     )
 
 
+@pytest.mark.requires_license
 def test_flatten_3d_propagate_bounds(data):
     m, *_ = data
     i = gp.Set(m, name="i", records=[f"i{i}" for i in range(1, 41)])
@@ -2589,6 +2620,7 @@ def test_flatten_3d_propagate_bounds(data):
     assert np.allclose(var_5_bounds.toDense(), all_bounds.reshape(2, 40000))
 
 
+@pytest.mark.requires_license
 def test_flatten_propagate_zero_bounds(data):
     m, *_ = data
     var = gp.Variable(m, name="var1", domain=dim([30, 40, 10, 5]))
@@ -2642,6 +2674,7 @@ def test_flatten_propagate_zero_bounds(data):
     )
 
 
+@pytest.mark.unit
 def test_flatten_more_complex_propagate_bounds(data):
     m, *_ = data
     var = gp.Variable(m, name="var", domain=dim([2, 4, 5]))
@@ -2696,6 +2729,7 @@ def test_flatten_more_complex_propagate_bounds(data):
     assert np.allclose(var_1_bounds.toDense(), all_bounds.reshape(2, 8, 5))
 
 
+@pytest.mark.unit
 def test_linear_bad_init(data):
     m, *_ = data
     # in feature must be integer
@@ -2712,6 +2746,7 @@ def test_linear_bad_init(data):
     pytest.raises(ValidationError, Linear, m, 4, 4, bias=10)
 
 
+@pytest.mark.unit
 def test_linear_load_weights(data):
     m, *_ = data
     lin1 = Linear(m, 1, 2, bias=True)
@@ -2741,6 +2776,7 @@ def test_linear_load_weights(data):
     pytest.raises(ValidationError, lin1.load_weights, w1, bad4)
 
 
+@pytest.mark.unit
 def test_linear_same_indices(data):
     m, *_ = data
     lin1 = Linear(m, 4, 4, bias=True)
@@ -2754,6 +2790,7 @@ def test_linear_same_indices(data):
     out2, eqs2 = lin2(inp)
 
 
+@pytest.mark.unit
 def test_linear_reloading_weights(data):
     m, *_ = data
     lin1 = Linear(m, 1, 2, bias=True)
@@ -2769,6 +2806,7 @@ def test_linear_reloading_weights(data):
     assert np.allclose(b1, lin1.bias.toDense())
 
 
+@pytest.mark.unit
 def test_linear_make_variable(data):
     m, *_ = data
     lin1 = Linear(m, 4, 2)
@@ -2784,6 +2822,7 @@ def test_linear_make_variable(data):
     assert len(set([x.name for x in out.domain])) == 4
 
 
+@pytest.mark.unit
 def test_linear_load_weight_make_var(data):
     m, *_ = data
     lin1 = Linear(m, 1, 2, bias=True)
@@ -2795,6 +2834,7 @@ def test_linear_load_weight_make_var(data):
     pytest.raises(ValidationError, lin1.make_variable)
 
 
+@pytest.mark.unit
 def test_linear_call_bad(data):
     m, *_ = data
     lin1 = Linear(m, 4, 4, bias=True)
@@ -2815,6 +2855,7 @@ def test_linear_call_bad(data):
     pytest.raises(ValidationError, lin1, bad_inp_2)
 
 
+@pytest.mark.requires_license
 def test_linear_simple_correctness(data):
     m, _, _, _, par_input, _ = data
     lin1 = Linear(m, 5, 128, bias=True)
@@ -2845,6 +2886,7 @@ def test_linear_simple_correctness(data):
     assert np.allclose(out2.toDense(), expected_out)
 
 
+@pytest.mark.requires_license
 def test_linear_bias_domain_conflict(data):
     m, *_ = data
     lin1 = Linear(m, 20, 30, bias=True)
@@ -2879,6 +2921,7 @@ def test_linear_bias_domain_conflict(data):
     assert np.allclose(out1.toDense(), expected_out)
 
 
+@pytest.mark.unit
 def test_linear_propagate_bounds_non_boolean(data):
     m, *_ = data
     lin1 = Linear(m, 20, 30, bias=True)
@@ -2890,6 +2933,7 @@ def test_linear_propagate_bounds_non_boolean(data):
     pytest.raises(ValidationError, lin1, par_input, "True")
 
 
+@pytest.mark.unit
 def test_linear_propagate_bounded_input(data):
     m, *_ = data
     lin1 = Linear(m, 4, 3, name_prefix="lin1")
@@ -2940,6 +2984,7 @@ def test_linear_propagate_bounded_input(data):
     assert bias_par_found
 
 
+@pytest.mark.unit
 def test_linear_propagate_unbounded_input(data):
     m, *_ = data
     lin1 = Linear(m, 20, 30, bias=True)
@@ -2956,6 +3001,7 @@ def test_linear_propagate_unbounded_input(data):
     assert out1.up.records is None
 
 
+@pytest.mark.unit
 def test_linear_propagate_partially_bounded_input(data):
     m, *_ = data
     lin1 = Linear(m, 4, 3, bias=False)
@@ -2990,6 +3036,7 @@ def test_linear_propagate_partially_bounded_input(data):
     assert np.allclose(out1_ub.toDense(), expected_ub)
 
 
+@pytest.mark.unit
 def test_linear_propagate_unbounded_input_with_zero_weight(data):
     m, *_ = data
     lin1 = Linear(m, 20, 30, bias=False)
@@ -3010,6 +3057,7 @@ def test_linear_propagate_unbounded_input_with_zero_weight(data):
     assert np.allclose(out1_lb, expected_bounds)
 
 
+@pytest.mark.unit
 def test_linear_propagate_zero_bounds(data):
     m, *_ = data
     lin1 = Linear(m, 4, 3, bias=False)

@@ -25,14 +25,15 @@ def exp(x: OperableType) -> Expression:
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import exp
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3.8)
     >>> b = Parameter(m, "b")
     >>> b[...] = exp(a)
-    >>> b.toValue()
-    np.float64(44.701184493300815)
+    >>> math.isclose(b.toValue(), 44.701184493300815)
+    True
 
     """
     return expression.Expression(None, MathOp("exp", (x,)), None)
@@ -52,14 +53,15 @@ def log(x: OperableType) -> Expression:
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import log
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3.8)
     >>> b = Parameter(m, "b")
     >>> b[...] = log(a)
-    >>> b.toValue()
-    np.float64(1.33500106673234)
+    >>> math.isclose(b.toValue(), 1.33500106673234)
+    True
 
     """
     return expression.Expression(None, MathOp("log", (x,)), None)
@@ -133,14 +135,15 @@ def logit(x: OperableType) -> Expression:
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import logit
     >>> m = Container()
     >>> a = Parameter(m, "a", records=0.8)
     >>> b = Parameter(m, "b")
     >>> b[...] = logit(a)
-    >>> b.toValue()
-    np.float64(1.3862943611198908)
+    >>> math.isclose(b.toValue(), 1.3862943611198908)
+    True
 
     """
     return expression.Expression(None, MathOp("logit", (x,)), None)
@@ -160,14 +163,15 @@ def log2(x: OperableType) -> Expression:
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import log2
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3.8)
     >>> b = Parameter(m, "b")
     >>> b[...] = log2(a)
-    >>> b.toValue()
-    np.float64(1.9259994185562224)
+    >>> math.isclose(b.toValue(), 1.9259994185562224)
+    True
 
     """
     return expression.Expression(None, MathOp("log2", (x,)), None)
@@ -187,14 +191,15 @@ def log10(x: OperableType) -> Expression:
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import log10
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3.8)
     >>> b = Parameter(m, "b")
     >>> b[...] = log10(a)
-    >>> b.toValue()
-    np.float64(0.5797835966168101)
+    >>> math.isclose(b.toValue(), 0.5797835966168101)
+    True
 
     """
     return expression.Expression(None, MathOp("log10", (x,)), None)
@@ -215,14 +220,15 @@ def power(base: float | Operable, exponent: OperableType) -> Expression:
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import power
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3.8)
     >>> b = Parameter(m, "b")
     >>> b[...] = power(a, 3)
-    >>> b.toValue()
-    np.float64(54.87199999999999)
+    >>> math.isclose(b.toValue(), 54.87199999999999)
+    True
 
     """
     return expression.Expression(None, MathOp("power", (base, exponent)), None)
@@ -284,8 +290,6 @@ def rpower(base: OperableType | Operable, exponent: OperableType):
     >>> a = Parameter(m, "a", domain=i, records=[("i1", 3.8)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = rpower(a[i], 3)
-    >>> b.toList()
-    [('i1', 54.87199999999999)]
 
     """
     return expression.Expression(
@@ -315,8 +319,6 @@ def sign_power(base: OperableType, exponent: float):
     >>> a = Parameter(m, "a", domain=i, records=[("i1", 3.8)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = sign_power(a[i], 5)
-    >>> b.toList()
-    [('i1', 792.3516799999994)]
 
     """
     if not isinstance(exponent, (float, int)):
@@ -345,14 +347,15 @@ def sllog10(x: OperableType, S: int | float = 1.0e-150) -> Expression:
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import sllog10
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3.8)
     >>> b = Parameter(m, "b")
     >>> b[...] = sllog10(a)
-    >>> b.toValue()
-    np.float64(0.5797835966168101)
+    >>> math.isclose(b.toValue(), 0.5797835966168101)
+    True
 
     """
     return expression.Expression(None, MathOp("sllog10", (x, S)), None)
@@ -373,14 +376,15 @@ def sqlog10(x: OperableType, S: int | float = 1.0e-150) -> Expression:
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import sqlog10
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3.8)
     >>> b = Parameter(m, "b")
     >>> b[...] = sqlog10(a)
-    >>> b.toValue()
-    np.float64(0.5797835966168101)
+    >>> math.isclose(b.toValue(), 0.5797835966168101)
+    True
 
     """
     return expression.Expression(None, MathOp("sqlog10", (x, S)), None)

@@ -221,13 +221,14 @@ def atan2(y: OperableType, x: OperableType) -> Expression:
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import atan2
     >>> m = Container()
     >>> r = Parameter(m, "r")
     >>> r[...] = atan2(1,1)
-    >>> r.toValue()
-    np.float64(0.7853981633974483)
+    >>> math.isclose(r.toValue(), 0.7853981633974483)
+    True
 
     """
     return expression.Expression(None, MathOp("arctan2", (y, x)), None)

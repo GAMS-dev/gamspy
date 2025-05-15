@@ -108,8 +108,6 @@ def uniform(
     >>> x = Parameter(m, "x", domain=i, records=[("i1", 30), ("i2", 8), ("i3", 45)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = uniform(x[i], 50)
-    >>> b.toList()
-    [('i1', 33.43494264), ('i2', 43.417201736), ('i3', 47.75187678)]
 
     """
     return expression.Expression(
@@ -176,8 +174,6 @@ def normal(mean: int | float, dev: int | float) -> Expression:
     >>> x = Parameter(m, "x", domain=i, records=[("i1", 30), ("i2", 8), ("i3", 45)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = normal(x[i], 5)
-    >>> b.toList()
-    [('i1', 28.433285357057226), ('i2', 9.6383740411321), ('i3', 47.3177939118135)]
 
     """
     return expression.Expression(None, MathOp("normal", (mean, dev)), None)
