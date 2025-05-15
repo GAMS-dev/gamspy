@@ -252,4 +252,5 @@ markers = [
     "engine: engine tests",
     "neos: neos tests",
     "model_library: run all model library",
+    "requires_license: tests that require license",
 ]
