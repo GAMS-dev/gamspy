@@ -6,37 +6,57 @@ Classic ML Formulations
    :description: GAMSPy User Guide
    :keywords: Machine Learning, User, Guide, GAMSPy, gamspy, GAMS, gams, mathematical modeling
 
-GAMSPy allows you to integrate Regression Trees (Decision Trees that predict numerical values) directly into your optimization models.
+We often require classical machine learning approaches for our optimization workflows.
+GAMSPy currently provides a formulation for decision trees that can be directly embedded in your optimization models.
+We will roll out additional formulations for other classical machine learning algorithms in the future.
 
 Supported formulations:
 
 :meth:`RegressionTree <gamspy.formulations.RegressionTree>`
 -----------------------------------------------------------
-Formulation generator for Regression Trees in GAMS. 
 
-Here is an example which uses a trained decision tree to embed in your optimization model.
+When a Decision Tree is trained to predict numerical values (rather than class labels), it is referred to as a :meth:`Regression Tree <gamspy.formulations.RegressionTree>`.
+Here is an example where we train a Regression tree and use the formulation to embed in an optimization model.
+
+It should be noted we are using the ``sklearn.tree.DecisionTreeRegressor`` for convenience. You can also provide the information from the trained decision tree as a dictionary.
+
+.. image:: ../images/regressionTree.png
+  :align: center
 
 .. code-block:: python
     
-    import gamspy as gp
-    import numpy as np
-    from gamspy.math import dim
-    np.random.seed(42)
-    m = gp.Container()
-    in_data = np.random.randint(0, 10, size=(5, 2))
-    out_data = np.random.randint(1, 3, size=(5, 1))
-    tree_dict = {
-        "capacity": 3,
-        "children_left": np.array([1, -1, -1]),
-        "children_right": np.array([2, -1, -1]),
-        "feature": np.array([0, -2, -2]),
-        "n_features": 2,
-        "threshold": np.array([4.0, -2.0, -2.0]),
-        "value": np.array([[1.8], [1.0], [2.0]]),
-    }
-    dt_model = gp.formulations.RegressionTree(m, tree_dict)
-    x = gp.Variable(m, "x", domain=dim((5, 2)), type="positive")
-    x.up[:, :] = 10
-    y, eqns = dt_model(x)
-    [d.name for d in y.domain]
-    # ['DenseDim5_1', 'OutputDim']
+   import gamspy as gp
+   import numpy as np
+   from gamspy.math import dim
+   from sklearn.tree import DecisionTreeRegressor
+
+   np.random.seed(42)
+
+   X = np.array(
+      [
+         [2, 3],
+         [3, 1],
+         [1, 2],
+         [5, 6],
+         [6, 4],
+      ]
+   )
+   y = np.array([10, 10, 10, 15, 33])
+
+   regressor = DecisionTreeRegressor(random_state=42)
+   regressor.fit(X, y)
+
+   m = gp.Container()
+   dt_formulation = gp.formulations.RegressionTree(m, regressor)
+   input = gp.Parameter(m, "input", domain=dim((5, 2)), records=X)
+   y_pred, eqns = dt_formulation(input)
+
+   predict_values = gp.Model(
+      m,
+      "regressionTree",
+      equations=eqns,
+      problem="MIP",
+   )
+   predict_values.solve()
+   print(y_pred.toDense().flatten())
+   # [10. 10. 10. 15. 33.]
