@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.alias import Alias
+    from gamspy.math.misc import MathOp
 
 
 def vector_norm(
@@ -30,7 +31,7 @@ def vector_norm(
     ),
     ord: float | int = 2,
     dim: list[int] | list[Set | Alias] | None = None,
-) -> Operation | Expression:
+) -> Operation | Expression | MathOp:
     """
     Returns the vector norm of the provided vector x. If ord is not an even integer, absolute value is used which
     requires DNLP.
@@ -43,7 +44,7 @@ def vector_norm(
 
     Returns
     -------
-    Expression | Operation
+    Expression | Operation | MathOp
 
     Examples
     --------

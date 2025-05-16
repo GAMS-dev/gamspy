@@ -34,6 +34,7 @@ from gamspy.math.matrix import (
     vector_norm,
 )
 from gamspy.math.misc import (
+    MathOp,
     Max,
     Min,
     Round,
@@ -144,6 +145,7 @@ __all__ = [
     "floor",
     "fractional",
     "Min",
+    "MathOp",
     "Max",
     "mod",
     "Round",

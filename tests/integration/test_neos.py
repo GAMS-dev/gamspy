@@ -2036,7 +2036,7 @@ def test_qcp(data):
     m, *_ = data
 
     # Set
-    i = Set(m, name="i", records=[str(idx) for idx in range(0, 181)])
+    i = Set(m, name="i", records=[str(idx) for idx in range(181)])
     omega_stop = Set(
         m,
         name="omega_stop",
@@ -2047,9 +2047,9 @@ def test_qcp(data):
         m,
         name="omega_pass",
         domain=i,
-        records=[str(idx) for idx in range(0, 91)],
+        records=[str(idx) for idx in range(91)],
     )
-    k = Set(m, name="k", records=[str(idx) for idx in range(0, 11)])
+    k = Set(m, name="k", records=[str(idx) for idx in range(11)])
 
     # Parameter
     beta = Parameter(m, name="beta", records=0.01)

@@ -2,16 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import gamspy._algebra.expression as expression
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
-    from gamspy._algebra.expression import Expression
     from gamspy._algebra.operable import Operable
     from gamspy._types import OperableType
 
 
-def exp(x: OperableType) -> Expression:
+def exp(x: OperableType) -> MathOp:
     """
     Exponential of ``x`` (i.e. ``e^x``)
 
@@ -21,7 +19,7 @@ def exp(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -36,10 +34,10 @@ def exp(x: OperableType) -> Expression:
     True
 
     """
-    return expression.Expression(None, MathOp("exp", (x,)), None)
+    return MathOp("exp", (x,))
 
 
-def log(x: OperableType) -> Expression:
+def log(x: OperableType) -> MathOp:
     """
     Natural logarithm of ``x`` (i.e. logarithm base ``e`` of ``x``)
 
@@ -49,7 +47,7 @@ def log(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -64,10 +62,10 @@ def log(x: OperableType) -> Expression:
     True
 
     """
-    return expression.Expression(None, MathOp("log", (x,)), None)
+    return MathOp("log", (x,))
 
 
-def log_beta(x: OperableType, y: OperableType) -> Expression:
+def log_beta(x: OperableType, y: OperableType) -> MathOp:
     """
     Log beta function (i.e. ``log(B(x, y)``)
 
@@ -78,7 +76,7 @@ def log_beta(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -93,10 +91,10 @@ def log_beta(x: OperableType, y: OperableType) -> Expression:
     True
 
     """
-    return expression.Expression(None, MathOp("logBeta", (x, y)), None)
+    return MathOp("logBeta", (x, y))
 
 
-def log_gamma(x: OperableType) -> Expression:
+def log_gamma(x: OperableType) -> MathOp:
     """
     Log gamma function of ``x``
 
@@ -106,7 +104,7 @@ def log_gamma(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -118,10 +116,10 @@ def log_gamma(x: OperableType) -> Expression:
     >>> b[...] = log_gamma(a)
 
     """
-    return expression.Expression(None, MathOp("logGamma", (x,)), None)
+    return MathOp("logGamma", (x,))
 
 
-def logit(x: OperableType) -> Expression:
+def logit(x: OperableType) -> MathOp:
     """
     Logit Transformation (i.e. ``log(x / (1 - x))``) for ``x`` in ``(0, 1)``
 
@@ -131,7 +129,7 @@ def logit(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -146,10 +144,10 @@ def logit(x: OperableType) -> Expression:
     True
 
     """
-    return expression.Expression(None, MathOp("logit", (x,)), None)
+    return MathOp("logit", (x,))
 
 
-def log2(x: OperableType) -> Expression:
+def log2(x: OperableType) -> MathOp:
     """
     Binary logarithm (i.e. logarithm base ``2`` of ``x``)
 
@@ -159,7 +157,7 @@ def log2(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -174,10 +172,10 @@ def log2(x: OperableType) -> Expression:
     True
 
     """
-    return expression.Expression(None, MathOp("log2", (x,)), None)
+    return MathOp("log2", (x,))
 
 
-def log10(x: OperableType) -> Expression:
+def log10(x: OperableType) -> MathOp:
     """
     Common logarithm (i.e. logarithm base ``10`` of ``x``)
 
@@ -187,7 +185,7 @@ def log10(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -202,10 +200,10 @@ def log10(x: OperableType) -> Expression:
     True
 
     """
-    return expression.Expression(None, MathOp("log10", (x,)), None)
+    return MathOp("log10", (x,))
 
 
-def power(base: float | Operable, exponent: OperableType) -> Expression:
+def power(base: float | Operable, exponent: OperableType) -> MathOp:
     """
     Base to the exponent power (i.e. ``base ^ exponent``)
 
@@ -216,7 +214,7 @@ def power(base: float | Operable, exponent: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -231,10 +229,10 @@ def power(base: float | Operable, exponent: OperableType) -> Expression:
     True
 
     """
-    return expression.Expression(None, MathOp("power", (base, exponent)), None)
+    return MathOp("power", (base, exponent))
 
 
-def cv_power(base: float, exponent: OperableType) -> Expression:
+def cv_power(base: float, exponent: OperableType) -> MathOp:
     """
     Real power (i.e. ``base ^ exponent`` where ``base >= 0``; error for ``base < 0``)
 
@@ -245,7 +243,7 @@ def cv_power(base: float, exponent: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -263,9 +261,7 @@ def cv_power(base: float, exponent: OperableType) -> Expression:
     if base < 0:
         raise ValueError("Base must be greater than or equal to 0")
 
-    return expression.Expression(
-        None, MathOp("cvPower", (base, exponent)), None
-    )
+    return MathOp("cvPower", (base, exponent))
 
 
 def rpower(base: OperableType | Operable, exponent: OperableType):
@@ -279,7 +275,7 @@ def rpower(base: OperableType | Operable, exponent: OperableType):
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -292,9 +288,7 @@ def rpower(base: OperableType | Operable, exponent: OperableType):
     >>> b[i] = rpower(a[i], 3)
 
     """
-    return expression.Expression(
-        None, MathOp("rPower", (base, exponent)), None
-    )
+    return MathOp("rPower", (base, exponent))
 
 
 def sign_power(base: OperableType, exponent: float):
@@ -308,7 +302,7 @@ def sign_power(base: OperableType, exponent: float):
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -327,12 +321,10 @@ def sign_power(base: OperableType, exponent: float):
     if exponent <= 0:
         raise ValueError("Exponent must be greater than 0")
 
-    return expression.Expression(
-        None, MathOp("signPower", (base, exponent)), None
-    )
+    return MathOp("signPower", (base, exponent))
 
 
-def sllog10(x: OperableType, S: int | float = 1.0e-150) -> Expression:
+def sllog10(x: OperableType, S: int | float = 1.0e-150) -> MathOp:
     """
     Smooth (linear) logarithm base 10
 
@@ -343,7 +335,7 @@ def sllog10(x: OperableType, S: int | float = 1.0e-150) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -358,10 +350,10 @@ def sllog10(x: OperableType, S: int | float = 1.0e-150) -> Expression:
     True
 
     """
-    return expression.Expression(None, MathOp("sllog10", (x, S)), None)
+    return MathOp("sllog10", (x, S))
 
 
-def sqlog10(x: OperableType, S: int | float = 1.0e-150) -> Expression:
+def sqlog10(x: OperableType, S: int | float = 1.0e-150) -> MathOp:
     """
     Smooth (quadratic) logarithm base 10
 
@@ -372,7 +364,7 @@ def sqlog10(x: OperableType, S: int | float = 1.0e-150) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -387,7 +379,7 @@ def sqlog10(x: OperableType, S: int | float = 1.0e-150) -> Expression:
     True
 
     """
-    return expression.Expression(None, MathOp("sqlog10", (x, S)), None)
+    return MathOp("sqlog10", (x, S))
 
 
 def vc_power(base: OperableType, exponent: OperableType):
@@ -401,7 +393,7 @@ def vc_power(base: OperableType, exponent: OperableType):
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -413,12 +405,10 @@ def vc_power(base: OperableType, exponent: OperableType):
     >>> b[...] = vc_power(a, 3)
 
     """
-    return expression.Expression(
-        None, MathOp("vcPower", (base, exponent)), None
-    )
+    return MathOp("vcPower", (base, exponent))
 
 
-def sqr(x: OperableType) -> Expression:
+def sqr(x: OperableType) -> MathOp:
     """
     Square of ``x`` (i.e. ``x^2``)
 
@@ -428,7 +418,7 @@ def sqr(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -442,4 +432,4 @@ def sqr(x: OperableType) -> Expression:
     np.float64(16.0)
 
     """
-    return expression.Expression(None, MathOp("sqr", (x,)), None)
+    return MathOp("sqr", (x,))

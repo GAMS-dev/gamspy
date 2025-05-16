@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any
+from typing import Any, Literal
 
 from gamspy.exceptions import ValidationError
 
@@ -43,8 +43,25 @@ def _set_default_options() -> None:
     evaluate_lazily = int(os.getenv("GAMSPY_LAZY_EVALUATION", 0))
     configuration["LAZY_EVALUATION"] = evaluate_lazily
 
+    # Assume .l or .scale for variables in assignments
+    assume_level = int(os.getenv("GAMSPY_ASSUME_VARIABLE_SUFFIX", 1))
+    configuration["ASSUME_VARIABLE_SUFFIX"] = assume_level
 
-def set_options(options: dict[str, Any]) -> None:
+
+def set_options(
+    options: dict[
+        Literal[
+            "GAMS_SYSDIR",
+            "VALIDATION",
+            "DOMAIN_VALIDATION",
+            "SOLVER_OPTION_VALIDATION",
+            "MAP_SPECIAL_VALUES",
+            "LAZY_EVALUATION",
+            "ASSUME_VARIABLE_SUFFIX",
+        ],
+        Any,
+    ],
+) -> None:
     """
     Sets the given configuration options.
 

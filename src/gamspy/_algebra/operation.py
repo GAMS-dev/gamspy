@@ -14,6 +14,8 @@ import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy._algebra import Domain
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
@@ -23,6 +25,7 @@ if TYPE_CHECKING:
         ImplicitSet,
         ImplicitVariable,
     )
+    from gamspy.math.misc import MathOp
 
 
 class Operation(operable.Operable):
@@ -37,6 +40,7 @@ class Operation(operable.Operable):
         rhs: (
             Expression
             | Operation
+            | MathOp
             | ImplicitSet
             | ImplicitVariable
             | ImplicitParameter
@@ -70,7 +74,7 @@ class Operation(operable.Operable):
                 except ValueError:
                     self.domain.append(x)
 
-        self.dimension = validation.get_dimension(self.domain)
+        self.dimension: int = validation.get_dimension(self.domain)
         controlled_domain = [d for d in self._bare_op_domain]
         controlled_domain.extend(getattr(rhs, "controlled_domain", []))
         self.controlled_domain = list(set(controlled_domain))
@@ -82,8 +86,54 @@ class Operation(operable.Operable):
 
         if isinstance(self.rhs, (bool, float, int)):
             return Operation(self.op_domain, self.rhs, self._op_name)
-        else:
-            return Operation(self.op_domain, self.rhs[domain], self._op_name)
+
+        return Operation(self.op_domain, self.rhs[domain], self._op_name)  # type: ignore
+
+    @property
+    def records(self) -> pd.DataFrame | None:
+        """
+        Evaluates the operation and returns the resulting records.
+
+        Returns
+        -------
+        pd.DataFrame | None
+        """
+        assert self.container is not None
+        temp_name = "a" + utils._get_unique_name()
+        temp_param = syms.Parameter._constructor_bypass(
+            self.container, temp_name, self.domain
+        )
+        temp_param[...] = self
+        del self.container.data[temp_name]
+        return temp_param.records
+
+    def toValue(self) -> float | None:
+        """
+        Convenience method to return the records of the operation as a Python float. Only possible if there is a single record as a result of the operation.
+
+        Returns
+        -------
+        float | None
+        """
+        records = self.records
+        if records is not None:
+            return records["value"][0]
+
+        return records
+
+    def toList(self) -> list | None:
+        """
+        Convenience method to return the records of the operation as a list.
+
+        Returns
+        -------
+        list | None
+        """
+        records = self.records
+        if records is not None:
+            return records.values.tolist()
+
+        return None
 
     def _get_raw_domain(self) -> list[Set | Alias | ImplicitSet]:
         raw_domain = []
@@ -241,6 +291,7 @@ class Sum(Operation):
     domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
     expression : (
             Expression
+            | MathOp
             | ImplicitVariable
             | ImplicitParameter
             | int
@@ -272,6 +323,7 @@ class Sum(Operation):
         | Condition,
         expression: Operation
         | Expression
+        | MathOp
         | ImplicitSet
         | ImplicitParameter
         | ImplicitVariable
@@ -315,6 +367,7 @@ class Product(Operation):
     domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
     expression : (
             Expression
+            | MathOp
             | ImplicitVariable
             | ImplicitParameter
             | int
@@ -346,6 +399,7 @@ class Product(Operation):
         | Condition,
         expression: Operation
         | Expression
+        | MathOp
         | ImplicitSet
         | ImplicitParameter
         | ImplicitVariable
@@ -389,6 +443,7 @@ class Smin(Operation):
     domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
     expression : (
             Expression
+            | MathOp
             | ImplicitVariable
             | ImplicitParameter
             | int
@@ -420,6 +475,7 @@ class Smin(Operation):
         | Condition,
         expression: Operation
         | Expression
+        | MathOp
         | ImplicitSet
         | ImplicitParameter
         | ImplicitVariable
@@ -463,6 +519,7 @@ class Smax(Operation):
     domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
     expression : (
             Expression
+            | MathOp
             | ImplicitVariable
             | ImplicitParameter
             | int
@@ -494,6 +551,7 @@ class Smax(Operation):
         | Condition,
         expression: Operation
         | Expression
+        | MathOp
         | ImplicitSet
         | ImplicitParameter
         | ImplicitVariable
@@ -537,6 +595,7 @@ class Sand(Operation):
     domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
     expression : (
             Expression
+            | MathOp
             | ImplicitVariable
             | ImplicitParameter
             | int
@@ -568,6 +627,7 @@ class Sand(Operation):
         | Condition,
         expression: Operation
         | Expression
+        | MathOp
         | ImplicitSet
         | ImplicitParameter
         | ImplicitVariable
@@ -610,6 +670,7 @@ class Sor(Operation):
     domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
     expression : (
             Expression
+            | MathOp
             | ImplicitVariable
             | ImplicitParameter
             | int
@@ -641,6 +702,7 @@ class Sor(Operation):
         | Condition,
         expression: Operation
         | Expression
+        | MathOp
         | ImplicitSet
         | ImplicitParameter
         | ImplicitVariable
@@ -699,6 +761,7 @@ class Ord(operable.Operable):
             )
 
         self._symbol = symbol
+        self.container = symbol.container
         self.domain: list[Set | Alias] = []
         self.where = condition.Condition(self)
 
@@ -775,6 +838,7 @@ class Card(operable.Operable):
             )
 
         self._symbol = symbol
+        self.container = symbol.container
         self.domain: list[Set | Alias] = []
         self.where = condition.Condition(self)
 

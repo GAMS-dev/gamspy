@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits.implicit_set import ImplicitSet
     from gamspy._types import EllipsisType, OperableType
+    from gamspy.math.misc import MathOp
 
 
 class SetMixin:
@@ -390,7 +391,7 @@ class SetMixin:
 
         raise ValueError("Lead type must be linear or circular")
 
-    def sameAs(self, other: Set | Alias | str) -> Expression:
+    def sameAs(self, other: Set | Alias | str) -> MathOp:
         """
         Evaluates to true if this set is identical to the given set or alias, false otherwise.
 
@@ -400,7 +401,7 @@ class SetMixin:
 
         Returns
         -------
-        Expression
+        MathOp
 
         Examples
         --------

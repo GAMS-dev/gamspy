@@ -38,7 +38,7 @@ def main():
     nh = Set(
         m,
         name="nh",
-        records=[str(idx) for idx in range(0, 101)],
+        records=[str(idx) for idx in range(101)],
         description="Number of subintervals",
     )
     k = Alias(m, name="k", alias_with=nh)

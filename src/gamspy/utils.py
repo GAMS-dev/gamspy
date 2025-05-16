@@ -396,6 +396,9 @@ def _filter_gams_string(raw_string: str) -> str:
         "$onMultiR",
         "$offMulti",
         "$onUNDF",
+        "$offUNDF",
+        "$onDotL",
+        "$offDotL",
         "$gdxIn",
         "$loadDC",
         "$offUNDF",
@@ -680,7 +683,7 @@ def _parse_generated_equations(model: Model, listing_file: str) -> None:
     with open(listing_file) as file:
         lines = file.readlines()
         lines = [line.strip() for line in lines]
-        lines = [line for line in lines if line != "\n" and line != ""]
+        lines = [line for line in lines if line not in ("\n", "")]
 
     equation_listing_start_idx = 0
     for idx, line in enumerate(lines):

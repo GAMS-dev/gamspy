@@ -20,7 +20,7 @@ fundamental GAMSPy ideas and philosophy.
    ./variable
    ./equation
    ./model
-   ./indexing
+   ./expression_and_indexing
    ./assignments
    ./card_ord
    ./lag_lead.rst

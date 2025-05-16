@@ -63,53 +63,53 @@ e4y &  & define y-coordinate of upper-right corner\\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
-\textbf{max} $(( power(a,2) ) + ( power(b,2) ))$\\
+\textbf{max} $(power(a,2) + power(b,2))$\\
 \textbf{s.t.}
 \subsubsection*{$e1x$}
 $
-(( sin(t("1")) ) \cdot ( cos((t("1") - (t("1") * t("1")))) )) = x
+(sin(t("1")) \cdot cos((t("1") - (t("1") * t("1"))))) = x
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e1y$}
 $
-(t_\text{\text{\textquotesingle 1\textquotesingle}} \cdot ( sin(t("1")) )) = y
+(t_\text{\text{\textquotesingle 1\textquotesingle}} \cdot sin(t("1"))) = y
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e2x$}
 $
-( sin(t("2")) ) \cdot ( cos((t("2") - (t("2") * t("2")))) )) = (x + a
+(sin(t("2")) \cdot cos((t("2") - (t("2") * t("2"))))) = (x + a)
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e2y$}
 $
-t_\text{\text{\textquotesingle 2\textquotesingle}} \cdot ( sin(t("2")) )) = (y + b
+(t_\text{\text{\textquotesingle 2\textquotesingle}} \cdot sin(t("2"))) = (y + b)
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e3x$}
 $
-( sin(t("3")) ) \cdot ( cos((t("3") - (t("3") * t("3")))) )) = (x - b
+(sin(t("3")) \cdot cos((t("3") - (t("3") * t("3"))))) = (x - b)
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e3y$}
 $
-t_\text{\text{\textquotesingle 3\textquotesingle}} \cdot ( sin(t("3")) )) = (y + a
+(t_\text{\text{\textquotesingle 3\textquotesingle}} \cdot sin(t("3"))) = (y + a)
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e4x$}
 $
-( sin(t("4")) ) \cdot ( cos((t("4") - (t("4") * t("4")))) )) = ((x + a) - b
+(sin(t("4")) \cdot cos((t("4") - (t("4") * t("4"))))) = ((x + a) - b)
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e4y$}
 $
-t_\text{\text{\textquotesingle 4\textquotesingle}} \cdot ( sin(t("4")) )) = ((y + a) + b
+(t_\text{\text{\textquotesingle 4\textquotesingle}} \cdot sin(t("4"))) = ((y + a) + b)
 $
 \vspace{5pt}
 \hrule
