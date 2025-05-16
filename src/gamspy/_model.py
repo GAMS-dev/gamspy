@@ -48,6 +48,7 @@ if TYPE_CHECKING:
     from gamspy._backend.neos import NeosClient
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
     from gamspy._symbols.symbol import Symbol
+    from gamspy.math import MathOp
 
 GMS_MAX_LINE_LENGTH = 80000
 MAX_MODEL_DECLARATION_LENGTH = 75
@@ -838,7 +839,7 @@ class Model:
 
     def _set_objective_variable(
         self,
-        assignment: None | Variable | Operation | Expression = None,
+        assignment: None | Variable | Operation | Expression | MathOp = None,
     ) -> Variable | None:
         """
         Returns objective variable. If the assignment is an Expression
@@ -857,7 +858,12 @@ class Model:
 
         if assignment is not None and not isinstance(
             assignment,
-            (gp.Variable, expression.Expression, operation.Operation),
+            (
+                gp.Variable,
+                expression.Expression,
+                operation.Operation,
+                gp.math.MathOp,
+            ),
         ):
             raise TypeError(
                 "Objective must be a Variable or an Expression but"
@@ -895,7 +901,8 @@ class Model:
             return variable
 
         if isinstance(
-            assignment, (expression.Expression, operation.Operation)
+            assignment,
+            (expression.Expression, operation.Operation, gp.math.MathOp),
         ):
             variable, equation = self._generate_obj_var_and_equation()
 
@@ -977,7 +984,6 @@ class Model:
         self.container._add_statement("$onListing")
 
     def _update_model_attributes(self) -> None:
-        container = self.container._temp_container
         gdx_handle = utils._open_gdx_file(
             self.container.system_directory, self.container._gdx_out
         )
@@ -985,7 +991,7 @@ class Model:
         for gams_attr, python_attr in ATTRIBUTE_MAP.items():
             symbol_name = f"{self._generate_prefix}{gams_attr}_{self._auto_id}"
             data = utils._get_scalar_data(
-                container._gams2np, gdx_handle, symbol_name
+                self.container._gams2np, gdx_handle, symbol_name
             )
 
             if python_attr == "_status":
@@ -1008,7 +1014,6 @@ class Model:
                 setattr(self, python_attr, data)
 
         utils._close_gdx_handle(gdx_handle)
-        self.container._temp_container.data = {}
 
     def computeInfeasibilities(self) -> dict[str, pd.DataFrame]:
         """

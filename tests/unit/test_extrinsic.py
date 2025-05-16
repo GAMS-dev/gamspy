@@ -80,6 +80,8 @@ def test_extrinsic_functions(data):
     d2[...] = trilib.myCos(90)
     assert d2.getAssignment() == "d2 = myCos(90);"
     assert int(d2.toValue()) == 0
+    assert trilib.myCos(0).records.values.item() == 1
+    assert trilib.myCos(0).toValue() == 1
 
     # External functions do not accept keyword arguments
     with pytest.raises(ValidationError):

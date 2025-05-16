@@ -221,7 +221,7 @@ def _indicator(
     if indicator_var.type != "binary":
         raise ValidationError("indicator_var needs to be a binary variable")
 
-    if indicator_val != 0 and indicator_val != 1:
+    if indicator_val not in (0, 1):
         raise ValidationError("indicator_val needs to be 1 or 0")
 
     if not isinstance(expr, gp.Expression):

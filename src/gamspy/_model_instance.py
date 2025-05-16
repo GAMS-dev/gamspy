@@ -705,9 +705,7 @@ class ModelInstance:
         return columns
 
     def _update_main_container(self) -> None:
-        temp = gt.Container(
-            system_directory=self.container.system_directory,
-        )
+        temp = self.container._temp_container
         temp.read(self.sync_db.gmd)
 
         prev_state = self.container._options.miro_protect
@@ -739,3 +737,5 @@ class ModelInstance:
             self.model._objective_value = temp[
                 self.model._objective_variable.name
             ].toValue()
+
+        temp.data = {}

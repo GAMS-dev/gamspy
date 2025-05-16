@@ -2,21 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import gamspy._algebra.expression as expression
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
-    from gamspy._algebra.expression import Expression
     from gamspy._types import OperableType
 
 
-def cos(x: OperableType) -> Expression:
+def cos(x: OperableType) -> MathOp:
     """
     Cosine of ``x``.
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -30,16 +28,16 @@ def cos(x: OperableType) -> Expression:
     np.float64(-1.0)
 
     """
-    return expression.Expression(None, MathOp("cos", (x,)), None)
+    return MathOp("cos", (x,))
 
 
-def cosh(x: OperableType) -> Expression:
+def cosh(x: OperableType) -> MathOp:
     """
     Hyperbolic cosine of ``x``.
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -52,16 +50,16 @@ def cosh(x: OperableType) -> Expression:
     np.float64(1.0)
 
     """
-    return expression.Expression(None, MathOp("cosh", (x,)), None)
+    return MathOp("cosh", (x,))
 
 
-def sin(x: OperableType) -> Expression:
+def sin(x: OperableType) -> MathOp:
     """
     Sine of ``x``.
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -75,16 +73,16 @@ def sin(x: OperableType) -> Expression:
     np.float64(1.0)
 
     """
-    return expression.Expression(None, MathOp("sin", (x,)), None)
+    return MathOp("sin", (x,))
 
 
-def sinh(x: OperableType) -> Expression:
+def sinh(x: OperableType) -> MathOp:
     """
     Hyperbolic sine of ``x``.
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -97,16 +95,16 @@ def sinh(x: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("sinh", (x,)), None)
+    return MathOp("sinh", (x,))
 
 
-def tan(x: OperableType) -> Expression:
+def tan(x: OperableType) -> MathOp:
     """
     Tangent of ``x``.
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -120,16 +118,16 @@ def tan(x: OperableType) -> Expression:
     np.float64(1.0)
 
     """
-    return expression.Expression(None, MathOp("tan", (x,)), None)
+    return MathOp("tan", (x,))
 
 
-def tanh(x: OperableType) -> Expression:
+def tanh(x: OperableType) -> MathOp:
     """
     Hyperbolic tangent of ``x``.
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -142,10 +140,10 @@ def tanh(x: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("tanh", (x,)), None)
+    return MathOp("tanh", (x,))
 
 
-def acos(x: OperableType) -> Expression:
+def acos(x: OperableType) -> MathOp:
     """
     Inverse cosine of ``x``.
 
@@ -164,16 +162,16 @@ def acos(x: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("arccos", (x,)), None)
+    return MathOp("arccos", (x,))
 
 
-def asin(x: OperableType) -> Expression:
+def asin(x: OperableType) -> MathOp:
     """
     Inver sinus of ``x``.
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -186,16 +184,16 @@ def asin(x: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("arcsin", (x,)), None)
+    return MathOp("arcsin", (x,))
 
 
-def atan(x: OperableType) -> Expression:
+def atan(x: OperableType) -> MathOp:
     """
     Inverse tangent of ``x``.
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -208,16 +206,16 @@ def atan(x: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("arctan", (x,)), None)
+    return MathOp("arctan", (x,))
 
 
-def atan2(y: OperableType, x: OperableType) -> Expression:
+def atan2(y: OperableType, x: OperableType) -> MathOp:
     """
     Four-quadrant arctan function yielding ``arctan(y/x)``, which is the angle the vector ``(x,y)`` makes with ``(1,0)`` in radians.
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -231,4 +229,4 @@ def atan2(y: OperableType, x: OperableType) -> Expression:
     True
 
     """
-    return expression.Expression(None, MathOp("arctan2", (y, x)), None)
+    return MathOp("arctan2", (y, x))

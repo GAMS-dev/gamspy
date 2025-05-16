@@ -345,7 +345,7 @@ tree memory usage.
 Setting GAMSPy Configurations
 -----------------------------
 GAMSPy allows setting package wide options via :meth:`gp.set_options <gamspy.set_options>`. For example, 
-one can skip the domain validation by setting `DOMAIN_VALIDATION` to 0. By default, GAMSPy performs 
+one can skip the domain validation by setting ``DOMAIN_VALIDATION`` to 0. By default, GAMSPy performs 
 domain validation which is helpful while writing mathematical models but might add a small overhead 
 to the execution time.
 
@@ -354,8 +354,8 @@ to the execution time.
     import gamspy as gp
     gp.set_options({"DOMAIN_VALIDATION": 0})
 
-One can also set the system directory via `GAMSPY_GAMS_SYSDIR` option. Beware that if a system directory 
-is given in the constructor of the `Container`, it overrides this option. Package wide options can also 
+One can also set the system directory via ``GAMSPY_GAMS_SYSDIR`` option. Beware that if a system directory 
+is given in the constructor of the ``Container``, it overrides this option. Package wide options can also 
 be set via environment variables. Environment variable names are always in the format of ``GAMSPY_<option_name>``.
 
 .. code-block:: bash
@@ -382,4 +382,7 @@ Here is a list of package wide options:
 | MAP_SPECIAL_VALUES           | GAMSPY_MAP_SPECIAL_VALUES       | int   | Map special values. Can be disabled for performance if there are no special values in the records. Set to 1 by default.                  |
 +------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | LAZY_EVALUATION              | GAMSPY_LAZY_EVALUATION          | int   | Whether to evaluate expressions lazily. Lazy evaluation might cause recursion depth errors for very long expression. Set to 0 by default |
++------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| ASSUME_VARIABLE_SUFFIX       | GAMSPY_ASSUME_VARIABLE_SUFFIX   | int   | Activates or deactivates the automatic addition of .l or .scale attribute to variables on the right-hand side of assignments. Set to 1   |
+|                              |                                 |       | by default. 0: deactivate, 1: use .l attribute, 2: use .scale attribute.                                                                 |
 +------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+

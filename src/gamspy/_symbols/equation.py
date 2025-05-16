@@ -1104,9 +1104,10 @@ class Equation(gt.Equation, Symbol):
             right_side = f"\\hfill {domain_str} ~ | ~ {constraint_str}"
 
         assert self._definition.right is not None
-        definition_str = remove_outer_parens(
-            self._definition.right.latexRepr()  # type: ignore
-        )
+        definition_str = self._definition.right.latexRepr()  # type: ignore
+        if definition_str[0] == "(":
+            definition_str = definition_str[1:-1]
+
         equation_str = "$\n" + definition_str + f"{right_side}" + "\n$"
 
         return equation_str
@@ -1221,10 +1222,3 @@ def cast_type(type: str | EquationType) -> str:
         type = "eq" if type == EquationType.REGULAR else str(type)
 
     return type
-
-
-def remove_outer_parens(expr: str) -> str:
-    if expr.startswith("(") and expr.endswith(")"):
-        return remove_outer_parens(expr[1:-1])
-
-    return expr

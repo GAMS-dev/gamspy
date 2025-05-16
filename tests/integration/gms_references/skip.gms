@@ -86,7 +86,7 @@ $gdxLoadAll /home/muhammet/Documents/gams_workspace/gamspy/tmp/to_gams/skip_data
 $offMulti
 tctrlo(zcrhx(i,j)) .. (((tc(i) - tr(j)) + 1) - ycol(i)) =g= 1;
 lmtdlo(i) .. lmtd(i) =g= (2 * ycol(i));
-lmtdsn(i) .. lmtd(i) =e= ((((0.6666666666666666 * ( sqrt(((tc(i) - tcin) * (tc(i) - tcout))) )) + (0.16666666666666666 * ((tc(i) - tcin) + (tc(i) - tcout)))) + sl1(i)) - sl2(i));
+lmtdsn(i) .. lmtd(i) =e= ((((0.6666666666666666 * sqrt(((tc(i) - tcin) * (tc(i) - tcout)))) + (0.16666666666666666 * ((tc(i) - tcin) + (tc(i) - tcout)))) + sl1(i)) - sl2(i));
 tempset(i) .. ((tc(i) + lmtd(i)) + sum(zcr(i,j),tr(j))) =l= (u * ycol(i));
 artrex1(i) .. ((s1(i) + s2(i)) + sl1(i)) =l= (u * (1 - ycol(i)));
 artrex2(i) .. ((s3(i) + s4(i)) + sl2(i)) =l= (u * (1 - ycol(i)));
