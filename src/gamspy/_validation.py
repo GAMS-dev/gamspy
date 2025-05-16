@@ -127,11 +127,11 @@ RESERVED_WORDS = (
 
 def get_dimension(
     domain: Sequence[Set | Alias | ImplicitSet | str],
-):
+) -> int:
     dimension = 0
 
     for elem in domain:
-        if type(elem) in (symbols.Set, symbols.Alias, implicits.ImplicitSet):
+        if hasattr(elem, "dimension"):
             dimension += elem.dimension  # type: ignore
         else:
             dimension += 1
@@ -167,7 +167,7 @@ def validate_dimension(
     | ImplicitVariable
     | Operation,
     domain: list[Set | Alias | ImplicitSet | str],
-):
+) -> None:
     dimension = get_dimension(domain)
 
     if dimension != symbol.dimension:

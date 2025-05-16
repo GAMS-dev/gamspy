@@ -185,8 +185,8 @@ def test_condition_on_number(data):
 
     assert (
         Util_gap.getAssignment()
-        == "Util_gap(t) = (1 $ (( round(Util_lic(t),10) ) ne ( round("
-        "Util_lic2(t),10) )));"
+        == "Util_gap(t) = (1 $ (round(Util_lic(t),10) ne round("
+        "Util_lic2(t),10)));"
     )
 
 

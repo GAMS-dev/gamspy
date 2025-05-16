@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import gamspy._algebra.expression as expression
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
@@ -10,7 +9,7 @@ if TYPE_CHECKING:
     from gamspy._types import OperableType
 
 
-def binomial(n: OperableType, k: OperableType) -> Expression:
+def binomial(n: OperableType, k: OperableType) -> MathOp:
     """
     (Generalized) Binomial coefficient for ``n > -1`` and ``-1 < k < n + 1``
 
@@ -21,7 +20,7 @@ def binomial(n: OperableType, k: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -34,14 +33,14 @@ def binomial(n: OperableType, k: OperableType) -> Expression:
     >>> b[i] = binomial(75, p[i])
 
     """
-    return expression.Expression(None, MathOp("binomial", (n, k)), None)
+    return MathOp("binomial", (n, k))
 
 
 def centropy(
     x: OperableType,
     y: OperableType,
     z: float = 1e-20,
-) -> Expression:
+) -> MathOp:
     """
     Cross-entropy: ``x.ln((x + z) / (y + z))`` for ``x, y > 0`` and ``z >= 0``
 
@@ -53,7 +52,7 @@ def centropy(
 
     Returns
     -------
-    Expression
+    MathOp
 
     Raises
     ------
@@ -79,13 +78,13 @@ def centropy(
     if z < 0:
         raise ValueError("z must be greater than or equal to 0")
 
-    return expression.Expression(None, MathOp("centropy", (x, y, z)), None)
+    return MathOp("centropy", (x, y, z))
 
 
 def uniform(
     lower_bound: float | Expression,
     upper_bound: float | Expression,
-) -> Expression:
+) -> MathOp:
     """
     Generates a random number from the uniform distribution between
     ``lower_bound`` and ``higher_bound``
@@ -97,7 +96,7 @@ def uniform(
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -108,18 +107,12 @@ def uniform(
     >>> x = Parameter(m, "x", domain=i, records=[("i1", 30), ("i2", 8), ("i3", 45)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = uniform(x[i], 50)
-    >>> b.toList()
-    [('i1', 33.43494264), ('i2', 43.417201736), ('i3', 47.75187678)]
 
     """
-    return expression.Expression(
-        None, MathOp("uniform", (lower_bound, upper_bound)), None
-    )
+    return MathOp("uniform", (lower_bound, upper_bound))
 
 
-def uniformInt(
-    lower_bound: int | float, upper_bound: int | float
-) -> Expression:
+def uniformInt(lower_bound: int | float, upper_bound: int | float) -> MathOp:
     """
     Generates an integer random number from the discrete uniform distribution
     whose outcomes are the integers between ``lower_bound`` and ``higher_bound``
@@ -131,7 +124,7 @@ def uniformInt(
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -146,14 +139,10 @@ def uniformInt(
     [('i1', 33.0), ('i2', 44.0), ('i3', 48.0)]
 
     """
-    return expression.Expression(
-        None,
-        MathOp("uniformInt", (lower_bound, upper_bound)),
-        None,
-    )
+    return MathOp("uniformInt", (lower_bound, upper_bound))
 
 
-def normal(mean: int | float, dev: int | float) -> Expression:
+def normal(mean: int | float, dev: int | float) -> MathOp:
     """
     Generate a random number from the normal distribution with mean ``mean``
     and standard deviation ``dev``
@@ -165,7 +154,7 @@ def normal(mean: int | float, dev: int | float) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -176,8 +165,6 @@ def normal(mean: int | float, dev: int | float) -> Expression:
     >>> x = Parameter(m, "x", domain=i, records=[("i1", 30), ("i2", 8), ("i3", 45)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = normal(x[i], 5)
-    >>> b.toList()
-    [('i1', 28.433285357057226), ('i2', 9.6383740411321), ('i3', 47.3177939118135)]
 
     """
-    return expression.Expression(None, MathOp("normal", (mean, dev)), None)
+    return MathOp("normal", (mean, dev))

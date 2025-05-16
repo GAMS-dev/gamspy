@@ -949,7 +949,7 @@ def test_feasibility():
         == "solve mi using LP MIN mi_objective_variable"
     )
     mi.freeze([a, b])
-    mi.solve(solver="cplex", solver_options={"writelp": "mi.lp"})
+    mi.solve(solver="cplex")
     mi.unfreeze()
 
 

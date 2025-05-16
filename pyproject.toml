@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.10.0"
+version = "1.11.0"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -36,12 +36,13 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi[transfer] == 49.5.0",
-  "gamspy_base == 49.5.0",
+  "gamsapi[transfer] == 49.6.0",
+  "gamspy_base == 49.6.0",
   "pydantic >= 2.0",
   "certifi >= 2022.09.14",
   "urllib3 >= 2.0.7",
   "typer >= 0.15.1",
+  "click < 8.2.0",
 ]
 
 [project.urls]
@@ -219,6 +220,10 @@ select = [
     "SIM",
     # isort
     "I",
+    # flake8-pie
+    "PIE",
+    # Consider merging multiple comparisons
+    "PLR1714",
 ]
 ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "B028", "B006"]
 
@@ -251,4 +256,5 @@ markers = [
     "engine: engine tests",
     "neos: neos tests",
     "model_library: run all model library",
+    "requires_license: tests that require license",
 ]

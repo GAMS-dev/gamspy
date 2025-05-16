@@ -62,10 +62,6 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         )
 
     @property
-    def dimension(self):
-        return self.parent.dimension
-
-    @property
     def records(self) -> pd.DataFrame | None:
         if self.parent.records is None:
             return None

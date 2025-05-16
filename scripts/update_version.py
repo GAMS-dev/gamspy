@@ -64,7 +64,7 @@ def update_release_notes(args: Namespace) -> None:
 
     index = -1
     for idx, line in enumerate(lines):
-        if line.endswith(f"release_{args.new_version}\n"):
+        if line.endswith(f"release_{__version__}\n"):
             index = idx
 
     current_release = lines[index]

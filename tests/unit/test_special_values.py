@@ -79,7 +79,7 @@ def test_operation_special_values(data):
 
     assert (
         results.getAssignment()
-        == 'results(tax,"x") = ( max((x.l(tax) - e.l(tax)),EPS) );'
+        == 'results(tax,"x") = max((x.l(tax) - e.l(tax)),EPS);'
     )
 
     dummy = Parameter(m, "dummy")

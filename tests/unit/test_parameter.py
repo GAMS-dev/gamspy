@@ -201,9 +201,7 @@ def test_undef():
     )  # Instead of using numpy there might be a NA from the math package
 
     generated = m.generateGamsString()
-    expected = (
-        "$onMultiR\n$onUNDF\nParameter rho / Undf /;\n$offUNDF\n$offMulti\n"
-    )
+    expected = "$onMultiR\n$onUNDF\n$onDotL\nParameter rho / Undf /;\n$offDotL\n$offUNDF\n$offMulti\n"
     assert generated == expected
 
 
