@@ -158,7 +158,7 @@ class RegressionTree:
         M : float
             value for the big_M. By default, infer the value using the available bounds for variables
         """
-
+        # TODO: Change the >input< arg name to something else?
         if len(input.domain) == 0:
             raise ValidationError(
                 "expected an input with at least 1 dimension"
@@ -170,18 +170,15 @@ class RegressionTree:
         if M and not isinstance(M, (float, int)):
             raise ValidationError("M can either be of type float or int")
 
-        sample_size = len(input.domain[0])
-        set_of_samples, set_of_features, set_of_leafs = gp.math._generate_dims(
-            self.container, dims=[sample_size, self._nfeatures, self._nleafs]
-        )
         # TODO: Cannot declare set of equal size as the names are then conflicting and the second set will be created as an alias for the first set.
-        # TODO: What happens if any of ss,sf,sl are equal?
-        set_of_output_dim = gp.Set(
-            self.container,
-            name="OutputDim",
-            domain=gp.math.dim((self._output_dim,)),
+        # TODO: What happens if ss,sf,sl are all equal?
+        ## Solution to both, added a argument (alias=False) in the generate_dim method to keep trying until DenseDim<> sets are generated
+
+        set_of_samples = input.domain[0]
+        set_of_features = input.domain[-1]
+        set_of_leafs, set_of_output_dim = gp.math._generate_dims(
+            self.container, dims=[self._nleafs, self._output_dim], alias=False
         )
-        set_of_output_dim.generateRecords(1)
 
         recs = []
         for i, leaf in enumerate(self._leafs):
@@ -247,9 +244,6 @@ class RegressionTree:
                 "p", self._name_prefix, "predicted_value"
             ),
             domain=[set_of_leafs, set_of_output_dim],
-            # TODO: This type conversion is required to match the set elements and the list is required o/w gp complains:
-            # User passed array with shape `(6, 3)` but anticipated shape was `(3, 2)` based on domain set information
-            # -- must reconcile before array-to-records conversion is possible.
             records=[
                 (int(i), int(j), v)
                 for i, j, v in np.stack(
@@ -385,9 +379,9 @@ class RegressionTree:
         )
         ge_cons[uni_domain].where[
             (feat_thresh[..., "ge"] != 0) & s[uni_domain]
-        ] = _feat_vars[...] >= feat_thresh[..., "ge"] - _bound_big_m[
-            ..., "ge"
-        ] * (1 - ind_vars)
+        ] = _feat_vars >= feat_thresh[..., "ge"] - _bound_big_m[..., "ge"] * (
+            1 - ind_vars
+        )
 
         le_cons = gp.Equation(
             self.container,
@@ -399,9 +393,9 @@ class RegressionTree:
         )
         le_cons[uni_domain].where[
             (feat_thresh[..., "le"] != 0) & s[uni_domain]
-        ] = _feat_vars[...] <= feat_thresh[..., "le"] + _bound_big_m[
-            ..., "le"
-        ] * (1 - ind_vars)
+        ] = _feat_vars <= feat_thresh[..., "le"] + _bound_big_m[..., "le"] * (
+            1 - ind_vars
+        )
 
         self._indicator_vars = ind_vars.records
 
