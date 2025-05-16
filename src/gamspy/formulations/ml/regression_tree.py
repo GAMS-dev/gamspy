@@ -170,27 +170,27 @@ class RegressionTree:
         if M and not isinstance(M, (float, int)):
             raise ValidationError("M can either be of type float or int")
 
-        # TODO: Cannot declare set of equal size as the names are then conflicting and the second set will be created as an alias for the first set.
-        # TODO: What happens if ss,sf,sl are all equal?
-        ## Solution to both, added a argument (alias=False) in the generate_dim method to keep trying until DenseDim<> sets are generated
-
         set_of_samples = input.domain[0]
         set_of_features = input.domain[-1]
         set_of_leafs, set_of_output_dim = gp.math._generate_dims(
             self.container, dims=[self._nleafs, self._output_dim], alias=False
         )
 
-        recs = []
+        _feat_par_records = []
         for i, leaf in enumerate(self._leafs):
             for feat in range(self._nfeatures):
-                recs.append((feat, i, "ub", self._node_ub[feat, leaf]))
-                recs.append((feat, i, "lb", self._node_lb[feat, leaf]))
+                _feat_par_records.append(
+                    (feat, i, "ub", self._node_ub[feat, leaf])
+                )
+                _feat_par_records.append(
+                    (feat, i, "lb", self._node_lb[feat, leaf])
+                )
 
         _feat_par = gp.Parameter(
             self.container,
             name=utils._generate_name("p", self._name_prefix, "feat_par"),
             domain=[set_of_features, set_of_leafs, "*"],
-            records=recs,
+            records=_feat_par_records,
         )
 
         out = gp.Variable(
