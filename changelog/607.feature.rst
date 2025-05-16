@@ -1,1 +1,0 @@
-Allow evaluation of expression on the fly without requiring an explicit assignment statement to a parameter.
