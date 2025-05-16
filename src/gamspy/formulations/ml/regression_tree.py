@@ -175,12 +175,26 @@ class RegressionTree:
             self.container, dims=[sample_size, self._nfeatures, self._nleafs]
         )
         # TODO: Cannot declare set of equal size as the names are then conflicting and the second set will be created as an alias for the first set.
+        # TODO: What happens if any of ss,sf,sl are equal?
         set_of_output_dim = gp.Set(
             self.container,
             name="OutputDim",
             domain=gp.math.dim((self._output_dim,)),
         )
         set_of_output_dim.generateRecords(1)
+
+        recs = []
+        for i, leaf in enumerate(self._leafs):
+            for feat in range(self._nfeatures):
+                recs.append((feat, i, "ub", self._node_ub[feat, leaf]))
+                recs.append((feat, i, "lb", self._node_lb[feat, leaf]))
+
+        _feat_par = gp.Parameter(
+            self.container,
+            name=utils._generate_name("p", self._name_prefix, "feat_par"),
+            domain=[set_of_features, set_of_leafs, "*"],
+            records=recs,
+        )
 
         out = gp.Variable(
             self.container,
@@ -325,35 +339,41 @@ class RegressionTree:
         )
 
         ### This generates the set of possible paths given the input data
-        for i, leaf in enumerate(self._leafs):
-            for feat in range(self._nfeatures):
-                feat_ub = self._node_ub[feat, leaf]
-                feat_lb = self._node_lb[feat, leaf]
-                mask = (_feat_vars.up[:, feat] >= feat_lb) & (
-                    _feat_vars.lo[:, feat] <= feat_ub
-                )
-                ind_vars.fx[set_of_samples, i].where[~mask] = 0
-                if feat_lb > -np.inf:
-                    mask_ext = (_feat_vars.lo[:, feat] < feat_lb) & mask
-                    s[set_of_samples, feat, i].where[mask_ext] = True
-                    feat_thresh[s, "ge"] = feat_lb
-                    _bound_big_m[s[set_of_samples, feat, i], "ge"] = (
-                        M
-                        if M
-                        else (feat_lb - _feat_vars.lo[set_of_samples, feat])
-                    )
-                if feat_ub < np.inf:
-                    mask_ext = (_feat_vars.up[:, feat] > feat_ub) & mask
-                    s[set_of_samples, feat, i].where[mask_ext] = True
-                    feat_thresh[s, "le"] = feat_ub
-                    _bound_big_m[s[set_of_samples, feat, i], "le"] = (
-                        M
-                        if M
-                        else (_feat_vars.up[set_of_samples, feat] - feat_ub)
-                    )
-                s[...] = False
-
-        s[...].where[gp.Sum(cons_type, feat_thresh[..., cons_type])] = True
+        mask = (_feat_vars.up[...] >= _feat_par[..., "lb"]) & (
+            _feat_vars.lo[...] <= _feat_par[..., "ub"]
+        )
+        mask_lo = (
+            (_feat_vars.lo[...] < _feat_par[..., "lb"])
+            & mask
+            & (_feat_par[..., "lb"] > -np.inf)
+        )
+        mask_up = (
+            (_feat_vars.up[...] > _feat_par[..., "ub"])
+            & mask
+            & (_feat_par[..., "ub"] < np.inf)
+        )
+        s[...].where[mask_lo | mask_up] = True
+        feat_thresh[..., "ge"].where[mask_lo] = _feat_par[..., "lb"]
+        feat_thresh[..., "le"].where[mask_up] = _feat_par[..., "ub"]
+        ind_vars.fx[set_of_samples, set_of_leafs].where[
+            gp.Sum(set_of_features, ~mask)
+        ] = 0
+        _bound_big_m[s[uni_domain], "ge"].where[mask_lo] = (
+            M
+            if M
+            else (
+                _feat_par[set_of_features, set_of_leafs, "lb"]
+                - _feat_vars.lo[set_of_samples, set_of_features]
+            )
+        )
+        _bound_big_m[s[uni_domain], "le"].where[mask_up] = (
+            M
+            if M
+            else (
+                _feat_vars.up[set_of_samples, set_of_features]
+                - _feat_par[set_of_features, set_of_leafs, "ub"]
+            )
+        )
 
         ge_cons = gp.Equation(
             self.container,
@@ -363,11 +383,11 @@ class RegressionTree:
             domain=uni_domain,
             description="Link the indicator variable with the feature which is Lower bounded using a big-M constraint",
         )
-        ge_cons[s[uni_domain]].where[feat_thresh[s, "ge"] != 0] = _feat_vars[
-            set_of_samples, set_of_features
-        ].where[s[uni_domain]] >= feat_thresh[s, "ge"] - _bound_big_m[
-            s, "ge"
-        ] * (1 - ind_vars[set_of_samples, set_of_leafs].where[s[uni_domain]])
+        ge_cons[uni_domain].where[
+            (feat_thresh[..., "ge"] != 0) & s[uni_domain]
+        ] = _feat_vars[...] >= feat_thresh[..., "ge"] - _bound_big_m[
+            ..., "ge"
+        ] * (1 - ind_vars)
 
         le_cons = gp.Equation(
             self.container,
@@ -377,11 +397,11 @@ class RegressionTree:
             domain=uni_domain,
             description="Link the indicator variable with the feature which is Upper bounded using a big-M constraint",
         )
-        le_cons[s[uni_domain]].where[feat_thresh[s, "le"] != 0] = _feat_vars[
-            set_of_samples, set_of_features
-        ].where[s[uni_domain]] <= feat_thresh[s, "le"] + _bound_big_m[
-            s, "le"
-        ] * (1 - ind_vars[set_of_samples, set_of_leafs].where[s[uni_domain]])
+        le_cons[uni_domain].where[
+            (feat_thresh[..., "le"] != 0) & s[uni_domain]
+        ] = _feat_vars[...] <= feat_thresh[..., "le"] + _bound_big_m[
+            ..., "le"
+        ] * (1 - ind_vars)
 
         self._indicator_vars = ind_vars.records
 
