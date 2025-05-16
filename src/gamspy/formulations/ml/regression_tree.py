@@ -47,7 +47,7 @@ class RegressionTree:
     >>> x.up[:, :] = 10
     >>> y, eqns = dt_model(x)
     >>> [d.name for d in y.domain]
-    ['DenseDim5_1', 'OutputDim']
+    ['DenseDim5_1', 'DenseDim1_1']
 
     """
 
