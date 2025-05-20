@@ -65,7 +65,7 @@ class RegressionTree(DecisionTreeStruct):
         regressor: DecisionTreeRegressor | None = None,
         name_prefix: str | None = None,
     ):
-        DecisionTreeStruct().__init__(regressor_source=regressor)
+        super().__init__(regressor_source=regressor)  # type: ignore
 
         if not isinstance(container, gp.Container):
             raise ValidationError(f"{container} is not a gp.Container.")
