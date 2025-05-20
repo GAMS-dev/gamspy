@@ -1163,6 +1163,16 @@ class Model:
         modifiables: list[Parameter | ImplicitParameter],
         options: Options | None = None,
     ) -> None:
+        """
+        Instantiates a model instance. After calling freeze, only modifiables can be modified.
+
+        Parameters
+        ----------
+        modifiables : list[Parameter  |  ImplicitParameter]
+            Modifiable symbols.
+        options : Options | None, optional
+            GAMSPy options, by default None
+        """
         self._is_frozen = True
         if options is None:
             options = self.container._options
@@ -1196,9 +1206,9 @@ class Model:
         solver : str, optional
             Solver name
         options : Options, optional
-            GAMS options
+            GAMSPy options.
         solver_options : dict, optional
-            Solver options
+            Solver options.
         model_instance_options : ModelInstanceOptions, optional
             Options to solve a frozen model. This argument will be deprecated in GAMSPy 1.10.0. Please use freeze_options instead.
         freeze_options : FreezeOptions, optional
@@ -1270,6 +1280,7 @@ class Model:
         # Only for local until GAMS Engine and NEOS Server backends adopt the new GP_SolveLine option.
         if solver == "local":
             frame = inspect.currentframe().f_back
+            assert isinstance(options, gp.Options)
             options._frame = frame
 
         if self._is_frozen:
@@ -1422,15 +1433,25 @@ class Model:
         self,
         path: str,
         options: Options | None = None,
+        *,
         dump_gams_state: bool = False,
     ) -> None:
         """
-        Generates GAMS model under path/<model_name>.gms
+        Generates GAMS model under path/<model_name>.gms.
 
         Parameters
         ----------
         path : str
             Path to the directory which will contain the GAMS model.
+        options : Options | None, optional
+            GAMSPy options, by default None
+        dump_gams_state : bool, optional
+            Whether to dump the state as a GAMS save file, by default False
+
+        Raises
+        ------
+        ValidationError
+            In case the given options is not of type gp.Options.
         """
         if options is not None and not isinstance(options, gp.Options):
             raise ValidationError(

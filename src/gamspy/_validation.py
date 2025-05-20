@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import io
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 
@@ -587,10 +587,12 @@ def validate_equations(model: Model) -> None:
             )
 
 
-def validate_global_options(options: Any) -> Options:
+def validate_global_options(options: Options | None) -> Options:
     if not get_option("VALIDATION"):
         if options is None:
             return Options()
+        elif isinstance(options, dict):
+            return Options.fromGams(options)
 
         return options
 

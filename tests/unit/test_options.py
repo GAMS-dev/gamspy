@@ -205,7 +205,7 @@ def test_gamspy_to_gams_options(data):
     gams_options = options._get_gams_compatible_options(output=None)
     assert gams_options["suffixalgebravars"] == "off"
     assert gams_options["suffixdlvars"] == "off"
-    assert gams_options["solveopt"] == 0
+    assert gams_options["solveopt"] == "replace"
 
 
 @pytest.mark.unit
@@ -970,3 +970,18 @@ def test_bypass_solver():
     assert end - start < 5
 
     m.close()
+
+
+def test_options_from_gams():
+    options = Options.fromGams(
+        {"reslim": 5, "lp": "cplex", "solvelink": 5, "solveopt": "replace"}
+    )
+    assert options.time_limit == 5
+    assert options.lp == "cplex"
+    assert options.solve_link_type == "memory"
+
+    with pytest.raises(exceptions.ValidationError):
+        _ = Options.fromGams({"solvelink": 4})
+
+    with pytest.raises(exceptions.ValidationError):
+        _ = Options.fromGams({"bla": 4})
