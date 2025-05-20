@@ -215,7 +215,7 @@ class Container(gt.Container):
     debugging_level : str, optional
         Decides on keeping the temporary files generate by GAMS, by default
         "keep_on_error"
-    options : Options, dict, optional
+    options : Options, optional
         Global options for the overall execution
 
     Examples
