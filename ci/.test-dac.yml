@@ -9,7 +9,8 @@ dac-test-3.13:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - uv python install 3.13 --install-dir ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}
+    - uv venv "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
@@ -31,7 +32,8 @@ dac-test-3.12:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}" --python 3.12
+    - uv python install 3.12 --install-dir ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}
+    - uv venv "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
@@ -55,7 +57,8 @@ dac-test-3.11:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}" --python 3.11
+    - uv python install 3.11 --install-dir ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}
+    - uv venv "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
@@ -79,7 +82,8 @@ dac-test-3.10:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}" --python 3.10
+    - uv python install 3.10 --install-dir ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}
+    - uv venv "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
@@ -104,7 +108,8 @@ dac-test-3.9:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - uv python install 3.9 --install-dir ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}
+    - uv venv "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
@@ -127,7 +132,8 @@ dac-engine-3.13:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - uv python install 3.13 --install-dir ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}
+    - uv venv "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - python -B -m pytest -x -v -s -m 'engine' tests
@@ -145,7 +151,8 @@ dac-engine-3.9:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-engine-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - uv python install 3.9 --install-dir ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}
+    - uv venv "${TMPDIR}gamspy-env-engine-3.9${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-engine-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - python -B -m pytest -x -v -s -m 'engine' tests
@@ -164,7 +171,8 @@ dac-neos-3.13:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - uv python install 3.13 --install-dir ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}
+    - uv venv "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - python -B -m pytest -x -v -s -m 'neos' tests
@@ -182,7 +190,8 @@ dac-neos-3.9:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-neos-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - uv python install 3.9 --install-dir ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}
+    - uv venv "${TMPDIR}gamspy-env-neos-3.9${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}/python${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-neos-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - python -B -m pytest -x -v -s -m 'neos' tests
