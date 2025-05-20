@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 import uuid
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
+from gamspy.formulations.ml.dtStruct import DecisionTreeStruct
+
+if TYPE_CHECKING:
+    from sklearn.tree import DecisionTreeRegressor
 
 
-class RegressionTree:
+class RegressionTree(DecisionTreeStruct):
     """
     Formulation generator for Regression Trees in GAMS.
 
@@ -17,8 +22,13 @@ class RegressionTree:
     ----------
     container : Container
         Container that will contain the new variable and equations.
-    regressor: dict | DecisionTreeRegressor
-        Trained decision tree.
+    regressor: DecisionTreeRegressor | None,
+        - A fitted sklearn.tree.DecisionTreeRegressor object which is processed by the
+        `DecisionTreeStruct` superclass to populate the underlying tree attributes.
+        - If None, the tree structure is NOT automatically initialized.
+        In this case, the user is responsible for manually populating the tree attributes
+        inherited from `DecisionTreeStruct` before the formulation can be used.
+        See `DecisionTreeStruct.__init__` docstring for details on required attributes.
     name_prefix : str | None
         Prefix for generated GAMSPy symbols, by default None which means
         random prefix. Using the same name_prefix in different formulations causes name
@@ -33,16 +43,14 @@ class RegressionTree:
     >>> m = gp.Container()
     >>> in_data = np.random.randint(0, 10, size=(5, 2))
     >>> out_data = np.random.randint(1, 3, size=(5, 1))
-    >>> tree_dict = {
-    ...     "capacity": 3,
-    ...     "children_left": np.array([1, -1, -1]),
-    ...     "children_right": np.array([2, -1, -1]),
-    ...     "feature": np.array([0, -2, -2]),
-    ...     "n_features": 2,
-    ...     "threshold": np.array([4.0, -2.0, -2.0]),
-    ...     "value": np.array([[1.8], [1.0], [2.0]]),
-    ... }
-    >>> dt_model = gp.formulations.RegressionTree(m, tree_dict)
+    >>> dt_model = gp.formulations.RegressionTree(m)
+    >>> dt_model.capacity = 3
+    >>> dt_model.children_left = np.array([1, -1, -1])
+    >>> dt_model.children_right = np.array([2, -1, -1])
+    >>> dt_model.feature = np.array([0, -2, -2])
+    >>> dt_model.n_features = 2
+    >>> dt_model.threshold = np.array([4.0, -2.0, -2.0])
+    >>> dt_model.value = np.array([[1.8], [1.0], [2.0]])
     >>> x = gp.Variable(m, "x", domain=dim((5, 2)), type="positive")
     >>> x.up[:, :] = 10
     >>> y, eqns = dt_model(x)
@@ -54,44 +62,13 @@ class RegressionTree:
     def __init__(
         self,
         container: gp.Container,
-        regressor: dict,  # | DecisionTreeRegressor,
+        regressor: DecisionTreeRegressor | None = None,
         name_prefix: str | None = None,
     ):
+        DecisionTreeStruct().__init__(regressor_source=regressor)
+
         if not isinstance(container, gp.Container):
             raise ValidationError(f"{container} is not a gp.Container.")
-
-        COMPLETE_TREE_DICT = {
-            "children_left",
-            "children_right",
-            "feature",
-            "threshold",
-            "value",
-            "capacity",
-            "n_features",
-        }
-        if isinstance(regressor, dict):
-            if len(check_keys := COMPLETE_TREE_DICT - regressor.keys()) != 0:
-                raise ValidationError(
-                    f"Dictionary containing the information from the Regression Tree is either incomplete or the keys are wrong. Expected Keys: {check_keys}"
-                )
-
-            self._tree_dict = regressor
-
-        else:
-            try:
-                self._tree_dict = {
-                    "children_left": regressor.tree_.children_left,
-                    "children_right": regressor.tree_.children_right,
-                    "feature": regressor.tree_.feature,
-                    "threshold": regressor.tree_.threshold,
-                    "value": regressor.tree_.value[:, :, 0],
-                    "capacity": regressor.tree_.capacity,
-                    "n_features": regressor.tree_.n_features,
-                }
-            except AttributeError as e:
-                raise ValidationError(
-                    f"Tried accessing {regressor} as a `sklearn.tree.DecisionTreeRegressor` object but failed. {e}"
-                ) from e
 
         self.container = container
         self._indicator_vars = None
@@ -100,46 +77,30 @@ class RegressionTree:
             name_prefix = str(uuid.uuid4()).split("-")[0]
 
         self._name_prefix = name_prefix
-        # TODO: Should we have sanity check for each prop. if nfeat == 0?
-        self._nfeatures = self._tree_dict["n_features"]
-        leafs = self._tree_dict["children_left"] < 0
-        self._leafs = leafs.nonzero()[0]
-        self._nleafs = len(self._leafs)
-        self._output_dim = self._tree_dict["value"].shape[-1]
-        self._node_lb, self._node_ub = self._node_bounds(tree=self._tree_dict)
 
-    @staticmethod
-    def _node_bounds(tree):
+    def _node_bounds(self):
         """Traverse the tree using DFS and extract bound information for each node."""
-
-        capacity = tree["capacity"]
-        n_features = tree["n_features"]
-        children_left = tree["children_left"]
-        children_right = tree["children_right"]
-        feature = tree["feature"]
-        threshold = tree["threshold"]
-
-        node_lb = np.empty((n_features, capacity))
+        node_lb = np.empty((self.n_features, self.capacity))
         node_lb.fill(-np.inf)
-        node_ub = np.empty((n_features, capacity))
+        node_ub = np.empty((self.n_features, self.capacity))
         node_ub.fill(np.inf)
 
         stack = [0]
 
         while stack:
             node = stack.pop()
-            left = children_left[node]
+            left = self.children_left[node]
             if left < 0:
                 continue
-            right = children_right[node]
+            right = self.children_right[node]
 
             node_lb[:, left] = node_lb[:, node]
             node_ub[:, left] = node_ub[:, node]
             node_lb[:, right] = node_lb[:, node]
             node_ub[:, right] = node_ub[:, node]
 
-            node_ub[feature[node], left] = threshold[node]
-            node_lb[feature[node], right] = threshold[node]
+            node_ub[self.feature[node], left] = self.threshold[node]
+            node_lb[self.feature[node], right] = self.threshold[node]
 
             stack.extend((right, left))
 
@@ -159,32 +120,35 @@ class RegressionTree:
             value for the big_M. By default, infer the value using the available bounds for variables
         """
         # TODO: Change the >input< arg name to something else?
+        super().check_input()
+
+        leafs = self.children_left < 0
+        leafs = leafs.nonzero()[0]
+        nleafs = len(leafs)
+        output_dim = self.value.shape[-1]
+        node_lb, node_ub = self._node_bounds()
+
         if len(input.domain) == 0:
             raise ValidationError(
                 "expected an input with at least 1 dimension"
             )
 
-        if len(input.domain[-1]) != self._nfeatures:
+        if len(input.domain[-1]) != self.n_features:
             raise ValidationError("number of features do not match")
 
         if M and not isinstance(M, (float, int)):
             raise ValidationError("M can either be of type float or int")
-
         set_of_samples = input.domain[0]
         set_of_features = input.domain[-1]
         set_of_leafs, set_of_output_dim = gp.math._generate_dims(
-            self.container, dims=[self._nleafs, self._output_dim], alias=False
+            self.container, dims=[nleafs, output_dim], alias=False
         )
 
         _feat_par_records = []
-        for i, leaf in enumerate(self._leafs):
-            for feat in range(self._nfeatures):
-                _feat_par_records.append(
-                    (feat, i, "ub", self._node_ub[feat, leaf])
-                )
-                _feat_par_records.append(
-                    (feat, i, "lb", self._node_lb[feat, leaf])
-                )
+        for i, leaf in enumerate(leafs):
+            for feat in range(self.n_features):
+                _feat_par_records.append((feat, i, "ub", node_ub[feat, leaf]))
+                _feat_par_records.append((feat, i, "lb", node_lb[feat, leaf]))
 
         _feat_par = gp.Parameter(
             self.container,
@@ -236,8 +200,8 @@ class RegressionTree:
             gp.Sum(set_of_leafs, ind_vars[set_of_samples, set_of_leafs]) == 1
         )
 
-        idx, jdx = np.indices((self._nleafs, self._output_dim), dtype=int)
-        mapped_values = self._tree_dict["value"][self._leafs[:, None], jdx]
+        idx, jdx = np.indices((nleafs, output_dim), dtype=int)
+        mapped_values = self.value[leafs[:, None], jdx]
         out_link = gp.Parameter(
             self.container,
             name=utils._generate_name(
@@ -273,13 +237,13 @@ class RegressionTree:
             self.container,
             name=utils._generate_name("p", self._name_prefix, "max_out"),
             domain=[set_of_output_dim],
-            records=np.max(self._tree_dict["value"][self._leafs, :], axis=0),
+            records=np.max(self.value[leafs, :], axis=0),
         )
         min_out = gp.Parameter(
             self.container,
             name=utils._generate_name("p", self._name_prefix, "min_out"),
             domain=[set_of_output_dim],
-            records=np.min(self._tree_dict["value"][self._leafs, :], axis=0),
+            records=np.min(self.value[leafs, :], axis=0),
         )
 
         ub_output = gp.Equation(

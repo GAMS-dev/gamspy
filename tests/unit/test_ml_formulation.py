@@ -49,16 +49,38 @@ def test_RegressionTree_bad_init(data):
     # empty regressor
     pytest.raises(ValidationError, RegressionTree, m, dict())
     # incomplete regressor
-    t = tree_dict.copy()
-    pytest.raises(ValidationError, RegressionTree, m, t.pop("n_features"))
+    tree_dict.pop("n_features")
+    pytest.raises(ValidationError, RegressionTree, m, tree_dict)
 
     # wrong regressor type, it must be either a dict or a sklearn.tree.DecisionTreeRegressor object
     pytest.raises(ValidationError, RegressionTree, m, [])
 
 
+def test_RegressionTree_incomplete_data(data):
+    m, tree_dict, _, _, par_input, _ = data
+    rt = RegressionTree(m)
+
+    rt.children_left = tree_dict["children_left"]
+    rt.children_right = tree_dict["children_right"]
+    rt.capacity = tree_dict["capacity"]
+    rt.feature = tree_dict["feature"]
+    rt.value = tree_dict["value"]
+    rt.threshold = tree_dict["threshold"]
+
+    # n_features is missing: rt.n_features = tree_dict["n_features"]
+    pytest.raises(ValidationError, rt, par_input)
+
+    rt.n_features = -2
+    # only positive integer allowed
+    pytest.raises(ValidationError, rt, par_input)
+
+
 def test_RegressionTree_bad_call(data):
     m, tree_dict, _, _, _, x = data
-    rt = RegressionTree(m, tree_dict)
+    rt = RegressionTree(m)
+
+    for key, value in tree_dict.items():
+        setattr(rt, key, value)
 
     # missing required input
     pytest.raises(TypeError, rt)
@@ -81,7 +103,10 @@ def test_RegressionTree_bad_call(data):
 
 def test_RegressionTree_valid_variable(data):
     m, tree_dict, _, output, par_input, x = data
-    rt = RegressionTree(m, tree_dict)
+    rt = RegressionTree(m)
+
+    for key, value in tree_dict.items():
+        setattr(rt, key, value)
 
     x.fx[:, 0] = par_input[:, 0]
     x.fx[:, 1] = par_input[:, 1]
@@ -103,7 +128,10 @@ def test_RegressionTree_valid_variable(data):
 
 def test_RegressionTree_valid_parameter(data):
     m, tree_dict, _, output, par_input, _ = data
-    rt = RegressionTree(m, tree_dict)
+    rt = RegressionTree(m)
+
+    for key, value in tree_dict.items():
+        setattr(rt, key, value)
 
     # check the prediction of the decions tree on the trained data using parameter
     out, eqns = rt(par_input)
@@ -122,7 +150,10 @@ def test_RegressionTree_valid_parameter(data):
 
 def test_RegressionTree_var_up(data):
     m, tree_dict, in_data, _, par_input, x = data
-    rt = RegressionTree(m, tree_dict)
+    rt = RegressionTree(m)
+
+    for key, value in tree_dict.items():
+        setattr(rt, key, value)
 
     x.fx[:, 0] = par_input[:, 0]
     x.up[:, 1] = int(max(in_data[:, 1]))
@@ -163,8 +194,12 @@ def test_RegressionTree_var_up(data):
 
 def test_RegressionTree_put_M(data):
     m, tree_dict, _, _, _, x = data
-    rt1 = RegressionTree(m, tree_dict, name_prefix="test_big_m")
-    rt2 = RegressionTree(m, tree_dict, name_prefix="test_bound_big_m")
+    rt1 = RegressionTree(m, name_prefix="test_big_m")
+    rt2 = RegressionTree(m, name_prefix="test_bound_big_m")
+
+    for key, value in tree_dict.items():
+        setattr(rt1, key, value)
+        setattr(rt2, key, value)
 
     x.up[:, 0] = 7
     x.up[:, 1] = 7
@@ -232,7 +267,10 @@ def test_RegressionTree_put_M(data):
 
 def test_RegressionTree_add_equation(data):
     m, tree_dict, _, _, par_input, x = data
-    rt = RegressionTree(m, tree_dict)
+    rt = RegressionTree(m)
+
+    for key, value in tree_dict.items():
+        setattr(rt, key, value)
 
     x.fx[:, 0] = par_input[:, 0]
     x.up[:, 1] = 7
@@ -286,7 +324,10 @@ def test_RegressionTree_multi_output(data):
         [[15.6, 14.6], [11.25, 15.5], [10.0, 14.0], [15.0, 20.0], [33.0, 11.0]]
     )
     output = np.array([[10, 14], [10, 14], [10, 14], [15, 20], [33, 11]])
-    rt = RegressionTree(m, tree_dict)
+    rt = RegressionTree(m)
+
+    for key, value in tree_dict.items():
+        setattr(rt, key, value)
 
     out, eqns = rt(par_input)
     s = out.domain
@@ -333,7 +374,10 @@ def test_RegressionTree_multi_output_equation(data):
             [33.0, 11.0],
         ]
     )
-    rt = RegressionTree(m, tree_dict)
+    rt = RegressionTree(m)
+
+    for key, value in tree_dict.items():
+        setattr(rt, key, value)
 
     x.fx[:, 0] = par_input[:, 0]
     x.up[:, 1] = 7
