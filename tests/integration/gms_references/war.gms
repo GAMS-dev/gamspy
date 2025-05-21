@@ -15,5 +15,5 @@ $gdxLoadAll /home/muhammet/Documents/gams_workspace/gamspy/tmp/to_gams/war_data.
 $offMulti
 maxw(w) .. sum(t $ td(w,t),x(w,t)) =l= wa(w);
 minw(t) $ tm(t) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);
-war_objective .. sum(t,(mv(t) * (1 - prod(w $ td(w,t),( rPower((1 - td(w,t)),x(w,t)) ))))) =e= war_objective_variable;
+war_objective .. sum(t,(mv(t) * (1 - prod(w $ td(w,t),rPower((1 - td(w,t)),x(w,t)))))) =e= war_objective_variable;
 solve war using NLP MAX war_objective_variable;

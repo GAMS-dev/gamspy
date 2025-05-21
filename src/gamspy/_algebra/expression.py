@@ -8,6 +8,7 @@ import gamspy._algebra.domain as domain
 import gamspy._algebra.number as number
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
+import gamspy._symbols as gp_syms
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._config import get_option
@@ -19,23 +20,14 @@ from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy import Alias, Set
     from gamspy._symbols.implicits import ImplicitEquation
     from gamspy._types import OperableType
 
 GMS_MAX_LINE_LENGTH = 80000
 LINE_LENGTH_OFFSET = 79000
-
-LATEX_DATA_MAP = {
-    "=g=": "\\geq",
-    "=l=": "\\leq",
-    "=e=": "=",
-    "*": "\\cdot",
-    "and": "\\wedge",
-    "or": "\\vee",
-    "xor": "\\oplus",
-    "$": "|",
-}
 
 
 @dataclass
@@ -77,7 +69,7 @@ class Expression(operable.Operable):
     def __init__(
         self,
         left: OperableType | ImplicitEquation | None,
-        data: str | MathOp | ExtrinsicFunction,
+        data: str,
         right: OperableType | str | None,
     ):
         self.left = (
@@ -184,6 +176,95 @@ class Expression(operable.Operable):
         right = self.right[right_domain] if right_domain else self.right
 
         return Expression(left, self.data, right)
+
+    @property
+    def records(self) -> pd.DataFrame | None:
+        """
+        Evaluates the expression and returns the resulting records.
+
+        Returns
+        -------
+        pd.DataFrame | None
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, records=5)
+        >>> b = gp.Parameter(m, records=6)
+        >>> (a + b).records
+           value
+        0   11.0
+
+        """
+        assert self.container is not None
+        temp_name = "a" + utils._get_unique_name()
+        temp_param = gp_syms.Parameter._constructor_bypass(
+            self.container, temp_name, self.domain
+        )
+        temp_param[...] = self
+        del self.container.data[temp_name]
+        return temp_param.records
+
+    def toValue(self) -> float | None:
+        """
+        Convenience method to return expression records as a Python float. Only possible if there is a single record as a result of the expression evaluation.
+
+        Returns
+        -------
+        float | None
+
+        Raises
+        ------
+        TypeError
+            In case the dimension of the expression is not zero.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, records=5)
+        >>> b = gp.Parameter(m, records=6)
+        >>> (a + b).toValue()
+        np.float64(11.0)
+
+        """
+        if self.dimension != 0:
+            raise TypeError(
+                f"Cannot extract value data for non-scalar expressions (expression dimension is {self.dimension})"
+            )
+
+        records = self.records
+        if records is not None:
+            return records["value"][0]
+
+        return records
+
+    def toList(self) -> list | None:
+        """
+        Convenience method to return the records of the expression as a list.
+
+        Returns
+        -------
+        list | None
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, records=range(3))
+        >>> a = gp.Parameter(m, domain=i, records=np.array([1,2,3]))
+        >>> b = gp.Parameter(m, domain=i, records=np.array([4,5,6]))
+        >>> (a + b).toList()
+        [['0', 5.0], ['1', 7.0], ['2', 9.0]]
+
+        """
+        records = self.records
+        if records is not None:
+            return records.values.tolist()
+
+        return None
 
     def _get_operand_representations(self) -> tuple[str, str]:
         left_str, right_str = "", ""
@@ -321,7 +402,7 @@ class Expression(operable.Operable):
         if self.data == "/":
             return f"\\frac{{{left_str}}}{{{right_str}}}"
 
-        return f"{left_str} {data_str} {right_str}"
+        return f"({left_str} {data_str} {right_str})"
 
     def gamsRepr(self) -> str:
         """
@@ -454,10 +535,6 @@ class Expression(operable.Operable):
                 elif isinstance(node, ExtrinsicFunction):
                     stack += list(node.args)
                     node = None
-                elif isinstance(node, Expression) and isinstance(
-                    node.data, MathOp
-                ):
-                    node = node.data
                 else:
                     node = getattr(node, "right", None)
             else:

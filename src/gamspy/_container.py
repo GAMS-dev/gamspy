@@ -581,8 +581,14 @@ class Container(gt.Container):
     ) -> str:
         LOADABLE = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         MIRO_INPUT_TYPES = (gp.Set, gp.Parameter)
+        assume_suffix = int(get_option("ASSUME_VARIABLE_SUFFIX"))
 
         strings = ["$onMultiR", "$onUNDF"]
+        if assume_suffix == 1:
+            strings.append("$onDotL")
+        elif assume_suffix == 2:
+            strings.append("$onDotScale")
+
         for statement in self._unsaved_statements:
             if type(statement) is str:
                 strings.append(statement)
@@ -618,6 +624,10 @@ class Container(gt.Container):
 
                 strings.append("$gdxIn")
 
+        if assume_suffix == 1:
+            strings.append("$offDotL")
+        elif assume_suffix == 2:
+            strings.append("$offDotScale")
         strings += ["$offUNDF", "$offMulti"]
 
         if not IS_MIRO_INIT and MIRO_GDX_OUT:
@@ -1347,7 +1357,7 @@ class Container(gt.Container):
         if not os.path.exists(lib_path):
             raise FileNotFoundError(f"`{lib_path}` is not a valid path.")
 
-        external_lib = ExtrinsicLibrary(lib_path, functions)
+        external_lib = ExtrinsicLibrary(self, lib_path, functions)
         self._add_statement(external_lib)
 
         return external_lib

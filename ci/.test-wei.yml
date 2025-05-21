@@ -13,7 +13,7 @@ wei-test-3.13:
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - $env:COVERAGE_CORE = 'sysmon'; coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - $env:COVERAGE_CORE = 'sysmon'; coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
 
@@ -31,7 +31,7 @@ wei-test-3.12:
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -51,7 +51,7 @@ wei-test-3.11:
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -71,7 +71,7 @@ wei-test-3.10:
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -91,7 +91,7 @@ wei-test-3.9:
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
     - python -m pytest -x -v -s -m 'doc'
 
 #### ENGINE #####

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import platform
 import time
 
 import pytest
@@ -83,6 +84,10 @@ def test_available_solvers(data):
         "SOPLEX",
         "XPRESS",
     ]
+
+    if platform.system() == "Linux" and platform.machine() == "aarch64":
+        expected.remove("BARON")
+        expected.remove("KNITRO")
 
     assert available_solvers == expected
 

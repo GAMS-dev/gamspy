@@ -6,10 +6,10 @@ import math
 import numpy as np
 import pytest
 
-import gamspy as gp
 from gamspy import Alias, Container, Parameter, Set, Sum, Variable
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim, permute, trace, vector_norm
+from gamspy.math.misc import MathOp
 
 pytestmark = pytest.mark.unit
 
@@ -58,6 +58,7 @@ def test_simple_matrix_matrix(data):
 
     c = Parameter(m, name="c", domain=[i, k])
     c[i, k] = a @ b
+    assert c.records.equals((a @ b).records)
     c_recs = c.toDense()
     assert np.allclose(c_recs, a_recs @ b_recs)
 
@@ -651,7 +652,7 @@ def test_vector_norm(data):
 
     # this is a special case
     norm_squared = n_expr**2
-    assert isinstance(norm_squared, gp._algebra.operation.Operation)
+    assert isinstance(norm_squared, MathOp)
 
     c[...] = vector_norm(b, ord=3)
     c_val = c.records.iloc[0, 0]

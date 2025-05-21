@@ -9,13 +9,14 @@ deg-test-3.13:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - uv python install 3.13 --install-dir ${TMPDIR}python3.13${CI_COMMIT_SHORT_SHA}
+    - uv venv -v "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.13${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
+    - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license or doc' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
   after_script:
@@ -35,13 +36,14 @@ deg-test-3.12:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}" --python 3.12
+    - uv python install 3.12 --install-dir ${TMPDIR}python3.12${CI_COMMIT_SHORT_SHA}
+    - uv venv -v "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.12${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -B -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -B -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
   after_script:
     - rm -rf "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}"
   rules:
@@ -59,13 +61,14 @@ deg-test-3.11:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}" --python 3.11
+    - uv python install 3.11 --install-dir ${TMPDIR}python3.11${CI_COMMIT_SHORT_SHA}
+    - uv venv -v "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.11${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -B -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -B -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
   after_script:
     - rm -rf "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}"
   rules:
@@ -83,13 +86,14 @@ deg-test-3.10:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}" --python 3.10
+    - uv python install 3.10 --install-dir ${TMPDIR}python3.10${CI_COMMIT_SHORT_SHA}
+    - uv venv -v "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.10${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -B -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -B -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
   after_script:
     - rm -rf "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}"
   rules:
@@ -107,13 +111,14 @@ deg-test-3.9:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - uv python install 3.9 --install-dir ${TMPDIR}python3.9${CI_COMMIT_SHORT_SHA}
+    - uv venv -v "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.9${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -B -m pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -B -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
     - python -B -m pytest -x -v -s -m 'doc'
   after_script:
     - rm -rf "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}"
@@ -134,7 +139,8 @@ deg-engine-3.13:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - uv python install 3.13 --install-dir ${TMPDIR}python3.13engine${CI_COMMIT_SHORT_SHA}
+    - uv venv -v "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.13engine${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - python -B -m pytest -x -v -s -m 'engine' tests
@@ -152,7 +158,8 @@ deg-engine-3.9:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-engine-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - uv python install 3.9 --install-dir ${TMPDIR}python3.9engine${CI_COMMIT_SHORT_SHA}
+    - uv venv -v "${TMPDIR}gamspy-env-engine-3.9${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.9engine${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-engine-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - python -B -m pytest -x -v -s -m 'engine' tests
@@ -171,7 +178,8 @@ deg-neos-3.13:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - uv python install 3.13 --install-dir ${TMPDIR}python3.13neos${CI_COMMIT_SHORT_SHA}
+    - uv venv -v "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.13neos${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - python -B -m pytest -x -v -s -m 'neos' tests
@@ -189,7 +197,8 @@ deg-neos-3.9:
         curl -LsSf https://astral.sh/uv/install.sh | sh
       fi
     - source $HOME/.local/bin/env
-    - uv venv "${TMPDIR}gamspy-env-neos-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - uv python install 3.9 --install-dir ${TMPDIR}python3.9neos${CI_COMMIT_SHORT_SHA}
+    - uv venv -v "${TMPDIR}gamspy-env-neos-3.9${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.9neos${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-neos-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - python -B -m pytest -x -v -s -m 'neos' tests

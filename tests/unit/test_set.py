@@ -407,7 +407,7 @@ def test_set_assignment():
 
     assert (
         mpos.getAssignment()
-        == "mpos(m,i) = ((yes $ (k(m,i) + sum(g,( abs(f(m,g,i)) )))) - hpos(m,i));"
+        == "mpos(m,i) = ((yes $ (k(m,i) + sum(g,abs(f(m,g,i))))) - hpos(m,i));"
     )
 
     with pytest.raises(ValidationError):
@@ -442,15 +442,15 @@ def test_sameas(data):
     m, *_ = data
     i = Set(m, "i")
     j = Alias(m, "j", i)
-    assert i.sameAs(j).gamsRepr() == "( sameAs(i,j) )"
-    assert j.sameAs(i).gamsRepr() == "( sameAs(j,i) )"
+    assert i.sameAs(j).gamsRepr() == "sameAs(i,j)"
+    assert j.sameAs(i).gamsRepr() == "sameAs(j,i)"
 
     m = Container()
     i = Set(m, "i", records=["1", "2", "3"])
     p = Parameter(m, "p", [i])
     p[i] = i.sameAs("2")
 
-    assert p.getAssignment() == 'p(i) = ( sameAs(i,"2") );'
+    assert p.getAssignment() == 'p(i) = sameAs(i,"2");'
 
 
 def test_assignment_dimensionality(data):

@@ -185,7 +185,7 @@ Only by declaring ``j`` as an ``Alias`` of ``i`` you will get the desired outcom
 
 
 Should I use a ``Parameter`` or a Python variable to represent scalar parameters?
------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
 
 .. code-block::
 

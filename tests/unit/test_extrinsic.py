@@ -17,6 +17,8 @@ def get_default_platform():
 
     if operating_system == "darwin":
         return f"mac_{architecture}"
+    elif operating_system == "linux" and architecture == "aarch64":
+        return f"linux_{architecture}"
 
     return operating_system
 
@@ -30,6 +32,11 @@ def data():
 
 def test_extrinsic_functions(data):
     m = data
+    user_platform = get_default_platform()
+
+    if user_platform == "linux_aarch64":
+        return
+
     # Invalid path
     with pytest.raises(FileNotFoundError):
         _ = m.importExtrinsicLibrary(
@@ -47,7 +54,7 @@ def test_extrinsic_functions(data):
         "windows": "tricclib64.dll",
     }
     directory = os.path.dirname(os.path.abspath(__file__))
-    shared_object = os.path.join(directory, names[get_default_platform()])
+    shared_object = os.path.join(directory, names[user_platform])
 
     # This is a library which contains myNum=1.
     trilib = m.importExtrinsicLibrary(
@@ -73,6 +80,8 @@ def test_extrinsic_functions(data):
     d2[...] = trilib.myCos(90)
     assert d2.getAssignment() == "d2 = myCos(90);"
     assert int(d2.toValue()) == 0
+    assert trilib.myCos(0).records.values.item() == 1
+    assert trilib.myCos(0).toValue() == 1
 
     # External functions do not accept keyword arguments
     with pytest.raises(ValidationError):

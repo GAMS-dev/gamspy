@@ -266,7 +266,7 @@ evaluates to TRUE. Thus only identical elements are counted.
     created from the tuple that features the ``where`` method: ``Domain(i, j).where(...)``. This construct
     is required for multi-dimensional indexes in index operators like ``Sum``, ``Product``, etc.
 
-The operators :ref:`ord and card <card_ord>`_ are frequently used to single out the first or last element of 
+The operators :ref:`card_ord` are frequently used to single out the first or last element of 
 an ordered set. For example, we may want to fix a variable for the first and last elements of a set: ::
 
     from gamspy import Container, Set, Variable, Ord, Card

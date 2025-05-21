@@ -1,7 +1,7 @@
 Expression
 ==========
 
-.. autoclass:: gamspy._algebra.expression.Expression
+.. autoclass:: gamspy.Expression
    :members:
    :undoc-members:
    :show-inheritance:

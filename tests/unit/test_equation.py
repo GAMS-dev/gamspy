@@ -499,7 +499,7 @@ def test_equation_assignment(data):
     m = Container()
     N = Parameter(m, "N", records=20)
     L = Parameter(m, "L", records=int(N.toValue()) / 2)
-    v = Set(m, "v", records=range(0, 1001))
+    v = Set(m, "v", records=range(1001))
     i = Set(m, "i", domain=[v])
     x = Variable(m, "x", "free", [v])
     y = Variable(m, "y", "free", [v])
@@ -507,8 +507,7 @@ def test_equation_assignment(data):
     e[...] = Sum(i.where[(i.val == L - 1)], sqr(x[i]) + sqr(y[i])) == 1
     assert (
         e.getDefinition()
-        == "e .. sum(i $ (i.val eq (L - 1)),(( sqr(x(i)) ) + ("
-        " sqr(y(i)) ))) =e= 1;"
+        == "e .. sum(i $ (i.val eq (L - 1)),(sqr(x(i)) + sqr(y(i)))) =e= 1;"
     )
 
 

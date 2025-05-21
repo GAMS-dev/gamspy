@@ -76,7 +76,7 @@ input variables, and then use this surrogate model in an optimization problem to
 maximize hydrogen production while meeting constraints on nitrogen concentration.
 
 Data Preparation
-===============
+================
 
 The first step in creating a surrogate model is preparing our data. This involves:
 
@@ -138,7 +138,7 @@ Here's how we do this:
 
 
 Neural Network Training
-======================
+=======================
 
 For this example, we'll use PyTorch to train our neural network. PyTorch is a 
 popular deep learning framework that provides a flexible and intuitive way to 
@@ -251,7 +251,7 @@ Here's how we implement and train the network:
        scheduler.step()
 
 Implementing the Neural Network in GAMSPy
-========================================
+=========================================
 
 After training our neural network in PyTorch, we need to transfer it to GAMSPy 
 for use in optimization. GAMSPy provides special tools to represent neural 
@@ -355,7 +355,7 @@ Here's how we implement the trained network in GAMSPy:
    unnormalize_output[...] = z7 == (z6 * y_std_par) + y_mean_par
 
 Optimization Problem
-===================
+====================
 
 Now that we have our neural network implemented in GAMSPy, we can use it to solve
 an optimization problem. Our goal is to find the operating conditions that maximize

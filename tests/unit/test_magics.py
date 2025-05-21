@@ -75,25 +75,25 @@ def test_magics(data):
     # POW
     # Parameter ** Variable, Variable ** Parameter
     op1 = b[i] ** x[i]
-    assert op1.gamsRepr() == "( rPower(b(i),x(i)) )"
+    assert op1.gamsRepr() == "rPower(b(i),x(i))"
     op2 = x[i] ** b[i]
-    assert op2.gamsRepr() == "( rPower(x(i),b(i)) )"
+    assert op2.gamsRepr() == "rPower(x(i),b(i))"
 
     # Set/Parameter/Variable ** 2
     op1 = i**2
-    assert op1.gamsRepr() == "( power(i,2) )"
+    assert op1.gamsRepr() == "power(i,2)"
     op2 = b[i] ** 2
-    assert op2.gamsRepr() == "( power(b(i),2) )"
+    assert op2.gamsRepr() == "power(b(i),2)"
     op3 = x[i] ** 2
-    assert op3.gamsRepr() == "( power(x(i),2) )"
+    assert op3.gamsRepr() == "power(x(i),2)"
 
     # Set/Parameter/Variable ** 0.5
     op1 = i**0.5
-    assert op1.gamsRepr() == "( sqrt(i) )"
+    assert op1.gamsRepr() == "sqrt(i)"
     op2 = b[i] ** 0.5
-    assert op2.gamsRepr() == "( sqrt(b(i)) )"
+    assert op2.gamsRepr() == "sqrt(b(i))"
     op3 = x[i] ** 0.5
-    assert op3.gamsRepr() == "( sqrt(x(i)) )"
+    assert op3.gamsRepr() == "sqrt(x(i))"
 
     m = Container()
     j = Parameter(m, "j", records=5)

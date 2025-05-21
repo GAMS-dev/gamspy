@@ -10,6 +10,8 @@ from collections.abc import Sequence
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
+from gams.core.gdx import GMS_UEL_IDENT_SIZE
+
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
@@ -46,7 +48,18 @@ if TYPE_CHECKING:
     from gamspy._backend.neos import NeosClient
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
     from gamspy._symbols.symbol import Symbol
+    from gamspy.math import MathOp
 
+GMS_MAX_LINE_LENGTH = 80000
+MAX_MODEL_DECLARATION_LENGTH = 75
+MAX_SYMBOL_NAME_LENGTH = GMS_UEL_IDENT_SIZE - 1
+MAX_MATCHING_LENGTH = (
+    MAX_SYMBOL_NAME_LENGTH
+    + MAX_SYMBOL_NAME_LENGTH
+    + MAX_MODEL_DECLARATION_LENGTH
+    + 1
+)
+MAX_NUM_MODEL_ELEMS = int(GMS_MAX_LINE_LENGTH / MAX_MATCHING_LENGTH)
 IS_MIRO_INIT = os.getenv("MIRO", False)
 
 logger = logging.getLogger("MODEL")
@@ -826,7 +839,7 @@ class Model:
 
     def _set_objective_variable(
         self,
-        assignment: None | Variable | Operation | Expression = None,
+        assignment: None | Variable | Operation | Expression | MathOp = None,
     ) -> Variable | None:
         """
         Returns objective variable. If the assignment is an Expression
@@ -845,7 +858,12 @@ class Model:
 
         if assignment is not None and not isinstance(
             assignment,
-            (gp.Variable, expression.Expression, operation.Operation),
+            (
+                gp.Variable,
+                expression.Expression,
+                operation.Operation,
+                gp.math.MathOp,
+            ),
         ):
             raise TypeError(
                 "Objective must be a Variable or an Expression but"
@@ -883,7 +901,8 @@ class Model:
             return variable
 
         if isinstance(
-            assignment, (expression.Expression, operation.Operation)
+            assignment,
+            (expression.Expression, operation.Operation, gp.math.MathOp),
         ):
             variable, equation = self._generate_obj_var_and_equation()
 
@@ -965,7 +984,6 @@ class Model:
         self.container._add_statement("$onListing")
 
     def _update_model_attributes(self) -> None:
-        container = self.container._temp_container
         gdx_handle = utils._open_gdx_file(
             self.container.system_directory, self.container._gdx_out
         )
@@ -973,7 +991,7 @@ class Model:
         for gams_attr, python_attr in ATTRIBUTE_MAP.items():
             symbol_name = f"{self._generate_prefix}{gams_attr}_{self._auto_id}"
             data = utils._get_scalar_data(
-                container._gams2np, gdx_handle, symbol_name
+                self.container._gams2np, gdx_handle, symbol_name
             )
 
             if python_attr == "_status":
@@ -996,7 +1014,6 @@ class Model:
                 setattr(self, python_attr, data)
 
         utils._close_gdx_handle(gdx_handle)
-        self.container._temp_container.data = {}
 
     def computeInfeasibilities(self) -> dict[str, pd.DataFrame]:
         """
@@ -1146,6 +1163,16 @@ class Model:
         modifiables: list[Parameter | ImplicitParameter],
         options: Options | None = None,
     ) -> None:
+        """
+        Instantiates a model instance. After calling freeze, only modifiables can be modified.
+
+        Parameters
+        ----------
+        modifiables : list[Parameter  |  ImplicitParameter]
+            Modifiable symbols.
+        options : Options | None, optional
+            GAMSPy options, by default None
+        """
         self._is_frozen = True
         if options is None:
             options = self.container._options
@@ -1179,9 +1206,9 @@ class Model:
         solver : str, optional
             Solver name
         options : Options, optional
-            GAMS options
+            GAMSPy options.
         solver_options : dict, optional
-            Solver options
+            Solver options.
         model_instance_options : ModelInstanceOptions, optional
             Options to solve a frozen model. This argument will be deprecated in GAMSPy 1.10.0. Please use freeze_options instead.
         freeze_options : FreezeOptions, optional
@@ -1253,6 +1280,7 @@ class Model:
         # Only for local until GAMS Engine and NEOS Server backends adopt the new GP_SolveLine option.
         if solver == "local":
             frame = inspect.currentframe().f_back
+            assert isinstance(options, gp.Options)
             options._frame = frame
 
         if self._is_frozen:
@@ -1323,6 +1351,21 @@ class Model:
         'Model my_model / e,my_model_objective /;'
 
         """
+
+        def build_str_with_new_lines(elements: list[str]) -> str:
+            num_elements = len(elements)
+            if num_elements < MAX_NUM_MODEL_ELEMS:
+                return ",".join(elements)
+
+            count = 0
+            return_str = ""
+            while count < num_elements:
+                batch = elements[count : count + MAX_NUM_MODEL_ELEMS]
+                return_str += ",".join(batch) + "\n"
+                count += MAX_NUM_MODEL_ELEMS
+
+            return return_str
+
         equations_in_matches = []
         if self._matches is not None:
             for key in self._matches:
@@ -1339,7 +1382,7 @@ class Model:
             else:
                 equations.append(equation.name)
 
-        equations_str = ",".join(equations)
+        equations_str = build_str_with_new_lines(equations)
 
         if self._matches is not None:
             matches = []
@@ -1357,7 +1400,7 @@ class Model:
                         f"({'|'.join([equation.name for equation in key])}):{value.name}"
                     )
 
-            matches_str = ",".join(matches)
+            matches_str = build_str_with_new_lines(matches)
 
             equations_str = (
                 ",".join([equations_str, matches_str])
@@ -1390,15 +1433,25 @@ class Model:
         self,
         path: str,
         options: Options | None = None,
+        *,
         dump_gams_state: bool = False,
     ) -> None:
         """
-        Generates GAMS model under path/<model_name>.gms
+        Generates GAMS model under path/<model_name>.gms.
 
         Parameters
         ----------
         path : str
             Path to the directory which will contain the GAMS model.
+        options : Options | None, optional
+            GAMSPy options, by default None
+        dump_gams_state : bool, optional
+            Whether to dump the state as a GAMS save file, by default False
+
+        Raises
+        ------
+        ValidationError
+            In case the given options is not of type gp.Options.
         """
         if options is not None and not isinstance(options, gp.Options):
             raise ValidationError(
