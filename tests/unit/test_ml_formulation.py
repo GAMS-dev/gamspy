@@ -42,17 +42,12 @@ def data():
 
 
 def test_RegressionTree_bad_init(data):
-    m, tree_dict, *_ = data
+    m, *_ = data
 
     # wrong container object
-    pytest.raises(ValidationError, RegressionTree, "m", tree_dict)
-    # empty regressor
-    pytest.raises(ValidationError, RegressionTree, m, dict())
-    # incomplete regressor
-    tree_dict.pop("n_features")
-    pytest.raises(ValidationError, RegressionTree, m, tree_dict)
+    pytest.raises(ValidationError, RegressionTree, "m")
 
-    # wrong regressor type, it must be either a dict or a sklearn.tree.DecisionTreeRegressor object
+    # wrong regressor type, it must be either None or a sklearn.tree.DecisionTreeRegressor object
     pytest.raises(ValidationError, RegressionTree, m, [])
 
 
