@@ -21,49 +21,43 @@ class DecisionTreeStruct:
     It can be initialized directly with these components, or it can derive them
     from a scikit-learn DecisionTreeRegressor object.
 
-    Attributes:
-        children_left: np.ndarray
-            An array where `children_left[i]` is the ID
-            of the left child of node `i`. Leaf nodes have -1.
-            Defaults to an empty numpy array.
-        children_right: np.ndarray
-            An array where `children_right[i]` is the ID
-            of the right child of node `i`. Leaf nodes have -1.
-            Defaults to an empty numpy array.
-        feature: np.ndarray
-            An array where `feature[i]` is the index of the
-            feature used for splitting at node `i`. Leaf nodes have -2.
-            Defaults to an empty numpy array.
-        threshold: np.ndarray
-            An array where `threshold[i]` is the threshold
-            value used for splitting at node `i` based on `feature[i]`.
-            Leaf nodes have -2.0. Defaults to an empty numpy array.
-        value: np.ndarray
-            An array (typically 2D for scikit-learn trees,
-            squeezed to 1D for single-output regressors) where `value[i]`
-            contains the prediction value(s) for node `i`. For leaf nodes,
-            this is the final prediction. Defaults to an empty numpy array.
-        capacity : int
-            The total number of nodes allocated in the underlying
-            tree structure arrays. Defaults to 0.
-        n_features : int
-            The number of features the decision tree was trained on
-            or expects as input. Defaults to 0.
-        regressor_source: sklearn.tree.DecisionTree | None
-            An optional source to initialize the tree attributes from.
-            This parameter is used only during the `__post_init__` phase and is not
-            stored as an instance attribute.
+    Attributes
+    ----------
+    children_left: np.ndarray
+        An array where `children_left[i]` is the ID
+        of the left child of node `i`. Leaf nodes have -1.
+        Defaults to an empty numpy array.
+    children_right: np.ndarray
+        An array where `children_right[i]` is the ID
+        of the right child of node `i`. Leaf nodes have -1.
+        Defaults to an empty numpy array.
+    feature: np.ndarray
+        An array where `feature[i]` is the index of the
+        feature used for splitting at node `i`. Leaf nodes have -2.
+        Defaults to an empty numpy array.
+    threshold: np.ndarray
+        An array where `threshold[i]` is the threshold
+        value used for splitting at node `i` based on `feature[i]`.
+        Leaf nodes have -2.0. Defaults to an empty numpy array.
+    value: np.ndarray
+        An array (typically 2D for scikit-learn trees,
+        squeezed to 1D for single-output regressors) where `value[i]`
+        contains the prediction value(s) for node `i`. For leaf nodes,
+        this is the final prediction. Defaults to an empty numpy array.
+    capacity : int
+        The total number of nodes allocated in the underlying
+        tree structure arrays. Defaults to 0.
+    n_features : int
+        The number of features the decision tree was trained on
+        or expects as input. Defaults to 0.
+    _regressor_source: DecisionTreeRegressor | None
+        An optional source to initialize the tree attributes from.
+        This parameter is used only during the `__post_init__` phase and is not
+        stored as an instance attribute.
 
     Note:
-            If `regressor_source` is None, the following attributes will need to be
-            set externally:
-            - children_left (np.ndarray)
-            - children_right (np.ndarray)
-            - feature (np.ndarray)
-            - threshold (np.ndarray)
-            - value (np.ndarray)
-            - capacity (int)
-            - n_features (int)
+            If `_regressor_source` is None, all the attributes mentioned above will need to be set externally.
+
     """
 
     children_left: np.ndarray = field(
@@ -81,19 +75,19 @@ class DecisionTreeStruct:
     value: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
     capacity: int = 0
     n_features: int = 0
-    regressor_source: InitVar[DecisionTreeRegressor | None] = None
+    _regressor_source: InitVar[DecisionTreeRegressor | None] = None
 
-    def __post_init__(self, regressor_source: DecisionTreeRegressor | None):
-        if regressor_source is not None:
-            regressor_type = type(regressor_source)
+    def __post_init__(self, _regressor_source: DecisionTreeRegressor | None):
+        if _regressor_source is not None:
+            regressor_type = type(_regressor_source)
             if (
                 regressor_type.__name__ == "DecisionTreeRegressor"
                 and regressor_type.__module__.startswith("sklearn.tree")
             ):
-                self._initialize_from_sklearn_object(regressor_source)
+                self._initialize_from_sklearn_object(_regressor_source)
             else:
                 raise ValidationError(
-                    f"Unsupported regressor_source type: {type(regressor_source)}. "
+                    f"Unsupported _regressor_source type: {type(_regressor_source)}. "
                     "Expected DecisionTreeRegressor, dict, or None."
                 )
 
@@ -118,7 +112,7 @@ class DecisionTreeStruct:
         self.capacity = regressor.tree_.capacity
         self.n_features = regressor.tree_.n_features
 
-    def check_input(self):
+    def _check_input(self):
         """
         Validates that the core tree attributes are populated and have valid basic properties.
 

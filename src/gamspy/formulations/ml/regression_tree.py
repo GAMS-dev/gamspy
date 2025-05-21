@@ -22,13 +22,14 @@ class RegressionTree(DecisionTreeStruct):
     ----------
     container : Container
         Container that will contain the new variable and equations.
-    regressor: DecisionTreeRegressor | None,
-        - A fitted sklearn.tree.DecisionTreeRegressor object which is processed by the
-        `DecisionTreeStruct` superclass to populate the underlying tree attributes.
-        - If None, the tree structure is NOT automatically initialized.
-        In this case, the user is responsible for manually populating the tree attributes
-        inherited from `DecisionTreeStruct` before the formulation can be used.
-        See `DecisionTreeStruct.__init__` docstring for details on required attributes.
+    regressor: DecisionTreeRegressor | None
+        - A fitted `sklearn.tree.DecisionTreeRegressor` object which is processed by the
+          `DecisionTreeStruct` superclass to populate the underlying tree attributes.
+        - If `None`, the tree structure is NOT automatically initialized.
+          In this case, the user is responsible for manually populating the tree attributes
+          inherited from `DecisionTreeStruct` before the formulation can be used.
+          See :meth:`DecisionTreeStruct <gamspy.formulations.DecisionTreeStruct>` for details on required attributes.
+
     name_prefix : str | None
         Prefix for generated GAMSPy symbols, by default None which means
         random prefix. Using the same name_prefix in different formulations causes name
@@ -65,7 +66,7 @@ class RegressionTree(DecisionTreeStruct):
         regressor: DecisionTreeRegressor | None = None,
         name_prefix: str | None = None,
     ):
-        super().__init__(regressor_source=regressor)  # type: ignore
+        super().__init__(_regressor_source=regressor)  # type: ignore
 
         if not isinstance(container, gp.Container):
             raise ValidationError(f"{container} is not a gp.Container.")
@@ -120,7 +121,7 @@ class RegressionTree(DecisionTreeStruct):
             value for the big_M. By default, infer the value using the available bounds for variables
         """
         # TODO: Change the >input< arg name to something else?
-        super().check_input()
+        super()._check_input()
 
         leafs = self.children_left < 0
         leafs = leafs.nonzero()[0]
