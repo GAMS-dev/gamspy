@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import sys
+import tempfile
 import time
 
 import pytest
@@ -258,6 +260,21 @@ def test_log_option(data):
     listing_file_name = os.path.join("tmp", "listing2.lst")
     transport.solve(options=Options(listing_file=listing_file_name))
     assert os.path.exists(listing_file_name)
+
+    file = tempfile.NamedTemporaryFile("w", delete=False)
+    file.close()
+    transport.solve(
+        options=Options(log_file=file.name, append_to_log_file=True)
+    )
+    transport.solve(
+        options=Options(log_file=file.name, append_to_log_file=True)
+    )
+    with open(file.name) as log_file:
+        content = log_file.read()
+        matches = re.findall("Status: Normal completion", content)
+        assert len(matches) == 2
+
+    os.remove(file.name)
 
 
 @pytest.mark.unit
