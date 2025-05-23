@@ -48,6 +48,7 @@ OPTION_MAP = {
     "rmpec": "rmpec",
     "allow_suffix_in_equation": "suffixalgebravars",
     "allow_suffix_in_limited_variables": "suffixdlvars",
+    "append_to_log_file": "appendLog",
     "basis_detection_threshold": "bratio",
     "compile_error_limit": "cerr",
     "domain_violation_limit": "domlim",
@@ -140,6 +141,8 @@ class Options(BaseModel):
         Flag to allow variables with suffixes in model algebra
     allow_suffix_in_limited_variables: bool | None
         Flag to allow **domain limited variables** with suffixes in model
+    append_to_log_file: bool | None
+        Setting this option to True means that the log file will be appended to and not overwritten (replaced).
     basis_detection_threshold: float | None
         Basis detection threshold
     compile_error_limit: int = 1
@@ -321,6 +324,7 @@ class Options(BaseModel):
     rmpec: Optional[str] = None
     allow_suffix_in_equation: Optional[bool] = None
     allow_suffix_in_limited_variables: Optional[bool] = None
+    append_to_log_file: Optional[bool] = None
     basis_detection_threshold: Optional[float] = None
     compile_error_limit: Optional[int] = None
     domain_violation_limit: Optional[int] = None

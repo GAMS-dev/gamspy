@@ -225,7 +225,7 @@ select = [
     # Consider merging multiple comparisons
     "PLR1714",
 ]
-ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "B028", "B006"]
+ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "SIM115", "B028", "B006"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
