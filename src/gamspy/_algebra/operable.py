@@ -75,6 +75,9 @@ class Operable:
 
         return expression.Expression(other, "-", self)
 
+    def __neg__(self):
+        return expression.Expression(None, "-", self)
+
     def __truediv__(self, other: OperableType):
         return expression.Expression(self, "/", other)
 
