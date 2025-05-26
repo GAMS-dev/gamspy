@@ -1,0 +1,1 @@
+Fix the overload of the unary magic function.

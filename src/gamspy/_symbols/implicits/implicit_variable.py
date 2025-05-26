@@ -224,9 +224,6 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
 
         return recs
 
-    def __neg__(self):
-        return expression.Expression(None, "-", self)
-
     def __eq__(self, other):
         return expression.Expression(self, "=e=", other)
 

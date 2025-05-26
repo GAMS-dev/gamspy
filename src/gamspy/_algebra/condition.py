@@ -108,9 +108,6 @@ class Condition(operable.Operable):
 
         self.conditioning_on.container._synch_with_gams(gams_to_gamspy=True)
 
-    def __neg__(self) -> Expression:
-        return expression.Expression(None, "-", self)
-
     def __repr__(self) -> str:
         return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"
 
