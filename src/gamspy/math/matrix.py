@@ -216,7 +216,9 @@ def dim(dims: list[int] | tuple[int, ...]) -> Dim:
 
 
 def _generate_dims(
-    m: Container, dims: list[int] | tuple[int, ...]
+    m: Container,
+    dims: list[int] | tuple[int, ...],
+    alias: bool = True,
 ) -> list[Alias | Set]:
     sets_so_far = []
     for x in dims:
@@ -225,7 +227,17 @@ def _generate_dims(
         if find_x is None:
             find_x = m.addSet(name=expected_name, records=range(x))
 
-        while find_x in sets_so_far:
+        elif not alias:
+            num = int(expected_name.split("_")[1])
+            while True:
+                num += 1
+                new_name = f"DenseDim{x}_{num}"
+                find_x = m.data.get(new_name, None)
+                if find_x is None:
+                    find_x = m.addSet(name=new_name, records=range(x))
+                    break
+
+        while (find_x in sets_so_far) and alias:
             find_x = next_alias(find_x)
 
         sets_so_far.append(find_x)
