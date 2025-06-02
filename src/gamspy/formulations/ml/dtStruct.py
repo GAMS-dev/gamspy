@@ -8,6 +8,7 @@ import numpy as np
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from sklearn.ensemble import RandomForestRegressor
     from sklearn.tree import DecisionTreeRegressor
 
 
@@ -75,20 +76,30 @@ class DecisionTreeStruct:
     value: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
     capacity: int = 0
     n_features: int = 0
-    _regressor_source: InitVar[DecisionTreeRegressor | None] = None
+    _regressor_source: InitVar[
+        DecisionTreeRegressor | RandomForestRegressor | None
+    ] = None
 
-    def __post_init__(self, _regressor_source: DecisionTreeRegressor | None):
+    def __post_init__(
+        self,
+        _regressor_source: DecisionTreeRegressor
+        | RandomForestRegressor
+        | None,
+    ):
         if _regressor_source is not None:
             regressor_type = type(_regressor_source)
             if (
                 regressor_type.__name__ == "DecisionTreeRegressor"
                 and regressor_type.__module__.startswith("sklearn.tree")
+            ) or (
+                regressor_type.__name__ == "RandomForestRegressor"
+                and regressor_type.__module__.startswith("sklearn.ensemble")
             ):
                 self._initialize_from_sklearn_object(_regressor_source)
             else:
                 raise ValidationError(
                     f"Unsupported _regressor_source type: {type(_regressor_source)}. "
-                    "Expected DecisionTreeRegressor, dict, or None."
+                    "Expected DecisionTreeRegressor | RandomForestRegressor | None."
                 )
 
     def _initialize_from_sklearn_object(
