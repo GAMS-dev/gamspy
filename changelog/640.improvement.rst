@@ -1,1 +1,0 @@
-Add "append_to_log_file" option to allow appending to the log file. 
