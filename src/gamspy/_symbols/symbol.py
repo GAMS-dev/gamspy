@@ -45,7 +45,8 @@ class Symbol:
         -------
         str
         """
-        return self.name
+        name = self.name.replace("_", "\\_")
+        return name
 
     @property
     def synchronize(
