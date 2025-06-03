@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
@@ -72,6 +73,33 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
             recs = recs[recs[column_name] == literal]
 
         return recs
+
+    def latexRepr(self):
+        name = self.name.replace("_", "\\_")
+        representation = name
+
+        if self.extension is not None:
+            representation += f"{self.extension}"
+
+        domain = list(self.domain)
+
+        for i, d in self._scalar_domains:
+            domain.insert(i, d)
+
+        if domain != ["*"]:
+            set_strs = []
+            for elem in domain:
+                if isinstance(elem, (syms.Set, syms.Alias, ImplicitSet)):
+                    set_strs.append(elem.latexRepr())
+                elif isinstance(elem, str):
+                    set_strs.append(
+                        f"\\textquotesingle {elem} \\textquotesingle"
+                    )
+
+            domain_str = "{" + ",".join(set_strs) + "}"
+            representation = f"{representation}_{domain_str}"
+
+        return representation
 
     def gamsRepr(self) -> str:
         representation = self.name
