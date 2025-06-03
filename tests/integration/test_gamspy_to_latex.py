@@ -1592,3 +1592,55 @@ def test_latex_repr(data):
 
     e[...] = c * c - a >= 0
     assert e.latexRepr() == "$\n((c \\cdot c) - a) \\geq 0\n$"
+
+
+def test_symbol_name_with_underscore():
+    m = Container()
+
+    cities = Set(m, name="cities", records=["LA", "HOU", "NY", "MIA"])
+
+    distance_for_next_city = Parameter(
+        m, name="distance_for_next_city", domain=cities
+    )
+    distance_for_next_city.setRecords(
+        [("LA", 1500), ("HOU", 1700), ("NY", 1300), ("MIA", 2700)]
+    )
+
+    fuel_purchased = Variable(
+        m, name="fuel_purchased", domain=cities, type="positive"
+    )  # Fuel purchased in city
+    fuel_at_takeoff = Variable(
+        m, name="fuel_at_takeoff", domain=cities, type="positive"
+    )  # Fuel at takeoff city
+    fuel_at_landing = Variable(
+        m, name="fuel_at_landing", domain=cities, type="positive"
+    )  # Fuel at landing city
+
+    fuel_balance_ground = Equation(
+        m, name="fuel_balance_ground", domain=cities
+    )
+    fuel_balance_ground[cities] = (
+        fuel_at_landing[cities] + fuel_purchased[cities]
+        == fuel_at_takeoff[cities]
+    )
+
+    fuel_balance_air = Equation(m, name="fuel_balance_air", domain=cities)
+    fuel_balance_air[cities].where[Ord(cities) > 1] = (
+        fuel_at_landing[cities]
+        == fuel_at_takeoff[cities - 1]
+        - (
+            1
+            + (
+                (0.5 * (fuel_at_takeoff[cities - 1] + fuel_at_landing[cities]))
+                / 2000
+            )
+        )
+        * distance_for_next_city[cities - 1]
+    )
+
+    assert (
+        fuel_balance_air.latexRepr()
+        == r"""$
+fuel\_at\_landing_{cities} = (fuel\_at\_takeoff_{cities - 1} - ((1 + \frac{(0.5 \cdot (fuel\_at\_takeoff_{cities - 1} + fuel\_at\_landing_{cities}))}{2000}) \cdot distance\_for\_next\_city_{cities - 1}))\hfill \forall cities ~ | ~ (ord(cities) > 1)
+$"""
+    )
