@@ -102,7 +102,7 @@ class ImplicitSymbol(ABC):
         from .implicit_set import ImplicitSet
 
         name = self.name.replace("_", "\\_")
-        representation = f"{name}"
+        representation = name
         domain = list(self.domain)
 
         for i, d in self._scalar_domains:
@@ -112,14 +112,14 @@ class ImplicitSymbol(ABC):
             set_strs = []
             for elem in domain:
                 if isinstance(elem, (gp.Set, gp.Alias, ImplicitSet)):
-                    set_strs.append(f"\\text{{{elem.latexRepr()}}}")
+                    set_strs.append(elem.latexRepr())
                 elif isinstance(elem, str):
                     set_strs.append(
-                        f"\\text{{\\textquotesingle {elem}\\textquotesingle}}"
+                        f"\\textquotesingle {elem} \\textquotesingle"
                     )
 
-            domain_str = ",".join(set_strs)
-            representation = f"{representation}_\\text{{{domain_str}}}"
+            domain_str = "{" + ",".join(set_strs) + "}"
+            representation = f"{representation}_{domain_str}"
 
         return representation
 

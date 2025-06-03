@@ -26,8 +26,8 @@ if TYPE_CHECKING:
     from gamspy._model import Problem
     from types import FrameType
 
-MULTI_SOLVE_MAP = {"replace": 0, "merge": 1, "clear": 2}
 SOLVE_LINK_MAP = {"disk": 2, "memory": 5}
+SOLVE_LINK_MAP_REVERSE = dict(zip(SOLVE_LINK_MAP.values(), SOLVE_LINK_MAP.keys()))
 
 # GAMSPy to GAMS option mapping
 OPTION_MAP = {
@@ -48,6 +48,7 @@ OPTION_MAP = {
     "rmpec": "rmpec",
     "allow_suffix_in_equation": "suffixalgebravars",
     "allow_suffix_in_limited_variables": "suffixdlvars",
+    "append_to_log_file": "appendLog",
     "basis_detection_threshold": "bratio",
     "compile_error_limit": "cerr",
     "domain_violation_limit": "domlim",
@@ -82,6 +83,7 @@ OPTION_MAP = {
     "zero_rounding_threshold": "zerores",
     "report_underflow": "zeroresrep",
 }
+OPTION_MAP_REVERSE = dict(zip(OPTION_MAP.values(), OPTION_MAP.keys()))
 
 MODEL_ATTR_OPTION_MAP = {
     "generate_name_dict": "dictfile",
@@ -139,6 +141,8 @@ class Options(BaseModel):
         Flag to allow variables with suffixes in model algebra
     allow_suffix_in_limited_variables: bool | None
         Flag to allow **domain limited variables** with suffixes in model
+    append_to_log_file: bool | None
+        Setting this option to True means that the log file will be appended to and not overwritten (replaced).
     basis_detection_threshold: float | None
         Basis detection threshold
     compile_error_limit: int = 1
@@ -320,6 +324,7 @@ class Options(BaseModel):
     rmpec: Optional[str] = None
     allow_suffix_in_equation: Optional[bool] = None
     allow_suffix_in_limited_variables: Optional[bool] = None
+    append_to_log_file: Optional[bool] = None
     basis_detection_threshold: Optional[float] = None
     compile_error_limit: Optional[int] = None
     domain_violation_limit: Optional[int] = None
@@ -374,6 +379,49 @@ class Options(BaseModel):
         self._solver_options_file: str = "0"
         self._frame: FrameType | None = None
 
+    @staticmethod
+    def fromGams(options: dict) -> Options:
+        """
+        Generates a gp.Options object from a dictionary of GAMS options 
+        where keys are the GAMS option names.
+
+        Parameters
+        ----------
+        options : dict
+            GAMS options.
+
+        Returns
+        -------
+        Options
+            Generated GAMSPy options
+
+        Raises
+        ------
+        ValidationError
+            In case the option is not supported in GAMSPy.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> options = gp.Options.fromGams({"reslim": 5})
+
+        """
+        gamspy_options = {}
+        for key, value in options.items():
+            if key.lower() in OPTION_MAP_REVERSE:
+                if key.lower() == "solvelink":
+                    try:
+                        value = SOLVE_LINK_MAP_REVERSE[value]
+                    except KeyError:
+                        raise ValidationError(f"`{value}` is not a valid value for `{key}`. Possible values are 2 and 5.")
+
+                gamspy_options[OPTION_MAP_REVERSE[key.lower()]] = value
+            else:
+                raise ValidationError(f"`{key}` is not a supported option in GAMSPy.")
+
+        return Options(**gamspy_options) 
+
     def _get_gams_compatible_options(
         self, output: io.TextIOWrapper | None = None
     ) -> dict:
@@ -389,10 +437,6 @@ class Options(BaseModel):
             gamspy_options["allow_suffix_in_limited_variables"] = (
                 "on" if allows_suffix else "off"
             )
-
-        if "merge_strategy" in gamspy_options:
-            strategy = gamspy_options["merge_strategy"]
-            gamspy_options["merge_strategy"] = MULTI_SOLVE_MAP[strategy]
 
         if "solve_link_type" in gamspy_options:
             link_type = gamspy_options["solve_link_type"]
