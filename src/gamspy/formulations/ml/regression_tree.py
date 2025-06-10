@@ -128,6 +128,11 @@ class RegressionTree(DecisionTreeStruct):
         output_dim = self.value.shape[-1]
         node_lb, node_ub = self._node_bounds()
 
+        if not isinstance(input, (gp.Variable, gp.Parameter)):
+            raise ValidationError(
+                "Input must be of either type gp.Parameter | gp.Variable"
+            )
+
         if len(input.domain) == 0:
             raise ValidationError(
                 "expected an input with at least 1 dimension"
@@ -185,13 +190,8 @@ class RegressionTree(DecisionTreeStruct):
         if isinstance(input, gp.Variable):
             _feat_vars = input
 
-        elif isinstance(input, gp.Parameter):
-            _feat_vars.fx[...] = input[...]
-
         else:
-            raise ValidationError(
-                "Input must be of either type gp.Parameter | gp.Variable"
-            )
+            _feat_vars.fx[...] = input[...]
 
         ind_vars = gp.Variable(
             self.container,
