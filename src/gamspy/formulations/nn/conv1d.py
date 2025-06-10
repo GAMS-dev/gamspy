@@ -14,9 +14,9 @@ if TYPE_CHECKING:
     from gamspy import Parameter, Variable
 
 
-class Conv2d:
+class Conv1d:
     """
-    Formulation generator for 2D Convolution symbol in GAMS. It can
+    Formulation generator for 1D Convolution symbol in GAMS. It can
     be used to embed convolutional layers of trained neural networks
     in your problem. It can also be used to embed convolutional layers
     when you need weights as variables.
@@ -29,15 +29,15 @@ class Conv2d:
         Number of channels in the input
     out_channel : int
         Number of channels in the output
-    kernel_size : int | tuple[int, int]
+    kernel_size : int
         Filter size
-    stride : int | tuple[int, int]
+    stride : int
         Stride in the convolution, by default 1
-    padding : int | tuple[int, int] | Literal["same", "valid"]
+    padding : int | Literal["same", "valid"]
         Specifies the amount of padding to apply to the input, by default 0.
-        If an integer is provided, that padding is applied to both the height and width.
+        If an integer is provided, that padding is applied to both the left and right.
         If a tuple of two integers is given, the first value determines the padding for the
-        top and bottom, while the second value sets the padding for the left and right.
+        left, while the second value sets the padding for the right.
         It is also possible to provide string literals "same" and "valid". "same" pads
         the input so the output has the shape as the input. "valid" is the same as no
         padding.
@@ -53,19 +53,19 @@ class Conv2d:
     >>> import gamspy as gp
     >>> import numpy as np
     >>> from gamspy.math import dim
-    >>> w1 = np.random.rand(2, 1, 3, 3)
+    >>> w1 = np.random.rand(2, 1, 3)
     >>> b1 = np.random.rand(2)
     >>> m = gp.Container()
-    >>> # in_channels=1, out_channels=2, kernel_size=3x3
-    >>> conv1 = gp.formulations.Conv2d(m, 1, 2, 3)
+    >>> # in_channels=1, out_channels=2, kernel_size=3
+    >>> conv1 = gp.formulations.Conv1d(m, 1, 2, 3)
     >>> conv1.load_weights(w1, b1)
-    >>> # 10 images, 1 channel, 24 by 24
-    >>> inp = gp.Variable(m, domain=dim((10, 1, 24, 24)))
+    >>> # 10 frequencies, 1 channel, 24 length
+    >>> inp = gp.Variable(m, domain=dim((10, 1, 24)))
     >>> out, eqs = conv1(inp)
     >>> type(out)
     <class 'gamspy._symbols.variable.Variable'>
     >>> [len(x) for x in out.domain]
-    [10, 2, 22, 22]
+    [10, 2, 22]
 
     """
 
@@ -74,11 +74,12 @@ class Conv2d:
         container: gp.Container,
         in_channels: int,
         out_channels: int,
-        kernel_size: int | tuple[int, int],
-        stride: int | tuple[int, int] = 1,
+        kernel_size: int,
+        stride: int = 1,
         padding: int | tuple[int, int] | Literal["same", "valid"] = 0,
-        bias: bool = True,
         name_prefix: str | None = None,
+        *,
+        bias: bool = True,
     ):
         if not (isinstance(in_channels, int) and in_channels > 0):
             raise ValidationError("in_channels must be a positive integer")
@@ -86,8 +87,14 @@ class Conv2d:
         if not (isinstance(out_channels, int) and out_channels > 0):
             raise ValidationError("out_channels must be a positive integer")
 
-        _kernel_size = utils._check_tuple_int(kernel_size, "kernel_size")
-        _stride = utils._check_tuple_int(stride, "stride")
+        if not (isinstance(kernel_size, int) and kernel_size > 0):
+            raise ValidationError("kernel_size must be a positive integer")
+
+        if not (isinstance(stride, int) and stride > 0):
+            raise ValidationError("stride must be a positive integer")
+
+        if not isinstance(bias, bool):
+            raise ValidationError("bias must be a boolean")
 
         if isinstance(padding, str):
             if padding not in {"same", "valid"}:
@@ -95,27 +102,26 @@ class Conv2d:
                     "padding must be 'same' or 'valid' when it is a string"
                 )
 
-            if padding == "same" and _stride != (1, 1):
+            if padding == "same" and stride != 1:
                 raise ValidationError(
                     "'same' padding can only be used with stride=1"
                 )
 
-            _padding: tuple[int, int, int, int] | str = (
-                (0, 0, 0, 0) if padding == "valid" else "same"
-            )
+            padding = (0, 0) if padding == "valid" else "same"
 
         else:
-            _padding = utils._check_padding(padding)
-
-        if not isinstance(bias, bool):
-            raise ValidationError("bias must be a boolean")
+            padding = utils._check_tuple_int(
+                padding,
+                "padding",
+                allow_zero=True,
+            )
 
         self.container = container
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.kernel_size = _kernel_size
-        self.stride = _stride
-        self.padding = _padding
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
         self.use_bias = bias
 
         self._state = 0
@@ -147,7 +153,7 @@ class Conv2d:
             out_bounds_array = np.zeros(output.shape)
 
             if self.use_bias:
-                b = self.bias_array[:, np.newaxis, np.newaxis]
+                b = self.bias_array[:, np.newaxis]
                 out_bounds_array = out_bounds_array + b
 
             out_bounds = gp.Parameter(
@@ -174,23 +180,23 @@ class Conv2d:
             input_lower = utils._encode_infinity(input_lower)
             input_upper = utils._encode_infinity(input_upper)
 
-        batch, out_channels, h_out, w_out = output.shape
-        _, in_channels, h_k, w_k = weight.shape
-        stride_y, stride_x = stride
-        pad_top, pad_left, pad_bottom, pad_right = padding
+        batch, out_channels, w_out = output.shape
+        _, in_channels, w_k = weight.shape
+        stride_x = stride
+        pad_left, pad_right = padding
 
         # if any side of the padding is non-zero, we need to pad the input
         if any(padding):
             # Pad the input bounds
             input_lower = np.pad(
                 input_lower,
-                ((0, 0), (0, 0), (pad_top, pad_bottom), (pad_left, pad_right)),
+                ((0, 0), (0, 0), (pad_left, pad_right)),
                 mode="constant",
                 constant_values=0,
             )
             input_upper = np.pad(
                 input_upper,
-                ((0, 0), (0, 0), (pad_top, pad_bottom), (pad_left, pad_right)),
+                ((0, 0), (0, 0), (pad_left, pad_right)),
                 mode="constant",
                 constant_values=0,
             )
@@ -198,38 +204,33 @@ class Conv2d:
         # ----- Sliding window view -----
         # Create sliding windows for the input, where each window has the same shape as the kernel.
         # This is done separately for the lower and upper bounds of the input.
-        # Then, downsample the sliding windows by selecting every `stride_y` step along the height (vertical) axis
-        # and every `stride_x` step along the width (horizontal) axis. This reduces the number of windows
-        # by skipping positions based on the user-specified strides.
+        # Then, downsample the sliding windows by selecting every `stride_x` step along the width (horizontal) axis.
+        # This reduces the number of windows by skipping positions based on the user-specified strides.
         #
         # After slicing, the axes are transposed to reorder the dimensions. Specifically:
-        # - The original window positions (height and width axes) are moved to the end.
+        # - The original window positions (width axis) are moved to the end.
         # - The window content (channel and spatial dimensions) is brought forward.
         #
-        # This ensures that the windows are processed in a left-to-right, top-to-bottom order,
-        # prioritizing horizontal traversal first, which is the desired behavior.
+        # This ensures that the windows are processed in a left-to-right order.
 
         windows_lower = sliding_window_view(
-            input_lower, (batch, in_channels, h_k, w_k)
+            input_lower, (batch, in_channels, w_k)
         )
         windows_upper = sliding_window_view(
-            input_upper, (batch, in_channels, h_k, w_k)
+            input_upper, (batch, in_channels, w_k)
         )
 
-        windows_lower = windows_lower[
-            :, :, ::stride_y, ::stride_x, :, :, :
-        ].transpose(0, 1, 4, 2, 3, 5, 6, 7)
-        windows_upper = windows_upper[
-            :, :, ::stride_y, ::stride_x, :, :, :
-        ].transpose(0, 1, 4, 2, 3, 5, 6, 7)
+        windows_lower = windows_lower[:, :, ::stride_x, :, :, :].transpose(
+            0, 1, 3, 2, 4, 5
+        )
+
+        windows_upper = windows_upper[:, :, ::stride_x, :, :, :].transpose(
+            0, 1, 3, 2, 4, 5
+        )
 
         # # Reshape windows for vectorized computation
-        windows_lower = windows_lower.reshape(
-            batch, h_out, w_out, in_channels, h_k, w_k
-        )
-        windows_upper = windows_upper.reshape(
-            batch, h_out, w_out, in_channels, h_k, w_k
-        )
+        windows_lower = windows_lower.reshape(batch, w_out, in_channels, w_k)
+        windows_upper = windows_upper.reshape(batch, w_out, in_channels, w_k)
 
         # Split weights into positive and negative parts
         pos_weight = np.maximum(weight, 0)
@@ -237,10 +238,10 @@ class Conv2d:
 
         # Initialize output bounds
         output_lower = np.zeros(
-            (batch, out_channels, h_out, w_out), dtype=out_arr_dtype
+            (batch, out_channels, w_out), dtype=out_arr_dtype
         )
         output_upper = np.zeros(
-            (batch, out_channels, h_out, w_out), dtype=out_arr_dtype
+            (batch, out_channels, w_out), dtype=out_arr_dtype
         )
 
         if bias is None:
@@ -248,31 +249,27 @@ class Conv2d:
 
         for c_out in range(out_channels):
             # Lower bound: sum(input_lower * pos_weight + input_upper * neg_weight)
-            output_lower[:, c_out, :, :] = (
+            output_lower[:, c_out, :] = (
                 np.sum(
-                    windows_lower
-                    * pos_weight[c_out, np.newaxis, np.newaxis, :, :, :],
-                    axis=(3, 4, 5),
+                    windows_lower * pos_weight[c_out, np.newaxis, :, :],
+                    axis=(2, 3),
                 )
                 + np.sum(
-                    windows_upper
-                    * neg_weight[c_out, np.newaxis, np.newaxis, :, :, :],
-                    axis=(3, 4, 5),
+                    windows_upper * neg_weight[c_out, np.newaxis, :, :],
+                    axis=(2, 3),
                 )
                 + bias[c_out]
             )
 
             # Upper bound: sum(input_lower * neg_weight + input_upper * pos_weight)
-            output_upper[:, c_out, :, :] = (
+            output_upper[:, c_out, :] = (
                 np.sum(
-                    windows_lower
-                    * neg_weight[c_out, np.newaxis, np.newaxis, :, :, :],
-                    axis=(3, 4, 5),
+                    windows_lower * neg_weight[c_out, np.newaxis, :, :],
+                    axis=(2, 3),
                 )
                 + np.sum(
-                    windows_upper
-                    * pos_weight[c_out, np.newaxis, np.newaxis, :, :, :],
-                    axis=(3, 4, 5),
+                    windows_upper * pos_weight[c_out, np.newaxis, :, :],
+                    axis=(2, 3),
                 )
                 + bias[c_out]
             )
@@ -296,7 +293,7 @@ class Conv2d:
 
     def make_variable(self) -> None:
         """
-        Mark Conv2d as variable. After this is called `load_weights`
+        Mark Conv1d as variable. After this is called `load_weights`
         cannot be called. Use this when you need to learn the weights
         of your convolutional layer in your optimization model.
 
@@ -311,8 +308,7 @@ class Conv2d:
         expected_shape = (
             self.out_channels,
             self.in_channels,
-            self.kernel_size[0],
-            self.kernel_size[1],
+            self.kernel_size,
         )
 
         if self.weight is None:
@@ -335,18 +331,30 @@ class Conv2d:
         self, weight: np.ndarray, bias: np.ndarray | None = None
     ) -> None:
         """
-        Mark Conv2d as parameter and load weights from NumPy arrays.
+        Mark Conv1d as parameter and load weights from NumPy arrays.
         After this is called `make_variable` cannot be called. Use this
         when you already have the weights of your convolutional layer.
 
         Parameters
         ----------
         weight : np.ndarray
-                 Conv2d layer weights in shape
-                 (out_channels x in_channels x kernel_size[0] x kernel_size[1])
+                 Conv1d layer weights in shape
+                 (out_channels x in_channels x kernel_size)
         bias : np.ndarray | None
-               Conv2d layer bias in shape (out_channels, ), only required when
+               Conv1d layer bias in shape (out_channels, ), only required when
                bias=True during initialization
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> from gamspy.math import dim
+        >>> w1 = np.random.rand(2, 1, 3)
+        >>> b1 = np.random.rand(2)
+        >>> m = gp.Container()
+        >>> # in_channels=1, out_channels=2, kernel_size=3
+        >>> conv1 = gp.formulations.Conv1d(m, 1, 2, 3)
+        >>> conv1.load_weights(w1, b1)
 
         """
         if self._state == 2:
@@ -362,16 +370,15 @@ class Conv2d:
         if self.use_bias is True and bias is None:
             raise ValidationError("bias must be provided")
 
-        if len(weight.shape) != 4:
+        if len(weight.shape) != 3:
             raise ValidationError(
-                f"expected 4D input for weight (got {len(weight.shape)}D input)"
+                f"expected 3D input for weight (got {len(weight.shape)}D input)"
             )
 
         expected_shape = (
             self.out_channels,
             self.in_channels,
-            self.kernel_size[0],
-            self.kernel_size[1],
+            self.kernel_size,
         )
         if weight.shape != expected_shape:
             raise ValidationError(f"weight expected to be {expected_shape}")
@@ -415,7 +422,10 @@ class Conv2d:
         self._state = 1
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable, propagate_bounds: bool = True
+        self,
+        input: gp.Parameter | gp.Variable,
+        *,
+        propagate_bounds: bool = True,
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         """
         Forward pass your input, generate output and equations required for
@@ -427,7 +437,7 @@ class Conv2d:
         ----------
         input : gp.Parameter | gp.Variable
                 input to the conv layer, must be in shape
-                (batch x in_channels x height x width)
+                (batch x in_channels x width)
         propagate_bounds : bool = True
                 If True, propagate bounds of the input to the output.
                 Otherwise, the output variable is unbounded.
@@ -438,33 +448,32 @@ class Conv2d:
 
         if self.weight is None:
             raise ValidationError(
-                "You must call load_weights or make_variable first before using the Conv2d"
+                "You must call load_weights or make_variable first before using the Conv1d"
             )
 
-        if len(input.domain) != 4:
+        if len(input.domain) != 3:
             raise ValidationError(
-                f"expected 4D input (got {len(input.domain)}D input)"
+                f"expected 3D input (got {len(input.domain)}D input)"
             )
 
-        N, C_in, H_in, W_in = input.domain
+        N, C_in, W_in = input.domain
 
         if len(C_in) != self.in_channels:
             raise ValidationError("in_channels does not match")
 
-        h_in = len(H_in)
         w_in = len(W_in)
 
-        h_out, w_out = utils._calc_hw(
-            self.padding, self.kernel_size, self.stride, h_in, w_in
+        w_out = utils._calc_w(
+            self.padding, self.kernel_size, self.stride, w_in
         )
 
         out = gp.Variable(
             self.container,
-            domain=dim([len(N), self.out_channels, h_out, w_out]),
+            domain=dim([len(N), self.out_channels, w_out]),
             name=utils._generate_name("v", self._name_prefix, "output"),
         )
 
-        N, C_out, H_out, W_out = out.domain
+        N, C_out, W_out = out.domain
 
         set_out = gp.Equation(
             self.container,
@@ -473,42 +482,34 @@ class Conv2d:
         )
 
         if isinstance(self.padding, str):
-            padding = utils._calc_same_padding_2d(self.kernel_size)
+            padding = utils._calc_same_padding_1d(self.kernel_size)
         else:
             padding = self.padding
 
-        # expr must have domain N, C_out, H_out, W_out
-        top_index = (self.stride[0] * (gp.Ord(H_out) - 1)) - padding[0] + 1
-        left_index = (self.stride[1] * (gp.Ord(W_out) - 1)) - padding[1] + 1
+        left_index = (self.stride * (gp.Ord(W_out) - 1)) - padding[0] + 1
 
-        _, _, Hf, Wf = self.weight.domain
-        C_in, Hf, Wf, H_in, W_in = utils._next_domains(
-            [C_in, Hf, Wf, H_in, W_in],
+        _, _, Wf = self.weight.domain
+        C_in, Wf, W_in = utils._next_domains(
+            [C_in, Wf, W_in],
             out.domain,
         )
 
         subset = gp.Set(
             self.container,
-            domain=[H_out, W_out, Hf, Wf, H_in, W_in],
+            domain=[W_out, Wf, W_in],
             name=utils._generate_name("s", self._name_prefix, "conv_subset"),
         )
         subset[
-            H_out,
             W_out,
-            Hf,
             Wf,
-            H_in,
             W_in,
-        ].where[
-            (gp.Ord(H_in) == (top_index + gp.Ord(Hf) - 1))
-            & (gp.Ord(W_in) == (left_index + gp.Ord(Wf) - 1))
-        ] = True
+        ].where[(gp.Ord(W_in) == (left_index + gp.Ord(Wf) - 1))] = True
 
         expr = gp.Sum(
             [C_in],
             gp.Sum(
-                subset[H_out, W_out, Hf, Wf, H_in, W_in],
-                input[N, C_in, H_in, W_in] * self.weight[C_out, C_in, Hf, Wf],
+                subset[W_out, Wf, W_in],
+                input[N, C_in, W_in] * self.weight[C_out, C_in, Wf],
             ),
         )
 
@@ -516,7 +517,7 @@ class Conv2d:
             assert self.bias is not None
             expr = expr + self.bias[C_out]
 
-        set_out[N, C_out, H_out, W_out] = out[N, C_out, H_out, W_out] == expr
+        set_out[N, C_out, W_out] = out[N, C_out, W_out] == expr
 
         # If propagate_bounds is True, weight is a parameter and input is a variable,
         # we will propagate the bounds of the input to the output
