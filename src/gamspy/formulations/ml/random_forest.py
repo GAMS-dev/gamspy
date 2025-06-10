@@ -54,46 +54,38 @@ class RandomForest(RegressionTree):
         self.n_estimators = ensemble.n_estimators  # type: ignore
         self.ensemble = ensemble
 
-    def __call__(self, input, M=None):
-        output_dim = (
-            self.ensemble.estimators_[0].tree_.value[:, :, 0].shape[-1]
-        )
-        set_of_samples, set_of_estimators, set_of_output_dim = (
-            gp.math._generate_dims(
-                self.container,
-                dims=[input.shape[0], self.n_estimators, output_dim],
-                alias=False,
-            )
-        )
-
-        rf_out = gp.Variable(
-            self.container,
-            name=utils._generate_name("v", self._name_prefix, "output"),
-            domain=[set_of_samples, set_of_estimators, set_of_output_dim],
-        )
-
-        out = gp.Variable(
-            self.container,
-            name=utils._generate_name("v", self._name_prefix, "output"),
-            domain=[set_of_samples, set_of_output_dim],
-        )
-
+    def __call__(self, input, M=None) -> tuple[gp.Variable, list[gp.Equation]]:
         rf_eqn_list = []
+        rf_out_collection = {}
         for i in range(self.n_estimators):
             super().__init__(
                 container=self.container,
-                regressor=self.ensemble.estimators_[i],
+                regressor=self.ensemble.estimators_[i],  # type: ignore
             )  # type: ignore
-            _out, dt_eqn = super().__call__(input, M)
-            rf_out[:, i, :].records = _out.records
+            rf_out_collection[f"estimator{i}"], dt_eqn = super().__call__(
+                input, M
+            )
             rf_eqn_list += dt_eqn
+
+        set_of_samples = input.domain[0]
+        set_of_output_dim = self.container.data.get("set_of_output_dim")
+
+        out = gp.Variable(
+            self.container,
+            name=utils._generate_name("v", self._name_prefix, "real_output"),
+            domain=[set_of_samples, set_of_output_dim],
+        )
 
         rf_eqn = gp.Equation(
             self.container,
             name=utils._generate_name("e", self._name_prefix, "rf_eqn"),
+            domain=[set_of_samples, set_of_output_dim],
             description="perdicted out times number of estimators should be equal to the random forest out",
         )
 
-        rf_eqn[...] = self.n_estimators * out == rf_out
+        rf_eqn[...] = self.n_estimators * out == sum(
+            rf_out_collection.values()
+        )
+        rf_eqn_list.append(rf_eqn)
 
-        return out, rf_eqn_list.append(rf_eqn)
+        return out, rf_eqn_list
