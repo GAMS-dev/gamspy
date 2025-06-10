@@ -41,7 +41,7 @@ def data():
     m.close()
 
 
-def test_RegressionTree_bad_init(data):
+def test_regression_tree_bad_init(data):
     m, *_ = data
 
     # wrong container object
@@ -51,7 +51,7 @@ def test_RegressionTree_bad_init(data):
     pytest.raises(ValidationError, RegressionTree, m, [])
 
 
-def test_RegressionTree_incomplete_data(data):
+def test_regression_tree_incomplete_data(data):
     m, tree_dict, _, _, par_input, _ = data
     rt = RegressionTree(m)
 
@@ -70,7 +70,7 @@ def test_RegressionTree_incomplete_data(data):
     pytest.raises(ValidationError, rt, par_input)
 
 
-def test_RegressionTree_bad_call(data):
+def test_regression_tree_bad_call(data):
     m, tree_dict, _, _, _, x = data
     rt = RegressionTree(m)
 
@@ -96,7 +96,7 @@ def test_RegressionTree_bad_call(data):
     pytest.raises(ValidationError, rt, x, "M")
 
 
-def test_RegressionTree_valid_variable(data):
+def test_regression_tree_valid_variable(data):
     m, tree_dict, _, output, par_input, x = data
     rt = RegressionTree(m)
 
@@ -121,7 +121,7 @@ def test_RegressionTree_valid_variable(data):
     assert model.status == ModelStatus(1)
 
 
-def test_RegressionTree_valid_parameter(data):
+def test_regression_tree_valid_parameter(data):
     m, tree_dict, _, output, par_input, _ = data
     rt = RegressionTree(m)
 
@@ -143,7 +143,7 @@ def test_RegressionTree_valid_parameter(data):
     assert model.status == ModelStatus(1)
 
 
-def test_RegressionTree_var_up(data):
+def test_regression_tree_var_up(data):
     m, tree_dict, in_data, _, par_input, x = data
     rt = RegressionTree(m)
 
@@ -187,7 +187,7 @@ def test_RegressionTree_var_up(data):
     assert model_min.status == ModelStatus(1)
 
 
-def test_RegressionTree_put_M(data):
+def test_regression_tree_put_M(data):
     m, tree_dict, _, _, _, x = data
     rt1 = RegressionTree(m, name_prefix="test_big_m")
     rt2 = RegressionTree(m, name_prefix="test_bound_big_m")
@@ -260,7 +260,7 @@ def test_RegressionTree_put_M(data):
     assert m2.status == ModelStatus(1)
 
 
-def test_RegressionTree_add_equation(data):
+def test_regression_tree_add_equation(data):
     m, tree_dict, _, _, par_input, x = data
     rt = RegressionTree(m)
 
@@ -313,7 +313,7 @@ def test_RegressionTree_add_equation(data):
     assert m2.status == ModelStatus(1)
 
 
-def test_RegressionTree_multi_output(data):
+def test_regression_tree_multi_output(data):
     m, tree_dict, _, _, par_input, _ = data
     tree_dict["value"] = np.array(
         [[15.6, 14.6], [11.25, 15.5], [10.0, 14.0], [15.0, 20.0], [33.0, 11.0]]
@@ -345,7 +345,7 @@ def test_RegressionTree_multi_output(data):
     assert m1.status == ModelStatus(1)
 
 
-def test_RegressionTree_multi_output_equation(data):
+def test_regression_tree_multi_output_equation(data):
     m, tree_dict, _, _, par_input, x = data
 
     tree_dict["value"] = np.array(

@@ -112,7 +112,7 @@ class DecisionTreeStruct:
         self.capacity = regressor.tree_.capacity
         self.n_features = regressor.tree_.n_features
 
-    def _check_input(self):
+    def _check_tree(self):
         """
         Validates that the core tree attributes are populated and have valid basic properties.
 

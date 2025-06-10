@@ -72,7 +72,6 @@ class RegressionTree(DecisionTreeStruct):
             raise ValidationError(f"{container} is not a gp.Container.")
 
         self.container = container
-        self._indicator_vars = None
 
         if name_prefix is None:
             name_prefix = str(uuid.uuid4()).split("-")[0]
@@ -121,7 +120,7 @@ class RegressionTree(DecisionTreeStruct):
             value for the big_M. By default, infer the value using the available bounds for variables
         """
         # TODO: Change the >input< arg name to something else?
-        super()._check_input()
+        super()._check_tree()
 
         leafs = self.children_left < 0
         leafs = leafs.nonzero()[0]
@@ -141,8 +140,21 @@ class RegressionTree(DecisionTreeStruct):
             raise ValidationError("M can either be of type float or int")
         set_of_samples = input.domain[0]
         set_of_features = input.domain[-1]
-        set_of_leafs, set_of_output_dim = gp.math._generate_dims(
-            self.container, dims=[nleafs, output_dim], alias=False
+
+        find_set_of_output_dim = self.container.data.get(
+            "set_of_output_dim", None
+        )
+        # In case of Random Forest, create this set only once as >output_dim< will not change
+        if find_set_of_output_dim is None:
+            set_of_output_dim = self.container.addSet(
+                "set_of_output_dim", records=range(output_dim)
+            )
+        else:
+            set_of_output_dim = find_set_of_output_dim
+
+        set_of_leafs = self.container.addSet(
+            name=utils._generate_name("s", self._name_prefix, "leafs"),
+            records=range(nleafs),
         )
 
         _feat_par_records = []
@@ -362,8 +374,6 @@ class RegressionTree(DecisionTreeStruct):
             1 - ind_vars
         )
 
-        self._indicator_vars = ind_vars.records
-
         return out, [
             assign_one_output,
             link_indctr_output,
@@ -372,15 +382,3 @@ class RegressionTree(DecisionTreeStruct):
             ge_cons,
             le_cons,
         ]
-
-    @property
-    def indicator_variable(self):
-        """
-        Convenience method to inspect the indicator variables used in the formulation.
-        Returns None if variables do not yet exist.
-
-        Returns
-        -------
-        None|pandas.DataFrame
-        """
-        return self._indicator_vars
