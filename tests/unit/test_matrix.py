@@ -6,10 +6,10 @@ import math
 import numpy as np
 import pytest
 
-import gamspy as gp
 from gamspy import Alias, Container, Parameter, Set, Sum, Variable
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim, permute, trace, vector_norm
+from gamspy.math.misc import MathOp
 
 pytestmark = pytest.mark.unit
 
@@ -58,6 +58,7 @@ def test_simple_matrix_matrix(data):
 
     c = Parameter(m, name="c", domain=[i, k])
     c[i, k] = a @ b
+    assert c.records.equals((a @ b).records)
     c_recs = c.toDense()
     assert np.allclose(c_recs, a_recs @ b_recs)
 
@@ -478,14 +479,22 @@ def test_domain_conflict_resolution_2(data):
     assert r2.domain[0] == mat.domain[0]
     assert r2.domain[1] == mat.domain[1]
 
-    # Added an exception to make this one work
+    mat2 = Parameter(m, name="mat2", domain=[mat.domain[1], mat.domain[0]])
+    r3 = vec @ mat2
+    assert len(r3.domain) == 1
+    assert r3.domain[0] == mat2.domain[1]
+
     r3 = vec @ mat
     assert len(r3.domain) == 1
-    assert r3.domain[0] == vec.domain[0]
+    assert r3.domain[0] == mat.domain[1]
 
     r4 = mat @ vec
     assert len(r4.domain) == 1
-    assert r4.domain[0] == vec.domain[0]
+    assert r4.domain[0] == mat.domain[0]
+
+    r4 = mat2 @ vec
+    assert len(r4.domain) == 1
+    assert r4.domain[0] == mat2.domain[0]
 
     # Added an exception to make this one work
     r5 = vec @ batched_mat
@@ -643,7 +652,7 @@ def test_vector_norm(data):
 
     # this is a special case
     norm_squared = n_expr**2
-    assert isinstance(norm_squared, gp._algebra.operation.Operation)
+    assert isinstance(norm_squared, MathOp)
 
     c[...] = vector_norm(b, ord=3)
     c_val = c.records.iloc[0, 0]

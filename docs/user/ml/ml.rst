@@ -7,7 +7,7 @@ GAMSPy and Machine Learning
    :keywords: Machine Learning, User, Guide, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
 
 GAMSPy heralds a new era of possibilities, bridging the gap between machine learning 
-and optimization that was previously difficult to cross using GAMS alone. Here’s why 
+and optimization that was previously difficult to cross using GAMS alone. Here's why
 GAMSPy is the ultimate choice:
 
 * Easy to understand, easy to write
@@ -40,6 +40,3 @@ needs or require additional information, please use our `Discourse platform <htt
    ./introduction
    ./formulations
    ./embed_nn
-   ./ols
-   ./logistic
-   ./nn

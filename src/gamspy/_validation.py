@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import io
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     )
     from gamspy._types import EllipsisType
 
-RESERVED_WORDS = [
+RESERVED_WORDS = (
     "abort",
     "acronym",
     "acronyms",
@@ -122,16 +122,16 @@ RESERVED_WORDS = [
     "while",
     "xor",
     "yes",
-]
+)
 
 
 def get_dimension(
     domain: Sequence[Set | Alias | ImplicitSet | str],
-):
+) -> int:
     dimension = 0
 
     for elem in domain:
-        if type(elem) in (symbols.Set, symbols.Alias, implicits.ImplicitSet):
+        if hasattr(elem, "dimension"):
             dimension += elem.dimension  # type: ignore
         else:
             dimension += 1
@@ -150,7 +150,7 @@ def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
             path.insert(0, domain.name)
 
         if type(domain) is symbols.Alias:
-            path.insert(0, domain.alias_with.name)
+            path.insert(0, domain.alias_with.name)  # type: ignore
 
         domain = "*" if type(domain) is str else domain.domain[0]  # type: ignore
 
@@ -162,11 +162,12 @@ def validate_dimension(
     | Parameter
     | Variable
     | Equation
+    | ImplicitSet
     | ImplicitParameter
     | ImplicitVariable
     | Operation,
     domain: list[Set | Alias | ImplicitSet | str],
-):
+) -> None:
     dimension = get_dimension(domain)
 
     if dimension != symbol.dimension:
@@ -192,7 +193,7 @@ def validate_one_dimensional_sets(
         and actual.name not in given_path
         or (
             type(actual) is symbols.Alias
-            and actual.alias_with.name not in given_path
+            and actual.alias_with.name not in given_path  # type: ignore
         )
     ):
         raise ValidationError(
@@ -288,6 +289,7 @@ def validate_domain(
     | Parameter
     | Variable
     | Equation
+    | ImplicitSet
     | ImplicitParameter
     | ImplicitVariable
     | Operation,
@@ -296,7 +298,7 @@ def validate_domain(
     domain = utils._to_list(indices)
     domain = [str(elem) if type(elem) is int else elem for elem in domain]
     domain = _expand_ellipsis_slice(symbol.domain, domain)  # type: ignore
-    if not get_option("DOMAIN_VALIDATION"):
+    if not get_option("VALIDATION") or not get_option("DOMAIN_VALIDATION"):
         return domain
 
     validate_type(domain)
@@ -342,6 +344,7 @@ def validate_container(
     | Parameter
     | Variable
     | Equation
+    | ImplicitSet
     | ImplicitParameter
     | ImplicitVariable
     | Operation,
@@ -359,6 +362,9 @@ def validate_container(
 
 
 def validate_name(word: str) -> str:
+    if not get_option("VALIDATION"):
+        return word
+
     if not isinstance(word, str):
         raise TypeError("Symbol name must be type str")
 
@@ -368,14 +374,33 @@ def validate_name(word: str) -> str:
             f" words: {RESERVED_WORDS}"
         )
 
+    if word.endswith("gpauto"):
+        raise ValidationError(
+            "Name cannot end with one of the reserved words. `gpauto` is a reserverd word."
+        )
+
     return word
 
 
 def validate_model(
     equations: Iterable[Equation],
+    matches: dict[
+        Equation | Sequence[Equation],
+        Variable | Sequence[Variable],
+    ]
+    | None,
     problem: Problem | str,
     sense: str | Sense,
 ) -> tuple[Problem, Sense]:
+    if not get_option("VALIDATION"):
+        if isinstance(problem, str):
+            problem = Problem(problem.upper())
+
+        if isinstance(sense, str):
+            sense = Sense(sense.upper())
+
+        return problem, sense
+
     if isinstance(problem, str):
         if problem.upper() not in Problem.values():
             raise ValueError(
@@ -403,10 +428,41 @@ def validate_model(
     ):
         raise TypeError("`equations` must be an Iterable of Equation objects")
 
+    if matches is not None:
+        if not isinstance(matches, dict):
+            raise TypeError(
+                f"`matches` must be of type dict but found {type(matches)}"
+            )
+
+        if any(
+            not isinstance(key, (symbols.Equation, Sequence))
+            or not isinstance(value, (symbols.Variable, Sequence))
+            or (isinstance(key, Sequence) and isinstance(value, Sequence))
+            for key, value in matches.items()
+        ):
+            raise TypeError(
+                "Possible syntaxes for the elements of the `matches` dictionary: Equation:Variable, Equation:Sequence[Variable], or Sequence[Equation]:Variable"
+            )
+
+    if problem == Problem.EMP:
+        for equation in equations:
+            assert equation._definition is not None
+            symbol_names = equation._definition._find_all_symbols()
+            if any(name.endswith("gpauto") for name in symbol_names):
+                raise ValidationError(
+                    f"{equation.name} contains symbols with autogenerated names. "
+                    "EMP models cannot contain a symbol with an autogenerated name. "
+                    "Please specify the `name` argument for all symbols you use in "
+                    "EMP models."
+                )
+
     return problem, sense
 
 
 def validate_model_name(name: str) -> str:
+    if not get_option("VALIDATION"):
+        return name
+
     if len(name) == 0:
         raise ValueError("Model name must be at least one character.")
 
@@ -440,6 +496,9 @@ def validate_solver_args(
     output: io.TextIOWrapper | None,
     load_symbols: list[Symbol] | None,
 ) -> None:
+    if not get_option("VALIDATION"):
+        return
+
     # Check validity of options
     if options is not None and not isinstance(options, Options):
         raise TypeError(
@@ -472,12 +531,12 @@ def validate_solver_args(
     if not isinstance(solver, str):
         raise TypeError("`solver` argument must be a string.")
 
-    if backend == "neos" and solver.lower() in ["mpsge", "kestrel"]:
+    if backend == "neos" and solver.lower() in ("mpsge", "kestrel"):
         raise ValidationError(
             f"`{solver}` is not a valid solver for NEOS Server."
         )
 
-    if backend == "engine" and solver.lower() in ["mpsge"]:
+    if backend == "engine" and solver.lower() == "mpsge":
         raise ValidationError(
             f"`{solver}` is not a valid solver for GAMS Engine."
         )
@@ -502,15 +561,41 @@ def validate_solver_args(
             )
 
 
-def validate_equations(model: Model):
+def validate_equations(model: Model) -> None:
+    if not get_option("VALIDATION"):
+        return
+
+    if model.container._is_restarted:
+        return
+
     for equation in model.equations:
         if equation._definition is None:
+            if equation.dimension == 0:
+                name = equation.name
+                raise ValidationError(
+                    f"`{name}` has been declared as a scalar equation but no equation definition was found.\n"
+                    f"The definition of `{name}` must use either `[:]` or `[...]` after the python variable name for the definition to register. "
+                    f"For example: \n\n\t{name} = gp.Equation(..., name='{name}', ...)\n\t{name}[...] = LHS == RHS\n\nFailure to add `[:]` or `[...]`, like in the following:\n\n\t"
+                    f"{name} = LHS == RHS\n\njust redefines the Python variable `{name}` as an expression, but does not define the equation `{name}`. "
+                    "This issue stems from the lack of assignment operator overloading in Python.\n"
+                    f"You can verify that the equation `{name}` has been defined by printing its definition:\n\n\t"
+                    f"print({name}.getDefinition())"
+                )
+
             raise ValidationError(
                 f"`{equation.name}` has been declared as an equation but no equation definition was found."
             )
 
 
-def validate_global_options(options: Any) -> Options:
+def validate_global_options(options: Options | None) -> Options:
+    if not get_option("VALIDATION"):
+        if options is None:
+            return Options()
+        elif isinstance(options, dict):
+            return Options.fromGams(options)
+
+        return options
+
     if options is not None and not isinstance(options, Options):
         raise TypeError(
             f"`options` must be of type Option but found {type(options)}"

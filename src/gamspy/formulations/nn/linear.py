@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
 
 import numpy as np
 
 import gamspy as gp
+import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
 
@@ -27,6 +27,10 @@ class Linear:
         Output feature size
     bias : bool = True
         Should bias be added after linear transformation, by Default: True
+    name_prefix : str | None
+        Prefix for generated GAMSPy symbols, by default None which means
+        random prefix. Using the same name_prefix in different formulations causes name
+        conflicts. Do not use the same name_prefix again.
 
     Examples
     --------
@@ -51,6 +55,7 @@ class Linear:
         in_features: int,
         out_features: int,
         bias: bool = True,
+        name_prefix: str | None = None,
     ):
         if not isinstance(in_features, int) or in_features <= 0:
             raise ValidationError("in_features must be a positive integer")
@@ -70,6 +75,11 @@ class Linear:
         self.weight_array = None
         self.bias: Parameter | Variable | None = None
         self.bias_array = None
+
+        if name_prefix is None:
+            name_prefix = gp.utils._get_unique_name()
+
+        self._name_prefix = name_prefix
 
     def load_weights(
         self, weight: np.ndarray, bias: np.ndarray | None = None
@@ -127,10 +137,9 @@ class Linear:
                 )
 
         if self.weight is None:
-            name = "lin_weight" + str(uuid.uuid4()).split("-")[0]
             self.weight = gp.Parameter(
                 self.container,
-                name,
+                name=utils._generate_name("p", self._name_prefix, "weight"),
                 domain=dim(expected_shape),
                 records=weight,
             )
@@ -140,10 +149,9 @@ class Linear:
 
         if self.use_bias:
             if self.bias is None:
-                name = "lin_bias" + str(uuid.uuid4()).split("-")[0]
                 self.bias = gp.Parameter(
                     self.container,
-                    name,
+                    name=utils._generate_name("p", self._name_prefix, "bias"),
                     domain=dim([self.out_features]),
                     records=bias,
                 )
@@ -175,12 +183,15 @@ class Linear:
 
         if self.weight is None:
             self.weight = gp.Variable(
-                self.container, domain=dim(expected_shape)
+                self.container,
+                name=utils._generate_name("v", self._name_prefix, "weight"),
+                domain=dim(expected_shape),
             )
 
         if self.use_bias and self.bias is None:
             self.bias = gp.Variable(
                 self.container,
+                name=utils._generate_name("v", self._name_prefix, "bias"),
                 domain=dim([self.out_features]),
             )
 
@@ -225,12 +236,17 @@ class Linear:
         if self.bias is not None:
             expr = expr + self.bias[expr.domain[-1]]
 
-        name = "lin_eq" + str(uuid.uuid4()).split("-")[0]
-        vname = "lin_var" + str(uuid.uuid4()).split("-")[0]
+        out = gp.Variable(
+            self.container,
+            name=utils._generate_name("v", self._name_prefix, "output"),
+            domain=expr.domain,
+        )
 
-        out = gp.Variable(self.container, vname, domain=expr.domain)
-
-        set_out = gp.Equation(self.container, name, domain=out.domain)
+        set_out = gp.Equation(
+            self.container,
+            name=utils._generate_name("e", self._name_prefix, "set_output"),
+            domain=out.domain,
+        )
 
         set_out[...] = out == expr
 
@@ -241,11 +257,12 @@ class Linear:
             and self._state == 1
             and isinstance(input, gp.Variable)
         ):
-            x_bounds_name = "x_bounds_" + str(uuid.uuid4()).split("-")[0]
-            out_bounds_name = "out_bounds_" + str(uuid.uuid4()).split("-")[0]
-
             x_bounds = gp.Parameter(
-                self.container, x_bounds_name, domain=dim([2, *input.shape])
+                self.container,
+                name=utils._generate_name(
+                    "p", self._name_prefix, "input_bounds"
+                ),
+                domain=dim([2, *input.shape]),
             )
             x_bounds[("0",) + tuple(input.domain)] = input.lo[...]
             x_bounds[("1",) + tuple(input.domain)] = input.up[...]
@@ -260,7 +277,9 @@ class Linear:
 
                 out_bounds = gp.Parameter(
                     self.container,
-                    out_bounds_name,
+                    name=utils._generate_name(
+                        "p", self._name_prefix, "output_bounds"
+                    ),
                     domain=dim(out.shape),
                     records=out_bounds_array,
                 )
@@ -312,7 +331,9 @@ class Linear:
 
             out_bounds = gp.Parameter(
                 self.container,
-                out_bounds_name,
+                name=utils._generate_name(
+                    "p", self._name_prefix, "output_bounds"
+                ),
                 domain=dim([2, *out.shape]),
                 records=out_bounds_array,
             )

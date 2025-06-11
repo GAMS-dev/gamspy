@@ -272,10 +272,11 @@ class NeosClient:
         working_directory: str = ".",
     ) -> None:
         gdx_string = ""
-        with open(gdx_path, "rb") as gdx_file:
-            content = gdx_file.read()
-            gdx_base64 = base64.b64encode(content).decode("utf-8")
-            gdx_string = f"<base64>{gdx_base64}</base64>"
+        if os.path.exists(gdx_path):
+            with open(gdx_path, "rb") as gdx_file:
+                content = gdx_file.read()
+                gdx_base64 = base64.b64encode(content).decode("utf-8")
+                gdx_string = f"<base64>{gdx_base64}</base64>"
 
         restart_string = ""
         try:
@@ -456,6 +457,7 @@ class NEOSServer(backend.Backend):
             "gdx": "output.gdx",
             "gdxSymbols": "newOrChanged",
             "trace": os.path.basename(self.trace_file),
+            "forcework": "1",
         }
         self.options._set_extra_options(extra_options)
 

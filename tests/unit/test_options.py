@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import sys
+import tempfile
 import time
 
 import pytest
@@ -25,8 +27,6 @@ from gamspy import (
     VariableType,
 )
 from gamspy.exceptions import GamspyException
-
-pytestmark = pytest.mark.unit
 
 
 @pytest.fixture
@@ -58,6 +58,7 @@ def data():
         os.remove(savepoint_path)
 
 
+@pytest.mark.unit
 def test_options(data):
     with pytest.raises(exceptions.ValidationError):
         options = Options(generate_name_dict=True)
@@ -122,10 +123,11 @@ def test_options(data):
 
     assert (
         content
-        == 'limcol = "0"\nlimrow = "0"\nsolprint = "0"\nsolvelink = "2"\npreviouswork = "1"\ntraceopt = "3"\nlogoption = "0"'
+        == 'optfile = "0"\nlimcol = "0"\nlimrow = "0"\nsolprint = "0"\nsolvelink = "2"\npreviouswork = "1"\ntraceopt = "3"\nlogoption = "0"'
     )
 
 
+@pytest.mark.unit
 def test_seed(data):
     m, *_ = data
     m = Container(
@@ -152,6 +154,7 @@ def test_seed(data):
     assert p2.records.value.item() == 0.11165956511164217
 
 
+@pytest.mark.unit
 def test_global_options(data):
     m, canning_plants, markets, capacities, demands, distances = data
     options = Options(lp="conopt")
@@ -193,6 +196,7 @@ def test_global_options(data):
         assert 'lp = "conopt"' in file.read()
 
 
+@pytest.mark.unit
 def test_gamspy_to_gams_options(data):
     m, canning_plants, markets, capacities, _, distances = data
     options = Options(
@@ -203,9 +207,10 @@ def test_gamspy_to_gams_options(data):
     gams_options = options._get_gams_compatible_options(output=None)
     assert gams_options["suffixalgebravars"] == "off"
     assert gams_options["suffixdlvars"] == "off"
-    assert gams_options["solveopt"] == 0
+    assert gams_options["solveopt"] == "replace"
 
 
+@pytest.mark.unit
 def test_log_option(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -256,7 +261,23 @@ def test_log_option(data):
     transport.solve(options=Options(listing_file=listing_file_name))
     assert os.path.exists(listing_file_name)
 
+    file = tempfile.NamedTemporaryFile("w", delete=False)
+    file.close()
+    transport.solve(
+        options=Options(log_file=file.name, append_to_log_file=True)
+    )
+    transport.solve(
+        options=Options(log_file=file.name, append_to_log_file=True)
+    )
+    with open(file.name) as log_file:
+        content = log_file.read()
+        matches = re.findall("Status: Normal completion", content)
+        assert len(matches) == 2
 
+    os.remove(file.name)
+
+
+@pytest.mark.unit
 def test_from_file(data):
     option_file = os.path.join("tmp", "option_file")
     with open(option_file, "w") as file:
@@ -269,6 +290,7 @@ def test_from_file(data):
         _ = Options.fromFile("unknown_path")
 
 
+@pytest.mark.unit
 def test_profile(data):
     m, canning_plants, markets, capacities, demands, distances = data
     # Set
@@ -366,6 +388,7 @@ def test_profile(data):
         assert "---- EQU supply" not in file.read()
 
 
+@pytest.mark.unit
 def test_solprint(data):
     m, canning_plants, markets, capacities, demands, distances = data
     m = Container(options=Options(report_solution=1))
@@ -456,6 +479,7 @@ def test_solprint(data):
         assert "---- EQU supply" in file.read()
 
 
+@pytest.mark.unit
 def test_exception_on_solve_with_listing_file(data):
     m, *_ = data
     x = Variable(m, name="x")
@@ -476,6 +500,7 @@ def test_exception_on_solve_with_listing_file(data):
         )
 
 
+@pytest.mark.unit
 def test_model_attribute_options(data):
     m, canning_plants, markets, capacities, demands, distances = data
     m = Container(debugging_level="keep")
@@ -565,6 +590,7 @@ def test_model_attribute_options(data):
     )
 
 
+@pytest.mark.unit
 def test_scaling(data):
     m, *_ = data
     m = Container()
@@ -597,6 +623,7 @@ def test_scaling(data):
         assert "eq..  2000000*x1 + 5000000*x2 - 1000000*z =E= 0" in file.read()
 
 
+@pytest.mark.unit
 def test_loadpoint(data):
     m, canning_plants, markets, capacities, demands, distances = data
     # Set
@@ -685,6 +712,7 @@ def test_loadpoint(data):
     assert transport.num_iterations == 0
 
 
+@pytest.mark.unit
 def test_solver_options_twice(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(
@@ -774,9 +802,10 @@ def test_solver_options_twice(data):
 
     transport.solve(options=Options(log_file=log_file_path))
     with open(log_file_path) as file:
-        assert "OptFile 1" not in file.read()
+        assert "OptFile 0" in file.read()
 
 
+@pytest.mark.unit
 def test_debug_options():
     m = Container()
     save_path = os.path.join(m.working_directory, "save.g00")
@@ -787,6 +816,96 @@ def test_debug_options():
     m.close()
 
 
+@pytest.mark.unit
+def test_solver_options_highs(data):
+    m, canning_plants, markets, capacities, demands, distances = data
+    i = Set(
+        m,
+        name="i",
+        records=canning_plants,
+        description="canning plants",
+    )
+    j = Set(
+        m,
+        name="j",
+        records=markets,
+        description="markets",
+    )
+
+    a = Parameter(
+        m,
+        name="a",
+        domain=i,
+        records=capacities,
+        description="capacity of plant i in cases",
+    )
+    b = Parameter(
+        m,
+        name="b",
+        domain=j,
+        records=demands,
+        description="demand at market j in cases",
+    )
+    d = Parameter(
+        m,
+        name="d",
+        domain=[i, j],
+        records=distances,
+        description="distance in thousands of miles",
+    )
+    c = Parameter(
+        m,
+        name="c",
+        domain=[i, j],
+        description="transport cost in thousands of dollars per case",
+    )
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(
+        m,
+        name="x",
+        domain=[i, j],
+        type="Positive",
+        description="shipment quantities in cases",
+    )
+
+    # Equation
+    supply = Equation(
+        m,
+        name="supply",
+        domain=i,
+        description="observe supply limit at plant i",
+    )
+    demand = Equation(
+        m,
+        name="demand",
+        domain=j,
+        description="satisfy demand at market j",
+    )
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+
+    log_path = os.path.join("tmp", "log.log")
+    with open(log_path, "w") as file:
+        transport.solve(
+            output=file, solver="highs", solver_options={"random_seed": 999}
+        )
+
+    with open(log_path) as file:
+        assert "random_seed" in file.read()
+
+
+@pytest.mark.requires_license
 def test_bypass_solver():
     m = Container()
 
@@ -868,3 +987,18 @@ def test_bypass_solver():
     assert end - start < 5
 
     m.close()
+
+
+def test_options_from_gams():
+    options = Options.fromGams(
+        {"reslim": 5, "lp": "cplex", "solvelink": 5, "solveopt": "replace"}
+    )
+    assert options.time_limit == 5
+    assert options.lp == "cplex"
+    assert options.solve_link_type == "memory"
+
+    with pytest.raises(exceptions.ValidationError):
+        _ = Options.fromGams({"solvelink": 4})
+
+    with pytest.raises(exceptions.ValidationError):
+        _ = Options.fromGams({"bla": 4})

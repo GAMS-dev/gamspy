@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.5.1"
+version = "1.11.1"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
 readme = "README_PYPI.md"
 description = "Python-based algebraic modeling interface to GAMS"
 requires-python = ">=3.9"
-license.file = "LICENSE"
+license-files = ["LICENSE"]
 keywords = ["Optimization", "GAMS"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
@@ -36,12 +36,13 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi[transfer] == 48.6.1",
-  "gamspy_base == 48.6.1",
+  "gamsapi[transfer] == 49.6.1",
+  "gamspy_base == 49.6.1",
   "pydantic >= 2.0",
   "certifi >= 2022.09.14",
   "urllib3 >= 2.0.7",
   "typer >= 0.15.1",
+  "click < 8.2.0",
 ]
 
 [project.urls]
@@ -81,7 +82,8 @@ doc = [
   "pytest>=8.2.1",
   "nbmake>=1.5.3",
   "openpyxl>=3.1.2",
-  "sphinx-tabs>=3.4.7"
+  "sphinx-tabs>=3.4.7",
+  "towncrier>= 24.8.0",
 ]
 
 [project.scripts]
@@ -91,12 +93,71 @@ gamspy = "gamspy._cli.cli:main"
 warn_unused_configs = true
 follow_imports = "skip"
 follow_imports_for_stubs = true
+disable_error_code = ["misc"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
 "gamspy" = ["py.typed"]
+
+[tool.towncrier]
+package = "gamspy"
+package_dir = "src"
+filename = "CHANGELOG.rst"
+directory = "changelog/"
+title_format = "GAMSPy {version} ({project_date})"
+template = "changelog/_template.rst"
+
+# NOTE: we want to declare extra non-default types for clarity and flexibility.
+
+[[tool.towncrier.type]]
+# New behaviors, public APIs etc.
+directory = "feature"
+name = "New features"
+showcontent = true
+
+[[tool.towncrier.type]]
+# New behaviors in existing features.
+directory = "improvement"
+name = "Improvements in existing functionality"
+showcontent = true
+
+[[tool.towncrier.type]]
+# Something we deemed an improper undesired behavior that got corrected.
+directory = "bugfix"
+name = "Bug fixes"
+showcontent = true
+
+[[tool.towncrier.type]]
+# Notable updates to the documentation.
+directory = "doc"
+name = "Improved documentation"
+showcontent = true
+
+[[tool.towncrier.type]]
+# Declarations of future API removals and breaking changes in behavior.
+directory = "deprecation"
+name = "Deprecations"
+showcontent = true
+
+[[tool.towncrier.type]]
+# Updates regarding dependencies.
+directory = "dependency"
+name = "Dependencies"
+showcontent = true
+
+[[tool.towncrier.type]]
+# ci/cd related changes.
+directory = "cicd"
+name = "CI/CD changes"
+showcontent = true
+
+[[tool.towncrier.type]]
+# Changes that are hard to assign to any of the above categories.
+directory = "misc"
+name = "Miscellaneous internal changes"
+showcontent = true
 
 [tool.coverage.run]
 omit = ["*/_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py"]
@@ -159,8 +220,12 @@ select = [
     "SIM",
     # isort
     "I",
+    # flake8-pie
+    "PIE",
+    # Consider merging multiple comparisons
+    "PLR1714",
 ]
-ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "B028", "B006"]
+ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "SIM115", "B028", "B006"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
@@ -191,4 +256,5 @@ markers = [
     "engine: engine tests",
     "neos: neos tests",
     "model_library: run all model library",
+    "requires_license: tests that require license",
 ]

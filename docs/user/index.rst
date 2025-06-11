@@ -32,9 +32,11 @@ details are found in :ref:`reference`.
 
    faq
    gamspy_for_gams_users
+   developer_guide
 
 .. toctree::
    :caption: Machine Learning
    :maxdepth: 2
 
    ml/ml
+   ml/examples

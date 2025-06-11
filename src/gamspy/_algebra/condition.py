@@ -10,6 +10,8 @@ import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy import Alias, Parameter, Set, Variable
     from gamspy._algebra.domain import Domain
     from gamspy._algebra.expression import Expression
@@ -19,6 +21,7 @@ if TYPE_CHECKING:
         ImplicitParameter,
         ImplicitSet,
     )
+    from gamspy.math import MathOp
 
 
 class Condition(operable.Operable):
@@ -43,8 +46,10 @@ class Condition(operable.Operable):
         | Domain
         | Number
         | Card
-        | Ord,
-        condition: Expression
+        | Ord
+        | MathOp,
+        condition: Operation
+        | Expression
         | ImplicitParameter
         | ImplicitSet
         | int
@@ -53,13 +58,21 @@ class Condition(operable.Operable):
         self.conditioning_on = conditioning_on
         self.condition = condition
         self._where = None
+        self.container = None
+        if hasattr(conditioning_on, "container"):
+            self.container = conditioning_on.container
+
+        self.domain = None
+        if hasattr(conditioning_on, "domain"):
+            self.domain = conditioning_on.domain
 
     @property
     def where(self):
         return Condition(self)
 
     def __getitem__(
-        self, condition: Expression | ImplicitParameter | ImplicitSet
+        self,
+        condition: Operation | Expression | ImplicitParameter | ImplicitSet,
     ) -> Condition:
         if isinstance(condition, expression.Expression):
             condition._fix_equalities()
@@ -95,11 +108,27 @@ class Condition(operable.Operable):
 
         self.conditioning_on.container._synch_with_gams(gams_to_gamspy=True)
 
-    def __neg__(self) -> Expression:
-        return expression.Expression(None, "-", self)
-
     def __repr__(self) -> str:
         return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"
+
+    @property
+    def dimension(self) -> int:
+        if self.domain is None:
+            return 0
+
+        return len(self.domain)
+
+    @property
+    def records(self) -> pd.DataFrame | None:
+        assert self.container is not None
+        assert self.domain is not None
+        temp_name = "a" + utils._get_unique_name()
+        temp_param = syms.Parameter._constructor_bypass(
+            self.container, temp_name, self.domain
+        )
+        temp_param[...] = self
+        del self.container.data[temp_name]
+        return temp_param.records
 
     def gamsRepr(self) -> str:
         condition_str = (

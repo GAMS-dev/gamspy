@@ -17,7 +17,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 @pytest.mark.unit
 def test_version():
-    assert gp.__version__ == "1.5.1"
+    assert gp.__version__ == "1.11.1"
 
 
 @pytest.mark.unit
@@ -36,14 +36,28 @@ def test_config():
 
     gp.set_options({"DOMAIN_VALIDATION": 1})
 
+    e = gp.Equation(m, "e")
+    model = gp.Model(m, "my_model", equations=[e])
+
+    # no equation definition was found. ValidationError by default.
+    with pytest.raises(ValidationError):
+        model.solve()
+
+    # no equation definition was found. Raises GamspyException because the validation is disabled.
+    gp.set_options({"VALIDATION": 0})
+    with pytest.raises(GamspyException):
+        model.solve()
+
+    gp.set_options({"VALIDATION": 1})
+
 
 @pytest.mark.unit
 def test_domain_checking_config_performance():
     gp.set_options({"DOMAIN_VALIDATION": 1})
-    start = time.time()
     m = gp.Container()
     i = gp.Set(m, records=range(999))
     a = gp.Parameter(m, domain=i)
+    start = time.time()
     for idx in range(999):
         _ = (
             a[idx]
@@ -59,10 +73,10 @@ def test_domain_checking_config_performance():
     timing_with_validation = time.time() - start
 
     gp.set_options({"DOMAIN_VALIDATION": 0})
-    start = time.time()
     m = gp.Container()
     i = gp.Set(m, records=range(999))
     a = gp.Parameter(m, domain=i)
+    start = time.time()
     for idx in range(999):
         _ = (
             a[idx]
@@ -115,7 +129,8 @@ def teardown():
     # Cleanup
     files = glob.glob("_*")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
 
     if os.path.exists("test"):
         shutil.rmtree("test")

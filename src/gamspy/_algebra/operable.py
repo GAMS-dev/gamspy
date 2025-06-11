@@ -5,6 +5,7 @@ import typing
 
 import gamspy._algebra.expression as expression
 import gamspy.math as gamspy_math
+from gamspy.exceptions import ValidationError
 
 if typing.TYPE_CHECKING:
     from gamspy._types import OperableType
@@ -15,6 +16,11 @@ class Operable:
     A mixin class that overloads the magic operations of a class
     to be used in Expressions
     """
+
+    def __iter__(self):
+        raise ValidationError(
+            "GAMSPy symbols are not iterable. If you want to iterate on records, iterate over <symbol>.records."
+        )
 
     # +, -, /, *, **, %
     def __add__(self, other: OperableType):
@@ -69,6 +75,9 @@ class Operable:
 
         return expression.Expression(other, "-", self)
 
+    def __neg__(self):
+        return expression.Expression(None, "-", self)
+
     def __truediv__(self, other: OperableType):
         return expression.Expression(self, "/", other)
 
@@ -101,11 +110,11 @@ class Operable:
             isinstance(other, int)
             and other == 2
             and isinstance(self, expression.Expression)
-            and isinstance(self.data, gamspy_math.misc.MathOp)
-            and self.data.op_name == "sqrt"
-            and self.data.safe_cancel
+            and isinstance(self.left, gamspy_math.misc.MathOp)
+            and self.left.op_name == "sqrt"
+            and self.left.safe_cancel
         ):
-            return self.data.elements[0]
+            return self.left.elements[0]
 
         if isinstance(other, int):
             return gamspy_math.power(self, other)
@@ -175,3 +184,6 @@ class Operable:
         return operation.Sum(
             [sum_domain], self[left_domain] * other[right_domain]
         )
+
+    def gamsRepr(self):
+        """Representation of the symbol in GAMS"""

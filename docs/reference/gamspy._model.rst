@@ -19,3 +19,8 @@ Model
    :members:
    :undoc-members:
    :show-inheritance:
+
+.. autoclass:: gamspy.FileFormat
+   :members:
+   :undoc-members:
+   :show-inheritance:

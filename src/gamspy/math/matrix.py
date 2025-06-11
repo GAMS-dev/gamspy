@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.alias import Alias
+    from gamspy.math.misc import MathOp
 
 
 def vector_norm(
@@ -30,7 +31,7 @@ def vector_norm(
     ),
     ord: float | int = 2,
     dim: list[int] | list[Set | Alias] | None = None,
-) -> Operation | Expression:
+) -> Operation | Expression | MathOp:
     """
     Returns the vector norm of the provided vector x. If ord is not an even integer, absolute value is used which
     requires DNLP.
@@ -43,7 +44,7 @@ def vector_norm(
 
     Returns
     -------
-    Expression | Operation
+    Expression | Operation | MathOp
 
     Examples
     --------
@@ -64,7 +65,7 @@ def vector_norm(
     if isinstance(ord, float):
         if ord.is_integer():
             ord = int(ord)
-        elif ord in [float("inf"), float("-inf")]:
+        elif ord in (float("inf"), float("-inf")):
             raise ValidationError("Infinity norms are not supported")
 
     if ord == 0:
@@ -431,7 +432,7 @@ def _validate_matrix_mult_dims(left, right):
 
         sum_domain = left.domain[1]
         while (
-            sum_domain in [left_domain, right_domain]
+            sum_domain in (left_domain, right_domain)
             or sum_domain in controlled_domain
         ):
             sum_domain = next_alias(sum_domain)
@@ -446,14 +447,13 @@ def _validate_matrix_mult_dims(left, right):
         if not utils.setBaseEqual(left.domain[0], right.domain[0]):
             raise ValidationError(dim_no_match_err)
 
-        if utils.setBaseEqual(right.domain[0], right.domain[1]):
-            sum_domain = right.domain[1]
-            right_domain = right.domain[0]
-        else:
-            sum_domain = right.domain[0]
-            right_domain = right.domain[1]
+        sum_domain = left.domain[0]
+        right_domain = right.domain[1]
 
-        while sum_domain == right.domain[1] or sum_domain in controlled_domain:
+        while right_domain in controlled_domain:
+            right_domain = next_alias(right_domain)
+
+        while sum_domain == right_domain or sum_domain in controlled_domain:
             sum_domain = next_alias(sum_domain)
 
         return [sum_domain], [sum_domain, right_domain], sum_domain
@@ -528,7 +528,7 @@ def _validate_matrix_mult_dims(left, right):
         while (
             sum_domain in left.domain[:-1]
             or sum_domain in right.domain[:-2]
-            or sum_domain in [right_domain, left_domain]
+            or sum_domain in (right_domain, left_domain)
             or sum_domain in controlled_domain
         ):
             sum_domain = next_alias(sum_domain)

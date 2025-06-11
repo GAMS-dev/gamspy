@@ -3,21 +3,28 @@ from __future__ import annotations
 import glob
 import math
 import os
+import pathlib
 import platform
+import signal
 import subprocess
 import sys
+import tempfile
+import time
 
 import gamspy_base
 import pandas as pd
 import pytest
 
+import gamspy as gp
 import gamspy.utils as utils
 from gamspy import (
     Alias,
     Container,
     Equation,
+    FreezeOptions,
     Model,
     ModelInstanceOptions,
+    ModelStatus,
     Options,
     Parameter,
     Problem,
@@ -73,7 +80,8 @@ def data():
 
     files = glob.glob("_*")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
 
     if os.path.exists("dict.txt"):
         os.remove("dict.txt")
@@ -137,11 +145,10 @@ def test_parameter_change(data):
     ]
 
     transport.freeze(modifiables=[bmult])
-
     for b_value, result in zip(bmult_list, results):
         bmult[...] = b_value
         summary = transport.solve(solver="conopt")
-        assert summary["Solver"].item() == "conopt"
+        assert summary["Solver"].item() == "CONOPT4"
         assert "bmult_var" in m.data
         assert x.records.columns.to_list() == [
             "i",
@@ -154,12 +161,40 @@ def test_parameter_change(data):
         ]
         assert math.isclose(z.toValue(), result, rel_tol=1e-3)
         assert math.isclose(transport.objective_value, result, rel_tol=1e-3)
+    transport2 = Model(
+        m,
+        name="transport2",
+        equations=[supply, demand, cost],
+        problem="LP",
+        sense=Sense.MIN,
+        objective=z,
+    )
 
+    bmult_list = [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3]
+
+    transport2.freeze(modifiables=[bmult])
+
+    expected_status = (
+        ModelStatus.OptimalGlobal,
+        ModelStatus.OptimalGlobal,
+        ModelStatus.OptimalGlobal,
+        ModelStatus.OptimalGlobal,
+        ModelStatus.OptimalGlobal,
+        ModelStatus.InfeasibleGlobal,
+        ModelStatus.InfeasibleGlobal,
+        ModelStatus.InfeasibleGlobal,
+    )
+    for b_value, status in zip(bmult_list, expected_status):
+        bmult.setRecords(b_value)
+        transport2.solve(solver="conopt")
+        assert transport2.status == status
+
+    transport2.unfreeze()
     # different solver
-    summary = transport.solve(solver="ipopt")
-    assert summary["Solver"].item() == "ipopt"
+    summary = transport.solve(solver="cplex")
+    assert summary["Solver"].item() == "cplex"
     assert math.isclose(
-        transport.objective_value, 199.88517934823204, rel_tol=1e-6
+        transport.objective_value, 199.77750000000003, rel_tol=1e-6
     )
 
     # invalid solver
@@ -317,27 +352,42 @@ def test_validations(data):
 
     transport.freeze(modifiables=[x.up], options=Options(lp="conopt"))
 
-    # Test model instance options
+    # Test freeze options
     transport.solve(
         solver="conopt",
-        model_instance_options=ModelInstanceOptions(debug=True),
+        freeze_options=FreezeOptions(debug=True),
     )
     assert math.isclose(transport.objective_value, 153.675, rel_tol=1e-6)
     assert os.path.exists("dict.txt")
     assert os.path.exists("gams.gms")
 
+    # ModelInstanceOptions should throw a warning
+    with pytest.warns(DeprecationWarning):
+        transport.solve(
+            solver="conopt",
+            model_instance_options=ModelInstanceOptions(debug=True),
+        )
+
     # Test solver options
-    with open("_out.txt", "w") as file:
+    with tempfile.NamedTemporaryFile("w", delete=False) as file:
         transport.solve(
             solver="conopt", output=file, solver_options={"rtmaxv": "1.e12"}
         )
+        file.close()
 
-    with open("_out.txt") as file:
-        assert ">>  rtmaxv 1.e12" in file.read()
+        with open(file.name) as f:
+            assert ">>  rtmaxv 1.e12" in f.read()
 
-    options_path = os.path.join(m.working_directory, "conopt.opt")
-    assert os.path.exists(options_path)
-    os.remove(options_path)
+        options_path = os.path.join(m.working_directory, "conopt4.opt")
+        assert os.path.exists(options_path)
+
+    with tempfile.NamedTemporaryFile("w", delete=False) as file:
+        # Test a second solve call without solver options
+        transport.solve(solver="conopt", output=file)
+        file.close()
+
+        with open(file.name) as f:
+            assert ">>  rtmaxv 1.e12" not in f.read()
 
 
 @pytest.mark.skipif(
@@ -642,7 +692,7 @@ def test_license():
     subprocess.run(
         [
             sys.executable,
-            "-m",
+            "-Bm",
             "gamspy",
             "install",
             "license",
@@ -675,7 +725,7 @@ def test_license():
     subprocess.run(
         [
             sys.executable,
-            "-m",
+            "-Bm",
             "gamspy",
             "install",
             "license",
@@ -885,3 +935,91 @@ def test_database():
     m = Container(gdx_path)
     assert len(m) == 6
     m.close()
+
+
+def test_feasibility():
+    m = gp.Container()
+    x = gp.Variable(m, "x", records=2)
+    a = gp.Parameter(m, "a", records=6)
+    b = gp.Parameter(m, "b", records=3)
+    e = gp.Equation(m, "e", definition=a * x / gp.math.sqr(b) == 0)
+    mi = gp.Model(m, "mi", equations=[e], problem="LP", sense="FEASIBILITY")
+    assert (
+        mi._generate_solve_string()
+        == "solve mi using LP MIN mi_objective_variable"
+    )
+    mi.freeze([a, b])
+    mi.solve(solver="cplex")
+    mi.unfreeze()
+
+
+def test_output_propagation(data):
+    _, canning_plants, markets, capacities, demands, distances = data
+    file = tempfile.NamedTemporaryFile("w", delete=False)  # noqa
+    m = Container(output=file)
+    i = Set(m, name="i", records=canning_plants)
+    j = Set(m, name="j", records=markets)
+
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
+    d = Parameter(
+        m,
+        name="d",
+        domain=[i, j],
+        records=distances,
+        is_miro_input=True,
+    )
+    c = Parameter(m, name="c", domain=[i, j])
+    bmult = Parameter(m, name="bmult", records=1)
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(m, name="x", domain=[i, j], type="Positive")
+    z = Variable(m, name="z")
+
+    cost = Equation(m, name="cost")
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
+
+    cost[...] = z == Sum((i, j), c[i, j] * x[i, j])
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= bmult * b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=z,
+    )
+
+    transport.freeze(modifiables=[bmult])
+
+    with open(file.name) as f:
+        assert "Generating LP model transport" in f.read()
+
+    transport.unfreeze()
+    file.close()
+    os.unlink(file.name)
+    m.close()
+
+
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Test only for linux."
+)
+def test_interrupt():
+    directory = str(pathlib.Path(__file__).parent.resolve())
+    process = subprocess.Popen(
+        [sys.executable, os.path.join(directory, "dice2.py")],
+        stdout=subprocess.PIPE,
+        text=True,
+        stderr=subprocess.STDOUT,
+    )
+    time.sleep(4)
+    process.send_signal(signal.SIGINT)
+    process.wait()
+    output = process.stdout.read()
+    assert (
+        "[FROZEN MODEL - WARNING] The solve was interrupted! Solve status: UserInterrupt"
+        in output
+    ), output

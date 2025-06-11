@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy.exceptions as exceptions
 import gamspy.math as gams_math
 from gamspy import (
     Alias,
@@ -25,7 +26,6 @@ from gamspy import (
     Sum,
     Variable,
 )
-from gamspy.exceptions import ValidationError
 from gamspy.math import sqrt
 
 pytestmark = pytest.mark.integration
@@ -154,7 +154,11 @@ def test_lp_transport(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
 
-    with pytest.raises(ValidationError):
+    transport.toGams(
+        os.path.join("tmp", "to_gams"),
+        options=Options.fromGams({"lp": "cplex"}),
+    )
+    with pytest.raises(exceptions.ValidationError):
         transport.toGams(
             os.path.join("tmp", "to_gams"), options={"lp": "cplex"}
         )
@@ -193,7 +197,11 @@ def test_lp_transport(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -335,7 +343,11 @@ def test_mip_cutstock(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -588,7 +600,11 @@ def test_nlp_weapons(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -722,7 +738,11 @@ def test_mcp_qp6(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -887,7 +907,11 @@ def test_dnlp_inscribedsquare(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -1601,7 +1625,11 @@ def test_minlp_minlphix(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -1680,7 +1708,11 @@ def test_qcp_EDsensitivity(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -1731,7 +1763,11 @@ def test_set_attributes(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -1749,7 +1785,7 @@ def test_math_op(data):
 
     m = ct.addModel(
         "math",
-        Problem.QCP,
+        problem=Problem.QCP,
         equations=ct.getEquations(),
         sense=Sense.MIN,
         objective=Sum(S, x[S]),
@@ -1768,6 +1804,106 @@ def test_math_op(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
+
+
+def test_dump_gams_state(data):
+    m = data
+
+    # Prepare data
+    distances = [
+        ["seattle", "new-york", 2.5],
+        ["seattle", "chicago", 1.7],
+        ["seattle", "topeka", 1.8],
+        ["san-diego", "new-york", 2.5],
+        ["san-diego", "chicago", 1.8],
+        ["san-diego", "topeka", 1.4],
+    ]
+
+    capacities = [["seattle", 350], ["san-diego", 600]]
+    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+    # Set
+    i = Set(
+        m,
+        name="i",
+        records=["seattle", "san-diego"],
+        description="canning plants",
+    )
+    j = Set(
+        m,
+        name="j",
+        records=["new-york", "chicago", "topeka"],
+        description="markets",
+    )
+
+    # Data
+    a = Parameter(
+        m,
+        name="a",
+        domain=i,
+        records=capacities,
+        description="capacity of plant i in cases",
+    )
+    b = Parameter(
+        m,
+        name="b",
+        domain=j,
+        records=demands,
+        description="demand at market j in cases",
+    )
+    d = Parameter(
+        m,
+        name="d",
+        domain=[i, j],
+        records=distances,
+        description="distance in thousands of miles",
+    )
+    c = Parameter(
+        m,
+        name="c",
+        domain=[i, j],
+        description="transport cost in thousands of dollars per case",
+    )
+    c[i, j] = 90 * d[i, j] / 1000
+
+    # Variable
+    x = Variable(
+        m,
+        name="x",
+        domain=[i, j],
+        type="Positive",
+        description="shipment quantities in cases",
+    )
+
+    # Equation
+    supply = Equation(
+        m,
+        name="supply",
+        domain=i,
+        description="observe supply limit at plant i",
+    )
+    demand = Equation(
+        m, name="demand", domain=j, description="satisfy demand at market j"
+    )
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+    path = os.path.join("tmp", "transport")
+    transport.toGams(path, dump_gams_state=True)
+    assert os.path.exists(os.path.join(path, "transport.g00"))

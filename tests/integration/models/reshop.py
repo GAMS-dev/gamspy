@@ -6,7 +6,7 @@
 """
 
 import gamspy.math as gpm
-from gamspy import Container, Equation, Model, Options, Set, Variable
+from gamspy import Container, Equation, Model, Set, Variable
 
 
 def ReSHOPAnnotation(m, s):
@@ -65,7 +65,7 @@ def main():
     """,
     )
 
-    nash.solve(solver="reshop", options=Options(log_file="log.log"))
+    nash.solve(solver="reshop")
     assert x.toList() == [
         ("a0", "0", 0.8571428571428571),
         ("a0", "1", 2.5),

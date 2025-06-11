@@ -9,7 +9,7 @@ repos:
     -   id: check-ast
     -   id: check-case-conflict
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.14.1'
+    rev: 'v1.15.0'
     hooks:
     -   id: mypy
         files: '^src\/gamspy\/(.*?)$'
@@ -26,8 +26,3 @@ repos:
         args: [ --fix ]
     # Run the formatter.
     -   id: ruff-format
--   repo: https://github.com/pypa/pip-audit
-    rev: v2.7.3
-    hooks:
-    -   id: pip-audit
-        args: ["."]

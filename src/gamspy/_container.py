@@ -10,7 +10,8 @@ import tempfile
 import threading
 import time
 import traceback
-import uuid
+import weakref
+from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -30,7 +31,6 @@ from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
-    from collections.abc import Iterable
     from typing import Any, Literal
 
     from pandas import DataFrame
@@ -51,6 +51,20 @@ LOOPBACK = "127.0.0.1"
 IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
+is_windows = platform.system() == "Windows"
+
+
+def add_sysdir_to_path(system_directory: str) -> None:
+    if is_windows:
+        if "PATH" in os.environ:
+            if not os.environ["PATH"].startswith(
+                system_directory + os.pathsep
+            ):
+                os.environ["PATH"] = (
+                    system_directory + os.pathsep + os.environ["PATH"]
+                )
+        else:
+            os.environ["PATH"] = system_directory
 
 
 def open_connection(
@@ -87,7 +101,7 @@ def open_connection(
         port = int(port_info.removeprefix("port: "))
     except ValueError as e:
         raise ValidationError(
-            f"Error while reading the port! {port_info=}"
+            f"Error while reading the port! {port_info + process.stdout.read()}"
         ) from e
 
     def handler(signum, frame):
@@ -224,12 +238,14 @@ class Container(gt.Container):
     ):
         self.output = output
         self._gams_string = ""
+        self.models: dict[str, Model] = dict()
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
 
         self._is_socket_open = True
 
         system_directory = get_system_directory(system_directory)
+        add_sysdir_to_path(system_directory)
 
         self._unsaved_statements: list = []
 
@@ -262,7 +278,15 @@ class Container(gt.Container):
         self._socket, self._process = open_connection(
             self.system_directory, self._process_directory, self._license_path
         )
+        weakref.finalize(
+            self,
+            self._release_resources,
+            self._is_socket_open,
+            self._socket,
+            self._process,
+        )
 
+        self._is_restarted = False
         if load_from is not None:
             if not isinstance(load_from, (str, gt.Container)):
                 raise ValidationError(
@@ -282,14 +306,25 @@ class Container(gt.Container):
                     {"restart": load_from, "gdxSymbols": "all"}
                 )
                 self._synch_with_gams(gams_to_gamspy=True)
+                self._options._set_debug_options(dict())
+                self._clean_modified_symbols()
+                self._unsaved_statements = []
+                self._is_restarted = True
             else:
                 self._read(load_from)
+                if not isinstance(load_from, gt.Container):
+                    self._unsaved_statements = []
+                    self._clean_modified_symbols()
+                    self._add_statement(f"$declareAndLoad {load_from}")
+
                 self._synch_with_gams()
 
     def __enter__(self):
         pid = os.getpid()
         tid = threading.get_native_id()
         gp._ctx_managers[(pid, tid)] = self
+
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pid = os.getpid()
@@ -308,12 +343,6 @@ class Container(gt.Container):
             return f"<Container ({hex(id(self))}) with {len(self)} symbols: {self.data.keys()}>"
 
         return f"<Empty Container ({hex(id(self))})>"
-
-    def __del__(self):
-        try:
-            self._stop_socket()
-        except (Exception, ConnectionResetError):  # pragma: no cover
-            ...
 
     @property
     def working_directory(self) -> str:
@@ -347,16 +376,21 @@ class Container(gt.Container):
 
         return bool("+" in lines[0] and lines[4][47] == "N")
 
-    def _stop_socket(self):
-        if hasattr(self, "_socket") and self._is_socket_open:
-            self._socket.sendall(b"stop")
-            self._socket.close()
-            self._is_socket_open = False
+    @staticmethod
+    def _release_resources(
+        is_socket_open: bool, socket: socket.socket, process: subprocess.Popen
+    ):
+        if is_socket_open:
+            try:
+                socket.sendall(b"stop")
+                socket.close()
 
-            if not self._process.stdout.closed:
-                self._process.stdout.close()
+                if not process.stdout.closed:
+                    process.stdout.close()
 
-            while self._process.poll() is None:
+                while process.poll() is None:
+                    ...
+            except OSError:  # Socket may have been already closed.
                 ...
 
     def _read_output(self, output: io.TextIOWrapper | None) -> None:
@@ -401,7 +435,10 @@ class Container(gt.Container):
             encoder = MiroJSONEncoder(self)
             encoder.write_json()
         except Exception:
-            self._stop_socket()
+            self._release_resources(
+                self._is_socket_open, self._socket, self._process
+            )
+            self._is_socket_open = False
             traceback.print_exc()
             os._exit(1)
 
@@ -459,7 +496,7 @@ class Container(gt.Container):
                 )
             elif isinstance(gtp_symbol, gt.Equation):
                 symbol_type = gtp_symbol.type
-                if gtp_symbol.type in ["eq", "leq", "geq"]:
+                if gtp_symbol.type in ("eq", "leq", "geq"):
                     symbol_type = "regular"
 
                 _ = gp.Equation._constructor_bypass(
@@ -482,18 +519,8 @@ class Container(gt.Container):
             if name in self.data:
                 del self.data[name]
 
-    def _get_symbol_names_to_load(
-        self, load_from: str, names: list[str] | None
-    ) -> list[str]:
-        if names is None:
-            names = utils._get_symbol_names_from_gdx(
-                self.system_directory, load_from
-            )
-
-        return names
-
     def _setup_paths(self) -> tuple[str, str, str]:
-        suffix = "_" + str(uuid.uuid4())
+        suffix = "_" + utils._get_unique_name()
         job = os.path.join(self.working_directory, suffix)
         gdx_in = os.path.join(self.working_directory, f"{suffix}in.gdx")
         gdx_out = os.path.join(self.working_directory, f"{suffix}out.gdx")
@@ -517,7 +544,7 @@ class Container(gt.Container):
                     type(symbol) is gp.Alias
                     and symbol.alias_with.name not in modified_names  # type: ignore
                 ):
-                    modified_names.append(symbol.alias_with.name)
+                    modified_names.append(symbol.alias_with.name)  # type: ignore
 
                 modified_names.append(name)
 
@@ -526,7 +553,7 @@ class Container(gt.Container):
     def _clean_modified_symbols(self) -> None:
         for symbol in self.data.values():
             if type(symbol) is gp.Alias:
-                symbol.alias_with.modified = False
+                symbol.alias_with.modified = False  # type: ignore
 
             symbol.modified = False
 
@@ -554,8 +581,14 @@ class Container(gt.Container):
     ) -> str:
         LOADABLE = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         MIRO_INPUT_TYPES = (gp.Set, gp.Parameter)
+        assume_suffix = int(get_option("ASSUME_VARIABLE_SUFFIX"))
 
         strings = ["$onMultiR", "$onUNDF"]
+        if assume_suffix == 1:
+            strings.append("$onDotL")
+        elif assume_suffix == 2:
+            strings.append("$onDotScale")
+
         for statement in self._unsaved_statements:
             if type(statement) is str:
                 strings.append(statement)
@@ -591,7 +624,11 @@ class Container(gt.Container):
 
                 strings.append("$gdxIn")
 
-        strings.append("$offUNDF")
+        if assume_suffix == 1:
+            strings.append("$offDotL")
+        elif assume_suffix == 2:
+            strings.append("$offDotScale")
+        strings += ["$offUNDF", "$offMulti"]
 
         if not IS_MIRO_INIT and MIRO_GDX_OUT:
             strings.append(miro.get_unload_output_str(self))
@@ -604,36 +641,44 @@ class Container(gt.Container):
         return gams_string
 
     def _load_records_from_gdx(
-        self,
-        load_from: str,
-        symbol_names: list[str] | None = None,
-        user_invoked: bool = False,
-    ):
-        symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
+        self, load_from: str, names: Iterable[str]
+    ) -> None:
+        self._temp_container.read(load_from, names)
+        original_state = self._options.miro_protect
+        self._options.miro_protect = False
 
-        self._temp_container.read(load_from, symbol_names)
-
-        for name in symbol_names:
+        for name in names:
             if name in self.data:
                 updated_records = self._temp_container[name].records
-
-                if user_invoked:
-                    self[name].records = updated_records
-                else:
-                    self[name]._records = updated_records
-
-                if updated_records is not None:
-                    self[name].domain_labels = self[name].domain_names
+                self[name].records = updated_records
+                self[name].domain_labels = self[name].domain_names
             else:
                 self._read(load_from, [name])
 
-            if user_invoked:
-                self[name].modified = True
-
+        self._options.miro_protect = original_state
         self._temp_container.data = {}
 
-        if user_invoked:
-            self._synch_with_gams()
+    def _load_records_with_rename(
+        self, load_from: str, names: dict[str, str]
+    ) -> None:
+        self._temp_container.read(load_from, list(names.keys()))
+        original_state = self._options.miro_protect
+        self._options.miro_protect = False
+
+        for gdx_name, gamspy_name in names.items():
+            if gamspy_name in self.data:
+                updated_records = self._temp_container[gdx_name].records
+                self[gamspy_name].records = updated_records
+                self[gamspy_name].domain_labels = self[
+                    gamspy_name
+                ].domain_names
+            else:
+                raise ValidationError(
+                    f"Invalid renaming. `{gamspy_name}` does not exist in the container."
+                )
+
+        self._options.miro_protect = original_state
+        self._temp_container.data = {}
 
     def _read(
         self,
@@ -752,7 +797,7 @@ class Container(gt.Container):
     def loadRecordsFromGdx(
         self,
         load_from: str,
-        symbol_names: list[str] | None = None,
+        symbol_names: Iterable[str] | dict[str, str] | None = None,
     ) -> None:
         """
         Loads data of the given symbols from a GDX file. If no
@@ -762,8 +807,11 @@ class Container(gt.Container):
         ----------
         load_from : str
             Path to the GDX file
-        symbols : List[str], optional
-            Symbols whose data will be load from GDX, by default None
+        symbol_names : Iterable[str], dict[str, str], optional
+            Symbol names whose data will be load from GDX, by default None.
+            Default option loads records of all symbols in the GDX file.
+            If given as a dict, keys are the symbol names in the GDX file, and
+            values are the names of the GAMSPy symbols.
 
         Examples
         --------
@@ -777,7 +825,18 @@ class Container(gt.Container):
         True
 
         """
-        self._load_records_from_gdx(load_from, symbol_names, user_invoked=True)
+        if symbol_names is None:
+            # If no symbol names are given, all records in the gdx should be loaded
+            symbol_names = utils._get_symbol_names_from_gdx(
+                self.system_directory, load_from
+            )
+
+        if isinstance(symbol_names, dict):
+            self._load_records_with_rename(load_from, symbol_names)
+        else:
+            self._load_records_from_gdx(load_from, symbol_names)
+
+        self._synch_with_gams()
 
     def addGamsCode(self, gams_code: str) -> None:
         """
@@ -811,7 +870,10 @@ class Container(gt.Container):
         to communicate with the GAMS execution engine, e.g. creating new symbols, changing data,
         solves, etc. The container data (Container.data) is still available for read operations.
         """
-        self._stop_socket()
+        self._release_resources(
+            self._is_socket_open, self._socket, self._process
+        )
+        self._is_socket_open = False
 
     def addAlias(
         self,
@@ -853,7 +915,7 @@ class Container(gt.Container):
     def addSet(
         self,
         name: str | None = None,
-        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
         domain_forwarding: bool = False,
@@ -921,7 +983,7 @@ class Container(gt.Container):
     def addParameter(
         self,
         name: str | None = None,
-        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
         records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -990,7 +1052,7 @@ class Container(gt.Container):
         self,
         name: str | None = None,
         type: str = "free",
-        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
         records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -1052,7 +1114,7 @@ class Container(gt.Container):
         self,
         name: str | None = None,
         type: str | EquationType = "regular",
-        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
         definition: Variable | Operation | Expression | None = None,
         records: Any | None = None,
         domain_forwarding: bool = False,
@@ -1123,12 +1185,17 @@ class Container(gt.Container):
     def addModel(
         self,
         name: str | None = None,
+        description: str = "",
         problem: Problem | str = Problem.MIP,
-        equations: Iterable[Equation] = [],
+        equations: Sequence[Equation] = [],
         sense: Sense | str = Sense.FEASIBILITY,
         objective: Variable | Expression | None = None,
-        matches: dict[Equation, Variable] | None = None,
-        limited_variables: Iterable[Variable] | None = None,
+        matches: dict[
+            Equation | Sequence[Equation],
+            Variable | Sequence[Variable],
+        ]
+        | None = None,
+        limited_variables: Sequence[Variable] | None = None,
         external_module: str | None = None,
     ) -> Model:
         """
@@ -1138,8 +1205,10 @@ class Container(gt.Container):
         ----------
         name : str, optional
             Name of the model. Name is autogenerated by default.
-        equations : Iterable[Equation]
-            Iterable of Equation objects.
+        description : str, optional
+            Description of the model.
+        equations : Sequence[Equation]
+            Sequence of Equation objects.
         problem : Problem or str, optional
             'LP', 'NLP', 'QCP', 'DNLP', 'MIP', 'RMIP', 'MINLP', 'RMINLP', 'MIQCP', 'RMIQCP', 'MCP', 'CNS', 'MPEC', 'RMPEC', 'EMP', or 'MPSGE',
             by default Problem.LP.
@@ -1147,9 +1216,9 @@ class Container(gt.Container):
             "MIN", "MAX", or "FEASIBILITY".
         objective : Variable | Expression, optional
             Objective variable to minimize or maximize or objective itself.
-        matches : dict[Equation, Variable]
+        matches : dict[Equation | Sequence[Equation], Variable | Sequence[Variable]], optional
             Equation - Variable matches for MCP models.
-        limited_variables : Iterable, optional
+        limited_variables : Sequence, optional
             Allows limiting the domain of variables used in a model.
         external_module: str, optional
             The name of the external module in which the external equations are implemented
@@ -1169,6 +1238,7 @@ class Container(gt.Container):
         return gp.Model(
             self,
             name,
+            description,
             problem,
             equations,
             sense,
@@ -1226,6 +1296,17 @@ class Container(gt.Container):
 
         return m
 
+    def serialize(self, path: str) -> None:
+        """
+        Serializes the Container into a zip file.
+
+        Parameters
+        ----------
+        path : str
+            Path to the zip file.
+        """
+        gp.serialize(self, path)
+
     def getEquations(self) -> list[Equation]:
         """
         Returns all equation symbols in the Container.
@@ -1276,7 +1357,7 @@ class Container(gt.Container):
         if not os.path.exists(lib_path):
             raise FileNotFoundError(f"`{lib_path}` is not a valid path.")
 
-        external_lib = ExtrinsicLibrary(lib_path, functions)
+        external_lib = ExtrinsicLibrary(self, lib_path, functions)
         self._add_statement(external_lib)
 
         return external_lib

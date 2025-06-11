@@ -77,7 +77,8 @@ def data():
     m.close()
     files = glob.glob("_*")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
 
     shutil.rmtree("tmp")
 
@@ -87,7 +88,7 @@ def network_license():
     subprocess.run(
         [
             sys.executable,
-            "-m",
+            "-Bm",
             "gamspy",
             "install",
             "license",
@@ -115,7 +116,7 @@ def network_license():
     subprocess.run(
         [
             sys.executable,
-            "-m",
+            "-Bm",
             "gamspy",
             "install",
             "license",
@@ -125,7 +126,8 @@ def network_license():
     )
     files = glob.glob("_*")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
 
 
 def test_network_license(network_license):
@@ -2034,7 +2036,7 @@ def test_qcp(data):
     m, *_ = data
 
     # Set
-    i = Set(m, name="i", records=[str(idx) for idx in range(0, 181)])
+    i = Set(m, name="i", records=[str(idx) for idx in range(181)])
     omega_stop = Set(
         m,
         name="omega_stop",
@@ -2045,9 +2047,9 @@ def test_qcp(data):
         m,
         name="omega_pass",
         domain=i,
-        records=[str(idx) for idx in range(0, 91)],
+        records=[str(idx) for idx in range(91)],
     )
-    k = Set(m, name="k", records=[str(idx) for idx in range(0, 11)])
+    k = Set(m, name="k", records=[str(idx) for idx in range(11)])
 
     # Parameter
     beta = Parameter(m, name="beta", records=0.01)

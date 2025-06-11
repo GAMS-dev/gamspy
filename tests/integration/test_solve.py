@@ -3,6 +3,7 @@ from __future__ import annotations
 import concurrent.futures
 import logging
 import math
+import multiprocessing
 import os
 import platform
 import shutil
@@ -34,6 +35,9 @@ from gamspy import (
 from gamspy.exceptions import GamspyException, ValidationError
 
 pytestmark = pytest.mark.integration
+
+if multiprocessing.get_start_method(allow_none=True) is None:
+    multiprocessing.set_start_method("spawn")
 
 
 @pytest.fixture
@@ -425,6 +429,7 @@ def test_records(data):
 
     x = Variable(m, name="x", domain=[i, j], type="Positive")
     assert x.records is None
+    assert x[i, "new-york"].records is None
     assert x.l[i, j].records is None
     assert x.l[i, "new-york"].records is None
     assert x.l["san-diego", j].records is None
@@ -479,14 +484,27 @@ def test_records(data):
         "scale",
     ]
 
-    # Test the columns of the attribute records
+    # Test the columns of the records
+    assert x[i, j].records.columns.tolist() == [
+        "i",
+        "j",
+        "level",
+        "marginal",
+        "lower",
+        "upper",
+        "scale",
+    ]
     assert x.l[i, j].records.columns.tolist() == ["i", "j", "level"]
     assert x.m[i, j].records.columns.tolist() == ["i", "j", "marginal"]
     assert x.up[i, j].records.columns.tolist() == ["i", "j", "upper"]
     assert x.lo[i, j].records.columns.tolist() == ["i", "j", "lower"]
     assert x.scale[i, j].records.columns.tolist() == ["i", "j", "scale"]
 
-    # Test the records of the filtered attribute records
+    # Test the records of the filtered records
+    assert x[i, "new-york"].records.values.tolist() == [
+        ["seattle", "new-york", 50.0, 0, 0, float("inf"), 1.0],
+        ["san-diego", "new-york", 275.0, 0, 0, float("inf"), 1.0],
+    ]
     assert x.l.records.values.tolist() == [
         ["seattle", "new-york", 50.0],
         ["seattle", "chicago", 300.0],
@@ -521,6 +539,7 @@ def test_records(data):
         ["san-diego", "topeka", 275.0],
     ]
     assert x.l["san-diego", "new-york"].records == 275.0
+    assert math.isclose(x.m["san-diego", "chicago"].records, 0.009)
     assert z.l.records == 153.675
 
     # Test the columns of equation
@@ -542,19 +561,48 @@ def test_records(data):
         "scale",
     ]
 
-    # Test the columns of the attribute records
+    # Test the columns of the records
+    assert supply["seattle"].records.columns.tolist() == [
+        "i",
+        "level",
+        "marginal",
+        "lower",
+        "upper",
+        "scale",
+    ]
     assert supply.l[i].records.columns.tolist() == ["i", "level"]
     assert supply.m[i].records.columns.tolist() == ["i", "marginal"]
     assert supply.up[i].records.columns.tolist() == ["i", "upper"]
     assert supply.lo[i].records.columns.tolist() == ["i", "lower"]
     assert supply.scale[i].records.columns.tolist() == ["i", "scale"]
+    assert supply.range[i].records.columns.tolist() == ["i", "range"]
+    assert supply.slacklo[i].records.columns.tolist() == ["i", "slacklo"]
+    assert supply.slackup[i].records.columns.tolist() == ["i", "slackup"]
+    assert supply.slack[i].records.columns.tolist() == ["i", "slack"]
+    assert supply.infeas[i].records.columns.tolist() == ["i", "infeas"]
 
-    # Test the records of the filtered attribute records
+    # Test the records of the filtered records
     assert supply.l[i].records.values.tolist() == [
         ["seattle", 350.0],
         ["san-diego", 550.0],
     ]
+    assert supply[i].records.values.tolist() == [
+        ["seattle", 350.0, -0, float("-inf"), 350, 1],
+        ["san-diego", 550.0, -0, float("-inf"), 600, 1],
+    ]
+    assert supply["seattle"].records.values.tolist() == [
+        ["seattle", 350.0, -0, float("-inf"), 350, 1],
+    ]
     assert supply.l["seattle"].records == 350.0
+    assert supply.m["seattle"].records == -0.0
+    assert supply.lo["san-diego"].records == float("-inf")
+    assert supply.up["san-diego"].records == 600.0
+    assert supply.scale["san-diego"].records == 1.0
+    assert supply.range["san-diego"].records == float("-inf")
+    assert supply.slacklo["san-diego"].records == float("inf")
+    assert supply.slackup["san-diego"].records == 50.0
+    assert supply.slack["san-diego"].records == 50.0
+    assert supply.infeas["san-diego"].records == 0.0
 
     m = Container()
     i1 = Set(m, name="i1", records=range(2))
@@ -581,6 +629,108 @@ def test_records(data):
         ["1", "1", "1", "0", 0.303194829291645],
         ["1", "1", "1", "1", 0.4534978894806515],
     ]
+
+    e1 = Equation(m, "e1", domain=[i1, i2, i3, i4])
+    e1.generateRecords(seed=1)
+    e1.lo = 5
+    e1.up = 10
+    assert e1.range[i1, i2, i3, i4].records.values.tolist() == [
+        ["0", "0", "0", "0", -5.0],
+        ["0", "0", "0", "1", -5.0],
+        ["0", "0", "1", "0", -5.0],
+        ["0", "0", "1", "1", -5.0],
+        ["0", "1", "0", "0", -5.0],
+        ["0", "1", "0", "1", -5.0],
+        ["0", "1", "1", "0", -5.0],
+        ["0", "1", "1", "1", -5.0],
+        ["1", "0", "0", "0", -5.0],
+        ["1", "0", "0", "1", -5.0],
+        ["1", "0", "1", "0", -5.0],
+        ["1", "0", "1", "1", -5.0],
+        ["1", "1", "0", "0", -5.0],
+        ["1", "1", "0", "1", -5.0],
+        ["1", "1", "1", "0", -5.0],
+        ["1", "1", "1", "1", -5.0],
+    ]
+    e1.lo = 0.5
+    e1.up = 0.6
+    assert e1.slacklo[i1, i2, i3, i4].records.values.tolist() == [
+        ["0", "0", "0", "0", 0.011821624700256717],
+        ["0", "0", "0", "1", 0.4504636963259353],
+        ["0", "0", "1", "0", 0.0],
+        ["0", "0", "1", "1", 0.44864944713724386],
+        ["0", "1", "0", "0", 0.0],
+        ["0", "1", "0", "1", 0.0],
+        ["0", "1", "1", "0", 0.32770259382044176],
+        ["0", "1", "1", "1", 0.0],
+        ["1", "0", "0", "0", 0.049593687673059494],
+        ["1", "0", "0", "1", 0.0],
+        ["1", "0", "1", "0", 0.2535131086748066],
+        ["1", "0", "1", "1", 0.03814331321927822],
+        ["1", "1", "0", "0", 0.0],
+        ["1", "1", "0", "1", 0.2884287034284043],
+        ["1", "1", "1", "0", 0.0],
+        ["1", "1", "1", "1", 0.0],
+    ]
+    assert e1.slackup[i1, i2, i3, i4].records.values.tolist() == [
+        ["0", "0", "0", "0", 0.08817837529974326],
+        ["0", "0", "0", "1", 0.0],
+        ["0", "0", "1", "0", 0.45584038728036624],
+        ["0", "0", "1", "1", 0.0],
+        ["0", "1", "0", "0", 0.2881685479895145],
+        ["0", "1", "0", "1", 0.17667355102742432],
+        ["0", "1", "1", "0", 0.0],
+        ["0", "1", "1", "1", 0.1908008636308387],
+        ["1", "0", "0", "0", 0.05040631232694048],
+        ["1", "0", "0", "1", 0.5724408867569316],
+        ["1", "0", "1", "0", 0.0],
+        ["1", "0", "1", "1", 0.06185668678072176],
+        ["1", "1", "0", "0", 0.2702682835009078],
+        ["1", "1", "0", "1", 0.0],
+        ["1", "1", "1", "0", 0.296805170708355],
+        ["1", "1", "1", "1", 0.14650211051934847],
+    ]
+    assert e1.slack[i1, i2, i3, i4].records.values.tolist() == [
+        ["0", "0", "0", "0", 0.011821624700256717],
+        ["0", "0", "0", "1", 0.0],
+        ["0", "0", "1", "0", 0.0],
+        ["0", "0", "1", "1", 0.0],
+        ["0", "1", "0", "0", 0.0],
+        ["0", "1", "0", "1", 0.0],
+        ["0", "1", "1", "0", 0.0],
+        ["0", "1", "1", "1", 0.0],
+        ["1", "0", "0", "0", 0.049593687673059494],
+        ["1", "0", "0", "1", 0.0],
+        ["1", "0", "1", "0", 0.0],
+        ["1", "0", "1", "1", 0.03814331321927822],
+        ["1", "1", "0", "0", 0.0],
+        ["1", "1", "0", "1", 0.0],
+        ["1", "1", "1", "0", 0.0],
+        ["1", "1", "1", "1", 0.0],
+    ]
+    assert e1.infeas[i1, i2, i3, i4].records.values.tolist() == [
+        ["0", "0", "0", "0", 0.0],
+        ["0", "0", "0", "1", 0.3504636963259353],
+        ["0", "0", "1", "0", 0.35584038728036627],
+        ["0", "0", "1", "1", 0.3486494471372439],
+        ["0", "1", "0", "0", 0.18816854798951455],
+        ["0", "1", "0", "1", 0.07667355102742435],
+        ["0", "1", "1", "0", 0.22770259382044178],
+        ["0", "1", "1", "1", 0.09080086363083872],
+        ["1", "0", "0", "0", 0.0],
+        ["1", "0", "0", "1", 0.47244088675693163],
+        ["1", "0", "1", "0", 0.1535131086748066],
+        ["1", "0", "1", "1", 0.0],
+        ["1", "1", "0", "0", 0.17026828350090784],
+        ["1", "1", "0", "1", 0.18842870342840434],
+        ["1", "1", "1", "0", 0.19680517070835502],
+        ["1", "1", "1", "1", 0.046502110519348494],
+    ]
+    assert e1.infeas["0", "1", "0", i4].records.values.tolist() == [
+        ["0", "1", "0", "0", 0.18816854798951455],
+        ["0", "1", "0", "1", 0.07667355102742435],
+    ]
+    assert e1.infeas["0", "1", "0", "1"].records == 0.07667355102742435
 
     assert v1.l[i1, :, i3, i4].records.values.tolist() == [
         ["0", "0", "0", "0", 0.5118216247002567],
@@ -757,7 +907,7 @@ def test_solve(data):
     )
 
     with pytest.raises(ValidationError):
-        transport2 = Model(
+        _ = Model(
             m,
             name="transport2",
             equations=[cost, supply, demand],
@@ -768,9 +918,9 @@ def test_solve(data):
         )
 
     # Test limited variables
-    transport2 = Model(
+    transport3 = Model(
         m,
-        name="transport2",
+        name="transport3",
         equations=[cost, supply, demand],
         problem="LP",
         sense="min",
@@ -779,8 +929,8 @@ def test_solve(data):
     )
 
     assert (
-        transport2.getDeclaration()
-        == "Model transport2 / cost,supply,demand,x(freeLinks) /;"
+        transport3.getDeclaration()
+        == "Model transport3 / cost,supply,demand,x(freeLinks) /;"
     )
 
     # Test output redirection
@@ -847,13 +997,13 @@ def test_solve(data):
     assert not any("dummy_" in name for name in m.data)
 
     # Test invalid problem
-    pytest.raises(ValueError, Model, m, "dummy", "bla", [cost])
+    pytest.raises(ValueError, Model, m, "dummy", "", "bla", [cost])
 
     # Test invalid sense
-    pytest.raises(ValueError, Model, m, "dummy", "LP", [cost], "bla")
+    pytest.raises(ValueError, Model, m, "dummy", "", "LP", [cost], "bla")
 
     # Test invalid objective variable
-    pytest.raises(TypeError, Model, m, "dummy", "LP", [cost], "min", a)
+    pytest.raises(TypeError, Model, m, "dummy", "", "LP", [cost], "min", a)
 
     # Test invalid commandline options
     pytest.raises(
@@ -873,7 +1023,7 @@ def test_solve(data):
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows",
+    platform.system() != "Linux",
     reason="It doesn't work in Docker Windows Server container.",
 )
 def test_interrupt():
@@ -1000,8 +1150,87 @@ def test_solver_options(data):
 
     # Test solver change
     transport.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
+    assert os.path.exists(os.path.join(m.working_directory, "conopt4.opt"))
 
-    assert os.path.exists(f"{m.working_directory}{os.sep}conopt.opt")
+    # Test solver option validation
+
+    ## Baron
+    with pytest.raises(ValidationError):
+        transport.solve(solver="baron", solver_options={"blabla": "1.e12"})
+
+    ## Cbc
+    with pytest.raises(ValidationError):
+        transport.solve(solver="cbc", solver_options={"blabla": "1.e12"})
+
+    ## Conopt
+    with pytest.raises(ValidationError):
+        transport.solve(solver="conopt", solver_options={"blabla": "1.e12"})
+
+    with pytest.raises(ValidationError):
+        transport.solve(solver="conopt4", solver_options={"blabla": "1.e12"})
+
+    ## Convert
+    with pytest.raises(ValidationError):
+        transport.solve(solver="convert", solver_options={"blabla": "1.e12"})
+
+    ## Copt
+    with pytest.raises(ValidationError):
+        transport.solve(solver="copt", solver_options={"blabla": "1.e12"})
+
+    ## Cplex
+    with pytest.raises(ValidationError):
+        transport.solve(solver="cplex", solver_options={"blabla": "1.e12"})
+
+    ## Examiner
+    with pytest.raises(ValidationError):
+        transport.solve(solver="examiner", solver_options={"blabla": "1.e12"})
+
+    ## Examiner2
+    with pytest.raises(ValidationError):
+        transport.solve(solver="examiner2", solver_options={"blabla": "1.e12"})
+
+    ## gurobi
+    with pytest.raises(ValidationError):
+        transport.solve(solver="gurobi", solver_options={"blabla": "1.e12"})
+
+    ## Highs will not care whether there is a wrong solver option
+    transport.solve(solver="highs", solver_options={"blabla": "1.e12"})
+
+    ## Ipopt
+    with pytest.raises(ValidationError):
+        transport.solve(solver="ipopt", solver_options={"blabla": "1.e12"})
+
+    ## Kestrel will expect kestrel_solver option but will not find it
+    with pytest.raises(GamspyException):
+        transport.solve(solver="kestrel", solver_options={"blabla": "1.e12"})
+
+    ## Knitro
+    with pytest.raises(ValidationError):
+        transport.solve(solver="knitro", solver_options={"blabla": "1.e12"})
+
+    ## Minos
+    with pytest.raises(ValidationError):
+        transport.solve(solver="minos", solver_options={"blabla": "1.e12"})
+
+    ## Mosek
+    with pytest.raises(ValidationError):
+        transport.solve(solver="mosek", solver_options={"blabla": "1.e12"})
+
+    ## Snopt
+    with pytest.raises(ValidationError):
+        transport.solve(solver="snopt", solver_options={"blabla": "1.e12"})
+
+    ## Soplex will not care
+    transport.solve(solver="soplex", solver_options={"blabla": "1.e12"})
+
+    ## Xpress
+    with pytest.raises(ValidationError):
+        transport.solve(solver="xpress", solver_options={"blabla": "1.e12"})
+
+    # Test disabled solver option validation
+    gp.set_options({"SOLVER_OPTION_VALIDATION": 0})
+    transport.solve(solver="conopt", solver_options={"blabla": "1.e12"})
+    gp.set_options({"SOLVER_OPTION_VALIDATION": 1})
 
 
 def test_ellipsis(data):
@@ -1450,7 +1679,7 @@ def test_invalid_arguments(data):
 
     # solver is not installed
     with pytest.raises(ValidationError):
-        transport.solve(solver="SNOPT")
+        transport.solve(solver="miles")
 
     # solver is not capable of solving this problem type
     with pytest.raises(ValidationError):
@@ -1637,3 +1866,53 @@ def test_execution_error(data):
 
     summary = model.solve()  # this should work
     assert summary is not None
+
+
+def test_emp():
+    m = Container()
+    t = Set(m, name="m", records=[0, 1])
+    a = Set(m, name="a", records=["a0", "a1"])
+    beta = 7
+    alpha = 6
+
+    x = Variable(m, domain=[a, t])
+    obj = Variable(m, name="obj", domain=[a])
+
+    oterms = a.toList()
+    cterms = a.toList()
+
+    # Agent 0
+    oterms[0] = (
+        beta / 2 * gamspy_math.sqr(x["a0", "0"]) - alpha * x["a0", "0"]
+    ) + (
+        1 / 2 * gamspy_math.sqr(x["a0", "1"])
+        + 3 * x["a0", "1"] * x["a1", "1"]
+        - 4 * x["a0", "1"]
+    )
+    cterms[0] = x["a0", "1"] - x["a0", "0"]
+
+    # Agent 1
+    oterms[1] = x["a1", "0"] + (
+        1 / 2 * gamspy_math.sqr(x["a1", "1"])
+        + x["a0", "1"] * x["a1", "1"]
+        - 3 * x["a1", "1"]
+    )
+    cterms[1] = x["a1", "1"]
+
+    defobj = Equation(m, name="defobj", domain=a)
+    defobj[a] = obj[a] == sum(
+        o.where[a.sameAs(f"a{i}")] for i, o in enumerate(oterms)
+    )
+
+    cons = Equation(m, name="cons", domain=a)
+    cons[a] = (
+        sum(c.where[a.sameAs(f"a{i}")] for i, c in enumerate(cterms)) >= 0
+    )
+
+    x.lo["a0", "0"] = 0
+    x.fx["a1", "0"] = 0
+
+    with pytest.raises(ValidationError):
+        _ = Model(m, name="nash", equations=[defobj, cons], problem="emp")
+
+    m.close()

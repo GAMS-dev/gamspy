@@ -19,7 +19,8 @@ gamspy
    gamspy.Problem
    gamspy.Sense
    gamspy.Options
-   gamspy.ModelInstanceOptions
+   gamspy.FreezeOptions
+   gamspy.ConvertOptions
    gamspy.Expression
    gamspy._algebra.domain
    gamspy._algebra.number
@@ -41,3 +42,5 @@ gamspy
 
 .. autofunction:: gamspy.set_options
 .. autofunction:: gamspy.get_option
+.. autofunction:: gamspy.serialize
+.. autofunction:: gamspy.deserialize   

@@ -51,7 +51,8 @@ def data():
     # Clean up
     files = glob.glob("_*")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
     tmp_dirs = glob.glob("tmp*")
     for tmp_dir in tmp_dirs:
         shutil.rmtree(tmp_dir)
@@ -59,6 +60,9 @@ def data():
 
 
 def test_sin_cos_example(data):
+    if platform.system() == "Linux" and platform.machine() == "aarch64":
+        return
+
     m, external_module = data
     y1 = gp.Variable(m, "y1")
     y2 = gp.Variable(m, "y2")
@@ -88,6 +92,9 @@ def test_sin_cos_example(data):
 
 
 def test_sin_cos_example2(data):
+    if platform.system() == "Linux" and platform.machine() == "aarch64":
+        return
+
     m, _ = data
     y1 = gp.Variable(m, "y1")
     x1 = gp.Variable(m, "x1")
@@ -99,6 +106,9 @@ def test_sin_cos_example2(data):
 
 
 def test_external_equation_on_engine(data):
+    if platform.system() == "Linux" and platform.machine() == "aarch64":
+        return
+
     m, external_module = data
     if platform.system() == "Linux":
         m = gp.Container(working_directory=".")

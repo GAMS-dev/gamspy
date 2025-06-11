@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
@@ -8,9 +9,12 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy._types import EllipsisType
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy import Set, Variable
     from gamspy._algebra.expression import Expression
 
@@ -38,7 +42,9 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     def __repr__(self) -> str:
         return f"ImplicitVariable(parent={self.parent}, name='{self.name}', domain={self.domain}, permutation={self.permutation}, parent_scalar_domains={self.parent_scalar_domains})"
 
-    def __getitem__(self, indices: list | str) -> ImplicitVariable:
+    def __getitem__(
+        self, indices: Sequence | str | EllipsisType | slice
+    ) -> ImplicitVariable:
         domain = validation.validate_domain(self, indices)
         return ImplicitVariable(
             parent=self.parent,
@@ -115,7 +121,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
 
     @scale.setter
     def scale(self, value: int | float | Expression):
-        if self.parent.type in ["integer", "binary"]:
+        if self.parent.type in ("integer", "binary"):
             raise ValidationError(
                 "Scales cannot be applied to discrete variables."
             )
@@ -148,7 +154,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
 
     @prior.setter
     def prior(self, value: int | float | Expression):
-        if self.parent.type not in ["integer", "binary"]:
+        if self.parent.type not in ("integer", "binary"):
             raise ValidationError(
                 "Priorities can only be used on discrete variables."
             )
@@ -206,8 +212,17 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         dims[-2] = x
         return permute(self, dims)  # type: ignore
 
-    def __neg__(self):
-        return expression.Expression(None, "-", self)
+    @property
+    def records(self) -> pd.DataFrame | float | None:
+        if self.parent.records is None:
+            return None
+
+        recs = self.parent.records
+        for idx, literal in self._scalar_domains:
+            column_name = recs.columns[idx]
+            recs = recs[recs[column_name] == literal]
+
+        return recs
 
     def __eq__(self, other):
         return expression.Expression(self, "=e=", other)

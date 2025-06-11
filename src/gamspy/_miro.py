@@ -166,6 +166,9 @@ class MiroJSONEncoder:
     def validate_table(
         self, symbol: Set | Parameter | Variable | Equation, last_item
     ):
+        if not gp.get_option("VALIDATION"):
+            return
+
         if symbol.dimension < 2:
             raise ValidationError(
                 f"miro table symbol `{symbol}` must have at least 2"

@@ -3,7 +3,6 @@ from __future__ import annotations
 import itertools
 import os
 import threading
-import uuid
 from typing import TYPE_CHECKING, Any, Literal
 
 import gams.transfer as gt
@@ -21,21 +20,24 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from gamspy import Alias, Container
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits.implicit_set import ImplicitSet
-    from gamspy._types import OperableType
+    from gamspy._types import EllipsisType, OperableType
+    from gamspy.math.misc import MathOp
 
 
 class SetMixin:
     @property
-    def pos(self):
+    def pos(self: Set | Alias) -> Expression:
         """
         Element position in the current set, starting with 1.
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -51,13 +53,13 @@ class SetMixin:
         return expression.Expression(self, ".", "pos")
 
     @property
-    def ord(self):
+    def ord(self: Set | Alias) -> Expression:
         """
         Same as .pos but for ordered sets only.
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -73,13 +75,13 @@ class SetMixin:
         return expression.Expression(self, ".", "ord")
 
     @property
-    def off(self):
+    def off(self: Set | Alias) -> Expression:
         """
         Element position in the current set minus 1. So .off = .pos - 1
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -95,14 +97,14 @@ class SetMixin:
         return expression.Expression(self, ".", "off")
 
     @property
-    def rev(self):
+    def rev(self: Set | Alias) -> Expression:
         """
         Reverse element position in the current set, so the value for
         the last element is 0, the value for the penultimate is 1, etc.
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -118,13 +120,13 @@ class SetMixin:
         return expression.Expression(self, ".", "rev")
 
     @property
-    def uel(self):
+    def uel(self: Set | Alias) -> Expression:
         """
         Element position in the unique element list.
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -140,13 +142,13 @@ class SetMixin:
         return expression.Expression(self, ".", "uel")
 
     @property
-    def len(self):
+    def len(self: Set | Alias) -> Expression:
         """
         Length of the set element name (a count of the number of characters).
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -162,13 +164,13 @@ class SetMixin:
         return expression.Expression(self, ".", "len")
 
     @property
-    def tlen(self):
+    def tlen(self: Set | Alias) -> Expression:
         """
         Length of the set element text (a count of the number of characters).
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -184,7 +186,7 @@ class SetMixin:
         return expression.Expression(self, ".", "tlen")
 
     @property
-    def val(self):
+    def val(self: Set | Alias) -> Expression:
         """
         If a set element is a number, this attribute gives the value of the number.
         For extended range arithmetic symbols, the symbols are reproduced.
@@ -193,7 +195,7 @@ class SetMixin:
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -209,7 +211,7 @@ class SetMixin:
         return expression.Expression(self, ".", "val")
 
     @property
-    def tval(self):
+    def tval(self: Set | Alias) -> Expression:
         """
         If a set element text is a number, this attribute gives the value of the number.
         For extended range arithmetic symbols, the symbols are reproduced.
@@ -218,7 +220,7 @@ class SetMixin:
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -234,13 +236,13 @@ class SetMixin:
         return expression.Expression(self, ".", "tval")
 
     @property
-    def first(self):
+    def first(self: Set | Alias) -> Expression:
         """
         Returns 1 for the first set element, otherwise 0.
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -256,13 +258,13 @@ class SetMixin:
         return expression.Expression(self, ".", "first")
 
     @property
-    def last(self):
+    def last(self: Set | Alias) -> Expression:
         """
         Returns 1 for the last set element, otherwise 0.
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -389,7 +391,7 @@ class SetMixin:
 
         raise ValueError("Lead type must be linear or circular")
 
-    def sameAs(self, other: Set | Alias | str) -> Expression:
+    def sameAs(self, other: Set | Alias | str) -> MathOp:
         """
         Evaluates to true if this set is identical to the given set or alias, false otherwise.
 
@@ -399,7 +401,7 @@ class SetMixin:
 
         Returns
         -------
-        Expression
+        MathOp
 
         Examples
         --------
@@ -430,7 +432,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         Container of the set.
     name : str, optional
         Name of the set. Name is autogenerated by default.
-    domain : list[Set | Alias | str] | Set | Alias | str, optional
+    domain : Sequence[Set | Alias | str] | Set | Alias | str, optional
         Domain of the set.
     is_singleton : bool, optional
         Whether the set is a singleton set. Singleton sets cannot contain more than one element.
@@ -460,7 +462,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         cls,
         container: Container,
         name: str,
-        domain: list[Set | Alias | str] | Set | Alias | str = [],
+        domain: Sequence[Set | Alias | str] | Set | Alias | str = [],
         is_singleton: bool = False,
         records: Any | None = None,
         description: str = "",
@@ -499,7 +501,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         # gamspy attributes
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
-        obj._current_index = 0
         obj._synchronize = True
         obj._metadata = dict()
 
@@ -513,7 +514,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         cls,
         container: Container | None = None,
         name: str | None = None,
-        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
         domain_forwarding: bool = False,
@@ -557,7 +558,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self,
         container: Container | None = None,
         name: str | None = None,
-        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
         domain_forwarding: bool = False,
@@ -593,7 +594,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         if has_symbol:
             if any(
                 d1 != d2
-                for d1, d2 in itertools.zip_longest(self.domain, domain)
+                for d1, d2 in itertools.zip_longest(self._domain, domain)
             ):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
@@ -639,13 +640,14 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             assert container is not None
 
             self.where = condition.Condition(self)
+            self._assignment: Expression | None = None
 
             if name is not None:
                 name = validation.validate_name(name)
                 if is_miro_input or is_miro_output:
                     name = name.lower()  # type: ignore
             else:
-                name = "s" + str(uuid.uuid4()).replace("-", "_")
+                name = "s" + utils._get_unique_name() + "gpauto"
 
             self._singleton_check(is_singleton, records, domain)
             previous_state = container._options.miro_protect
@@ -668,17 +670,50 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             if is_miro_output:
                 container._miro_output_symbols.append(self.name)
 
-            validation.validate_container(self, self.domain)
+            validation.validate_container(self, self._domain)
             self.container._add_statement(self)
 
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
+                self.modified = False
                 self.container._synch_with_gams(
                     gams_to_gamspy=self._is_miro_input
                 )
 
             container._options.miro_protect = previous_state
+
+    def _serialize(self) -> dict:
+        info = {
+            "_domain_forwarding": self.domain_forwarding,
+            "_is_miro_input": self._is_miro_input,
+            "_is_miro_output": self._is_miro_output,
+            "_metadata": self._metadata,
+            "_synchronize": self._synchronize,
+        }
+        if self._assignment is not None:
+            info["_assignment"] = self._assignment.getDeclaration()
+
+        return info
+
+    def _deserialize(self, info: dict) -> None:
+        # Set attributes
+        for key, value in info.items():
+            if key == "_assignment":
+                left, right = value.split(" = ")
+                value = expression.Expression(left, "=", right[:-1])
+
+            setattr(self, key, value)
+
+        # Relink domain symbols
+        new_domain = []
+        for elem in self._domain:
+            if elem == "*":
+                new_domain.append(elem)
+                continue
+            new_domain.append(self.container[elem])
+
+        self.domain = new_domain
 
     def __len__(self):
         if self.records is not None:
@@ -686,12 +721,21 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         return 0
 
-    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
+    def __getitem__(self, indices: Sequence | str) -> implicits.ImplicitSet:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
-    def __setitem__(self, indices: tuple | str, rhs):
+    def __setitem__(
+        self,
+        indices: Sequence
+        | str
+        | int
+        | implicits.ImplicitSet
+        | EllipsisType
+        | slice,
+        rhs,
+    ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 
@@ -719,7 +763,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self,
         is_singleton: bool,
         records: Any | None,
-        domain: list[Set | Alias | str],
+        domain: Sequence[Set | Alias | str],
     ):
         if is_singleton:
             if records is not None and len(records) != 1:
@@ -861,6 +905,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         if self.description:
             output += f' "{self.description}"'
 
+        if self.records is None:
+            output += " / /"
+
         output += ";"
 
         return output
@@ -883,7 +930,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         'i("i1") = no;'
 
         """
-        if not hasattr(self, "_assignment"):
-            raise ValidationError("Set is not assigned!")
+        if self._assignment is None:
+            raise ValidationError("Set was not assigned!")
 
         return self._assignment.getDeclaration()

@@ -66,7 +66,7 @@ def license(
 
         data = request.data.decode("utf-8", errors="replace")
         cmex_type = json.loads(data)["cmex_type"]
-        if cmex_type not in ["gamspy", "gamspy++", "gamsall"]:
+        if cmex_type not in ("gamspy", "gamspy++", "gamsall"):
             raise ValidationError(
                 f"Given access code `{alp_id} ({cmex_type})` is not valid for GAMSPy. "
                 "Make sure that you use a GAMSPy license, not a GAMS license."
@@ -107,13 +107,13 @@ def license(
         lines = license_text.splitlines()
         license_type = lines[0][54]
         if license_type == "+":
-            if lines[2][:2] not in ["00", "07", "08", "09"]:
+            if lines[2][:2] not in ("00", "07", "08", "09"):
                 raise ValidationError(
                     f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
         else:
-            if lines[2][8:10] not in ["00", "07", "08", "09"]:
+            if lines[2][8:10] not in ("00", "07", "08", "09"):
                 raise ValidationError(
                     f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
@@ -127,13 +127,13 @@ def license(
 
         license_type = lines[0][54]
         if license_type == "+":
-            if lines[2][:2] not in ["00", "07", "08", "09"]:
+            if lines[2][:2] not in ("00", "07", "08", "09"):
                 raise ValidationError(
                     f"Given license file `{license}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
         else:
-            if lines[2][8:10] not in ["00", "07", "08", "09"]:
+            if lines[2][8:10] not in ("00", "07", "08", "09"):
                 raise ValidationError(
                     f"Given license file `{license}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
@@ -160,7 +160,7 @@ def append_dist_info(files, gamspy_base_dir: str):
             line = f"{gamspy_base_relative_path}{os.sep}{file},,"
             lines.append(line)
 
-        record.write("\n".join(lines))
+        record.write("\n".join(lines) + "\n")
 
 @app.command(
     short_help="To install solvers",
@@ -207,20 +207,32 @@ def solver(
         for item in addons:
             solver_name = item.lower()
 
-            if solver_name.upper() not in utils.getAvailableSolvers():
+            if solver_name.upper() in gamspy_base.default_solvers:
+                print(f"`{solver_name}` is a default solver, skipping...")
+                continue
+            installable_solvers = utils.getInstallableSolvers(gamspy_base.directory)
+            if solver_name.upper() not in installable_solvers:
                 raise ValidationError(
                     f'Given solver name ("{solver_name}") is not valid. Available'
-                    f" solvers that can be installed: {utils.getAvailableSolvers()}"
-                )
+                    f" solvers that can be installed: {installable_solvers}")
+            
+            installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
+            if solver_name.upper() in installed_solvers:
+                print(f"`{solver_name}` is already installed, skipping...")
+                continue
 
             if not skip_pip_install:
+
+                solver_version = gamspy_base.__version__
                 # install specified solver
                 if use_uv:
                     command = [
                         "uv",
                         "pip",
+                        "--python-preference",
+                        "only-system",
                         "install",
-                        f"gamspy-{solver_name}=={gamspy_base.__version__}",
+                        f"gamspy-{solver_name}=={solver_version}",
                         "--force-reinstall",
                     ]
                 else:
@@ -229,14 +241,14 @@ def solver(
                         "-m",
                         "pip",
                         "install",
-                        f"gamspy-{solver_name}=={gamspy_base.__version__}",
+                        f"gamspy-{solver_name}=={solver_version}",
                         "--force-reinstall",
                     ]
                 try:
                     _ = subprocess.run(command, check=True, stderr=subprocess.PIPE)
                 except subprocess.CalledProcessError as e:
                     raise GamspyException(
-                        f"Could not install gamspy-{solver_name}: {e.stderr.decode('utf-8')}"
+                        f"Could not install gamspy-{solver_name}. Please check your internet connection. If it's not related to your internet connection, PyPI servers might be down. Please retry it later. Here is the error message of pip:\n\n{e.stderr.decode('utf-8')}"
                     ) from e
             else:
                 try:
@@ -246,13 +258,6 @@ def solver(
                 except ModuleNotFoundError as e:
                     e.msg = f"You must install gamspy-{solver_name} first!"
                     raise e
-
-                if solver_lib.__version__ != gamspy_base.__version__:
-                    raise ValidationError(
-                        f"gamspy_base version ({gamspy_base.__version__}) and solver"
-                        f" version ({solver_lib.__version__}) must match! Run `gamspy"
-                        " update` to update your solvers."
-                    )
 
             # copy solver files to gamspy_base
             gamspy_base_dir = utils._get_gamspy_base_directory()
@@ -280,12 +285,7 @@ def solver(
 
             with open(addons_path, "w") as file:
                 if solver_name.upper() not in installed:
-                    file.write(
-                        "\n".join(installed)
-                        + "\n"
-                        + solver_name.upper()
-                        + "\n"
-                    )
+                    file.write("\n".join(installed + [solver_name.upper()]))
 
     if install_all_solvers:
         available_solvers = utils.getAvailableSolvers()
@@ -302,6 +302,7 @@ def solver(
         try:
             with open(addons_path) as file:
                 solvers = file.read().splitlines()
+                solvers = [solver for solver in solvers if solver != "" and solver != "\n"]
                 install_addons(solvers)
                 return
         except FileNotFoundError as e:

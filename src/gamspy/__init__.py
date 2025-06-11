@@ -22,8 +22,21 @@ from gamspy._backend.engine import EngineClient
 from gamspy._backend.neos import NeosClient
 from gamspy._config import _set_default_options, get_option, set_options
 from gamspy._container import Container
-from gamspy._model import Model, ModelStatus, Problem, Sense, SolveStatus
-from gamspy._options import ModelInstanceOptions, Options
+from gamspy._model import (
+    FileFormat,
+    Model,
+    ModelStatus,
+    Problem,
+    Sense,
+    SolveStatus,
+)
+from gamspy._options import (
+    ConvertOptions,
+    FreezeOptions,
+    ModelInstanceOptions,
+    Options,
+)
+from gamspy._serialization import deserialize, serialize
 from gamspy._symbols import (
     Alias,
     Equation,
@@ -66,7 +79,10 @@ __all__ = [
     "Ord",
     "Card",
     "Options",
+    "FreezeOptions",
     "ModelInstanceOptions",
+    "ConvertOptions",
+    "FileFormat",
     "Expression",
     "EngineClient",
     "NeosClient",
@@ -77,4 +93,6 @@ __all__ = [
     "__version__",
     "get_option",
     "set_options",
+    "serialize",
+    "deserialize",
 ]

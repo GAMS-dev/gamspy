@@ -74,7 +74,13 @@ def gamspy_model(c, IJK, JKL, KLM):
         >= 0
     )
 
-    model = gp.Model(c, "IJKLM_model", "LP", c.getEquations(), "FEASIBILITY")
+    model = gp.Model(
+        c,
+        name="IJKLM_model",
+        problem="LP",
+        equations=c.getEquations(),
+        sense="FEASIBILITY",
+    )
 
     c.addGamsCode("IJKLM_model.JustScrDir = 1;")
 

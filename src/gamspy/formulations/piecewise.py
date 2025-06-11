@@ -221,7 +221,7 @@ def _indicator(
     if indicator_var.type != "binary":
         raise ValidationError("indicator_var needs to be a binary variable")
 
-    if indicator_val != 0 and indicator_val != 1:
+    if indicator_val not in (0, 1):
         raise ValidationError("indicator_val needs to be 1 or 0")
 
     if not isinstance(expr, gp.Expression):
@@ -244,16 +244,22 @@ def _indicator(
     if expr.data == "=e=":
         # sos1(bin_var, lhs - rhs) might be better
         eqs1 = _indicator(
-            indicator_var, indicator_val, expr.left <= expr.right
+            indicator_var,
+            indicator_val,
+            expr.left <= expr.right,  # type: ignore
         )
         eqs2 = _indicator(
-            indicator_var, indicator_val, -expr.left <= -expr.right
+            indicator_var,
+            indicator_val,
+            -expr.left <= -expr.right,  # type: ignore
         )
         return [*eqs1, *eqs2]
 
     if expr.data == "=g=":
         return _indicator(
-            indicator_var, indicator_val, -expr.left <= -expr.right
+            indicator_var,
+            indicator_val,
+            -expr.left <= -expr.right,  # type: ignore
         )
 
     equations = []

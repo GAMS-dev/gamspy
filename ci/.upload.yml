@@ -6,9 +6,10 @@ leg-upload-wheel:
   script:
     - python -m pip install uv && uv venv .upload_venv
     - source .upload_venv/bin/activate && uv pip install pip
-    - uv pip install wheel build twine pip-audit
+    - uv pip install wheel build twine pip-audit licensecheck
     - pip-audit -v
     - if [ "$?" == "0" ]; then echo "Audit passed!"; else exit 1; fi
+    - licensecheck --ignore-packages gamspy-base --zero --requirements-paths pyproject.toml
     - python -m build && twine upload dist/* -u $PF_PYPI_USERNAME -p $PF_PYPI_PASSWORD
   rules:
     - if: $CI_COMMIT_BRANCH != "master"

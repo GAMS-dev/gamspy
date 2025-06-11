@@ -10,8 +10,13 @@ from gamspy import (
     Model,
     Options,
     Parameter,
+    Product,
+    Sand,
     Sense,
     Set,
+    Smax,
+    Smin,
+    Sor,
     Sum,
     Variable,
     VariableType,
@@ -92,7 +97,7 @@ def test_variable_string(data):
     # Variable without data
     v4 = Variable(m, "v4")
     assert v4.gamsRepr() == "v4"
-    assert v4.getDeclaration() == "free Variable v4;"
+    assert v4.getDeclaration() == "free Variable v4 / /;"
 
     with pytest.raises(TypeError):
         v4.records = 5
@@ -100,7 +105,7 @@ def test_variable_string(data):
     # Variable without domain
     v0 = Variable(m, name="v0", description="some text")
     assert v0.gamsRepr() == "v0"
-    assert v0.getDeclaration() == 'free Variable v0 "some text";'
+    assert v0.getDeclaration() == 'free Variable v0 "some text" / /;'
 
     expression = -v0
     assert expression.getDeclaration() == "( - v0)"
@@ -108,14 +113,14 @@ def test_variable_string(data):
     # Variable one domain
     v1 = Variable(m, name="v1", domain=[i])
     assert v1.gamsRepr() == "v1(i)"
-    assert v1.getDeclaration() == "free Variable v1(i);"
+    assert v1.getDeclaration() == "free Variable v1(i) / /;"
 
     assert (v1[i] == v1[i]).gamsRepr() == "v1(i) =e= v1(i)"
 
     # Variable two domain
     v2 = Variable(m, name="v2", domain=[i, j])
     assert v2.gamsRepr() == "v2(i,j)"
-    assert v2.getDeclaration() == "free Variable v2(i,j);"
+    assert v2.getDeclaration() == "free Variable v2(i,j) / /;"
 
     # Scalar variable with records
     pi = Variable(
@@ -157,16 +162,16 @@ def test_variable_types(data):
     i = Set(m, "i", records=["1", "2"])
 
     v = Variable(m, name="v", type="Positive")
-    assert v.getDeclaration() == "positive Variable v;"
+    assert v.getDeclaration() == "positive Variable v / /;"
 
     v1 = Variable(m, name="v1", type="Negative")
-    assert v1.getDeclaration() == "negative Variable v1;"
+    assert v1.getDeclaration() == "negative Variable v1 / /;"
 
     v2 = Variable(m, name="v2", type="Binary")
-    assert v2.getDeclaration() == "binary Variable v2;"
+    assert v2.getDeclaration() == "binary Variable v2 / /;"
 
     v3 = Variable(m, name="v3", domain=[i], type="Integer")
-    assert v3.getDeclaration() == "integer Variable v3(i);"
+    assert v3.getDeclaration() == "integer Variable v3(i) / /;"
 
     assert str(VariableType.FREE) == "free"
     assert VariableType.values() == [
@@ -542,3 +547,266 @@ def test_alternative_syntax():
     assert v2.getAssignment() == "v2.prior(i) = 5;"
     v[i].stage = 5
     assert v.getAssignment() == "v.stage(i) = 5;"
+
+
+def test_alternative_operation_syntax():
+    m = Container()
+
+    i = Set(m)
+    j = Set(m)
+    x = Variable(m, domain=[i, j])
+    y = Variable(m)
+
+    # Test sum
+    with pytest.raises(ValidationError):
+        y.sum()
+
+    expr = x.sum()
+    expr2 = Sum((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.sum(i)
+    expr2 = Sum(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.sum(i, j)
+    expr2 = Sum((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test product
+    with pytest.raises(ValidationError):
+        y.product()
+
+    expr = x.product()
+    expr2 = Product((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.product(i)
+    expr2 = Product(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.product(i, j)
+    expr2 = Product((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test smin
+    with pytest.raises(ValidationError):
+        y.smin()
+
+    expr = x.smin()
+    expr2 = Smin((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.smin(i)
+    expr2 = Smin(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.smin(i, j)
+    expr2 = Smin((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test smax
+    with pytest.raises(ValidationError):
+        y.smax()
+
+    expr = x.smax()
+    expr2 = Smax((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.smax(i)
+    expr2 = Smax(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.smax(i, j)
+    expr2 = Smax((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test sand
+    with pytest.raises(ValidationError):
+        y.sand()
+
+    expr = x.sand()
+    expr2 = Sand((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.sand(i)
+    expr2 = Sand(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.sand(i, j)
+    expr2 = Sand((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test sor
+    with pytest.raises(ValidationError):
+        y.sor()
+
+    expr = x.sor()
+    expr2 = Sor((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.sor(i)
+    expr2 = Sor(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.sor(i, j)
+    expr2 = Sor((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    ### ImplicitVariable
+    # Test sum
+    expr = x[i, j].sum()
+    expr2 = Sum((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x[i, j].sum(i)
+    expr2 = Sum(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x[i, j].sum(i, j)
+    expr2 = Sum((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test product
+    expr = x[i, j].product()
+    expr2 = Product((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x[i, j].product(i)
+    expr2 = Product(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x[i, j].product(i, j)
+    expr2 = Product((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test smin
+    expr = x[i, j].smin()
+    expr2 = Smin((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x[i, j].smin(i)
+    expr2 = Smin(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x[i, j].smin(i, j)
+    expr2 = Smin((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test smax
+    expr = x[i, j].smax()
+    expr2 = Smax((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x[i, j].smax(i)
+    expr2 = Smax(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x[i, j].smax(i, j)
+    expr2 = Smax((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test sand
+    expr = x[i, j].sand()
+    expr2 = Sand((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x[i, j].sand(i)
+    expr2 = Sand(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x[i, j].sand(i, j)
+    expr2 = Sand((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test sor
+    expr = x[i, j].sor()
+    expr2 = Sor((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x[i, j].sor(i)
+    expr2 = Sor(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x[i, j].sor(i, j)
+    expr2 = Sor((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    ### Sum over attribute
+    # Test sum
+    expr = x.l[i, j].sum()
+    expr2 = Sum((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].sum(i)
+    expr2 = Sum(i, x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].sum(i, j)
+    expr2 = Sum((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test product
+    expr = x.l[i, j].product()
+    expr2 = Product((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].product(i)
+    expr2 = Product(i, x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].product(i, j)
+    expr2 = Product((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test smin
+    expr = x.l[i, j].smin()
+    expr2 = Smin((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].smin(i)
+    expr2 = Smin(i, x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].smin(i, j)
+    expr2 = Smin((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test smax
+    expr = x.l[i, j].smax()
+    expr2 = Smax((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].smax(i)
+    expr2 = Smax(i, x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].smax(i, j)
+    expr2 = Smax((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test sand
+    expr = x.l[i, j].sand()
+    expr2 = Sand((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].sand(i)
+    expr2 = Sand(i, x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].sand(i, j)
+    expr2 = Sand((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test sor
+    expr = x.l[i, j].sor()
+    expr2 = Sor((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].sor(i)
+    expr2 = Sor(i, x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].sor(i, j)
+    expr2 = Sor((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()

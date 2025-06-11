@@ -58,7 +58,8 @@ def data():
     shutil.rmtree("tmp")
     files = glob.glob("_*")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
 
 
 @pytest.fixture
@@ -66,7 +67,7 @@ def network_license():
     subprocess.run(
         [
             sys.executable,
-            "-m",
+            "-Bm",
             "gamspy",
             "install",
             "license",
@@ -94,7 +95,7 @@ def network_license():
     subprocess.run(
         [
             sys.executable,
-            "-m",
+            "-Bm",
             "gamspy",
             "install",
             "license",

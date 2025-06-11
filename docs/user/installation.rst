@@ -14,18 +14,18 @@ You can create a virtual environment and activate it as follows:
 
     .. code-block:: Linux-MacOS
 
-        python -m venv .venv
-        source .venv/bin/activate
+        python -m venv .gamspy_venv
+        source .gamspy_venv/bin/activate
 
     .. code-block:: Windows(Bash)
 
-        python -m venv .venv
-        source .venv/Scripts/activate
+        python -m venv .gamspy_venv
+        source .gamspy_venv/Scripts/activate
 
     .. code-block:: Windows(PowerShell)
 
-        python -m venv .venv
-        .venv\Scripts\Activate.ps1
+        python -m venv .gamspy_venv
+        .gamspy_venv\Scripts\Activate.ps1
 
 You can run the following command to install GAMSPy from PyPI::
 
@@ -81,7 +81,7 @@ is as follows:
 
 1. Generate a json file which contains the node information as follows: ::
 
-    gamspy probe -o info.json
+    gamspy probe -j info.json
 
 2. Move info.json file to a machine which has an internet connection and run: ::
 
@@ -114,6 +114,7 @@ The same information can also be accessed programmatically via the ``utils`` mod
     import gamspy_base
     print(gp.utils.getInstalledSolvers(gamspy_base.directory))
     print(gp.utils.getAvailableSolvers())
+    print(gp.utils.getInstallableSolvers(gamspy_base.directory))
 
 .. note::
     All available solver packages can also be found on `PyPI <https://pypi.org/user/GAMS_Development>`_.

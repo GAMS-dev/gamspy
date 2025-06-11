@@ -48,6 +48,7 @@ def read_data():
     df_vacations = nurse_xls_file.parse("NurseVacations")
     df_associations = nurse_xls_file.parse("NurseAssociations")
     df_incompatibilities = nurse_xls_file.parse("NurseIncompatibilities")
+    nurse_xls_file.close()
 
 
 def preprocess_data():

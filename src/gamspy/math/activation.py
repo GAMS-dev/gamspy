@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
 
 import gamspy._symbols.implicits as implicits
 import gamspy.math
+import gamspy.utils as utils
 from gamspy._symbols.parameter import Parameter
 from gamspy._symbols.variable import Variable
 from gamspy.exceptions import ValidationError
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 def _get_random_name(prefix: str) -> str:
-    return f"{prefix}_{uuid.uuid4()}".replace("-", "_")
+    return f"{prefix}_{utils._get_unique_name()}"
 
 
 def _get_lb(x: Variable, default_lb: float):

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import gamspy._algebra.condition as condition
 import gamspy._algebra.operable as operable
+from gamspy._algebra import expression
 
 
 class Number(operable.Operable):
@@ -31,6 +32,12 @@ class Number(operable.Operable):
         self._value = value
         self.where = condition.Condition(self)
         self.domain: list = []
+
+    def __eq__(self, other):
+        return expression.Expression(self, "=e=", other)
+
+    def __ne__(self, other):
+        return expression.Expression(self, "ne", other)
 
     def __repr__(self) -> str:
         return f"Number(value={self._value})"

@@ -28,6 +28,7 @@ The general syntax for creating a model is as follows: ::
     example_model = Model(
         m,
         name="myModel",
+        description"description of your model",
         equations=[e1, e2],
         problem=Problem.LP,
         sense=Sense.MAX,
@@ -105,8 +106,37 @@ argument in its constructor. ::
     )
 
 You do not need to include equations already provided in `matches` in the `equations` argument.
-An example MCP model can be found in the model library: `HANSMCP <https://github.com/GAMS-dev/gamspy/blob/master/tests/integration/models/hansmcp.py>`_.
 
+In addition to this explicit equation, variable matching, some alternative matching constructs with more flexibility are also supported.
+
+**Equation sequence syntax:** ::
+
+    model = Model(m, problem=Problem.MCP, matches={(e1, e2, e3) : v})
+
+This syntax requires that each equation in the sequence be conformant with ``v`` 
+(i.e. each equation has the same domain with the variable) and that the 
+set of tuples defining each equation be disjoint. For each column of ``v``, 
+at most one of ``e1`` or ``e2`` or ``e3`` will have a matching row. This is 
+useful when a variable contains columns of different kinds, e.g. prices for 
+both tradable and non-tradable commodities whose equilibrium conditions are 
+best expressed in different equations.
+
+**Variable sequence syntax:** ::
+
+    model = Model(m, problem=Problem.MCP, matches={e : (v1, v2, v3)})
+
+This construct requires that each variable in the variable sequence be conformant with `e`. 
+This points to the exclusive-or relationship among the non-fixed variables involved in a match. 
+For each row of ``e``, at most one of the matching columns in ``v1`` or ``v2`` or ``v3`` is 
+allowed to be non-fixed. The fixed columns in the match are ignored by the solver, and the row 
+is paired with the one non-fixed column. If all the columns are fixed, this effectively drops the 
+row from the model, just as would happen with a fixed column in the simple match ``e.v``. If no 
+columns exist to match a row of ``e``, this is an error. This construct is useful when a system 
+has too many degrees of freedom if all the variables in question are left endogenous: by fixing 
+some variables (i.e. making them exogenous) we arrive at a square system.
+
+More background information on MCP models can be found `here <https://www.gams.com/latest/docs/UG_ModelSolve.html#UG_ModelSolve_ModelClassificationOfModels_MCP>`_.
+An example MCP model can be found in the model library: `HANSMCP <https://github.com/GAMS-dev/gamspy/blob/master/tests/integration/models/hansmcp.py>`_.
 
 Model Attributes
 ================
@@ -394,7 +424,6 @@ Solve options can be specified using the :meth:`gamspy.Options` class. For examp
     model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.MAX, objective=z)
     model.solve(options=Options(iteration_limit=2))
 
-
 Here is the list of options and their descriptions:
 
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
@@ -515,7 +544,7 @@ Here is the list of options and their descriptions:
 | solve_link_type                   | Solve link option                                                                 | "disk": The model instance is saved to the scratch directory,                             |
 |                                   |                                                                                   | "memory": The model instance is passed to the solver in-memory                            |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
-| multi_solve_strategy              | Multiple solve management                                                         | "replace" | "merge" | "clear"                                                             |
+| merge_strategy                    | Multiple solve management                                                         | "replace" | "merge" | "clear"                                                             |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 | step_summary                      | Summary of computing resources used by job steps                                  | bool                                                                                      |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
@@ -534,6 +563,18 @@ Here is the list of options and their descriptions:
 
 To check all available options, see :meth:`gamspy.Options`.
 
+.. note::
+
+    Solve options can also be created with a dictionary of GAMS options. For example: ::
+
+        import gamspy as gp
+
+        m = gp.Container()
+        ... # Definition of your model
+        model = gp.Model(m, equations=m.getEquations(), problem=gp.Problem.LP, sense=gp.Sense.MAX, objective=z)
+        model.solve(options=gp.Options.fromGams({"reslim": 5, "lp": "gurobi"}))
+
+
 Solver Options
 --------------
 
@@ -548,6 +589,28 @@ In addition to solve options, user can specify solver options as a dictionary.::
 
     
 For all possible solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_
+
+Converting A Model To A Scalar Format
+=====================================
+:meth:`gamspy.Model.convert` transforms a GAMSPy model instance into a scalar model where all confidential information 
+has been removed or into formats used by other modeling and solution systems. It is designed to achieve the following goals:
+
+- Permit users to convert a confidential model into GAMS scalar format so that any idenifiable structure is removed. It can then be passed on to others for investigation without confidentiality being lost.
+- A way of sharing a model instance created by GAMSPy for use with other modeling systems or solvers.
+
+For example, you can convert your GAMSPy model into a scalar GAMS model as follows: ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+    ... # Definition of your model
+    model = gp.Model(m, equations=m.getEquations(), problem="LP", sense="MAX", objective=z)
+    model.convert(path="path_to_the_directory", file_format=gp.FileFormat.GAMS, options=gp.ConvertOptions(Width=50))
+
+The `path` parameter specifies the directory where the converted model will be saved. The `file_format` parameter specifies the 
+format of the converted model. The `options` parameter specifies the options for the conversion. See :meth:`gamspy.ConvertOptions` 
+for all available conversion options.
+
 
 Exporting Model To LaTeX
 ========================
@@ -566,6 +629,22 @@ The generated `.tex` file can be automatically compiled into a PDF file by using
     The :meth:`toLatex <gamspy.Model.toLatex>` function uses the *names* of the GAMSPy symbols. If names are not
     supplied, GAMSPy invents (ugly) names which would show up in the LaTeX source. So for this feature to be useful
     the GAMSPy set, parameter, variable, and equations should be specified with a name.
+
+Latex representation of the individual equation definitions can be retrieved with :meth:`equation.latexRepr <gamspy.Equation.latexRepr>`. 
+For example: ::
+
+    from gamspy import Container, Set, Variable, Equation
+
+    m = Container()
+    i = Set(m, "i")
+    v = Variable(m, "v", domain=i)
+    e = Equation(m, "e", domain=i)
+    e[i] = v[i] >= 5
+    print(e.latexRepr())
+    
+This would result in: ::
+
+    $v_{i} \geq 5\hfill \forall i$
 
 Limiting Domain for Variables
 =============================

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import base64
 import os
 import platform
+import uuid
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -52,15 +54,47 @@ elif platform.system() == "Darwin":
 elif platform.system() == "Windows":
     DEFAULT_DIR = os.path.join(user_dir, "Documents", "GAMSPy")
 
+_defaults: dict[str, dict[str, str]] = dict()
+_capabilities: dict[str, dict[str, list[str]]] = dict()
+_installed_solvers: dict[str, list[str]] = dict()
 
-def getDefaultSolvers() -> dict[str, str]:
+
+def getDefaultSolvers(system_directory: str) -> dict[str, str]:
+    """
+    Returns the default solver for each problem type.
+
+    Parameters
+    ----------
+    system_directory : str
+
+    Returns
+    -------
+    dict[str, str]
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> import gamspy_base
+    >>> default_solvers = gp.utils.getDefaultSolvers(gamspy_base.directory)
+
+    """
+    global _defaults
     try:
-        import gamspy_base
-    except ModuleNotFoundError as e:  # pragma: no cover
-        e.msg = "You must first install gamspy_base to use this functionality"
-        raise e
+        return _defaults[system_directory]
+    except KeyError:
+        ...
 
-    return gamspy_base.defaults
+    capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
+    with open(capabilities_path, encoding="utf-8") as file:
+        lines = file.read().split("DEFAULTS")[1].splitlines()[1:]
+
+    defaults: dict[str, str] = dict()
+    for line in lines:
+        problem, solver = line.split()
+        defaults[problem] = solver
+
+    _defaults[system_directory] = defaults
+    return defaults
 
 
 def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
@@ -76,6 +110,12 @@ def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
     -------
     dict[str, list[str]]
     """
+    global _capabilities
+    try:
+        return _capabilities[system_directory]
+    except KeyError:
+        ...
+
     capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
     capabilities: dict[str, list[str]] = dict()
 
@@ -96,6 +136,7 @@ def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
 
         capabilities[solver] = problem_types
 
+    _capabilities[system_directory] = capabilities
     return capabilities
 
 
@@ -119,6 +160,12 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
     >>> installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
 
     """
+    global _installed_solvers
+    try:
+        return _installed_solvers[system_directory]
+    except KeyError:
+        ...
+
     capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
     solvers: list[str] = []
 
@@ -140,12 +187,15 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
         if solver != "GUSS":
             solvers.append(solver)
 
-    return sorted(solvers)
+    solvers.remove("CONOPT")
+    solvers.sort()
+    _installed_solvers[system_directory] = solvers
+    return solvers
 
 
 def getAvailableSolvers() -> list[str]:
     """
-    Returns all available solvers that can be installed.
+    Returns all available solvers.
 
     Returns
     -------
@@ -168,7 +218,46 @@ def getAvailableSolvers() -> list[str]:
         e.msg = "You must first install gamspy_base to use this functionality"
         raise e
 
-    return sorted(gamspy_base.available_solvers)
+    solvers = sorted(gamspy_base.available_solvers)
+    if "CONOPT" in solvers and "CONOPT4" in solvers:
+        solvers.remove("CONOPT")
+
+    return solvers
+
+
+def getInstallableSolvers(system_directory: str) -> list[str]:
+    """
+    Returns all installable solvers.
+
+    Parameters
+    ----------
+    system_directory : str
+
+    Returns
+    -------
+    list[str]
+
+    Raises
+    ------
+    ModuleNotFoundError
+        In case gamspy_base is not installed.
+
+    Examples
+    --------
+    >>> import gamspy_base
+    >>> import gamspy.utils as utils
+    >>> available_solvers = utils.getInstallableSolvers(gamspy_base.directory)
+
+    """
+    try:
+        import gamspy_base
+    except ModuleNotFoundError as e:  # pragma: no cover
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
+
+    return sorted(
+        list(set(getAvailableSolvers()) - set(gamspy_base.default_solvers))
+    )
 
 
 def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
@@ -250,6 +339,15 @@ def _get_scalar_data(gams2np: Gams2Numpy, gdx_handle, symbol_id: str) -> float:
     return float(arrvals[0][0])
 
 
+def _get_unique_name() -> str:
+    """
+    N= 2^122 and the collision probability is: 1 - e^(-(n^2 / 2*N))
+    """
+    u = uuid.uuid4()
+    b64 = base64.urlsafe_b64encode(u.bytes)
+    return b64.rstrip(b"=").decode("ascii").replace("-", "_")
+
+
 def _get_symbol_names_from_gdx(
     system_directory: str, load_from: str
 ) -> list[str]:
@@ -296,7 +394,11 @@ def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame:
 def _filter_gams_string(raw_string: str) -> str:
     FILTERS = (
         "$onMultiR",
+        "$offMulti",
         "$onUNDF",
+        "$offUNDF",
+        "$onDotL",
+        "$offDotL",
         "$gdxIn",
         "$loadDC",
         "$offUNDF",
@@ -546,7 +648,7 @@ def _get_set(domain: list[Set | Alias | Domain | Expression]):
     for el in domain:
         if hasattr(el, "left"):
             if hasattr(el.left, "sets"):
-                res.extend(el.left.sets)
+                res.extend(el.left.sets)  # type: ignore
             else:
                 res.append(el.left)
         elif hasattr(el, "sets"):
@@ -581,7 +683,7 @@ def _parse_generated_equations(model: Model, listing_file: str) -> None:
     with open(listing_file) as file:
         lines = file.readlines()
         lines = [line.strip() for line in lines]
-        lines = [line for line in lines if line != "\n" and line != ""]
+        lines = [line for line in lines if line not in ("\n", "")]
 
     equation_listing_start_idx = 0
     for idx, line in enumerate(lines):

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import uuid
-
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
@@ -22,6 +20,10 @@ class AvgPool2d:
         Stride in the avg pooling, it is equal to kernel_size if not provided
     padding : int | tuple[int, int]
         Amount of padding to be added to input, by default 0
+    name_prefix : str | None
+        Prefix for generated GAMSPy symbols, by default None which means
+        random prefix. Using the same name_prefix in different formulations causes name
+        conflicts. Do not use the same name_prefix again.
 
     Examples
     --------
@@ -45,6 +47,7 @@ class AvgPool2d:
         kernel_size: int | tuple[int, int],
         stride: int | tuple[int, int] | None = None,
         padding: int = 0,
+        name_prefix: str | None = None,
     ):
         _kernel_size = utils._check_tuple_int(kernel_size, "kernel_size")
         if stride is None:
@@ -58,6 +61,11 @@ class AvgPool2d:
         self.stride = _stride
         self.padding = _padding
 
+        if name_prefix is None:
+            name_prefix = gp.utils._get_unique_name()
+
+        self._name_prefix = name_prefix
+
     def _set_bounds(
         self,
         input: gp.Parameter | gp.Variable,
@@ -68,14 +76,29 @@ class AvgPool2d:
         H_out, W_out, Hf, Wf, H_in, W_in = subset.domain
 
         # Create subset2 mapping output positions to input positions
-        subset2 = gp.Set(self.container, domain=[H_out, W_out, H_in, W_in])
+        subset2 = gp.Set(
+            self.container,
+            domain=[H_out, W_out, H_in, W_in],
+            name=utils._generate_name(
+                "s", self._name_prefix, "in_out_matching_2"
+            ),
+        )
+
         subset2[H_out, W_out, H_in, W_in] = gp.Sum(
             [Hf, Wf], subset[H_out, W_out, Hf, Wf, H_in, W_in]
         )
 
         # Initialize parameters for bounds
-        lb = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
-        ub = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
+        lb = gp.Parameter(
+            self.container,
+            domain=[N, C, H_out, W_out],
+            name=utils._generate_name("p", self._name_prefix, "output_lb"),
+        )
+        ub = gp.Parameter(
+            self.container,
+            domain=[N, C, H_out, W_out],
+            name=utils._generate_name("p", self._name_prefix, "output_ub"),
+        )
 
         # Calculate upper/lower bounds based on input type
         if isinstance(input, gp.Variable):
@@ -159,12 +182,18 @@ class AvgPool2d:
         )
 
         out_var = gp.Variable(
-            self.container, domain=dim([len(N), len(C_in), h_out, w_out])
+            self.container,
+            domain=dim([len(N), len(C_in), h_out, w_out]),
+            name=utils._generate_name("v", self._name_prefix, "output"),
         )
 
         N, C, H_out, W_out = out_var.domain
 
-        set_out = gp.Equation(self.container, domain=out_var.domain)
+        set_out = gp.Equation(
+            self.container,
+            domain=out_var.domain,
+            name=utils._generate_name("e", self._name_prefix, "set_output"),
+        )
 
         # expr must have domain N, C, H_out, W_out
         top_index = (
@@ -180,9 +209,12 @@ class AvgPool2d:
             [Hf, Wf, H_in, W_in], out_var.domain
         )
 
-        name = "ds_" + str(uuid.uuid4()).split("-")[0]
         subset = gp.Set(
-            self.container, name, domain=[H_out, W_out, Hf, Wf, H_in, W_in]
+            self.container,
+            name=utils._generate_name(
+                "s", self._name_prefix, "in_out_matching_1"
+            ),
+            domain=[H_out, W_out, Hf, Wf, H_in, W_in],
         )
         subset[
             H_out,

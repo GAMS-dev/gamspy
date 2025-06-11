@@ -4,7 +4,7 @@ Set d(days) "selected days";
 Set s(stocks) "selected stocks";
 Parameter mean(stocks) "mean of daily return";
 Parameter dev(stocks,days) "deviations";
-Parameter totmean "total mean return";
+Parameter totmean "total mean return" / -0.08019310344827588 /;
 positive Variable x(stocks) "investments";
 free Variable w(days) "intermediate variables";
 Equation budget;
@@ -16,6 +16,9 @@ free Variable m_budget;
 free Variable m_wdef(days);
 positive Variable m_retcon;
 Model qp6 / d_x.x,d_w.w,retcon.m_retcon,budget.m_budget,wdef.m_wdef /;
+$onMultiR
+$gdxLoadAll /home/muhammet/Documents/gams_workspace/gamspy/tmp/to_gams/qp6_data.gdx
+$offMulti
 d_x(s) .. sum(d,(m_wdef(d) * dev(s,d))) =g= ((m_retcon * mean(s)) + m_budget);
 d_w(d) .. ((2 * w(d)) / (card(d) - 1)) =e= m_wdef(d);
 retcon .. sum(s,(mean(s) * x(s))) =g= (totmean * 1.25);

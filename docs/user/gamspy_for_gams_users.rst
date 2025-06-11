@@ -250,7 +250,7 @@ The following example shows how GAMS Macro `reciprocal` can be defined as a func
 Automatic Conversion of a GAMSPy Model to GAMS
 ----------------------------------------------
 
-Existing GAMSPy models can be translated to a GAMS model automatically by using ``Model.toGams()``: ::
+Existing GAMSPy models can be translated to a GAMS model automatically by using :meth:`Model.toGams <gamspy.Model.toGams>`: ::
 
     import gamspy as gp
 
@@ -265,4 +265,7 @@ Existing GAMSPy models can be translated to a GAMS model automatically by using 
 
     your_model.toGams(path=<gams_model_path>)
 
-The generated GAMS model can be found under ``<gams_model_path>/<model_name>.gms``.
+The generated GAMS model can be found under ``<gams_model_path>/<model_name>.gms``. 
+If you also want to generate a pf file that contains the necessary option, you 
+can provide it with `options` argument. If you want to dump the GAMS state, you can 
+also set `dump_gams_state` to True.

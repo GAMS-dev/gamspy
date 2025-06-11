@@ -2,20 +2,25 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
+import gamspy._algebra.operable as operable
+import gamspy._symbols as syms
+import gamspy._validation as validation
 import gamspy.utils as utils
-from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
-from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
+    from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
     from gamspy._symbols.symbol import Symbol
     from gamspy._types import OperableType
 
 
-class MathOp:
+class MathOp(operable.Operable):
     def __init__(
         self,
         op_name: str,
@@ -25,6 +30,77 @@ class MathOp:
         self.op_name = op_name
         self.elements = list(elements)
         self.safe_cancel = safe_cancel
+        self.container = None
+        self.domain: list[Set | Alias] = []
+        self.dimension = 0
+        self.where = condition.Condition(self)
+        if hasattr(elements[0], "container"):
+            self.container = elements[0].container  # type: ignore
+        if hasattr(elements[0], "domain"):
+            self.domain: list[Set | Alias] = elements[0].domain  # type: ignore
+            self.dimension = validation.get_dimension(self.domain)
+
+    def __eq__(self, other):
+        return expression.Expression(self, "=e=", other)
+
+    def __ne__(self, other):
+        return expression.Expression(self, "ne", other)
+
+    @property
+    def records(self) -> pd.DataFrame | None:
+        """
+        Evaluates the expression and returns the resulting records.
+
+        Returns
+        -------
+        pd.DataFrame | None
+        """
+        assert self.container is not None
+        temp_name = "a" + utils._get_unique_name()
+        temp_param = syms.Parameter._constructor_bypass(
+            self.container, temp_name, self.domain
+        )
+        temp_param[...] = self
+        del self.container.data[temp_name]
+        return temp_param.records
+
+    def toValue(self) -> float | None:
+        """
+        Convenience method to return expression records as a Python float. Only possible if there is a single record as a result of the expression evaluation.
+
+        Returns
+        -------
+        float | None
+
+        Raises
+        ------
+        TypeError
+            In case the dimension of the expression is not zero.
+        """
+        if self.dimension != 0:
+            raise TypeError(
+                f"Cannot extract value data for non-scalar expressions (expression dimension is {self.dimension})"
+            )
+
+        records = self.records
+        if records is not None:
+            return records["value"][0]
+
+        return records
+
+    def toList(self) -> list | None:
+        """
+        Convenience method to return the records of the expression as a list.
+
+        Returns
+        -------
+        list | None
+        """
+        records = self.records
+        if records is not None:
+            return records.values.tolist()
+
+        return None
 
     def gamsRepr(self) -> str:
         operands_str = ",".join([_stringify(elem) for elem in self.elements])
@@ -66,16 +142,16 @@ def _stringify(x: str | int | float | Symbol | ImplicitSymbol):
     elif isinstance(x, str):
         return f'"{x}"'
 
-    return x.gamsRepr()
+    return x.gamsRepr()  # type: ignore
 
 
-def abs(x: OperableType) -> Expression:
+def abs(x: OperableType) -> MathOp:
     """
     Absolute value of ``x`` (i.e. ``|x|``)
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -89,16 +165,16 @@ def abs(x: OperableType) -> Expression:
     np.float64(3.8)
 
     """
-    return expression.Expression(None, MathOp("abs", (x,)), None)
+    return MathOp("abs", (x,))
 
 
-def ceil(x: OperableType) -> Expression:
+def ceil(x: OperableType) -> MathOp:
     """
     The smallest integer greater than or equal to ``x`` (i.e. ``ceil(4.1)`` returns ``5``)
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -112,10 +188,10 @@ def ceil(x: OperableType) -> Expression:
     np.float64(4.0)
 
     """
-    return expression.Expression(None, MathOp("ceil", (x,)), None)
+    return MathOp("ceil", (x,))
 
 
-def div(dividend: OperableType, divisor: OperableType) -> Expression:
+def div(dividend: OperableType, divisor: OperableType) -> MathOp:
     """
     Dividing operation, Error if the divisor is ``0``. To avoid the error, ``div0`` can be used instead.
 
@@ -126,7 +202,7 @@ def div(dividend: OperableType, divisor: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -140,12 +216,10 @@ def div(dividend: OperableType, divisor: OperableType) -> Expression:
     np.float64(70.0)
 
     """
-    return expression.Expression(
-        None, MathOp("div", (dividend, divisor)), None
-    )
+    return MathOp("div", (dividend, divisor))
 
 
-def div0(dividend: OperableType, divisor: OperableType) -> Expression:
+def div0(dividend: OperableType, divisor: OperableType) -> MathOp:
     """
     Dividing operation, returns ``1e+299`` if the divisor is ``0``
 
@@ -156,7 +230,7 @@ def div0(dividend: OperableType, divisor: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -170,21 +244,19 @@ def div0(dividend: OperableType, divisor: OperableType) -> Expression:
     np.float64(1e+299)
 
     """
-    return expression.Expression(
-        None, MathOp("div0", (dividend, divisor)), None
-    )
+    return MathOp("div0", (dividend, divisor))
 
 
 def dist(
     x1: OperableType,
     x2: OperableType,
-) -> Expression:
+) -> MathOp:
     """
     Euclidean or L-2 Norm: ``sqrt(x1^2 + x2^2 + ... + xn^2)``
 
     Returns
     -------
-    Expression
+    MathOp
 
     Raises
     ------
@@ -201,10 +273,10 @@ def dist(
     >>> b[...] = dist(a, 100)
 
     """
-    return expression.Expression(None, MathOp("eDist", (x1, x2)), None)
+    return MathOp("eDist", (x1, x2))
 
 
-def factorial(x: int) -> Expression:
+def factorial(x: int) -> MathOp:
     """
     Factorial of ``x``: ``x!``
 
@@ -214,7 +286,7 @@ def factorial(x: int) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -225,16 +297,16 @@ def factorial(x: int) -> Expression:
     >>> b[...] = factorial(2)
 
     """
-    return expression.Expression(None, MathOp("fact", (x,)), None)
+    return MathOp("fact", (x,))
 
 
-def floor(x: OperableType) -> Expression:
+def floor(x: OperableType) -> MathOp:
     """
     The greatest integer less than or equal to ``x`` (i.e. ``floor(4.9)`` returns ``4``)
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -248,39 +320,40 @@ def floor(x: OperableType) -> Expression:
     np.float64(3.0)
 
     """
-    return expression.Expression(None, MathOp("floor", (x,)), None)
+    return MathOp("floor", (x,))
 
 
-def fractional(x: OperableType) -> Expression:
+def fractional(x: OperableType) -> MathOp:
     """
     Returns the fractional part of ``x`` (i.e. ``fractional(3.9)`` returns ``0.9``)
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import fractional
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3.9)
     >>> b = Parameter(m, "b")
     >>> b[...] = fractional(a)
-    >>> b.toValue()
-    np.float64(0.8999999999999999)
+    >>> math.isclose(b.toValue(), 0.8999999999999999)
+    True
 
     """
-    return expression.Expression(None, MathOp("frac", (x,)), None)
+    return MathOp("frac", (x,))
 
 
-def Min(*values) -> Expression:
+def Min(*values) -> MathOp:
     """
     Minimum value of the values, where the number of values may vary.
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -295,16 +368,16 @@ def Min(*values) -> Expression:
     [('i1', -2.0), ('i2', 0.3), ('i3', 1.0)]
 
     """
-    return expression.Expression(None, MathOp("min", values), None)
+    return MathOp("min", values)
 
 
-def Max(*values) -> Expression:
+def Max(*values) -> MathOp:
     """
     Maximum value of the values, where the number of values may vary.
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -319,16 +392,16 @@ def Max(*values) -> Expression:
     [('i1', 2.0), ('i2', 1.0), ('i3', 2.5)]
 
     """
-    return expression.Expression(None, MathOp("max", values), None)
+    return MathOp("max", values)
 
 
-def mod(x: OperableType, y: OperableType) -> Expression:
+def mod(x: OperableType, y: OperableType) -> MathOp:
     """
     Remainder of ``x`` divided by ``y`` (i.e. ``mod(10, 3)`` returns ``1``)
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -342,10 +415,10 @@ def mod(x: OperableType, y: OperableType) -> Expression:
     np.float64(2.0)
 
     """
-    return expression.Expression(None, MathOp("mod", (x, y)), None)
+    return MathOp("mod", (x, y))
 
 
-def Round(x: OperableType, num_decimals: int = 0) -> Expression:
+def Round(x: OperableType, num_decimals: int = 0) -> MathOp:
     """
     Round ``x`` to ``num_decimals`` decimal places (i.e. ``Round(3.14159, 2)`` returns ``3.14``)
 
@@ -356,7 +429,7 @@ def Round(x: OperableType, num_decimals: int = 0) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -370,12 +443,10 @@ def Round(x: OperableType, num_decimals: int = 0) -> Expression:
     np.float64(66.67)
 
     """
-    return expression.Expression(
-        None, MathOp("round", (x, num_decimals)), None
-    )
+    return MathOp("round", (x, num_decimals))
 
 
-def sign(x: Symbol) -> Expression:
+def sign(x: Symbol) -> MathOp:
     """
     Sign of ``x`` returns ``1 if x > 0``, ``-1 if x < 0``, and ``0 if x = 0``
 
@@ -385,7 +456,7 @@ def sign(x: Symbol) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -400,10 +471,10 @@ def sign(x: Symbol) -> Expression:
     [('i1', 1.0), ('i2', -1.0)]
 
     """
-    return expression.Expression(None, MathOp("sign", (x,)), None)
+    return MathOp("sign", (x,))
 
 
-def slexp(x: OperableType, S: int | float = 150) -> Expression:
+def slexp(x: OperableType, S: int | float = 150) -> MathOp:
     """
     Smooth (linear) exponential where ``S <= 150``. (Default ``S = 150``)
 
@@ -414,24 +485,25 @@ def slexp(x: OperableType, S: int | float = 150) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import slexp
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3)
     >>> b = Parameter(m, "b")
     >>> b[...] = slexp(a)
-    >>> b.toValue()
-    np.float64(20.085536923187668)
+    >>> math.isclose(b.toValue(), 20.085536923187668)
+    True
 
     """
-    return expression.Expression(None, MathOp("slexp", (x, S)), None)
+    return MathOp("slexp", (x, S))
 
 
-def sqexp(x: OperableType, S: int | float = 150) -> Expression:
+def sqexp(x: OperableType, S: int | float = 150) -> MathOp:
     """
     Smooth (quadratic) exponential where ``S <= 150``. (Default ``S = 150``)
 
@@ -442,30 +514,31 @@ def sqexp(x: OperableType, S: int | float = 150) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import sqexp
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3)
     >>> b = Parameter(m, "b")
     >>> b[...] = sqexp(a)
-    >>> b.toValue()
-    np.float64(20.085536923187668)
+    >>> math.isclose(b.toValue(), 20.085536923187668)
+    True
 
     """
-    return expression.Expression(None, MathOp("sqexp", (x, S)), None)
+    return MathOp("sqexp", (x, S))
 
 
-def sqrt(x: OperableType, safe_cancel: bool = False) -> Expression:
+def sqrt(x: OperableType, safe_cancel: bool = False) -> MathOp:
     """
     Square root of ``x``
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -476,22 +549,18 @@ def sqrt(x: OperableType, safe_cancel: bool = False) -> Expression:
     >>> a = Parameter(m, "a", domain=i, records=[("i1", 4), ("i2", 54), ("i3", 0)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = sqrt(a[i])
-    >>> b.toList()
-    [('i1', 2.0), ('i2', 7.3484692283495345)]
 
     """
-    return expression.Expression(
-        None, MathOp("sqrt", (x,), safe_cancel=safe_cancel), None
-    )
+    return MathOp("sqrt", (x,), safe_cancel=safe_cancel)
 
 
-def truncate(x: OperableType) -> Expression:
+def truncate(x: OperableType) -> MathOp:
     """
     Returns the integer part of ``x`` (i.e. ``truncate(3.9)`` returns ``3``)
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -505,10 +574,10 @@ def truncate(x: OperableType) -> Expression:
     np.float64(3.0)
 
     """
-    return expression.Expression(None, MathOp("trunc", (x,)), None)
+    return MathOp("trunc", (x,))
 
 
-def beta(x: OperableType, y: OperableType) -> Expression:
+def beta(x: OperableType, y: OperableType) -> MathOp:
     """
     Beta function: ``B(x, y) = gamma(x) * gamma(y) / gamma(x + y) = (x-1)! * (y-1)! / (x + y - 1)!``
 
@@ -519,26 +588,25 @@ def beta(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import beta
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3)
     >>> b = Parameter(m, "b")
     >>> b[...] = beta(a, 1)
-    >>> b.toValue()
-    np.float64(0.3333333333333333)
+    >>> math.isclose(b.toValue(), 0.3333333333333333)
+    True
 
     """
-    return expression.Expression(None, MathOp("beta", (x, y)), None)
+    return MathOp("beta", (x, y))
 
 
-def regularized_beta(
-    x: int | float, y: int | float, z: int | float
-) -> Expression:
+def regularized_beta(x: int | float, y: int | float, z: int | float) -> MathOp:
     """
     Regularized Beta Function, See `MathWorld <https://mathworld.wolfram.com/RegularizedBetaFunction.html>`_
 
@@ -550,24 +618,25 @@ def regularized_beta(
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import regularized_beta
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3)
     >>> b = Parameter(m, "b")
     >>> b[...] = regularized_beta(0.5, a, 1)
-    >>> b.toValue()
-    np.float64(0.12500000000000003)
+    >>> math.isclose(b.toValue(), 0.12500000000000003)
+    True
 
     """
-    return expression.Expression(None, MathOp("betaReg", (x, y, z)), None)
+    return MathOp("betaReg", (x, y, z))
 
 
-def gamma(x: OperableType) -> Expression:
+def gamma(x: OperableType) -> MathOp:
     """
     Gamma function: ``gamma(x) = (x-1)!``
 
@@ -577,7 +646,7 @@ def gamma(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -588,14 +657,12 @@ def gamma(x: OperableType) -> Expression:
     >>> a = Parameter(m, "a", domain=i, records=[("i1", 4), ("i2", 7), ("i3", 0.5)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = gamma(a[i])
-    >>> b.toList()
-    [('i1', 6.0), ('i2', 720.0), ('i3', 1.772453850905516)]
 
     """
-    return expression.Expression(None, MathOp("gamma", (x,)), None)
+    return MathOp("gamma", (x,))
 
 
-def regularized_gamma(x: int | float, a: int | float) -> Expression:
+def regularized_gamma(x: int | float, a: int | float) -> MathOp:
     """
     Lower Incomplete Regularized Gamma function, See `MathWorld <https://mathworld.wolfram.com/RegularizedGammaFunction.html>`_
 
@@ -606,7 +673,7 @@ def regularized_gamma(x: int | float, a: int | float) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -617,20 +684,18 @@ def regularized_gamma(x: int | float, a: int | float) -> Expression:
     >>> a = Parameter(m, "a", domain=i, records=[("i1", 4), ("i2", 1), ("i3", 0.5)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = regularized_gamma(0.5, a[i])
-    >>> b.toList()
-    [('i1', 0.001751622556290824), ('i2', 0.3934693402873665), ('i3', 0.6826894921370857)]
 
     """
-    return expression.Expression(None, MathOp("gammaReg", (x, a)), None)
+    return MathOp("gammaReg", (x, a))
 
 
-def lse_max(*xs) -> Expression:
+def lse_max(*xs) -> MathOp:
     """
     Smoothed Max via the Logarithm of the Sum of Exponentials: ``ln(exp(x1) + exp(x2) + ... + exp(xn))``
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -641,23 +706,21 @@ def lse_max(*xs) -> Expression:
     >>> a = Parameter(m, "a", domain=i, records=[("i1", 4), ("i2", 10), ("i3", 0.5)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = lse_max(a[i], 5)
-    >>> b.toList()
-    [('i1', 5.313261687518223), ('i2', 10.006715348489118), ('i3', 5.011047744848594)]
 
     """
     if len(xs) < 1:
         raise ValidationError("lse_max requires at least 1 x")
 
-    return expression.Expression(None, MathOp("lseMax", xs), None)
+    return MathOp("lseMax", xs)
 
 
-def lse_max_sc(t, *xs) -> Expression:
+def lse_max_sc(t, *xs) -> MathOp:
     """
     Scaled smoothed Max via the Logarithm of the Sum of Exponentials: ``lse_max_sc(T,x) = lse_max(Tx)/T``
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -668,23 +731,21 @@ def lse_max_sc(t, *xs) -> Expression:
     >>> a = Parameter(m, "a", domain=i, records=[("i1", 4), ("i2", 100), ("i3", 0.5)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = lse_max_sc(7.5, a[i], 10.5)
-    >>> b.toList()
-    [('i1', 10.50000153604837), ('i2', 10.5), ('i3', 10.902826555965506)]
 
     """
     if len(xs) < 1:
         raise ValidationError("lse_max_sc requires at least 1 x")
 
-    return expression.Expression(None, MathOp("lseMaxSc", xs + (t,)), None)
+    return MathOp("lseMaxSc", xs + (t,))
 
 
-def lse_min(*xs) -> Expression:
+def lse_min(*xs) -> MathOp:
     """
     Smoothed Min via the Logarithm of the Sum of Exponentials: ``-ln(exp(-x1) + exp(-x2) + ... + exp(-xn))``
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -695,23 +756,21 @@ def lse_min(*xs) -> Expression:
     >>> a = Parameter(m, "a", domain=i, records=[("i1", 4), ("i2", 10), ("i3", 0.5)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = lse_min(a[i], 5)
-    >>> b.toList()
-    [('i1', 3.686738312481777), ('i2', 4.993284651510882), ('i3', 0.4889522551514062)]
 
     """
     if len(xs) < 1:
         raise ValidationError("lse_min requires at least 1 x")
 
-    return expression.Expression(None, MathOp("lseMin", xs), None)
+    return MathOp("lseMin", xs)
 
 
-def lse_min_sc(t, *xs) -> Expression:
+def lse_min_sc(t, *xs) -> MathOp:
     """
     Scaled smoothed Min via the Logarithm of the Sum of Exponentials: ``lse_min_sc(T,x) = lse_min(Tx)/T``
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -729,10 +788,10 @@ def lse_min_sc(t, *xs) -> Expression:
     if len(xs) < 1:
         raise ValidationError("lse_min_sc requires at least 1 x")
 
-    return expression.Expression(None, MathOp("lseMinSc", (t,) + xs), None)
+    return MathOp("lseMinSc", (t,) + xs)
 
 
-def ncp_cm(x: Symbol, y: Symbol, z: float | int) -> Expression:
+def ncp_cm(x: Symbol, y: Symbol, z: float | int) -> MathOp:
     """
     Chen-Mangasarian smoothing: ``x - z*ln(1 + exp((x-y)/z))``
 
@@ -744,24 +803,25 @@ def ncp_cm(x: Symbol, y: Symbol, z: float | int) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import ncp_cm
     >>> m = Container()
     >>> y = Parameter(m, "y", records=2)
     >>> b = Parameter(m, "b")
     >>> b[...] = ncp_cm(1, y, 0.5)
-    >>> b.toValue()
-    np.float64(0.9365359944785137)
+    >>> math.isclose(b.toValue(), 0.9365359944785137)
+    True
 
     """
-    return expression.Expression(None, MathOp("ncpCM", (x, y, z)), None)
+    return MathOp("ncpCM", (x, y, z))
 
 
-def ncp_f(x: Symbol, y: Symbol, z: int | float = 0) -> Expression:
+def ncp_f(x: Symbol, y: Symbol, z: int | float = 0) -> MathOp:
     """
     Fisher-Burmeister smoothing: ``sqrt(x^2 + y^2 + 2z) - x - y`` where ``z >= 0`` (default ``z = 0``)
 
@@ -773,28 +833,29 @@ def ncp_f(x: Symbol, y: Symbol, z: int | float = 0) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import ncp_f
     >>> m = Container()
     >>> y = Parameter(m, "y", records=2)
     >>> b = Parameter(m, "b")
     >>> b[...] = ncp_f(1, y, 0.5)
-    >>> b.toValue()
-    np.float64(-0.5505102572168221)
+    >>> math.isclose(b.toValue(), -0.5505102572168221)
+    True
 
     """
-    return expression.Expression(None, MathOp("ncpF", (x, y, z)), None)
+    return MathOp("ncpF", (x, y, z))
 
 
 def ncpVUpow(
     r: Symbol,
     s: Symbol,
     mu: int | float = 0,
-) -> Expression:
+) -> MathOp:
     """
     NCP Veelken-Ulbrich (smoothed min(r,s))
 
@@ -806,7 +867,7 @@ def ncpVUpow(
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -820,10 +881,10 @@ def ncpVUpow(
     np.float64(1.0)
 
     """
-    return expression.Expression(None, MathOp("ncpVUpow", (r, s, mu)), None)
+    return MathOp("ncpVUpow", (r, s, mu))
 
 
-def ncpVUsin(r: Symbol, s: Symbol, mu: int | float = 0) -> Expression:
+def ncpVUsin(r: Symbol, s: Symbol, mu: int | float = 0) -> MathOp:
     """
     NCP Veelken-Ulbrich (smoothed min(r,s))
 
@@ -835,7 +896,7 @@ def ncpVUsin(r: Symbol, s: Symbol, mu: int | float = 0) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -849,16 +910,16 @@ def ncpVUsin(r: Symbol, s: Symbol, mu: int | float = 0) -> Expression:
     np.float64(1.0)
 
     """
-    return expression.Expression(None, MathOp("ncpVUsin", (r, s, mu)), None)
+    return MathOp("ncpVUsin", (r, s, mu))
 
 
-def poly(x, *args) -> Expression:
+def poly(x, *args) -> MathOp:
     """
     Polynomial function: ``p(x) = A[0] + A[1]*x + A[2]*x^2 + ... + A[n-1]*x^(n-1)``
 
     Returns
     -------
-    Expression
+    MathOp
 
     Raises
     ------
@@ -881,10 +942,10 @@ def poly(x, *args) -> Expression:
     if len(args) < 3:
         raise ValidationError("poly requires at least 3 arguments after x")
 
-    return expression.Expression(None, MathOp("poly", (x,) + args), None)
+    return MathOp("poly", (x,) + args)
 
 
-def sigmoid(x: OperableType) -> Expression:
+def sigmoid(x: OperableType) -> MathOp:
     """
     Sigmoid of ``x`` (i.e. ``1 / (1 + exp(-x))``)
 
@@ -894,7 +955,7 @@ def sigmoid(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -905,14 +966,12 @@ def sigmoid(x: OperableType) -> Expression:
     >>> a = Parameter(m, "a", domain=i, records=[("i1", 4), ("i2", -1), ("i3", 0.5)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = sigmoid(a[i])
-    >>> b.toList()
-    [('i1', 0.9820137900379085), ('i2', 0.2689414213699951), ('i3', 0.6224593312018546)]
 
     """
-    return expression.Expression(None, MathOp("sigmoid", (x,)), None)
+    return MathOp("sigmoid", (x,))
 
 
-def rand_binomial(n: int | float, p: int | float) -> Expression:
+def rand_binomial(n: int | float, p: int | float) -> MathOp:
     """
     Generate a random number from the binomial distribution, where n is the
     number of trials and p the probability of success for each trial
@@ -924,7 +983,7 @@ def rand_binomial(n: int | float, p: int | float) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -939,12 +998,12 @@ def rand_binomial(n: int | float, p: int | float) -> Expression:
     [('i1', 21.0), ('i2', 63.0), ('i3', 25.0)]
 
     """
-    return expression.Expression(None, MathOp("randBinomial", (n, p)), None)
+    return MathOp("randBinomial", (n, p))
 
 
 def rand_linear(
     low: int | float, slope: int | float, high: int | float
-) -> Expression:
+) -> MathOp:
     """
     Generate a random number between low and high with linear distribution.
     ``slope`` must be less than ``2 / (high - low)`` and greater than ``0``
@@ -957,7 +1016,7 @@ def rand_linear(
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -968,18 +1027,14 @@ def rand_linear(
     >>> s = Parameter(m, "s", domain=i, records=[("i1", 0.03), ("i2", 0.008), ("i3", 0.04)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = rand_linear(75, s[i], 125)
-    >>> b.toList()
-    [('i1', 78.22119203430918), ('i2', 87.65662570307367), ('i3', 80.24583337516547)]
 
     """
-    return expression.Expression(
-        None, MathOp("randLinear", (low, slope, high)), None
-    )
+    return MathOp("randLinear", (low, slope, high))
 
 
 def rand_triangle(
     low: int | float, mid: int | float, high: int | float
-) -> Expression:
+) -> MathOp:
     """
     Generate a random number between ``low`` and ``high`` with triangular distribution.
     ``mid`` is the most probable number.
@@ -992,7 +1047,7 @@ def rand_triangle(
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1003,16 +1058,12 @@ def rand_triangle(
     >>> s = Parameter(m, "s", domain=i, records=[("i1", 103), ("i2", 80), ("i3", 115)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = rand_triangle(75, s[i], 125)
-    >>> b.toList()
-    [('i1', 90.50632080153123), ('i2', 106.22102486822031), ('i3', 108.17756338250294)]
 
     """
-    return expression.Expression(
-        None, MathOp("randTriangle", (low, mid, high)), None
-    )
+    return MathOp("randTriangle", (low, mid, high))
 
 
-def same_as(self: Set | Alias, other: Set | Alias | str) -> Expression:
+def same_as(self: Set | Alias, other: Set | Alias | str) -> MathOp:
     """
     Evaluates to true if this set is identical to the given set or alias, false otherwise.
 
@@ -1022,7 +1073,7 @@ def same_as(self: Set | Alias, other: Set | Alias | str) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1037,10 +1088,10 @@ def same_as(self: Set | Alias, other: Set | Alias | str) -> Expression:
     [['seattle', 'seattle', 1.0]]
 
     """
-    return expression.Expression(None, MathOp("sameAs", (self, other)), None)
+    return MathOp("sameAs", (self, other))
 
 
-def slrec(x: OperableType, S: int | float = 1e-10) -> Expression:
+def slrec(x: OperableType, S: int | float = 1e-10) -> MathOp:
     """
     Smooth (linear) reciprocal, where ``S >= 1e-10``. (Default ``S = 1e-10``)
 
@@ -1051,7 +1102,7 @@ def slrec(x: OperableType, S: int | float = 1e-10) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1062,14 +1113,12 @@ def slrec(x: OperableType, S: int | float = 1e-10) -> Expression:
     >>> a = Parameter(m, "a", domain=i, records=[("i1", 1), ("i2", 0.8), ("i3", 15)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = slrec(a[i])
-    >>> b.toList()
-    [('i1', 1.0), ('i2', 1.25), ('i3', 0.06666666666666667)]
 
     """
-    return expression.Expression(None, MathOp("slrec", (x, S)), None)
+    return MathOp("slrec", (x, S))
 
 
-def sqrec(x: OperableType, S: int | float = 1e-10) -> Expression:
+def sqrec(x: OperableType, S: int | float = 1e-10) -> MathOp:
     """
     Smooth (quadratic) reciprocal, where ``S >= 1e-10``. (Default ``S = 1e-10``)
 
@@ -1080,7 +1129,7 @@ def sqrec(x: OperableType, S: int | float = 1e-10) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1091,14 +1140,12 @@ def sqrec(x: OperableType, S: int | float = 1e-10) -> Expression:
     >>> a = Parameter(m, "a", domain=i, records=[("i1", 1), ("i2", 0.8), ("i3", 15)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = sqrec(a[i])
-    >>> b.toList()
-    [('i1', 1.0), ('i2', 1.25), ('i3', 0.06666666666666667)]
 
     """
-    return expression.Expression(None, MathOp("sqrec", (x, S)), None)
+    return MathOp("sqrec", (x, S))
 
 
-def entropy(x: OperableType) -> Expression:
+def entropy(x: OperableType) -> MathOp:
     """
     Entropy function: ``-x*ln(x)`` where ``x >= 0``
 
@@ -1108,7 +1155,7 @@ def entropy(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1119,14 +1166,12 @@ def entropy(x: OperableType) -> Expression:
     >>> a = Parameter(m, "a", domain=i, records=[("i1", 1), ("i2", 0.8), ("i3", 15)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = entropy(a[i])
-    >>> b.toList()
-    [('i2', 0.17851484105136778), ('i3', -40.62075301653315)]
 
     """
-    return expression.Expression(None, MathOp("entropy", (x,)), None)
+    return MathOp("entropy", (x,))
 
 
-def errorf(x: OperableType) -> Expression:
+def errorf(x: OperableType) -> MathOp:
     """
     Integral of the standard normal distribution from negative infinity to ``x``
 
@@ -1136,7 +1181,7 @@ def errorf(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1147,18 +1192,16 @@ def errorf(x: OperableType) -> Expression:
     >>> a = Parameter(m, "a", domain=i, records=[("i1", -2.5), ("i2", 0.8), ("i3", 1.7)])
     >>> b = Parameter(m, "b", domain=i)
     >>> b[i] = errorf(a[i])
-    >>> b.toList()
-    [('i1', 0.0062096653257761375), ('i2', 0.7881446014166034), ('i3', 0.955434537241457)]
 
     """
-    return expression.Expression(None, MathOp("errorf", (x,)), None)
+    return MathOp("errorf", (x,))
 
 
 def ifthen(
     condition: Expression,
     yes_return: float | Expression,
     no_return: float | Expression,
-) -> Expression:
+) -> MathOp:
     """
     If the logical condition is ``true``, the function returns ``yes_return``,
     else it returns ``no_return``
@@ -1171,7 +1214,7 @@ def ifthen(
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1187,12 +1230,10 @@ def ifthen(
         condition.gamsRepr()
     )
 
-    return expression.Expression(
-        None, MathOp("ifthen", (condition, yes_return, no_return)), None
-    )
+    return MathOp("ifthen", (condition, yes_return, no_return))
 
 
-def bool_and(x: OperableType, y: OperableType) -> Expression:
+def bool_and(x: OperableType, y: OperableType) -> MathOp:
     """
     Returns ``true`` iff both ``x and y`` are true
 
@@ -1203,7 +1244,7 @@ def bool_and(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1218,10 +1259,10 @@ def bool_and(x: OperableType, y: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("bool_and", (x, y)), None)
+    return MathOp("bool_and", (x, y))
 
 
-def bool_eqv(x: OperableType, y: OperableType) -> Expression:
+def bool_eqv(x: OperableType, y: OperableType) -> MathOp:
     """
     Returns ``false`` iff exactly one argument is false
 
@@ -1232,7 +1273,7 @@ def bool_eqv(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1247,10 +1288,10 @@ def bool_eqv(x: OperableType, y: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("bool_eqv", (x, y)), None)
+    return MathOp("bool_eqv", (x, y))
 
 
-def bool_imp(x: OperableType, y: OperableType) -> Expression:
+def bool_imp(x: OperableType, y: OperableType) -> MathOp:
     """
     Returns ``true`` iff ``x is false`` or ``y is true``
 
@@ -1261,7 +1302,7 @@ def bool_imp(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1276,10 +1317,10 @@ def bool_imp(x: OperableType, y: OperableType) -> Expression:
     np.float64(1.0)
 
     """
-    return expression.Expression(None, MathOp("bool_imp", (x, y)), None)
+    return MathOp("bool_imp", (x, y))
 
 
-def bool_not(x: OperableType) -> Expression:
+def bool_not(x: OperableType) -> MathOp:
     """
     Returns ``true`` iff ``x is false``
 
@@ -1289,7 +1330,7 @@ def bool_not(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1304,10 +1345,10 @@ def bool_not(x: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("bool_not", (x,)), None)
+    return MathOp("bool_not", (x,))
 
 
-def bool_or(x: OperableType, y: OperableType) -> Expression:
+def bool_or(x: OperableType, y: OperableType) -> MathOp:
     """
     Returns ``true`` iff ``x is true`` or ``y is true``
 
@@ -1318,7 +1359,7 @@ def bool_or(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1333,10 +1374,10 @@ def bool_or(x: OperableType, y: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("bool_or", (x, y)), None)
+    return MathOp("bool_or", (x, y))
 
 
-def bool_xor(x: OperableType, y: OperableType) -> Expression:
+def bool_xor(x: OperableType, y: OperableType) -> MathOp:
     """
     Returns ``true`` iff exactly one argument is ``false``
 
@@ -1347,7 +1388,7 @@ def bool_xor(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1362,10 +1403,10 @@ def bool_xor(x: OperableType, y: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("bool_xor", (x, y)), None)
+    return MathOp("bool_xor", (x, y))
 
 
-def rel_eq(x: OperableType, y: OperableType) -> Expression:
+def rel_eq(x: OperableType, y: OperableType) -> MathOp:
     """
     Returns ``true`` iff ``x == y``
 
@@ -1376,7 +1417,7 @@ def rel_eq(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1391,10 +1432,10 @@ def rel_eq(x: OperableType, y: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("rel_eq", (x, y)), None)
+    return MathOp("rel_eq", (x, y))
 
 
-def rel_ge(x: OperableType, y: OperableType) -> Expression:
+def rel_ge(x: OperableType, y: OperableType) -> MathOp:
     """
     Returns ``true`` iff ``x >= y``
 
@@ -1405,7 +1446,7 @@ def rel_ge(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1420,10 +1461,10 @@ def rel_ge(x: OperableType, y: OperableType) -> Expression:
     np.float64(1.0)
 
     """
-    return expression.Expression(None, MathOp("rel_ge", (x, y)), None)
+    return MathOp("rel_ge", (x, y))
 
 
-def rel_gt(x: OperableType, y: OperableType) -> Expression:
+def rel_gt(x: OperableType, y: OperableType) -> MathOp:
     """
     Returns ``true`` iff ``x > y``
 
@@ -1434,7 +1475,7 @@ def rel_gt(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1449,10 +1490,10 @@ def rel_gt(x: OperableType, y: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("rel_gt", (x, y)), None)
+    return MathOp("rel_gt", (x, y))
 
 
-def rel_le(x: OperableType, y: OperableType) -> Expression:
+def rel_le(x: OperableType, y: OperableType) -> MathOp:
     """
     Returns ``true`` iff ``x <= y``
 
@@ -1463,7 +1504,7 @@ def rel_le(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1478,10 +1519,10 @@ def rel_le(x: OperableType, y: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("rel_le", (x, y)), None)
+    return MathOp("rel_le", (x, y))
 
 
-def rel_lt(x: OperableType, y: OperableType) -> Expression:
+def rel_lt(x: OperableType, y: OperableType) -> MathOp:
     """
     Returns ``true`` iff ``x < y``
 
@@ -1492,7 +1533,7 @@ def rel_lt(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1507,10 +1548,10 @@ def rel_lt(x: OperableType, y: OperableType) -> Expression:
     np.float64(1.0)
 
     """
-    return expression.Expression(None, MathOp("rel_lt", (x, y)), None)
+    return MathOp("rel_lt", (x, y))
 
 
-def rel_ne(x: OperableType, y: OperableType) -> Expression:
+def rel_ne(x: OperableType, y: OperableType) -> MathOp:
     """
     Returns ``true`` iff ``x != y``
 
@@ -1521,7 +1562,7 @@ def rel_ne(x: OperableType, y: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1536,10 +1577,10 @@ def rel_ne(x: OperableType, y: OperableType) -> Expression:
     np.float64(0.0)
 
     """
-    return expression.Expression(None, MathOp("rel_ne", (x, y)), None)
+    return MathOp("rel_ne", (x, y))
 
 
-def map_value(x: OperableType) -> Expression:
+def map_value(x: OperableType) -> MathOp:
     """
     Returns an integer value that indicates what special value (if any) is stored in the input.
     Possible results:
@@ -1556,7 +1597,7 @@ def map_value(x: OperableType) -> Expression:
 
     Returns
     -------
-    Expression
+    MathOp
 
     Examples
     --------
@@ -1574,4 +1615,4 @@ def map_value(x: OperableType) -> Expression:
     np.float64(6.0)
 
     """
-    return expression.Expression(None, MathOp("mapval", (x,)), None)
+    return MathOp("mapval", (x,))

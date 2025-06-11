@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import platform
+import time
+
 import pytest
 
 import gamspy.utils as utils
@@ -52,7 +55,6 @@ def test_available_solvers(data):
     expected = [
         "BARON",
         "CBC",
-        "CONOPT",
         "CONOPT3",
         "CONOPT4",
         "CONVERT",
@@ -83,11 +85,17 @@ def test_available_solvers(data):
         "XPRESS",
     ]
 
+    if platform.system() == "Linux" and platform.machine() == "aarch64":
+        expected.remove("BARON")
+        expected.remove("KNITRO")
+
     assert available_solvers == expected
 
 
 def test_default_solvers():
-    default_solvers = utils.getDefaultSolvers()
+    import gamspy_base
+
+    default_solvers = utils.getDefaultSolvers(gamspy_base.directory)
 
     expected = {
         "CNS": "PATH",
@@ -107,3 +115,37 @@ def test_default_solvers():
     }
 
     assert default_solvers == expected
+
+
+def test_solver_and_capability_caching():
+    import gamspy_base
+
+    start = time.perf_counter_ns()
+    _ = utils.getDefaultSolvers(gamspy_base.directory)
+    first_time = time.perf_counter_ns() - start
+
+    start = time.perf_counter_ns()
+    _ = utils.getDefaultSolvers(gamspy_base.directory)
+    second_time = time.perf_counter_ns() - start
+
+    assert second_time < first_time, f"{first_time=}, {second_time=}"
+
+    start = time.perf_counter_ns()
+    _ = utils.getSolverCapabilities(gamspy_base.directory)
+    first_time = time.perf_counter_ns() - start
+
+    start = time.perf_counter_ns()
+    _ = utils.getSolverCapabilities(gamspy_base.directory)
+    second_time = time.perf_counter_ns() - start
+
+    assert second_time < first_time, f"{first_time=}, {second_time=}"
+
+    start = time.perf_counter_ns()
+    _ = utils.getInstalledSolvers(gamspy_base.directory)
+    first_time = time.perf_counter_ns() - start
+
+    start = time.perf_counter_ns()
+    _ = utils.getInstalledSolvers(gamspy_base.directory)
+    second_time = time.perf_counter_ns() - start
+
+    assert second_time < first_time, f"{first_time=}, {second_time=}"

@@ -15,13 +15,16 @@ Equation e4y "define y-coordinate of upper-right corner";
 free Variable square_objective_variable;
 Equation square_objective;
 Model square / e1x,e1y,e2x,e2y,e3x,e3y,e4x,e4y,square_objective /;
-e1x .. (( sin(t("1")) ) * ( cos((t("1") - (t("1") * t("1")))) )) =e= x;
-e1y .. (t("1") * ( sin(t("1")) )) =e= y;
-e2x .. (( sin(t("2")) ) * ( cos((t("2") - (t("2") * t("2")))) )) =e= (x + a);
-e2y .. (t("2") * ( sin(t("2")) )) =e= (y + b);
-e3x .. (( sin(t("3")) ) * ( cos((t("3") - (t("3") * t("3")))) )) =e= (x - b);
-e3y .. (t("3") * ( sin(t("3")) )) =e= (y + a);
-e4x .. (( sin(t("4")) ) * ( cos((t("4") - (t("4") * t("4")))) )) =e= ((x + a) - b);
-e4y .. (t("4") * ( sin(t("4")) )) =e= ((y + a) + b);
-square_objective .. (( power(a,2) ) + ( power(b,2) )) =e= square_objective_variable;
+$onMultiR
+$gdxLoadAll /home/muhammet/Documents/gams_workspace/gamspy/tmp/to_gams/square_data.gdx
+$offMulti
+e1x .. (sin(t("1")) * cos((t("1") - (t("1") * t("1"))))) =e= x;
+e1y .. (t("1") * sin(t("1"))) =e= y;
+e2x .. (sin(t("2")) * cos((t("2") - (t("2") * t("2"))))) =e= (x + a);
+e2y .. (t("2") * sin(t("2"))) =e= (y + b);
+e3x .. (sin(t("3")) * cos((t("3") - (t("3") * t("3"))))) =e= (x - b);
+e3y .. (t("3") * sin(t("3"))) =e= (y + a);
+e4x .. (sin(t("4")) * cos((t("4") - (t("4") * t("4"))))) =e= ((x + a) - b);
+e4y .. (t("4") * sin(t("4"))) =e= ((y + a) + b);
+square_objective .. (power(a,2) + power(b,2)) =e= square_objective_variable;
 solve square using DNLP MAX square_objective_variable;

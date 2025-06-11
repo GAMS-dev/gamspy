@@ -7,6 +7,9 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
+import uuid
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -18,6 +21,7 @@ from gamspy import (
     Container,
     Equation,
     Model,
+    Options,
     Parameter,
     Problem,
     Sense,
@@ -25,10 +29,11 @@ from gamspy import (
     Sum,
     UniverseAlias,
     Variable,
+    VariableType,
+    deserialize,
+    serialize,
 )
 from gamspy.exceptions import GamspyException, ValidationError
-
-pytestmark = pytest.mark.unit
 
 
 @pytest.fixture
@@ -60,6 +65,7 @@ def data():
         os.remove(mpsge_file_path)
 
 
+@pytest.mark.unit
 def test_container(data):
     m, *_ = data
     import gams.transfer as gt
@@ -74,6 +80,8 @@ def test_container(data):
 
     with pytest.raises(TypeError):
         m = Container(options={"bla": "bla"})
+
+    m = Container(options=Options.fromGams({"reslim": 5}))
 
     i = gt.Set(m, "i")
     m._cast_symbols()
@@ -176,6 +184,7 @@ def test_container(data):
     assert id(e3) == id(e1)
 
 
+@pytest.mark.unit
 def test_str(data):
     m, *_ = data
     assert str(m) == f"<Empty Container ({hex(id(m))})>"
@@ -187,6 +196,7 @@ def test_str(data):
     )
 
 
+@pytest.mark.unit
 def test_read_write(data):
     m, *_ = data
     gdx_path = os.path.join("tmp", "test.gdx")
@@ -201,6 +211,7 @@ def test_read_write(data):
     assert list(m.data.keys()) == ["k", "i"]
 
 
+@pytest.mark.unit
 def test_read_synch():
     m = Container()
 
@@ -236,48 +247,63 @@ def test_read_synch():
     os.remove("test.gdx")
 
 
+@pytest.mark.unit
 def test_loadRecordsFromGdx(data):
     m, *_ = data
-    gdx_path = os.path.join("tmp", "test.gdx")
+    with tempfile.TemporaryDirectory() as tmp_path:
+        gdx_path = os.path.join(tmp_path, "test.gdx")
 
-    i = Set(m, name="i", records=["i1", "i2"])
-    a = Parameter(m, name="a", domain=[i], records=[("i1", 1), ("i2", 2)])
-    m.write(gdx_path)
+        i = Set(m, name="i", records=["i1", "i2"])
+        a = Parameter(m, name="a", domain=[i], records=[("i1", 1), ("i2", 2)])
+        m.write(gdx_path)
 
-    # Load all
-    new_container = Container()
-    i = Set(new_container, name="i")
-    a = Parameter(new_container, name="a", domain=[i])
-    new_container.loadRecordsFromGdx(gdx_path)
+        # Load all
+        new_container = Container()
+        i = Set(new_container, name="i")
+        a = Parameter(new_container, name="a", domain=[i])
+        new_container.loadRecordsFromGdx(gdx_path)
 
-    assert i.records.values.tolist() == [["i1", ""], ["i2", ""]]
+        assert i.records.values.tolist() == [["i1", ""], ["i2", ""]]
 
-    assert a.records.values.tolist() == [["i1", 1.0], ["i2", 2.0]]
+        assert a.records.values.tolist() == [["i1", 1.0], ["i2", 2.0]]
 
-    # Load specific symbols
-    new_container2 = Container()
-    i = Set(new_container2, name="i")
-    a = Parameter(new_container2, name="a", domain=[i])
-    new_container2.loadRecordsFromGdx(gdx_path, ["i"])
+        # Load specific symbols
+        new_container2 = Container()
+        i = Set(new_container2, name="i")
+        a = Parameter(new_container2, name="a", domain=[i])
+        new_container2.loadRecordsFromGdx(gdx_path, ["i"])
 
-    assert i.records.values.tolist() == [["i1", ""], ["i2", ""]]
-    assert a.records is None
+        assert i.records.values.tolist() == [["i1", ""], ["i2", ""]]
+        assert a.records is None
 
-    m = Container()
-    i = Set(m, "i", records=["i1", "i2", "i3"])
-    j = Set(m, "j", i, records=["i1", "i2"])
-    m.write(gdx_path)
+        m = Container()
+        i = Set(m, "i", records=["i1", "i2", "i3"])
+        j = Set(m, "j", i, records=["i1", "i2"])
+        m.write(gdx_path)
 
-    m = Container()
-    i = Set(m, "i")
-    j = Set(m, "j", i, domain_forwarding=True)
-    m.loadRecordsFromGdx(gdx_path, ["j"])
-    assert i.toList() == ["i1", "i2"]
-    assert j.toList() == ["i1", "i2"]
+        m = Container()
+        i = Set(m, "i")
+        j = Set(m, "j", i, domain_forwarding=True)
+        m.loadRecordsFromGdx(gdx_path, ["j"])
+        assert i.toList() == ["i1", "i2"]
+        assert j.toList() == ["i1", "i2"]
+
+        # Test renaming
+        m = Container()
+        i = Set(m, "i", records=range(5))
+        m.write(gdx_path)
+
+        m = Container()
+        j = Set(m, "j")
+        m.loadRecordsFromGdx(gdx_path, symbol_names={"i": "j"})
+        assert j.toList() == ["0", "1", "2", "3", "4"]
+
+        with pytest.raises(ValidationError):
+            m.loadRecordsFromGdx(gdx_path, symbol_names={"i": "k"})
 
 
-def test_enums(data):
-    m, *_ = data
+@pytest.mark.unit
+def test_enums():
     assert str(Problem.LP) == "LP"
     assert str(Sense.MAX) == "MAX"
 
@@ -303,6 +329,7 @@ def test_enums(data):
     assert Sense.values() == ["MIN", "MAX", "FEASIBILITY"]
 
 
+@pytest.mark.unit
 def test_add_gams_code_domain_recovery(data):
     m, *_ = data
     i = Set(m, name="i", records=range(10))
@@ -313,8 +340,8 @@ def test_add_gams_code_domain_recovery(data):
     assert x.fx.domain == [i]
 
 
-def test_arbitrary_gams_code(data):
-    m, *_ = data
+@pytest.mark.unit
+def test_arbitrary_gams_code():
     m = Container()
     i = Set(m, "i", records=["i1", "i2"])
     i["i1"] = False
@@ -340,8 +367,8 @@ def test_arbitrary_gams_code(data):
     assert demand.domain == [T]
 
 
-def test_add_gams_code_on_actual_models(data):
-    m, *_ = data
+@pytest.mark.requires_license
+def test_add_gams_code_on_actual_models():
     links = {
         "LP": "https://gams.com/latest/gamslib_ml/trnsport.1",
         "MIP": "https://gams.com/latest/gamslib_ml/prodsch.9",
@@ -357,12 +384,12 @@ def test_add_gams_code_on_actual_models(data):
 
     for link in links.values():
         data = urllib3.request("GET", link).data.decode("utf-8")
-        m = Container()
-        m.addGamsCode(data)
+        with Container() as m:
+            m.addGamsCode(data)
 
 
-def test_system_directory(data):
-    m, *_ = data
+@pytest.mark.unit
+def test_system_directory():
     import gamspy_base
 
     expected_path = gamspy_base.__path__[0]
@@ -370,18 +397,25 @@ def test_system_directory(data):
     m = Container()
 
     if os.getenv("GAMSPY_GAMS_SYSDIR", None) is None:
-        assert m.system_directory.lower() == expected_path.lower()
+        assert (
+            Path(m.system_directory.lower()).resolve()
+            == Path(expected_path.lower()).resolve()
+        )
 
         assert (
-            utils._get_gamspy_base_directory().lower() == expected_path.lower()
+            Path(utils._get_gamspy_base_directory().lower()).resolve()
+            == Path(expected_path.lower()).resolve()
         )
     else:
-        assert m.system_directory == os.environ["GAMSPY_GAMS_SYSDIR"]
+        assert (
+            Path(m.system_directory).resolve()
+            == Path(os.environ["GAMSPY_GAMS_SYSDIR"]).resolve()
+        )
 
 
+@pytest.mark.unit
 def test_write_load_on_demand(data):
     m, *_ = data
-    m = Container()
     i = Set(m, name="i", records=["i1"])
     p1 = Parameter(m, name="p1", domain=[i], records=[["i1", 1]])
     p2 = Parameter(m, name="p2", domain=[i])
@@ -393,8 +427,9 @@ def test_write_load_on_demand(data):
     assert m["p2"].toList() == [("i1", 1.0)]
 
 
+@pytest.mark.unit
 def test_copy(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+    _, canning_plants, markets, capacities, demands, distances = data
     m = Container(
         working_directory=f"tmp{os.sep}copy",
     )
@@ -439,6 +474,7 @@ def test_copy(data):
     assert math.isclose(transport.objective_value, 153.675, rel_tol=1e-6)
 
 
+@pytest.mark.unit
 def test_generate_gams_string():
     m = Container(debugging_level="keep")
     i = Set(m, "i")
@@ -447,26 +483,29 @@ def test_generate_gams_string():
     _ = Variable(m, "v")
     _ = Equation(m, "e")
 
-    assert (
-        m.generateGamsString()
-        == f"$onMultiR\n$onUNDF\nSet i(*);\n$gdxIn {m._gdx_in}\n$loadDC i\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nAlias(i,a);\n$gdxIn {m._gdx_in}\n$loadDC i\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nParameter p;\n$gdxIn {m._gdx_in}\n$loadDC p\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nfree Variable v;\n$gdxIn {m._gdx_in}\n$loadDC v\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nEquation e;\n$gdxIn {m._gdx_in}\n$loadDC e\n$gdxIn\n$offUNDF\n"
-    )
+    generated = m.generateGamsString()
+    expected = "$onMultiR\n$onUNDF\n$onDotL\nSet i(*) / /;\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nAlias(i,a);\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nParameter p / /;\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nfree Variable v / /;\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nEquation e / /;\n$offDotL\n$offUNDF\n$offMulti\n"
+    assert generated == expected
 
     assert (
         m.generateGamsString(show_raw=True)
-        == """Set i(*);
+        == """Set i(*) / /;
 Alias(i,a);
-Parameter p;
-free Variable v;
-Equation e;
+Parameter p / /;
+free Variable v / /;
+Equation e / /;
 """
     )
+    m.close()
 
     m2 = Container()
     with pytest.raises(ValidationError):
         m2.generateGamsString()
 
+    m2.close()
 
+
+@pytest.mark.unit
 def test_removal_of_autogenerated_symbols(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -510,6 +549,7 @@ def test_removal_of_autogenerated_symbols(data):
     ]
 
 
+@pytest.mark.unit
 def test_write(data):
     m, *_ = data
     gdx_path = os.path.join("tmp", "test.gdx")
@@ -527,6 +567,7 @@ def test_write(data):
     m.close()
 
 
+@pytest.mark.unit
 def test_read(data):
     m, *_ = data
     gdx_path = os.path.join("tmp", "test.gdx")
@@ -541,8 +582,8 @@ def test_read(data):
     m.close()
 
 
-def test_debugging_level(data):
-    m, *_ = data
+@pytest.mark.unit
+def test_debugging_level():
     from gamspy.math import sqrt
 
     with pytest.raises(ValidationError):
@@ -621,6 +662,7 @@ def test_debugging_level(data):
     assert len(glob.glob(os.path.join(working_directory, "*.gms"))) == 1
 
 
+@pytest.mark.unit
 def test_read_from_gdx(data):
     m, canning_plants, markets, capacities, demands, distances = data
     # Set
@@ -705,6 +747,7 @@ def test_read_from_gdx(data):
     transport.solve()
     gdx_path = os.path.join("tmp", "out.gdx")
     m.write(gdx_path)
+    m.close()
 
     m = Container(load_from=gdx_path)
     assert m["supply"].toList() == [
@@ -730,11 +773,13 @@ def test_read_from_gdx(data):
 
     assert m["i"].toList() == ["seattle", "san-diego"]
     assert m["k"].toList() == ["seattle", "san-diego"]
+    m.close()
 
 
-def test_output(data):
-    m, *_ = data
-    path = os.path.join("tmp", "bla.py")
+@pytest.mark.unit
+def test_output():
+    path = os.path.join("tmp", str(uuid.uuid4()) + ".py")
+    os.makedirs("tmp", exist_ok=True)
     with open(path, "w") as file:
         file.write(
             "import sys\nfrom gamspy import Container, Set\nm = Container(output=sys.stdout)\ni = Set(m)\nj = Set(m)"
@@ -745,7 +790,10 @@ def test_output(data):
     )
     assert process.stdout
 
+    os.remove(path)
 
+
+@pytest.mark.unit
 def test_restart():
     m = Container()
     save_path = os.path.join(m.working_directory, "save.g00")
@@ -757,3 +805,154 @@ def test_restart():
     m = Container(load_from=save_path)
     assert "i" in m.data
     assert m["i"].toList() == ["i1", "i2"]
+    _ = Set(m, "j", records=range(6))
+    assert list(m.data.keys()) == ["i", "j"]
+    m.close()
+
+
+@pytest.mark.unit
+def test_serialization(data) -> None:
+    m, canning_plants, markets, capacities, demands, distances = data
+    i = Set(m, name="i", records=canning_plants)
+    j = Set(m, name="j", records=markets)
+    k = Alias(m, name="k", alias_with=i)
+
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
+    d = Parameter(m, name="d", domain=[i, j], records=distances)
+    c = Parameter(m, name="c", domain=[i, j])
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(m, name="x", domain=[i, j], type="Positive")
+    x._metadata = {"some_metadata": "some_value"}
+
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+    transport.solve()
+
+    with tempfile.TemporaryDirectory() as directory:
+        serialization_path = os.path.join(directory, "serialized.zip")
+        serialization_path2 = os.path.join(directory, "serialized2.zip")
+        # Incorrect zip file name
+        with pytest.raises(ValidationError):
+            serialize(m, "bla")
+
+        # Incorrect container type
+        with pytest.raises(ValidationError):
+            serialize(i, serialization_path)
+
+        serialize(m, serialization_path)  # try gp.serialize syntax
+        m.serialize(serialization_path2)  # try container.serialize syntax
+
+        m2 = deserialize(serialization_path)
+
+    assert id(m) != id(m2)
+    assert m.data.keys() == m2.data.keys()
+
+    # Test model
+    transport2 = m2.models["transport"]
+    assert id(transport) != transport2
+    assert transport.name == transport2.name
+    assert transport.objective_value == transport2.objective_value
+
+    # Test symbols
+    i2: Set = m2["i"]
+    j2: Set = m2["j"]
+    k2: Alias = m2["k"]
+    c2: Parameter = m2["c"]
+    d2: Parameter = m2["d"]
+
+    assert i.records.equals(i2.records)
+    assert k.records.equals(k2.records)
+    assert c.records.equals(c2.records)
+    assert all(not isinstance(elem, str) for elem in c2.domain)
+    assert c.domain_names == c2.domain_names
+    x2: Variable = m2["x"]
+    assert x.records.equals(x2.records)
+    assert all(not isinstance(elem, str) for elem in c2.domain)
+    assert x.domain_names == x2.domain_names
+    assert x._metadata == x2._metadata
+    supply2: Equation = m2["supply"]
+    assert supply.records.equals(supply2.records)
+    assert all(not isinstance(elem, str) for elem in supply2.domain)
+    assert supply.domain_names == supply2.domain_names
+
+    # Test assignment and definitions
+    assert c.getAssignment() == c2.getAssignment()
+    assert supply.getDefinition() == supply2.getDefinition()
+
+    # Test solve
+    c2[i2, j2] = 90 * d2[i2, j2] / 100
+    transport2.solve()
+    assert transport.objective_value != transport2.objective_value
+
+
+@pytest.mark.unit
+def test_mcp_serialization(data) -> None:
+    m, _, _, _, _, _ = data
+    c = Set(m, "c")
+    h = Set(m, "h")
+    s = Set(m, "s")
+
+    cc = Alias(m, "cc", c)
+
+    e = Parameter(m, "e", domain=[c, h])
+    esub = Parameter(m, "esub", domain=h)
+
+    alpha = Parameter(m, "alpha", domain=[c, h])
+    a = Parameter(m, "a", domain=[c, s])
+
+    p = Variable(m, "p", type=VariableType.POSITIVE, domain=c)
+    y = Variable(m, "y", type=VariableType.POSITIVE, domain=s)
+    i = Variable(m, "i", type=VariableType.POSITIVE, domain=h)
+
+    mkt = Equation(m, "mkt", domain=c, description="commodity market")
+    profit = Equation(m, "profit", domain=s, description="zero profit")
+    income = Equation(m, "income", domain=h, description="income index")
+
+    mkt[c] = Sum(s, a[c, s] * y[s]) + Sum(h, e[c, h]) >= Sum(
+        h.where[esub[h] != 1],
+        (i[h] / Sum(cc, alpha[cc, h] * p[cc] ** (1 - esub[h])))
+        * alpha[c, h]
+        * (1 / p[c]) ** esub[h],
+    ) + Sum(h.where[esub[h] == 1], i[h] * alpha[c, h] / p[c])
+
+    profit[s] = -Sum(c, a[c, s] * p[c]) >= 0
+    income[h] = i[h] >= Sum(c, p[c] * e[c, h])
+
+    hansen = Model(
+        m,
+        "hansen",
+        problem=Problem.MCP,
+        matches={mkt: p, profit: y, income: i},
+    )
+
+    with tempfile.TemporaryDirectory() as directory:
+        serialization_path = os.path.join(directory, "mcp_serialized.zip")
+        serialize(m, serialization_path)  # try gp.serialize syntax
+        m2 = deserialize(serialization_path)
+
+    hansen2 = m2.models["hansen"]
+
+    for unserialized, serialized in zip(
+        hansen._matches.items(), hansen2._matches.items()
+    ):
+        orig_equation, orig_variable = unserialized
+        serialized_equation, serialized_variable = serialized
+
+        assert isinstance(serialized_equation, Equation)
+        assert isinstance(serialized_variable, Variable)
+        assert orig_equation.name == serialized_equation.name
+        assert orig_variable.name == serialized_variable.name

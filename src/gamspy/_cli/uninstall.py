@@ -69,16 +69,17 @@ def solver(
             installed_solvers = utils.getInstalledSolvers(
                 gamspy_base.directory
             )
-            if solver_name.upper() not in installed_solvers:
+            removable_solvers = set(installed_solvers) - set(gamspy_base.default_solvers)
+            if solver_name.upper() not in removable_solvers:
                 raise ValidationError(
                     f'Given solver name ("{solver_name}") is not valid. Installed'
-                    f" solvers solvers that can be uninstalled: {installed_solvers}"
+                    f" solvers that can be uninstalled: {sorted(removable_solvers)}"
                 )
-
+            
             if not skip_pip_uninstall:
                 # uninstall specified solver
                 if use_uv:
-                    command = ["uv", "pip", "uninstall", f"gamspy-{solver_name}"]
+                    command = ["uv", "pip", "--python-preference", "only-system", "uninstall", f"gamspy-{solver_name}"]
                 else:
                     command = [sys.executable, "-m", "pip", "uninstall", f"gamspy-{solver_name}", "-y"]
                 try:

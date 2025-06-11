@@ -17,11 +17,13 @@ def teardown():
     # Cleanup
     files = glob.glob("*.csv")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
 
     files = glob.glob("*.xlsx")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
 
     mpsge_file_path = os.path.join(os.getcwd(), "HANSEN.GEN")
     if os.path.exists(mpsge_file_path):
@@ -38,8 +40,9 @@ def test_full_models(teardown):
     )
 
     for idx, path in enumerate(paths):
-        print(f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}")
+        print(f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}", flush=True)
         process = subprocess.run(
-            [sys.executable, "-Wd", path], capture_output=True, text=True
+            [sys.executable, "-B", "-Wd", path], capture_output=True, text=True
         )
+        print(process.stderr)
         assert process.returncode == 0, process.stderr

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import uuid
 from typing import Literal
 
 import gamspy as gp
@@ -17,9 +16,10 @@ class _MPool2d:
         kernel_size: int | tuple[int, int],
         stride: int | tuple[int, int] | None = None,
         padding: int = 0,
+        name_prefix: str | None = None,
     ):
         # Validate pooling type
-        if sense not in ["min", "max"]:
+        if sense not in ("min", "max"):
             raise ValidationError("_MPool2d expects min or max")
 
         # Convert kernel_size, stride, and padding to tuples
@@ -37,6 +37,11 @@ class _MPool2d:
         self.padding = _padding
         self.sense = sense
 
+        if name_prefix is None:
+            name_prefix = gp.utils._get_unique_name()
+
+        self._name_prefix = name_prefix
+
     def _set_bounds_and_big_M(
         self,
         input: gp.Parameter | gp.Variable,
@@ -49,15 +54,33 @@ class _MPool2d:
         H_out, W_out, Hf, Wf, H_in, W_in = subset.domain
 
         # Create subset2 mapping output positions to input positions
-        subset2 = gp.Set(self.container, domain=[H_out, W_out, H_in, W_in])
+        subset2 = gp.Set(
+            self.container,
+            name=utils._generate_name(
+                "s", self._name_prefix, "in_out_matching_2"
+            ),
+            domain=[H_out, W_out, H_in, W_in],
+        )
         subset2[H_out, W_out, H_in, W_in] = gp.Sum(
             [Hf, Wf], subset[H_out, W_out, Hf, Wf, H_in, W_in]
         )
 
         # Initialize parameters for bounds and Big-M
-        big_m_par = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
-        lb = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
-        ub = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
+        big_m_par = gp.Parameter(
+            self.container,
+            name=utils._generate_name("p", self._name_prefix, "bigM_1"),
+            domain=[N, C, H_out, W_out],
+        )
+        lb = gp.Parameter(
+            self.container,
+            name=utils._generate_name("p", self._name_prefix, "output_lb"),
+            domain=[N, C, H_out, W_out],
+        )
+        ub = gp.Parameter(
+            self.container,
+            name=utils._generate_name("p", self._name_prefix, "output_ub"),
+            domain=[N, C, H_out, W_out],
+        )
 
         # Calculate upper/lower bounds based on input type
         if isinstance(input, gp.Variable):
@@ -121,7 +144,9 @@ class _MPool2d:
 
         # Create output variable
         out_var = gp.Variable(
-            self.container, domain=dim([len(N), len(C), h_out, w_out])
+            self.container,
+            name=utils._generate_name("v", self._name_prefix, "output"),
+            domain=dim([len(N), len(C), h_out, w_out]),
         )
         N, C, H_out, W_out = out_var.domain
 
@@ -142,9 +167,12 @@ class _MPool2d:
         )
 
         # Create mapping between input/output positions
-        name = "ds_" + str(uuid.uuid4()).split("-")[0]
         subset = gp.Set(
-            self.container, name, domain=[H_out, W_out, Hf, Wf, H_in, W_in]
+            self.container,
+            name=utils._generate_name(
+                "s", self._name_prefix, "in_out_matching_1"
+            ),
+            domain=[H_out, W_out, Hf, Wf, H_in, W_in],
         )
         # Create relationship between output positions and their corresponding input windows
         subset[
@@ -162,23 +190,32 @@ class _MPool2d:
         # Create a binary variable
         bin_var = gp.Variable(
             self.container,
+            name=utils._generate_name("v", self._name_prefix, "aux_variable"),
             type="binary",
             domain=[N, C, H_out, W_out, H_in, W_in],
         )
 
         # Create constraint equations
         greater_than = gp.Equation(
-            self.container, domain=[N, C, H_out, W_out, Hf, Wf, H_in, W_in]
+            self.container,
+            name=utils._generate_name("e", self._name_prefix, "gte"),
+            domain=[N, C, H_out, W_out, Hf, Wf, H_in, W_in],
         )
         less_than = gp.Equation(
-            self.container, domain=[N, C, H_out, W_out, Hf, Wf, H_in, W_in]
+            self.container,
+            name=utils._generate_name("e", self._name_prefix, "lte"),
+            domain=[N, C, H_out, W_out, Hf, Wf, H_in, W_in],
         )
 
         # Set up Big-M parameter
         if propagate_bounds:
             _big_m = self._set_bounds_and_big_M(input, big_m, subset, out_var)
         else:
-            _big_m = gp.Parameter(self.container, records=big_m)
+            _big_m = gp.Parameter(
+                self.container,
+                name=utils._generate_name("p", self._name_prefix, "bigM_2"),
+                records=big_m,
+            )
 
         big_m_expr = _big_m * (1 - bin_var[N, C, H_out, W_out, H_in, W_in])
 
@@ -203,7 +240,11 @@ class _MPool2d:
             )
 
         # Ensure exactly one element is selected per window
-        pick_one = gp.Equation(self.container, domain=[N, C, H_out, W_out])
+        pick_one = gp.Equation(
+            self.container,
+            name=utils._generate_name("e", self._name_prefix, "pick_one"),
+            domain=[N, C, H_out, W_out],
+        )
         pick_one[N, C, H_out, W_out] = (
             gp.Sum(
                 [Hf, Wf],
