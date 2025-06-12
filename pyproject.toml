@@ -66,6 +66,7 @@ test = [
   "python-dotenv >= 1.0.0",
   "pytest >= 8.0.0",
   "networkx >= 3.2.1",
+  "scikit-learn >= 1.6.1",
 ]
 doc = [
   "sphinx>=7.1.2",

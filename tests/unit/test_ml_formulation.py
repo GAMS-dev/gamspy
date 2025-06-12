@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from sklearn.tree import DecisionTreeRegressor
 
 import gamspy as gp
 from gamspy import Container, ModelStatus
@@ -57,6 +58,10 @@ def test_regression_tree_bad_init(data):
 
     # wrong regressor type, it must be either sklearn.tree.DecisionTreeRegressor or DecisionTreeStruct object
     pytest.raises(ValidationError, RegressionTree, m, tree_args)
+
+    # initializing the formulation with untrained sklearn.tree
+    tree = DecisionTreeRegressor(random_state=42)
+    pytest.raises(ValidationError, RegressionTree, m, tree)
 
 
 def test_regression_tree_incomplete_data(data):
@@ -126,6 +131,27 @@ def test_regression_tree_bad_call(data):
 
     # wrong value type for M either float or int
     pytest.raises(ValidationError, rt, x, "M")
+
+
+def test_regression_tree_with_trained_sklearn_tree(data):
+    m, _, in_data, output, par_input, _ = data
+
+    tree = DecisionTreeRegressor(random_state=42)
+    tree.fit(X=in_data, y=output)
+    rt = RegressionTree(m, tree)
+
+    out, eqns = rt(par_input)
+
+    model = gp.Model(
+        m,
+        "regressionTree",
+        equations=eqns,
+        problem="MIP",
+    )
+    model.solve()
+
+    assert np.allclose(out.toDense().flatten(), output)
+    assert model.status == ModelStatus(1)
 
 
 def test_regression_tree_valid_variable(data):
