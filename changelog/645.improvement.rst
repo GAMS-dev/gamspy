@@ -1,0 +1,1 @@
+Accept os.PathLike objects as load from argument of Container.
