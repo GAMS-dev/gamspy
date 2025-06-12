@@ -104,15 +104,27 @@ def test_container(data):
     assert isinstance(m["e"], Equation)
 
     # Test load_from
+
+    ## Invalid
     with pytest.raises(ValidationError):
         _ = Container(load_from=1)
 
     with pytest.raises(ValidationError):
         _ = Container(load_from="bla.gdp")
 
+    ## Read from another container
     new_cont = Container(m)
     new_cont["a"][...] = 5
     assert new_cont.data.keys() == m.data.keys()
+
+    ## Read from a pathlike load_from
+    gdx_path = os.path.join("tmp", "_" + str(uuid.uuid4()) + ".gdx")
+    writer_cont = Container()
+    i = Set(writer_cont, "i", records=range(3))
+    writer_cont.write(gdx_path)
+    reader_cont = Container(load_from=Path(gdx_path))
+    assert "i" in reader_cont.data
+    assert reader_cont["i"].toList() == ["0", "1", "2"]
 
     # Test getters
     m = Container()
