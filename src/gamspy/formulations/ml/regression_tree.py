@@ -56,8 +56,9 @@ class RegressionTree:
     >>> x = gp.Variable(m, "x", domain=dim((5, 2)), type="positive")
     >>> x.up[:, :] = 10
     >>> y, eqns = dt_model(x)
-    >>> [d.name for d in y.domain]
-    ['DenseDim5_1', 'set_of_output_dim']
+    >>> set_of_samples = y.domain[0]
+    >>> set_of_samples.name
+    'DenseDim5_1'
 
     """
 
