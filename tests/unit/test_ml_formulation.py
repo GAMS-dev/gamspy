@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from sklearn.tree import DecisionTreeRegressor
 
 import gamspy as gp
 from gamspy import Container, ModelStatus
 from gamspy.exceptions import ValidationError
-from gamspy.formulations.ml import RegressionTree
+from gamspy.formulations.ml import DecisionTreeStruct, RegressionTree
 from gamspy.math import dim
 
 pytestmark = pytest.mark.unit
@@ -15,14 +16,14 @@ pytestmark = pytest.mark.unit
 @pytest.fixture
 def data():
     m = Container()
-    tree_dict = {
-        "capacity": 5,
+    tree_args = {
         "children_left": np.array([1, 2, -1, -1, -1]),
         "children_right": np.array([4, 3, -1, -1, -1]),
         "feature": np.array([0, 1, -2, -2, -2]),
-        "n_features": 2,
         "threshold": np.array([5.5, 4.5, -2.0, -2.0, -2.0]),
         "value": np.array([[15.6], [11.25], [10.0], [15.0], [33.0]]),
+        "capacity": 5,
+        "n_features": 2,
     }
     in_data = np.array(
         [
@@ -37,45 +38,81 @@ def data():
     output = np.array([10, 10, 10, 15, 33])
     par_input = gp.Parameter(m, domain=dim(in_data.shape), records=in_data)
     x = gp.Variable(m, "x", domain=dim(in_data.shape), type="positive")
-    yield m, tree_dict, in_data, output, par_input, x
+    yield m, tree_args, in_data, output, par_input, x
     m.close()
 
 
-def test_RegressionTree_bad_init(data):
-    m, *_ = data
+def test_regression_tree_bad_init(data):
+    m, tree_args, *_ = data
+
+    tree = DecisionTreeStruct(**tree_args)
+
+    # No Container
+    pytest.raises(TypeError, RegressionTree, tree)
+
+    # No regressor
+    pytest.raises(TypeError, RegressionTree, m)
 
     # wrong container object
-    pytest.raises(ValidationError, RegressionTree, "m")
+    pytest.raises(ValidationError, RegressionTree, "m", tree)
 
-    # wrong regressor type, it must be either None or a sklearn.tree.DecisionTreeRegressor object
-    pytest.raises(ValidationError, RegressionTree, m, [])
+    # wrong regressor type, it must be either sklearn.tree.DecisionTreeRegressor or DecisionTreeStruct object
+    pytest.raises(ValidationError, RegressionTree, m, tree_args)
 
-
-def test_RegressionTree_incomplete_data(data):
-    m, tree_dict, _, _, par_input, _ = data
-    rt = RegressionTree(m)
-
-    rt.children_left = tree_dict["children_left"]
-    rt.children_right = tree_dict["children_right"]
-    rt.capacity = tree_dict["capacity"]
-    rt.feature = tree_dict["feature"]
-    rt.value = tree_dict["value"]
-    rt.threshold = tree_dict["threshold"]
-
-    # n_features is missing: rt.n_features = tree_dict["n_features"]
-    pytest.raises(ValidationError, rt, par_input)
-
-    rt.n_features = -2
-    # only positive integer allowed
-    pytest.raises(ValidationError, rt, par_input)
+    # initializing the formulation with untrained sklearn.tree
+    tree = DecisionTreeRegressor(random_state=42)
+    pytest.raises(ValidationError, RegressionTree, m, tree)
 
 
-def test_RegressionTree_bad_call(data):
-    m, tree_dict, _, _, _, x = data
-    rt = RegressionTree(m)
+def test_regression_tree_incomplete_data(data):
+    m, tree_args, *_ = data
 
-    for key, value in tree_dict.items():
-        setattr(rt, key, value)
+    # tree instance with missing attribute, children_left
+    rm_tree_args = tree_args.copy()
+    rm_tree_args.pop("children_left")
+    broken_tree = DecisionTreeStruct(**rm_tree_args)
+    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+
+    # tree instance with missing attribute, children_right
+    rm_tree_args = tree_args.copy()
+    rm_tree_args.pop("children_right")
+    broken_tree = DecisionTreeStruct(**rm_tree_args)
+    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+
+    # tree instance with missing attribute, features
+    rm_tree_args = tree_args.copy()
+    rm_tree_args.pop("feature")
+    broken_tree = DecisionTreeStruct(**rm_tree_args)
+    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+
+    # tree instance with missing attribute, threshold
+    rm_tree_args = tree_args.copy()
+    rm_tree_args.pop("threshold")
+    broken_tree = DecisionTreeStruct(**rm_tree_args)
+    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+
+    # tree instance with missing attribute, value
+    rm_tree_args = tree_args.copy()
+    rm_tree_args.pop("value")
+    broken_tree = DecisionTreeStruct(**rm_tree_args)
+    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+
+    # wrong value for attribute, n_features
+    broken_tree = DecisionTreeStruct(**tree_args)
+    broken_tree.n_features = -2
+    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+
+    # wrong value for attribute, capacity
+    broken_tree = DecisionTreeStruct(**tree_args)
+    broken_tree.capacity = -2
+    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+
+
+def test_regression_tree_bad_call(data):
+    m, tree_args, _, _, _, x = data
+
+    tree = DecisionTreeStruct(**tree_args)
+    rt = RegressionTree(m, tree)
 
     # missing required input
     pytest.raises(TypeError, rt)
@@ -96,12 +133,32 @@ def test_RegressionTree_bad_call(data):
     pytest.raises(ValidationError, rt, x, "M")
 
 
-def test_RegressionTree_valid_variable(data):
-    m, tree_dict, _, output, par_input, x = data
-    rt = RegressionTree(m)
+def test_regression_tree_with_trained_sklearn_tree(data):
+    m, _, in_data, output, par_input, _ = data
 
-    for key, value in tree_dict.items():
-        setattr(rt, key, value)
+    tree = DecisionTreeRegressor(random_state=42)
+    tree.fit(X=in_data, y=output)
+    rt = RegressionTree(m, tree)
+
+    out, eqns = rt(par_input)
+
+    model = gp.Model(
+        m,
+        "regressionTree",
+        equations=eqns,
+        problem="MIP",
+    )
+    model.solve()
+
+    assert np.allclose(out.toDense().flatten(), output)
+    assert model.status == ModelStatus(1)
+
+
+def test_regression_tree_valid_variable(data):
+    m, tree_args, _, output, par_input, x = data
+
+    tree = DecisionTreeStruct(**tree_args)
+    rt = RegressionTree(m, tree)
 
     x.fx[:, 0] = par_input[:, 0]
     x.fx[:, 1] = par_input[:, 1]
@@ -121,12 +178,11 @@ def test_RegressionTree_valid_variable(data):
     assert model.status == ModelStatus(1)
 
 
-def test_RegressionTree_valid_parameter(data):
-    m, tree_dict, _, output, par_input, _ = data
-    rt = RegressionTree(m)
+def test_regression_tree_valid_parameter(data):
+    m, tree_args, _, output, par_input, _ = data
 
-    for key, value in tree_dict.items():
-        setattr(rt, key, value)
+    tree = DecisionTreeStruct(**tree_args)
+    rt = RegressionTree(m, tree)
 
     # check the prediction of the decions tree on the trained data using parameter
     out, eqns = rt(par_input)
@@ -143,12 +199,11 @@ def test_RegressionTree_valid_parameter(data):
     assert model.status == ModelStatus(1)
 
 
-def test_RegressionTree_var_up(data):
-    m, tree_dict, in_data, _, par_input, x = data
-    rt = RegressionTree(m)
+def test_regression_tree_var_up(data):
+    m, tree_args, in_data, _, par_input, x = data
 
-    for key, value in tree_dict.items():
-        setattr(rt, key, value)
+    tree = DecisionTreeStruct(**tree_args)
+    rt = RegressionTree(m, tree)
 
     x.fx[:, 0] = par_input[:, 0]
     x.up[:, 1] = int(max(in_data[:, 1]))
@@ -187,14 +242,12 @@ def test_RegressionTree_var_up(data):
     assert model_min.status == ModelStatus(1)
 
 
-def test_RegressionTree_put_M(data):
-    m, tree_dict, _, _, _, x = data
-    rt1 = RegressionTree(m, name_prefix="test_big_m")
-    rt2 = RegressionTree(m, name_prefix="test_bound_big_m")
+def test_regression_tree_put_M(data):
+    m, tree_args, _, _, _, x = data
 
-    for key, value in tree_dict.items():
-        setattr(rt1, key, value)
-        setattr(rt2, key, value)
+    tree = DecisionTreeStruct(**tree_args)
+    rt1 = RegressionTree(m, tree, name_prefix="test_big_m")
+    rt2 = RegressionTree(m, tree, name_prefix="test_bound_big_m")
 
     x.up[:, 0] = 7
     x.up[:, 1] = 7
@@ -260,12 +313,11 @@ def test_RegressionTree_put_M(data):
     assert m2.status == ModelStatus(1)
 
 
-def test_RegressionTree_add_equation(data):
-    m, tree_dict, _, _, par_input, x = data
-    rt = RegressionTree(m)
+def test_regression_tree_add_equation(data):
+    m, tree_args, _, _, par_input, x = data
 
-    for key, value in tree_dict.items():
-        setattr(rt, key, value)
+    tree = DecisionTreeStruct(**tree_args)
+    rt = RegressionTree(m, tree)
 
     x.fx[:, 0] = par_input[:, 0]
     x.up[:, 1] = 7
@@ -313,16 +365,16 @@ def test_RegressionTree_add_equation(data):
     assert m2.status == ModelStatus(1)
 
 
-def test_RegressionTree_multi_output(data):
-    m, tree_dict, _, _, par_input, _ = data
-    tree_dict["value"] = np.array(
+def test_regression_tree_multi_output(data):
+    m, tree_args, _, _, par_input, _ = data
+
+    tree_args["value"] = np.array(
         [[15.6, 14.6], [11.25, 15.5], [10.0, 14.0], [15.0, 20.0], [33.0, 11.0]]
     )
     output = np.array([[10, 14], [10, 14], [10, 14], [15, 20], [33, 11]])
-    rt = RegressionTree(m)
 
-    for key, value in tree_dict.items():
-        setattr(rt, key, value)
+    tree = DecisionTreeStruct(**tree_args)
+    rt = RegressionTree(m, tree)
 
     out, eqns = rt(par_input)
     s = out.domain
@@ -345,10 +397,10 @@ def test_RegressionTree_multi_output(data):
     assert m1.status == ModelStatus(1)
 
 
-def test_RegressionTree_multi_output_equation(data):
-    m, tree_dict, _, _, par_input, x = data
+def test_regression_tree_multi_output_equation(data):
+    m, tree_args, _, _, par_input, x = data
 
-    tree_dict["value"] = np.array(
+    tree_args["value"] = np.array(
         [[15.6, 14.6], [11.25, 15.5], [10.0, 14.0], [15.0, 20.0], [33.0, 11.0]]
     )
     output1 = np.array(
@@ -369,10 +421,9 @@ def test_RegressionTree_multi_output_equation(data):
             [33.0, 11.0],
         ]
     )
-    rt = RegressionTree(m)
 
-    for key, value in tree_dict.items():
-        setattr(rt, key, value)
+    tree = DecisionTreeStruct(**tree_args)
+    rt = RegressionTree(m, tree)
 
     x.fx[:, 0] = par_input[:, 0]
     x.up[:, 1] = 7

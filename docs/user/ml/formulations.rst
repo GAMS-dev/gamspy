@@ -92,6 +92,37 @@ with a transformation and bias to the input data, expressed as :math:`y = x A^T 
    [d.name for d in y.domain]
    # ['DenseDim10_1', 'DenseDim64_1']
 
+:meth:`Conv1d <gamspy.formulations.Conv1d>`
+-------------------------------------------------------
+Formulation generator for 1D Convolution symbol in GAMS. It applies a 
+1D convolution operation on an input signal.
+
+|  
+.. image:: ../images/conv1d.gif
+   :align: center
+|
+
+.. code-block:: python
+
+   import gamspy as gp
+   import numpy as np
+   from gamspy.math import dim
+
+   w1 = np.array([[[-1, 0 , 1]]])
+   b1 = np.array([0])
+   m = gp.Container()
+   # in_channels=1, out_channels=1, kernel_size=3
+   conv1 = gp.formulations.Conv1d(m, 1, 1, 3, padding=1)
+   conv1.load_weights(w1, b1)
+   # 10 signals, 1 channel, Length 8
+   inp = gp.Variable(m, domain=dim((10, 1, 8)))
+   out, eqs = conv1(inp)
+
+   type(out)
+   # <class 'gamspy._symbols.variable.Variable'>
+   [len(x) for x in out.domain]
+   # [10, 1, 8]
+
 :meth:`Conv2d <gamspy.formulations.Conv2d>`
 -------------------------------------------------------
 Formulation generator for 2D Convolution symbol in GAMS. It applies a 

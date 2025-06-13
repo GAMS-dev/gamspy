@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from sklearn.tree import DecisionTreeRegressor
 
 
-class RegressionTree(DecisionTreeStruct):
+class RegressionTree:
     """
     Formulation generator for Regression Trees in GAMS.
 
@@ -22,12 +22,10 @@ class RegressionTree(DecisionTreeStruct):
     ----------
     container : Container
         Container that will contain the new variable and equations.
-    regressor: DecisionTreeRegressor | None
-        - A fitted `sklearn.tree.DecisionTreeRegressor` object which is processed by the
-          `DecisionTreeStruct` superclass to populate the underlying tree attributes.
-        - If `None`, the tree structure is NOT automatically initialized.
-          In this case, the user is responsible for manually populating the tree attributes
-          inherited from `DecisionTreeStruct` before the formulation can be used.
+    regressor: DecisionTreeRegressor | DecisionTreeStruct
+        - A fitted `sklearn.tree.DecisionTreeRegressor` instance.
+        - If `sklearn.tree.DecisionTreeRegressor` is not utilized, the fitted tree information
+          can be supplied via the `DecisionTreeStruct` dataclass, which represents the same components as those in `sklearn.tree`.
           See :meth:`DecisionTreeStruct <gamspy.formulations.DecisionTreeStruct>` for details on required attributes.
 
     name_prefix : str | None
@@ -44,40 +42,109 @@ class RegressionTree(DecisionTreeStruct):
     >>> m = gp.Container()
     >>> in_data = np.random.randint(0, 10, size=(5, 2))
     >>> out_data = np.random.randint(1, 3, size=(5, 1))
-    >>> dt_model = gp.formulations.RegressionTree(m)
-    >>> dt_model.capacity = 3
-    >>> dt_model.children_left = np.array([1, -1, -1])
-    >>> dt_model.children_right = np.array([2, -1, -1])
-    >>> dt_model.feature = np.array([0, -2, -2])
-    >>> dt_model.n_features = 2
-    >>> dt_model.threshold = np.array([4.0, -2.0, -2.0])
-    >>> dt_model.value = np.array([[1.8], [1.0], [2.0]])
+    >>> tree_attribute = {
+    ...    "children_left": np.array([1, 2, -1, -1, -1]),
+    ...    "children_right": np.array([4, 3, -1, -1, -1]),
+    ...    "feature": np.array([0, 1, -2, -2, -2]),
+    ...    "threshold": np.array([5.5, 4.5, -2.0, -2.0, -2.0]),
+    ...    "value": np.array([[15.6], [11.25], [10.0], [15.0], [33.0]]),
+    ...    "capacity": 5,
+    ...    "n_features": 2,
+    ... }
+    >>> tree = gp.formulations.DecisionTreeStruct(**tree_attribute)
+    >>> dt_model = gp.formulations.RegressionTree(m, tree)
     >>> x = gp.Variable(m, "x", domain=dim((5, 2)), type="positive")
     >>> x.up[:, :] = 10
     >>> y, eqns = dt_model(x)
-    >>> [d.name for d in y.domain]
-    ['DenseDim5_1', 'DenseDim1_1']
+    >>> set_of_samples = y.domain[0]
+    >>> set_of_samples.name
+    'DenseDim5_1'
 
     """
 
     def __init__(
         self,
         container: gp.Container,
-        regressor: DecisionTreeRegressor | None = None,
+        regressor: DecisionTreeRegressor | DecisionTreeStruct,
         name_prefix: str | None = None,
     ):
-        super().__init__(_regressor_source=regressor)  # type: ignore
-
         if not isinstance(container, gp.Container):
             raise ValidationError(f"{container} is not a gp.Container.")
 
+        regressor_type = type(regressor)
+        if (
+            regressor_type.__name__ == "DecisionTreeRegressor"
+            and regressor_type.__module__.startswith("sklearn.tree")
+        ):
+            self._initialize_from_sklearn(regressor=regressor)
+        elif isinstance(regressor, DecisionTreeStruct):
+            self._initialize_from_dtStruct(regressor=regressor)
+        else:
+            raise ValidationError(
+                f"{regressor} must be an instance of either >sklearn.tree.DecisionTreeRegressor< or >DecisionTreeStruct<"
+            )
+
+        self._check_tree()
+
         self.container = container
-        self._indicator_vars = None
 
         if name_prefix is None:
             name_prefix = str(uuid.uuid4()).split("-")[0]
 
         self._name_prefix = name_prefix
+
+    def _initialize_from_sklearn(self, regressor: DecisionTreeRegressor):
+        """
+        Initializes the tree attributes from a fitted scikit-learn DecisionTreeRegressor.
+        """
+        _trained = hasattr(regressor, "tree_") and regressor.tree_ is not None
+
+        if not _trained:
+            raise ValidationError(
+                f"{regressor} is not fitted or tree_ attribute is missing."
+            )
+
+        self.children_left = regressor.tree_.children_left
+        self.children_right = regressor.tree_.children_right
+        self.feature = regressor.tree_.feature
+        self.threshold = regressor.tree_.threshold
+        self.value = regressor.tree_.value[:, :, 0]
+        self.capacity = regressor.tree_.capacity
+        self.n_features = regressor.tree_.n_features
+
+    def _initialize_from_dtStruct(self, regressor: DecisionTreeStruct):
+        """
+        Initializes the tree attributes from DecisionTreeStruct.
+        """
+        self.children_left = regressor.children_left
+        self.children_right = regressor.children_right
+        self.feature = regressor.feature
+        self.threshold = regressor.threshold
+        self.value = regressor.value
+        self.capacity = regressor.capacity
+        self.n_features = regressor.n_features
+
+    def _check_tree(self):
+        """
+        Validates that the core tree attributes are populated and have valid basic properties.
+
+        Raises:
+            ValidationError: If any essential attribute is empty or invalid.
+        """
+        if self.children_left.size == 0:
+            raise ValidationError("Attribute 'children_left' is empty.")
+        if self.children_right.size == 0:
+            raise ValidationError("Attribute 'children_right' is empty.")
+        if self.feature.size == 0:
+            raise ValidationError("Attribute 'feature' is empty.")
+        if self.threshold.size == 0:
+            raise ValidationError("Attribute 'threshold' is empty.")
+        if self.value.size == 0:
+            raise ValidationError("Attribute 'value' is empty.")
+        if self.n_features <= 0:
+            raise ValidationError("'n_features' must be a positive integer.")
+        if self.capacity <= 0:
+            raise ValidationError("'capacity' must be a positive integer.")
 
     def _node_bounds(self):
         """Traverse the tree using DFS and extract bound information for each node."""
@@ -120,29 +187,39 @@ class RegressionTree(DecisionTreeStruct):
         M : float
             value for the big_M. By default, infer the value using the available bounds for variables
         """
-        # TODO: Change the >input< arg name to something else?
-        super()._check_input()
-
         leafs = self.children_left < 0
         leafs = leafs.nonzero()[0]
         nleafs = len(leafs)
         output_dim = self.value.shape[-1]
         node_lb, node_ub = self._node_bounds()
 
+        if not isinstance(input, (gp.Variable, gp.Parameter)):
+            raise ValidationError(
+                "Input must be of either type gp.Parameter | gp.Variable"
+            )
+
         if len(input.domain) == 0:
             raise ValidationError(
                 "expected an input with at least 1 dimension"
             )
 
+        # sklearn does not allow single dimension input data. It has to be (n,m) even when m=1
         if len(input.domain[-1]) != self.n_features:
             raise ValidationError("number of features do not match")
 
         if M and not isinstance(M, (float, int)):
             raise ValidationError("M can either be of type float or int")
+
         set_of_samples = input.domain[0]
         set_of_features = input.domain[-1]
-        set_of_leafs, set_of_output_dim = gp.math._generate_dims(
-            self.container, dims=[nleafs, output_dim], alias=False
+
+        set_of_output_dim = self.container.addSet(
+            name=utils._generate_name("s", self._name_prefix, "output_dim"),
+            records=range(output_dim),
+        )
+        set_of_leafs = self.container.addSet(
+            name=utils._generate_name("s", self._name_prefix, "leafs"),
+            records=range(nleafs),
         )
 
         _feat_par_records = []
@@ -173,13 +250,8 @@ class RegressionTree(DecisionTreeStruct):
         if isinstance(input, gp.Variable):
             _feat_vars = input
 
-        elif isinstance(input, gp.Parameter):
-            _feat_vars.fx[...] = input[...]
-
         else:
-            raise ValidationError(
-                "Input must be of either type gp.Parameter | gp.Variable"
-            )
+            _feat_vars.fx[...] = input[...]
 
         ind_vars = gp.Variable(
             self.container,
@@ -271,7 +343,7 @@ class RegressionTree(DecisionTreeStruct):
                 "s", self._name_prefix, "subset_of_paths"
             ),
             description="Dynamic subset of possible paths",
-            domain=uni_domain,  # TODO: Why we cannot just pass ss here, and GAMSPy infers the domain of ss? We get `ValueError: All linked 'domain' elements must have dimension == 1`
+            domain=uni_domain,
         )
 
         cons_type = gp.Set(
@@ -362,8 +434,6 @@ class RegressionTree(DecisionTreeStruct):
             1 - ind_vars
         )
 
-        self._indicator_vars = ind_vars.records
-
         return out, [
             assign_one_output,
             link_indctr_output,
@@ -372,15 +442,3 @@ class RegressionTree(DecisionTreeStruct):
             ge_cons,
             le_cons,
         ]
-
-    @property
-    def indicator_variable(self):
-        """
-        Convenience method to inspect the indicator variables used in the formulation.
-        Returns None if variables do not yet exist.
-
-        Returns
-        -------
-        None|pandas.DataFrame
-        """
-        return self._indicator_vars

@@ -7,6 +7,7 @@ from gamspy.formulations.ml import (
 )
 from gamspy.formulations.nn import (
     AvgPool2d,
+    Conv1d,
     Conv2d,
     Linear,
     MaxPool2d,
@@ -22,6 +23,7 @@ __all__ = [
     "nn",
     "ml",
     "piecewise",
+    "Conv1d",
     "Conv2d",
     "MaxPool2d",
     "MinPool2d",
