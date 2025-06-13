@@ -105,7 +105,7 @@ class RandomForest(RegressionTree):
             description="perdicted out times number of estimators should be equal to the random forest out",
         )
 
-        rf_eqn[...] = self.n_estimators * out == sum(
+        rf_eqn[...] = len(self.list_of_trees) * out == sum(
             rf_out_collection.values()
         )
         rf_eqn_list.append(rf_eqn)
