@@ -6,10 +6,12 @@ from typing import TYPE_CHECKING
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
+from gamspy.formulations.ml.dtStruct import DecisionTreeStruct
 from gamspy.formulations.ml.regression_tree import RegressionTree
 
 if TYPE_CHECKING:
     from sklearn.ensemble import RandomForestRegressor
+    from sklearn.tree import DecisionTreeRegressor
 
 
 class RandomForest(RegressionTree):
@@ -21,11 +23,10 @@ class RandomForest(RegressionTree):
     container : Container
         Container that will contain the new variable and equations.
     ensemble: RandomForestRegressor | None
-        - A fitted `sklearn.ensemble.RandomForestRegressor` object which is processed by the
-          `DecisionTreeStruct` superclass to populate the underlying tree attributes.
-        - If `None`, the tree structure is NOT automatically initialized.
-          In this case, the user is responsible for manually populating the tree attributes
-          inherited from `DecisionTreeStruct` before the formulation can be used.
+        - A fitted `sklearn.ensemble.RandomForestRegressor` instance,
+        - If `sklearn.ensemble.RandomForestRegressor` is not utilized, the ensembled trees information
+          can be supplied via a list of `DecisionTreeStruct` dataclasse instances, which represents
+          the same components as those in `sklearn.tree`.
           See :meth:`DecisionTreeStruct <gamspy.formulations.DecisionTreeStruct>` for details on required attributes.
 
     name_prefix : str | None
@@ -38,30 +39,51 @@ class RandomForest(RegressionTree):
     def __init__(
         self,
         container: gp.Container,
-        ensemble: RandomForestRegressor | None = None,
+        ensemble: RandomForestRegressor | list[DecisionTreeStruct],
         name_prefix: str | None = None,
     ):
         if not isinstance(container, gp.Container):
             raise ValidationError(f"{container} is not a gp.Container.")
 
+        def _validate_ensemble(
+            ensemble,
+        ) -> list[DecisionTreeRegressor | DecisionTreeStruct]:
+            ensemble_type = type(ensemble)
+            if (
+                ensemble_type.__name__ == "RandomForestRegressor"
+                and ensemble_type.__module__.startswith("sklearn.ensemble")
+            ):
+                if not hasattr(ensemble, "estimators_"):
+                    raise ValidationError(
+                        f"{ensemble} must be a trained/fitted instance of >sklearn.tree.RandomForestRegressor<."
+                    )
+                return ensemble.estimators_
+            elif isinstance(ensemble, list) and all(
+                isinstance(item, DecisionTreeStruct) for item in ensemble
+            ):
+                return ensemble
+            else:
+                raise ValidationError(
+                    f"{ensemble} must be an instance of either >sklearn.tree.RandomForestRegressor< or a list of >DecisionTreeStruct<"
+                )
+
+        self.list_of_trees = _validate_ensemble(ensemble)
         self.container = container
-        self._indicator_vars = None
 
         if name_prefix is None:
             name_prefix = str(uuid.uuid4()).split("-")[0]
 
         self._name_prefix = name_prefix
-        self.n_estimators = ensemble.n_estimators  # type: ignore
-        self.ensemble = ensemble
 
     def __call__(self, input, M=None) -> tuple[gp.Variable, list[gp.Equation]]:
         rf_eqn_list = []
         rf_out_collection = {}
-        for i in range(self.n_estimators):
+        for i, tree in enumerate(self.list_of_trees):
             super().__init__(
                 container=self.container,
-                regressor=self.ensemble.estimators_[i],  # type: ignore
-            )  # type: ignore
+                regressor=tree,
+                name_prefix=self._name_prefix,
+            )
             rf_out_collection[f"estimator{i}"], dt_eqn = super().__call__(
                 input, M
             )
