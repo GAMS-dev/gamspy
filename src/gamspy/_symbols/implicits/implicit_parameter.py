@@ -67,9 +67,6 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self._records = records
         self._assignment = None
 
-    def __neg__(self) -> Expression:
-        return expression.Expression(None, "-", self)
-
     def __getitem__(self, indices: Iterable | str) -> ImplicitParameter:
         domain = validation.validate_domain(self, indices)
 

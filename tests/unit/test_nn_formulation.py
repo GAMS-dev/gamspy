@@ -9,6 +9,7 @@ from gamspy.exceptions import ValidationError
 from gamspy.formulations import flatten_dims
 from gamspy.formulations.nn import (
     AvgPool2d,
+    Conv1d,
     Conv2d,
     Linear,
     MaxPool2d,
@@ -72,31 +73,46 @@ def data():
         ]
     )
 
+    inp2 = inp[:, :, 0, :]
+
     par_input = gp.Parameter(m, domain=dim(inp.shape), records=inp)
+    par_input_2 = gp.Parameter(m, domain=dim(inp2.shape), records=inp2)
     ii = gp.Set(m, "ii", records=range(20))
-    yield m, w1, b1, inp, par_input, ii
+    yield m, w1, b1, inp, par_input, ii, par_input_2
     m.close()
 
 
 @pytest.mark.unit
-def test_conv2d_bad_init(data):
+def test_conv_bad_init(data):
     m, *_ = data
-    # in channel must be integer
-    pytest.raises(ValidationError, Conv2d, m, 2.5, 4, 3)
-    pytest.raises(ValidationError, Conv2d, m, "2", 4, 3)
-    # out channel must be integer
-    pytest.raises(ValidationError, Conv2d, m, 2, 4.1, 3)
-    pytest.raises(ValidationError, Conv2d, m, "2", 4.1, 3)
-    # in channel must be positive
-    pytest.raises(ValidationError, Conv2d, m, -4, 4, 3)
-    # out channel must be positive
-    pytest.raises(ValidationError, Conv2d, m, 4, -4, 3)
+    for layer in [Conv1d, Conv2d]:
+        # in channel must be integer
+        pytest.raises(ValidationError, layer, m, 2.5, 4, 3)
+        pytest.raises(ValidationError, layer, m, "2", 4, 3)
+        # out channel must be integer
+        pytest.raises(ValidationError, layer, m, 2, 4.1, 3)
+        pytest.raises(ValidationError, layer, m, "2", 4.1, 3)
 
-    # padding when string must be valid or same
-    pytest.raises(ValidationError, Conv2d, m, 1, 2, 3, 1, "asd")
+        # in channel must be positive
+        pytest.raises(ValidationError, layer, m, -4, 4, 3)
 
-    # same padding requires stride = 1
-    pytest.raises(ValidationError, Conv2d, m, 1, 2, 3, 2, "same")
+        # out channel must be positive
+        pytest.raises(ValidationError, layer, m, 4, -4, 3)
+
+        # kernel_size must be integer
+        pytest.raises(ValidationError, layer, m, 4, 4, 3.5)
+
+        # stride must be integer
+        pytest.raises(ValidationError, layer, m, 4, 4, 3, stride=0.4)
+
+        # padding when string must be valid or same
+        pytest.raises(ValidationError, layer, m, 1, 2, 3, 1, "asd")
+
+        # same padding requires stride = 1
+        pytest.raises(ValidationError, layer, m, 1, 2, 3, 2, "same")
+
+        # bias must be a bool
+        pytest.raises(ValidationError, layer, m, 4, 4, 3, bias=10)
 
     # kernel size must be integer or tuple of integer
     bad_values = [(3, "a"), ("a", 3), 2.4, -1, 0]
@@ -109,143 +125,173 @@ def test_conv2d_bad_init(data):
     for bad_value in bad_values[:-1]:
         pytest.raises(ValidationError, Conv2d, m, 4, 4, 3, 1, bad_value)
 
-    # bias must be a bool
-    pytest.raises(ValidationError, Conv2d, m, 4, 4, 3, bias=10)
+    pytest.raises(ValidationError, Conv2d, m, 1, 3, 2, padding=(1, 2, 3))
 
 
 @pytest.mark.unit
-def test_conv2d_load_weights(data):
+def test_conv_load_weights(data):
     m, *_ = data
-    conv1 = Conv2d(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
-    conv2 = Conv2d(m, in_channels=1, out_channels=2, kernel_size=3, bias=False)
 
     w1 = np.random.rand(2, 1, 3, 3)
     b1 = np.random.rand(2)
 
-    # needs bias as well
-    pytest.raises(ValidationError, conv1.load_weights, w1)
+    w2 = np.random.rand(2, 1, 3)
+    b2 = np.random.rand(2)
 
-    # conv2 does not have bias
-    pytest.raises(ValidationError, conv2.load_weights, w1, b1)
+    for layer, (w, b) in zip([Conv1d, Conv2d], [(w2, b2), (w1, b1)]):
+        conv1 = layer(
+            m, in_channels=1, out_channels=2, kernel_size=3, bias=True
+        )
+        conv2 = layer(
+            m, in_channels=1, out_channels=2, kernel_size=3, bias=False
+        )
+        # needs bias as well
+        pytest.raises(ValidationError, conv1.load_weights, w)
 
-    # test bad shape
-    bad1 = np.random.rand(1)
-    pytest.raises(ValidationError, conv1.load_weights, bad1, b1)
-    pytest.raises(ValidationError, conv1.load_weights, w1, bad1)
+        # conv2 does not have bias
+        pytest.raises(ValidationError, conv2.load_weights, w, b)
 
-    bad2 = np.random.rand(2, 2, 2, 2)
-    pytest.raises(ValidationError, conv1.load_weights, bad2, b1)
+        # test bad shape
+        bad1 = np.random.rand(1)
+        pytest.raises(ValidationError, conv1.load_weights, bad1, b)
+        pytest.raises(ValidationError, conv1.load_weights, w, bad1)
 
-    bad3 = np.random.rand(6)
-    pytest.raises(ValidationError, conv1.load_weights, w1, bad3)
+        bad2 = np.random.rand(2, 2, 2, 2)
+        pytest.raises(ValidationError, conv1.load_weights, bad2, b)
 
-    bad4 = np.random.rand(6, 2)
-    pytest.raises(ValidationError, conv1.load_weights, w1, bad4)
+        bad3 = np.random.rand(6)
+        pytest.raises(ValidationError, conv1.load_weights, w, bad3)
 
+        bad4 = np.random.rand(6, 2)
+        pytest.raises(ValidationError, conv1.load_weights, w, bad4)
 
-@pytest.mark.unit
-def test_conv2d_same_indices(data):
-    m, *_ = data
-    conv1 = Conv2d(m, 4, 4, 4, bias=True, name_prefix="conv1")
-    w1 = np.random.rand(4, 4, 4, 4)
-    b1 = np.random.rand(4)
-    conv1.load_weights(w1, b1)
-
-    inp = gp.Variable(m, domain=dim([4, 4, 4, 4]))
-    out, eqs = conv1(inp)
-
-    output_var_found = False
-    weight_par_found = False
-    bias_par_found = False
-    for sym_name in m.data:
-        if sym_name.startswith("v_conv1_output"):
-            output_var_found = True
-        elif sym_name.startswith("p_conv1_weight"):
-            weight_par_found = True
-        elif sym_name.startswith("p_conv1_bias"):
-            bias_par_found = True
-
-    assert output_var_found
-    assert weight_par_found
-    assert bias_par_found
-
-    # this produces an output that is 4 x 4 too
-    conv2 = Conv2d(m, 4, 4, 4, padding=3, stride=2, bias=True)
-    conv2.load_weights(w1, b1)
-    out2, eqs2 = conv2(inp)
-    conv2.load_weights(w1, b1)
+        bad5 = np.random.rand(2, 2, 2)
+        pytest.raises(ValidationError, conv1.load_weights, bad5, b)
 
 
 @pytest.mark.unit
-def test_conv2d_reloading_weights(data):
+def test_conv_same_indices(data):
     m, *_ = data
-    conv1 = Conv2d(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
-    w1 = np.random.rand(2, 1, 3, 3)
-    b1 = np.random.rand(2)
-    conv1.load_weights(w1, b1)
+    for layer, l in zip([Conv1d, Conv2d], [3, 4]):
+        w1 = np.random.rand(*[4] * l)
+        b1 = np.random.rand(4)
+        conv1 = layer(m, 4, 4, 4, bias=True, name_prefix="conv1")
+        conv1.load_weights(w1, b1)
 
-    w1 = np.ones((2, 1, 3, 3))
-    b1 = np.ones(2)
-    conv1.load_weights(w1, b1)
+        inp = gp.Variable(m, domain=dim([4] * l))
+        out, eqs = conv1(inp)
 
-    assert np.allclose(w1, conv1.weight.toDense())
-    assert np.allclose(b1, conv1.bias.toDense())
+        output_var_found = False
+        weight_par_found = False
+        bias_par_found = False
+        for sym_name in m.data:
+            if sym_name.startswith("v_conv1_output"):
+                output_var_found = True
+            elif sym_name.startswith("p_conv1_weight"):
+                weight_par_found = True
+            elif sym_name.startswith("p_conv1_bias"):
+                bias_par_found = True
+
+        assert output_var_found
+        assert weight_par_found
+        assert bias_par_found
+
+        # this produces an output that is 4 x 4 too
+        conv2 = layer(m, 4, 4, 4, padding=3, stride=2, bias=True)
+        conv2.load_weights(w1, b1)
+        out2, eqs2 = conv2(inp)
+        conv2.load_weights(w1, b1)
 
 
 @pytest.mark.unit
-def test_conv2d_make_variable(data):
+def test_conv_reloading_weights(data):
     m, *_ = data
-    conv1 = Conv2d(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
-    conv1.make_variable()
-    w1 = np.random.rand(2, 1, 3, 3)
-    b1 = np.random.rand(2)
-    pytest.raises(ValidationError, conv1.load_weights, w1, b1)
-    assert isinstance(conv1.weight, gp.Variable)
-    assert isinstance(conv1.bias, gp.Variable)
-    inp = gp.Variable(m, domain=dim([4, 1, 4, 4]))
-    out, eqs = conv1(inp)
+    for layer, random_shape in zip(
+        [Conv1d, Conv2d], [(2, 1, 3), (2, 1, 3, 3)]
+    ):
+        conv1 = layer(
+            m, in_channels=1, out_channels=2, kernel_size=3, bias=True
+        )
+        w1 = np.random.rand(*random_shape)
+        b1 = np.random.rand(2)
+        conv1.load_weights(w1, b1)
+
+        w1 = np.ones(random_shape)
+        b1 = np.ones(2)
+        conv1.load_weights(w1, b1)
+
+        assert np.allclose(w1, conv1.weight.toDense())
+        assert np.allclose(b1, conv1.bias.toDense())
 
 
 @pytest.mark.unit
-def test_conv2d_load_weight_make_var(data):
+def test_conv_make_variable(data):
     m, *_ = data
-    conv1 = Conv2d(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
-    w1 = np.random.rand(2, 1, 3, 3)
-    b1 = np.random.rand(2)
-    conv1.load_weights(w1, b1)
-    assert isinstance(conv1.weight, gp.Parameter)
-    assert isinstance(conv1.bias, gp.Parameter)
-    pytest.raises(ValidationError, conv1.make_variable)
+    for layer, shape_len, padding_type in zip(
+        [Conv1d, Conv2d], [3, 4], ["valid", "same"]
+    ):
+        conv1 = layer(
+            m,
+            in_channels=1,
+            out_channels=2,
+            kernel_size=3,
+            bias=True,
+            padding=padding_type,
+        )
+        conv1.make_variable()
+        w1 = np.random.rand(*[2, 1, 3, 3][:shape_len])
+        b1 = np.random.rand(2)
+        pytest.raises(ValidationError, conv1.load_weights, w1, b1)
+        assert isinstance(conv1.weight, gp.Variable)
+        assert isinstance(conv1.bias, gp.Variable)
+        inp = gp.Variable(m, domain=dim([4, 1, 4, 4][:shape_len]))
+        out, eqs = conv1(inp)
 
 
 @pytest.mark.unit
-def test_conv2d_call_bad(data):
+def test_conv_load_weight_make_var(data):
     m, *_ = data
-    conv1 = Conv2d(m, 4, 4, 4, bias=True)
-    inp = gp.Variable(m, domain=dim([4, 4, 4, 4]))
-    # requires initialization before
-    pytest.raises(ValidationError, conv1, inp)
+    for layer, shape_len in zip([Conv1d, Conv2d], [3, 4]):
+        conv1 = layer(
+            m, in_channels=1, out_channels=2, kernel_size=3, bias=True
+        )
+        w1 = np.random.rand(*[2, 1, 3, 3][:shape_len])
+        b1 = np.random.rand(2)
+        conv1.load_weights(w1, b1)
+        assert isinstance(conv1.weight, gp.Parameter)
+        assert isinstance(conv1.bias, gp.Parameter)
+        pytest.raises(ValidationError, conv1.make_variable)
 
-    w1 = np.random.rand(4, 4, 4, 4)
-    b1 = np.random.rand(4)
-    conv1.load_weights(w1, b1)
 
-    # needs 4 dimension
-    bad_inp = gp.Variable(m, domain=dim([4, 4, 4]))
-    pytest.raises(ValidationError, conv1, bad_inp)
+@pytest.mark.unit
+def test_conv_call_bad(data):
+    m, *_ = data
+    for layer, shape_len in zip([Conv1d, Conv2d], [3, 4]):
+        conv1 = layer(m, 4, 4, 4, bias=True)
+        inp = gp.Variable(m, domain=dim([4, 4, 4, 4][:shape_len]))
+        # requires initialization before
+        pytest.raises(ValidationError, conv1, inp)
 
-    # in channel must match 4
-    # batch x in_channel x height x width
-    bad_inp_2 = gp.Variable(m, domain=dim([10, 3, 4, 4]))
-    pytest.raises(ValidationError, conv1, bad_inp_2)
+        w1 = np.random.rand(*[4, 4, 4, 4][:shape_len])
+        b1 = np.random.rand(4)
+        conv1.load_weights(w1, b1)
 
-    # propagate_bounds must be a boolean
-    pytest.raises(ValidationError, conv1, inp, propagate_bounds="True")
+        # needs 3 or 4 dimension
+        bad_inp = gp.Variable(m, domain=dim([4] * (shape_len - 1)))
+        pytest.raises(ValidationError, conv1, bad_inp)
+
+        # in channel must match 4
+        # batch x in_channel x height x width
+        bad_inp_2 = gp.Variable(m, domain=dim([10, 3, 4, 4][:shape_len]))
+        pytest.raises(ValidationError, conv1, bad_inp_2)
+
+        # propagate_bounds must be a boolean
+        pytest.raises(ValidationError, conv1, inp, propagate_bounds="True")
 
 
 @pytest.mark.unit
 def test_conv2d_simple_correctness(data):
-    m, w1, b1, inp, par_input, _ = data
+    m, w1, b1, inp, par_input, *_ = data
     conv1 = Conv2d(m, 1, 2, 3)
     conv1.load_weights(w1, b1)
     out, eqs = conv1(par_input)
@@ -305,26 +351,20 @@ def test_conv2d_simple_correctness(data):
 
 
 @pytest.mark.unit
-def test_conv2d_with_same_padding_odd_kernel(data):
-    # when kernel size is odd
-    m, w1, b1, inp, par_input, _ = data
+def test_conv1d_simple_correctness(data):
+    m, _, _, _, _, _, par_input_2, *_ = data
 
-    conv1 = Conv2d(m, 1, 1, 3, padding="same", bias=True)
-    keep_same = np.array(
+    w1 = np.array(
         [
-            [
-                [
-                    [0, 0, 0],
-                    [0, 1, 0],
-                    [0, 0, 0],
-                ]
-            ]
+            [[0.98727534, 0.94129724, 0.44578929]],
+            [[0.45728722, 0.15647212, 0.56943917]],
         ]
     )
-    add_one = np.array([1])
-    conv1.load_weights(keep_same, add_one)
+    b1 = np.array([2.2, -0.4])
 
-    out, eqs = conv1(par_input)
+    conv1 = Conv1d(m, 1, 2, 3)
+    conv1.load_weights(w1, b1)
+    out, eqs = conv1(par_input_2)
     obj = gp.Sum(out.domain, out)
     model = gp.Model(
         m,
@@ -335,13 +375,71 @@ def test_conv2d_with_same_padding_odd_kernel(data):
         problem="LP",
     )
     model.solve()
-    assert np.allclose(out.toDense(), inp + 1)
+
+    expected_out = np.array(
+        [
+            [
+                [3.56825381, 3.74108292, 3.90399443],
+                [0.40809439, 0.41946991, 0.20110516],
+            ],
+            [
+                [3.92287844, 3.98335548, 3.53671043],
+                [0.41505584, 0.34675258, 0.31888293],
+            ],
+            [
+                [3.57567320, 3.40667563, 3.13680175],
+                [0.33893762, -0.02290649, 0.19859786],
+            ],
+        ]
+    )
+
+    assert np.allclose(out.toDense(), expected_out)
+
+
+@pytest.mark.unit
+def test_conv_with_same_padding_odd_kernel(data):
+    # when kernel size is odd
+    m, w1, b1, inp, par_input, ii, par_input_2 = data
+
+    keep_same_1 = np.array(
+        [
+            [
+                [
+                    [0, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 0],
+                ]
+            ]
+        ]
+    )
+
+    keep_same_2 = np.array([[[0, 1, 0]]])
+
+    for layer, weight, inp_par in zip(
+        [Conv1d, Conv2d], [keep_same_2, keep_same_1], [par_input_2, par_input]
+    ):
+        conv1 = layer(m, 1, 1, 3, padding="same", bias=True)
+        add_one = np.array([1])
+        conv1.load_weights(weight, add_one)
+
+        out, eqs = conv1(inp_par)
+        obj = gp.Sum(out.domain, out)
+        model = gp.Model(
+            m,
+            "convolve",
+            equations=eqs,
+            objective=obj,
+            sense="min",
+            problem="LP",
+        )
+        model.solve()
+        assert np.allclose(out.toDense(), inp_par.toDense() + 1)
 
 
 @pytest.mark.unit
 def test_conv2d_with_same_padding_even_kernel(data):
     # when kernel size is even
-    m, w1, b1, inp, par_input, _ = data
+    m, w1, b1, inp, par_input, *_ = data
 
     conv1 = Conv2d(m, 1, 1, 2, padding="same", bias=False)
     keep_same = np.array(
@@ -373,7 +471,7 @@ def test_conv2d_with_same_padding_even_kernel(data):
 @pytest.mark.unit
 def test_conv2d_with_same_padding_even_kernel_2(data):
     # when kernel size is odd
-    m, w1, b1, inp, par_input, _ = data
+    m, w1, b1, inp, par_input, *_ = data
 
     conv1 = Conv2d(m, 1, 2, 2, padding="same", bias=True)
     conv1.load_weights(w1[:, :, :2, :2], b1)
@@ -628,7 +726,7 @@ def test_conv2d_with_same_padding_even_kernel_2(data):
 
 @pytest.mark.unit
 def test_conv2d_with_padding(data):
-    m, w1, b1, inp, par_input, _ = data
+    m, w1, b1, inp, par_input, *_ = data
 
     conv_with_valid_padding = Conv2d(m, 1, 2, 3, padding="valid")
     assert conv_with_valid_padding.padding == (0, 0, 0, 0)
@@ -969,7 +1067,7 @@ def test_conv2d_with_padding(data):
 
 @pytest.mark.unit
 def test_conv2d_with_stride(data):
-    m, w1, b1, inp, par_input, _ = data
+    m, w1, b1, inp, par_input, *_ = data
     conv1 = Conv2d(m, 1, 2, 3, stride=(2, 1))
     conv1.load_weights(w1, b1)
     out, eqs = conv1(par_input)
@@ -1024,7 +1122,7 @@ def test_conv2d_with_stride(data):
 
 @pytest.mark.unit
 def test_conv2d_with_padding_and_stride(data):
-    m, w1, b1, inp, par_input, _ = data
+    m, w1, b1, inp, par_input, *_ = data
     conv1 = Conv2d(m, 1, 2, 3, stride=(2, 1), padding=(1, 2))
     conv1.load_weights(w1, b1)
     out, eqs = conv1(par_input)
@@ -1283,87 +1381,113 @@ def test_conv2d_propagate_bounds_general(data):
 
 
 @pytest.mark.unit
-def test_conv2d_propagate_bounds_zero_weights_unbounded_input(data):
+def test_conv_propagate_bounds_zero_weights_unbounded_input(data):
     m, *_ = data
 
-    w1 = np.zeros((3, 1, 2, 2))
-    b1 = np.random.rand(3)
+    for layer, shape_len in zip([Conv1d, Conv2d], [3, 4]):
+        w1 = np.zeros((3, 1, 2, 2)[:shape_len])
+        b1 = np.random.rand(3)
 
-    # in_channels=1, out_channels=3, kernel_size=2x2
-    conv1 = Conv2d(m, 1, 3, 2)
-    conv1.load_weights(w1, b1)
+        # in_channels=1, out_channels=3, kernel_size=2
+        conv1 = layer(m, 1, 3, 2)
+        conv1.load_weights(w1, b1)
 
-    # in_channels=1, out_channels=3, kernel_size=2x2, bias=False
-    conv2 = Conv2d(m, 1, 3, 2, bias=False)
-    conv2.load_weights(w1)
+        # in_channels=1, out_channels=3, kernel_size=2x2, bias=False
+        conv2 = layer(m, 1, 3, 2, bias=False)
+        conv2.load_weights(w1)
 
-    # 16 images, 1 channels, 24 by 24
-    inp = gp.Variable(m, domain=dim((16, 1, 24, 24)))
+        # 16 images, 1 channels, 24 by 24
+        inp = gp.Variable(m, domain=dim((16, 1, 24, 24)[:shape_len]))
 
-    out1, _ = conv1(inp, propagate_bounds=True)
-    out2, _ = conv2(inp, propagate_bounds=True)
+        out1, _ = conv1(inp, propagate_bounds=True)
+        out2, _ = conv2(inp, propagate_bounds=True)
 
-    # When bias is present, the output bounds should be equal to the bias
-    assert np.allclose(
-        np.array(out1.records.upper).reshape(out1.shape),
-        b1[:, np.newaxis, np.newaxis],
-    )
-    assert np.allclose(
-        np.array(out1.records.lower).reshape(out1.shape),
-        b1[:, np.newaxis, np.newaxis],
-    )
+        # When bias is present, the output bounds should be equal to the bias
+        if layer == Conv1d:
+            assert np.allclose(
+                np.array(out1.records.upper).reshape(out1.shape),
+                b1[:, np.newaxis],
+            )
+            assert np.allclose(
+                np.array(out1.records.lower).reshape(out1.shape),
+                b1[:, np.newaxis],
+            )
+        else:
+            assert np.allclose(
+                np.array(out1.records.upper).reshape(out1.shape),
+                b1[:, np.newaxis, np.newaxis],
+            )
+            assert np.allclose(
+                np.array(out1.records.lower).reshape(out1.shape),
+                b1[:, np.newaxis, np.newaxis],
+            )
 
-    # When bias is not present, the output bounds should be zeros
-    assert np.allclose(
-        np.array(out2.records.upper).reshape(out2.shape), np.zeros(out2.shape)
-    )
-    assert np.allclose(
-        np.array(out2.records.lower).reshape(out2.shape), np.zeros(out2.shape)
-    )
+        # When bias is not present, the output bounds should be zeros
+        assert np.allclose(
+            np.array(out2.records.upper).reshape(out2.shape),
+            np.zeros(out2.shape),
+        )
+        assert np.allclose(
+            np.array(out2.records.lower).reshape(out2.shape),
+            np.zeros(out2.shape),
+        )
 
 
 @pytest.mark.unit
-def test_conv2d_propagate_bounds_input_bounded_by_zero(data):
+def test_conv_propagate_bounds_input_bounded_by_zero(data):
     m, *_ = data
 
-    w1 = np.random.rand(3, 1, 2, 2)
-    b1 = np.random.rand(3)
+    for layer, shape_len in zip([Conv1d, Conv2d], [3, 4]):
+        w1 = np.random.rand(*(3, 1, 2, 2)[:shape_len])
+        b1 = np.random.rand(3)
 
-    # in_channels=1, out_channels=3, kernel_size=2x2
-    conv1 = Conv2d(m, 1, 3, 2)
-    conv1.load_weights(w1, b1)
+        # in_channels=1, out_channels=3, kernel_size=2
+        conv1 = layer(m, 1, 3, 2)
+        conv1.load_weights(w1, b1)
 
-    # in_channels=1, out_channels=3, kernel_size=2x2, bias=False
-    conv2 = Conv2d(m, 1, 3, 2, bias=False)
-    conv2.load_weights(w1)
+        # in_channels=1, out_channels=3, kernel_size=2, bias=False
+        conv2 = layer(m, 1, 3, 2, bias=False)
+        conv2.load_weights(w1)
 
-    # 16 images, 1 channels, 24 by 24
-    inp = gp.Variable(m, domain=dim((16, 1, 24, 24)))
+        # 16 images, 1 channels, 24 by 24
+        inp = gp.Variable(m, domain=dim((16, 1, 24, 24)[:shape_len]))
 
-    # Input bounded with zeros results in bounded output with zeros (bias not present) or bias (bias present)
-    inp.lo[...] = 0
-    inp.up[...] = 0
+        # Input bounded with zeros results in bounded output with zeros (bias not present) or bias (bias present)
+        inp.lo[...] = 0
+        inp.up[...] = 0
 
-    out1, _ = conv1(inp, propagate_bounds=True)
-    out2, _ = conv2(inp, propagate_bounds=True)
+        out1, _ = conv1(inp, propagate_bounds=True)
+        out2, _ = conv2(inp, propagate_bounds=True)
 
-    # When bias is present, the output bounds should be equal to the bias
-    assert np.allclose(
-        np.array(out1.records.upper).reshape(out1.shape),
-        b1[:, np.newaxis, np.newaxis],
-    )
-    assert np.allclose(
-        np.array(out1.records.lower).reshape(out1.shape),
-        b1[:, np.newaxis, np.newaxis],
-    )
+        # When bias is present, the output bounds should be equal to the bias
+        if layer == Conv2d:
+            assert np.allclose(
+                np.array(out1.records.upper).reshape(out1.shape),
+                b1[:, np.newaxis, np.newaxis],
+            )
+            assert np.allclose(
+                np.array(out1.records.lower).reshape(out1.shape),
+                b1[:, np.newaxis, np.newaxis],
+            )
+        else:
+            assert np.allclose(
+                np.array(out1.records.upper).reshape(out1.shape),
+                b1[:, np.newaxis],
+            )
+            assert np.allclose(
+                np.array(out1.records.lower).reshape(out1.shape),
+                b1[:, np.newaxis],
+            )
 
-    # When bias is not present, the output bounds should be zeros
-    assert np.allclose(
-        np.array(out2.records.upper).reshape(out2.shape), np.zeros(out2.shape)
-    )
-    assert np.allclose(
-        np.array(out2.records.lower).reshape(out2.shape), np.zeros(out2.shape)
-    )
+        # When bias is not present, the output bounds should be zeros
+        assert np.allclose(
+            np.array(out2.records.upper).reshape(out2.shape),
+            np.zeros(out2.shape),
+        )
+        assert np.allclose(
+            np.array(out2.records.lower).reshape(out2.shape),
+            np.zeros(out2.shape),
+        )
 
 
 @pytest.mark.unit
@@ -1661,7 +1785,7 @@ def test_conv2d_propagate_bounds_with_same_padding_even_input(data):
 
 @pytest.mark.unit
 def test_max_pooling(data):
-    m, w1, b1, inp, par_input, ii = data
+    m, w1, b1, inp, par_input, ii, *_ = data
 
     mp1 = MaxPool2d(m, 2)
     mp2 = MaxPool2d(m, (2, 1))
@@ -1810,7 +1934,7 @@ def test_max_pooling(data):
 
 @pytest.mark.unit
 def test_pooling_with_bounds(data):
-    m, w1, b1, inp, par_input, ii = data
+    m, w1, b1, inp, par_input, ii, *_ = data
     mp1 = MinPool2d(m, 2)
     mp2 = MaxPool2d(m, 2)
     ap1 = AvgPool2d(m, 2)
@@ -1992,7 +2116,7 @@ def test_mpooling_with_complex_bounds(data):
 
 @pytest.mark.unit
 def test_min_pooling(data):
-    m, w1, b1, inp, par_input, ii = data
+    m, w1, b1, inp, par_input, ii, *_ = data
     mp1 = MinPool2d(m, 2)
     mp2 = MinPool2d(m, (2, 1))
     mp3 = MinPool2d(m, 3, stride=(1, 1))
@@ -2139,7 +2263,7 @@ def test_min_pooling(data):
 
 @pytest.mark.unit
 def test_avg_pooling(data):
-    m, w1, b1, inp, par_input, ii = data
+    m, w1, b1, inp, par_input, ii, *_ = data
     ap1 = AvgPool2d(m, 2, name_prefix="avgpool1")
     ap2 = AvgPool2d(m, (2, 1))
     ap3 = AvgPool2d(m, 3, stride=(1, 1))
@@ -2304,7 +2428,7 @@ def test_avg_pooling(data):
 
 @pytest.mark.unit
 def test_avg_pool_bounds_neg(data):
-    m, w1, b1, _, par_input, ii = data
+    m, w1, b1, _, par_input, ii, *_ = data
     inp = np.array(
         [
             [
@@ -2380,7 +2504,7 @@ def test_avg_pool_bounds_neg(data):
 
 @pytest.mark.unit
 def test_pool_call_bad(data):
-    m, w1, b1, inp, par_input, ii = data
+    m, w1, b1, inp, par_input, ii, *_ = data
     avgpool1 = AvgPool2d(m, (2, 2))
     minpool1 = MinPool2d(m, (2, 2))
     maxpool1 = MaxPool2d(m, (2, 2))
@@ -2404,7 +2528,7 @@ def test_pool_call_bad(data):
 
 @pytest.mark.unit
 def test_flatten_bad(data):
-    m, w1, b1, inp, par_input, ii = data
+    m, w1, b1, inp, par_input, ii, *_ = data
     # should only work for parameter or variable
     pytest.raises(ValidationError, flatten_dims, w1, [2, 3])
     pytest.raises(ValidationError, flatten_dims, par_input, [0])  # single dim
@@ -2432,7 +2556,7 @@ def test_flatten_bad(data):
 
 @pytest.mark.unit
 def test_flatten_par(data):
-    m, w1, b1, inp, par_input, ii = data
+    m, w1, b1, inp, par_input, ii, *_ = data
     # 3x1x5x5 -> 3x25
     par_flattened, eqs = flatten_dims(par_input, [1, 2, 3])
     out_data = par_flattened.toDense()
@@ -2477,7 +2601,7 @@ def test_flatten_par_with_no_records(data):
 
 @pytest.mark.requires_license
 def test_flatten_var_copied_domain(data):
-    m, w1, b1, inp, par_input, ii = data
+    m, w1, b1, inp, par_input, ii, *_ = data
 
     a1 = gp.Alias(m, "ii2", alias_with=ii)
     a2 = gp.Alias(m, "ii3", alias_with=ii)
@@ -2857,7 +2981,7 @@ def test_linear_call_bad(data):
 
 @pytest.mark.requires_license
 def test_linear_simple_correctness(data):
-    m, _, _, _, par_input, _ = data
+    m, _, _, _, par_input, *_ = data
     lin1 = Linear(m, 5, 128, bias=True)
     lin2 = Linear(m, 128, 64, bias=False)
     w1 = np.random.rand(128, 5)

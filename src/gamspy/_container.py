@@ -204,7 +204,7 @@ class Container(gt.Container):
 
     Parameters
     ----------
-    load_from : str, Container, gt.Container, optional
+    load_from : str, os.PathLike, Container, gt.Container, optional
         Path to the GDX file to be loaded from, by default None
     system_directory : str, optional
         Path to the directory that holds the GAMS installation, by default None
@@ -227,7 +227,7 @@ class Container(gt.Container):
 
     def __init__(
         self,
-        load_from: str | Container | gt.Container | None = None,
+        load_from: str | os.PathLike | Container | gt.Container | None = None,
         system_directory: str | None = None,
         working_directory: str | None = None,
         debugging_level: Literal[
@@ -288,6 +288,9 @@ class Container(gt.Container):
 
         self._is_restarted = False
         if load_from is not None:
+            if isinstance(load_from, os.PathLike):
+                load_from = os.fspath(load_from)
+
             if not isinstance(load_from, (str, gt.Container)):
                 raise ValidationError(
                     f"`load_from` must be of type str or Container but found {type(load_from)}"

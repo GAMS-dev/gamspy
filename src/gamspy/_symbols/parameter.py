@@ -377,9 +377,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
-    def __neg__(self):
-        return expression.Expression(None, "-", self)
-
     def __repr__(self) -> str:
         return f"Parameter(name='{self.name}', domain={self.domain})"
 

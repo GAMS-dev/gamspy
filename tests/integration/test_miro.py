@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+import platform
 import subprocess
 import sys
 
@@ -848,6 +849,35 @@ def test_miro_in():
         capture_output=True,
         text=True,
     )
+    assert process.returncode == 0, process.stderr
+
+
+@pytest.mark.skipif(
+    platform.system() != "Linux" or sys.version_info.minor != 9,
+    reason="Run miro tests",
+)
+def test_args():
+    directory = str(pathlib.Path(__file__).parent.resolve())
+    script_path = os.path.join(directory, "miro_models", "miro10.py")
+    subprocess_env = os.environ.copy()
+    subprocess_env["MIRO"] = "1"
+    command = [
+        sys.executable,
+        script_path,
+        "--my-kwarg",
+        "bla",
+        "a",
+        "b",
+        "c",
+        "d",
+    ]
+    process = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        env=subprocess_env,
+    )
+
     assert process.returncode == 0, process.stderr
 
 
