@@ -944,9 +944,7 @@ class GAMSEngine(backend.Backend):
             "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
             "logoption": 0,
             "previouswork": 1,
-            "license": utils._get_license_path(
-                self.container.system_directory
-            ),
+            "license": self.container._license_path,
         }
 
         if self.container._network_license:

@@ -250,7 +250,12 @@ class Container(gt.Container):
         self._unsaved_statements: list = []
 
         super().__init__(system_directory=system_directory)
-        self._license_path = utils._get_license_path(self.system_directory)
+        self._options = validation.validate_global_options(options)
+        if self._options.license is not None:
+            self._license_path = self._options.license
+        else:
+            self._license_path = utils._get_license_path(self.system_directory)
+
         self._network_license = self._is_network_license()
 
         self._debugging_level = debugging_level
@@ -268,8 +273,6 @@ class Container(gt.Container):
         self._temp_container = gt.Container(
             system_directory=self.system_directory
         )
-
-        self._options = validation.validate_global_options(options)
 
         # needed for miro
         self._miro_input_symbols: list[str] = []
