@@ -968,3 +968,88 @@ def test_mcp_serialization(data) -> None:
         assert isinstance(serialized_variable, Variable)
         assert orig_equation.name == serialized_equation.name
         assert orig_variable.name == serialized_variable.name
+
+
+def test_explicit_license_path():
+    import gamspy_base
+
+    import gamspy as gp
+
+    demo_license_path = os.path.join(gamspy_base.directory, "gamslice.txt")
+    m = gp.Container(options=gp.Options(license=demo_license_path))
+    assert m._license_path == demo_license_path
+
+    f = gp.Set(
+        m,
+        name="f",
+        description="faces on a dice",
+        records=[f"face{idx}" for idx in range(1, 20)],
+    )
+    dice = gp.Set(
+        m,
+        name="dice",
+        description="number of dice",
+        records=[f"dice{idx}" for idx in range(1, 20)],
+    )
+
+    flo = gp.Parameter(
+        m, name="flo", description="lowest face value", records=1
+    )
+    fup = gp.Parameter(
+        m, "fup", description="highest face value", records=len(dice) * len(f)
+    )
+
+    fp = gp.Alias(m, name="fp", alias_with=f)
+
+    wnx = gp.Variable(m, name="wnx", description="number of wins")
+    fval = gp.Variable(
+        m,
+        name="fval",
+        domain=[dice, f],
+        description="face value on dice - may be fractional",
+    )
+    comp = gp.Variable(
+        m,
+        name="comp",
+        domain=[dice, f, fp],
+        description="one implies f beats fp",
+        type=gp.VariableType.BINARY,
+    )
+
+    fval.lo[dice, f] = flo
+    fval.up[dice, f] = fup
+    fval.fx["dice1", "face1"] = flo
+
+    eq1 = gp.Equation(m, "eq1", domain=dice, description="count the wins")
+    eq3 = gp.Equation(
+        m,
+        "eq3",
+        domain=[dice, f, fp],
+        description="definition of non-transitive relation",
+    )
+    eq4 = gp.Equation(
+        m,
+        "eq4",
+        domain=[dice, f],
+        description="different face values for a single dice",
+    )
+
+    eq1[dice] = gp.Sum((f, fp), comp[dice, f, fp]) == wnx
+    eq3[dice, f, fp] = (
+        fval[dice, f] + (fup - flo + 1) * (1 - comp[dice, f, fp])
+        >= fval[dice.lead(1, type="circular"), fp] + 1
+    )
+    eq4[dice, f - 1] = fval[dice, f - 1] + 1 <= fval[dice, f]
+
+    xdice = gp.Model(
+        m,
+        "xdice",
+        equations=m.getEquations(),
+        problem=gp.Problem.MIP,
+        sense=gp.Sense.MAX,
+        objective=wnx,
+    )
+
+    # Should throw license error since we are using the demo license.
+    with pytest.raises(GamspyException):
+        xdice.solve()
