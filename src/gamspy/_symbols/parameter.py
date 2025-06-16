@@ -254,7 +254,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 if is_miro_input or is_miro_output:
                     name = name.lower()  # type: ignore
             else:
-                name = "p" + utils._get_unique_name() + "gpauto"
+                name = utils._get_symbol_name(prefix="p")
 
             previous_state = container._options.miro_protect
             container._options.miro_protect = False

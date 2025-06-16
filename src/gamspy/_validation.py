@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import re
 from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, Literal
 
@@ -25,6 +26,8 @@ if TYPE_CHECKING:
         ImplicitVariable,
     )
     from gamspy._types import EllipsisType
+
+NAME_MATCH_REGEX = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]{0,62}$")
 
 RESERVED_WORDS = (
     "abort",
@@ -365,8 +368,11 @@ def validate_name(word: str) -> str:
     if not get_option("VALIDATION"):
         return word
 
+    if word == "":
+        raise ValueError("Symbol name cannot be an empty string.")
+
     if not isinstance(word, str):
-        raise TypeError("Symbol name must be type str")
+        raise TypeError("Symbol name must be type str.")
 
     if word.lower() in RESERVED_WORDS:
         raise ValidationError(
@@ -379,6 +385,13 @@ def validate_name(word: str) -> str:
             "Name cannot end with one of the reserved words. `gpauto` is a reserverd word."
         )
 
+    if not re.match(NAME_MATCH_REGEX, word):
+        raise ValidationError(
+            f"`{word}` is an invalid GAMSPy symbol name. "
+            "GAMSPy symbol names can only contain alphanumeric characters "
+            "(letters and numbers) and the '_' character. They must start "
+            "with a letter. They also shouldn't be more than 63 characters."
+        )
     return word
 
 

@@ -970,6 +970,130 @@ def test_mcp_serialization(data) -> None:
         assert orig_variable.name == serialized_variable.name
 
 
+@pytest.mark.unit
+def test_auto_python_name_retrieval():
+    import gamspy as gp
+
+    with gp.Container():
+        gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+        i = gp.Set()
+        assert i.name != "i"  # autogen name, will be different every time
+
+        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+        # Reserved names are not allowed,
+        with pytest.raises(ValidationError):
+            binary = gp.Set()  # noqa: F841
+
+        i = gp.Set()
+        assert i.name == "i"
+
+        gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+        j = gp.Alias(alias_with=i)
+        assert j.name != "j"  # autogen name, will be different every time
+
+        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+        j = gp.Alias(alias_with=i)
+        assert j.name == "j"
+
+        gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+        k = gp.Parameter()
+        assert k.name != "k"  # autogen name, will be different every time
+
+        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+        k = gp.Parameter()
+        assert k.name == "k"
+
+        gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+        l = gp.Variable()
+        assert l.name != "l"  # autogen name, will be different every time
+
+        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+        l = gp.Variable()
+        assert l.name == "l"
+
+        gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+        n = gp.Equation()
+        assert n.name != "n"  # autogen name, will be different every time
+
+        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+        n = gp.Equation()
+        assert n.name == "n"
+
+    m = gp.Container()
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+    i = gp.Set(m)
+    assert i.name != "i"  # autogen name, will be different every time
+
+    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+    i = gp.Set(m)
+    assert i.name == "i"
+
+    # GAMS symbol names cannot begin with a '_' character
+    with pytest.raises(ValidationError):
+        _bla = gp.Set(m)
+
+    gp.set_options({"USE_PY_VAR_NAME": "yes-or-autogenerate"})
+    _ = gp.Set(m)  # autogen a name
+
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+    j = gp.Alias(m, alias_with=i)
+    assert j.name != "j"  # autogen name, will be different every time
+
+    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+    j = gp.Alias(m, alias_with=i)
+    assert j.name == "j"
+
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+    k = gp.Parameter(m)
+    assert k.name != "k"  # autogen name, will be different every time
+
+    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+    k = gp.Parameter(m)
+    assert k.name == "k"
+
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+    l = gp.Variable(m)
+    assert l.name != "l"  # autogen name, will be different every time
+
+    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+    l = gp.Variable(m)
+    assert l.name == "l"
+
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+    n = gp.Equation(m)
+    assert n.name != "n"  # autogen name, will be different every time
+
+    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+    n = gp.Equation(m)
+    assert n.name == "n"
+
+    p = gp.Model(m)
+    assert p.name == "p"
+
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+
+@pytest.mark.unit
 def test_explicit_license_path():
     import gamspy_base
 
