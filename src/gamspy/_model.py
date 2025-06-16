@@ -297,7 +297,7 @@ class Model:
             name = validation.validate_name(name)
             self.name = validation.validate_model_name(name)
         else:
-            self.name = self._auto_id
+            self.name = utils._get_symbol_name(prefix="m")
 
         self.description = description
 

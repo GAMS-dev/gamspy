@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import inspect
 import os
 import platform
 import uuid
@@ -11,6 +12,7 @@ from gams.core import gdx
 
 import gamspy._model as model
 import gamspy._symbols.implicits as implicits
+import gamspy._validation as validation
 from gamspy._config import get_option
 from gamspy.exceptions import FatalError, ValidationError
 
@@ -346,6 +348,47 @@ def _get_unique_name() -> str:
     u = uuid.uuid4()
     b64 = base64.urlsafe_b64encode(u.bytes)
     return b64.rstrip(b"=").decode("ascii").replace("-", "_")
+
+
+def _get_name_from_stack() -> str:
+    try:
+        # Current frame is this function (_get_name_from_stack)
+        # The first f_back takes us to _get_symbol_name
+        # The second f_back takes us to the __init__ function of
+        # the symbol. The third f_back takes us to the user code.
+        frame = inspect.currentframe().f_back.f_back.f_back
+
+        # We get the line that defines the symbol. e.g. i = Set(m)
+        line = inspect.getframeinfo(frame).code_context[0]
+
+        # Pretty naive but it's the best chance we've got with little overhead.
+        name = line.split("=", maxsplit=1)[0].strip()
+        name = validation.validate_name(name)
+    except Exception as e:
+        raise ValidationError(
+            f"It is not possible to get the Python variable name in this context: {e}"
+        ) from e
+
+    return name
+
+
+def _get_symbol_name(prefix: str) -> str:
+    use_py_var_name = get_option("USE_PY_VAR_NAME")
+    if use_py_var_name == "no":
+        name = prefix + _get_unique_name() + "gpauto"
+    elif use_py_var_name == "yes":
+        name = _get_name_from_stack()
+    elif use_py_var_name == "yes-or-autogenerate":
+        try:
+            name = _get_name_from_stack()
+        except ValidationError:
+            name = prefix + _get_unique_name() + "gpauto"
+    else:
+        raise ValidationError(
+            f'Invalid value `{use_py_var_name}` for `USE_PY_VAR_NAME`. Possible values are "no", "yes", "yes-or-autogenerate"'
+        )
+
+    return name
 
 
 def _get_symbol_names_from_gdx(
