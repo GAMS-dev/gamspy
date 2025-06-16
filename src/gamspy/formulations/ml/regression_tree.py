@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import uuid
 from typing import TYPE_CHECKING
 
@@ -175,7 +176,10 @@ class RegressionTree:
         return node_lb, node_ub
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable, M: float | None = None
+        self,
+        input: gp.Parameter | gp.Variable,
+        M: float | None = None,
+        **kwargs,
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         """
         Generate output variable and equations required for embedding the regression tree.
@@ -187,6 +191,8 @@ class RegressionTree:
         M : float
             value for the big_M. By default, infer the value using the available bounds for variables
         """
+        is_random_forest = kwargs.get("is_random_forest", False)
+
         leafs = self.children_left < 0
         leafs = leafs.nonzero()[0]
         nleafs = len(leafs)
@@ -213,83 +219,78 @@ class RegressionTree:
         set_of_samples = input.domain[0]
         set_of_features = input.domain[-1]
 
-        set_of_output_dim = self.container.addSet(
-            name=utils._generate_name("s", self._name_prefix, "output_dim"),
-            records=range(output_dim),
-        )
-        set_of_leafs = self.container.addSet(
+        def find_output_dim(allSets) -> gp.Set:
+            """
+            Helper function to check if `set_of_output_dim` already exist in the container.
+            Since, this will not change once created and we require this to be the only set (<20)
+            when consolidating the random forest formulation.
+            """
+            _set_names = [ele.name for ele in allSets]
+            pattern = r"s_.*?_output_dim.*"
+
+            for set_name in _set_names:
+                if re.search(pattern, set_name):
+                    return self.container.data.get(set_name)
+
+            return self.container.addSet(
+                name=utils._generate_name(
+                    "s", self._name_prefix, "output_dim"
+                ),
+                records=range(output_dim),
+            )
+
+        set_of_output_dim = find_output_dim(self.container.getSets())
+
+        set_of_leafs = gp.Set._constructor_bypass(
+            self.container,
             name=utils._generate_name("s", self._name_prefix, "leafs"),
-            records=range(nleafs),
+            domain=["*"],
         )
 
-        _feat_par_records = []
-        for i, leaf in enumerate(leafs):
-            for feat in range(self.n_features):
-                _feat_par_records.append((feat, i, "ub", node_ub[feat, leaf]))
-                _feat_par_records.append((feat, i, "lb", node_lb[feat, leaf]))
-
-        _feat_par = gp.Parameter(
+        _feat_par = gp.Parameter._constructor_bypass(
             self.container,
             name=utils._generate_name("p", self._name_prefix, "feat_par"),
             domain=[set_of_features, set_of_leafs, "*"],
-            records=_feat_par_records,
         )
 
-        out = gp.Variable(
+        out = gp.Variable._constructor_bypass(
             self.container,
             name=utils._generate_name("v", self._name_prefix, "output"),
             domain=[set_of_samples, set_of_output_dim],
         )
 
-        _feat_vars = gp.Variable(
+        _feat_vars = gp.Variable._constructor_bypass(
             self.container,
             name=utils._generate_name("v", self._name_prefix, "feature"),
             domain=[set_of_samples, set_of_features],
         )
 
-        if isinstance(input, gp.Variable):
-            _feat_vars = input
-
-        else:
-            _feat_vars.fx[...] = input[...]
-
-        ind_vars = gp.Variable(
+        ind_vars = gp.Variable._constructor_bypass(
             self.container,
             name=utils._generate_name("v", self._name_prefix, "indicator"),
-            type="BINARY",
+            type="binary",
             domain=[set_of_samples, set_of_leafs],
             description="indicator variable for each leaf for each sample",
         )
 
-        assign_one_output = gp.Equation(
+        assign_one_output = gp.Equation._constructor_bypass(
             self.container,
             name=utils._generate_name(
                 "e", self._name_prefix, "assign_one_output"
             ),
-            domain=set_of_samples,
+            domain=[set_of_samples],
             description="Activate only one leaf per sample",
         )
-        assign_one_output[set_of_samples] = (
-            gp.Sum(set_of_leafs, ind_vars[set_of_samples, set_of_leafs]) == 1
-        )
 
-        idx, jdx = np.indices((nleafs, output_dim), dtype=int)
-        mapped_values = self.value[leafs[:, None], jdx]
-        out_link = gp.Parameter(
+        out_link = gp.Parameter._constructor_bypass(
             self.container,
             name=utils._generate_name(
                 "p", self._name_prefix, "predicted_value"
             ),
             domain=[set_of_leafs, set_of_output_dim],
-            records=[
-                (int(i), int(j), v)
-                for i, j, v in np.stack(
-                    (idx, jdx, mapped_values), axis=-1
-                ).reshape(-1, 3)
-            ],
         )
 
-        link_indctr_output = gp.Equation(
+        link_indctr_output = gp.Equation._constructor_bypass(
             self.container,
             name=utils._generate_name(
                 "e", self._name_prefix, "link_indctr_output"
@@ -297,6 +298,115 @@ class RegressionTree:
             domain=[set_of_samples, set_of_output_dim],
             description="Link the indicator variable to the predicted value of the decision tree",
         )
+
+        max_out = gp.Parameter._constructor_bypass(
+            self.container,
+            name=utils._generate_name("p", self._name_prefix, "max_out"),
+            domain=[set_of_output_dim],
+        )
+        min_out = gp.Parameter._constructor_bypass(
+            self.container,
+            name=utils._generate_name("p", self._name_prefix, "min_out"),
+            domain=[set_of_output_dim],
+        )
+
+        ub_output = gp.Equation._constructor_bypass(
+            self.container,
+            name=utils._generate_name("e", self._name_prefix, "ub_output"),
+            domain=[set_of_samples, set_of_output_dim],
+            description="Output cannot be more than the maximum of predicted value",
+        )
+
+        lb_output = gp.Equation._constructor_bypass(
+            self.container,
+            name=utils._generate_name("e", self._name_prefix, "lb_output"),
+            domain=[set_of_samples, set_of_output_dim],
+            description="Output cannot be less than the minimum of predicted value",
+        )
+
+        uni_domain = [set_of_samples, set_of_features, set_of_leafs]
+
+        s = gp.Set._constructor_bypass(
+            self.container,
+            name=utils._generate_name(
+                "s", self._name_prefix, "subset_of_paths"
+            ),
+            description="Dynamic subset of possible paths",
+            domain=uni_domain,
+        )
+
+        cons_type = gp.Set._constructor_bypass(
+            self.container,
+            name=utils._generate_name("s", self._name_prefix, "cons_type"),
+            domain=["*"],
+        )
+
+        feat_thresh = gp.Parameter._constructor_bypass(
+            self.container,
+            name=utils._generate_name(
+                "p", self._name_prefix, "feature_threshold"
+            ),
+            description="feature splitting value",
+            domain=uni_domain + [cons_type],
+        )
+
+        _bound_big_m = gp.Parameter._constructor_bypass(
+            self.container,
+            name=utils._generate_name("p", self._name_prefix, "bound_big_m"),
+            description="bound value for big-M",
+            domain=uni_domain + [cons_type],
+        )
+
+        ge_cons = gp.Equation._constructor_bypass(
+            self.container,
+            name=utils._generate_name(
+                "e", self._name_prefix, "link_indctr_feature_ge"
+            ),
+            domain=uni_domain,
+            description="Link the indicator variable with the feature which is Lower bounded using a big-M constraint",
+        )
+
+        le_cons = gp.Equation._constructor_bypass(
+            self.container,
+            name=utils._generate_name(
+                "e", self._name_prefix, "link_indctr_feature_le"
+            ),
+            domain=uni_domain,
+            description="Link the indicator variable with the feature which is Upper bounded using a big-M constraint",
+        )
+
+        self.container._synch_with_gams(gams_to_gamspy=True)
+
+        set_of_leafs.setRecords(range(nleafs))
+
+        if isinstance(input, gp.Variable):
+            _feat_vars = input
+
+        else:
+            _feat_vars.fx[...] = input[...]
+
+        _feat_par_records = []
+        for i, leaf in enumerate(leafs):
+            for feat in range(self.n_features):
+                _feat_par_records.append((feat, i, "ub", node_ub[feat, leaf]))
+                _feat_par_records.append((feat, i, "lb", node_lb[feat, leaf]))
+
+        _feat_par.setRecords(_feat_par_records)
+        assign_one_output[set_of_samples] = (
+            gp.Sum(set_of_leafs, ind_vars[set_of_samples, set_of_leafs]) == 1
+        )
+
+        idx, jdx = np.indices((nleafs, output_dim), dtype=int)
+        mapped_values = self.value[leafs[:, None], jdx]
+        out_link.setRecords(
+            [
+                (int(i), int(j), v)
+                for i, j, v in np.stack(
+                    (idx, jdx, mapped_values), axis=-1
+                ).reshape(-1, 3)
+            ]
+        )
+
         link_indctr_output[set_of_samples, set_of_output_dim] = (
             gp.Sum(
                 set_of_leafs,
@@ -306,68 +416,12 @@ class RegressionTree:
             == out
         )
 
-        max_out = gp.Parameter(
-            self.container,
-            name=utils._generate_name("p", self._name_prefix, "max_out"),
-            domain=[set_of_output_dim],
-            records=np.max(self.value[leafs, :], axis=0),
-        )
-        min_out = gp.Parameter(
-            self.container,
-            name=utils._generate_name("p", self._name_prefix, "min_out"),
-            domain=[set_of_output_dim],
-            records=np.min(self.value[leafs, :], axis=0),
-        )
+        max_out.setRecords(np.max(self.value[leafs, :], axis=0))
+        min_out.setRecords(np.min(self.value[leafs, :], axis=0))
 
-        ub_output = gp.Equation(
-            self.container,
-            name=utils._generate_name("e", self._name_prefix, "ub_output"),
-            domain=[set_of_samples, set_of_output_dim],
-            description="Output cannot be more than the maximum of predicted value",
-        )
         ub_output[...] = out <= max_out
-
-        lb_output = gp.Equation(
-            self.container,
-            name=utils._generate_name("e", self._name_prefix, "lb_output"),
-            domain=[set_of_samples, set_of_output_dim],
-            description="Output cannot be less than the minimum of predicted value",
-        )
         lb_output[...] = out >= min_out
-
-        uni_domain = [set_of_samples, set_of_features, set_of_leafs]
-
-        s = gp.Set(
-            self.container,
-            name=utils._generate_name(
-                "s", self._name_prefix, "subset_of_paths"
-            ),
-            description="Dynamic subset of possible paths",
-            domain=uni_domain,
-        )
-
-        cons_type = gp.Set(
-            self.container,
-            name=utils._generate_name("s", self._name_prefix, "cons_type"),
-            domain=["*"],
-            records=["ge", "le"],
-        )
-
-        feat_thresh = gp.Parameter(
-            self.container,
-            name=utils._generate_name(
-                "p", self._name_prefix, "feature_threshold"
-            ),
-            description="feature splitting value",
-            domain=uni_domain + [cons_type],
-        )
-
-        _bound_big_m = gp.Parameter(
-            self.container,
-            name=utils._generate_name("p", self._name_prefix, "bound_big_m"),
-            description="bound value for big-M",
-            domain=uni_domain + [cons_type],
-        )
+        cons_type.setRecords(["ge", "le"])
 
         ### This generates the set of possible paths given the input data
         mask = (_feat_vars.up[...] >= _feat_par[..., "lb"]) & (
@@ -406,35 +460,19 @@ class RegressionTree:
             )
         )
 
-        ge_cons = gp.Equation(
-            self.container,
-            name=utils._generate_name(
-                "e", self._name_prefix, "link_indctr_feature_ge"
-            ),
-            domain=uni_domain,
-            description="Link the indicator variable with the feature which is Lower bounded using a big-M constraint",
-        )
         ge_cons[uni_domain].where[
             (feat_thresh[..., "ge"] != 0) & s[uni_domain]
         ] = _feat_vars >= feat_thresh[..., "ge"] - _bound_big_m[..., "ge"] * (
             1 - ind_vars
         )
 
-        le_cons = gp.Equation(
-            self.container,
-            name=utils._generate_name(
-                "e", self._name_prefix, "link_indctr_feature_le"
-            ),
-            domain=uni_domain,
-            description="Link the indicator variable with the feature which is Upper bounded using a big-M constraint",
-        )
         le_cons[uni_domain].where[
             (feat_thresh[..., "le"] != 0) & s[uni_domain]
         ] = _feat_vars <= feat_thresh[..., "le"] + _bound_big_m[..., "le"] * (
             1 - ind_vars
         )
 
-        return out, [
+        eqns = [
             assign_one_output,
             link_indctr_output,
             ub_output,
@@ -442,3 +480,9 @@ class RegressionTree:
             ge_cons,
             le_cons,
         ]
+
+        if is_random_forest:
+            return out, eqns, set_of_output_dim  # type: ignore
+
+        else:
+            return out, eqns

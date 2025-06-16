@@ -75,36 +75,41 @@ class RandomForest(RegressionTree):
 
         self._name_prefix = name_prefix
 
-    def __call__(self, input, M=None) -> tuple[gp.Variable, list[gp.Equation]]:
+    def __call__(
+        self,
+        input: gp.Parameter | gp.Variable,
+        M: float | None = None,
+        **kwargs,
+    ) -> tuple[gp.Variable, list[gp.Equation]]:
         rf_eqn_list = []
-        rf_out_collection = {}
+        rf_out_collection: dict[str, gp.Variable] = {}
         for i, tree in enumerate(self.list_of_trees):
             super().__init__(
                 container=self.container,
                 regressor=tree,
                 name_prefix=self._name_prefix,
             )
-            rf_out_collection[f"estimator{i}"], dt_eqn = super().__call__(
-                input, M
+            rf_out_collection[f"estimator{i}"], dt_eqn, set_of_output_dim = (
+                super().__call__(input, M, is_random_forest=True)
             )
             rf_eqn_list += dt_eqn
 
         set_of_samples = input.domain[0]
-        set_of_output_dim = self.container.data.get("set_of_output_dim")
 
-        out = gp.Variable(
+        out = gp.Variable._constructor_bypass(
             self.container,
             name=utils._generate_name("v", self._name_prefix, "real_output"),
             domain=[set_of_samples, set_of_output_dim],
         )
 
-        rf_eqn = gp.Equation(
+        rf_eqn = gp.Equation._constructor_bypass(
             self.container,
             name=utils._generate_name("e", self._name_prefix, "rf_eqn"),
             domain=[set_of_samples, set_of_output_dim],
             description="perdicted out times number of estimators should be equal to the random forest out",
         )
 
+        self.container._synch_with_gams(gams_to_gamspy=True)
         rf_eqn[...] = len(self.list_of_trees) * out == sum(
             rf_out_collection.values()
         )
