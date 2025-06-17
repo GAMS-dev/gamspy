@@ -182,6 +182,7 @@ def test_alias_state(m):
     j = Alias(m, name="j", alias_with=i)
     i.modified = False
     j.setRecords(["a", "b"])
+    assert not i.modified
 
     i.modified = False
     j.records = pd.DataFrame([["a", "b"]])

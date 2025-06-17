@@ -685,11 +685,12 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             self.container._add_statement(self)
 
             if records is not None:
-                super().setRecords(records, uels_on_axes=uels_on_axes)
+                self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
                 self.modified = False
-
-            self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
+                self.container._synch_with_gams(
+                    gams_to_gamspy=self._is_miro_input
+                )
 
             container._options.miro_protect = previous_state
 
@@ -867,6 +868,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         """
 
         super().setRecords(records, uels_on_axes)
+
+        self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
         self._winner = "python"
 
     def gamsRepr(self) -> str:

@@ -343,11 +343,10 @@ class Equation(gt.Equation, Symbol):
             self._infeas = self._create_attr("infeas")
 
             if records is not None:
-                super().setRecords(records, uels_on_axes=uels_on_axes)
+                self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
                 self.modified = False
-
-            self.container._synch_with_gams()
+                self.container._synch_with_gams()
 
             container._options.miro_protect = previous_state
 
@@ -1027,6 +1026,8 @@ class Equation(gt.Equation, Symbol):
 
         """
         super().setRecords(records, uels_on_axes)
+
+        self.container._synch_with_gams()
         self._winner = "python"
 
     @property
