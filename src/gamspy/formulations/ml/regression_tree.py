@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import uuid
 from typing import TYPE_CHECKING
 
@@ -8,7 +9,7 @@ import numpy as np
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
-from gamspy.formulations.ml.dtStruct import DecisionTreeStruct
+from gamspy.formulations.ml.decision_tree_struct import DecisionTreeStruct
 
 if TYPE_CHECKING:
     from sklearn.tree import DecisionTreeRegressor
@@ -71,18 +72,21 @@ class RegressionTree:
         if not isinstance(container, gp.Container):
             raise ValidationError(f"{container} is not a gp.Container.")
 
-        regressor_type = type(regressor)
-        if (
-            regressor_type.__name__ == "DecisionTreeRegressor"
-            and regressor_type.__module__.startswith("sklearn.tree")
-        ):
-            self._initialize_from_sklearn(regressor=regressor)
-        elif isinstance(regressor, DecisionTreeStruct):
-            self._initialize_from_dtStruct(regressor=regressor)
+        type_err = ValidationError(
+            f"{regressor} must be an instance of either >sklearn.tree.DecisionTreeRegressor< or >DecisionTreeStruct<"
+        )
+
+        if isinstance(regressor, DecisionTreeStruct):
+            self._initialize_from_decision_tree_struct(regressor=regressor)
         else:
-            raise ValidationError(
-                f"{regressor} must be an instance of either >sklearn.tree.DecisionTreeRegressor< or >DecisionTreeStruct<"
-            )
+            try:
+                sklearn_tree = importlib.import_module("sklearn.tree")
+                if isinstance(regressor, sklearn_tree.DecisionTreeRegressor):
+                    self._initialize_from_sklearn(regressor=regressor)
+                else:
+                    raise type_err
+            except ModuleNotFoundError:
+                raise type_err from None
 
         self._check_tree()
 
@@ -112,7 +116,9 @@ class RegressionTree:
         self.capacity = regressor.tree_.capacity
         self.n_features = regressor.tree_.n_features
 
-    def _initialize_from_dtStruct(self, regressor: DecisionTreeStruct):
+    def _initialize_from_decision_tree_struct(
+        self, regressor: DecisionTreeStruct
+    ):
         """
         Initializes the tree attributes from DecisionTreeStruct.
         """
@@ -203,7 +209,7 @@ class RegressionTree:
                 "expected an input with at least 1 dimension"
             )
 
-        # sklearn does not allow single dimension input data. It has to be (n,m) even when m=1
+        # sklearn does not allow single dimension input data. It has to be (n,m) even when n=1
         if len(input.domain[-1]) != self.n_features:
             raise ValidationError("number of features do not match")
 
