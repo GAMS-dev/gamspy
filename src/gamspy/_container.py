@@ -542,7 +542,7 @@ class Container(gt.Container):
         modified_names = []
 
         for name, symbol in self:
-            if symbol.modified:
+            if symbol._modified:
                 if (
                     type(symbol) is gp.Alias
                     and symbol.alias_with.name not in modified_names  # type: ignore
