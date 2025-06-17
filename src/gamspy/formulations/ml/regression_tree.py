@@ -223,11 +223,12 @@ class RegressionTree:
         set_of_samples = input.domain[0]
         set_of_features = input.domain[-1]
 
-        set_of_output_dim = gp.math._generate_dims(
+        [set_of_output_dim] = gp.math._generate_dims(
             self.container, dims=[output_dim]
-        )[0]
+        )
 
-        set_of_leafs = self.container.addSet(
+        set_of_leafs = gp.Set._constructor_bypass(
+            self.container,
             name=utils._generate_name("s", self._name_prefix, "leafs"),
             domain=["*"],
         )
