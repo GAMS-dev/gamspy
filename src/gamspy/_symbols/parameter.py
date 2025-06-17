@@ -499,8 +499,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         """
         super().setRecords(records, uels_on_axes)
-
-        self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
         self._winner = "python"
 
     def gamsRepr(self) -> str:

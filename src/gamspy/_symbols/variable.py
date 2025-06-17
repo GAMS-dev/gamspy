@@ -329,11 +329,11 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             self._stage = self._create_attr("stage")
 
             if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
+                super().setRecords(records, uels_on_axes=uels_on_axes)
             else:
                 self.modified = False
-                self.container._synch_with_gams()
 
+            self.container._synch_with_gams()
             container._options.miro_protect = True
 
     def _serialize(self) -> dict:
@@ -871,8 +871,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         """
         super().setRecords(records, uels_on_axes)
-
-        self.container._synch_with_gams()
         self._winner = "python"
 
     @property
