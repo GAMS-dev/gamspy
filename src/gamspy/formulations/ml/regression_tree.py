@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 import gamspy as gp
+import gamspy._algebra.expression as expression
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
 from gamspy.formulations.ml.dtStruct import DecisionTreeStruct
@@ -379,9 +380,25 @@ class RegressionTree:
 
         if isinstance(input, gp.Variable):
             _feat_vars = input
-
         else:
-            _feat_vars.fx[...] = input[...]
+            self.container._add_statement(
+                expression.Expression(_feat_vars.fx[...], "=", input[...])
+            )
+            _feat_vars.modified = True
+
+        self.container._add_statement(
+            expression.Expression(
+                assign_one_output[set_of_samples],
+                "..",
+                (
+                    gp.Sum(
+                        set_of_leafs, ind_vars[set_of_samples, set_of_leafs]
+                    )
+                    == 1
+                ),
+            )
+        )
+        assign_one_output.modified = True
 
         _feat_par_records = []
         for i, leaf in enumerate(leafs):
@@ -390,9 +407,6 @@ class RegressionTree:
                 _feat_par_records.append((feat, i, "lb", node_lb[feat, leaf]))
 
         _feat_par.setRecords(_feat_par_records)
-        assign_one_output[set_of_samples] = (
-            gp.Sum(set_of_leafs, ind_vars[set_of_samples, set_of_leafs]) == 1
-        )
 
         idx, jdx = np.indices((nleafs, output_dim), dtype=int)
         mapped_values = self.value[leafs[:, None], jdx]
@@ -405,20 +419,33 @@ class RegressionTree:
             ]
         )
 
-        link_indctr_output[set_of_samples, set_of_output_dim] = (
-            gp.Sum(
-                set_of_leafs,
-                out_link[set_of_leafs, set_of_output_dim]
-                * ind_vars[set_of_samples, set_of_leafs],
+        self.container._add_statement(
+            expression.Expression(
+                link_indctr_output[set_of_samples, set_of_output_dim],
+                "..",
+                (
+                    gp.Sum(
+                        set_of_leafs,
+                        out_link[set_of_leafs, set_of_output_dim]
+                        * ind_vars[set_of_samples, set_of_leafs],
+                    )
+                    == out
+                ),
             )
-            == out
         )
+        link_indctr_output.modified = True
 
         max_out.setRecords(np.max(self.value[leafs, :], axis=0))
         min_out.setRecords(np.min(self.value[leafs, :], axis=0))
 
-        ub_output[...] = out <= max_out
-        lb_output[...] = out >= min_out
+        self.container._add_statement(
+            expression.Expression(ub_output[...], "..", out <= max_out)
+        )
+        self.container._add_statement(
+            expression.Expression(lb_output[...], "..", out >= min_out)
+        )
+        ub_output.modified = True
+        lb_output = True
         cons_type.setRecords(["ge", "le"])
 
         ### This generates the set of possible paths given the input data
@@ -436,33 +463,77 @@ class RegressionTree:
             & (_feat_par[..., "ub"] < np.inf)
         )
         s[...].where[mask_lo | mask_up] = True
-        feat_thresh[..., "ge"].where[mask_lo] = _feat_par[..., "lb"]
-        feat_thresh[..., "le"].where[mask_up] = _feat_par[..., "ub"]
-        ind_vars.fx[set_of_samples, set_of_leafs].where[
-            gp.Sum(set_of_features, ~mask)
-        ] = 0
-        _bound_big_m[s[uni_domain], "ge"].where[mask_lo] = (
-            M
-            if M
-            else (
-                _feat_par[set_of_features, set_of_leafs, "lb"]
-                - _feat_vars.lo[set_of_samples, set_of_features]
+
+        self.container._add_statement(
+            expression.Expression(
+                feat_thresh[..., "ge"].where[mask_lo],
+                "=",
+                _feat_par[..., "lb"],
             )
         )
-        _bound_big_m[s[uni_domain], "le"].where[mask_up] = (
-            M
-            if M
-            else (
-                _feat_vars.up[set_of_samples, set_of_features]
-                - _feat_par[set_of_features, set_of_leafs, "ub"]
+        self.container._add_statement(
+            expression.Expression(
+                feat_thresh[..., "le"].where[mask_up],
+                "=",
+                _feat_par[..., "ub"],
+            )
+        )
+        self.container._add_statement(
+            expression.Expression(
+                ind_vars.fx[set_of_samples, set_of_leafs].where[
+                    gp.Sum(set_of_features, ~mask)
+                ],
+                "=",
+                0,
+            )
+        )
+        feat_thresh.modified = True
+        ind_vars.modified = True
+        self.container._synch_with_gams()
+
+        self.container._add_statement(
+            expression.Expression(
+                _bound_big_m[s[uni_domain], "ge"].where[mask_lo],
+                "=",
+                (
+                    M
+                    if M
+                    else (
+                        _feat_par[set_of_features, set_of_leafs, "lb"]
+                        - _feat_vars.lo[set_of_samples, set_of_features]
+                    )
+                ),
             )
         )
 
-        ge_cons[uni_domain].where[
-            (feat_thresh[..., "ge"] != 0) & s[uni_domain]
-        ] = _feat_vars >= feat_thresh[..., "ge"] - _bound_big_m[..., "ge"] * (
-            1 - ind_vars
+        self.container._add_statement(
+            expression.Expression(
+                _bound_big_m[s[uni_domain], "le"].where[mask_up],
+                "=",
+                (
+                    M
+                    if M
+                    else (
+                        _feat_vars.up[set_of_samples, set_of_features]
+                        - _feat_par[set_of_features, set_of_leafs, "ub"]
+                    )
+                ),
+            )
         )
+        _bound_big_m.modified = True
+
+        self.container._add_statement(
+            expression.Expression(
+                ge_cons[uni_domain].where[
+                    (feat_thresh[..., "ge"] != 0) & s[uni_domain]
+                ],
+                "..",
+                _feat_vars
+                >= feat_thresh[..., "ge"]
+                - _bound_big_m[..., "ge"] * (1 - ind_vars),
+            )
+        )
+        self.container._synch_with_gams()
 
         le_cons[uni_domain].where[
             (feat_thresh[..., "le"] != 0) & s[uni_domain]
