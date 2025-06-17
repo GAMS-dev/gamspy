@@ -204,12 +204,11 @@ class RegressionTree:
                 "Input must be of either type gp.Parameter | gp.Variable"
             )
 
-        if len(input.domain) == 0:
+        if len(input.domain) != 2:
             raise ValidationError(
-                "expected an input with at least 1 dimension"
+                f"input expected to be in shape (n_samples, {self.n_features})"
             )
 
-        # sklearn does not allow single dimension input data. It has to be (n,m) even when n=1
         if len(input.domain[-1]) != self.n_features:
             raise ValidationError("number of features do not match")
 
@@ -219,10 +218,10 @@ class RegressionTree:
         set_of_samples = input.domain[0]
         set_of_features = input.domain[-1]
 
-        set_of_output_dim = self.container.addSet(
-            name=utils._generate_name("s", self._name_prefix, "output_dim"),
-            records=range(output_dim),
-        )
+        set_of_output_dim = gp.math._generate_dims(
+            self.container, dims=[output_dim]
+        )[0]
+
         set_of_leafs = self.container.addSet(
             name=utils._generate_name("s", self._name_prefix, "leafs"),
             records=range(nleafs),
