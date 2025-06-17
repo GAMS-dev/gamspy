@@ -370,21 +370,17 @@ class RegressionTree:
             self.container._add_statement(
                 expression.Expression(_feat_vars.fx[...], "=", input[...])
             )
-            _feat_vars.modified = True
 
-        self.container._add_statement(
-            expression.Expression(
-                assign_one_output[set_of_samples],
-                "..",
-                (
-                    gp.Sum(
-                        set_of_leafs, ind_vars[set_of_samples, set_of_leafs]
-                    )
-                    == 1
-                ),
-            )
+        definition = expression.Expression(
+            assign_one_output[set_of_samples],
+            "..",
+            (
+                gp.Sum(set_of_leafs, ind_vars[set_of_samples, set_of_leafs])
+                == 1
+            ),
         )
-        assign_one_output.modified = True
+        self.container._add_statement(definition)
+        assign_one_output._definition = definition
 
         _feat_par_records = []
         for i, leaf in enumerate(leafs):
@@ -405,33 +401,35 @@ class RegressionTree:
             ]
         )
 
-        self.container._add_statement(
-            expression.Expression(
-                link_indctr_output[set_of_samples, set_of_output_dim],
-                "..",
-                (
-                    gp.Sum(
-                        set_of_leafs,
-                        out_link[set_of_leafs, set_of_output_dim]
-                        * ind_vars[set_of_samples, set_of_leafs],
-                    )
-                    == out
-                ),
-            )
+        definition = expression.Expression(
+            link_indctr_output[set_of_samples, set_of_output_dim],
+            "..",
+            (
+                gp.Sum(
+                    set_of_leafs,
+                    out_link[set_of_leafs, set_of_output_dim]
+                    * ind_vars[set_of_samples, set_of_leafs],
+                )
+                == out
+            ),
         )
-        link_indctr_output.modified = True
+        self.container._add_statement(definition)
+        link_indctr_output._definition = definition
 
         max_out.setRecords(np.max(self.value[leafs, :], axis=0))
         min_out.setRecords(np.min(self.value[leafs, :], axis=0))
 
-        self.container._add_statement(
-            expression.Expression(ub_output[...], "..", out <= max_out)
+        definition = expression.Expression(
+            ub_output[...], "..", out <= max_out
         )
-        self.container._add_statement(
-            expression.Expression(lb_output[...], "..", out >= min_out)
+        self.container._add_statement(definition)
+        ub_output._definition = definition
+
+        definition = expression.Expression(
+            lb_output[...], "..", out >= min_out
         )
-        ub_output.modified = True
-        lb_output = True
+        lb_output._definition = definition
+        self.container._add_statement(definition)
         cons_type.setRecords(["ge", "le"])
 
         ### This generates the set of possible paths given the input data
@@ -473,8 +471,6 @@ class RegressionTree:
                 0,
             )
         )
-        feat_thresh.modified = True
-        ind_vars.modified = True
         self.container._synch_with_gams()
 
         self.container._add_statement(
@@ -506,19 +502,18 @@ class RegressionTree:
                 ),
             )
         )
-        _bound_big_m.modified = True
 
-        self.container._add_statement(
-            expression.Expression(
-                ge_cons[uni_domain].where[
-                    (feat_thresh[..., "ge"] != 0) & s[uni_domain]
-                ],
-                "..",
-                _feat_vars
-                >= feat_thresh[..., "ge"]
-                - _bound_big_m[..., "ge"] * (1 - ind_vars),
-            )
+        definition = expression.Expression(
+            ge_cons[uni_domain].where[
+                (feat_thresh[..., "ge"] != 0) & s[uni_domain]
+            ],
+            "..",
+            _feat_vars
+            >= feat_thresh[..., "ge"]
+            - _bound_big_m[..., "ge"] * (1 - ind_vars),
         )
+        self.container._add_statement(definition)
+        ge_cons._definition = definition
         self.container._synch_with_gams()
 
         le_cons[uni_domain].where[

@@ -217,7 +217,7 @@ def test_model(data):
 
     # Equations provided as strings
     pytest.raises(
-        TypeError, Model, m, "test_model5", "", "LP", ["cost", "supply"]
+        ValueError, Model, m, "test_model5", "", "LP", ["cost", "supply"]
     )
 
     # Test matches
