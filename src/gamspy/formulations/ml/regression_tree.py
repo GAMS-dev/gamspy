@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import re
+import importlib
 import uuid
 from typing import TYPE_CHECKING
 
@@ -9,7 +9,7 @@ import numpy as np
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
-from gamspy.formulations.ml.dtStruct import DecisionTreeStruct
+from gamspy.formulations.ml.decision_tree_struct import DecisionTreeStruct
 
 if TYPE_CHECKING:
     from sklearn.tree import DecisionTreeRegressor
@@ -72,18 +72,21 @@ class RegressionTree:
         if not isinstance(container, gp.Container):
             raise ValidationError(f"{container} is not a gp.Container.")
 
-        regressor_type = type(regressor)
-        if (
-            regressor_type.__name__ == "DecisionTreeRegressor"
-            and regressor_type.__module__.startswith("sklearn.tree")
-        ):
-            self._initialize_from_sklearn(regressor=regressor)
-        elif isinstance(regressor, DecisionTreeStruct):
-            self._initialize_from_dtStruct(regressor=regressor)
+        type_err = ValidationError(
+            f"{regressor} must be an instance of either >sklearn.tree.DecisionTreeRegressor< or >DecisionTreeStruct<"
+        )
+
+        if isinstance(regressor, DecisionTreeStruct):
+            self._initialize_from_decision_tree_struct(regressor=regressor)
         else:
-            raise ValidationError(
-                f"{regressor} must be an instance of either >sklearn.tree.DecisionTreeRegressor< or >DecisionTreeStruct<"
-            )
+            try:
+                sklearn_tree = importlib.import_module("sklearn.tree")
+                if isinstance(regressor, sklearn_tree.DecisionTreeRegressor):
+                    self._initialize_from_sklearn(regressor=regressor)
+                else:
+                    raise type_err
+            except ModuleNotFoundError:
+                raise type_err from None
 
         self._check_tree()
 
@@ -113,7 +116,9 @@ class RegressionTree:
         self.capacity = regressor.tree_.capacity
         self.n_features = regressor.tree_.n_features
 
-    def _initialize_from_dtStruct(self, regressor: DecisionTreeStruct):
+    def _initialize_from_decision_tree_struct(
+        self, regressor: DecisionTreeStruct
+    ):
         """
         Initializes the tree attributes from DecisionTreeStruct.
         """
@@ -204,12 +209,11 @@ class RegressionTree:
                 "Input must be of either type gp.Parameter | gp.Variable"
             )
 
-        if len(input.domain) == 0:
+        if len(input.domain) != 2:
             raise ValidationError(
-                "expected an input with at least 1 dimension"
+                f"input expected to be in shape (n_samples, {self.n_features})"
             )
 
-        # sklearn does not allow single dimension input data. It has to be (n,m) even when m=1
         if len(input.domain[-1]) != self.n_features:
             raise ValidationError("number of features do not match")
 
@@ -218,31 +222,12 @@ class RegressionTree:
 
         set_of_samples = input.domain[0]
         set_of_features = input.domain[-1]
-        pattern = re.compile(r"s_.*?_output_dim.*")
 
-        def find_output_dim(allSets) -> gp.Set:
-            """
-            Helper function to check if `set_of_output_dim` already exist in the container.
-            Since, this will not change once created and we require this to be the only set (<20)
-            when consolidating the random forest formulation.
-            """
-            _set_names = [ele.name for ele in allSets]
+        set_of_output_dim = gp.math._generate_dims(
+            self.container, dims=[output_dim]
+        )[0]
 
-            for set_name in _set_names:
-                if re.search(pattern, set_name):
-                    return self.container.data.get(set_name)
-
-            return self.container.addSet(
-                name=utils._generate_name(
-                    "s", self._name_prefix, "output_dim"
-                ),
-                records=range(output_dim),
-            )
-
-        set_of_output_dim = find_output_dim(self.container.getSets())
-
-        set_of_leafs = gp.Set._constructor_bypass(
-            self.container,
+        set_of_leafs = self.container.addSet(
             name=utils._generate_name("s", self._name_prefix, "leafs"),
             domain=["*"],
         )
