@@ -218,6 +218,7 @@ class RegressionTree:
 
         set_of_samples = input.domain[0]
         set_of_features = input.domain[-1]
+        pattern = re.compile(r"s_.*?_output_dim.*")
 
         def find_output_dim(allSets) -> gp.Set:
             """
@@ -226,7 +227,6 @@ class RegressionTree:
             when consolidating the random forest formulation.
             """
             _set_names = [ele.name for ele in allSets]
-            pattern = r"s_.*?_output_dim.*"
 
             for set_name in _set_names:
                 if re.search(pattern, set_name):
@@ -374,8 +374,6 @@ class RegressionTree:
             domain=uni_domain,
             description="Link the indicator variable with the feature which is Upper bounded using a big-M constraint",
         )
-
-        self.container._synch_with_gams(gams_to_gamspy=True)
 
         set_of_leafs.setRecords(range(nleafs))
 
