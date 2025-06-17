@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import importlib
 import uuid
 from typing import TYPE_CHECKING
 
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
-from gamspy.formulations.ml.dtStruct import DecisionTreeStruct
+from gamspy.formulations.ml.decision_tree_struct import DecisionTreeStruct
 from gamspy.formulations.ml.regression_tree import RegressionTree
 
 if TYPE_CHECKING:
@@ -48,24 +49,31 @@ class RandomForest(RegressionTree):
         def _validate_ensemble(
             ensemble,
         ) -> list[DecisionTreeRegressor | DecisionTreeStruct]:
-            ensemble_type = type(ensemble)
-            if (
-                ensemble_type.__name__ == "RandomForestRegressor"
-                and ensemble_type.__module__.startswith("sklearn.ensemble")
-            ):
-                if not hasattr(ensemble, "estimators_"):
-                    raise ValidationError(
-                        f"{ensemble} must be a trained/fitted instance of >sklearn.tree.RandomForestRegressor<."
-                    )
-                return ensemble.estimators_
-            elif isinstance(ensemble, list) and all(
+            type_err = ValidationError(
+                f"{ensemble} must be an instance of either >sklearn.ensemble.RandomForestRegressor< or a list of >DecisionTreeStruct<"
+            )
+
+            if isinstance(ensemble, list) and all(
                 isinstance(item, DecisionTreeStruct) for item in ensemble
             ):
                 return ensemble
             else:
-                raise ValidationError(
-                    f"{ensemble} must be an instance of either >sklearn.tree.RandomForestRegressor< or a list of >DecisionTreeStruct<"
-                )
+                try:
+                    sklearn_forest = importlib.import_module(
+                        "sklearn.ensemble"
+                    )
+                    if isinstance(
+                        ensemble, sklearn_forest.RandomForestRegressor
+                    ):
+                        if not hasattr(ensemble, "estimators_"):
+                            raise ValidationError(
+                                f"{ensemble} must be a trained/fitted instance of >sklearn.ensemble.RandomForestRegressor<."
+                            )
+                        return ensemble.estimators_
+                    else:
+                        raise type_err
+                except ModuleNotFoundError:
+                    raise type_err from None
 
         self.list_of_trees = _validate_ensemble(ensemble)
         self.container = container
