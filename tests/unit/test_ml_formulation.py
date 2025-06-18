@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import FrozenInstanceError
+
 import numpy as np
 import pytest
 from sklearn.tree import DecisionTreeRegressor
@@ -97,15 +99,15 @@ def test_regression_tree_incomplete_data(data):
     broken_tree = DecisionTreeStruct(**rm_tree_args)
     pytest.raises(ValidationError, RegressionTree, m, broken_tree)
 
-    # wrong value for attribute, n_features
+    # cannot assign values to attributes to once initialized dataclass
     broken_tree = DecisionTreeStruct(**tree_args)
-    broken_tree.n_features = -2
-    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+    with pytest.raises(FrozenInstanceError):
+        broken_tree.n_features = -2
 
     # wrong value for attribute, capacity
     broken_tree = DecisionTreeStruct(**tree_args)
-    broken_tree.capacity = -2
-    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+    with pytest.raises(FrozenInstanceError):
+        broken_tree.capacity = -2
 
 
 def test_regression_tree_bad_call(data):
@@ -465,3 +467,38 @@ def test_regression_tree_multi_output_equation(data):
     assert m2.objective_value == 162
     assert np.allclose(o2, output2)
     assert m2.status == ModelStatus(1)
+
+
+def test_regression_tree_string_features(data):
+    m, tree_args, in_data, output, _, _ = data
+
+    tree = DecisionTreeStruct(**tree_args)
+    rt = RegressionTree(m, tree)
+
+    samples = gp.Set(
+        m, "set_of_samples", domain=["*"], records=[f"s{i}" for i in range(5)]
+    )
+    features = gp.Set(
+        m, "set_of_features", domain=["*"], records=[f"f{i}" for i in range(2)]
+    )
+
+    rt_input = gp.Parameter(
+        m,
+        "new_input",
+        domain=[samples, features],
+        records=[(f"s{i}", "f0", ele) for i, ele in enumerate(in_data[:, 0])]
+        + [(f"s{i}", "f1", ele) for i, ele in enumerate(in_data[:, 1])],
+    )
+
+    out, eqns = rt(rt_input)
+
+    model = gp.Model(
+        m,
+        "regressionTree",
+        equations=eqns,
+        problem="MIP",
+    )
+    model.solve()
+
+    assert np.allclose(out.toDense().flatten(), output)
+    assert model.status == ModelStatus(1)
