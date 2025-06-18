@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 
-@dataclass
+@dataclass(frozen=True)
 class DecisionTreeStruct:
     """
     Represents the components of `sklearn.tree`.
