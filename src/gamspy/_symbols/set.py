@@ -438,7 +438,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         Whether the set is a singleton set. Singleton sets cannot contain more than one element.
     records : pd.DataFrame | np.ndarray | list, optional
         Records of the set.
-    domain_forwarding : bool, optional
+    domain_forwarding : bool | list[bool], optional
         Whether the set forwards the domain.
     description : str, optional
         Description of the set.
@@ -462,11 +462,20 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         cls,
         container: Container,
         name: str,
-        domain: Sequence[Set | Alias | str] | Set | Alias | str = [],
+        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
         description: str = "",
     ):
+        if domain is None:
+            domain = ["*"]
+
+        if isinstance(domain, (gp.Set, gp.Alias, str)):
+            domain = [domain]
+
+        if isinstance(domain, gp.math.Dim):
+            domain = gp.math._generate_dims(container, domain.dims)
+
         # create new symbol object
         obj = Set.__new__(
             cls,
@@ -517,7 +526,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
-        domain_forwarding: bool = False,
+        domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
         is_miro_input: bool = False,
@@ -561,7 +570,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
-        domain_forwarding: bool = False,
+        domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
         is_miro_input: bool = False,
