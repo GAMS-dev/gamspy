@@ -294,7 +294,7 @@ def _indicator(
 
 
 def _generate_ray(
-    container: gp.Container, domain: list[gp.Set]
+    container: gp.Container, domain: typing.Sequence[gp.Set]
 ) -> tuple[gp.Variable, gp.Variable, list[gp.Equation]]:
     # if b_var == 0 => x_var = 0 o.w x_var >= 0
     # effectively x_var <= bigM * b_var without bigM

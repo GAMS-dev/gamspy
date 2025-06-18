@@ -374,7 +374,7 @@ class Expression(operable.Operable):
             left_str = (
                 str(self.left)
                 if isinstance(self.left, (int, float, str))
-                else self.left.latexRepr()
+                else self.left.latexRepr()  # type: ignore
             )
 
         if self.right is None:
@@ -383,7 +383,7 @@ class Expression(operable.Operable):
             right_str = (
                 str(self.right)
                 if isinstance(self.right, (int, float, str))
-                else self.right.latexRepr()
+                else self.right.latexRepr()  # type: ignore
             )
 
         data = self.data

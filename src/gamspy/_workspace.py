@@ -30,8 +30,13 @@ def validate_arguments(
 
 class Workspace:
     def __init__(
-        self, debugging_level: str, working_directory: str | None = None
+        self,
+        debugging_level: str,
+        working_directory: str | os.PathLike | None = None,
     ):
+        if isinstance(working_directory, os.PathLike):
+            working_directory = os.fspath(working_directory)
+
         validate_arguments(working_directory, debugging_level)
 
         self.debugging_level = debugging_level

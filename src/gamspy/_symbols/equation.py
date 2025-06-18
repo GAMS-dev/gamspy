@@ -4,7 +4,6 @@ import builtins
 import itertools
 import os
 import threading
-from collections.abc import Sequence
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -26,6 +25,8 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from gamspy import Alias, Container, Set, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
@@ -75,7 +76,7 @@ class Equation(gt.Equation, Symbol):
         Definition of the equation.
     records : Any, optional
         Records of the equation.
-    domain_forwarding : bool, optional
+    domain_forwarding : bool | list[bool], optional
         Whether the equation forwards the domain.
     description : str, optional
         Description of the equation.
@@ -108,6 +109,15 @@ class Equation(gt.Equation, Symbol):
         records: Any | None = None,
         description: str = "",
     ):
+        if domain is None:
+            domain = []
+
+        if isinstance(domain, (gp.Set, gp.Alias, str)):
+            domain = [domain]
+
+        if isinstance(domain, gp.math.Dim):
+            domain = gp.math._generate_dims(container, domain.dims)
+
         # create new symbol object
         obj = Equation.__new__(
             cls,
@@ -167,7 +177,7 @@ class Equation(gt.Equation, Symbol):
         domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
         definition: Variable | Operation | Expression | None = None,
         records: Any | None = None,
-        domain_forwarding: bool = False,
+        domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
@@ -210,7 +220,7 @@ class Equation(gt.Equation, Symbol):
         domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
         definition: Variable | Operation | Expression | None = None,
         records: Any | None = None,
-        domain_forwarding: bool = False,
+        domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
         is_miro_output: bool = False,

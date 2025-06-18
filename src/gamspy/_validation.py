@@ -169,7 +169,7 @@ def validate_dimension(
     | ImplicitParameter
     | ImplicitVariable
     | Operation,
-    domain: list[Set | Alias | ImplicitSet | str],
+    domain: Sequence[Set | Alias | ImplicitSet | str],
 ) -> None:
     dimension = get_dimension(domain)
 
@@ -243,7 +243,7 @@ def _get_ellipsis_range(domain, given_domain):
 
 
 def _expand_ellipsis_slice(
-    domain: list[Set | Alias | str],
+    domain: Sequence[Set | Alias | str],
     indices: Sequence[Set | Alias | str | EllipsisType | slice],
 ) -> Sequence[Set | Alias | str]:
     if len(domain) == 0:
@@ -311,7 +311,7 @@ def validate_domain(
     offset = 0
     for given in domain:
         try:
-            given_dim = given.dimension
+            given_dim = given.dimension  # type: ignore
         except AttributeError:
             given_dim = 1
         actual = symbol.domain[offset]
@@ -351,7 +351,7 @@ def validate_container(
     | ImplicitParameter
     | ImplicitVariable
     | Operation,
-    domain: list[str | Set | Alias],
+    domain: Sequence[str | Set | Alias],
 ):
     for set in domain:
         if (
