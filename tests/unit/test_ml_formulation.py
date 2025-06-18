@@ -4,12 +4,17 @@ from dataclasses import FrozenInstanceError
 
 import numpy as np
 import pytest
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 
 import gamspy as gp
 from gamspy import Container, ModelStatus
 from gamspy.exceptions import ValidationError
-from gamspy.formulations.ml import DecisionTreeStruct, RegressionTree
+from gamspy.formulations.ml import (
+    DecisionTreeStruct,
+    RandomForest,
+    RegressionTree,
+)
 from gamspy.math import dim
 
 pytestmark = pytest.mark.unit
@@ -494,11 +499,54 @@ def test_regression_tree_string_features(data):
 
     model = gp.Model(
         m,
-        "regressionTree",
+        "regressionTree_string_feat",
         equations=eqns,
         problem="MIP",
     )
     model.solve()
 
     assert np.allclose(out.toDense().flatten(), output)
+    assert model.status == ModelStatus(1)
+
+
+@pytest.fixture
+def data_rf():
+    m = Container()
+    in_data = np.array(
+        [
+            [2, 3],
+            [3, 1],
+            [1, 2],
+            [5, 6],
+            [6, 4],
+        ]
+    )
+
+    output = np.array([10, 10, 10, 15, 33])
+    expected_out = np.array([10.0, 10.0, 10.0, 22.2, 24.8])
+    par_input = gp.Parameter(m, domain=dim(in_data.shape), records=in_data)
+    x = gp.Variable(m, "x", domain=dim(in_data.shape), type="positive")
+    yield m, in_data, output, expected_out, par_input, x
+    m.close()
+
+
+def test_random_forest_with_sklearn(data_rf):
+    m, in_data, output, expected_out, par_input, _ = data_rf
+
+    forest = RandomForestRegressor(n_estimators=10, random_state=42)
+    forest.fit(in_data, output)
+
+    rf = RandomForest(m, ensemble=forest)
+
+    out, eqns = rf(par_input)
+
+    model = gp.Model(
+        m,
+        "randomForest",
+        equations=eqns,
+        problem="MIP",
+    )
+    model.solve()
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
     assert model.status == ModelStatus(1)
