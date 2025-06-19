@@ -512,6 +512,26 @@ def test_regression_tree_string_features(data):
 @pytest.fixture
 def data_rf():
     m = Container()
+    tree1 = {
+        "capacity": 5,
+        "children_left": np.array([1, 2, -1, -1, -1]),
+        "children_right": np.array([4, 3, -1, -1, -1]),
+        "feature": np.array([0, 0, -2, -2, -2]),
+        "n_features": 2,
+        "threshold": np.array([5.5, 4.0, -2.0, -2.0, -2.0]),
+        "value": np.array([[15.6], [11.25], [10.0], [15.0], [33.0]]),
+    }
+    tree2 = {
+        "capacity": 3,
+        "children_left": np.array([1, -1, -1]),
+        "children_right": np.array([2, -1, -1]),
+        "feature": np.array([0, -2, -2]),
+        "n_features": 2,
+        "threshold": np.array([4.0, -2.0, -2.0]),
+        "value": np.array([[13.0], [10.0], [15.0]]),
+    }
+    ensemble = [DecisionTreeStruct(**tree1), DecisionTreeStruct(**tree2)]
+
     in_data = np.array(
         [
             [2, 3],
@@ -523,17 +543,52 @@ def data_rf():
     )
 
     output = np.array([10, 10, 10, 15, 33])
-    expected_out = np.array([10.0, 10.0, 10.0, 22.2, 24.8])
+    expected_out = np.array([10, 10, 10, 15, 24])
     par_input = gp.Parameter(m, domain=dim(in_data.shape), records=in_data)
     x = gp.Variable(m, "x", domain=dim(in_data.shape), type="positive")
-    yield m, in_data, output, expected_out, par_input, x
+    yield (
+        m,
+        ensemble,
+        [tree1, tree2],
+        in_data,
+        output,
+        expected_out,
+        par_input,
+        x,
+    )
     m.close()
 
 
-def test_random_forest_with_sklearn(data_rf):
-    m, in_data, output, expected_out, par_input, _ = data_rf
+def test_random_forest_bad_init(data_rf):
+    m, ensemble, tree_attrs, *_ = data_rf
 
-    forest = RandomForestRegressor(n_estimators=10, random_state=42)
+    # No Container
+    pytest.raises(TypeError, RandomForest, ensemble)
+
+    # No regressor
+    pytest.raises(TypeError, RandomForest, m)
+
+    # wrong container object
+    pytest.raises(ValidationError, RandomForest, "m", ensemble)
+
+    # wrong regressor type, it must be either sklearn.tree.DecisionTreeRegressor or DecisionTreeStruct object
+    pytest.raises(ValidationError, RandomForest, m, ensemble[0])
+
+    # initializing the formulation with untrained sklearn.tree
+    ensemble = RandomForestRegressor(n_estimators=2, random_state=42)
+    pytest.raises(ValidationError, RandomForest, m, ensemble)
+
+    # one of the tree instance with missing attribute, this is more of a RegressionTree check
+    t1, t2 = tree_attrs
+    t2.pop("children_left")
+    ensemble = [DecisionTreeStruct(**t1), DecisionTreeStruct(**t2)]
+    pytest.raises(ValidationError, RandomForest, m, ensemble)
+
+
+def test_random_forest_with_sklearn(data_rf):
+    m, _, _, in_data, output, expected_out, par_input, _ = data_rf
+
+    forest = RandomForestRegressor(n_estimators=2, random_state=42)
     forest.fit(in_data, output)
 
     rf = RandomForest(m, ensemble=forest)
