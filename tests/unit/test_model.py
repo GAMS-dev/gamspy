@@ -269,7 +269,7 @@ def test_model(data):
 
     # model name too long
     pytest.raises(
-        ValueError,
+        ValidationError,
         Model,
         m,
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
