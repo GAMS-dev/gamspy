@@ -234,10 +234,18 @@ class RegressionTree:
             domain=["*"],
         )
 
+        set_of_lb_ub = self.container.addSet(
+            name=utils._generate_name("s", self._name_prefix, "lb_ub"),
+            records=["lb", "ub"],
+        )
+
+        _feat_par_records = np.stack([node_lb, node_ub], axis=-1)[:, leafs, :]
+
         _feat_par = gp.Parameter._constructor_bypass(
             self.container,
             name=utils._generate_name("p", self._name_prefix, "feat_par"),
-            domain=[set_of_features, set_of_leafs, "*"],
+            domain=[set_of_features, set_of_leafs, set_of_lb_ub],
+            records=_feat_par_records,
         )
 
         out = gp.Variable._constructor_bypass(
