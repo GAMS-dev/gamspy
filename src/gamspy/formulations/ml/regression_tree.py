@@ -239,13 +239,10 @@ class RegressionTree:
             records=["lb", "ub"],
         )
 
-        _feat_par_records = np.stack([node_lb, node_ub], axis=-1)[:, leafs, :]
-
         _feat_par = gp.Parameter._constructor_bypass(
             self.container,
             name=utils._generate_name("p", self._name_prefix, "feat_par"),
             domain=[set_of_features, set_of_leafs, set_of_lb_ub],
-            records=_feat_par_records,
         )
 
         out = gp.Variable._constructor_bypass(
@@ -390,15 +387,9 @@ class RegressionTree:
         self.container._add_statement(definition)
         assign_one_output._definition = definition
 
-        _feat_par_records = []
-        for i, leaf in enumerate(leafs):
-            for j, feat in enumerate(
-                set_of_features.getUELs(ignore_unused=True)
-            ):
-                _feat_par_records.append((feat, i, "ub", node_ub[j, leaf]))
-                _feat_par_records.append((feat, i, "lb", node_lb[j, leaf]))
-
-        _feat_par.setRecords(_feat_par_records)
+        _feat_par.setRecords(
+            np.stack([node_lb, node_ub], axis=-1)[:, leafs, :]
+        )
 
         idx, jdx = np.indices((nleafs, output_dim), dtype=int)
         mapped_values = self.value[leafs[:, None], jdx]
