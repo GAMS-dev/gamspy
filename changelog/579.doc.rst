@@ -1,0 +1,1 @@
+Add classic machine learning formulations to the documentation.

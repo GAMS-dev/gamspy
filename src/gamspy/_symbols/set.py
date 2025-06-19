@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits.implicit_set import ImplicitSet
     from gamspy._types import EllipsisType, OperableType
+    from gamspy.math import Dim
     from gamspy.math.misc import MathOp
 
 
@@ -523,7 +524,12 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         cls,
         container: Container | None = None,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: Sequence[Set | Alias | str]
+        | Set
+        | Alias
+        | str
+        | Dim
+        | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
@@ -567,7 +573,12 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self,
         container: Container | None = None,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: Sequence[Set | Alias | str]
+        | Set
+        | Alias
+        | str
+        | Dim
+        | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
@@ -730,7 +741,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         return 0
 
-    def __getitem__(self, indices: Sequence | str) -> implicits.ImplicitSet:
+    def __getitem__(
+        self, indices: Sequence | str | int | EllipsisType | slice
+    ) -> implicits.ImplicitSet:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
