@@ -227,18 +227,17 @@ class RegressionTree:
             records=range(nleafs),
         )
 
-        _feat_par_records = []
-        for i, leaf in enumerate(leafs):
-            for j, feat in enumerate(
-                set_of_features.getUELs(ignore_unused=True)
-            ):
-                _feat_par_records.append((feat, i, "ub", node_ub[j, leaf]))
-                _feat_par_records.append((feat, i, "lb", node_lb[j, leaf]))
+        set_of_lb_ub = self.container.addSet(
+            name=utils._generate_name("s", self._name_prefix, "lb_ub"),
+            records=["lb", "ub"],
+        )
+
+        _feat_par_records = np.stack([node_lb, node_ub], axis=-1)[:, leafs, :]
 
         _feat_par = gp.Parameter(
             self.container,
             name=utils._generate_name("p", self._name_prefix, "feat_par"),
-            domain=[set_of_features, set_of_leafs, "*"],
+            domain=[set_of_features, set_of_leafs, set_of_lb_ub],
             records=_feat_par_records,
         )
 
