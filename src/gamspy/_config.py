@@ -47,6 +47,10 @@ def _set_default_options() -> None:
     assume_level = int(os.getenv("GAMSPY_ASSUME_VARIABLE_SUFFIX", 1))
     configuration["ASSUME_VARIABLE_SUFFIX"] = assume_level
 
+    # Try to use the Python variable name in case the name is not provided.
+    use_py_var_name = os.getenv("GAMSPY_USE_PY_VAR_NAME", "no")
+    configuration["USE_PY_VAR_NAME"] = use_py_var_name
+
 
 def set_options(
     options: dict[
@@ -58,6 +62,7 @@ def set_options(
             "MAP_SPECIAL_VALUES",
             "LAZY_EVALUATION",
             "ASSUME_VARIABLE_SUFFIX",
+            "USE_PY_VAR_NAME",
         ],
         Any,
     ],

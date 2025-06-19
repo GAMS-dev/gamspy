@@ -354,9 +354,11 @@ to the execution time.
     import gamspy as gp
     gp.set_options({"DOMAIN_VALIDATION": 0})
 
-One can also set the system directory via ``GAMSPY_GAMS_SYSDIR`` option. Beware that if a system directory 
-is given in the constructor of the ``Container``, it overrides this option. Package wide options can also 
-be set via environment variables. Environment variable names are always in the format of ``GAMSPY_<option_name>``.
+
+.. note::
+    One can also set the system directory via ``GAMSPY_GAMS_SYSDIR`` option. Beware that if a system directory 
+    is given in the constructor of the ``Container``, it overrides this option. Package wide options can also 
+    be set via environment variables. Environment variable names are always in the format of ``GAMSPY_<option_name>``.
 
 .. code-block:: bash
 
@@ -368,21 +370,30 @@ be set via environment variables. Environment variable names are always in the f
 
 Here is a list of package wide options:
 
-+------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-| Option Name                  | Commandline Option Name         | Type  | Description                                                                                                                              |
-+==============================+=================================+=======+==========================================================================================================================================+
-| VALIDATION                   | GAMSPY_VALIDATION               | int   | Whether to enable all validations of GAMSPy. Set to 1 by default                                                                         |
-+------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-| DOMAIN_VALIDATION            | GAMSPY_DOMAIN_VALIDATION        | int   | Whether to check for domain validation. Set to 1 by default.                                                                             |
-+------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-| SOLVER_OPTION_VALIDATION     | GAMSPY_SOLVER_OPTION_VALIDATION | str   | Whether to validate solver options. Set to 1 by default.                                                                                 |
-+------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-| GAMS_SYSDIR                  | GAMSPY_GAMS_SYSDIR              | str   | Path to the GAMS system directory. Set to gamspy_base directory by default.                                                              |
-+------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-| MAP_SPECIAL_VALUES           | GAMSPY_MAP_SPECIAL_VALUES       | int   | Map special values. Can be disabled for performance if there are no special values in the records. Set to 1 by default.                  |
-+------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-| LAZY_EVALUATION              | GAMSPY_LAZY_EVALUATION          | int   | Whether to evaluate expressions lazily. Lazy evaluation might cause recursion depth errors for very long expression. Set to 0 by default |
-+------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-| ASSUME_VARIABLE_SUFFIX       | GAMSPY_ASSUME_VARIABLE_SUFFIX   | int   | Activates or deactivates the automatic addition of .l or .scale attribute to variables on the right-hand side of assignments. Set to 1   |
-|                              |                                 |       | by default. 0: deactivate, 1: use .l attribute, 2: use .scale attribute.                                                                 |
-+------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Option Name                  | Type  | Description                                                                                                                              |
++==============================+=======+==========================================================================================================================================+
+| VALIDATION                   | int   | Whether to enable all validations of GAMSPy. Set to 1 by default                                                                         |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| DOMAIN_VALIDATION            | int   | Whether to check for domain validation. Set to 1 by default.                                                                             |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| SOLVER_OPTION_VALIDATION     | str   | Whether to validate solver options. Set to 1 by default.                                                                                 |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| GAMS_SYSDIR                  | str   | Path to the GAMS system directory. Set to gamspy_base directory by default.                                                              |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| MAP_SPECIAL_VALUES           | int   | Map special values. Can be disabled for performance if there are no special values in the records. Set to 1 by default.                  |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| LAZY_EVALUATION              | int   | Whether to evaluate expressions lazily. Lazy evaluation might cause recursion depth errors for very long expression. Set to 0 by default |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| ASSUME_VARIABLE_SUFFIX       | int   | Activates or deactivates the automatic addition of .l or .scale attribute to variables on the right-hand side of assignments. Set to 1   |
+|                              |       | by default. 0: deactivate, 1: use .l attribute, 2: use .scale attribute.                                                                 |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| USE_PY_VAR_NAME              | str   | "no": Do not try to use the Python variable name as the GAMSPy symbol name. (default value for this option)                              |
+|                              |       | "yes": Try using the variable name as the symbol name. If the variable name is not a valid GAMSPy symbol name, raise ValidationError.    |
+|                              |       | "yes-or-autogenerate": Try using the variable name as the symbol name. If the name is not a valid symbol name, autogenerate a new name.  |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+
+
+.. warning::
+    GAMSPy validations are essential during development. Setting `VALIDATION` to 0 should only be done to improve the performance by skipping the validation steps after you are 
+    convinced that your model works as intended. 

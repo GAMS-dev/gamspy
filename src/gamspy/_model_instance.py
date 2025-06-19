@@ -676,9 +676,7 @@ class ModelInstance:
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,
             "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
-            "license": utils._get_license_path(
-                self.container.system_directory
-            ),
+            "license": self.container._license_path,
             "solvercntr": self.solver_control_file,
         }
         if self.container._network_license:
