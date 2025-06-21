@@ -46,6 +46,7 @@ OPTION_MAP = {
     "rmip": "rmip",
     "rmiqcp": "rmiqcp",
     "rmpec": "rmpec",
+    "license": "license",
     "allow_suffix_in_equation": "suffixalgebravars",
     "allow_suffix_in_limited_variables": "suffixdlvars",
     "append_to_log_file": "appendLog",
@@ -203,6 +204,8 @@ class Options(BaseModel):
         Iteration limit of solver
     keep_temporary_files: bool = False
         Controls keeping or deletion of process directory and scratch files
+    license: str | None
+        Absolute path of the license.
     listing_file: str | None
         Listing file name
     loadpoint: str | None
@@ -342,6 +345,7 @@ class Options(BaseModel):
     hold_fixed_variables: Optional[bool] = None
     iteration_limit: Optional[int] = None
     keep_temporary_files: Optional[int] = None
+    license: Optional[str] = None
     listing_file: Optional[str] = None
     loadpoint: Optional[str] = None
     log_file: Optional[str] = None

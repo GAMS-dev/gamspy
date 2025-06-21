@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.11.1"
+version = "1.12.0"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -36,8 +36,8 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi[transfer] == 49.6.1",
-  "gamspy_base == 49.6.1",
+  "gamsapi[transfer] == 50.1.0",
+  "gamspy_base == 50.1.0",
   "pydantic >= 2.0",
   "certifi >= 2022.09.14",
   "urllib3 >= 2.0.7",
@@ -54,7 +54,7 @@ changelog = "https://github.com/GAMS-dev/gamspy/blob/develop/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
-  "ruff == 0.9.4", 
+  "ruff == 0.12.0", 
   "pre-commit >= 3.5.0",
   "mypy >= 1.11.1",
 ]
@@ -66,6 +66,7 @@ test = [
   "python-dotenv >= 1.0.0",
   "pytest >= 8.0.0",
   "networkx >= 3.2.1",
+  "scikit-learn >= 1.6.1",
 ]
 doc = [
   "sphinx>=7.1.2",
@@ -93,7 +94,7 @@ gamspy = "gamspy._cli.cli:main"
 warn_unused_configs = true
 follow_imports = "skip"
 follow_imports_for_stubs = true
-disable_error_code = ["misc"]
+disable_error_code = ["misc", "import-untyped"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
