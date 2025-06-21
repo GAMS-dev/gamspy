@@ -1,1 +1,0 @@
-Allow providing an explicit path to the license file.
