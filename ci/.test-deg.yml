@@ -14,8 +14,8 @@ deg-test-3.13:
     - source "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver --install-all-solvers --use-uv
-    - gamspy uninstall solver miles --use-uv
+    - gamspy install solver --install-all-solvers
+    - gamspy uninstall solver miles
     - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license or doc' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
@@ -41,8 +41,8 @@ deg-test-3.12:
     - source "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver --install-all-solvers --use-uv
-    - gamspy uninstall solver miles --use-uv
+    - gamspy install solver --install-all-solvers
+    - gamspy uninstall solver miles
     - python -B -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
   after_script:
     - rm -rf "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}"
@@ -66,8 +66,8 @@ deg-test-3.11:
     - source "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver --install-all-solvers --use-uv
-    - gamspy uninstall solver miles --use-uv
+    - gamspy install solver --install-all-solvers
+    - gamspy uninstall solver miles
     - python -B -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
   after_script:
     - rm -rf "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}"
@@ -91,8 +91,8 @@ deg-test-3.10:
     - source "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver --install-all-solvers --use-uv
-    - gamspy uninstall solver miles --use-uv
+    - gamspy install solver --install-all-solvers
+    - gamspy uninstall solver miles
     - python -B -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
   after_script:
     - rm -rf "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}"
@@ -116,8 +116,8 @@ deg-test-3.9:
     - source "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver --install-all-solvers --use-uv
-    - gamspy uninstall solver miles --use-uv
+    - gamspy install solver --install-all-solvers
+    - gamspy uninstall solver miles
     - python -B -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
     - python -B -m pytest -x -v -s -m 'doc'
   after_script:
