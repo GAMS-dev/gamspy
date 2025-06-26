@@ -8,7 +8,6 @@ deg-test-3.13:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - source $HOME/.local/bin/env
     - ${TMPDIR}uv python install 3.13 --install-dir ${TMPDIR}python3.13${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.13${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -35,7 +34,6 @@ deg-test-3.12:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - source $HOME/.local/bin/env
     - ${TMPDIR}uv python install 3.12 --install-dir ${TMPDIR}python3.12${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.12${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -60,7 +58,6 @@ deg-test-3.11:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - source $HOME/.local/bin/env
     - ${TMPDIR}uv python install 3.11 --install-dir ${TMPDIR}python3.11${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.11${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -85,7 +82,6 @@ deg-test-3.10:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - source $HOME/.local/bin/env
     - ${TMPDIR}uv python install 3.10 --install-dir ${TMPDIR}python3.10${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.10${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -110,7 +106,6 @@ deg-test-3.9:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - source $HOME/.local/bin/env
     - ${TMPDIR}uv python install 3.9 --install-dir ${TMPDIR}python3.9${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.9${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -138,7 +133,6 @@ deg-engine-3.13:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - source $HOME/.local/bin/env
     - ${TMPDIR}uv python install 3.13 --install-dir ${TMPDIR}python3.13engine${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.13engine${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -157,7 +151,6 @@ deg-engine-3.9:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - source $HOME/.local/bin/env
     - ${TMPDIR}uv python install 3.9 --install-dir ${TMPDIR}python3.9engine${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-engine-3.9${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.9engine${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-engine-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -177,7 +170,6 @@ deg-neos-3.13:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - source $HOME/.local/bin/env
     - ${TMPDIR}uv python install 3.13 --install-dir ${TMPDIR}python3.13neos${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.13neos${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -196,7 +188,6 @@ deg-neos-3.9:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - source $HOME/.local/bin/env
     - ${TMPDIR}uv python install 3.9 --install-dir ${TMPDIR}python3.9neos${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-neos-3.9${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.9neos${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-neos-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
