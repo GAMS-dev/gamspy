@@ -504,6 +504,14 @@ class RegressionTree:
             )
         )
 
+        self.container._add_statement(
+            expression.Expression(
+                _bound_big_m[...].where[gp.math.abs(_bound_big_m) == np.inf],
+                "=",
+                1e10,
+            )
+        )
+
         definition = expression.Expression(
             ge_cons[uni_domain].where[
                 (feat_thresh[..., "ge"] != 0) & s[uni_domain]
