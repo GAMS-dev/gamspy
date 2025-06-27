@@ -221,8 +221,8 @@ class RegressionTree:
         if M and not isinstance(M, (float, int)):
             raise ValidationError("M can either be of type float or int")
 
-        set_of_samples = input.domain[0]
-        set_of_features = input.domain[-1]
+        set_of_samples: gp.Set = input.domain[0]
+        set_of_features: gp.Set = input.domain[-1]
 
         [set_of_output_dim] = gp.math._generate_dims(
             self.container, dims=[output_dim]
@@ -234,10 +234,15 @@ class RegressionTree:
             domain=["*"],
         )
 
+        set_of_lb_ub = self.container.addSet(
+            name=utils._generate_name("s", self._name_prefix, "lb_ub"),
+            records=["lb", "ub"],
+        )
+
         _feat_par = gp.Parameter._constructor_bypass(
             self.container,
             name=utils._generate_name("p", self._name_prefix, "feat_par"),
-            domain=[set_of_features, set_of_leafs, "*"],
+            domain=[set_of_features, set_of_leafs, set_of_lb_ub],
         )
 
         out = gp.Variable._constructor_bypass(
@@ -498,6 +503,14 @@ class RegressionTree:
                         - _feat_par[set_of_features, set_of_leafs, "ub"]
                     )
                 ),
+            )
+        )
+
+        self.container._add_statement(
+            expression.Expression(
+                _bound_big_m[...].where[gp.math.abs(_bound_big_m) == np.inf],
+                "=",
+                1e10,
             )
         )
 

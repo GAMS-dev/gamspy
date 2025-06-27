@@ -984,3 +984,211 @@ def test_set_records():
     assert j.toList() == ["0", "1", "2"]
     assert k.toList() == ["0", "1", "2"]
     assert a.toValue() == 3.0
+
+
+def test_auto_python_name_retrieval():
+    import gamspy as gp
+
+    with gp.Container():
+        gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+        i = gp.Set()
+        assert i.name != "i"  # autogen name, will be different every time
+
+        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+        # Reserved names are not allowed,
+        with pytest.raises(ValidationError):
+            binary = gp.Set()  # noqa: F841
+
+        i = gp.Set()
+        assert i.name == "i"
+
+        gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+        j = gp.Alias(alias_with=i)
+        assert j.name != "j"  # autogen name, will be different every time
+
+        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+        j = gp.Alias(alias_with=i)
+        assert j.name == "j"
+
+        gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+        k = gp.Parameter()
+        assert k.name != "k"  # autogen name, will be different every time
+
+        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+        k = gp.Parameter()
+        assert k.name == "k"
+
+        gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+        l = gp.Variable()
+        assert l.name != "l"  # autogen name, will be different every time
+
+        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+        l = gp.Variable()
+        assert l.name == "l"
+
+        gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+        n = gp.Equation()
+        assert n.name != "n"  # autogen name, will be different every time
+
+        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+        n = gp.Equation()
+        assert n.name == "n"
+
+    m = gp.Container()
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+    i = gp.Set(m)
+    assert i.name != "i"  # autogen name, will be different every time
+
+    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+    i = gp.Set(m)
+    assert i.name == "i"
+
+    # GAMS symbol names cannot begin with a '_' character
+    with pytest.raises(ValidationError):
+        _bla = gp.Set(m)
+
+    gp.set_options({"USE_PY_VAR_NAME": "yes-or-autogenerate"})
+    _ = gp.Set(m)  # autogen a name
+
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+    j = gp.Alias(m, alias_with=i)
+    assert j.name != "j"  # autogen name, will be different every time
+
+    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+    j = gp.Alias(m, alias_with=i)
+    assert j.name == "j"
+
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+    k = gp.Parameter(m)
+    assert k.name != "k"  # autogen name, will be different every time
+
+    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+    k = gp.Parameter(m)
+    assert k.name == "k"
+
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+    l = gp.Variable(m)
+    assert l.name != "l"  # autogen name, will be different every time
+
+    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+    l = gp.Variable(m)
+    assert l.name == "l"
+
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+    n = gp.Equation(m)
+    assert n.name != "n"  # autogen name, will be different every time
+
+    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+
+    n = gp.Equation(m)
+    assert n.name == "n"
+
+    p = gp.Model(m)
+    assert p.name == "p"
+
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+
+
+@pytest.mark.unit
+def test_explicit_license_path():
+    import gamspy_base
+
+    import gamspy as gp
+
+    demo_license_path = os.path.join(gamspy_base.directory, "gamslice.txt")
+    m = gp.Container(options=gp.Options(license=demo_license_path))
+    assert m._license_path == demo_license_path
+
+    f = gp.Set(
+        m,
+        name="f",
+        description="faces on a dice",
+        records=[f"face{idx}" for idx in range(1, 20)],
+    )
+    dice = gp.Set(
+        m,
+        name="dice",
+        description="number of dice",
+        records=[f"dice{idx}" for idx in range(1, 20)],
+    )
+
+    flo = gp.Parameter(
+        m, name="flo", description="lowest face value", records=1
+    )
+    fup = gp.Parameter(
+        m, "fup", description="highest face value", records=len(dice) * len(f)
+    )
+
+    fp = gp.Alias(m, name="fp", alias_with=f)
+
+    wnx = gp.Variable(m, name="wnx", description="number of wins")
+    fval = gp.Variable(
+        m,
+        name="fval",
+        domain=[dice, f],
+        description="face value on dice - may be fractional",
+    )
+    comp = gp.Variable(
+        m,
+        name="comp",
+        domain=[dice, f, fp],
+        description="one implies f beats fp",
+        type=gp.VariableType.BINARY,
+    )
+
+    fval.lo[dice, f] = flo
+    fval.up[dice, f] = fup
+    fval.fx["dice1", "face1"] = flo
+
+    eq1 = gp.Equation(m, "eq1", domain=dice, description="count the wins")
+    eq3 = gp.Equation(
+        m,
+        "eq3",
+        domain=[dice, f, fp],
+        description="definition of non-transitive relation",
+    )
+    eq4 = gp.Equation(
+        m,
+        "eq4",
+        domain=[dice, f],
+        description="different face values for a single dice",
+    )
+
+    eq1[dice] = gp.Sum((f, fp), comp[dice, f, fp]) == wnx
+    eq3[dice, f, fp] = (
+        fval[dice, f] + (fup - flo + 1) * (1 - comp[dice, f, fp])
+        >= fval[dice.lead(1, type="circular"), fp] + 1
+    )
+    eq4[dice, f - 1] = fval[dice, f - 1] + 1 <= fval[dice, f]
+
+    xdice = gp.Model(
+        m,
+        "xdice",
+        equations=m.getEquations(),
+        problem=gp.Problem.MIP,
+        sense=gp.Sense.MAX,
+        objective=wnx,
+    )
+
+    # Should throw license error since we are using the demo license.
+    with pytest.raises(GamspyException):
+        xdice.solve()

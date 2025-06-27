@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from sklearn.tree import DecisionTreeRegressor
 
 
-class RandomForest(RegressionTree):
+class RandomForest:
     """
     Formulation generator for Random Forests in GAMS.
 
@@ -34,6 +34,42 @@ class RandomForest(RegressionTree):
         Prefix for generated GAMSPy symbols, by default None which means
         random prefix. Using the same name_prefix in different formulations causes name
         conflicts. Do not use the same name_prefix again.
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> import numpy as np
+    >>> from gamspy.math import dim
+    >>> np.random.seed(42)
+    >>> m = gp.Container()
+    >>> in_data = np.random.randint(0, 10, size=(5, 2))
+    >>> out_data = np.random.randint(1, 3, size=(5, 1))
+    >>> tree1_attribute = {
+    ...     "capacity": 7,
+    ...     "children_left": np.array([ 1, -1,  3, -1,  5, -1, -1]),
+    ...     "children_right": np.array([ 2, -1,  4, -1,  6, -1, -1]),
+    ...     "feature": np.array([ 1, -2,  0, -2,  1, -2, -2]),
+    ...     "n_features": 2,
+    ...     "threshold": np.array([ 2. , -2. ,  5.5, -2. ,  8.5, -2. , -2. ]),
+    ...     "value": np.array([[1.6 ],[1.  ],[1.75],[2.  ],[1.5 ],[1.  ],[2.  ]])
+    ... }
+    >>> tree2_attribute = {
+    ...     "capacity": 3,
+    ...     "children_left": np.array([ 1, -1, -1]),
+    ...     "children_right": np.array([ 2, -1, -1]),
+    ...     "feature": np.array([ 0, -2, -2]),
+    ...     "n_features": 2,
+    ...     "threshold": np.array([ 1.5, -2. , -2. ]),
+    ...     "value": np.array([[1.4],[1. ],[2. ]])
+    ... }
+    >>> forest = [gp.formulations.DecisionTreeStruct(**tree1_attribute), gp.formulations.DecisionTreeStruct(**tree2_attribute)]
+    >>> dt_model = gp.formulations.RandomForest(m, forest)
+    >>> x = gp.Variable(m, "x", domain=dim((5, 2)), type="positive")
+    >>> x.up[:, :] = 10
+    >>> y, eqns = dt_model(x)
+    >>> set_of_samples = y.domain[0]
+    >>> set_of_samples.name
+    'DenseDim5_1'
 
     """
 
@@ -75,7 +111,6 @@ class RandomForest(RegressionTree):
                 except ModuleNotFoundError:
                     raise type_err from None
 
-        self.list_of_trees = _validate_ensemble(ensemble)
         self.container = container
 
         if name_prefix is None:
@@ -83,23 +118,30 @@ class RandomForest(RegressionTree):
 
         self._name_prefix = name_prefix
 
+        self._list_of_trees: list[RegressionTree] = []
+
+        for tree in _validate_ensemble(ensemble):
+            rt_instance = RegressionTree(
+                self.container,
+                regressor=tree,
+                name_prefix=self._name_prefix,
+            )
+            self._list_of_trees.append(rt_instance)
+
     def __call__(
         self,
         input: gp.Parameter | gp.Variable,
         M: float | None = None,
         **kwargs,
     ) -> tuple[gp.Variable, list[gp.Equation]]:
-        rf_eqn_list = []
-        rf_out_collection: dict[str, gp.Variable] = {}
-        for i, tree in enumerate(self.list_of_trees):
-            super().__init__(
-                container=self.container,
-                regressor=tree,
-                name_prefix=self._name_prefix,
+        rf_out_list: list[gp.Variable] = []
+        rf_eqn_list: list[gp.Equation] = []
+
+        for regression_tree in self._list_of_trees:
+            dt_out, dt_eqn, set_of_output_dim = regression_tree(
+                input, M, is_random_forest=True
             )
-            rf_out_collection[f"estimator{i}"], dt_eqn, set_of_output_dim = (
-                super().__call__(input, M, is_random_forest=True)
-            )
+            rf_out_list.append(dt_out)
             rf_eqn_list += dt_eqn
 
         set_of_samples = input.domain[0]
@@ -118,9 +160,7 @@ class RandomForest(RegressionTree):
         )
 
         self.container._synch_with_gams(gams_to_gamspy=True)
-        rf_eqn[...] = len(self.list_of_trees) * out == sum(
-            rf_out_collection.values()
-        )
+        rf_eqn[...] = len(self._list_of_trees) * out == sum(rf_out_list)
         rf_eqn_list.append(rf_eqn)
 
         return out, rf_eqn_list
