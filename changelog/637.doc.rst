@@ -1,1 +1,0 @@
-Add docs for Conv1d formulation.

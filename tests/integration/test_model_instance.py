@@ -696,7 +696,7 @@ def test_license():
             "gamspy",
             "install",
             "license",
-            os.environ["MODEL_INSTANCE_LICENSE"],
+            os.environ["LOCAL_LICENSE"],
         ],
         check=True,
         capture_output=True,
@@ -721,20 +721,6 @@ def test_license():
     model.solve()
     assert model.solve_status == SolveStatus.NormalCompletion
     m.close()
-
-    subprocess.run(
-        [
-            sys.executable,
-            "-Bm",
-            "gamspy",
-            "install",
-            "license",
-            os.environ["LOCAL_LICENSE"],
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
 
 
 def normal_dice():

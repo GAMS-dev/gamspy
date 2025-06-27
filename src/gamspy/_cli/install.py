@@ -105,7 +105,11 @@ def license(
             license_text = process.stdout
             
         lines = license_text.splitlines()
-        license_type = lines[0][54]
+        try:
+            license_type = lines[0][54]
+        except Exception:
+            raise ValidationError(f"Invalid license text. Received message from the license server: {license_text}")
+        
         if license_type == "+":
             if lines[2][:2] not in ("00", "07", "08", "09"):
                 raise ValidationError(

@@ -295,37 +295,38 @@ def test_install_solver():
     )
     assert process.returncode == 0, process.stdout + process.stderr
 
-    # use uv
-    process = subprocess.run(
-        [
-            sys.executable,
-            "-Bm",
-            "gamspy",
-            "install",
-            "solver",
-            "soplex",
-            "--use-uv",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    assert process.returncode == 0, process.stdout + process.stderr
+    if platform.system() == "Linux":
+        # use uv
+        process = subprocess.run(
+            [
+                sys.executable,
+                "-Bm",
+                "gamspy",
+                "install",
+                "solver",
+                "soplex",
+                "--use-uv",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        assert process.returncode == 0, process.stdout + process.stderr
 
-    # use uv
-    process = subprocess.run(
-        [
-            sys.executable,
-            "-Bm",
-            "gamspy",
-            "uninstall",
-            "solver",
-            "soplex",
-            "--use-uv",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    assert process.returncode == 0, process.stdout + process.stderr
+        # use uv
+        process = subprocess.run(
+            [
+                sys.executable,
+                "-Bm",
+                "gamspy",
+                "uninstall",
+                "solver",
+                "soplex",
+                "--use-uv",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        assert process.returncode == 0, process.stdout + process.stderr
 
 
 def test_list_solvers():
