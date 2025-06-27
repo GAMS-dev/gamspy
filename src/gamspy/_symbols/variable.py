@@ -366,6 +366,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         self.domain = new_domain
 
+    def __hash__(self):
+        return id(self)
+
     def __getitem__(
         self, indices: Sequence | str | EllipsisType | slice
     ) -> implicits.ImplicitVariable:
@@ -846,6 +849,15 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             for _, symbol in self.container.data.items():
                 symbol._requires_state_check = True
 
+    def _setRecords(
+        self, records: Any, *, uels_on_axes: bool = False, sync: bool = False
+    ) -> None:
+        super().setRecords(records, uels_on_axes)
+        self.modified = True
+
+        if sync:
+            self.container._synch_with_gams()
+
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         """
         Main convenience method to set standard pandas.DataFrame formatted
@@ -870,9 +882,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         [['seattle', 7.0, 0.0, -inf, inf, 1.0], ['san-diego', 18.0, 0.0, -inf, inf, 1.0]]
 
         """
-        super().setRecords(records, uels_on_axes)
-
-        self.container._synch_with_gams()
+        self._setRecords(records, uels_on_axes=uels_on_axes, sync=True)
         self._winner = "python"
 
     @property

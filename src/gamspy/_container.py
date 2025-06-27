@@ -729,6 +729,46 @@ class Container(gt.Container):
         self._read(load_from, symbol_names, load_records, mode, encoding)
         self._synch_with_gams()
 
+    def setRecords(
+        self,
+        records: dict[Alias | Set | Parameter | Variable | Equation, Any],
+    ) -> None:
+        """
+        Sets the records of many symbols. Keys are symbols and values are their records.
+
+        Parameters
+        ----------
+        records : dict[Alias  |  Set  |  Parameter  |  Variable  |  Equation, Any]
+            Dictionary of symbol - records pairs.
+
+        Raises
+        ------
+        ValidationError
+            In case records is not a dictionary.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> a = gp.Parameter(m, "a")
+        >>> m.setRecords({i: range(5), a: 3})
+        >>> i.toList()
+        ['0', '1', '2', '3', '4']
+        >>> a.toValue()
+        np.float64(3.0)
+
+        """
+        if not isinstance(records, dict):
+            raise ValidationError(
+                f"`records` must be of type dict but found {type(records)}"
+            )
+
+        for key, value in records.items():
+            key._setRecords(value)
+
+        self._synch_with_gams()
+
     def write(
         self,
         write_to: str,

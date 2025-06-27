@@ -1000,6 +1000,15 @@ class Equation(gt.Equation, Symbol):
             for symbol in self.container.data.values():
                 symbol._requires_state_check = True
 
+    def _setRecords(
+        self, records: Any, *, uels_on_axes: bool = False, sync: bool = False
+    ) -> None:
+        super().setRecords(records, uels_on_axes)
+        self.modified = True
+
+        if sync:
+            self.container._synch_with_gams()
+
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         """
         Main convenience method to set standard pandas.DataFrame formatted
@@ -1025,9 +1034,7 @@ class Equation(gt.Equation, Symbol):
         np.float64(5.0)
 
         """
-        super().setRecords(records, uels_on_axes)
-
-        self.container._synch_with_gams()
+        self._setRecords(records, uels_on_axes=uels_on_axes, sync=True)
         self._winner = "python"
 
     @property

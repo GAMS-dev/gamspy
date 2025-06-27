@@ -362,8 +362,6 @@ class RegressionTree:
             description="Link the indicator variable with the feature which is Upper bounded using a big-M constraint",
         )
 
-        set_of_leafs.setRecords(range(nleafs))
-
         if isinstance(input, gp.Variable):
             _feat_vars = input
         else:
@@ -371,6 +369,7 @@ class RegressionTree:
                 expression.Expression(_feat_vars.fx[...], "=", input[...])
             )
 
+        set_of_leafs._setRecords(range(nleafs))
         definition = expression.Expression(
             assign_one_output[set_of_samples],
             "..",
@@ -382,17 +381,9 @@ class RegressionTree:
         self.container._add_statement(definition)
         assign_one_output._definition = definition
 
-        _feat_par_records = []
-        for i, leaf in enumerate(leafs):
-            for feat in range(self.n_features):
-                _feat_par_records.append((feat, i, "ub", node_ub[feat, leaf]))
-                _feat_par_records.append((feat, i, "lb", node_lb[feat, leaf]))
-
-        _feat_par.setRecords(_feat_par_records)
-
         idx, jdx = np.indices((nleafs, output_dim), dtype=int)
         mapped_values = self.value[leafs[:, None], jdx]
-        out_link.setRecords(
+        out_link._setRecords(
             [
                 (int(i), int(j), v)
                 for i, j, v in np.stack(
@@ -416,8 +407,15 @@ class RegressionTree:
         self.container._add_statement(definition)
         link_indctr_output._definition = definition
 
-        max_out.setRecords(np.max(self.value[leafs, :], axis=0))
-        min_out.setRecords(np.min(self.value[leafs, :], axis=0))
+        _feat_par_records = []
+        for i, leaf in enumerate(leafs):
+            for feat in range(self.n_features):
+                _feat_par_records.append((feat, i, "ub", node_ub[feat, leaf]))
+                _feat_par_records.append((feat, i, "lb", node_lb[feat, leaf]))
+
+        _feat_par.setRecords(_feat_par_records)
+        max_out._setRecords(np.max(self.value[leafs, :], axis=0))
+        min_out._setRecords(np.min(self.value[leafs, :], axis=0))
 
         definition = expression.Expression(
             ub_output[...], "..", out <= max_out
@@ -430,7 +428,7 @@ class RegressionTree:
         )
         lb_output._definition = definition
         self.container._add_statement(definition)
-        cons_type.setRecords(["ge", "le"])
+        cons_type._setRecords(["ge", "le"])
 
         ### This generates the set of possible paths given the input data
         mask = (_feat_vars.up[...] >= _feat_par[..., "lb"]) & (
@@ -514,7 +512,6 @@ class RegressionTree:
         )
         self.container._add_statement(definition)
         ge_cons._definition = definition
-        self.container._synch_with_gams()
 
         le_cons[uni_domain].where[
             (feat_thresh[..., "le"] != 0) & s[uni_domain]

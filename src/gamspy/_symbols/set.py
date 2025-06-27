@@ -732,6 +732,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         return 0
 
+    def __hash__(self):
+        return id(self)
+
     def __getitem__(
         self, indices: Sequence | str | int | EllipsisType | slice
     ) -> implicits.ImplicitSet:
@@ -843,6 +846,15 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             for symbol in self.container.data.values():
                 symbol._requires_state_check = True
 
+    def _setRecords(
+        self, records: Any, *, uels_on_axes: bool = False, sync: bool = False
+    ) -> None:
+        super().setRecords(records, uels_on_axes)
+        self.modified = True
+
+        if sync:
+            self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
+
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         """
         Main convenience method to set standard pandas.DataFrame formatted
@@ -866,10 +878,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         [['seattle', ''], ['san-diego', '']]
 
         """
-
-        super().setRecords(records, uels_on_axes)
-
-        self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
+        self._setRecords(records, uels_on_axes=uels_on_axes, sync=True)
         self._winner = "python"
 
     def gamsRepr(self) -> str:

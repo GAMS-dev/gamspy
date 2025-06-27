@@ -158,7 +158,6 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             self.container._add_statement(self)
 
             self.modified = False
-            self.container._synch_with_gams()
 
     def _serialize(self) -> dict:
         info: dict[str, Any] = {"_metadata": self._metadata}
@@ -185,6 +184,9 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         raise ValidationError(
             "Alias cannot be used as a truth value. Use len(<symbol>.records) instead."
         )
+
+    def __hash__(self):
+        return id(self)
 
     def __repr__(self) -> str:
         return f"Alias(name='{self.name}', alias_with={self.alias_with})"
@@ -214,6 +216,15 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
         if self.alias_with.synchronize:  # type: ignore
             self.container._synch_with_gams(gams_to_gamspy=True)
+
+    def _setRecords(
+        self, records: Any, *, uels_on_axes: bool = False, sync: bool = False
+    ) -> None:
+        super().setRecords(records, uels_on_axes)
+        self.modified = True
+
+        if sync:
+            self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
 
     @property
     def synchronize(self):
