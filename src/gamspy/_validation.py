@@ -554,8 +554,12 @@ def validate_solver_args(
             f"`{solver}` is not a valid solver for GAMS Engine."
         )
 
-    if backend == "local":
-        # No need to check whether the solver is installed on client's machine for NEOS or ENGINE.
+    # No need to check whether the solver is installed on client's machine for NEOS or ENGINE.
+    if (
+        backend == "local"
+        and get_option("VALIDATION")
+        and get_option("SOLVER_VALIDATION")
+    ):
         installed_solvers = utils.getInstalledSolvers(system_directory)
         if solver.upper() not in installed_solvers:
             raise ValidationError(
