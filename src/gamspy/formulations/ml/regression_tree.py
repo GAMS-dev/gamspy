@@ -491,7 +491,6 @@ class RegressionTree:
                 ),
             )
         )
-        _bound_big_m[...].where[gp.math.abs(_bound_big_m) == np.inf] = 1e10
 
         self.container._add_statement(
             expression.Expression(
