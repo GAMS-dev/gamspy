@@ -50,6 +50,19 @@ def test_config():
 
     gp.set_options({"VALIDATION": 1})
 
+    # do not validate solver. This should raise GamspyException
+    gp.set_options({"SOLVER_VALIDATION": 0})
+    m = gp.Container()
+    v = gp.Variable(m)
+    p = gp.Parameter(m)
+    e = gp.Equation(m)
+    e[...] = v <= p
+    model = gp.Model(m)
+    with pytest.raises(GamspyException):
+        model.solve(solver="unknown")
+
+    gp.set_options({"SOLVER_VALIDATION": 1})
+
 
 @pytest.mark.unit
 def test_domain_checking_config_performance():
