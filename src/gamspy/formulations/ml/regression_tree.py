@@ -413,13 +413,9 @@ class RegressionTree:
         self.container._add_statement(definition)
         link_indctr_output._definition = definition
 
-        _feat_par_records = []
-        for i, leaf in enumerate(leafs):
-            for feat in range(self.n_features):
-                _feat_par_records.append((feat, i, "ub", node_ub[feat, leaf]))
-                _feat_par_records.append((feat, i, "lb", node_lb[feat, leaf]))
-
-        _feat_par.setRecords(_feat_par_records)
+        _feat_par.setRecords(
+            np.stack([node_lb, node_ub], axis=-1)[:, leafs, :]
+        )
         max_out._setRecords(np.max(self.value[leafs, :], axis=0))
         min_out._setRecords(np.min(self.value[leafs, :], axis=0))
 
