@@ -195,7 +195,8 @@ class RegressionTree:
         input : gp.Parameter | gp.Variable
                 input for the regression tree, must be in shape (sample_size, number_of_features)
         M : float
-            value for the big_M. By default, infer the value using the available bounds for variables
+            value for the big_M. By default, infer the value using the available bounds for variables.
+            If the variable is unbounded, then default to 1e10.
         """
         is_random_forest = kwargs.get("is_random_forest", False)
 
@@ -490,6 +491,7 @@ class RegressionTree:
                 ),
             )
         )
+        _bound_big_m[...].where[gp.math.abs(_bound_big_m) == np.inf] = 1e10
 
         self.container._add_statement(
             expression.Expression(
