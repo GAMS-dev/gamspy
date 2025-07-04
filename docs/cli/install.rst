@@ -29,10 +29,14 @@ Usage
      - 
      - None
      - Interprocess communication starting port. Only relevant for local licenses that restrict concurrent use of GAMSPy.
-   * - -\-renew 
-     - -r
+   * - -\-server
+     - -s
+     - https://license.gams.com
+     - License server adress.
+   * - -\-port 
+     - -p
      - None
-     - Specify a file path to a license file to extend a session.
+     - Port for the license server connection.
    * - -\-checkout-duration 
      - -c
      - None

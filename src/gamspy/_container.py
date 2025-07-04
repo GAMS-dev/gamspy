@@ -82,18 +82,26 @@ def open_connection(
             f'curdir="{os.getcwd()}"\n'
         )
 
+    command = [
+        os.path.join(system_directory, "gams"),
+        "GAMSPY_JOB",
+        "pf",
+        initial_pf_file,
+    ]
+
+    certificate_path = os.path.join(utils.DEFAULT_DIR, "gamspy_cert.crt")
+    env = os.environ.copy()
+    if os.path.isfile(certificate_path):
+        env["GAMSLICECRT"] = certificate_path
+
     process = subprocess.Popen(
-        [
-            os.path.join(system_directory, "gams"),
-            "GAMSPY_JOB",
-            "pf",
-            initial_pf_file,
-        ],
+        command,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         errors="replace",
         start_new_session=platform.system() != "Windows",
+        env=env,
     )
 
     port_info = process.stdout.readline().strip()
