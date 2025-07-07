@@ -25,7 +25,7 @@
                 },
                 "value": {
                     "type": "numeric",
-                    "alias": "value"
+                    "alias": "a"
                 }
             }
         },
@@ -39,7 +39,7 @@
                 },
                 "value": {
                     "type": "numeric",
-                    "alias": "value"
+                    "alias": "b"
                 }
             }
         },
@@ -57,7 +57,7 @@
                 },
                 "value": {
                     "type": "numeric",
-                    "alias": "value"
+                    "alias": "d"
                 }
             }
         },

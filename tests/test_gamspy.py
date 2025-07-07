@@ -17,7 +17,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 @pytest.mark.unit
 def test_version():
-    assert gp.__version__ == "1.12.0"
+    assert gp.__version__ == "1.12.1"
 
 
 @pytest.mark.unit
@@ -49,6 +49,19 @@ def test_config():
         model.solve()
 
     gp.set_options({"VALIDATION": 1})
+
+    # do not validate solver. This should raise GamspyException
+    gp.set_options({"SOLVER_VALIDATION": 0})
+    m = gp.Container()
+    v = gp.Variable(m)
+    p = gp.Parameter(m)
+    e = gp.Equation(m)
+    e[...] = v <= p
+    model = gp.Model(m)
+    with pytest.raises(GamspyException):
+        model.solve(solver="unknown")
+
+    gp.set_options({"SOLVER_VALIDATION": 1})
 
 
 @pytest.mark.unit

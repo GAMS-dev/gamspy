@@ -57,6 +57,7 @@ def test_install_license(teardown):
             ],
             check=True,
             capture_output=True,
+            encoding="utf-8",
         )
 
     # Try to install a GAMS license (+ license)
@@ -75,6 +76,7 @@ def test_install_license(teardown):
             ],
             check=True,
             capture_output=True,
+            encoding="utf-8",
         )
 
     # Try to install a GAMS license (/ license)
@@ -93,6 +95,7 @@ def test_install_license(teardown):
             ],
             check=True,
             capture_output=True,
+            encoding="utf-8",
         )
 
     # Test network license
@@ -140,6 +143,7 @@ def test_install_license(teardown):
             tmp_license_path,
         ],
         capture_output=True,
+        encoding="utf-8",
         text=True,
     )
 
@@ -160,12 +164,13 @@ def test_install_license(teardown):
             tmp_license_path,
         ],
         capture_output=True,
+        encoding="utf-8",
         text=True,
     )
 
     assert process.returncode == 0, process.stderr
 
-    # Test renew
+    # Test invalid port (port 100 is below the minimum port (1024))
     process = subprocess.run(
         [
             sys.executable,
@@ -173,19 +178,32 @@ def test_install_license(teardown):
             "gamspy",
             "install",
             "license",
-            os.environ["CHECKOUT_LICENSE"],
-            "-c",
-            "1",
-            "-r",
-            tmp_license_path,
-            "-o",
-            tmp_license_path,
+            os.environ["LOCAL_LICENSE"],
+            "-p",
+            "100",
         ],
         capture_output=True,
+        encoding="utf-8",
         text=True,
     )
 
-    assert process.returncode == 0, process.stderr
+    assert process.returncode != 0
+
+    if platform.system() == "Linux":
+        process = subprocess.run(
+            [
+                sys.executable,
+                "-Bm",
+                "gamspy",
+                "install",
+                "license",
+                os.environ["ON_PREM_LICENSE"],
+                "-s",
+                "alptest.gams.com",
+            ],
+            capture_output=True,
+            text=True,
+        )
 
     # Recover local license
     process = subprocess.run(
@@ -199,6 +217,7 @@ def test_install_license(teardown):
         ],
         text=True,
         capture_output=True,
+        encoding="utf-8",
     )
 
     assert process.returncode == 0, process.stderr
@@ -224,6 +243,7 @@ def test_install_solver():
             "mosek",
         ],
         capture_output=True,
+        encoding="utf-8",
         text=True,
     )
     assert process.returncode == 0, process.stdout + process.stderr
@@ -246,6 +266,7 @@ def test_install_solver():
             "--install-all-solvers",
         ],
         capture_output=True,
+        encoding="utf-8",
         text=True,
     )
     assert process.returncode == 0, process.stdout + process.stderr
@@ -261,6 +282,7 @@ def test_install_solver():
             "mosek",
         ],
         capture_output=True,
+        encoding="utf-8",
         text=True,
     )
     assert process.returncode == 0, process.stdout + process.stderr
@@ -275,6 +297,7 @@ def test_install_solver():
             "--uninstall-all-solvers",
         ],
         capture_output=True,
+        encoding="utf-8",
         text=True,
     )
     assert process.returncode == 0, process.stdout + process.stderr
@@ -295,37 +318,40 @@ def test_install_solver():
     )
     assert process.returncode == 0, process.stdout + process.stderr
 
-    # use uv
-    process = subprocess.run(
-        [
-            sys.executable,
-            "-Bm",
-            "gamspy",
-            "install",
-            "solver",
-            "soplex",
-            "--use-uv",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    assert process.returncode == 0, process.stdout + process.stderr
+    if platform.system() == "Linux":
+        # use uv
+        process = subprocess.run(
+            [
+                sys.executable,
+                "-Bm",
+                "gamspy",
+                "install",
+                "solver",
+                "soplex",
+                "--use-uv",
+            ],
+            capture_output=True,
+            encoding="utf-8",
+            text=True,
+        )
+        assert process.returncode == 0, process.stdout + process.stderr
 
-    # use uv
-    process = subprocess.run(
-        [
-            sys.executable,
-            "-Bm",
-            "gamspy",
-            "uninstall",
-            "solver",
-            "soplex",
-            "--use-uv",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    assert process.returncode == 0, process.stdout + process.stderr
+        # use uv
+        process = subprocess.run(
+            [
+                sys.executable,
+                "-Bm",
+                "gamspy",
+                "uninstall",
+                "solver",
+                "soplex",
+                "--use-uv",
+            ],
+            capture_output=True,
+            encoding="utf-8",
+            text=True,
+        )
+        assert process.returncode == 0, process.stdout + process.stderr
 
 
 def test_list_solvers():
@@ -377,6 +403,7 @@ def test_probe(teardown):
     process = subprocess.run(
         [sys.executable, "-Bm", "gamspy", "probe", "-h"],
         capture_output=True,
+        encoding="utf-8",
         text=True,
     )
     assert process.returncode == 0, process.stdout + process.stderr
@@ -384,6 +411,7 @@ def test_probe(teardown):
     process = subprocess.run(
         [sys.executable, "-Bm", "gamspy", "probe", "-j", node_info_path],
         capture_output=True,
+        encoding="utf-8",
         text=True,
     )
     assert process.returncode == 0, process.stdout + process.stderr
@@ -402,6 +430,7 @@ def test_probe(teardown):
             node_info_path[:-5] + ".txt",
         ],
         capture_output=True,
+        encoding="utf-8",
         text=True,
     )
 

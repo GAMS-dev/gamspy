@@ -1,0 +1,24 @@
+{
+    "modelTitle": "GAMSPy App",
+    "inputSymbols": {
+        "completed_df": {
+            "alias": "completed_df",
+            "symtype": "set",
+            "headers": {
+                "acad_yr": {
+                    "type": "string",
+                    "alias": "acad_yr"
+                },
+                "i": {
+                    "type": "string",
+                    "alias": "i"
+                },
+                "element_text": {
+                    "type": "string",
+                    "alias": "element_text"
+                }
+            }
+        }
+    },
+    "outputSymbols": {}
+}
