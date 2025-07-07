@@ -878,6 +878,13 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         super().setRecords(records, uels_on_axes)
 
+        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
+            if self.hasDomainViolations():
+                self._domain_violations = self.getDomainViolations()
+                self.dropDomainViolations()
+            else:
+                self._domain_violations = None
+
         self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
         self._winner = "python"
 
