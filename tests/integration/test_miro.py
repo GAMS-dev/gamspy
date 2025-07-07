@@ -323,7 +323,7 @@ def test_contract():
                             "type": "string",
                             "alias": "canning plants",
                         },
-                        "value": {"type": "numeric", "alias": "value"},
+                        "value": {"type": "numeric", "alias": "a"},
                     },
                 },
                 "b": {
@@ -331,7 +331,7 @@ def test_contract():
                     "symtype": "parameter",
                     "headers": {
                         "j": {"type": "string", "alias": "markets"},
-                        "value": {"type": "numeric", "alias": "value"},
+                        "value": {"type": "numeric", "alias": "b"},
                     },
                 },
                 "d": {
@@ -343,7 +343,7 @@ def test_contract():
                             "alias": "canning plants",
                         },
                         "j": {"type": "string", "alias": "markets"},
-                        "value": {"type": "numeric", "alias": "value"},
+                        "value": {"type": "numeric", "alias": "d"},
                     },
                 },
                 "ilocdata": {
@@ -775,11 +775,21 @@ def test_miro_encoder(data):
     m5 = Container()
     i5 = Set(m5, "i5", records=["i1", "i2"])
     _ = Set(m5, "i6", domain=i5, records=["i1"], is_miro_input=True)
+    _ = Parameter(m5, "a", domain=["*", "*"], is_miro_input=True)
     encoder = MiroJSONEncoder(m5)
     generated_json = encoder.write_json()
     assert generated_json == {
         "modelTitle": "GAMSPy App",
         "inputSymbols": {
+            "a": {
+                "alias": "a",
+                "symtype": "parameter",
+                "headers": {
+                    "uni": {"type": "string", "alias": "uni"},
+                    "uni#1": {"type": "string", "alias": "uni#1"},
+                    "value": {"type": "numeric", "alias": "a"},
+                },
+            },
             "i6": {
                 "alias": "i6",
                 "symtype": "set",
@@ -790,7 +800,7 @@ def test_miro_encoder(data):
                         "alias": "element_text",
                     },
                 },
-            }
+            },
         },
         "outputSymbols": {},
     }
@@ -912,3 +922,61 @@ def test_miro_protect(data):
         is_miro_input=True,
     )
     f.setRecords(6)
+
+
+def test_domain_violation():
+    directory = str(pathlib.Path(__file__).parent.resolve())
+    script_path = os.path.join(directory, "miro_models", "miro11.py")
+    gdxin_path = os.path.join(directory, "miro_models", "_miro11_gdxin_.gdx")
+    subprocess_env = os.environ.copy()
+    subprocess_env["GAMS_IDC_GDX_INPUT"] = gdxin_path
+    process = subprocess.run(
+        [sys.executable, script_path],
+        capture_output=True,
+        text=True,
+        env=subprocess_env,
+    )
+
+    assert process.returncode == 0, process.stderr
+
+
+def test_duplicate_domain():
+    c = Container()
+    i = Set(c, "i")
+    _ = Parameter(c, "p", domain=[i, i], is_miro_input=True)
+
+    encoder = MiroJSONEncoder(c)
+    miro_dict = encoder.write_json()
+    assert miro_dict == {
+        "modelTitle": "GAMSPy App",
+        "inputSymbols": {
+            "p": {
+                "alias": "p",
+                "symtype": "parameter",
+                "headers": {
+                    "i": {"type": "string", "alias": "i"},
+                    "i#1": {"type": "string", "alias": "i#1"},
+                    "value": {"type": "numeric", "alias": "p"},
+                },
+            }
+        },
+        "outputSymbols": {},
+    }
+
+
+def test_gams_state_of_miro_symbol():
+    directory = str(pathlib.Path(__file__).parent.resolve())
+    script_path = os.path.join(directory, "miro_models", "miro12.py")
+    gdxin_path = os.path.join(directory, "miro_models", "_miro12_gdxin_.gdx")
+    gdxout_path = os.path.join(directory, "miro_models", "_miro12_gdxout_.gdx")
+    subprocess_env = os.environ.copy()
+    subprocess_env["GAMS_IDC_GDX_INPUT"] = gdxin_path
+    subprocess_env["GAMS_IDC_GDX_OUTPUT"] = gdxout_path
+    process = subprocess.run(
+        [sys.executable, script_path],
+        capture_output=True,
+        text=True,
+        env=subprocess_env,
+    )
+
+    assert process.returncode == 0, process.stderr

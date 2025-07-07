@@ -494,11 +494,65 @@ def test_regression_tree_string_features(data):
 
     model = gp.Model(
         m,
-        "regressionTree",
+        "regressionTree_string_feat",
         equations=eqns,
         problem="MIP",
     )
     model.solve()
 
     assert np.allclose(out.toDense().flatten(), output)
+    assert model.status == ModelStatus(1)
+
+
+def test_regression_tree_no_upper_bound(data):
+    m, tree_args, in_data, _, _, _ = data
+
+    tree = DecisionTreeStruct(**tree_args)
+    rt = RegressionTree(m, tree)
+
+    x = gp.Variable(m, name="x_free", domain=dim(in_data.shape))
+    x.lo[...] = 5
+    # x.up is inf
+
+    # check the prediction of the decions tree on the trained data
+    out, eqns = rt(x)
+
+    model = gp.Model(
+        m,
+        "regressionTree_up_bnd",
+        equations=eqns,
+        problem="MIP",
+    )
+    model.solve()
+
+    expected_out = [15, 15, 15, 15, 15]
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert model.status == ModelStatus(1)
+
+
+def test_regression_tree_no_lower_bound(data):
+    m, tree_args, in_data, _, _, _ = data
+
+    tree = DecisionTreeStruct(**tree_args)
+    rt = RegressionTree(m, tree)
+
+    x = gp.Variable(m, name="x_free", domain=dim(in_data.shape))
+    # x.lo is -inf
+    x.up[...] = 7
+
+    # check the prediction of the decions tree on the trained data
+    out, eqns = rt(x)
+
+    model = gp.Model(
+        m,
+        "regressionTree_lo_bnd",
+        equations=eqns,
+        problem="MIP",
+    )
+    model.solve()
+
+    expected_out = [10, 10, 10, 10, 10]
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
     assert model.status == ModelStatus(1)

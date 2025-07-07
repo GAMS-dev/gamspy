@@ -82,18 +82,26 @@ def open_connection(
             f'curdir="{os.getcwd()}"\n'
         )
 
+    command = [
+        os.path.join(system_directory, "gams"),
+        "GAMSPY_JOB",
+        "pf",
+        initial_pf_file,
+    ]
+
+    certificate_path = os.path.join(utils.DEFAULT_DIR, "gamspy_cert.crt")
+    env = os.environ.copy()
+    if os.path.isfile(certificate_path):
+        env["GAMSLICECRT"] = certificate_path
+
     process = subprocess.Popen(
-        [
-            os.path.join(system_directory, "gams"),
-            "GAMSPY_JOB",
-            "pf",
-            initial_pf_file,
-        ],
+        command,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         errors="replace",
         start_new_session=platform.system() != "Windows",
+        env=env,
     )
 
     port_info = process.stdout.readline().strip()
@@ -641,7 +649,10 @@ class Container(gt.Container):
         strings += ["$offUNDF", "$offMulti"]
 
         if not IS_MIRO_INIT and MIRO_GDX_OUT:
-            strings.append(miro.get_unload_output_str(self))
+            if len(self._miro_output_symbols) == 0:
+                self.write(MIRO_GDX_OUT, symbol_names=[])
+            else:
+                strings.append(miro.get_unload_output_str(self))
 
         gams_string = "\n".join(strings)
 

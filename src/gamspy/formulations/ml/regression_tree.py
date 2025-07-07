@@ -191,7 +191,8 @@ class RegressionTree:
         input : gp.Parameter | gp.Variable
                 input for the regression tree, must be in shape (sample_size, number_of_features)
         M : float
-            value for the big_M. By default, infer the value using the available bounds for variables
+            value for the big_M. By default, infer the value using the available bounds for variables.
+            If the variable is unbounded, then default to 1e10.
         """
         leafs = self.children_left < 0
         leafs = leafs.nonzero()[0]
@@ -411,6 +412,7 @@ class RegressionTree:
                 - _feat_par[set_of_features, set_of_leafs, "ub"]
             )
         )
+        _bound_big_m[...].where[gp.math.abs(_bound_big_m) == np.inf] = 1e10
 
         ge_cons = gp.Equation(
             self.container,

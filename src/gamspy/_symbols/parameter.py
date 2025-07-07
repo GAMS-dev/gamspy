@@ -105,6 +105,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         obj._description = description
         obj._records = records
         obj._modified = True
+        obj._domain_violations = None
 
         # typing
         obj._gams_type = GMS_DT_PAR
@@ -201,6 +202,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self._is_miro_input = is_miro_input
         self._is_miro_output = is_miro_output
         self._is_miro_table = is_miro_table
+        self._is_miro_symbol = is_miro_input or is_miro_output or is_miro_table
+        self._domain_violations = None
 
         self._synchronize = True
 
@@ -295,10 +298,18 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
             if records is not None:
                 super().setRecords(records, uels_on_axes=uels_on_axes)
-                if self.dimension == 0:
+                if self.dimension == 0 and not self._is_miro_symbol:
                     self.modified = False
+
+                if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
+                    if self.hasDomainViolations():
+                        self._domain_violations = self.getDomainViolations()
+                        self.dropDomainViolations()
+                    else:
+                        self._domain_violations = None
             else:
-                self.modified = False
+                if not self._is_miro_symbol:
+                    self.modified = False
 
             self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
 
@@ -513,6 +524,13 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         """
         super().setRecords(records, uels_on_axes)
+
+        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
+            if self.hasDomainViolations():
+                self._domain_violations = self.getDomainViolations()
+                self.dropDomainViolations()
+            else:
+                self._domain_violations = None
 
         self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
         self._winner = "python"

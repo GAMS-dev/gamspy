@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from collections import defaultdict
 from typing import TYPE_CHECKING
 
 import gamspy as gp
@@ -52,6 +53,9 @@ def load_miro_symbol_records(container: Container):
         container._load_records_from_gdx(
             MIRO_GDX_OUT, container._miro_output_symbols
         )
+
+    for name in container._miro_input_symbols + container._miro_output_symbols:
+        container[name].modified = False
 
 
 def _write_default_gdx_miro(container: Container) -> None:
@@ -200,6 +204,21 @@ class MiroJSONEncoder:
     def prepare_headers_dict(
         self, symbol: Set | Parameter | Variable | Equation
     ):
+        def rename_duplicates(items: list[str]) -> list[str]:
+            # Renames duplicate domain names. For example:
+            # p = gp.Parameter(c,'p',domain=[i,i], is_miro_input=True)
+            counts: dict[str, int] = defaultdict(int)
+            result = []
+
+            for item in items:
+                if counts[item] == 0:
+                    result.append(item)
+                else:
+                    result.append(f"{item}#{counts[item]}")
+                counts[item] += 1
+
+            return result
+
         if isinstance(symbol, gp.Set):
             domain_keys = symbol.domain_names + ["element_text"]
             types = ["string"] * (len(symbol.domain_names) + 1)
@@ -233,16 +252,17 @@ class MiroJSONEncoder:
         for idx, key in enumerate(domain_keys):
             if key == "*":
                 domain_keys[idx] = (
-                    "uni" if uni_counter == 0 else f"uni{uni_counter}"
+                    "uni" if uni_counter == 0 else f"uni#{uni_counter}"
                 )
                 uni_counter += 1
 
+        domain_keys = rename_duplicates(domain_keys)
         for column, column_type in zip(domain_keys, types):
             try:
                 elem = self.container[column]
                 alias = elem.description if elem.description else column
             except KeyError:
-                alias = column
+                alias = symbol.name if column == "value" else column
 
             domain_values.append({"type": column_type, "alias": alias})
 
@@ -330,7 +350,6 @@ class MiroJSONEncoder:
 
     def write_json(self):
         miro_dict = self.prepare_dict()
-
         filename = os.path.splitext(os.path.basename(sys.argv[0]))[0]
         directory = os.path.dirname(sys.argv[0])
         conf_path = os.path.join(directory, f"conf_{filename}")
