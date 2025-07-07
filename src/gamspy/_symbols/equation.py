@@ -144,6 +144,7 @@ class Equation(gt.Equation, Symbol):
         obj._description = description
         obj._records = records
         obj._modified = True
+        obj._domain_violations = None
 
         # add to container
         container.data.update({name: obj})
@@ -233,6 +234,7 @@ class Equation(gt.Equation, Symbol):
 
         # miro support
         self._is_miro_output = is_miro_output
+        self._domain_violations = None
 
         self._synchronize = True
 
@@ -355,7 +357,8 @@ class Equation(gt.Equation, Symbol):
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
-                self.modified = False
+                if not self._is_miro_output:
+                    self.modified = False
                 self.container._synch_with_gams()
 
             container._options.miro_protect = previous_state

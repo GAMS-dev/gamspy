@@ -105,6 +105,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         obj._description = description
         obj._records = records
         obj._modified = True
+        obj._domain_violations = None
 
         # typing
         obj._gams_type = GMS_DT_PAR
@@ -202,6 +203,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self._is_miro_output = is_miro_output
         self._is_miro_table = is_miro_table
         self._is_miro_symbol = is_miro_input or is_miro_output or is_miro_table
+        self._domain_violations = None
 
         self._synchronize = True
 
