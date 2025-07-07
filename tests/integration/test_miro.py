@@ -962,3 +962,21 @@ def test_duplicate_domain():
         },
         "outputSymbols": {},
     }
+
+
+def test_gams_state_of_miro_symbol():
+    directory = str(pathlib.Path(__file__).parent.resolve())
+    script_path = os.path.join(directory, "miro_models", "miro12.py")
+    gdxin_path = os.path.join(directory, "miro_models", "_miro12_gdxin_.gdx")
+    gdxout_path = os.path.join(directory, "miro_models", "_miro12_gdxout_.gdx")
+    subprocess_env = os.environ.copy()
+    subprocess_env["GAMS_IDC_GDX_INPUT"] = gdxin_path
+    subprocess_env["GAMS_IDC_GDX_OUTPUT"] = gdxout_path
+    process = subprocess.run(
+        [sys.executable, script_path],
+        capture_output=True,
+        text=True,
+        env=subprocess_env,
+    )
+
+    assert process.returncode == 0, process.stderr

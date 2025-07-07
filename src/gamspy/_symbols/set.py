@@ -500,6 +500,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         obj._records = records
         obj._modified = True
         obj._is_singleton = is_singleton
+        obj._domain_violations = None
 
         # typing
         obj._gams_type = GMS_DT_SET
@@ -593,6 +594,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         self._is_miro_input = is_miro_input
         self._is_miro_output = is_miro_output
+        self._is_miro_symbol = is_miro_input or is_miro_output
+        self._domain_violations = None
 
         self._synchronize = True
 
@@ -696,7 +699,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
-                self.modified = False
+                if not self._is_miro_symbol:
+                    self.modified = False
                 self.container._synch_with_gams(
                     gams_to_gamspy=self._is_miro_input
                 )
