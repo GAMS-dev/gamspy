@@ -11,7 +11,7 @@
                 },
                 "value": {
                     "type": "numeric",
-                    "alias": "value"
+                    "alias": "p"
                 }
             }
         }
