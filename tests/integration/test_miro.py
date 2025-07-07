@@ -924,6 +924,22 @@ def test_miro_protect(data):
     f.setRecords(6)
 
 
+def test_domain_violation():
+    directory = str(pathlib.Path(__file__).parent.resolve())
+    script_path = os.path.join(directory, "miro_models", "miro11.py")
+    gdxin_path = os.path.join(directory, "miro_models", "_miro11_gdxin_.gdx")
+    subprocess_env = os.environ.copy()
+    subprocess_env["GAMS_IDC_GDX_INPUT"] = gdxin_path
+    process = subprocess.run(
+        [sys.executable, script_path],
+        capture_output=True,
+        text=True,
+        env=subprocess_env,
+    )
+
+    assert process.returncode == 0, process.stderr
+
+
 def test_duplicate_domain():
     c = Container()
     i = Set(c, "i")

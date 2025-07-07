@@ -55,6 +55,10 @@ def _set_default_options() -> None:
     use_py_var_name = os.getenv("GAMSPY_USE_PY_VAR_NAME", "no")
     configuration["USE_PY_VAR_NAME"] = use_py_var_name
 
+    # Do not drop the domain violations by default
+    strategy = int(os.getenv("GAMSPY_DROP_DOMAIN_VIOLATIONS", 0))
+    configuration["DROP_DOMAIN_VIOLATIONS"] = strategy
+
 
 def set_options(
     options: dict[
@@ -67,6 +71,7 @@ def set_options(
             "LAZY_EVALUATION",
             "ASSUME_VARIABLE_SUFFIX",
             "USE_PY_VAR_NAME",
+            "DROP_DOMAIN_VIOLATIONS",
         ],
         Any,
     ],

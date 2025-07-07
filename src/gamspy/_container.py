@@ -649,7 +649,10 @@ class Container(gt.Container):
         strings += ["$offUNDF", "$offMulti"]
 
         if not IS_MIRO_INIT and MIRO_GDX_OUT:
-            strings.append(miro.get_unload_output_str(self))
+            if len(self._miro_output_symbols) == 0:
+                self.write(MIRO_GDX_OUT, symbol_names=[])
+            else:
+                strings.append(miro.get_unload_output_str(self))
 
         gams_string = "\n".join(strings)
 

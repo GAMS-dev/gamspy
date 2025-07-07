@@ -1,0 +1,1 @@
+Add `DROP_DOMAIN_VIOLATIONS` option.

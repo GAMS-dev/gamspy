@@ -881,6 +881,13 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         super().setRecords(records, uels_on_axes)
 
+        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
+            if self.hasDomainViolations():
+                self._domain_violations = self.getDomainViolations()
+                self.dropDomainViolations()
+            else:
+                self._domain_violations = None
+
         self.container._synch_with_gams()
         self._winner = "python"
 

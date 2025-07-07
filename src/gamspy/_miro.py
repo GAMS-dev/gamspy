@@ -54,6 +54,9 @@ def load_miro_symbol_records(container: Container):
             MIRO_GDX_OUT, container._miro_output_symbols
         )
 
+    for name in container._miro_input_symbols + container._miro_output_symbols:
+        container[name].modified = False
+
 
 def _write_default_gdx_miro(container: Container) -> None:
     # create data_<model>/default.gdx
