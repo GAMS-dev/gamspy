@@ -590,7 +590,24 @@ In addition to solve options, user can specify solver options as a dictionary.::
     model.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
 
     
-For all possible solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_
+For all possible solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_.
+
+Solver options can also be created with :meth:`gamspy.Container.writeSolverOptions`: ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+    ...
+    ...
+    ...
+    your model definition goes here
+    ...
+    ...
+    ...
+    m.writeSolverOptions(solver="nlpec", solver_options={"testTol": 1e-006})
+    model.solve(solver="reshop", options=Options(mcp="nlpec"), solver_options={"subsolveropt": 1})
+
+In this example, :meth:`gamspy.Container.writeSolverOptions` would create solver options for the `nlpec` solver. 
 
 Converting A Model To A Scalar Format
 =====================================
