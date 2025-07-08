@@ -85,10 +85,6 @@ class RandomForest:
         def _validate_ensemble(
             ensemble,
         ) -> list[DecisionTreeRegressor | DecisionTreeStruct]:
-            type_err = ValidationError(
-                f"{ensemble} must be an instance of either >sklearn.ensemble.RandomForestRegressor< or a list of >DecisionTreeStruct<"
-            )
-
             if isinstance(ensemble, list) and all(
                 isinstance(item, DecisionTreeStruct) for item in ensemble
             ):
@@ -107,9 +103,13 @@ class RandomForest:
                             )
                         return ensemble.estimators_
                     else:
-                        raise type_err
+                        raise ValidationError(
+                            f"{ensemble} must be an instance of either >sklearn.ensemble.RandomForestRegressor< or a list of >DecisionTreeStruct<"
+                        )
                 except ModuleNotFoundError:
-                    raise type_err from None
+                    raise ValidationError(
+                        ">sklearn.ensemble< module not found."
+                    ) from None
 
         self.container = container
 

@@ -73,10 +73,6 @@ class RegressionTree:
         if not isinstance(container, gp.Container):
             raise ValidationError(f"{container} is not a gp.Container.")
 
-        type_err = ValidationError(
-            f"{regressor} must be an instance of either >sklearn.tree.DecisionTreeRegressor< or >DecisionTreeStruct<"
-        )
-
         if isinstance(regressor, DecisionTreeStruct):
             self._initialize_from_decision_tree_struct(regressor=regressor)
         else:
@@ -85,9 +81,13 @@ class RegressionTree:
                 if isinstance(regressor, sklearn_tree.DecisionTreeRegressor):
                     self._initialize_from_sklearn(regressor=regressor)
                 else:
-                    raise type_err
+                    raise ValidationError(
+                        f"{regressor} must be an instance of either >sklearn.tree.DecisionTreeRegressor< or >DecisionTreeStruct<"
+                    )
             except ModuleNotFoundError:
-                raise type_err from None
+                raise ValidationError(
+                    ">sklearn.tree< module not found."
+                ) from None
 
         self._check_tree()
 

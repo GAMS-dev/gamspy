@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError
+from unittest import mock
 
 import numpy as np
 import pytest
@@ -70,6 +71,9 @@ def test_regression_tree_bad_init(data):
     tree = DecisionTreeRegressor(random_state=42)
     pytest.raises(ValidationError, RegressionTree, m, tree)
 
+    with mock.patch.dict("sys.modules", {"sklearn.tree": None}):
+        pytest.raises(ValidationError, RegressionTree, m, tree)
+
 
 def test_regression_tree_incomplete_data(data):
     m, tree_args, *_ = data
@@ -113,6 +117,17 @@ def test_regression_tree_incomplete_data(data):
     broken_tree = DecisionTreeStruct(**tree_args)
     with pytest.raises(FrozenInstanceError):
         broken_tree.capacity = -2
+
+    # capacity must be positive
+    tree_args["capacity"] = -5
+    tree = DecisionTreeStruct(**tree_args)
+    pytest.raises(ValidationError, RegressionTree, m, tree)
+    tree_args["capacity"] = 5
+
+    # n_features must be positive
+    tree_args["n_features"] = -2
+    tree = DecisionTreeStruct(**tree_args)
+    pytest.raises(ValidationError, RegressionTree, m, tree)
 
 
 def test_regression_tree_bad_call(data):
@@ -632,6 +647,10 @@ def test_random_forest_bad_init(data_rf):
     ensemble = RandomForestRegressor(n_estimators=2, random_state=42)
     pytest.raises(ValidationError, RandomForest, m, ensemble)
 
+    # missing package
+    with mock.patch.dict("sys.modules", {"sklearn.ensemble": None}):
+        pytest.raises(ValidationError, RandomForest, m, ensemble)
+
     # one of the tree instance with missing attribute, this is more of a RegressionTree check
     t1, t2 = tree_attrs
     t2.pop("children_left")
@@ -659,3 +678,122 @@ def test_random_forest_with_sklearn(data_rf):
 
     assert np.allclose(out.toDense().flatten(), expected_out)
     assert model.status == ModelStatus(1)
+
+
+def test_random_forest_valid_variable(data_rf):
+    m, ensemble, _, _, _, expected_out, par_input, x = data_rf
+
+    rf = RandomForest(m, ensemble=ensemble)
+
+    x.fx[:, 0] = par_input[:, 0]
+    x.up[:, 1] = 6
+
+    out, eqns = rf(x)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    model = gp.Model(
+        m,
+        "randomForest",
+        equations=eqns,
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MAX,
+    )
+
+    model.solve(solver="CPLEX")
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 69
+
+
+def test_random_forest_valid_parameter(data_rf):
+    m, ensemble, _, _, _, expected_out, par_input, _ = data_rf
+
+    rf = RandomForest(m, ensemble=ensemble)
+
+    out, eqns = rf(par_input)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    model = gp.Model(
+        m,
+        "randomForest",
+        equations=eqns,
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MIN,
+    )
+
+    model.solve(solver="CPLEX")
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 69
+
+
+def test_random_forest_valid_variable_no_lb(data_rf):
+    m, ensemble, _, in_data, _, _, par_input, _ = data_rf
+
+    rf = RandomForest(m, ensemble=ensemble)
+    x = gp.Variable(m, "x_free", domain=dim(in_data.shape))
+
+    x.up[:, 0] = 6
+    x.fx[:, 1] = par_input[:, 1]
+
+    out, eqns = rf(x)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    model = gp.Model(
+        m,
+        "randomForest",
+        equations=eqns,
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MIN,
+    )
+
+    model.solve(solver="CPLEX")
+
+    expected_out = [10] * 5
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 50
+
+
+def test_random_forest_valid_variable_no_ub(data_rf):
+    m, ensemble, _, in_data, _, _, par_input, x = data_rf
+
+    rf = RandomForest(m, ensemble=ensemble)
+    x = gp.Variable(m, "x_free", domain=dim(in_data.shape))
+
+    x.lo[:, 0] = 2
+    x.fx[:, 1] = par_input[:, 1]
+
+    out, eqns = rf(x)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    model = gp.Model(
+        m,
+        "randomForest",
+        equations=eqns,
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MAX,
+    )
+
+    model.solve(solver="CPLEX")
+
+    expected_out = [24] * 5
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 120
