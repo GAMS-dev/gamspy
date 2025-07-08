@@ -135,6 +135,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         obj._description = description
         obj._records = records
         obj._modified = True
+        obj._domain_violations = None
 
         # add to container
         container.data.update({name: obj})
@@ -227,6 +228,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         # miro support
         self._is_miro_output = is_miro_output
+        self._domain_violations = None
 
         self._synchronize = True
 
@@ -340,7 +342,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
-                self.modified = False
+                if not self._is_miro_output:
+                    self.modified = False
                 self.container._synch_with_gams()
 
             container._options.miro_protect = True
@@ -891,7 +894,16 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         [['seattle', 7.0, 0.0, -inf, inf, 1.0], ['san-diego', 18.0, 0.0, -inf, inf, 1.0]]
 
         """
-        self._setRecords(records, uels_on_axes=uels_on_axes, sync=True)
+        super().setRecords(records, uels_on_axes)
+
+        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
+            if self.hasDomainViolations():
+                self._domain_violations = self.getDomainViolations()
+                self.dropDomainViolations()
+            else:
+                self._domain_violations = None
+
+        self.container._synch_with_gams()
         self._winner = "python"
 
     @property

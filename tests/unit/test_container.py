@@ -1192,3 +1192,47 @@ def test_explicit_license_path():
     # Should throw license error since we are using the demo license.
     with pytest.raises(GamspyException):
         xdice.solve()
+
+
+@pytest.mark.unit
+def test_domain_violations():
+    import gamspy as gp
+
+    gp.set_options({"DROP_DOMAIN_VIOLATIONS": 1})
+
+    c = gp.Container()
+    i = gp.Set(c, "i", records=["i1"])
+
+    j = gp.Set(c, "j", domain=i, records=["i1", "i2"])
+    assert j.toList() == ["i1"]
+    assert j._domain_violations[0].violations == ["i2"]
+
+    p = gp.Parameter(c, "p", domain=[i], records=[("i1", 10), ("i2", 20)])
+    assert p.toList() == [("i1", 10.0)]
+    assert p._domain_violations[0].violations == ["i2"]
+
+    v = gp.Variable(
+        c,
+        "v",
+        domain=[i],
+        records=pd.DataFrame(
+            data=[("i1", 5), ("i2", 10)],
+            columns=["domain", "level"],
+        ),
+    )
+    assert v.toList() == [("i1", 5.0)]
+    assert v._domain_violations[0].violations == ["i2"]
+
+    e = gp.Equation(
+        c,
+        "e",
+        domain=[i],
+        records=pd.DataFrame(
+            data=[("i1", 10), ("i2", 10)],
+            columns=["domain", "level"],
+        ),
+    )
+    assert e.toList() == [("i1", 10.0)]
+    assert e._domain_violations[0].violations == ["i2"]
+
+    gp.set_options({"DROP_DOMAIN_VIOLATIONS": 0})

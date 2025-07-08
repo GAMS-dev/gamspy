@@ -27,7 +27,8 @@ app = typer.Typer(
 def license(
     license: Annotated[str, typer.Argument(help="access code or path to the license file.")],
     checkout_duration: Optional[int] = typer.Option(None, "--checkout-duration", "-c", help="Specify a duration in hours to checkout a session."),
-    renew: Optional[str] = typer.Option(None, "--renew", "-r", help="Specify a file path to a license file to extend a session."),
+    server: Optional[str] = typer.Option("https://license.gams.com", "--server", "-s", help="License server adress."),
+    port: Optional[int] = typer.Option(None, "--port", "-p", help="Port for the license server connection."),
     output: Optional[str] = typer.Option(None, "--output", "-o", help="Specify a file path to write the license file."),
     uses_port: Annotated[Union[int, None], typer.Option("--uses-port", help="Interprocess communication starting port.")] = None,
 ):
@@ -48,31 +49,44 @@ def license(
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
     license_path = os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt")
+    certificate_path = os.path.join(utils.DEFAULT_DIR, "gamspy_cert.crt")
 
     if is_alp:
         alp_id = license
-        http = urllib3.PoolManager(
-            cert_reqs="CERT_REQUIRED",
-            ca_certs=certifi.where()
-        )
-        encoded_args = urlencode({"access_token": alp_id})
-        request = http.request(
-            "GET", "https://license.gams.com/license-type?" + encoded_args
-        )
-        if request.status != 200:
-            raise ValidationError(
-                f"License server did not respond in an expected way. Request status: {request.status}. Reason: {request.data.decode('utf-8', errors='replace')}"
-            )
 
-        data = request.data.decode("utf-8", errors="replace")
-        cmex_type = json.loads(data)["cmex_type"]
-        if cmex_type not in ("gamspy", "gamspy++", "gamsall"):
-            raise ValidationError(
-                f"Given access code `{alp_id} ({cmex_type})` is not valid for GAMSPy. "
-                "Make sure that you use a GAMSPy license, not a GAMS license."
+        # Make cmex_type check only for GAMS license server.
+        if server == "https://license.gams.com":
+            http = urllib3.PoolManager(
+                cert_reqs="CERT_REQUIRED",
+                ca_certs=certifi.where()
             )
+            encoded_args = urlencode({"access_token": alp_id})
+            request = http.request(
+                "GET", f"{server}/license-type?" + encoded_args
+            )
+            if request.status != 200:
+                raise ValidationError(
+                    f"License server did not respond in an expected way. Request status: {request.status}. Reason: {request.data.decode('utf-8', errors='replace')}"
+                )
 
-        command = [os.path.join(gamspy_base_dir, "gamsgetkey"), alp_id]
+            data = request.data.decode("utf-8", errors="replace")
+            cmex_type = json.loads(data)["cmex_type"]
+            if cmex_type not in ("demo", "community", "gamspy", "gamspy++", "gamsall"):
+                raise ValidationError(
+                    f"Given access code `{alp_id} ({cmex_type})` is not valid for GAMSPy. "
+                    "Make sure that you use a GAMSPy license, not a GAMS license."
+                )
+
+        command = [os.path.join(gamspy_base_dir, "gamsgetkey"), alp_id, "-s", server]
+
+        # On-prem license server licenses start with abcdef12
+        if alp_id.startswith("abcdef12"):
+            command.append("-g")
+            command.append(certificate_path)
+
+        if port:
+            command.append("-p")
+            command.append(str(port))
 
         if uses_port:
             command.append("-u")
@@ -82,33 +96,31 @@ def license(
             command.append("-c")
             command.append(str(checkout_duration))
 
-        if checkout_duration:
-            command.append("-r")
-            command.append(str(renew))
-        
         if output:
             command.append("-o")
             command.append(output)
+        else:
+            command.append("-o")
+            command.append(license_path)
 
         process = subprocess.run(
             command,
             text=True,
             capture_output=True,
+            encoding="utf-8",
         )
         if process.returncode:
             raise ValidationError(process.stderr)
 
-        if output:
-            with open(output) as file:
-                license_text = file.read()
-        else:
-            license_text = process.stdout
+        license_file_path = output if output else license_path
+        with open(license_file_path) as file:
+            license_text = file.read()
             
         lines = license_text.splitlines()
         try:
             license_type = lines[0][54]
-        except Exception:
-            raise ValidationError(f"Invalid license text. Received message from the license server: {license_text}")
+        except (Exception, IndexError):
+            raise ValidationError(f"Invalid license text. \nLicense text: {license_text}\nstdout: {process.stdout}\nstderr: {process.stderr}")
         
         if license_type == "+":
             if lines[2][:2] not in ("00", "07", "08", "09"):
@@ -122,9 +134,6 @@ def license(
                     f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
-
-        with open(license_path, "w", encoding="utf-8") as file:
-            file.write(license_text)
     else:
         with open(license) as file:
             lines = file.read().splitlines()
@@ -249,7 +258,7 @@ def solver(
                         "--force-reinstall",
                     ]
                 try:
-                    _ = subprocess.run(command, check=True, stderr=subprocess.PIPE)
+                    _ = subprocess.run(command, check=True, encoding="utf-8", stderr=subprocess.PIPE)
                 except subprocess.CalledProcessError as e:
                     raise GamspyException(
                         f"Could not install gamspy-{solver_name}. Please check your internet connection. If it's not related to your internet connection, PyPI servers might be down. Please retry it later. Here is the error message of pip:\n\n{e.stderr.decode('utf-8')}"

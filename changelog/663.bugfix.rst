@@ -1,0 +1,2 @@
+Fix duplicate domain name issue in the MIRO contract.
+Fix symbol declaration without records for miro apps.

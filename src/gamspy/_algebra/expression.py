@@ -572,7 +572,9 @@ class Expression(operable.Operable):
     def _validate_definition(
         self, control_stack: list[Set | Alias | ImplicitSet]
     ) -> None:
-        if not get_option("DOMAIN_VALIDATION"):
+        if not get_option("DOMAIN_VALIDATION") or not get_option(
+            "DOMAIN_VALIDATION"
+        ):
             return
 
         stack = []
