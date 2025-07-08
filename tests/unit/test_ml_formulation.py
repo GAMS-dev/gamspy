@@ -763,12 +763,15 @@ def test_random_forest_valid_variable_no_lb(data_rf):
     expected_out = [10] * 5
 
     assert np.allclose(out.toDense().flatten(), expected_out)
+    assert np.allclose(
+        x[:, 0].l.records["level"].to_numpy(), [-1e10] * 5
+    )  # bigM threshold
     assert model.status == ModelStatus(1)
     assert model.objective_value == 50
 
 
 def test_random_forest_valid_variable_no_ub(data_rf):
-    m, ensemble, _, in_data, _, _, par_input, x = data_rf
+    m, ensemble, _, in_data, _, _, par_input, _ = data_rf
 
     rf = RandomForest(m, ensemble=ensemble)
     x = gp.Variable(m, "x_free", domain=dim(in_data.shape))
@@ -795,5 +798,43 @@ def test_random_forest_valid_variable_no_ub(data_rf):
     expected_out = [24] * 5
 
     assert np.allclose(out.toDense().flatten(), expected_out)
+    assert np.allclose(x[:, 0].l.records["level"].to_numpy(), [5.5] * 5)
     assert model.status == ModelStatus(1)
     assert model.objective_value == 120
+
+
+def test_random_forest_with_new_constraint(data_rf):
+    m, ensemble, _, _, _, _, par_input, x = data_rf
+
+    rf = RandomForest(m, ensemble=ensemble)
+
+    x.lo[:, 0] = 2
+    x.fx[:, 1] = par_input[:, 1]
+
+    out, eqns = rf(x)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    feat_1 = x[:, 0]
+
+    c1 = gp.Equation(m, "c1", domain=dom[0])
+    c1[...] = feat_1 <= 5
+
+    model = gp.Model(
+        m,
+        "randomForest",
+        equations=eqns + [c1],
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MAX,
+    )
+
+    model.solve(solver="CPLEX")
+
+    expected_out = [15] * 5
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert np.allclose(feat_1.l.records["level"].to_numpy(), [4] * 5)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 75
