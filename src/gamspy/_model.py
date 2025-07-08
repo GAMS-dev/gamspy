@@ -1255,15 +1255,16 @@ class Model:
         if solver is None:
             solver = utils.getDefaultSolvers(self.container.system_directory)[
                 str(self.problem).upper()
-            ]
+            ].lower()
         else:
             if not isinstance(solver, str):
                 raise TypeError(
                     f"`solver` argument must be of type `str` but given `{type(solver)}`"
                 )
+            solver = solver.lower()
 
-        if solver.upper() == "CONOPT":
-            solver = "CONOPT4"
+        if solver == "conopt":
+            solver = "conopt4"
 
         validation.validate_solver_args(
             self.container.system_directory,
@@ -1280,7 +1281,7 @@ class Model:
             options = self.container._options
 
         # Only for local until GAMS Engine and NEOS Server backends adopt the new GP_SolveLine option.
-        if solver == "local":
+        if backend == "local":
             frame = inspect.currentframe().f_back
             assert isinstance(options, gp.Options)
             options._frame = frame
@@ -1308,8 +1309,7 @@ class Model:
         self.container._add_statement(self._generate_solve_string() + "\n")
         self._create_model_attributes()
         options._set_solver_options(
-            system_directory=self.container.system_directory,
-            working_directory=self.container.working_directory,
+            container=self.container,
             solver=solver,
             problem=self.problem,
             solver_options=solver_options,

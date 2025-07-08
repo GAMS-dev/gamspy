@@ -66,7 +66,7 @@ from gamspy._database import (
     GamsParameter,
     GamsVariable,
 )
-from gamspy._options import FreezeOptions, Options, write_solver_options
+from gamspy._options import FreezeOptions, Options
 from gamspy.exceptions import (
     GamspyException,
     ValidationError,
@@ -364,12 +364,7 @@ class ModelInstance:
         # write solver options file
         option_file = 0
         if solver_options:
-            write_solver_options(
-                self.container.system_directory,
-                self.container.working_directory,
-                solver,
-                solver_options,
-            )
+            self.container.writeSolverOptions(solver, solver_options)
             option_file = 1
 
         names_to_write = []
