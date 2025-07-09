@@ -304,3 +304,15 @@ Why can I not run GAMSPy with the Python interpreter from the Microsoft Store
 
 Due to compatibility issues, the GAMS Python API (which is a dependency of GAMSPy) does not work with the Python interpreter from
 the Microsoft Store.
+
+Do network licenses incur extra overhead?
+-----------------------------------------
+
+While highly flexible, network licenses come with a fixed start-up cost: every GAMSPy job must 
+create a session on the license server before execution can begin. The time to establish this session 
+is governed by network latency and typically takes under a second on a fast connection, but can take 
+longer on slower or distant networks. For long-running jobs this overhead is usually negligible, but 
+workflows that launch many short-lived GAMSPy jobs can accumulate noticeable delays. If running a large 
+number of such jobs is part of your optimization pipeline, consider checking out the network license 
+for a suitable period. While the license is checked out it behaves like a local license, eliminating 
+per-job connection delays.
