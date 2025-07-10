@@ -962,10 +962,14 @@ class Model:
                     f"{self.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};\n"
                 )
             elif key in EXECUTION_OPTIONS:
-                if backend == "engine" and key == "loadpoint":
-                    value = os.path.relpath(
-                        value, self.container.working_directory
-                    )
+                if key == "loadpoint":
+                    if isinstance(value, os.PathLike):
+                        value = os.path.abspath(value)
+
+                    if backend == "engine":
+                        value = os.path.relpath(
+                            value, self.container.working_directory
+                        )
 
                 self.container._add_statement(
                     f"{EXECUTION_OPTIONS[key]} '{value}';\n"
