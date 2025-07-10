@@ -3,7 +3,7 @@ from __future__ import annotations
 import io
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Optional
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 import warnings
 
 from pydantic import BaseModel, ConfigDict
@@ -197,7 +197,7 @@ class Options(BaseModel):
         Absolute path of the license.
     listing_file: str | None
         Listing file name
-    loadpoint: str | None
+    loadpoint: os.PathLike | str | None
         Path to the loadpoint GDX file that contains starting point records.
     log_file: str | None
         Log file name
@@ -336,7 +336,7 @@ class Options(BaseModel):
     keep_temporary_files: Optional[int] = None
     license: Optional[str] = None
     listing_file: Optional[str] = None
-    loadpoint: Optional[str] = None
+    loadpoint: Optional[Union[str, os.PathLike]] = None
     log_file: Optional[str] = None
     variable_listing_limit: int = 0
     equation_listing_limit: int = 0
