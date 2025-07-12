@@ -1,6 +1,6 @@
 import gamspy as gp
 
-c = gp.Container(working_directory=".")
+c = gp.Container()
 acad_yr = gp.Set(c, "acad_yr", records=["2026"])
 i = gp.Set(c, "i", records=["i1"])
 completed_df = gp.Set(

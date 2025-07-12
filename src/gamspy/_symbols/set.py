@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
     from gamspy import Alias, Container
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols.implicits.implicit_set import ImplicitSet
+    from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import EllipsisType, OperableType
     from gamspy.math import Dim
     from gamspy.math.misc import MathOp
@@ -32,162 +32,148 @@ if TYPE_CHECKING:
 
 class SetMixin:
     @property
-    def pos(self: Set | Alias) -> Expression:
+    def pos(self: Set | Alias) -> ImplicitParameter:
         """
         Element position in the current set, starting with 1.
 
         Returns
         -------
-        Expression
+        ImplicitParameter
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
-        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set position values")
-        >>> attr[i,"position"]  =  i.pos
-        >>> attr.records.values.tolist()
+        >>> i.pos.records.values.tolist()
         [['seattle', 'position', 1.0], ['san-diego', 'position', 2.0], ['new-york', 'position', 3.0]]
 
         """
-        return expression.Expression(self, ".", "pos")
+        return implicits.ImplicitParameter(self, f"{self.name}.pos")
 
     @property
-    def ord(self: Set | Alias) -> Expression:
+    def ord(self: Set | Alias) -> ImplicitParameter:
         """
         Same as .pos but for ordered sets only.
 
         Returns
         -------
-        Expression
+        ImplicitParameter
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
-        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set order values")
-        >>> attr[i,"order"]  =  i.ord
-        >>> attr.records.values.tolist()
+        >>> i.ord.records.values.tolist()
         [['seattle', 'order', 1.0], ['san-diego', 'order', 2.0], ['new-york', 'order', 3.0]]
 
         """
-        return expression.Expression(self, ".", "ord")
+        return implicits.ImplicitParameter(self, f"{self.name}.ord")
 
     @property
-    def off(self: Set | Alias) -> Expression:
+    def off(self: Set | Alias) -> ImplicitParameter:
         """
         Element position in the current set minus 1. So .off = .pos - 1
 
         Returns
         -------
-        Expression
+        ImplicitParameter
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
-        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set off values")
-        >>> attr[i,"off"]  =  i.off
-        >>> attr.records.values.tolist()
+        >>> i.off.records.values.tolist()
         [['san-diego', 'off', 1.0], ['new-york', 'off', 2.0]]
 
         """
-        return expression.Expression(self, ".", "off")
+        return implicits.ImplicitParameter(self, f"{self.name}.off")
 
     @property
-    def rev(self: Set | Alias) -> Expression:
+    def rev(self: Set | Alias) -> ImplicitParameter:
         """
         Reverse element position in the current set, so the value for
         the last element is 0, the value for the penultimate is 1, etc.
 
         Returns
         -------
-        Expression
+        ImplicitParameter
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
-        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set reverse values")
-        >>> attr[i,"reverse"]  =  i.rev
-        >>> attr.records.values.tolist()
+        >>> i.rev.records.values.tolist()
         [['seattle', 'reverse', 2.0], ['san-diego', 'reverse', 1.0]]
 
         """
-        return expression.Expression(self, ".", "rev")
+        return implicits.ImplicitParameter(self, f"{self.name}.rev")
 
     @property
-    def uel(self: Set | Alias) -> Expression:
+    def uel(self: Set | Alias) -> ImplicitParameter:
         """
         Element position in the unique element list.
 
         Returns
         -------
-        Expression
+        ImplicitParameter
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
-        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set uel_pos values")
-        >>> attr[i,"uel_position"]  =  i.uel
-        >>> attr.records.values.tolist()
+        >>> i.uel.records.values.tolist()
         [['seattle', 'uel_position', 1.0], ['san-diego', 'uel_position', 2.0], ['new-york', 'uel_position', 3.0]]
 
         """
-        return expression.Expression(self, ".", "uel")
+        return implicits.ImplicitParameter(self, f"{self.name}.uel")
 
     @property
-    def len(self: Set | Alias) -> Expression:
+    def len(self: Set | Alias) -> ImplicitParameter:
         """
         Length of the set element name (a count of the number of characters).
 
         Returns
         -------
-        Expression
+        ImplicitParameter
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
-        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set length values")
-        >>> attr[i,"length"]  =  i.len
-        >>> attr.records.values.tolist()
+        >>> i.len.records.values.tolist()
         [['seattle', 'length', 7.0], ['san-diego', 'length', 9.0], ['new-york', 'length', 8.0]]
 
         """
-        return expression.Expression(self, ".", "len")
+        return implicits.ImplicitParameter(self, f"{self.name}.len")
 
     @property
-    def tlen(self: Set | Alias) -> Expression:
+    def tlen(self: Set | Alias) -> ImplicitParameter:
         """
         Length of the set element text (a count of the number of characters).
 
         Returns
         -------
-        Expression
+        ImplicitParameter
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i", records=[("seattle", "Wisconsin"), ("san-diego", ""), ("new-york", " ")], description="canning plants")
-        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set element text length values")
-        >>> attr[i,"text_length"]  =  i.tlen
-        >>> attr.records.values.tolist()
+        >>> i.tlen.records.values.tolist()
         [['seattle', 'text_length', 9.0], ['new-york', 'text_length', 1.0]]
 
         """
-        return expression.Expression(self, ".", "tlen")
+        return implicits.ImplicitParameter(self, f"{self.name}.tlen")
 
     @property
-    def val(self: Set | Alias) -> Expression:
+    def val(self: Set | Alias) -> ImplicitParameter:
         """
         If a set element is a number, this attribute gives the value of the number.
         For extended range arithmetic symbols, the symbols are reproduced.
@@ -196,23 +182,21 @@ class SetMixin:
 
         Returns
         -------
-        Expression
+        ImplicitParameter
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i", records=["12", "20", "-13.4"], description="canning plants")
-        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set val values")
-        >>> attr[i,"value"]  =  i.val
-        >>> attr.records.values.tolist()
+        >>> i.val.records.values.tolist()
         [['12', 'value', 12.0], ['20', 'value', 20.0], ['-13.4', 'value', -13.4]]
 
         """
-        return expression.Expression(self, ".", "val")
+        return implicits.ImplicitParameter(self, f"{self.name}.val")
 
     @property
-    def tval(self: Set | Alias) -> Expression:
+    def tval(self: Set | Alias) -> ImplicitParameter:
         """
         If a set element text is a number, this attribute gives the value of the number.
         For extended range arithmetic symbols, the symbols are reproduced.
@@ -221,64 +205,58 @@ class SetMixin:
 
         Returns
         -------
-        Expression
+        ImplicitParameter
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i", records=[("seattle", "12"), ("san-diego", ""), ("new-york", "-13.4")], description="canning plants")
-        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set text values")
-        >>> attr[i,"text_value"]  =  i.tval
-        >>> attr.records.values.tolist()
+        >>> i.tval.records.values.tolist()
         [['seattle', 'text_value', 12.0], ['new-york', 'text_value', -13.4]]
 
         """
-        return expression.Expression(self, ".", "tval")
+        return implicits.ImplicitParameter(self, f"{self.name}.tval")
 
     @property
-    def first(self: Set | Alias) -> Expression:
+    def first(self: Set | Alias) -> ImplicitParameter:
         """
         Returns 1 for the first set element, otherwise 0.
 
         Returns
         -------
-        Expression
+        ImplicitParameter
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
-        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"])
-        >>> attr[i,"is_first"]  =  i.first
-        >>> attr.records.values.tolist()
+        >>> i.first.records.values.tolist()
         [['seattle', 'is_first', 1.0]]
 
         """
-        return expression.Expression(self, ".", "first")
+        return implicits.ImplicitParameter(self, f"{self.name}.first")
 
     @property
-    def last(self: Set | Alias) -> Expression:
+    def last(self: Set | Alias) -> ImplicitParameter:
         """
         Returns 1 for the last set element, otherwise 0.
 
         Returns
         -------
-        Expression
+        ImplicitParameter
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
-        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"])
-        >>> attr[i,"is_last"]  =  i.last
-        >>> attr.records.values.tolist()
+        >>> i.last.records.values.tolist()
         [['new-york', 'is_last', 1.0]]
 
         """
-        return expression.Expression(self, ".", "last")
+        return implicits.ImplicitParameter(self, f"{self.name}.last")
 
     def lag(
         self,

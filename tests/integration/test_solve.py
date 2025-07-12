@@ -821,6 +821,9 @@ def test_records(data):
         ["i0", "j1", "k1", "l0", ""],
     ]
 
+    g = gp.Parameter(m, "g", domain=["*"], records=[("a", 1), ("b", 2)])
+    assert g["*"].records.values.tolist() == [["a", 1.0], ["b", 2.0]]
+
 
 def test_after_first_solve(data):
     m, canning_plants, markets, capacities, demands, distances = data
