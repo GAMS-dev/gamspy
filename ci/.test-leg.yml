@@ -6,7 +6,7 @@ leg-test-3.13:
   image: python:3.13
   script:
     - python -m pip install uv && uv venv venv313 && source venv313/bin/activate
-    - uv pip install .[dev,test] --force-reinstall
+    - uv pip install .[dev,test,torch] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv

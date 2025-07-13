@@ -229,6 +229,61 @@ It combines the domains specified by dims into a single unified domain.
    [len(x) for x in out.domain]
    # [10, 1, 576]
 
+
+:meth:`TorchSequential <gamspy.formulations.TorchSequential>`
+-------------------------------------------------------------
+A convenience function that lets you embed your PyTorch Sequential
+layer in your optimization models easily. As shown in the example,
+it can be easily extended to include support for the layers that
+we haven't included yet.
+
+.. code-block:: python
+
+   from functools import partial
+
+   import gamspy as gp
+   import torch
+   from gamspy.math import dim
+
+
+   class Flatten(torch.nn.Module):
+       def __init__(self, dims_to_flatten: list[int]):
+           super().__init__()
+           self.dims_to_flatten = dims_to_flatten
+
+       def forward(self, x):
+           return torch.flatten(x, self.dims_to_flatten[0], self.dims_to_flatten[-1])
+
+
+   # Mapping images of size 3 (RGB), 32 (Height), 32 (Width) to 4 classes
+   model = torch.nn.Sequential(
+       torch.nn.Conv2d(3, 4, (5, 5), bias=True),
+       torch.nn.ReLU(),
+       torch.nn.MaxPool2d((2, 2)),
+       torch.nn.Conv2d(4, 4, (5, 5), bias=True),
+       torch.nn.ReLU(),
+       torch.nn.MaxPool2d((5, 5)),
+       Flatten([1, 2, 3]),
+       torch.nn.Linear(16, 4),
+   )
+
+
+   def convert_flatten(m: gp.Container, layer: Flatten):
+       return partial(gp.formulations.flatten_dims, dims=layer.dims_to_flatten)
+
+
+   m = gp.Container()
+
+   seq_form = gp.formulations.TorchSequential(
+       m, model, layer_converters={"Flatten": convert_flatten}
+   )
+
+   x = gp.Variable(m, domain=dim((10, 3, 32, 32)))
+
+   out, eqs = seq_form(x)
+   [len(d) for d in out.domain]
+   # [10, 4]
+
 .. _pooling-linearization:
 
 Max/Min Pooling Implementation

@@ -37,7 +37,7 @@ def _generate_name(sym_type: str, prefix: str, name: str) -> str:
 
 
 def _check_tuple_int(
-    value: int | tuple[int, int],
+    value: int | tuple[int] | tuple[int, int],
     name: str,
     allow_zero=False,
 ) -> tuple[int, int]:
@@ -48,6 +48,8 @@ def _check_tuple_int(
 
     if isinstance(value, int):
         value = (value, value)
+    elif len(value) == 1:
+        value = (value[0], value[0])
 
     cmp = (lambda a: a >= 0) if allow_zero else (lambda a: a > 0)
     text = "or equal to " if allow_zero else ""
