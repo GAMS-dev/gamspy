@@ -5,6 +5,7 @@ from gamspy.formulations.nn.linear import Linear
 from gamspy.formulations.nn.maxpool2d import MaxPool2d
 from gamspy.formulations.nn.minpool2d import MinPool2d
 from gamspy.formulations.nn.mpool2d import _MPool2d
+from gamspy.formulations.nn.torch_sequential import TorchSequential
 
 __all__ = [
     "Conv1d",
@@ -14,4 +15,5 @@ __all__ = [
     "MinPool2d",
     "AvgPool2d",
     "Linear",
+    "TorchSequential",
 ]
