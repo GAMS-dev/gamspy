@@ -9,17 +9,15 @@
 {% for category, val in definitions.items() if category in sections[section] %}
 
 {{ definitions[category]['name'] }}
+{% set underline = "-" %}
 {{ underline * definitions[category]['name']|length }}
-
 {% if definitions[category]['showcontent'] %}
 {% for text, values in sections[section][category]|dictsort(by='value') %}
 {% set issue_joiner = joiner(', ') %}
 - {% for value in values|sort %}{{ issue_joiner() }}{{ value }}{% endfor %}: {{ text }}
-
 {% endfor %}
 {% else %}
 - {{ sections[section][category]['']|sort|join(', ') }}
-
 {% endif %}
 {% if sections[section][category]|length == 0 %}
 
