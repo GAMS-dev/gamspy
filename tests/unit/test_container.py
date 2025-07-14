@@ -1277,3 +1277,18 @@ def test_domain_violations():
     assert e._domain_violations[0].violations == ["i2"]
 
     gp.set_options({"DROP_DOMAIN_VIOLATIONS": 0})
+
+
+@pytest.mark.unit
+def test_expert_sync():
+    import gamspy as gp
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i1", "i2", "i3"])
+    a = gp.Parameter(m, "a", domain=[i, i])
+    a.synchronize = False
+    for s in range(5):
+        a[i, i].where[gp.Ord(i) == 1] = 0.1 * s
+        assert a.records is None
+    a.synchronize = True
+    assert a.toList() == [("i1", "i1", 0.4)]
