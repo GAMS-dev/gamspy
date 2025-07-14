@@ -102,6 +102,7 @@ class Condition(operable.Operable):
 
         if isinstance(self.conditioning_on, ImplicitSymbol):
             self.conditioning_on.parent._assignment = statement
+            self.conditioning_on.parent._winner = "gams"
 
         if isinstance(self.conditioning_on, implicits.ImplicitEquation):
             self.conditioning_on.parent._definition = statement

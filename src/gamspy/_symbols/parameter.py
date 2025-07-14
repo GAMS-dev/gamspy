@@ -119,6 +119,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._metadata = dict()
+        obj._winner = "python"
 
         # miro support
         obj._is_miro_input = False
@@ -206,6 +207,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self._domain_violations = None
 
         self._synchronize = True
+        self._winner = "python"
 
         # domain handling
         if domain is None:

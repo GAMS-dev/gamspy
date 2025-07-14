@@ -74,9 +74,12 @@ class Conv1d:
         container: gp.Container,
         in_channels: int,
         out_channels: int,
-        kernel_size: int,
-        stride: int = 1,
-        padding: int | tuple[int, int] | Literal["same", "valid"] = 0,
+        kernel_size: int | tuple[int],
+        stride: int | tuple[int] = 1,
+        padding: int
+        | tuple[int]
+        | tuple[int, int]
+        | Literal["same", "valid"] = 0,
         name_prefix: str | None = None,
         *,
         bias: bool = True,
@@ -87,8 +90,14 @@ class Conv1d:
         if not (isinstance(out_channels, int) and out_channels > 0):
             raise ValidationError("out_channels must be a positive integer")
 
+        if isinstance(kernel_size, tuple) and len(kernel_size) == 1:
+            kernel_size = kernel_size[0]
+
         if not (isinstance(kernel_size, int) and kernel_size > 0):
             raise ValidationError("kernel_size must be a positive integer")
+
+        if isinstance(stride, tuple) and len(stride) == 1:
+            stride = stride[0]
 
         if not (isinstance(stride, int) and stride > 0):
             raise ValidationError("stride must be a positive integer")
