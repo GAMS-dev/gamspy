@@ -1,1 +1,0 @@
-Implemented `TorchSequential` convenience formulation for embedding Sequential layers into GAMSPy.

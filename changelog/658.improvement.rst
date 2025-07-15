@@ -1,1 +1,0 @@
-Add a gamspy option to disable solver validation. Useful for solvers that are added via gamsconfig.yaml.

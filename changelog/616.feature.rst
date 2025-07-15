@@ -1,1 +1,0 @@
-Implement container.writeSolverOptions to write solver option files to the working directory.

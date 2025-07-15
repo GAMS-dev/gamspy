@@ -1,1 +1,0 @@
-Allow PathLike objects for loadpoint option.

@@ -1,1 +1,0 @@
-Allow server and port specification for on-prem license servers.
