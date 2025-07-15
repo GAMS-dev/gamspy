@@ -2,7 +2,7 @@ GAMSPy 1.10.0 (2025-04-30)
 ==========================
 
 New features
-============
+------------
 
 - #599: Allow renaming on ``container.loadRecordsFromGdx`` function call.
 
@@ -10,7 +10,7 @@ New features
 
 
 Improvements in existing functionality
-======================================
+--------------------------------------
 
 - #594: Add GAMSPyJacobian file format for the convert function.
 
@@ -28,7 +28,7 @@ Improvements in existing functionality
 
 
 Bug fixes
-=========
+---------
 
 - #625: Overload __eq__ and __ne__ magic functions of the Number class to ensure the order is correct in expressions.
 
@@ -38,7 +38,7 @@ Bug fixes
 
 
 Improved documentation
-======================
+----------------------
 
 - #602: Use towncrier to automate changelog creation and avoid marge conflicts in the changelog file.
 

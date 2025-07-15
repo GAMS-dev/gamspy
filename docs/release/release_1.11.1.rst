@@ -2,7 +2,7 @@ GAMSPy 1.11.1 (2025-06-03)
 ==========================
 
 Improvements in existing functionality
-======================================
+--------------------------------------
 
 - #611: Allow users to create GAMSPy options from a dictionary of GAMS options.
 
@@ -10,7 +10,7 @@ Improvements in existing functionality
 
 
 Bug fixes
-=========
+---------
 
 - #641: Fix the overload of the unary magic function.
 

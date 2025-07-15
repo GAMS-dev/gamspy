@@ -2,7 +2,7 @@ GAMSPy 1.12.0 (2025-06-21)
 ==========================
 
 New features
-============
+------------
 
 - #579: Add Decision Tree formulation.
 
@@ -10,7 +10,7 @@ New features
 
 
 Improvements in existing functionality
-======================================
+--------------------------------------
 
 - #561: Allow args and kwargs for gamspy scripts for miro applications.
 
@@ -22,7 +22,7 @@ Improvements in existing functionality
 
 
 Improved documentation
-======================
+----------------------
 
 - #579: Add classic machine learning formulations to the documentation.
 
