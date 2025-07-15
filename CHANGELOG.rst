@@ -24,6 +24,7 @@ Bug fixes
 Improved documentation
 ----------------------
 - #654: Added docs for `TorchSequential` formulation.
+
 GAMSPy 1.12.1 (2025-07-07)
 ==========================
 
