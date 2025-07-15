@@ -8,6 +8,7 @@ import os
 import platform
 import shutil
 import sys
+import tempfile
 import time
 
 import numpy as np
@@ -38,6 +39,10 @@ pytestmark = pytest.mark.integration
 
 if multiprocessing.get_start_method(allow_none=True) is None:
     multiprocessing.set_start_method("spawn")
+
+
+def ReSHOPAnnotation(m, s):
+    return m.addGamsCode("EmbeddedCode ReSHOP:\n" + s + "\nendEmbeddedCode")
 
 
 @pytest.fixture
@@ -815,6 +820,9 @@ def test_records(data):
         ["i0", "j0", "k1", "l0", ""],
         ["i0", "j1", "k1", "l0", ""],
     ]
+
+    g = gp.Parameter(m, "g", domain=["*"], records=[("a", 1), ("b", 2)])
+    assert g["*"].records.values.tolist() == [["a", 1.0], ["b", 2.0]]
 
 
 def test_after_first_solve(data):
@@ -1914,5 +1922,97 @@ def test_emp():
 
     with pytest.raises(ValidationError):
         _ = Model(m, name="nash", equations=[defobj, cons], problem="emp")
+
+    m.close()
+
+
+def test_subsolver_options():
+    m = Container()
+    t = Set(m, name="m", records=[0, 1])
+    a = Set(m, name="a", records=["a0", "a1"])
+    beta = 7
+    alpha = 6
+
+    x = Variable(m, name="x", domain=[a, t])
+    obj = Variable(m, name="obj", domain=[a])
+
+    oterms = a.toList()
+    cterms = a.toList()
+
+    # Agent 0
+    oterms[0] = (
+        beta / 2 * gamspy_math.sqr(x["a0", "0"]) - alpha * x["a0", "0"]
+    ) + (
+        1 / 2 * gamspy_math.sqr(x["a0", "1"])
+        + 3 * x["a0", "1"] * x["a1", "1"]
+        - 4 * x["a0", "1"]
+    )
+    cterms[0] = x["a0", "1"] - x["a0", "0"]
+
+    # Agent 1
+    oterms[1] = x["a1", "0"] + (
+        1 / 2 * gamspy_math.sqr(x["a1", "1"])
+        + x["a0", "1"] * x["a1", "1"]
+        - 3 * x["a1", "1"]
+    )
+    cterms[1] = x["a1", "1"]
+
+    defobj = Equation(m, name="defobj", domain=a)
+    defobj[a] = obj[a] == sum(
+        o.where[a.sameAs(f"a{i}")] for i, o in enumerate(oterms)
+    )
+
+    cons = Equation(m, name="cons", domain=a)
+    cons[a] = (
+        sum(c.where[a.sameAs(f"a{i}")] for i, c in enumerate(cterms)) >= 0
+    )
+
+    x.lo["a0", "0"] = 0
+    x.fx["a1", "0"] = 0
+
+    nash = Model(m, name="nash", equations=[defobj, cons], problem="emp")
+
+    ReSHOPAnnotation(
+        m,
+        """
+    n(a): min obj(a) x(a,'*') defobj(a) cons(a)
+    root: Nash(n(a))
+    """,
+    )
+
+    m.writeSolverOptions("path", {"crash_method": "none", "prox_pert": 0})
+
+    with tempfile.NamedTemporaryFile("w", delete=False) as file:
+        nash.solve(
+            solver="reshop",
+            options=Options(log_file="log.log"),
+            output=file,
+            solver_options={"subsolveropt": 1},
+        )
+        file.close()
+
+        with open(file.name) as f:
+            assert ">>  crash_method none" in f.read()
+
+        os.remove(file.name)
+
+    m.writeSolverOptions("nlpec", {"testTol": 1e-006})
+    with tempfile.NamedTemporaryFile("w", delete=False) as file:
+        nash.solve(
+            solver="reshop",
+            options=Options(log_file="log.log", mcp="nlpec"),
+            output=file,
+            solver_options={"subsolveropt": 1},
+        )
+        file.close()
+        with open(file.name) as f:
+            content = f.read()
+            print(content)
+            assert ">>  testTol 1e-06" in content
+
+    assert np.isclose(
+        x.records["level"].to_numpy(),
+        np.array([0.8571428571428571, 2.5, 0.0, 0.5]),
+    ).all()
 
     m.close()

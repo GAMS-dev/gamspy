@@ -315,6 +315,22 @@ def test_set_attributes(data):
         == "tight(i,j) = (1 $ ((((i.val >= ((L - 1) / 2)) and (j.val >= ((L - 1) - i.val))) and (j.val <= i.val)) and (j.val <= (L - i.val))));"
     )
 
+    m = Container()
+
+    i = Set(m, "i", records=range(3))
+    j = Alias(m, "j", alias_with=i)
+    assert i.pos.records.values.tolist() == [
+        ["0", "position", 1.0],
+        ["1", "position", 2.0],
+        ["2", "position", 3.0],
+    ]
+    assert j.pos.records.values.tolist() == [
+        ["0", "position", 1.0],
+        ["1", "position", 2.0],
+        ["2", "position", 3.0],
+    ]
+    m.close()
+
 
 def test_set_assignment():
     container = Container()

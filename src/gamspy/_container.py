@@ -151,6 +151,27 @@ def get_system_directory(system_directory: str | os.PathLike | None) -> str:
     return get_option("GAMS_SYSDIR")
 
 
+def get_options_file_name(solver: str, file_number: int) -> str:
+    """
+    Generates the option file name according to the `optfile` rules of GAMS.
+    Here are the rules:
+    1: solver.opt
+    2-9: solver.op<file_number>
+    10-99: solver.o<file_number>
+    >100: solver.<file_number>
+    """
+    if file_number == 1:
+        options_file_name = f"{solver}.opt"
+    elif file_number >= 2 and file_number <= 9:
+        options_file_name = f"{solver}.op{file_number}"
+    elif file_number >= 10 and file_number <= 99:
+        options_file_name = f"{solver}.o{file_number}"
+    else:
+        options_file_name = f"{solver}.{file_number}"
+
+    return options_file_name
+
+
 def check_response(response: bytes, job_name: str) -> None:
     GAMS_STATUS = {
         1: "Solver is to be called, the system should never return this number.",
@@ -785,6 +806,61 @@ class Container(gt.Container):
             mode=mode,
             eps_to_zero=eps_to_zero,
         )
+
+    def writeSolverOptions(
+        self, solver: str, solver_options: dict, file_number: int = 1
+    ) -> None:
+        """
+        Writes solver options of the specified solver to the working directory.
+
+        Parameters
+        ----------
+        solver : str
+            Name of the solver.
+        solver_options : dict
+            Options of the specified solver.
+        file_number : int
+            Solver option file number. Equivalent to optfile option of GAMS. See https://gams.com/latest/docs/UG_GamsCall.html#GAMSAOoptfile for more details.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"})
+
+        """
+        if file_number < 1:
+            raise ValidationError(
+                f"The smallest number `file_number` can get is 1 but received {file_number}"
+            )
+
+        options_file_name = os.path.join(
+            self.working_directory, get_options_file_name(solver, file_number)
+        )
+
+        with open(options_file_name, "w", encoding="utf-8") as solver_file:
+            for key, value in solver_options.items():
+                row = f"{key} {value}\n"
+                if solver.upper() in ("SHOT", "SOPLEX", "SCIP", "HIGHS"):
+                    row = f"{key} = {value}\n"
+
+                solver_file.write(row)
+
+        # The following solvers do not use the opt<solver>.def file
+        if solver.upper() in (
+            "HIGHS",
+            "SOPLEX",
+            "KESTREL",
+            "SCIP",
+            "SHOT",
+            "SOPLEX",
+        ):
+            return
+
+        if get_option("VALIDATION") and get_option("SOLVER_OPTION_VALIDATION"):
+            validation.validate_solver_options(
+                self.system_directory, options_file_name, solver
+            )
 
     def generateGamsString(self, show_raw: bool = False) -> str:
         """

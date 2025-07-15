@@ -8,6 +8,7 @@ from gamspy.formulations.nn import (
     Linear,
     MaxPool2d,
     MinPool2d,
+    TorchSequential,
 )
 from gamspy.formulations.piecewise import (
     pwl_convexity_formulation,
@@ -30,4 +31,5 @@ __all__ = [
     "pwl_interval_formulation",
     "RegressionTree",
     "DecisionTreeStruct",
+    "TorchSequential",
 ]

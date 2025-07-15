@@ -48,10 +48,12 @@ from gamspy import Set
 from gamspy import Smax
 from gamspy import Sum
 from gamspy import Variable
+import networkx as nx
 
 
 def main():
     m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         load_from=str(Path(__file__).parent.absolute()) + "/lop.gdx",
     )
 
@@ -60,6 +62,15 @@ def main():
 
     # Parameters
     rt, tt, lfr, od = m.getSymbols(["rt", "tt", "lfr", "od"])
+
+    # create graph
+
+    G = nx.Graph()
+    G.add_nodes_from(s.records["uni"])
+    edges = list(
+        zip(rt.records["s_0"], rt.records["s_1"], rt.records["value"])
+    )
+    G.add_weighted_edges_from(edges)
 
     # Scalars
     mincars, ccap, cfx, crm, trm, cmp, maxtcap = m.getSymbols(
@@ -72,136 +83,46 @@ def main():
     # Variables
     f, spobj = m.getSymbols(["f", "spobj"])
 
-    # Equations
-    balance, defspobj = m.getSymbols(["balance", "defspobj"])
+    predecessors, _ = nx.floyd_warshall_predecessor_and_distance(G)
 
-    balance[s, s1] = (
-        Sum(d[s1, s2], f[s, d])
-        == Sum(d[s2, s1], f[s, d]) + s.sameAs(s1) * Card(s) - 1
-    )
+    lines = dict()
+    for n1 in G.nodes():
+        for n2 in G.nodes():
+            if n1 != n2 and lines.get((n2, n1), None) is None:
+                lines[(n1, n2)] = nx.reconstruct_path(n1, n2, predecessors)
 
-    defspobj[...] = spobj == Sum(
-        (s, d[s1, s2]), f[s, d] * gams_math.Max(rt[s1, s2], rt[s2, s1])
-    )
+    l_rec = []
+    rp_rec = []
+    for l, path in lines.items():
+        for i in range(len(path)):
+            if i != len(path) - 1:
+                arc = (path[i], path[i + 1])
+                l_rec.append(l + (arc))
+                l_rec.append(l + (arc[::-1]))
+            rp_rec.append(l + (path[i], i + 1))
 
-    sp = Model(
-        m,
-        "sp",
-        equations=[balance, defspobj],
-        problem="LP",
-        sense=Sense.MIN,
-        objective=spobj,
-    )
-    sp.solve()
-
-    tree = Set(
-        m, "tree", domain=[s, s1, s2], description="shortest path tree from s"
-    )
-    tree[s, s1, s2] = f.l[s, s1, s2]
-
-    r = Set(
-        m, "r", records=[str(idx) for idx in range(1, 101)], description="rank"
-    )
-    k = Set(m, "k", domain=[s, s], description="arcs from root to a node")
-    v = Set(
-        m,
-        "v",
-        domain=[s, r],
-        description="nodes with rank from root to a node",
-    )
-    unvisit = Set(m, "unvisit", domain=s, description="unvisited nodes")
-    visit = Set(m, "visit", domain=s, description="visited nodes")
-    from_ = Set(m, "from", domain=s, description="from nodes")
-    to = Set(m, "to", domain=s, description="to nodes")
     l = Set(
         m,
         "l",
         domain=[s, s1, s2, s3],
         description="line from s to s1 with edge s2s3",
+        records=l_rec,
     )  # noqa: E741
-    lr = Set(
-        m,
-        "lr",
-        domain=[s, s1, s2, r],
-        description="rank of s2 in line from s to s1",
-    )
-
     root = Alias(m, "root", s)
-    r1 = Alias(m, "r1", r)
-
-    l[root, s, s1, s2] = False
-    lr[root, s, s1, r] = False
-
-    counter = 0
-
-    for root_elem in root.toList():
-        from_[root_elem] = True
-        unvisit[s] = True
-        visit[s] = False
-
-        for r_elem in r.toList():
-            if int(r_elem) > 1 and len(unvisit):
-                unvisit[from_] = False
-                visit[from_] = True
-                to[unvisit] = Sum(tree[root_elem, from_, unvisit], True)
-
-                for f_elem in from_.toList():
-                    k[s2, s3].where[l[root_elem, f_elem, s2, s3]] = True
-                    v[s2, r1].where[lr[root_elem, f_elem, s2, r1]] = True
-                    v[f_elem, "1"].where[Card(k) == 0] = True
-
-                    l[root_elem, to, k].where[tree[root_elem, f_elem, to]] = (
-                        True
-                    )
-                    lr[root_elem, to, v].where[tree[root_elem, f_elem, to]] = (
-                        True
-                    )
-                    l[root_elem, to, f_elem, to].where[
-                        tree[root_elem, f_elem, to]
-                    ] = True
-                    lr[root_elem, to, to, r_elem].where[
-                        tree[root_elem, f_elem, to]
-                    ] = True
-
-                    k[s2, s3] = False
-                    v[s2, r1] = False
-
-                from_[s] = False
-                from_[to] = True
-                to[s] = False
-
-                counter += 1
-
-        from_[s] = False
-
-    error02 = Set(
-        m,
-        "error02",
-        domain=[s1, s2],
-        description="arcs not covered by shortest path lines",
-    )
-    error02[s1, s2] = lfr[s1, s2] & (Sum(l[root, s, s1, s2], 1) == 0)
-
-    if len(error02):
-        sys.exit(f"There is an error {error02.records}")
 
     ll = Set(
         m, "ll", domain=[s, s], description="station pair represening a line"
     )
     ll[s1, s2] = Ord(s1) < Ord(s2)
 
-    l[root, s, s1, s2].where[~ll[root, s]] = False
-    lr[root, s, s1, r].where[~ll[root, s]] = False
-
-    l[root, s, s1, s2].where[l[root, s, s2, s1] & rt[s1, s2]] = True
     l[root, s, s1, s2].where[~rt[s1, s2]] = False
 
-    rp = Parameter(m, "rp", domain=[s, s, s], description="rank of node")
+    rp = Parameter(
+        m, "rp", domain=[s, s, s], description="rank of node", records=rp_rec
+    )
     lastrp = Parameter(
         m, "lastrp", domain=[s, s], description="rank of the last node in line"
     )
-
-    rp[ll, s] = Sum(r.where[lr[ll, s, r]], Ord(r))
     lastrp[ll] = Smax(s, rp[ll, s])
 
     load = Parameter(
@@ -293,7 +214,7 @@ def main():
     length[ll] = Sum(l[ll, s1, s2], rt[s1, s2])
     sigma[ll] = (
         length[ll]
-        + Sum(s.where[lr[ll, s, "1"]], tt[s])
+        + Sum(s.where[rp[ll, s] == 1], tt[s])
         + Sum(s.where[rp[ll, s] == lastrp[ll]], tt[s])
     ) / 60
 

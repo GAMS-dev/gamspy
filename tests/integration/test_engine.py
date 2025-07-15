@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -785,3 +786,16 @@ def test_savepoint(data):
         options=Options(loadpoint=savepoint_path),
     )
     assert transport.num_iterations == 0
+
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".txt", delete=False
+    ) as temp_file:
+        transport.solve(
+            output=temp_file, options=Options(loadpoint=Path(savepoint_path))
+        )
+        temp_file.close()
+        with open(temp_file.name) as file:
+            content = file.read()
+            assert "GDX File (execute_load)" in content
+
+        os.remove(temp_file.name)
