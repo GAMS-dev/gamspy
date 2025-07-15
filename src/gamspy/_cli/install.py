@@ -27,7 +27,7 @@ app = typer.Typer(
 def license(
     license: Annotated[str, typer.Argument(help="access code or path to the license file.")],
     checkout_duration: Optional[int] = typer.Option(None, "--checkout-duration", "-c", help="Specify a duration in hours to checkout a session."),
-    server: Optional[str] = typer.Option("https://license.gams.com", "--server", "-s", help="License server adress."),
+    server: Optional[str] = typer.Option(None, "--server", "-s", help="License server adress."),
     port: Optional[int] = typer.Option(None, "--port", "-p", help="Port for the license server connection."),
     output: Optional[str] = typer.Option(None, "--output", "-o", help="Specify a file path to write the license file."),
     uses_port: Annotated[Union[int, None], typer.Option("--uses-port", help="Interprocess communication starting port.")] = None,
@@ -53,6 +53,9 @@ def license(
 
     if is_alp:
         alp_id = license
+
+        if server is None:
+            server = "https://license.gams.com"
 
         # Make cmex_type check only for GAMS license server.
         if server == "https://license.gams.com":
