@@ -112,6 +112,7 @@ autodoc_member_order = "groupwise"
 todo_include_todos = False
 
 favicons = ["gams.ico"]
+linkcheck_ignore = [r'https://license.gams.com']
 
 # Analytics
 def setup(app):
