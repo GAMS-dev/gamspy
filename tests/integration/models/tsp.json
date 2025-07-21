@@ -1,0 +1,802 @@
+[
+  {
+    "row_idx": 3354,
+    "row": {
+      "city": "Berlin",
+      "latitude": 52.5166667,
+      "longitude": 13.3999996
+    }
+  },
+  {
+    "row_idx": 3355,
+    "row": {
+      "city": "Hamburg",
+      "latitude": 53.55,
+      "longitude": 10.0
+    }
+  },
+  {
+    "row_idx": 3356,
+    "row": {
+      "city": "Muenchen",
+      "latitude": 48.1376831,
+      "longitude": 11.5743542
+    }
+  },
+  {
+    "row_idx": 3357,
+    "row": {
+      "city": "Koeln",
+      "latitude": 50.9333333,
+      "longitude": 6.9499998
+    }
+  },
+  {
+    "row_idx": 3358,
+    "row": {
+      "city": "Frankfurt am Main",
+      "latitude": 50.1166667,
+      "longitude": 8.6833334
+    }
+  },
+  {
+    "row_idx": 3359,
+    "row": {
+      "city": "Essen",
+      "latitude": 51.45,
+      "longitude": 7.0166669
+    }
+  },
+  {
+    "row_idx": 3360,
+    "row": {
+      "city": "Stuttgart",
+      "latitude": 48.7823243,
+      "longitude": 9.1770172
+    }
+  },
+  {
+    "row_idx": 3361,
+    "row": {
+      "city": "Dortmund",
+      "latitude": 51.5166667,
+      "longitude": 7.4499998
+    }
+  },
+  {
+    "row_idx": 3362,
+    "row": {
+      "city": "Dusseldorf",
+      "latitude": 51.2217226,
+      "longitude": 6.7761612
+    }
+  },
+  {
+    "row_idx": 3363,
+    "row": {
+      "city": "Bremen",
+      "latitude": 53.0751557,
+      "longitude": 8.8077736
+    }
+  },
+  {
+    "row_idx": 3364,
+    "row": {
+      "city": "Hannover",
+      "latitude": 52.3705163,
+      "longitude": 9.7332211
+    }
+  },
+  {
+    "row_idx": 3365,
+    "row": {
+      "city": "Leipzig",
+      "latitude": 51.33962,
+      "longitude": 12.3712921
+    }
+  },
+  {
+    "row_idx": 3366,
+    "row": {
+      "city": "Duisburg",
+      "latitude": 51.4333333,
+      "longitude": 6.75
+    }
+  },
+  {
+    "row_idx": 3367,
+    "row": {
+      "city": "Nuernberg",
+      "latitude": 49.4477778,
+      "longitude": 11.0683336
+    }
+  },
+  {
+    "row_idx": 3368,
+    "row": {
+      "city": "Dresden",
+      "latitude": 51.0508911,
+      "longitude": 13.7383175
+    }
+  },
+  {
+    "row_idx": 3369,
+    "row": {
+      "city": "Bochum",
+      "latitude": 51.4833333,
+      "longitude": 7.2166667
+    }
+  },
+  {
+    "row_idx": 3370,
+    "row": {
+      "city": "Wuppertal",
+      "latitude": 51.2666667,
+      "longitude": 7.1833334
+    }
+  },
+  {
+    "row_idx": 3371,
+    "row": {
+      "city": "Bielefeld",
+      "latitude": 52.0333333,
+      "longitude": 8.5333328
+    }
+  },
+  {
+    "row_idx": 3372,
+    "row": {
+      "city": "Bonn",
+      "latitude": 50.7333333,
+      "longitude": 7.0999999
+    }
+  },
+  {
+    "row_idx": 3373,
+    "row": {
+      "city": "Mannheim",
+      "latitude": 49.4883333,
+      "longitude": 8.4647226
+    }
+  },
+  {
+    "row_idx": 3374,
+    "row": {
+      "city": "Karlsruhe",
+      "latitude": 49.0047222,
+      "longitude": 8.3858337
+    }
+  },
+  {
+    "row_idx": 3375,
+    "row": {
+      "city": "Wiesbaden",
+      "latitude": 50.0833333,
+      "longitude": 8.25
+    }
+  },
+  {
+    "row_idx": 3376,
+    "row": {
+      "city": "Munster",
+      "latitude": 51.9623559,
+      "longitude": 7.6257133
+    }
+  },
+  {
+    "row_idx": 3377,
+    "row": {
+      "city": "Gelsenkirchen-Alt",
+      "latitude": 51.5166667,
+      "longitude": 7.1166668
+    }
+  },
+  {
+    "row_idx": 3378,
+    "row": {
+      "city": "Aachen",
+      "latitude": 50.7766356,
+      "longitude": 6.0834217
+    }
+  },
+  {
+    "row_idx": 3379,
+    "row": {
+      "city": "Monchengladbach",
+      "latitude": 51.2,
+      "longitude": 6.4333334
+    }
+  },
+  {
+    "row_idx": 3380,
+    "row": {
+      "city": "Augsburg",
+      "latitude": 48.3666667,
+      "longitude": 10.8833332
+    }
+  },
+  {
+    "row_idx": 3381,
+    "row": {
+      "city": "Chemnitz",
+      "latitude": 50.8333333,
+      "longitude": 12.916667
+    }
+  },
+  {
+    "row_idx": 3382,
+    "row": {
+      "city": "Braunschweig",
+      "latitude": 52.2666667,
+      "longitude": 10.5333328
+    }
+  },
+  {
+    "row_idx": 3383,
+    "row": {
+      "city": "Halle-Neustadt",
+      "latitude": 51.4833333,
+      "longitude": 11.9333334
+    }
+  },
+  {
+    "row_idx": 3384,
+    "row": {
+      "city": "Krefeld",
+      "latitude": 51.3333333,
+      "longitude": 6.5666666
+    }
+  },
+  {
+    "row_idx": 3385,
+    "row": {
+      "city": "Halle",
+      "latitude": 51.5,
+      "longitude": 12.0
+    }
+  },
+  {
+    "row_idx": 3386,
+    "row": {
+      "city": "Kiel",
+      "latitude": 54.3213293,
+      "longitude": 10.1348877
+    }
+  },
+  {
+    "row_idx": 3387,
+    "row": {
+      "city": "Magdeburg",
+      "latitude": 52.1666667,
+      "longitude": 11.666667
+    }
+  },
+  {
+    "row_idx": 3388,
+    "row": {
+      "city": "Neustadt",
+      "latitude": 52.15,
+      "longitude": 11.6333332
+    }
+  },
+  {
+    "row_idx": 3389,
+    "row": {
+      "city": "Oberhausen",
+      "latitude": 51.4666667,
+      "longitude": 6.8499999
+    }
+  },
+  {
+    "row_idx": 3390,
+    "row": {
+      "city": "Freiburg",
+      "latitude": 47.9958954,
+      "longitude": 7.8522205
+    }
+  },
+  {
+    "row_idx": 3391,
+    "row": {
+      "city": "Lubeck",
+      "latitude": 53.868927,
+      "longitude": 10.687294
+    }
+  },
+  {
+    "row_idx": 3392,
+    "row": {
+      "city": "Erfurt",
+      "latitude": 50.9833333,
+      "longitude": 11.0333328
+    }
+  },
+  {
+    "row_idx": 3393,
+    "row": {
+      "city": "Hagen",
+      "latitude": 51.35,
+      "longitude": 7.4666667
+    }
+  },
+  {
+    "row_idx": 3394,
+    "row": {
+      "city": "Rostock",
+      "latitude": 54.0886975,
+      "longitude": 12.1404934
+    }
+  },
+  {
+    "row_idx": 3395,
+    "row": {
+      "city": "Kassel",
+      "latitude": 51.3166667,
+      "longitude": 9.5
+    }
+  },
+  {
+    "row_idx": 3396,
+    "row": {
+      "city": "Hamm",
+      "latitude": 51.6803258,
+      "longitude": 7.8208923
+    }
+  },
+  {
+    "row_idx": 3397,
+    "row": {
+      "city": "Mainz",
+      "latitude": 50.0,
+      "longitude": 8.2711115
+    }
+  },
+  {
+    "row_idx": 3398,
+    "row": {
+      "city": "Saarbrucken",
+      "latitude": 49.2333333,
+      "longitude": 7.0
+    }
+  },
+  {
+    "row_idx": 3399,
+    "row": {
+      "city": "Herne",
+      "latitude": 51.55,
+      "longitude": 7.2166667
+    }
+  },
+  {
+    "row_idx": 3400,
+    "row": {
+      "city": "Mulheim an der Ruhr",
+      "latitude": 51.4333333,
+      "longitude": 6.8833332
+    }
+  },
+  {
+    "row_idx": 3401,
+    "row": {
+      "city": "Osnabruck",
+      "latitude": 52.2666667,
+      "longitude": 8.0500002
+    }
+  },
+  {
+    "row_idx": 3402,
+    "row": {
+      "city": "Solingen",
+      "latitude": 51.1833333,
+      "longitude": 7.0833335
+    }
+  },
+  {
+    "row_idx": 3403,
+    "row": {
+      "city": "Ludwigshafen am Rhein",
+      "latitude": 49.4811111,
+      "longitude": 8.4352779
+    }
+  },
+  {
+    "row_idx": 3404,
+    "row": {
+      "city": "Leverkusen",
+      "latitude": 51.0333333,
+      "longitude": 7.0
+    }
+  },
+  {
+    "row_idx": 3405,
+    "row": {
+      "city": "Oldenburg",
+      "latitude": 53.1666667,
+      "longitude": 8.1999998
+    }
+  },
+  {
+    "row_idx": 3406,
+    "row": {
+      "city": "Neuss",
+      "latitude": 51.2,
+      "longitude": 6.6833334
+    }
+  },
+  {
+    "row_idx": 3407,
+    "row": {
+      "city": "Potsdam",
+      "latitude": 52.3988578,
+      "longitude": 13.0656624
+    }
+  },
+  {
+    "row_idx": 3408,
+    "row": {
+      "city": "Heidelberg",
+      "latitude": 49.4076783,
+      "longitude": 8.6907864
+    }
+  },
+  {
+    "row_idx": 3409,
+    "row": {
+      "city": "Paderborn",
+      "latitude": 51.7190528,
+      "longitude": 8.7543869
+    }
+  },
+  {
+    "row_idx": 3410,
+    "row": {
+      "city": "Darmstadt",
+      "latitude": 49.8705556,
+      "longitude": 8.6494446
+    }
+  },
+  {
+    "row_idx": 3411,
+    "row": {
+      "city": "Wurzburg",
+      "latitude": 49.7877778,
+      "longitude": 9.9361115
+    }
+  },
+  {
+    "row_idx": 3412,
+    "row": {
+      "city": "Regensburg",
+      "latitude": 49.015,
+      "longitude": 12.0955553
+    }
+  },
+  {
+    "row_idx": 3413,
+    "row": {
+      "city": "Wolfsburg",
+      "latitude": 52.4333333,
+      "longitude": 10.8000002
+    }
+  },
+  {
+    "row_idx": 3414,
+    "row": {
+      "city": "Recklinghausen",
+      "latitude": 51.6166667,
+      "longitude": 7.1999998
+    }
+  },
+  {
+    "row_idx": 3415,
+    "row": {
+      "city": "Gottingen",
+      "latitude": 51.5333333,
+      "longitude": 9.9333334
+    }
+  },
+  {
+    "row_idx": 3416,
+    "row": {
+      "city": "Heilbronn",
+      "latitude": 49.1402778,
+      "longitude": 9.2200003
+    }
+  },
+  {
+    "row_idx": 3417,
+    "row": {
+      "city": "Ingolstadt",
+      "latitude": 48.7666667,
+      "longitude": 11.4333334
+    }
+  },
+  {
+    "row_idx": 3418,
+    "row": {
+      "city": "Ulm",
+      "latitude": 48.3984084,
+      "longitude": 9.9915504
+    }
+  },
+  {
+    "row_idx": 3419,
+    "row": {
+      "city": "Bottrop",
+      "latitude": 51.5166667,
+      "longitude": 6.9166665
+    }
+  },
+  {
+    "row_idx": 3420,
+    "row": {
+      "city": "Pforzheim",
+      "latitude": 48.8833333,
+      "longitude": 8.6999998
+    }
+  },
+  {
+    "row_idx": 3421,
+    "row": {
+      "city": "Offenbach",
+      "latitude": 50.1,
+      "longitude": 8.7666664
+    }
+  },
+  {
+    "row_idx": 3422,
+    "row": {
+      "city": "Bremerhaven",
+      "latitude": 53.55,
+      "longitude": 8.583333
+    }
+  },
+  {
+    "row_idx": 3423,
+    "row": {
+      "city": "Remscheid",
+      "latitude": 51.1833333,
+      "longitude": 7.1999998
+    }
+  },
+  {
+    "row_idx": 3424,
+    "row": {
+      "city": "Reutlingen",
+      "latitude": 48.49144,
+      "longitude": 9.2042685
+    }
+  },
+  {
+    "row_idx": 3425,
+    "row": {
+      "city": "Furth",
+      "latitude": 49.4759325,
+      "longitude": 10.9885597
+    }
+  },
+  {
+    "row_idx": 3426,
+    "row": {
+      "city": "Moers",
+      "latitude": 51.45,
+      "longitude": 6.6500001
+    }
+  },
+  {
+    "row_idx": 3427,
+    "row": {
+      "city": "Koblenz",
+      "latitude": 50.35,
+      "longitude": 7.5999999
+    }
+  },
+  {
+    "row_idx": 3428,
+    "row": {
+      "city": "Siegen",
+      "latitude": 50.8666667,
+      "longitude": 8.0333328
+    }
+  },
+  {
+    "row_idx": 3429,
+    "row": {
+      "city": "Bergisch Gladbach",
+      "latitude": 50.9833333,
+      "longitude": 7.1333332
+    }
+  },
+  {
+    "row_idx": 3430,
+    "row": {
+      "city": "Jena",
+      "latitude": 50.9333333,
+      "longitude": 11.583333
+    }
+  },
+  {
+    "row_idx": 3431,
+    "row": {
+      "city": "Gera",
+      "latitude": 50.8666667,
+      "longitude": 12.083333
+    }
+  },
+  {
+    "row_idx": 3432,
+    "row": {
+      "city": "Hildesheim",
+      "latitude": 52.15,
+      "longitude": 9.9666672
+    }
+  },
+  {
+    "row_idx": 3433,
+    "row": {
+      "city": "Erlangen",
+      "latitude": 49.5897222,
+      "longitude": 11.0038891
+    }
+  },
+  {
+    "row_idx": 3434,
+    "row": {
+      "city": "Witten",
+      "latitude": 51.4333333,
+      "longitude": 7.3333335
+    }
+  },
+  {
+    "row_idx": 3435,
+    "row": {
+      "city": "Trier",
+      "latitude": 49.7556526,
+      "longitude": 6.6393471
+    }
+  },
+  {
+    "row_idx": 3436,
+    "row": {
+      "city": "Zwickau",
+      "latitude": 50.7333333,
+      "longitude": 12.5
+    }
+  },
+  {
+    "row_idx": 3437,
+    "row": {
+      "city": "Kaiserslautern",
+      "latitude": 49.45,
+      "longitude": 7.75
+    }
+  },
+  {
+    "row_idx": 3438,
+    "row": {
+      "city": "Iserlohn",
+      "latitude": 51.3666667,
+      "longitude": 7.6999998
+    }
+  },
+  {
+    "row_idx": 3439,
+    "row": {
+      "city": "Schwerin",
+      "latitude": 53.6333333,
+      "longitude": 11.3833332
+    }
+  },
+  {
+    "row_idx": 3440,
+    "row": {
+      "city": "Gutersloh",
+      "latitude": 51.9,
+      "longitude": 8.3833332
+    }
+  },
+  {
+    "row_idx": 3441,
+    "row": {
+      "city": "Duren",
+      "latitude": 50.8,
+      "longitude": 6.4833331
+    }
+  },
+  {
+    "row_idx": 3442,
+    "row": {
+      "city": "Esslingen",
+      "latitude": 48.7396066,
+      "longitude": 9.3047333
+    }
+  },
+  {
+    "row_idx": 3443,
+    "row": {
+      "city": "Ratingen",
+      "latitude": 51.2972421,
+      "longitude": 6.8492889
+    }
+  },
+  {
+    "row_idx": 3444,
+    "row": {
+      "city": "Marl",
+      "latitude": 51.65,
+      "longitude": 7.0833335
+    }
+  },
+  {
+    "row_idx": 3445,
+    "row": {
+      "city": "Lunen",
+      "latitude": 51.6166667,
+      "longitude": 7.5166669
+    }
+  },
+  {
+    "row_idx": 3446,
+    "row": {
+      "city": "Hanau am Main",
+      "latitude": 50.1333333,
+      "longitude": 8.916667
+    }
+  },
+  {
+    "row_idx": 3447,
+    "row": {
+      "city": "Velbert",
+      "latitude": 51.3333333,
+      "longitude": 7.0500002
+    }
+  },
+  {
+    "row_idx": 3448,
+    "row": {
+      "city": "Ludwigsburg",
+      "latitude": 48.8973114,
+      "longitude": 9.1916084
+    }
+  },
+  {
+    "row_idx": 3449,
+    "row": {
+      "city": "Flensburg",
+      "latitude": 54.7833333,
+      "longitude": 9.4333334
+    }
+  },
+  {
+    "row_idx": 3450,
+    "row": {
+      "city": "Cottbus",
+      "latitude": 51.7666667,
+      "longitude": 14.333333
+    }
+  },
+  {
+    "row_idx": 3451,
+    "row": {
+      "city": "Wilhelmshaven",
+      "latitude": 53.5166667,
+      "longitude": 8.1333332
+    }
+  },
+  {
+    "row_idx": 3452,
+    "row": {
+      "city": "Tubingen",
+      "latitude": 48.522659,
+      "longitude": 9.0522194
+    }
+  },
+  {
+    "row_idx": 3453,
+    "row": {
+      "city": "Minden",
+      "latitude": 52.2833333,
+      "longitude": 8.916667
+    }
+  }
+]
