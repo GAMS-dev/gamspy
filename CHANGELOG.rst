@@ -1,123 +1,125 @@
+GAMSPy 1.13.0 (2025-07-15)
+==========================
+
+New features
+------------
+- #616: Implement container.writeSolverOptions to write solver option files to the working directory.
+- #654: Implemented `TorchSequential` convenience formulation for embedding Sequential layers into GAMSPy.
+
+Improvements in existing functionality
+--------------------------------------
+- #658: Add a gamspy option to disable solver validation. Useful for solvers that are added via gamsconfig.yaml.
+- #659: Allow server and port specification for on-prem license servers.
+- #660: Add `DROP_DOMAIN_VIOLATIONS` option.
+
+Bug fixes
+---------
+- #657: Unbounded input in the RegressionTree caused the value of M to become `infinity`. To prevent this, limit M to 1e10.
+- #663: Fix duplicate domain name issue in the MIRO contract.
+  Fix symbol declaration without records for miro apps.
+- #665: Allow PathLike objects for loadpoint option.
+- #666: Fix set attributes records call.
+- #667: Fix the bug in expert sync mode due to missing attribute.
+
+Improved documentation
+----------------------
+- #654: Added docs for `TorchSequential` formulation.
+
+GAMSPy 1.12.1 (2025-07-07)
+==========================
+
+Improvements in existing functionality
+--------------------------------------
+- #658: Add a gamspy option to disable solver validation. Useful for solvers that are added via gamsconfig.yaml.
+- #659: Allow server and port specification for on-prem license servers.
+- #660: Add `DROP_DOMAIN_VIOLATIONS` option.
+
+Bug fixes
+---------
+- #657: Unbounded input in the RegressionTree caused the value of M to become `infinity`. To prevent this, limit M to 1e10.
+- #663: Fix duplicate domain name issue in the MIRO contract.
+  Fix symbol declaration without records for miro apps.
+
 GAMSPy 1.12.0 (2025-06-21)
 ==========================
 
 New features
-============
-
+------------
 - #579: Add Decision Tree formulation.
-
 - #637: Add Conv1d formulation.
 
-
 Improvements in existing functionality
-======================================
-
+--------------------------------------
 - #561: Allow args and kwargs for gamspy scripts for miro applications.
-
 - #645: Accept os.PathLike objects as load from argument of Container.
-
 - #646: Allow providing an explicit path to the license file.
-
 - #648: Improve static typing.
 
-
 Improved documentation
-======================
-
+----------------------
 - #579: Add classic machine learning formulations to the documentation.
-
 - #637: Add docs for Conv1d formulation.
 
 GAMSPy 1.11.1 (2025-06-03)
 ==========================
 
 Improvements in existing functionality
-======================================
-
+--------------------------------------
 - #611: Allow users to create GAMSPy options from a dictionary of GAMS options.
-
 - #640: Add "append_to_log_file" option to allow appending to the log file.
 
-
 Bug fixes
-=========
-
+---------
 - #641: Fix the overload of the unary magic function.
-
 - #643: Escape underscores in latex representation to support symbol names with underscores.
 
 GAMSPy 1.11.0 (2025-05-16)
 ==========================
 
 New features
-============
-
+------------
 - #607: Allow evaluation of expression on the fly without requiring an explicit assignment statement to a parameter.
 
-
 Bug fixes
-=========
-
+---------
 - #608: Fix literal bug in latex representation of implicit symbols.
-
 - #633: Incrementally build model declaration to avoid input line length limitation (80000 characters).
-
 - #638: Fix the bug that occurs when "gamspy probe -h" runs.
 
-
 Improved documentation
-======================
-
+----------------------
 - #614: Add developer guide to the documentation.
 
-
 CI/CD changes
-=============
-
+-------------
 - #631: Add tests for Linux arm64. Add a new marker called "requires_license" to separate tests that require a license to run.
 
 GAMSPy 1.10.0 (2025-04-30)
 ==========================
 
 New features
-============
-
+------------
 - #599: Allow renaming on ``container.loadRecordsFromGdx`` function call.
-
 - #601: Allow users to disable all validation via ``gp.set_options({"VALIDATION": 0})``.
 
-
 Improvements in existing functionality
-======================================
-
+--------------------------------------
 - #594: Add GAMSPyJacobian file format for the convert function.
-
 - #612: Raise a validation error in case an automatically named symbol is used in an equation of an EMP model. Use base64 auto-generated names instead of plain uuid.uuid4 names.
-
 - #613: Improve the error message of undefined scalar equations.
-
 - #615: Remove duplicate conopt entries in gamspy list solvers cli command and add utils.getInstallableSolvers function.
-
 - #617: Cast the type of objective value, num equations, num variables, and solver time in the summary dataframe.
-
 - #623: Improve the error message in case the user does not have an internet connection or the PyPI server are down.
-
 - #624: Allow .records call on implicit variables and equations.
 
-
 Bug fixes
-=========
-
+---------
 - #625: Overload __eq__ and __ne__ magic functions of the Number class to ensure the order is correct in expressions.
-
 - #626: Fix the bug in the filtering of a single record in non-level attributes of a variable (lo, up, marginal, scale).
-
 - #629: Allow record filtering over eq.range, eq.slacklo, eq.slackup, eq.slack, and eq.infeas attributes.
 
-
 Improved documentation
-======================
-
+----------------------
 - #602: Use towncrier to automate changelog creation and avoid marge conflicts in the changelog file.
 
 GAMSPy 1.9.0

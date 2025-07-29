@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.12.0"
+version = "1.13.0"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -36,8 +36,8 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi[transfer] == 50.1.0",
-  "gamspy_base == 50.1.0",
+  "gamsapi[transfer] == 50.2.0",
+  "gamspy_base == 50.2.0",
   "pydantic >= 2.0",
   "certifi >= 2022.09.14",
   "urllib3 >= 2.0.7",
@@ -54,7 +54,7 @@ changelog = "https://github.com/GAMS-dev/gamspy/blob/develop/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
-  "ruff == 0.12.0", 
+  "ruff == 0.12.0",
   "pre-commit >= 3.5.0",
   "mypy >= 1.11.1",
 ]
@@ -68,6 +68,7 @@ test = [
   "networkx >= 3.2.1",
   "scikit-learn >= 1.6.1",
 ]
+
 doc = [
   "sphinx>=7.1.2",
   "numpydoc>=1.5.0",
@@ -86,6 +87,20 @@ doc = [
   "sphinx-tabs>=3.4.7",
   "towncrier>= 24.8.0",
 ]
+
+torch = [
+    "torch>=2.7.0"
+]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [project.scripts]
 gamspy = "gamspy._cli.cli:main"

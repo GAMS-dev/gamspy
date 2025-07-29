@@ -145,6 +145,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         obj.container._add_statement(obj)
         obj._synchronize = True
         obj._metadata = dict()
+        obj._winner = "python"
 
         # create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
@@ -231,6 +232,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._domain_violations = None
 
         self._synchronize = True
+        self._winner = "python"
 
         # domain handling
         if domain is None:

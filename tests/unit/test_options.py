@@ -6,6 +6,7 @@ import shutil
 import sys
 import tempfile
 import time
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -710,6 +711,20 @@ def test_loadpoint(data):
 
     transport.solve(options=Options(loadpoint="transport_p.gdx"))
     assert transport.num_iterations == 0
+
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".txt", delete=False
+    ) as temp_file:
+        transport.solve(
+            output=temp_file,
+            options=Options(loadpoint=Path("transport_p.gdx")),
+        )
+        temp_file.close()
+        with open(temp_file.name) as file:
+            content = file.read()
+            assert "GDX File (execute_load)" in content
+
+        os.remove(temp_file.name)
 
 
 @pytest.mark.unit

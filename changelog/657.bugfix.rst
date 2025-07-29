@@ -1,1 +1,0 @@
-Unbounded input in the RegressionTree caused the value of M to become `infinity`. To prevent this, limit M to 1e10.

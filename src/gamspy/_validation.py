@@ -1,10 +1,22 @@
 from __future__ import annotations
 
 import io
+import os
 import re
 from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, Literal
 
+from gams.core.opt import (
+    GMS_SSSIZE,
+    new_optHandle_tp,
+    optClearMessages,
+    optCreateD,
+    optFree,
+    optGetMessage,
+    optMessageCount,
+    optReadDefinition,
+    optReadParameterFile,
+)
 from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 
 import gamspy._symbols as symbols
@@ -638,3 +650,79 @@ def validate_global_options(options: Options | None) -> Options:
         return Options()
 
     return options
+
+
+def _get_def_file(system_directory: str, solver: str) -> str:
+    solver_name = solver.upper()
+    def_file_path = os.path.join(system_directory, f"opt{solver.lower()}.def")
+
+    if solver_name == "CONOPT4":
+        return os.path.join(system_directory, "optconopt.def")
+
+    if solver_name == "EXAMINER2":
+        return os.path.join(system_directory, "optexaminer.def")
+
+    if solver_name == "IPOPTH":
+        return os.path.join(system_directory, "optipopt.def")
+
+    return def_file_path
+
+
+def validate_solver_options(
+    system_directory: str, options_file_name: str, solver: str
+) -> None:
+    if not get_option("VALIDATION"):
+        return
+
+    option_handle = new_optHandle_tp()
+    rc, msg = optCreateD(option_handle, system_directory, GMS_SSSIZE)
+
+    # Return code 0 means there is an error. Weird but this is what we have to work with.
+    if rc == 0:
+        raise RuntimeError(msg)
+
+    # Check the validity of the .def file.
+    solver_def_file = _get_def_file(system_directory, solver)
+    if optReadDefinition(option_handle, solver_def_file):
+        msg_list = []
+        for i in range(optMessageCount(option_handle)):
+            msg_list.append(optGetMessage(option_handle, i + 1))
+
+        raise RuntimeError(
+            f"Error while processing {solver_def_file}. Log messages: {msg_list}"
+        )
+
+    optClearMessages(option_handle)
+
+    # Check the validity of the parameters
+    if optReadParameterFile(option_handle, options_file_name):
+        raise RuntimeError(f"Error while reading {options_file_name}")
+
+    msg_list = []
+    for i in range(optMessageCount(option_handle)):
+        msg_list.append(optGetMessage(option_handle, i + 1))
+
+    optClearMessages(option_handle)
+    optFree(option_handle)
+
+    if msg_list:
+        error_messages = []
+        for message in msg_list:
+            # optMsgInputEcho    = 0,
+            # optMsgHelp         = 1,
+            # optMsgDefineError  = 2,
+            # optMsgValueError   = 3,
+            # optMsgValueWarning = 4,
+            # optMsgDeprecated   = 5,
+            # optMsgFileEnter    = 6,
+            # optMsgFileLeave    = 7,
+            # optMsgTooManyMsgs  = 8,
+            # optMsgUserError    = 9
+            if message[1] not in (6, 7):
+                error_messages.append(message[0])
+
+        if error_messages:
+            error_message = "\n".join(error_messages)
+            raise ValidationError(
+                f"Error while reading the parameter file: \n\n{error_message}"
+            )

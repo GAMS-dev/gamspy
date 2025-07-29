@@ -43,6 +43,20 @@ ATTR_MAPPING = {
     "scale": "scale",
 }
 
+SET_ATTR_MAPPING = {
+    "pos": "position",
+    "ord": "order",
+    "off": "off",
+    "rev": "reverse",
+    "uel": "uel_position",
+    "len": "length",
+    "tlen": "text_length",
+    "val": "value",
+    "tval": "text_value",
+    "first": "is_first",
+    "last": "is_last",
+}
+
 
 class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __init__(
@@ -163,13 +177,24 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         if self.parent.records is None:
             return None
 
-        if isinstance(self.parent, syms.Parameter):
+        if isinstance(self.parent, (syms.Set, syms.Alias)):
+            temp_name = "p" + utils._get_unique_name()
+            temp_param = syms.Parameter._constructor_bypass(
+                self.container, temp_name, [self.parent, "*"]
+            )
+            column_name = SET_ATTR_MAPPING[self.name.split(".")[1]]
+            temp_param[self.parent, column_name] = self
+            del self.container.data[temp_name]
+            return temp_param.records
+        elif isinstance(self.parent, syms.Parameter):
             recs = self.parent.records
             for idx, literal in self._scalar_domains:
                 column_name = recs.columns[idx]
                 recs = recs[recs[column_name] == literal]
 
-            if all(isinstance(elem, str) for elem in self.domain):
+            if all(
+                isinstance(elem, str) and elem != "*" for elem in self.domain
+            ):
                 return float(recs["value"].squeeze())
 
             return recs
@@ -190,7 +215,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
                 column_name = recs.columns[idx]
                 recs = recs[recs[column_name] == literal]
 
-            if all(isinstance(elem, str) for elem in self.domain):
+            if all(
+                isinstance(elem, str) and elem != "*" for elem in self.domain
+            ):
                 return float(recs[extension].squeeze())
 
             return recs

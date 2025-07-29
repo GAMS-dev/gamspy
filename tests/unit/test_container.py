@@ -1194,6 +1194,62 @@ def test_explicit_license_path():
         xdice.solve()
 
 
+def test_writeSolverOptions():
+    m = Container()
+    m.writeSolverOptions(
+        "conopt",
+        solver_options={"rtmaxv": "1.e12"},
+    )
+    solver_options_path = os.path.join(m.working_directory, "conopt.opt")
+    assert os.path.exists(solver_options_path)
+    with open(solver_options_path) as file:
+        assert "rtmaxv" in file.read()
+
+    m.writeSolverOptions(
+        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=2
+    )
+    solver_options_path = os.path.join(m.working_directory, "conopt.op2")
+    assert os.path.exists(solver_options_path)
+
+    m.writeSolverOptions(
+        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=9
+    )
+    solver_options_path = os.path.join(m.working_directory, "conopt.op9")
+    assert os.path.exists(solver_options_path)
+
+    m.writeSolverOptions(
+        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=10
+    )
+    solver_options_path = os.path.join(m.working_directory, "conopt.o10")
+    assert os.path.exists(solver_options_path)
+
+    m.writeSolverOptions(
+        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=99
+    )
+    solver_options_path = os.path.join(m.working_directory, "conopt.o99")
+    assert os.path.exists(solver_options_path)
+
+    m.writeSolverOptions(
+        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=100
+    )
+    solver_options_path = os.path.join(m.working_directory, "conopt.100")
+    assert os.path.exists(solver_options_path)
+
+    m.writeSolverOptions(
+        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=999
+    )
+    solver_options_path = os.path.join(m.working_directory, "conopt.999")
+    assert os.path.exists(solver_options_path)
+
+    m.writeSolverOptions(
+        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=1234
+    )
+    solver_options_path = os.path.join(m.working_directory, "conopt.1234")
+    assert os.path.exists(solver_options_path)
+
+    m.close()
+
+
 @pytest.mark.unit
 def test_domain_violations():
     import gamspy as gp
@@ -1236,3 +1292,18 @@ def test_domain_violations():
     assert e._domain_violations[0].violations == ["i2"]
 
     gp.set_options({"DROP_DOMAIN_VIOLATIONS": 0})
+
+
+@pytest.mark.unit
+def test_expert_sync():
+    import gamspy as gp
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i1", "i2", "i3"])
+    a = gp.Parameter(m, "a", domain=[i, i])
+    a.synchronize = False
+    for s in range(5):
+        a[i, i].where[gp.Ord(i) == 1] = 0.1 * s
+        assert a.records is None
+    a.synchronize = True
+    assert a.toList() == [("i1", "i1", 0.4)]
