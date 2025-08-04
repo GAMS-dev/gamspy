@@ -231,6 +231,12 @@ class Options(BaseModel):
         Monitor the memory used by the GAMS process tree
     profile: int | None
         Execution profiling
+
+        * **Option 0**: Do not profile.
+
+        * **Option 1**: Minimum profiling.
+
+        * **Option n**: Profiling depth for nested control structures.
     profile_file: str
         Write profile information to this file
     profile_tolerance: float | None

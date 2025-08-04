@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import glob
 import os
+import pathlib
 import platform
 import shutil
 import subprocess
@@ -799,3 +800,66 @@ def test_savepoint(data):
             assert "GDX File (execute_load)" in content
 
         os.remove(temp_file.name)
+
+
+def test_external_equation_on_engine(data):
+    directory = str(pathlib.Path(__file__).parent.resolve())
+    external_module = os.path.relpath(
+        os.path.join(
+            directory, "external_module", "build", "libsimple_ext_module"
+        ),
+        os.getcwd(),
+    )
+
+    if platform.system() == "Darwin":
+        if platform.machine() == "arm64":
+            external_module += "_arm64"
+
+        external_module += ".dylib"
+    elif platform.system() == "Linux":
+        external_module += ".so"
+    elif platform.system() == "Windows":
+        external_module += ".dll"
+
+    if platform.system() == "Linux" and platform.machine() == "aarch64":
+        return
+
+    if platform.system() == "Linux":
+        m = Container(working_directory=".")
+        y1 = Variable(m, "y1")
+        y2 = Variable(m, "y2")
+        x1 = Variable(m, "x1")
+        x2 = Variable(m, "x2")
+
+        eq1 = Equation(m, "eq1", type="external")
+        eq2 = Equation(m, "eq2", type="external")
+
+        eq1[...] = 1 * x1 + 3 * y1 == 1
+        eq2[...] = 2 * x2 + 4 * y2 == 2
+
+        model = Model(
+            container=m,
+            name="sincos",
+            equations=m.getEquations(),
+            problem="NLP",
+            sense="min",
+            objective=y1 + y2,
+            external_module=external_module,
+        )
+
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+        )
+
+        model.solve(
+            output=sys.stdout,
+            solver="conopt",
+            backend="engine",
+            client=client,
+        )
+        assert y1.toDense() == -1.0
+
+        m.close()

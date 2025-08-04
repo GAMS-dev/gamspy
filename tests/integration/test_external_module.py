@@ -11,7 +11,6 @@ import sys
 import pytest
 
 import gamspy as gp
-from gamspy import EngineClient
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.integration
@@ -103,47 +102,3 @@ def test_sin_cos_example2(data):
 
     with pytest.raises(ValidationError):
         eq1[...] = 1 * x1 + 3 * y1 >= 1
-
-
-def test_external_equation_on_engine(data):
-    if platform.system() == "Linux" and platform.machine() == "aarch64":
-        return
-
-    m, external_module = data
-    if platform.system() == "Linux":
-        m = gp.Container(working_directory=".")
-        y1 = gp.Variable(m, "y1")
-        y2 = gp.Variable(m, "y2")
-        x1 = gp.Variable(m, "x1")
-        x2 = gp.Variable(m, "x2")
-
-        eq1 = gp.Equation(m, "eq1", type="external")
-        eq2 = gp.Equation(m, "eq2", type="external")
-
-        eq1[...] = 1 * x1 + 3 * y1 == 1
-        eq2[...] = 2 * x2 + 4 * y2 == 2
-
-        model = gp.Model(
-            container=m,
-            name="sincos",
-            equations=m.getEquations(),
-            problem="NLP",
-            sense="min",
-            objective=y1 + y2,
-            external_module=external_module,
-        )
-
-        client = EngineClient(
-            host=os.environ["ENGINE_URL"],
-            username=os.environ["ENGINE_USER"],
-            password=os.environ["ENGINE_PASSWORD"],
-            namespace=os.environ["ENGINE_NAMESPACE"],
-        )
-
-        model.solve(
-            output=sys.stdout,
-            solver="conopt",
-            backend="engine",
-            client=client,
-        )
-        assert y1.toDense() == -1.0
