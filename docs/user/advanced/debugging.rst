@@ -340,7 +340,7 @@ tree memory usage.
 .. code-block:: python
 
     from gamspy import Container, Options
-    m = Container(options=Options(profile_file="<file_path>", monitor_process_tree_memory=True))
+    m = Container(options=Options(profile=1, profile_file="<file_path>", monitor_process_tree_memory=True))
 
 Setting GAMSPy Configurations
 -----------------------------
