@@ -127,6 +127,7 @@ deg-engine-3.13:
   stage: engine
   when: manual
   needs: []
+  allow_failure: true
   tags: [macos]
   script:
     - |
@@ -145,6 +146,7 @@ deg-engine-3.9:
   stage: engine
   when: manual
   needs: []
+  allow_failure: true
   tags: [macos]
   script:
     - |
@@ -164,6 +166,7 @@ deg-neos-3.13:
   stage: neos
   when: manual
   needs: []
+  allow_failure: true
   tags: [macos]
   script:
     - |
@@ -182,6 +185,7 @@ deg-neos-3.9:
   stage: neos
   when: manual
   needs: []
+  allow_failure: true
   tags: [macos]
   script:
     - |

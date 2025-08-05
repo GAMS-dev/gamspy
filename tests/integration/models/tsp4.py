@@ -22,7 +22,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import gamspy.math as gams_math
+import networkx as nx
+
 from gamspy import (
     Alias,
     Container,
@@ -32,7 +33,6 @@ from gamspy import (
     Ord,
     Parameter,
     Set,
-    Smax,
     Sum,
     Variable,
 )
@@ -109,15 +109,6 @@ def main():
     if len(t) < len(i):
         raise GamspyException("Set t is possibly too small")
 
-    # SETS
-    tour = Set(m, name="tour", domain=[i, j, t], description="subtours")
-    visited = Set(
-        m,
-        name="visited",
-        domain=i,
-        description="flag whether a city is already visited",
-    )
-
     # SINGLETON SETS
     fromi = Set(
         m,
@@ -126,13 +117,6 @@ def main():
         is_singleton=True,
         description="contains always one element: the from city",
     )
-    nextj = Set(
-        m,
-        name="nextj",
-        domain=j,
-        is_singleton=True,
-        description="contains always one element: the to city",
-    )
     tt = Set(
         m,
         name="tt",
@@ -140,9 +124,6 @@ def main():
         is_singleton=True,
         description="contains always one element: the current subtour",
     )
-
-    # ALIASES ##
-    ix = Alias(m, name="ix", alias_with=i)
 
     # initialize
     fromi[i].where[Ord(i) == 1] = True  # turn first element on
@@ -167,9 +148,6 @@ def main():
     # Parameter
     cutcoeff = Parameter(m, name="cutcoeff", domain=[cc, i, j])
     rhs = Parameter(m, name="rhs", domain=cc)
-    nosubtours = Parameter(
-        m, name="nosubtours", description="number of subtours"
-    )
 
     # Equation
     cut = Equation(m, name="cut", domain=cc, description="dynamic cuts")
@@ -190,51 +168,22 @@ def main():
     curcut[cc].where[Ord(cc) == 1] = True
 
     for ccc_loop in ccc.toList():
-        #  initialize
-        fromi[i].where[Ord(i) == 1] = True  # turn first element on
-        tt[t].where[Ord(t) == 1] = True  # turn first element on
-        tour[i, j, t] = False
-        visited[i] = False
+        G = nx.DiGraph()
+        G.add_nodes_from(i.getUELs())
+        x_filtered = x.records[x.records["level"] > 0.5].loc[:, :"level"]
+        edges = list(zip(x_filtered["ii"], x_filtered["jj"]))
+        G.add_edges_from(edges)
+        S = [G.subgraph(c).copy() for c in nx.strongly_connected_components(G)]
 
-        for _ in i.toList():
-            nextj[j].where[x.l[fromi, j] > 0.5] = (
-                True  # check x.l(fromi,j) = 1 would be dangerous
-            )
-            tour[fromi, nextj, tt] = True  # store in table
-            visited[fromi] = True  # mark city 'fromi' as visited
-            fromi[j] = nextj[j]
-
-            if nextj.toList()[0] in visited.toList():  # if already visited...
-                tt[t] = tt[t - 1]
-                for ix_loop in ix.toList():
-                    if (
-                        ix_loop in visited.toList()
-                    ):  # find starting point of new subtour
-                        continue
-                    fromi[ix_loop] = True
-
-        nosubtours[...] = Sum(t, gams_math.Max(0, Smax(tour[i, j, t], 1)))
-
-        if nosubtours.toValue() == 1:  # done: no subtours
+        nosubtours = len(S)
+        if nosubtours == 1:  # done: no subtours
             break
 
-        # introduce cut
-        for idx, t_loop in enumerate(t.toList()):
-            if idx + 1 > nosubtours.toValue():
-                continue
+        for s in S:
             rhs[curcut] = -1
-
-            for i_loop, j_loop, t_loop2, _ in tour.records.itertuples(
-                index=False
-            ):
-                if t_loop2 != t_loop:
-                    continue
-
-                cutcoeff[curcut, i_loop, j_loop].where[
-                    x.l[i_loop, j_loop] > 0.5
-                ] = 1
-                # not needed due to nature of assignment constraints
-                #        cutcoeff(curcut, i, j)$(x.l[i,j] < 0.5) = -1
+            for u, v in s.edges():
+                if x.l[u, v].records > 0.5:
+                    cutcoeff[curcut, i, j].where[i.sameAs(u) & j.sameAs(v)] = 1
                 rhs[curcut] = rhs[curcut] + 1
             allcuts[curcut] = True  # include this cut in set
             curcut[cc] = curcut[cc - 1]
@@ -244,10 +193,10 @@ def main():
             "Cut: ",
             ccc_loop,
             "\t\t # of subtours remaining: ",
-            nosubtours.toValue() - 1,
+            nosubtours - 1,
         )
 
-    if nosubtours.toValue() != 1:
+    if nosubtours != 1:
         raise GamspyException("Too many cuts needed")
 
     print("No subtours remaining. Solution found!!\n")
