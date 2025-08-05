@@ -435,3 +435,100 @@ def test_probe(teardown):
     )
 
     assert process.returncode == 0, process.stdout + process.stderr
+
+
+DUMMY_GDX = os.path.join(os.path.dirname(__file__), "file1.gdx")
+DUMMY_GDX2 = os.path.join(os.path.dirname(__file__), "file2.gdx")
+
+
+def run_cli(args):
+    return subprocess.run(
+        [sys.executable, "-Bm", "gamspy", "gdx"] + args,
+        capture_output=True,
+        text=True,
+    )
+
+
+@pytest.mark.parametrize(
+    "flag,value",
+    [
+        ("--output", "out.txt"),
+        ("--symb", "a"),
+        ("--ueltable", "uelVar"),
+        ("--delim", "comma"),
+        ("--decimalsep", "period"),
+        ("--dformat", "hexponential"),
+        ("--cdim", "Y"),
+        ("--filterdef", "N"),
+        ("--epsout", "EPSVAL"),
+        ("--naout", "NA_VAL"),
+        ("--pinfout", "PINFINITY"),
+        ("--minfout", "-INFINITY"),
+        ("--undfout", "UNDEFINED"),
+        ("--zeroout", "0.000"),
+        ("--header", "My Header"),
+    ],
+)
+def test_gdx_dump_with_value_flags(flag, value):
+    result = run_cli(["dump", DUMMY_GDX, flag, value])
+    assert result.returncode == 0, f"Failed: {flag} = {value}"
+
+
+@pytest.mark.parametrize(
+    "flag",
+    [
+        "--version",
+        "--noheader",
+        "--nodata",
+        "--csvallfields",
+        "--csvsettext",
+        "--symbols",
+        "--domaininfo",
+        "--symbolsasset",
+        "--symbolsassetdi",
+        "--settext",
+    ],
+)
+def test_gdx_dump_with_boolean_flags(flag):
+    result = run_cli(["dump", DUMMY_GDX, flag])
+    assert result.returncode == 0, f"Failed: {flag}"
+
+
+@pytest.mark.parametrize(
+    "flag,value",
+    [
+        ("--eps", "1e-6"),
+        ("--releps", "1e-5"),
+        ("--field", "L"),
+        ("--setdesc", "N"),
+    ],
+)
+def test_gdx_diff_with_value_flags(flag, value):
+    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, flag, value])
+    assert result.returncode == 0, f"Failed: {flag} = {value}"
+
+
+@pytest.mark.parametrize(
+    "flag",
+    [
+        "--cmpdefaults",
+        "--cmpdomains",
+        "--matrixfile",
+        "--ignoreorder",
+    ],
+)
+def test_gdx_diff_with_boolean_flags(flag):
+    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, flag])
+    assert result.returncode == 0, f"Failed: {flag}"
+
+
+def test_gdx_diff_with_ids():
+    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--id", "a", "--id", "b"])
+    assert result.returncode == 0
+
+
+def test_gdx_diff_with_skipids():
+    result = run_cli(
+        ["diff", DUMMY_GDX, DUMMY_GDX2, "--skipid", "a", "--skipid", "b"]
+    )
+    assert result.returncode == 0

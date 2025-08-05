@@ -49,6 +49,7 @@ Show help message::
       -v, --version  Shows the version of GAMSPy, GAMS and gamspy_base
 
     Commands:
+      gdx       To dump and compare GDX files.
       install   To install licenses and solvers.
       list      To list solvers.
       probe     To probe node information for license retrieval.
@@ -60,9 +61,9 @@ Show help message::
 Show version information::
 
     $ gamspy --version
-    GAMSPy version: 1.4.0
-    GAMS version: 48.5.0
-    gamspy_base version: 48.5.0                              
+    GAMSPy version: 1.13.0
+    GAMS version: 50.2.0
+    gamspy_base version: 50.2.0                              
 
 List of Commands
 ----------------
@@ -70,6 +71,7 @@ List of Commands
 .. toctree::
     :maxdepth: 1
 
+    gdx
     install
     list
     probe
