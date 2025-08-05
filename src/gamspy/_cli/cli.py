@@ -1,20 +1,14 @@
 from __future__ import annotations
 
-import os
-import subprocess
 from typing import Optional
-
 import typer
-
-from gamspy.exceptions import ValidationError
-import gamspy.utils as utils
-
-from . import install, list, retrieve, run, show, uninstall, probe
+from . import gdx, install, list, retrieve, run, show, uninstall, probe
 
 app = typer.Typer(
     rich_markup_mode="rich",
     context_settings={"help_option_names": ["-h", "--help"]},
 )
+app.add_typer(gdx.app, name="gdx")
 app.add_typer(install.app, name="install")
 app.add_typer(list.app, name="list")
 app.add_typer(probe.app, name="probe")
