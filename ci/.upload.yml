@@ -1,6 +1,7 @@
 leg-upload-wheel:
   stage: upload
   needs: []
+  allow_failure: true
   tags: [puma]
   image: python:3.12
   script:

@@ -120,6 +120,7 @@ dac-engine-3.13:
   stage: engine
   when: manual
   needs: []
+  allow_failure: true
   tags: [macos-arm64]
   script:
     - |
@@ -138,6 +139,7 @@ dac-engine-3.9:
   stage: engine
   when: manual
   needs: []
+  allow_failure: true
   tags: [macos-arm64]
   script:
     - |
@@ -157,6 +159,7 @@ dac-neos-3.13:
   stage: neos
   when: manual
   needs: []
+  allow_failure: true
   tags: [macos-arm64]
   script:
     - |
@@ -175,6 +178,7 @@ dac-neos-3.9:
   stage: neos
   when: manual
   needs: []
+  allow_failure: true
   tags: [macos-arm64]
   script:
     - |

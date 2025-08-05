@@ -99,6 +99,7 @@ wei-engine-3.13:
   stage: engine
   when: manual
   needs: []
+  allow_failure: true
   tags: [windows]
   image: winamd64/python:3.13
   script:
@@ -110,6 +111,7 @@ wei-engine-3.9:
   stage: engine
   when: manual
   needs: []
+  allow_failure: true
   tags: [windows]
   image: winamd64/python:3.9
   script:
@@ -122,6 +124,7 @@ wei-neos-3.13:
   stage: neos
   when: manual
   needs: []
+  allow_failure: true
   tags: [windows]
   image: winamd64/python:3.13
   script:
@@ -133,6 +136,7 @@ wei-neos-3.9:
   stage: neos
   when: manual
   needs: []
+  allow_failure: true
   tags: [windows]
   image: winamd64/python:3.9
   script:

@@ -1,6 +1,7 @@
 leg-performance:
   stage: performance
   needs: []
+  allow_failure: true
   tags: [puma]
   image: python:3.12
   when: manual
