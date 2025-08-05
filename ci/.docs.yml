@@ -2,6 +2,7 @@ leg-build-docs:
   stage: docs
   when: manual
   needs: []
+  allow_failure: true
   tags: [linux]
   image: python:3.10
   script:
