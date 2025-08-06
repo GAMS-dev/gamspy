@@ -810,14 +810,31 @@ def test_solver_options_twice(data):
     transport.solve(
         solver="cplex",
         solver_options={"lpmethod": 4},
-        options=Options(log_file=log_file_path),
+        options=Options(log_file=log_file_path, solve_link_type="memory"),
     )
     with open(log_file_path) as file:
-        assert "OptFile 1" in file.read()
+        content = file.read()
+        assert "Solvelink=5" in content
+        assert "OptFile 1" in content
 
     transport.solve(options=Options(log_file=log_file_path))
     with open(log_file_path) as file:
-        assert "OptFile 0" in file.read()
+        content = file.read()
+        assert "Solvelink=2" in content
+        assert "OptFile 0" in content
+
+    transport2 = Model(
+        m,
+        name="transport2",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), 2 * c[i, j] * x[i, j]),
+    )
+    transport2.solve(options=Options(log_file=log_file_path))
+    with open(log_file_path) as file:
+        content = file.read()
+        assert "Solvelink=2" in content
 
 
 @pytest.mark.unit
