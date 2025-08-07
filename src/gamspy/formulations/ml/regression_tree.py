@@ -375,7 +375,7 @@ class RegressionTree:
                 expression.Expression(_feat_vars.fx[...], "=", input[...])
             )
 
-        set_of_leafs._setRecords(range(nleafs))
+        set_of_leafs.setRecords(range(nleafs))
         definition = expression.Expression(
             assign_one_output[set_of_samples],
             "..",
@@ -389,7 +389,7 @@ class RegressionTree:
 
         idx, jdx = np.indices((nleafs, output_dim), dtype=int)
         mapped_values = self.value[leafs[:, None], jdx]
-        out_link._setRecords(
+        out_link.setRecords(
             [
                 (int(i), int(j), v)
                 for i, j, v in np.stack(
@@ -416,8 +416,8 @@ class RegressionTree:
         _feat_par.setRecords(
             np.stack([node_lb, node_ub], axis=-1)[:, leafs, :]
         )
-        max_out._setRecords(np.max(self.value[leafs, :], axis=0))
-        min_out._setRecords(np.min(self.value[leafs, :], axis=0))
+        max_out.setRecords(np.max(self.value[leafs, :], axis=0))
+        min_out.setRecords(np.min(self.value[leafs, :], axis=0))
 
         definition = expression.Expression(
             ub_output[...], "..", out <= max_out
@@ -430,7 +430,7 @@ class RegressionTree:
         )
         lb_output._definition = definition
         self.container._add_statement(definition)
-        cons_type._setRecords(["ge", "le"])
+        cons_type.setRecords(["ge", "le"])
 
         ### This generates the set of possible paths given the input data
         mask = (_feat_vars.up[...] >= _feat_par[..., "lb"]) & (

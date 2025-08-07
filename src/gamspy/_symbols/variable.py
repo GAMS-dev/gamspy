@@ -380,9 +380,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         self.domain = new_domain
 
-    def __hash__(self):
-        return id(self)
-
     def __getitem__(
         self, indices: Sequence | str | EllipsisType | slice
     ) -> implicits.ImplicitVariable:
@@ -862,15 +859,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             # reset state check flags for all symbols in the container
             for _, symbol in self.container.data.items():
                 symbol._requires_state_check = True
-
-    def _setRecords(
-        self, records: Any, *, uels_on_axes: bool = False, sync: bool = False
-    ) -> None:
-        super().setRecords(records, uels_on_axes)
-        self.modified = True
-
-        if sync:
-            self.container._synch_with_gams()
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         """

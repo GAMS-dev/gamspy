@@ -502,18 +502,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             for symbol in self.container.data.values():
                 symbol._requires_state_check = True
 
-    def __hash__(self):
-        return id(self)
-
-    def _setRecords(
-        self, records: Any, *, uels_on_axes: bool = False, sync: bool = False
-    ) -> None:
-        super().setRecords(records, uels_on_axes)
-        self.modified = True
-
-        if sync:
-            self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
-
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         """
         Main convenience method to set standard pandas.DataFrame formatted
