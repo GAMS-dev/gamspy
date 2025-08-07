@@ -1,2 +1,1 @@
-Add container.setRecords function to allow setting records of symbols in one call.
 Add RandomForest formulation.
