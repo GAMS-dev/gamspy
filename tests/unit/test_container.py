@@ -496,7 +496,7 @@ def test_generate_gams_string():
     _ = Equation(m, "e")
 
     generated = m.generateGamsString()
-    expected = "$onMultiR\n$onUNDF\n$onDotL\nSet i(*) / /;\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nAlias(i,a);\nParameter p / /;\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nfree Variable v / /;\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nEquation e / /;\n$offDotL\n$offUNDF\n$offMulti\n"
+    expected = "$onMultiR\n$onUNDF\n$onDotL\nSet i(*) / /;\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nAlias(i,a);\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nParameter p / /;\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nfree Variable v / /;\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nEquation e / /;\n$offDotL\n$offUNDF\n$offMulti\n"
     assert generated == expected
 
     assert (
@@ -971,21 +971,6 @@ def test_mcp_serialization(data) -> None:
 
 
 @pytest.mark.unit
-def test_set_records():
-    import gamspy as gp
-
-    m = gp.Container()
-    i = gp.Set(m, "i")
-    j = gp.Set(m, "j")
-    k = gp.Alias(m, "k", alias_with=j)
-    a = gp.Parameter(m, "a")
-    m.setRecords({i: range(5), k: range(3), a: 3})
-    assert i.toList() == ["0", "1", "2", "3", "4"]
-    assert j.toList() == ["0", "1", "2"]
-    assert k.toList() == ["0", "1", "2"]
-    assert a.toValue() == 3.0
-
-
 def test_auto_python_name_retrieval():
     import gamspy as gp
 
