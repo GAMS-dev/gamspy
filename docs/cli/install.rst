@@ -6,7 +6,7 @@ gamspy install
 Installs add-on solvers or a license to the GAMSPy installation.
 
 Install License
--------------
+---------------
 
 Installs a new license using either an access code or a license file.
 
@@ -54,7 +54,7 @@ Install using license file::
   $ gamspy install license /home/joe/gamslice.txt
 
 Install Solver
--------------
+--------------
 
 Installs one or more solvers to the GAMSPy installation.
 

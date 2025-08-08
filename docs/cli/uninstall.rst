@@ -1,10 +1,10 @@
 gamspy uninstall
-===============
+================
 
 Uninstalls solvers or the current license from the GAMSPy installation.
 
 Uninstall License
----------------
+-----------------
 
 Uninstalls the current license.
 
@@ -20,7 +20,7 @@ Example::
   $ gamspy uninstall license
 
 Uninstall Solver
---------------
+----------------
 
 Uninstalls one or more solvers from the GAMSPy installation.
 

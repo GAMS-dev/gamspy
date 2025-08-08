@@ -1,10 +1,10 @@
 gamspy show
-==========
+===========
 
 Shows information about your GAMSPy installation.
 
 Show License
------------
+------------
 
 Shows the content of the current license.
 
@@ -25,7 +25,7 @@ Example::
   [License content will be displayed here]
 
 Show Base Directory
------------------
+-------------------
 
 Shows the path of the gamspy_base installation directory.
 
