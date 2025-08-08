@@ -373,6 +373,10 @@ Implements the ReLU activation function using `SOS1 <https://www.gams.com/47/doc
 Implements the softmax activation function. This function strictly 
 requires a GAMSPy Variable, y = softmax(x).
 
+:meth:`leaky_relu_with_binary_var <gamspy.math.leaky_relu_with_binary_var>`
+---------------------------------------------------------------
+Implements the Leaky ReLU activation function using binary variables.
+
 :meth:`log_softmax <gamspy.math.log_softmax>`
 ---------------------------------------------
 Implements the log_softmax activation function. This function strictly 

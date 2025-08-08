@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import gamspy._symbols.implicits as implicits
 import gamspy.math
 import gamspy.utils as utils
+from gamspy._symbols.equation import Equation
 from gamspy._symbols.parameter import Parameter
 from gamspy._symbols.variable import Variable
 from gamspy.exceptions import ValidationError
@@ -128,6 +129,122 @@ def relu_with_sos1_var(
         return y[activation_domain], y[sos1_var_domain], [eq]
 
     return y[activation_domain], [eq]
+
+
+def leaky_relu_with_binary_var(
+    x: (
+        Parameter
+        | Variable
+        | implicits.ImplicitParameter
+        | implicits.ImplicitVariable
+        | Expression
+        | Operation
+    ),
+    negative_slope: float,
+    default_lb: float = -(10**6),
+    default_ub: float = 10**6,
+    *,
+    return_binary_var: bool = False,
+):
+    """
+    Implements the LeakyReLU activation function using binary variables. The LeakyReLU
+    function is defined as LeakyReLU(x, negative_slope) = max(x, 0) + negative_slope * min(0, x).
+    This implementation **generates** one binary variable, one output variable and four
+    equations. The binary variable is necessary to represent the mathematical relationship,
+    while the output variable serves as the activation variable. Both the binary and
+    ouput variables share the same domain as the input.
+
+    The formulation of this function requires having lower and upper bounds
+    for the input ``x``. This function utilizes the bounds from the variables
+    if provided. If not, it defaults to the bounds defined by ``default_lb``
+    and ``default_ub``. Providing tighter and **correct** bounds can enhance
+    the quality of linear relaxations.
+
+    Returns the activation variable and the equation list if ``return_binary_var`` is False,
+    otherwise returns activation, binary variable and equation list in order.
+
+    Parameters
+    ----------
+    x : Parameter | Variable | implicits.ImplicitParameter | implicits.ImplicitVariable | Expression | Operation
+    negative_slope: float
+    default_ub : float
+    default_lb : float
+    return_binary_var: bool
+
+    Returns
+    -------
+    tuple[Variable, list[Equation]] | tuple[Variable, Variable, list[Equation]]
+
+    Examples
+    --------
+    >>> from gamspy import Container, Variable, Set
+    >>> from gamspy.math.activation import leaky_relu_with_binary_var
+    >>> m = Container()
+    >>> i = Set(m, "i", records=range(3))
+    >>> x = Variable(m, "x", domain=[i])
+    >>> y, eqs = leaky_relu_with_binary_var(x, 0.01)
+    >>> len(eqs)
+    4
+    >>> y, b, eqs = leaky_relu_with_binary_var(x, 0.01, return_binary_var=True)
+    >>> b.type
+    'binary'
+    >>> y.domain # i many activation variables
+    [Set(name='i', domain=['*'])]
+    >>> b.domain # i many binary variables
+    [Set(name='i', domain=['*'])]
+
+    """
+    assert x.container
+
+    if negative_slope <= 0 or negative_slope >= 1:
+        raise ValidationError("negative_slope must be in the range (0, 1).")
+
+    domain = x.domain
+    sigma = Variable._constructor_bypass(
+        x.container,
+        _get_random_name("bin"),
+        type="binary",
+        domain=domain,
+    )
+
+    y = Variable._constructor_bypass(
+        x.container,
+        _get_random_name("y"),
+        domain=domain,
+        type="free",
+    )
+
+    eq = [
+        Equation._constructor_bypass(
+            x.container,
+            _get_random_name("eq"),
+            domain=domain,
+        )
+        for _ in range(4)
+    ]
+
+    eq[0][...] = y >= x
+    eq[1][...] = y >= negative_slope * x
+
+    if isinstance(x, Variable):
+        eq[2][...] = y <= x - (1 - sigma) * (1 - negative_slope) * _get_lb(
+            x, default_lb
+        )
+        eq[3][...] = y <= negative_slope * x + sigma * (
+            1 - negative_slope
+        ) * _get_ub(x, default_ub)
+        y.lo[...] = x.lo[...] * negative_slope
+        y.up[...] = gamspy.math.Max(0, x.up[...])
+    else:
+        eq[2][...] = y <= x - (1 - sigma) * (1 - negative_slope) * default_lb
+        eq[3][...] = y <= negative_slope * x + sigma * default_ub * (
+            1 - negative_slope
+        )
+
+    if return_binary_var:
+        return y, sigma, eq
+    else:
+        return y, eq
 
 
 def relu_with_binary_var(
