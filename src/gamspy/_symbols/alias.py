@@ -215,6 +215,16 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         if self.alias_with.synchronize:  # type: ignore
             self.container._synch_with_gams(gams_to_gamspy=True)
 
+    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+        super().setRecords(records, uels_on_axes)
+
+        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
+            if self.hasDomainViolations():
+                self._domain_violations = self.getDomainViolations()
+                self.dropDomainViolations()
+            else:
+                self._domain_violations = None
+
     @property
     def synchronize(self):
         raise ValidationError(

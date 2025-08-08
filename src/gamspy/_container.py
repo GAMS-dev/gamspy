@@ -31,7 +31,7 @@ from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
-    from typing import Any, Literal
+    from typing import Any, Literal, TypeAlias, Union
 
     from pandas import DataFrame
 
@@ -47,6 +47,8 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy.math.matrix import Dim
+
+    SymbolType: TypeAlias = Union[Set, Alias, Parameter, Variable, Equation]
 
 LOOPBACK = "127.0.0.1"
 IS_MIRO_INIT = os.getenv("MIRO", False)
@@ -769,6 +771,45 @@ class Container(gt.Container):
             load_from = os.fspath(load_from)
 
         self._read(load_from, symbol_names, load_records, mode, encoding)
+        self._synch_with_gams()
+
+    def setRecords(
+        self,
+        records: dict[SymbolType, Any],
+        *,
+        uels_on_axes: bool | list[bool] = False,
+    ) -> None:
+        """
+        Batched setRecords call where one can set the records of many symbols at once.
+
+        Parameters
+        ----------
+        records : dict[SymbolType, Any]
+            Dictionary of records where keys are symbols are values are their records.
+        uels_on_axes : bool, optional
+            If uels_on_axes=True setRecords will assume that all domain information is contained in the axes of the pandas object. Data will be flattened (if necessary).
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> k = gp.Set(m, "k")
+        >>> m.setRecords({i: range(10), k: range(5)})
+
+        """
+        if not isinstance(uels_on_axes, list):
+            uels_on_axes = [uels_on_axes] * len(records)
+
+        if len(uels_on_axes) != len(records):
+            raise ValidationError(
+                f"Length of `records` and `uels_on_axes` must match. Size of records: {len(records)}, size of uels_on_axes: {len(uels_on_axes)}"
+            )
+
+        for item, uels_on_axe in zip(records.items(), uels_on_axes):
+            symbol, record = item
+            symbol._setRecords(record, uels_on_axes=uels_on_axe)
+
         self._synch_with_gams()
 
     def write(

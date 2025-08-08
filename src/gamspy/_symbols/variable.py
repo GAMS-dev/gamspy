@@ -860,6 +860,19 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             for _, symbol in self.container.data.items():
                 symbol._requires_state_check = True
 
+    def __hash__(self):
+        return id(self)
+
+    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+        super().setRecords(records, uels_on_axes)
+
+        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
+            if self.hasDomainViolations():
+                self._domain_violations = self.getDomainViolations()
+                self.dropDomainViolations()
+            else:
+                self._domain_violations = None
+
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         """
         Main convenience method to set standard pandas.DataFrame formatted
@@ -884,15 +897,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         [['seattle', 7.0, 0.0, -inf, inf, 1.0], ['san-diego', 18.0, 0.0, -inf, inf, 1.0]]
 
         """
-        super().setRecords(records, uels_on_axes)
-
-        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
-            if self.hasDomainViolations():
-                self._domain_violations = self.getDomainViolations()
-                self.dropDomainViolations()
-            else:
-                self._domain_violations = None
-
+        self._setRecords(records, uels_on_axes=uels_on_axes)
         self.container._synch_with_gams()
         self._winner = "python"
 

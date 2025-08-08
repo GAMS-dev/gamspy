@@ -215,6 +215,7 @@ For example: ::
 
 Here the keys of the ``symbol_names`` argument are the names in the GDX file and values are the names in the GAMSPy container.
 
+
 Serialization and Deserialization
 ---------------------------------
 
@@ -244,6 +245,40 @@ This creates a new container with the information from the zip file. The symbol 
 returned Container will be identical to the symbol `i` in the first container that was used 
 to generate the zip file.
 
+===========================================
+Setting Records Of Multiple Symbols At Once
+===========================================
+The records of each symbol can be set with its ``setRecords`` function (e.g. :meth:`gp.Set.setRecords <gamspy.Set.setRecords>`). 
+In certain cases setting the records of each symbol separately might be relatively slow (e.g. if you have a lot of symbols) since 
+each ``setRecords`` call synchronizes GAMSPy and the underlying GAMS representation. In 
+those cases, one can set the records in bulk with :meth:`gp.Container.setRecords <gamspy.Container.setRecords>`:
+
+.. tabs::
+
+    .. tab:: One by one
+
+        .. code-block:: python
+
+            import gamspy as gp
+            m = gp.Container()
+            i = gp.Set(m)
+            k = gp.Set(m)
+            i.setRecords(range(5))
+            k.setRecords(range(5))
+
+    .. tab:: Bulk setRecords
+
+         .. code-block:: python
+
+            import gamspy as gp
+            m = gp.Container()
+            i = gp.Set(m)
+            k = gp.Set(m)
+            m.setRecords({i: range(10), k: range(5)})
+
+In the example code snippets above, the first tab (One by one) shows how you can set the records of each symbol separately. 
+This code snippets synchronizes twice since there are two separate calls. The second tab (Bulk setRecords) show how you 
+can eliminate the extra call. Here ``m.setRecords`` is called once and it sets the records of symbol ``i`` and ``j``.
 
 =================================
 Generating the Executed GAMS Code
