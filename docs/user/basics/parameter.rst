@@ -593,65 +593,69 @@ boolean varibales satisfies the boolean expression: ::
 
 An altenative syntax for these operations is as follows:
 
-.. tab-set-code:: 
+.. tabs:: 
 
-    .. code-block:: Alternative
+    .. tab:: Alternative
+    
+        .. code-block:: python
 
-        from gamspy import Container, Set, Parameter, Sum, Smax
+            from gamspy import Container, Set, Parameter, Sum, Smax
 
-        m = Container()
-        i = Set(m, "i", description="plants")
-        p = Set(m, "p", description="product")
+            m = Container()
+            i = Set(m, "i", description="plants")
+            p = Set(m, "p", description="product")
 
-        capacity = Parameter(
-            m,
-            domain=[i, p],
-            description="capacity in tons per day",
-            domain_forwarding=True,
-            records=[
-                ["cartagena", "nitr-acid", 10],
-                ["cartagena", "sulf-acid", 20],
-                ["cartagena", "amm-sulf", 30],
-                ["callao", "nitr-acid", 20],
-                ["callao", "sulf-acid", 30],
-                ["callao", "amm-sulf", 40],
-                ["moron", "nitr-acid", 30],
-                ["moron", "sulf-acid", 40],
-                ["moron", "amm-sulf", 50],
-            ],
-        )
+            capacity = Parameter(
+                m,
+                domain=[i, p],
+                description="capacity in tons per day",
+                domain_forwarding=True,
+                records=[
+                    ["cartagena", "nitr-acid", 10],
+                    ["cartagena", "sulf-acid", 20],
+                    ["cartagena", "amm-sulf", 30],
+                    ["callao", "nitr-acid", 20],
+                    ["callao", "sulf-acid", 30],
+                    ["callao", "amm-sulf", 40],
+                    ["moron", "nitr-acid", 30],
+                    ["moron", "sulf-acid", 40],
+                    ["moron", "amm-sulf", 50],
+                ],
+            )
 
-        totcap = Parameter(m, domain=p, description="total capacity by process")
-        totcap[p] = capacity.sum(i)
+            totcap = Parameter(m, domain=p, description="total capacity by process")
+            totcap[p] = capacity.sum(i)
 
-    .. code-block:: Original
+    .. tab:: Original
 
-        from gamspy import Container, Set, Parameter, Sum, Smax
+        .. code-block:: python
 
-        m = Container()
-        i = Set(m, "i", description="plants")
-        p = Set(m, "p", description="product")
+            from gamspy import Container, Set, Parameter, Sum, Smax
 
-        capacity = Parameter(
-            m,
-            domain=[i, p],
-            description="capacity in tons per day",
-            domain_forwarding=True,
-            records=[
-                ["cartagena", "nitr-acid", 10],
-                ["cartagena", "sulf-acid", 20],
-                ["cartagena", "amm-sulf", 30],
-                ["callao", "nitr-acid", 20],
-                ["callao", "sulf-acid", 30],
-                ["callao", "amm-sulf", 40],
-                ["moron", "nitr-acid", 30],
-                ["moron", "sulf-acid", 40],
-                ["moron", "amm-sulf", 50],
-            ],
-        )
+            m = Container()
+            i = Set(m, "i", description="plants")
+            p = Set(m, "p", description="product")
 
-        totcap = Parameter(m, domain=p, description="total capacity by process")
-        totcap[p] = Sum(i, capacity[i, p])
+            capacity = Parameter(
+                m,
+                domain=[i, p],
+                description="capacity in tons per day",
+                domain_forwarding=True,
+                records=[
+                    ["cartagena", "nitr-acid", 10],
+                    ["cartagena", "sulf-acid", 20],
+                    ["cartagena", "amm-sulf", 30],
+                    ["callao", "nitr-acid", 20],
+                    ["callao", "sulf-acid", 30],
+                    ["callao", "amm-sulf", 40],
+                    ["moron", "nitr-acid", 30],
+                    ["moron", "sulf-acid", 40],
+                    ["moron", "amm-sulf", 50],
+                ],
+            )
+
+            totcap = Parameter(m, domain=p, description="total capacity by process")
+            totcap[p] = Sum(i, capacity[i, p])
 
 The assignment to the totcap parameter shows two different ways of writing an operation. 
 While the original way uses the :meth:`Sum <gamspy.Sum>` class of GAMSPy, the alternative way uses the :meth:`sum <gamspy.Parameter.sum>` function 

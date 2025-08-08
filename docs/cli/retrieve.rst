@@ -1,12 +1,12 @@
 .. _gamspy_retrieve:
 
 gamspy retrieve
-==============
+===============
 
 Retrieves a license with another node's information.
 
 Retrieve License
---------------
+----------------
 
 Retrieves a license using an access code and node information from a JSON file.
 

@@ -97,9 +97,11 @@ with a transformation and bias to the input data, expressed as :math:`y = x A^T 
 Formulation generator for 1D Convolution symbol in GAMS. It applies a 
 1D convolution operation on an input signal.
 
-|  
+|
+
 .. image:: ../images/conv1d.gif
    :align: center
+
 |
 
 .. code-block:: python
@@ -302,9 +304,11 @@ likely continuous, but there is no restriction. :math:`p` is the variable that i
 the output of the pooling operation on the blue region. Depending on the operation,
 it is either min or max of the corresponding input points.
 
-|  
+|
+
 .. image:: ../images/pooling.png
    :align: center
+
 |
 
 The linearization of the :math:`p = \max(a,b,c,d)` is as follows:

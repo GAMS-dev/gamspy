@@ -1,10 +1,10 @@
 gamspy run
-=========
+==========
 
 Runs GAMSPy models with GAMS MIRO.
 
 Run with MIRO
-------------
+-------------
 
 Runs a GAMSPy model with GAMS MIRO application.
 

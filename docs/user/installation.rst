@@ -10,22 +10,28 @@ Basic Installation
 Creating a virtual environment is highly recommended whenever you start working on a new Python project.
 You can create a virtual environment and activate it as follows:
 
-.. tab-set-code::
+.. tabs::
 
-    .. code-block:: Linux-MacOS
+    .. tab:: Linux-MacOS
 
-        python -m venv .gamspy_venv
-        source .gamspy_venv/bin/activate
+        .. code-block:: bash
 
-    .. code-block:: Windows(Bash)
+            python -m venv .gamspy_venv
+            source .gamspy_venv/bin/activate
 
-        python -m venv .gamspy_venv
-        source .gamspy_venv/Scripts/activate
+    .. tab:: Windows (Bash)
+        
+        .. code-block:: bash
 
-    .. code-block:: Windows(PowerShell)
+            python -m venv .gamspy_venv
+            source .gamspy_venv/Scripts/activate
 
-        python -m venv .gamspy_venv
-        .gamspy_venv\Scripts\Activate.ps1
+    .. tab:: Windows (PowerShell)
+    
+        .. code-block:: bash
+
+            python -m venv .gamspy_venv
+            .gamspy_venv\Scripts\Activate.ps1
 
 You can run the following command to install GAMSPy from PyPI::
 
