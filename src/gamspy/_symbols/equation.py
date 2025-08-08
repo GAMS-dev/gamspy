@@ -401,9 +401,6 @@ class Equation(gt.Equation, Symbol):
 
         self.domain = new_domain
 
-    def __hash__(self):
-        return id(self)
-
     def __getitem__(self, indices: EllipsisType | slice | tuple | str):
         domain = validation.validate_domain(self, indices)
 
@@ -1015,6 +1012,19 @@ class Equation(gt.Equation, Symbol):
             for symbol in self.container.data.values():
                 symbol._requires_state_check = True
 
+    def __hash__(self):
+        return id(self)
+
+    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+        super().setRecords(records, uels_on_axes)
+
+        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
+            if self.hasDomainViolations():
+                self._domain_violations = self.getDomainViolations()
+                self.dropDomainViolations()
+            else:
+                self._domain_violations = None
+
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         """
         Main convenience method to set standard pandas.DataFrame formatted
@@ -1040,15 +1050,7 @@ class Equation(gt.Equation, Symbol):
         np.float64(5.0)
 
         """
-        super().setRecords(records, uels_on_axes)
-
-        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
-            if self.hasDomainViolations():
-                self._domain_violations = self.getDomainViolations()
-                self.dropDomainViolations()
-            else:
-                self._domain_violations = None
-
+        self._setRecords(records, uels_on_axes=uels_on_axes)
         self.container._synch_with_gams()
         self._winner = "python"
 

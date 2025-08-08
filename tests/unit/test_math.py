@@ -534,6 +534,50 @@ def test_relu(data, relu_type=gams_math.relu_with_binary_var):
     assert np.isclose(budget.objective_value, 200.0)
 
 
+def test_leaky_relu(data):
+    m, _, _ = data
+    leaky_relu = gams_math.leaky_relu_with_binary_var
+
+    i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
+
+    x = Variable(m, name="x", domain=i, type="free")
+    x.lo[...] = -100
+    x.up[...] = 100
+
+    x2 = Parameter(m, name="x2", domain=i)
+    x2[...] = 43
+
+    y, eqs = leaky_relu(x2, 0.1)
+    assert len(eqs) == 4
+
+    y, eqs = leaky_relu(x, 0.1)
+    assert len(eqs) == 4
+
+    y, b, eqs = leaky_relu(x, 0.1, return_binary_var=True)
+    assert len(eqs) == 4
+    assert b.type == "binary"
+
+    # must be in (0, 1)
+    pytest.raises(ValidationError, leaky_relu, x, -1)
+    pytest.raises(ValidationError, leaky_relu, x, 0)
+    pytest.raises(ValidationError, leaky_relu, x, 2)
+    pytest.raises(ValidationError, leaky_relu, x, 1)
+
+    x_vals = [-100, -50, 0, 50, 100]
+    y_vals = [-10, -5, 0, 50, 100]
+    b_vals = [[0], [0], [0, 1], [1], [1]]
+
+    model = Model(
+        m, name="leaky_relu", equations=m.getEquations(), problem="MIP"
+    )
+
+    for x_val, y_val, b_val in zip(x_vals, y_vals, b_vals):
+        x.fx[...] = x_val
+        model.solve()
+        assert y.toDense()[0] == y_val
+        assert b.toDense()[0] in b_val
+
+
 def test_relu_2(data):
     m, markets, demands = data
     m = Container()
