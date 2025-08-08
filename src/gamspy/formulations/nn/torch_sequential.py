@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import partial
 from typing import TYPE_CHECKING
 
 import gamspy as gp
@@ -91,6 +92,12 @@ def convert_relu(m: gp.Container, layer: torch.nn.ReLU):
     return gp.math.relu_with_binary_var
 
 
+def convert_leaky_relu(m: gp.Container, layer: torch.nn.LeakyReLU):
+    return partial(
+        gp.math.leaky_relu_with_binary_var, negative_slope=layer.negative_slope
+    )
+
+
 def convert_pool2d(
     m: gp.Container, layer: torch.nn.MaxPool2d | torch.nn.AvgPool2d
 ):
@@ -134,6 +141,7 @@ _DEFAULT_CONVERTERS = {
     "Conv1d": convert_conv1d,
     "Conv2d": convert_conv2d,
     "ReLU": convert_relu,
+    "LeakyReLU": convert_leaky_relu,
     "MaxPool2d": convert_pool2d,
     "AvgPool2d": convert_pool2d,
 }
