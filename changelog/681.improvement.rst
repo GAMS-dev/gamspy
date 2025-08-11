@@ -1,0 +1,2 @@
+Allow redirecting generateGamsString output to a file.
+Generate unique gdx files for each execution if the debugging level is set to "keep".

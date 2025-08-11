@@ -405,6 +405,7 @@ class NEOSServer(backend.Backend):
             )
 
         super().__init__(
+            "neos",
             container,
             model,
             options,
@@ -414,11 +415,6 @@ class NEOSServer(backend.Backend):
             load_symbols,
         )
         self.client = client
-        self.job_name = self.get_job_name()
-        self.gms_file = self.job_name + ".gms"
-        self.pf_file = self.job_name + ".pf"
-        self.restart_file = self.job_name + ".g00"
-        self.trace_file = self.job_name + ".txt"
 
     def is_async(self):
         return not self.client.is_blocking
@@ -432,7 +428,7 @@ class NEOSServer(backend.Backend):
         self._create_restart_file()
 
         # Generate gams string and write modified symbols to gdx
-        gams_string = self.preprocess("in.gdx")
+        gams_string = self.preprocess()
 
         # Run the model
         self.execute_gams(gams_string)

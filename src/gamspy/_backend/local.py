@@ -26,6 +26,7 @@ class Local(backend.Backend):
         load_symbols: list[Symbol] | None,
     ) -> None:
         super().__init__(
+            "local",
             container,
             model,
             options,
@@ -34,11 +35,6 @@ class Local(backend.Backend):
             output,
             load_symbols,
         )
-        self.job_name = self.get_job_name()
-        self.gms_file = self.job_name + ".gms"
-        self.lst_file = self.job_name + ".lst"
-        self.pf_file = self.job_name + ".pf"
-        self.trace_file = self.job_name + ".txt"
 
     def _prepare_extra_options(self, gams_to_gamspy: bool) -> dict:
         scrdir = self.container._process_directory
@@ -72,7 +68,7 @@ class Local(backend.Backend):
         gams_to_gamspy: bool = False,
     ):
         # Generate gams string and write modified symbols to gdx
-        gams_string = self.preprocess(self.container._gdx_in)
+        gams_string = self.preprocess()
 
         # Run the model
         self.execute_gams(gams_string, gams_to_gamspy)
@@ -93,7 +89,6 @@ class Local(backend.Backend):
         self.options._export(self.pf_file, self.output)
 
         try:
-            self.container._job = self.job_name
             self.container._send_job(self.job_name, self.pf_file, self.output)
 
             if not self.is_async() and self.model:
