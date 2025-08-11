@@ -563,8 +563,8 @@ class Container(gt.Container):
     def _setup_paths(self) -> tuple[str, str, str]:
         suffix = "_" + utils._get_unique_name()
         job = os.path.join(self.working_directory, suffix)
-        gdx_in = os.path.join(self.working_directory, f"{suffix}in.gdx")
-        gdx_out = os.path.join(self.working_directory, f"{suffix}out.gdx")
+        gdx_in = f"{job}in.gdx"
+        gdx_out = f"{job}out.gdx"
 
         return job, gdx_in, gdx_out
 
@@ -903,12 +903,16 @@ class Container(gt.Container):
                 self.system_directory, options_file_name, solver
             )
 
-    def generateGamsString(self, show_raw: bool = False) -> str:
+    def generateGamsString(
+        self, path: str | None = None, *, show_raw: bool = False
+    ) -> str:
         """
         Generates the GAMS code
 
         Parameters
         ----------
+        path : str, optional
+            Path to the file that will contain the executed GAMS code.
         show_raw : bool, optional
             Shows the raw model without data and other necessary
             GAMS statements, by default False.
@@ -930,10 +934,15 @@ class Container(gt.Container):
                 "`debug_level` argument of the container must be set to 'keep' to use this function."
             )
 
-        if not show_raw:
-            return self._gams_string
+        gams_string = self._gams_string
+        if show_raw:
+            gams_string = utils._filter_gams_string(self._gams_string)
 
-        return utils._filter_gams_string(self._gams_string)
+        if path:
+            with open(path, "w") as file:
+                file.write(gams_string)
+
+        return gams_string
 
     def loadRecordsFromGdx(
         self,
