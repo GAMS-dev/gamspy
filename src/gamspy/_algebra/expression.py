@@ -126,7 +126,7 @@ def create_expression_string(root_node: Expression) -> str:
         return get_operand_repr(root_node)
 
     # 1. Get nodes in post-order using an iterative approach (2 stacks)
-    s1: list[OperableType | str] = [root_node]
+    s1: list[OperableType | ImplicitEquation | str] = [root_node]
     post_order_nodes = []
     while s1:
         node = s1.pop()
