@@ -216,7 +216,7 @@ class Expression(operable.Operable):
     >>> b = gp.Parameter(m, name="b")
     >>> expression = a * b
     >>> expression.gamsRepr()
-    '(a * b)'
+    'a * b'
 
     """
 
@@ -511,7 +511,7 @@ class Expression(operable.Operable):
         >>> b = gp.Parameter(m, name="b")
         >>> expression = a * b
         >>> expression.gamsRepr()
-        '(a * b)'
+        'a * b'
 
         """
         return self.representation
@@ -532,7 +532,7 @@ class Expression(operable.Operable):
         >>> b = gp.Parameter(m, name="b")
         >>> expression = a * b
         >>> expression.getDeclaration()
-        '(a * b)'
+        'a * b'
 
         """
         return self.gamsRepr()

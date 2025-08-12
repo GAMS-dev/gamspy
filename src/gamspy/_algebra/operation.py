@@ -341,7 +341,7 @@ class Sum(Operation):
         >>> c = Parameter(m, "c", domain=i)
         >>> v = Variable(m, "v", domain=i)
         >>> Sum(i, c[i]*v[i]).gamsRepr()
-        'sum(i,(c(i) * v(i)))'
+        'sum(i,c(i) * v(i))'
 
         """
         repr = super().gamsRepr()
@@ -417,7 +417,7 @@ class Product(Operation):
         >>> c = Parameter(m, "c", domain=i)
         >>> v = Variable(m, "v", domain=i)
         >>> Product(i, c[i]*v[i]).gamsRepr()
-        'prod(i,(c(i) * v(i)))'
+        'prod(i,c(i) * v(i))'
 
         """
         repr = super().gamsRepr()
@@ -493,7 +493,7 @@ class Smin(Operation):
         >>> c = Parameter(m, "c", domain=i)
         >>> v = Variable(m, "v", domain=i)
         >>> Smin(i, c[i]*v[i]).gamsRepr()
-        'smin(i,(c(i) * v(i)))'
+        'smin(i,c(i) * v(i))'
 
         """
         repr = super().gamsRepr()
@@ -569,7 +569,7 @@ class Smax(Operation):
         >>> c = Parameter(m, "c", domain=i)
         >>> v = Variable(m, "v", domain=i)
         >>> Smax(i, c[i]*v[i]).gamsRepr()
-        'smax(i,(c(i) * v(i)))'
+        'smax(i,c(i) * v(i))'
 
         """
         repr = super().gamsRepr()
