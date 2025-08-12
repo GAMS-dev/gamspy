@@ -20,6 +20,8 @@ from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
+    from numbers import Real
+
     import pandas as pd
 
     from gamspy import Alias, Set
@@ -39,6 +41,164 @@ def peek(stack):
     if len(stack) > 0:
         return stack[-1]
     return None
+
+
+# Higher number means higher precedence.
+PRECEDENCE = {
+    "..": 0,
+    "=": 0,
+    "or": 1,
+    "xor": 2,
+    "and": 3,
+    "=e=": 4,
+    "=n=": 4,
+    "=b=": 4,
+    "eq": 4,
+    "ne": 4,
+    ">=": 4,
+    "<=": 4,
+    ">": 4,
+    "<": 4,
+    "=g=": 4,
+    "=l=": 4,
+    "=x=": 4,
+    "+": 5,
+    "-": 5,
+    "*": 6,
+    "/": 6,
+    "not": 7,
+    "u-": 7,
+}
+
+# Defines how operators of the same precedence are grouped.
+ASSOCIATIVITY = {
+    "or": "left",
+    "xor": "left",
+    "and": "left",
+    "=e=": "left",
+    "=n=": "left",
+    "=x=": "left",
+    "=b=": "left",
+    "eq": "left",
+    "ne": "left",
+    "=": "left",
+    ">=": "left",
+    "<=": "left",
+    ">": "left",
+    "<": "left",
+    "=g=": "left",
+    "=l=": "left",
+    "..": "non",
+    "+": "left",
+    "-": "left",
+    "*": "left",
+    "/": "left",
+    "not": "right",
+    "u-": "right",
+}
+
+# Precedence for a leaf node is considered infinite.
+LEAF_PRECEDENCE = float("inf")
+
+
+def get_operand_repr(operand) -> str:
+    if hasattr(operand, "gamsRepr"):
+        return operand.gamsRepr()
+
+    representation = str(operand)
+
+    # b[i] * -1   -> not valid
+    # b[i] * (-1) -> valid
+    if isinstance(operand, (int, float)) and operand < 0:
+        representation = f"({representation})"
+
+    return representation
+
+
+def create_expression_string(root_node: Expression) -> str:
+    """
+    Creates a string representation of a binary expression tree without recursion.
+    It uses an iterative post-order traversal to build the expression,
+    adding parentheses only when necessary based on operator precedence and
+    associativity rules.
+    """
+    if not isinstance(root_node, Expression):
+        return get_operand_repr(root_node)
+
+    # 1. Get nodes in post-order using an iterative approach (2 stacks)
+    s1: list[OperableType | str] = [root_node]
+    post_order_nodes = []
+    while s1:
+        node = s1.pop()
+        post_order_nodes.append(node)
+        if isinstance(node, Expression):
+            # Note: For post-order, process left then right.
+            # So, push left then right to s1, so they are popped in reverse order.
+            if node.left is not None:
+                s1.append(node.left)
+            if node.right is not None:
+                s1.append(node.right)
+
+    # 2. Build the expression string using the post-order list
+    eval_stack: list[tuple[str, Real]] = []
+    for node in reversed(post_order_nodes):
+        if not isinstance(node, Expression):
+            eval_stack.append((get_operand_repr(node), LEAF_PRECEDENCE))
+            continue
+
+        # It's an operator node
+        op = node.data
+        op_prec = PRECEDENCE[op]
+        op_assoc = ASSOCIATIVITY[op]
+
+        # --- Handle Unary Operators ---
+        if op in ("u-", "not"):
+            operand_str, operand_prec = eval_stack.pop()
+
+            # Add parentheses if the operand's operator has lower precedence
+            if operand_prec < op_prec:
+                operand_str = f"({operand_str})"
+
+            if op == "u-":
+                new_str = f"(-{operand_str})"
+                # A parenthesized expression has the highest precedence
+                eval_stack.append((new_str, LEAF_PRECEDENCE))
+            else:  # Standard handling for 'not'
+                new_str = f"not {operand_str}"
+                eval_stack.append((new_str, op_prec))
+
+        # --- Handle Binary Operators ---
+        else:
+            right_str, right_prec = eval_stack.pop()
+            left_str, left_prec = eval_stack.pop()
+
+            # Parenthesize left operand if needed
+            if left_prec < op_prec or (
+                left_prec == op_prec and op_assoc == "right"
+            ):
+                left_str = f"({left_str})"
+
+            # Parenthesize right operand if needed
+            if right_prec < op_prec or (
+                right_prec == op_prec and op_assoc == "left"
+            ):
+                right_str = f"({right_str})"
+
+            # get around 80000 line length limitation in GAMS
+            length = len(left_str) + len(op) + len(right_str)
+            if length >= GMS_MAX_LINE_LENGTH - LINE_LENGTH_OFFSET:
+                new_str = f"{left_str} {op}\n {right_str}"
+            else:
+                new_str = f"{left_str} {op} {right_str}"
+            eval_stack.append((new_str, op_prec))
+
+    final_string = eval_stack[0][0]
+
+    if root_node.data in ("=", ".."):
+        return f"{final_string};"
+
+    # The final result is the string from the single item left on the stack
+    return final_string
 
 
 class Expression(operable.Operable):
@@ -87,10 +247,7 @@ class Expression(operable.Operable):
         if data == "=" and isinstance(right, Expression):
             right._fix_equalities()
 
-        if get_option("LAZY_EVALUATION"):
-            self._representation = None
-        else:
-            self._representation = self._create_output_str()
+        self._representation: str | None = None
         self.where = condition.Condition(self)
         self._create_domain()
         left_control = getattr(left, "controlled_domain", [])
@@ -107,7 +264,7 @@ class Expression(operable.Operable):
     @property
     def representation(self) -> str:
         if self._representation is None:
-            self._representation = self._create_output_str()
+            self._representation = create_expression_string(self)
 
         return self._representation
 
@@ -266,60 +423,6 @@ class Expression(operable.Operable):
 
         return None
 
-    def _get_operand_representations(self) -> tuple[str, str]:
-        left_str, right_str = "", ""
-        if self.left is not None:
-            left_str = (
-                str(self.left)
-                if isinstance(self.left, (int, float, str))
-                else self.left.gamsRepr()
-            )
-
-        if self.right is not None:
-            right_str = (
-                str(self.right)
-                if isinstance(self.right, (int, float, str))
-                else self.right.gamsRepr()
-            )
-
-        # ((((ord(n) - 1) / 10) * -1) + ((ord(n) / 10) * 0));   -> not valid
-        # ((((ord(n) - 1) / 10) * (-1)) + ((ord(n) / 10) * 0)); -> valid
-        if isinstance(self.left, (int, float)) and self.left < 0:
-            left_str = f"({left_str})"
-
-        if isinstance(self.right, (int, float)) and self.right < 0:
-            right_str = f"({right_str})"
-
-        # (voycap(j,k)$vc(j,k)) .. sum(.) -> not valid
-        #  voycap(j,k)$vc(j,k)  .. sum(.) -> valid
-        if self.data in ("..", "=") and isinstance(
-            self.left, condition.Condition
-        ):
-            left_str = left_str[1:-1]
-
-        return left_str, right_str
-
-    def _create_output_str(self) -> str:
-        left_str, right_str = self._get_operand_representations()
-
-        # get around 80000 line length limitation in GAMS
-        length = len(left_str) + len(self.data) + len(right_str)
-        if length >= GMS_MAX_LINE_LENGTH - LINE_LENGTH_OFFSET:
-            out_str = f"{left_str} {self.data}\n {right_str}"
-        else:
-            out_str = f"{left_str} {self.data} {right_str}"
-
-        if self.data == ".":
-            return out_str.replace(" ", "")
-
-        if self.data in ("..", "="):
-            return f"{out_str};"
-
-        if self.data in ("=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b="):
-            return out_str
-
-        return f"({out_str})"
-
     def __eq__(self, other):
         return Expression(self, "=e=", other)
 
@@ -339,9 +442,6 @@ class Expression(operable.Operable):
 
     def _replace_operator(self, operator: str):
         self.data = operator
-
-        if not get_option("LAZY_EVALUATION"):
-            self._representation = self._create_output_str()
 
     def latexRepr(self) -> str:
         """
@@ -465,12 +565,8 @@ class Expression(operable.Operable):
 
             root = stack.pop()
 
-            if isinstance(root, Expression):
-                if root.data in EQ_MAP:
-                    root._replace_operator(EQ_MAP[root.data])
-                else:
-                    if not get_option("LAZY_EVALUATION"):
-                        root._representation = root._create_output_str()
+            if isinstance(root, Expression) and root.data in EQ_MAP:
+                root._replace_operator(EQ_MAP[root.data])
 
             last_item = peek(stack)
             if (
@@ -667,6 +763,3 @@ class SetExpression(Expression):
                     raise ValidationError(
                         f"Incompatible operand `{self.left}` for the set operation `{self.data}`."
                     )
-
-        if not get_option("LAZY_EVALUATION"):
-            self._representation = self._create_output_str()

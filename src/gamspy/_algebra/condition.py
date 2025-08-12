@@ -137,11 +137,15 @@ class Condition(operable.Operable):
             if hasattr(self.condition, "gamsRepr")
             else str(self.condition)
         )
+        conditioning_on_str = self.conditioning_on.gamsRepr()
 
         if isinstance(self.condition, bool):
             condition_str = str(int(self.condition))
 
-        return f"({self.conditioning_on.gamsRepr()} $ {condition_str})"  # type: ignore
+        if isinstance(self.conditioning_on, expression.Expression):
+            conditioning_on_str = f"({conditioning_on_str})"
+
+        return f"{conditioning_on_str} $ ({condition_str})"  # type: ignore
 
     def getDeclaration(self) -> str:
         return self.gamsRepr()

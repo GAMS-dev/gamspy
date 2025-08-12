@@ -28,6 +28,7 @@ from gamspy import (
     Container,
     Equation,
     Model,
+    Options,
     Parameter,
     Sense,
     Set,
@@ -397,7 +398,7 @@ def main():
         objective=obj,
     )
 
-    mexss.solve()
+    mexss.solve(options=Options(equation_listing_limit=100))
 
     import math
 

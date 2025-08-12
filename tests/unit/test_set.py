@@ -146,13 +146,13 @@ def test_implicit_sets(data):
     k = Set(m, "k", domain=[j], records=canning_plants)
 
     expr = k[j] <= k[j]
-    assert expr.gamsRepr() == "(k(j) <= k(j))"
+    assert expr.gamsRepr() == "k(j) <= k(j)"
     expr = k[j] >= k[j]
-    assert expr.gamsRepr() == "(k(j) >= k(j))"
+    assert expr.gamsRepr() == "k(j) >= k(j)"
 
     k[j] = ~k[j]
 
-    assert k.getAssignment() == "k(j) = ( not k(j));"
+    assert k.getAssignment() == "k(j) = not k(j);"
 
 
 def test_set_operations(data):
@@ -160,16 +160,16 @@ def test_set_operations(data):
     i = Set(m, "i", records=canning_plants)
     k = Set(m, "k", records=canning_plants)
     union = i + k
-    assert union.gamsRepr() == "(i + k)"
+    assert union.gamsRepr() == "i + k"
 
     intersection = i * k
-    assert intersection.gamsRepr() == "(i * k)"
+    assert intersection.gamsRepr() == "i * k"
 
     complement = ~i
-    assert complement.gamsRepr() == "( not i)"
+    assert complement.gamsRepr() == "not i"
 
     difference = i - k
-    assert difference.gamsRepr() == "(i - k)"
+    assert difference.gamsRepr() == "i - k"
 
 
 def test_dynamic_sets(data):
@@ -312,7 +312,7 @@ def test_set_attributes(data):
     ]
     assert (
         tight._assignment.gamsRepr()
-        == "tight(i,j) = (1 $ ((((i.val >= ((L - 1) / 2)) and (j.val >= ((L - 1) - i.val))) and (j.val <= i.val)) and (j.val <= (L - i.val))));"
+        == "tight(i,j) = 1 $ (i.val >= (L - 1) / 2 and j.val >= L - 1 - i.val and j.val <= i.val and j.val <= L - i.val);"
     )
 
     m = Container()
@@ -423,7 +423,7 @@ def test_set_assignment():
 
     assert (
         mpos.getAssignment()
-        == "mpos(m,i) = ((yes $ (k(m,i) + sum(g,abs(f(m,g,i))))) - hpos(m,i));"
+        == "mpos(m,i) = yes $ (k(m,i) + sum(g,abs(f(m,g,i)))) - hpos(m,i);"
     )
 
     with pytest.raises(ValidationError):
@@ -443,7 +443,7 @@ def test_set_assignment():
     col = Set(container, "col")
     col[i] = 1 - (reb[i] - con[i])
     assert isinstance(col._assignment.right, SetExpression)
-    assert col.getAssignment() == "col(i) = (yes - (reb(i) - con(i)));"
+    assert col.getAssignment() == "col(i) = yes - (reb(i) - con(i));"
 
     m = Container()
     i = Set(m, "i", records=["i1", "i2"])

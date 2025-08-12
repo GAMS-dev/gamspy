@@ -356,7 +356,7 @@ class SetMixin:
 
         """
         assert isinstance(self, (gp.Set, gp.Alias))
-        jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
+        jump = n if isinstance(n, int) else f"({n.gamsRepr()})"  # type: ignore
 
         if type == "circular":
             return implicits.ImplicitSet(

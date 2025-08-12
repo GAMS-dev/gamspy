@@ -176,14 +176,7 @@ class Operation(operable.Operable):
 
     def _get_index_str(self) -> str:
         if len(self.op_domain) == 1:
-            op_domain = self.op_domain[0]
-            representation = op_domain.gamsRepr()
-            if isinstance(op_domain, condition.Condition):
-                # sum((l(root,s,s1,s2) $ od(root,s)),1); -> not valid
-                # sum(l(root,s,s1,s2) $ od(root,s),1); -> valid
-                return representation[1:-1]
-
-            return representation
+            return self.op_domain[0].gamsRepr()
 
         return (
             "("

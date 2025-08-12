@@ -108,7 +108,7 @@ def test_variable_string(data):
     assert v0.getDeclaration() == 'free Variable v0 "some text" / /;'
 
     expression = -v0
-    assert expression.getDeclaration() == "( - v0)"
+    assert expression.getDeclaration() == "(-v0)"
 
     # Variable one domain
     v1 = Variable(m, name="v1", domain=[i])
@@ -129,8 +129,8 @@ def test_variable_string(data):
         records=pd.DataFrame(data=[3.14159], columns=["level"]),
     )
     assert pi.getDeclaration() == "free Variable pi;"
-    assert (-pi).gamsRepr() == "( - pi)"
-    assert (pi != 3).gamsRepr() == "(pi ne 3)"
+    assert (-pi).gamsRepr() == "(-pi)"
+    assert (pi != 3).gamsRepr() == "pi ne 3"
 
     # 1D variable with records
     v = Variable(
@@ -306,7 +306,7 @@ def test_implicit_variable(data):
     assert a.isValid()
 
     expression = -a[i] * 5
-    assert expression.gamsRepr() == "(( - a(i)) * 5)"
+    assert expression.gamsRepr() == "(-a(i)) * 5"
 
     a.l[...] = 5
 

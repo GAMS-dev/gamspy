@@ -99,16 +99,16 @@ def test_equation_types(data):
     d = Parameter(m, name="d", records=0.5)
     eq1 = Equation(m, "eq1", type="nonbinding")
     eq1[...] = (x - d) == 0
-    assert eq1.getDefinition() == "eq1 .. (x - d) =n= 0;"
+    assert eq1.getDefinition() == "eq1 .. x - d =n= 0;"
     assert eq1.type == "nonbinding"
 
     y = Variable(m, "y", domain=[i])
     eq2 = Equation(m, "eq2", domain=[i], type="nonbinding")
     eq2[i] = (y[i] - c[i]) == 0
-    assert eq2.getDefinition() == "eq2(i) .. (y(i) - c(i)) =n= 0;"
+    assert eq2.getDefinition() == "eq2(i) .. y(i) - c(i) =n= 0;"
 
     eq2[i] = (y[i] - c[i]) == 0
-    assert eq2.getDefinition() == "eq2(i) .. (y(i) - c(i)) =n= 0;"
+    assert eq2.getDefinition() == "eq2(i) .. y(i) - c(i) =n= 0;"
 
     # eq
     eq3 = Equation(m, "eq3", domain=[i])
@@ -226,9 +226,7 @@ def test_equation_definition(data):
     with pytest.raises(TypeError):
         cost.records = 5
 
-    assert (
-        cost.getDefinition() == "cost .. sum((i,j),(c(i,j) * x(i,j))) =e= z;"
-    )
+    assert cost.getDefinition() == "cost .. sum((i,j),c(i,j) * x(i,j)) =e= z;"
 
     # Equation definition with an index
     supply = Equation(
@@ -261,7 +259,7 @@ def test_equation_definition(data):
         definition=Sum((i, j), c[i, j] * x[i, j]) == z,
     )
     assert (
-        cost2.getDefinition() == "cost2 .. sum((i,j),(c(i,j) * x(i,j))) =e= z;"
+        cost2.getDefinition() == "cost2 .. sum((i,j),c(i,j) * x(i,j)) =e= z;"
     )
 
     # Equation definition in addEquation
@@ -271,7 +269,7 @@ def test_equation_definition(data):
         definition=Sum((i, j), c[i, j] * x[i, j]) == z,
     )
     assert (
-        cost3.getDefinition() == "cost3 .. sum((i,j),(c(i,j) * x(i,j))) =e= z;"
+        cost3.getDefinition() == "cost3 .. sum((i,j),c(i,j) * x(i,j)) =e= z;"
     )
 
     # eq[bla][...] test
@@ -315,8 +313,7 @@ def test_equation_definition(data):
     )
     assert (
         eStartNaive.getDefinition()
-        == "eStartNaive(g,t1) .. sum(t2 $ ((ord(t1) >= ord(t2)) and"
-        " (ord(t2) > (ord(t1) - pMinDown(g,t1)))),vStart(g,t2)) =l= 1;"
+        == "eStartNaive(g,t1) .. sum(t2 $ (ord(t1) >= ord(t2) and ord(t2) > ord(t1) - pMinDown(g,t1)),vStart(g,t2)) =l= 1;"
     )
 
     m = Container()
@@ -330,7 +327,7 @@ def test_equation_definition(data):
     assign_1[...] = a[i, j] == b[i, j] + c[i, j]
     assert (
         assign_1.getDefinition()
-        == "assign_1(i,j) .. a(i,j) =e= (b(i,j) + c(i,j));"
+        == "assign_1(i,j) .. a(i,j) =e= b(i,j) + c(i,j);"
     )
 
     m = Container()
@@ -342,9 +339,7 @@ def test_equation_definition(data):
     assign_1 = Equation(m, name="assign_1")
 
     assign_1[...] = a == Sum(k, b[k] * c[k])
-    assert (
-        assign_1.getDefinition() == "assign_1 .. a =e= sum(k,(b(k) * c(k)));"
-    )
+    assert assign_1.getDefinition() == "assign_1 .. a =e= sum(k,b(k) * c(k));"
 
     i = Set(m, "i", records=["OJ", "1M"])
     x = Variable(m, "x", domain=i)
@@ -355,7 +350,7 @@ def test_equation_definition(data):
     )
     assert (
         drinking_eqn.getDefinition()
-        == 'drinking_eqn .. (x("OJ") + x("1M")) =l= 3;'
+        == 'drinking_eqn .. x("OJ") + x("1M") =l= 3;'
     )
 
     s = m.addVariable(
@@ -368,7 +363,7 @@ def test_equation_definition(data):
     )
     assert (
         drinking_eqn.getDefinition()
-        == 'drinking_eqn .. (x("OJ") + x("1M")) =l= (3 + s);'
+        == 'drinking_eqn .. x("OJ") + x("1M") =l= 3 + s;'
     )
 
 
@@ -458,16 +453,16 @@ def test_mcp_equation(data):
     f = Equation(m, name="f", type="nonbinding")
     f[...] = (x - c) == 0
 
-    assert f.getDefinition() == "f .. (x - c) =n= 0;"
+    assert f.getDefinition() == "f .. x - c =n= 0;"
 
     f2 = Equation(m, name="f2", type="nonbinding", definition=(x - c) == 0)
-    assert f2.getDefinition() == "f2 .. (x - c) =n= 0;"
+    assert f2.getDefinition() == "f2 .. x - c =n= 0;"
 
     f3 = Equation(m, name="f3", type="nonbinding", definition=(x - c) == 0)
-    assert f3.getDefinition() == "f3 .. (x - c) =n= 0;"
+    assert f3.getDefinition() == "f3 .. x - c =n= 0;"
 
     f4 = Equation(m, name="f4", definition=(x - c) == 0)
-    assert f4.getDefinition() == "f4 .. (x - c) =e= 0;"
+    assert f4.getDefinition() == "f4 .. x - c =e= 0;"
 
     model = Model(m, "mcp_model", "MCP", matches={f: x})
     model.solve()
@@ -507,7 +502,7 @@ def test_equation_assignment(data):
     e[...] = Sum(i.where[(i.val == L - 1)], sqr(x[i]) + sqr(y[i])) == 1
     assert (
         e.getDefinition()
-        == "e .. sum(i $ (i.val eq (L - 1)),(sqr(x(i)) + sqr(y(i)))) =e= 1;"
+        == "e .. sum(i $ (i.val eq L - 1),sqr(x(i)) + sqr(y(i))) =e= 1;"
     )
 
 

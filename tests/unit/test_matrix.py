@@ -590,38 +590,34 @@ def test_domain_relabeling(data):
     expr = a + b
     expr2 = expr[n, i2, j, k]
     assert expr.domain == [n, i, j, k]
-    assert expr.gamsRepr() == "(a(n,i,j) + b(j,k))"
+    assert expr.gamsRepr() == "a(n,i,j) + b(j,k)"
     assert expr2.domain == [n, i2, j, k]
-    assert expr2.gamsRepr() == "(a(n,i2,j) + b(j,k))"
+    assert expr2.gamsRepr() == "a(n,i2,j) + b(j,k)"
     pytest.raises(ValidationError, lambda: expr[n])
 
     expr3 = (a + a) + (b + b)
-    assert expr3.gamsRepr() == "((a(n,i,j) + a(n,i,j)) + (b(j,k) + b(j,k)))"
+    assert expr3.gamsRepr() == "a(n,i,j) + a(n,i,j) + (b(j,k) + b(j,k))"
     expr4 = expr3[n, i2, j, k]
-    assert expr4.gamsRepr() == "((a(n,i2,j) + a(n,i2,j)) + (b(j,k) + b(j,k)))"
+    assert expr4.gamsRepr() == "a(n,i2,j) + a(n,i2,j) + (b(j,k) + b(j,k))"
 
     expr5 = Sum(n, expr3)
-    assert (
-        expr5.gamsRepr()
-        == "sum(n,((a(n,i,j) + a(n,i,j)) + (b(j,k) + b(j,k))))"
-    )
+    assert expr5.gamsRepr() == "sum(n,a(n,i,j) + a(n,i,j) + (b(j,k) + b(j,k)))"
 
     expr6 = expr5[i2, j, k]
     assert (
-        expr6.gamsRepr()
-        == "sum(n,((a(n,i2,j) + a(n,i2,j)) + (b(j,k) + b(j,k))))"
+        expr6.gamsRepr() == "sum(n,a(n,i2,j) + a(n,i2,j) + (b(j,k) + b(j,k)))"
     )
 
     expr7 = Sum(j, expr6)
     assert (
         expr7.gamsRepr()
-        == "sum(j,sum(n,((a(n,i2,j) + a(n,i2,j)) + (b(j,k) + b(j,k)))))"
+        == "sum(j,sum(n,a(n,i2,j) + a(n,i2,j) + (b(j,k) + b(j,k))))"
     )
 
     expr8 = expr7[i, k2]
     assert (
         expr8.gamsRepr()
-        == "sum(j,sum(n,((a(n,i,j) + a(n,i,j)) + (b(j,k2) + b(j,k2)))))"
+        == "sum(j,sum(n,a(n,i,j) + a(n,i,j) + (b(j,k2) + b(j,k2))))"
     )
 
 
@@ -750,7 +746,7 @@ def test_literal_indexing(data):
 
     a_6 = -a["n1", :]
     assert a_6.domain == [i]
-    assert a_6.gamsRepr() == '( - a("n1",i))'
+    assert a_6.gamsRepr() == '(-a("n1",i))'
 
     # try simple case
     b_1 = b[:, "i1"]
@@ -776,7 +772,7 @@ def test_literal_indexing(data):
 
     b_6 = -b["n1", :]
     assert b_6.domain == [i]
-    assert b_6.gamsRepr() == '( - b("n1",i))'
+    assert b_6.gamsRepr() == '(-b("n1",i))'
 
 
 def test_literal_indexing_mix_permute_variable(data):
@@ -840,7 +836,7 @@ def test_literal_indexing_mix_permute_variable(data):
 
     a_6_2 = -((a[:, "n1", :]).t())
     assert a_6_2.domain == [i, n]
-    assert a_6_2.gamsRepr() == '( - a(n,"n1",i))'
+    assert a_6_2.gamsRepr() == '(-a(n,"n1",i))'
 
     # a_6_3 = ((-a)[:, "n1", :]).t()
     # assert(a_6_3.domain == [i== n])
@@ -852,11 +848,11 @@ def test_literal_indexing_mix_permute_variable(data):
 
     a_6_5 = (-a.t())[:, :, "n1"]
     assert a_6_5.domain == [n, i]
-    assert a_6_5.gamsRepr() == '( - a(n,"n1",i))'
+    assert a_6_5.gamsRepr() == '(-a(n,"n1",i))'
 
     a_6_6 = -((a.t())[:, :, "n1"])
     assert a_6_6.domain == [n, i]
-    assert a_6_6.gamsRepr() == '( - a(n,"n1",i))'
+    assert a_6_6.gamsRepr() == '(-a(n,"n1",i))'
 
 
 def test_literal_indexing_mix_permute_parameter(data):
@@ -920,7 +916,7 @@ def test_literal_indexing_mix_permute_parameter(data):
 
     a_6_2 = -((a[:, "n1", :]).t())
     assert a_6_2.domain == [i, n]
-    assert a_6_2.gamsRepr() == '( - a(n,"n1",i))'
+    assert a_6_2.gamsRepr() == '(-a(n,"n1",i))'
 
     # a_6_3 = ((-a)[:, "n1", :]).t()
     # assert(a_6_3.domain == [i== n])
@@ -932,11 +928,11 @@ def test_literal_indexing_mix_permute_parameter(data):
 
     a_6_5 = (-a.t())[:, :, "n1"]
     assert a_6_5.domain == [n, i]
-    assert a_6_5.gamsRepr() == '( - a(n,"n1",i))'
+    assert a_6_5.gamsRepr() == '(-a(n,"n1",i))'
 
     a_6_6 = -((a.t())[:, :, "n1"])
     assert a_6_6.domain == [n, i]
-    assert a_6_6.gamsRepr() == '( - a(n,"n1",i))'
+    assert a_6_6.gamsRepr() == '(-a(n,"n1",i))'
 
 
 def test_shift_permute(data):

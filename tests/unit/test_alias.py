@@ -233,7 +233,7 @@ def test_indexing(m):
     a[row, dyn_col_alias[col]] = 13.2 + r[row] * c[dyn_col_alias]
     assert (
         a.getAssignment()
-        == "a(row,dyn_col_alias(col)) = (13.2 + (r(row) * c(dyn_col_alias)));"
+        == "a(row,dyn_col_alias(col)) = 13.2 + r(row) * c(dyn_col_alias);"
     )
 
     dyn_col_alias["c-1"] = False

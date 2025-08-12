@@ -396,8 +396,6 @@ Here is a list of package wide options:
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | MAP_SPECIAL_VALUES           | int   | Map special values. Can be disabled for performance if there are no special values in the records. Set to 1 by default.                  |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-| LAZY_EVALUATION              | int   | Whether to evaluate expressions lazily. Lazy evaluation might cause recursion depth errors for very long expression. Set to 0 by default |
-+------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | ASSUME_VARIABLE_SUFFIX       | int   | Activates or deactivates the automatic addition of .l or .scale attribute to variables on the right-hand side of assignments. Set to 1   |
 |                              |       | by default. 0: deactivate, 1: use .l attribute, 2: use .scale attribute.                                                                 |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
