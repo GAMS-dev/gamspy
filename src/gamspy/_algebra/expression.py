@@ -132,8 +132,6 @@ def create_expression_string(root_node: Expression) -> str:
         node = s1.pop()
         post_order_nodes.append(node)
         if isinstance(node, Expression):
-            # Note: For post-order, process left then right.
-            # So, push left then right to s1, so they are popped in reverse order.
             if node.left is not None:
                 s1.append(node.left)
             if node.right is not None:
@@ -146,12 +144,11 @@ def create_expression_string(root_node: Expression) -> str:
             eval_stack.append((get_operand_repr(node), LEAF_PRECEDENCE))
             continue
 
-        # It's an operator node
-        op = node.data
+        op = node.operator
         op_prec = PRECEDENCE[op]
         op_assoc = ASSOCIATIVITY[op]
 
-        # --- Handle Unary Operators ---
+        # Handle unary ops
         if op in ("u-", "not"):
             operand_str, operand_prec = eval_stack.pop()
 
@@ -167,18 +164,16 @@ def create_expression_string(root_node: Expression) -> str:
                 new_str = f"not {operand_str}"
                 eval_stack.append((new_str, op_prec))
 
-        # --- Handle Binary Operators ---
+        # Handle binary ops
         else:
             right_str, right_prec = eval_stack.pop()
             left_str, left_prec = eval_stack.pop()
 
-            # Parenthesize left operand if needed
             if left_prec < op_prec or (
                 left_prec == op_prec and op_assoc == "right"
             ):
                 left_str = f"({left_str})"
 
-            # Parenthesize right operand if needed
             if right_prec < op_prec or (
                 right_prec == op_prec and op_assoc == "left"
             ):
@@ -194,10 +189,9 @@ def create_expression_string(root_node: Expression) -> str:
 
     final_string = eval_stack[0][0]
 
-    if root_node.data in ("=", ".."):
+    if root_node.operator in ("=", ".."):
         return f"{final_string};"
 
-    # The final result is the string from the single item left on the stack
     return final_string
 
 
@@ -229,7 +223,7 @@ class Expression(operable.Operable):
     def __init__(
         self,
         left: OperableType | ImplicitEquation | None,
-        data: str,
+        operator: str,
         right: OperableType | str | None,
     ):
         self.left = (
@@ -237,14 +231,14 @@ class Expression(operable.Operable):
             if isinstance(left, float)
             else left
         )
-        self.data = data
+        self.operator = operator
         self.right = (
             utils._map_special_values(right)
             if isinstance(right, float)
             else right
         )
 
-        if data == "=" and isinstance(right, Expression):
+        if operator == "=" and isinstance(right, Expression):
             right._fix_equalities()
 
         self._representation: str | None = None
@@ -332,7 +326,7 @@ class Expression(operable.Operable):
         left = self.left[left_domain] if left_domain else self.left
         right = self.right[right_domain] if right_domain else self.right
 
-        return Expression(left, self.data, right)
+        return Expression(left, self.operator, right)
 
     @property
     def records(self) -> pd.DataFrame | None:
@@ -438,10 +432,10 @@ class Expression(operable.Operable):
         )
 
     def __repr__(self) -> str:
-        return f"Expression(left={self.left}, data={self.data}, right={self.right})"
+        return f"Expression(left={self.left}, data={self.operator}, right={self.right})"
 
     def _replace_operator(self, operator: str):
-        self.data = operator
+        self.operator = operator
 
     def latexRepr(self) -> str:
         """
@@ -486,20 +480,20 @@ class Expression(operable.Operable):
                 else self.right.latexRepr()  # type: ignore
             )
 
-        data = self.data
-        if isinstance(self.data, str):
-            data = data_map.get(self.data, self.data)
+        operator = self.operator
+        if isinstance(self.operator, str):
+            operator = data_map.get(self.operator, self.operator)
 
-        data_str = (
-            str(data)
-            if isinstance(data, (int, float, str))
-            else data.latexRepr()
+        operator_str = (
+            str(operator)
+            if isinstance(operator, (int, float, str))
+            else operator.latexRepr()
         )
 
-        if self.data == "/":
+        if self.operator == "/":
             return f"\\frac{{{left_str}}}{{{right_str}}}"
 
-        return f"({left_str} {data_str} {right_str})"
+        return f"({left_str} {operator_str} {right_str})"
 
     def gamsRepr(self) -> str:
         """
@@ -565,8 +559,8 @@ class Expression(operable.Operable):
 
             root = stack.pop()
 
-            if isinstance(root, Expression) and root.data in EQ_MAP:
-                root._replace_operator(EQ_MAP[root.data])
+            if isinstance(root, Expression) and root.operator in EQ_MAP:
+                root._replace_operator(EQ_MAP[root.operator])
 
             last_item = peek(stack)
             if (
@@ -729,7 +723,7 @@ class SetExpression(Expression):
                     self.right = "yes"
                 else:
                     raise ValidationError(
-                        f"Incompatible operand `{self.right}` for the set operation `{self.data}`."
+                        f"Incompatible operand `{self.right}` for the set operation `{self.operator}`."
                     )
             elif isinstance(self.right, condition.Condition) and isinstance(
                 self.right.conditioning_on, number.Number
@@ -739,7 +733,7 @@ class SetExpression(Expression):
                 elif self.right.conditioning_on._value == 1:
                     self.right.conditioning_on._value = "yes"
                 raise ValidationError(
-                    f"Incompatible operand `{self.right}` for the set operation `{self.data}`."
+                    f"Incompatible operand `{self.right}` for the set operation `{self.operator}`."
                 )
 
         if isinstance(self.right, (ImplicitSet, SetExpression)):
@@ -750,7 +744,7 @@ class SetExpression(Expression):
                     self.left = "yes"
                 else:
                     raise ValidationError(
-                        f"Incompatible operand `{self.left}` for the set operation `{self.data}`."
+                        f"Incompatible operand `{self.left}` for the set operation `{self.operator}`."
                     )
             elif isinstance(self.left, condition.Condition) and isinstance(
                 self.left.conditioning_on, number.Number
@@ -761,5 +755,5 @@ class SetExpression(Expression):
                     self.left.conditioning_on._value = "yes"
                 else:
                     raise ValidationError(
-                        f"Incompatible operand `{self.left}` for the set operation `{self.data}`."
+                        f"Incompatible operand `{self.left}` for the set operation `{self.operator}`."
                     )
