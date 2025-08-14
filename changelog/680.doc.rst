@@ -1,1 +1,0 @@
-Minor docs fix and add docs fix for Leaky ReLU activation function.
