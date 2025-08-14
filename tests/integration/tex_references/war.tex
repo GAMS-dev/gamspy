@@ -58,17 +58,17 @@ minw & t & minimum number of weapons required per target\\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
-\textbf{max} $\sum_\text{t} (mv_{t} \cdot (1 - \prod_\text{w ~ | ~ td_{w,t}} rPower(1 - td(w,t),x(w,t))))$\\
+\textbf{max} $\sum_{t} mv_{t} \cdot (1 - \prod_{w ~ | ~ td_{w,t}} rPower(1 - td(w,t),x(w,t)))$\\
 \textbf{s.t.}
 \subsubsection*{$maxw_{w}$}
 $
-\sum_\text{t ~ | ~ td_{w,t}} x_{w,t} \leq wa_{w}\hfill \forall w
+\sum_{t ~ | ~ td_{w,t}} x_{w,t} \leq wa_{w}\hfill \forall w
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$minw_{t}$}
 $
-\sum_\text{w ~ | ~ td_{w,t}} x_{w,t} \geq tm_{t}\hfill \forall t ~ | ~ tm_{t}
+\sum_{w ~ | ~ td_{w,t}} x_{w,t} \geq tm_{t}\hfill \forall t ~ | ~ tm_{t}
 $
 \vspace{5pt}
 \hrule

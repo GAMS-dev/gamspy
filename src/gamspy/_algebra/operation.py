@@ -267,7 +267,7 @@ class Operation(operable.Operable):
             else self.rhs.latexRepr()
         )
         representation = (
-            f"\\{op_map[self._op_name]}_\\text{{{index_str}}} {expression_str}"
+            f"\\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
         )
         return representation
 

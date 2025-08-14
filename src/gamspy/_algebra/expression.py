@@ -101,7 +101,7 @@ ASSOCIATIVITY = {
 LEAF_PRECEDENCE = float("inf")
 
 
-def get_operand_repr(operand) -> str:
+def get_operand_gams_repr(operand) -> str:
     if hasattr(operand, "gamsRepr"):
         return operand.gamsRepr()
 
@@ -115,17 +115,29 @@ def get_operand_repr(operand) -> str:
     return representation
 
 
-def create_expression_string(root_node: Expression) -> str:
+def get_operand_latex_repr(operand) -> str:
+    if hasattr(operand, "latexRepr"):
+        return operand.latexRepr()
+
+    if isinstance(operand, float):
+        operand = utils._map_special_values(operand)
+
+    representation = str(operand)
+
+    return representation
+
+
+def create_gams_expression(root_node: Expression) -> str:
     """
-    Creates a string representation of a binary expression tree without recursion.
+    Creates GAMS representation of a binary expression tree without recursion.
     It uses an iterative post-order traversal to build the expression,
     adding parentheses only when necessary based on operator precedence and
     associativity rules.
     """
     if not isinstance(root_node, Expression):
-        return get_operand_repr(root_node)
+        return get_operand_gams_repr(root_node)
 
-    # 1. Get nodes in post-order using an iterative approach (2 stacks)
+    # 1. Get nodes in post-order (left - right - parent).
     s1: list[OperableType | ImplicitEquation | str] = [root_node]
     post_order_nodes = []
     while s1:
@@ -137,11 +149,11 @@ def create_expression_string(root_node: Expression) -> str:
             if node.right is not None:
                 s1.append(node.right)
 
-    # 2. Build the expression string using the post-order list
+    # 2. Build the GAMS expression
     eval_stack: list[tuple[str, Real]] = []
     for node in reversed(post_order_nodes):
         if not isinstance(node, Expression):
-            eval_stack.append((get_operand_repr(node), LEAF_PRECEDENCE))
+            eval_stack.append((get_operand_gams_repr(node), LEAF_PRECEDENCE))
             continue
 
         op = node.operator
@@ -191,6 +203,102 @@ def create_expression_string(root_node: Expression) -> str:
 
     if root_node.operator in ("=", ".."):
         return f"{final_string};"
+
+    return final_string
+
+
+def create_latex_expression(root_node: Expression) -> str:
+    """
+    Creates LaTeX representation of a binary expression tree without recursion.
+    It uses an iterative post-order traversal to build the expression,
+    adding parentheses only when necessary based on operator precedence and
+    associativity rules.
+    """
+    if not isinstance(root_node, Expression):
+        return get_operand_latex_repr(root_node)
+
+    op_map = {
+        "=g=": "\\geq",
+        "=l=": "\\leq",
+        "=e=": "=",
+        "*": "\\cdot",
+        "and": "\\wedge",
+        "or": "\\vee",
+        "xor": "\\oplus",
+        "$": "|",
+    }
+
+    # 1. Get nodes in post-order (left - right - parent).
+    s1: list[OperableType | ImplicitEquation | str] = [root_node]
+    post_order_nodes = []
+    while s1:
+        node = s1.pop()
+        post_order_nodes.append(node)
+        if isinstance(node, Expression):
+            if node.left is not None:
+                s1.append(node.left)
+            if node.right is not None:
+                s1.append(node.right)
+
+    # 2. Build the GAMS expression
+    eval_stack: list[tuple[str, Real]] = []
+    for node in reversed(post_order_nodes):
+        if not isinstance(node, Expression):
+            eval_stack.append((get_operand_latex_repr(node), LEAF_PRECEDENCE))
+            continue
+
+        op = node.operator
+        op_prec = PRECEDENCE[op]
+        op_assoc = ASSOCIATIVITY[op]
+
+        # Handle unary ops
+        if op in ("u-", "not"):
+            operand_str, operand_prec = eval_stack.pop()
+
+            # Add parentheses if the operand's operator has lower precedence
+            if operand_prec < op_prec:
+                operand_str = f"({operand_str})"
+
+            if op == "u-":
+                new_str = f"(-{operand_str})"
+                # A parenthesized expression has the highest precedence
+                eval_stack.append((new_str, LEAF_PRECEDENCE))
+            else:  # Standard handling for 'not'
+                new_str = f"not {operand_str}"
+                eval_stack.append((new_str, op_prec))
+
+        # Handle binary ops
+        else:
+            right_str, right_prec = eval_stack.pop()
+            left_str, left_prec = eval_stack.pop()
+
+            if left_prec < op_prec or (
+                left_prec == op_prec and op_assoc == "right"
+            ):
+                left_str = f"({left_str})"
+
+            if right_prec < op_prec or (
+                right_prec == op_prec and op_assoc == "left"
+            ):
+                right_str = f"({right_str})"
+
+            if op == "/":
+                eval_stack.append(
+                    (f"\\frac{{{left_str}}}{{{right_str}}}", op_prec)
+                )
+                continue
+
+            op = op_map.get(op, op)
+
+            # get around 80000 line length limitation in GAMS
+            length = len(left_str) + len(op) + len(right_str)
+            if length >= GMS_MAX_LINE_LENGTH - LINE_LENGTH_OFFSET:
+                new_str = f"{left_str} {op}\n {right_str}"
+            else:
+                new_str = f"{left_str} {op} {right_str}"
+            eval_stack.append((new_str, op_prec))
+
+    final_string = eval_stack[0][0]
 
     return final_string
 
@@ -258,7 +366,7 @@ class Expression(operable.Operable):
     @property
     def representation(self) -> str:
         if self._representation is None:
-            self._representation = create_expression_string(self)
+            self._representation = create_gams_expression(self)
 
         return self._representation
 
@@ -445,55 +553,7 @@ class Expression(operable.Operable):
         -------
         str
         """
-        data_map = {
-            "=g=": "\\geq",
-            "=l=": "\\leq",
-            "=e=": "=",
-            "*": "\\cdot",
-            "and": "\\wedge",
-            "or": "\\vee",
-            "xor": "\\oplus",
-            "$": "|",
-        }
-
-        if isinstance(self.left, float):
-            self.left = utils._map_special_values(self.left)
-
-        if isinstance(self.right, float):
-            self.right = utils._map_special_values(self.right)
-
-        if self.left is None:
-            left_str = ""
-        else:
-            left_str = (
-                str(self.left)
-                if isinstance(self.left, (int, float, str))
-                else self.left.latexRepr()  # type: ignore
-            )
-
-        if self.right is None:
-            right_str = ""
-        else:
-            right_str = (
-                str(self.right)
-                if isinstance(self.right, (int, float, str))
-                else self.right.latexRepr()  # type: ignore
-            )
-
-        operator = self.operator
-        if isinstance(self.operator, str):
-            operator = data_map.get(self.operator, self.operator)
-
-        operator_str = (
-            str(operator)
-            if isinstance(operator, (int, float, str))
-            else operator.latexRepr()
-        )
-
-        if self.operator == "/":
-            return f"\\frac{{{left_str}}}{{{right_str}}}"
-
-        return f"({left_str} {operator_str} {right_str})"
+        return create_latex_expression(self)
 
     def gamsRepr(self) -> str:
         """
