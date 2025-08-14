@@ -10,6 +10,7 @@ Improvements in existing functionality
 --------------------------------------
 - #681: Allow redirecting generateGamsString output to a file.
   Generate unique gdx files for each execution if the debugging level is set to "keep".
+  Implement precedence and associativity to decrease number of paranthesis.
 
 Bug fixes
 ---------
@@ -22,6 +23,7 @@ Improved documentation
 Miscellaneous internal changes
 ------------------------------
 - #450: Add a new model (tsp) to the model library.
+
 GAMSPy 1.14.0 (2025-08-04)
 ==========================
 
