@@ -123,6 +123,7 @@ def _cast_values(
 class Backend(ABC):
     def __init__(
         self,
+        backend_type: str,
         container: Container,
         model: Model | None,
         options: Options,
@@ -131,6 +132,7 @@ class Backend(ABC):
         output: io.TextIOWrapper | None,
         load_symbols: list[Symbol] | None,
     ):
+        self.backend_type = backend_type
         self.container = container
         self.model = model
         self.options = options
@@ -142,6 +144,13 @@ class Backend(ABC):
                 symbol.name  # type: ignore
                 for symbol in load_symbols
             ]
+
+        self.job_name = self.get_job_name()
+        self.gms_file = self.job_name + ".gms"
+        self.lst_file = self.job_name + ".lst"
+        self.pf_file = self.job_name + ".pf"
+        self.restart_file = self.job_name + ".g00"
+        self.trace_file = self.job_name + ".txt"
 
     @abstractmethod
     def is_async(self): ...
@@ -161,10 +170,13 @@ class Backend(ABC):
                 self.container.working_directory,
                 "_" + utils._get_unique_name(),
             )
+            self.container._job = job_name
+            self.container._gdx_in = f"{job_name}in.gdx"
+            self.container._gdx_out = f"{job_name}out.gdx"
 
         return job_name
 
-    def preprocess(self, gdx_in: str):
+    def preprocess(self):
         modified_names = self.container._get_modified_symbols()
 
         if len(modified_names) != 0:
@@ -176,6 +188,11 @@ class Backend(ABC):
                 # Unfortunately, GTP raises a blind exception here. Turn it into a GamspyException.
                 raise GamspyException(str(e)) from e
 
+        gdx_in = self.container._gdx_in
+        if self.backend_type == "engine":
+            gdx_in = os.path.basename(gdx_in)
+        elif self.backend_type == "neos":
+            gdx_in = "in.gdx"
         gams_string = self.container._generate_gams_string(
             gdx_in, modified_names
         )

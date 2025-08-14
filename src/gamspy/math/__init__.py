@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from gamspy.math.activation import (
+    leaky_relu_with_binary_var,
     log_softmax,
     relu_with_binary_var,
     relu_with_complementarity_var,
@@ -203,6 +204,7 @@ __all__ = [
     "relu_with_sos1_var",
     "relu_with_binary_var",
     "relu_with_complementarity_var",
+    "leaky_relu_with_binary_var",
     "log_softmax",
     "softmax",
     "map_value",

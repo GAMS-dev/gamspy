@@ -794,6 +794,7 @@ class GAMSEngine(backend.Backend):
             )
 
         super().__init__(
+            "engine",
             container,
             model,
             options,
@@ -803,12 +804,6 @@ class GAMSEngine(backend.Backend):
             load_symbols,
         )
         self.client = client
-
-        self.job_name = self.get_job_name()
-        self.gms_file = self.job_name + ".gms"
-        self.pf_file = self.job_name + ".pf"
-        self.restart_file = self.job_name + ".g00"
-        self.trace_file = self.job_name + ".txt"
 
     def is_async(self):
         return not self.client.is_blocking
@@ -822,7 +817,7 @@ class GAMSEngine(backend.Backend):
         self._create_restart_file()
 
         # Generate gams string and write modified symbols to gdx
-        gams_string = self.preprocess(os.path.basename(self.container._gdx_in))
+        gams_string = self.preprocess()
 
         self.execute_gams(gams_string)
 

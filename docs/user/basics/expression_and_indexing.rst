@@ -15,28 +15,34 @@ Set-based indexing is at the core of the GAMSPy and GAMS execution system. They 
 Therefore, we encourage the use of it in most contexts. Yet, in certain cases, one might be inclined to do literal indexing (with a str or an int). 
 Because of that GAMSPy also allows literal indexing.
 
-.. tab-set-code::
+.. tabs::
 
-    .. code-block:: Set-based
+    .. tab:: Set-based
 
-        m = gp.Container()
-        i = gp.Set(m, records=['i1', 'i2'])
-        a = gp.Parameter(m, domain=i, records=[('i1', 1), ('i2', 2)])
-        a[i] = 5 # set-based indexing that sets all records of a to 5
+        .. code-block:: python
+            
+            import gamspy as gp
 
-    .. code-block:: Literal
+            m = gp.Container()
+            i = gp.Set(m, records=['i1', 'i2'])
+            a = gp.Parameter(m, domain=i, records=[('i1', 1), ('i2', 2)])
+            a[i] = 5 # set-based indexing that sets all records of a to 5
 
-        import gamspy as gp
-        
-        m = gp.Container()
+    .. tab:: Literal
 
-        i = gp.Set(m, records=['i1', 'i2'])
-        a = gp.Parameter(m, "a", domain=i, records=[('i1', 1), ('i2', 2)])
-        a['i1'] = 5 # literal indexing with a string that sets element 'i1' to 5 
-        a['i2'] = 6 # literal indexing with a string that sets element 'i2' to 6
+        .. code-block:: python
 
-        j = gp.Set(m, records=range(5))
-        j[1] = False # literal indexing with an integer that removes element 1 from the set.
+            import gamspy as gp
+            
+            m = gp.Container()
+
+            i = gp.Set(m, records=['i1', 'i2'])
+            a = gp.Parameter(m, "a", domain=i, records=[('i1', 1), ('i2', 2)])
+            a['i1'] = 5 # literal indexing with a string that sets element 'i1' to 5 
+            a['i2'] = 6 # literal indexing with a string that sets element 'i2' to 6
+
+            j = gp.Set(m, records=range(5))
+            j[1] = False # literal indexing with an integer that removes element 1 from the set.
 
 Slices and Ellipsis
 ===================

@@ -3239,7 +3239,7 @@ def test_sequential_layer(data):
         torch.nn.Conv2d(3, 4, 3, bias=True),
         torch.nn.ReLU(),
         torch.nn.Conv2d(4, 4, 3, bias=False, padding=1),
-        torch.nn.ReLU(),
+        torch.nn.LeakyReLU(negative_slope=0.02),
         torch.nn.MaxPool2d((2, 2)),
         torch.nn.Linear(15, 15, bias=False),
         torch.nn.ReLU(),

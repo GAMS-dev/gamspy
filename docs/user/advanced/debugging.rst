@@ -144,6 +144,15 @@ up to that point as a string. In order to use this function, ``debugging_level``
     ... # Definition of your model
     print(m.generateGamsString())
 
+One can also redirect the executed GAMS code into a file by providing ``path`` argument: ::
+
+.. code-block:: python
+
+    from gamspy import Container
+    m = Container(debugging_level="keep")
+    ... # Definition of your model
+    print(m.generateGamsString(path="executed_code.gms"))
+
 By default, ``generateGamsString`` returns exactly the same string that is executed, but ``show_raw`` argument
 allows users to see only the raw model without any data or dollar calls or other necessary statements to make the model work.
 

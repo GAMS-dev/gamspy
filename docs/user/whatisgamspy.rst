@@ -22,48 +22,52 @@ GAMSPy delegates the expensive assignment and solve statements to the GAMS execu
 are at the core of the GAMSPy and GAMS execution system. For example, in many optimization libraries, you would 
 write your equations as shown in the ``Other Libraries`` block below: 
 
-.. tab-set-code::
+.. tabs::
 
-    .. code-block:: Other-Libraries
-      :emphasize-lines: 13,14,15
+    .. tab:: Other-Libraries
 
-      import other_library as ol
-      from numpy.random import uniform
+      .. code-block:: python
+        :emphasize-lines: 13,14,15
 
-      m = ol.Model()
-      m.i = ol.Set(records=range(500))
-      m.i = ol.Set(records=range(1000))
-      data = uniform(0, 1, (500, 1000))
-      data[data > 0.01] = 0
-      m.a = ol.Parameter(m.i, m.j, records=data)
-      m.b = ol.Parameter(m.i, records=uniform(0,1, 500))
-      m.x = ol.Variable(m.i, m.j)
+        import other_library as ol
+        from numpy.random import uniform
 
-      def e_definition(m, i):
-        return sum(m.a[i, j] * m.x[i, j] for j in m.j) >= m.b[i]
-      m.e = ol.Equation(m.i, definition=e_definition)
+        m = ol.Model()
+        m.i = ol.Set(records=range(500))
+        m.i = ol.Set(records=range(1000))
+        data = uniform(0, 1, (500, 1000))
+        data[data > 0.01] = 0
+        m.a = ol.Parameter(m.i, m.j, records=data)
+        m.b = ol.Parameter(m.i, records=uniform(0,1, 500))
+        m.x = ol.Variable(m.i, m.j)
 
-    .. code-block:: GAMSPy
-      :emphasize-lines: 11
+        def e_definition(m, i):
+          return sum(m.a[i, j] * m.x[i, j] for j in m.j) >= m.b[i]
+        m.e = ol.Equation(m.i, definition=e_definition)
 
-      import gamspy as gp
-      from numpy.random import uniform
+    .. tab:: GAMSPy
 
-      m = gp.Container()
-      i = gp.Set(m)
-      j = gp.Set(m)
-      a = gp.Parameter(m, domain=[i, j])
-      b = gp.Parameter(m, domain=[i])
-      x = gp.Variable(m, domain=[i, j])
-      e = gp.Equation(m, domain=[i])
-      e[i] = gp.Sum(j, a[i, j] * x[i, j]) >= b[i]
+      .. code-block:: python
+        :emphasize-lines: 11
 
-      data = uniform(0, 1, (500, 1000))
-      data[data > 0.01] = 0
-      i.setRecords(range(500))
-      j.setRecords(range(1000))
-      a.setRecords(data)
-      b.setRecords(uniform(0, 1, 500))
+        import gamspy as gp
+        from numpy.random import uniform
+
+        m = gp.Container()
+        i = gp.Set(m)
+        j = gp.Set(m)
+        a = gp.Parameter(m, domain=[i, j])
+        b = gp.Parameter(m, domain=[i])
+        x = gp.Variable(m, domain=[i, j])
+        e = gp.Equation(m, domain=[i])
+        e[i] = gp.Sum(j, a[i, j] * x[i, j]) >= b[i]
+
+        data = uniform(0, 1, (500, 1000))
+        data[data > 0.01] = 0
+        i.setRecords(range(500))
+        j.setRecords(range(1000))
+        a.setRecords(data)
+        b.setRecords(uniform(0, 1, 500))
 
 With the approach of other libraries, you iterate over all items of ``I`` and ``J``. This approach has certain disadvantages:
 

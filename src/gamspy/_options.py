@@ -360,7 +360,7 @@ class Options(BaseModel):
     seed: Optional[int] = None
     report_solution: Literal[0, 1, 2] = 0
     show_os_memory: Optional[Literal[0, 1, 2]] = None
-    solve_link_type: Optional[Literal["disk", "memory"]] = None
+    solve_link_type: Optional[Literal["disk", "memory"]] = "disk"
     merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None
     step_summary: Optional[bool] = None
     suppress_compiler_listing: Optional[bool] = None
