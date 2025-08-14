@@ -176,14 +176,7 @@ class Operation(operable.Operable):
 
     def _get_index_str(self) -> str:
         if len(self.op_domain) == 1:
-            op_domain = self.op_domain[0]
-            representation = op_domain.gamsRepr()
-            if isinstance(op_domain, condition.Condition):
-                # sum((l(root,s,s1,s2) $ od(root,s)),1); -> not valid
-                # sum(l(root,s,s1,s2) $ od(root,s),1); -> valid
-                return representation[1:-1]
-
-            return representation
+            return self.op_domain[0].gamsRepr()
 
         return (
             "("
@@ -274,7 +267,7 @@ class Operation(operable.Operable):
             else self.rhs.latexRepr()
         )
         representation = (
-            f"\\{op_map[self._op_name]}_\\text{{{index_str}}} {expression_str}"
+            f"\\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
         )
         return representation
 
@@ -348,7 +341,7 @@ class Sum(Operation):
         >>> c = Parameter(m, "c", domain=i)
         >>> v = Variable(m, "v", domain=i)
         >>> Sum(i, c[i]*v[i]).gamsRepr()
-        'sum(i,(c(i) * v(i)))'
+        'sum(i,c(i) * v(i))'
 
         """
         repr = super().gamsRepr()
@@ -424,7 +417,7 @@ class Product(Operation):
         >>> c = Parameter(m, "c", domain=i)
         >>> v = Variable(m, "v", domain=i)
         >>> Product(i, c[i]*v[i]).gamsRepr()
-        'prod(i,(c(i) * v(i)))'
+        'prod(i,c(i) * v(i))'
 
         """
         repr = super().gamsRepr()
@@ -500,7 +493,7 @@ class Smin(Operation):
         >>> c = Parameter(m, "c", domain=i)
         >>> v = Variable(m, "v", domain=i)
         >>> Smin(i, c[i]*v[i]).gamsRepr()
-        'smin(i,(c(i) * v(i)))'
+        'smin(i,c(i) * v(i))'
 
         """
         repr = super().gamsRepr()
@@ -576,7 +569,7 @@ class Smax(Operation):
         >>> c = Parameter(m, "c", domain=i)
         >>> v = Variable(m, "v", domain=i)
         >>> Smax(i, c[i]*v[i]).gamsRepr()
-        'smax(i,(c(i) * v(i)))'
+        'smax(i,c(i) * v(i))'
 
         """
         repr = super().gamsRepr()

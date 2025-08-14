@@ -185,14 +185,10 @@ def tspModel(
     )
 
     eq_enter_once = gp.Equation(m, "eq_enter_once", domain=[n1])
-    eq_enter_once[j].where[~j.sameAs(start_point)] = (
-        gp.Sum(i.where[ij[i, j]], X[i, j]) == 1
-    )
+    eq_enter_once[j] = gp.Sum(i.where[ij[i, j]], X[i, j]) == 1
 
     eq_leave_once = gp.Equation(m, "eq_leave_once", domain=[n1])
-    eq_leave_once[i].where[~i.sameAs(start_point)] = (
-        gp.Sum(j.where[ij[i, j]], X[i, j]) == 1
-    )
+    eq_leave_once[i] = gp.Sum(j.where[ij[i, j]], X[i, j]) == 1
 
     nodes.setRecords(nodes_recs["row.city"])
     start_point.setRecords([nodes.records.iloc[0]["uni"]])

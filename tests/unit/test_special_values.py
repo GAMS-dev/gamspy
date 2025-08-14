@@ -19,7 +19,7 @@ def test_parameter_special_values(data):
     m = data
     x = Parameter(m, "x", records=5)
     x[...] = x + gp.SpecialValues.EPS
-    assert x.getAssignment() == "x = (x + EPS);"
+    assert x.getAssignment() == "x = x + EPS;"
 
     i = Set(m, "i", records=["i1", "i2"])
 
@@ -79,7 +79,7 @@ def test_operation_special_values(data):
 
     assert (
         results.getAssignment()
-        == 'results(tax,"x") = max((x.l(tax) - e.l(tax)),EPS);'
+        == 'results(tax,"x") = max(x.l(tax) - e.l(tax),EPS);'
     )
 
     dummy = Parameter(m, "dummy")

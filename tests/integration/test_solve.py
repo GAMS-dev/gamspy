@@ -1363,19 +1363,10 @@ def test_max_line_length(data):
 
     # This generates an equation with length > 80000
     long_expr = f
-    for _ in range(1200):
+    for _ in range(1300):
         long_expr *= f
 
     supply[i] = Sum(j, x[i, j]) * long_expr <= a[i]
-    gp.set_options({"LAZY_EVALUATION": 1})
-    with pytest.raises(RecursionError):
-        long_expr = f
-        for _ in range(1200):
-            long_expr *= f
-        supply[i] = Sum(j, x[i, j]) * long_expr <= a[i]
-
-    gp.set_options({"LAZY_EVALUATION": 0})
-
     demand[j] = Sum(i, x[i, j]) >= b[j]
 
     transport = Model(

@@ -71,9 +71,9 @@ The following example illustrates this point. ::
     from gamspy import Container, Set, Parameter, Number
 
     m = Container()    
-    i = Set(m, name="i", records=["i1", "i2", "i3", "i:", "i5"])
+    i = Set(m, name="i", records=["i1", "i2", "i3", "i4", "i5"])
     s = Parameter(m, "s", domain=i, records=[["i1", 3], ["i2", 5], ["i3", 6]])
-    u = Parameter(m, "v", domain=i)
+    u = Parameter(m, "u", domain=i)
 
     u[i].where[2 * s[i] - 6] = 7
 
@@ -84,12 +84,15 @@ The following example illustrates this point. ::
     	 i	value
     0	i2	  7.0
     1	i3	  7.0
+    2	i4	  7.0
+    3	i5	  7.0
 
 Here the numerical expression is the logical condition. The numerical expression is 
-zero if ``a[i]`` equals 3, and non-zero otherwise. Hence the logical value of the 
-expression is FALSE for ``a[i] = 3`` and TRUE for all other values of ``a[i]``. The 
+zero if ``s[i]`` equals 3, and non-zero otherwise. Hence the logical value of the 
+expression is FALSE for ``s[i] = 3`` and TRUE for all other values of ``s[i]``. The 
 assignment is only made if the numerical expression evaluates to TRUE, otherwise 
-no assignment is made.
+no assignment is made. Note that values to ``u['i4']`` and ``u['i5']`` were also 
+assigned since the domain of ``u`` is controlled over the entire set ``i``.
 
 .. note::
     - Values of the extended range arithmetic such as ``float("inf")`` are also 
@@ -113,19 +116,19 @@ examples. ::
     m = Container()
     i = Set(m, name="i", records=["i1", "i2", "i3", "i4", "i5"])
     s = Parameter(m, "s", domain=i, records=[["i1", 3], ["i2", 5], ["i3", 6]])
-    u = Parameter(m, "v", domain=i)
+    u = Parameter(m, "u", domain=i)
 
-    u[i].where[s[i] >= 5] = u[i] + 10
+    u[i].where[s[i] >= 5] = s[i] + 10
     
 ::
 
     In [1]: u.records
     Out[1]:
     	 i	 value
-    0	i2	  11.0
-    1	i4	  10.0
+    0	i2	  15.0
+    1	i3	  16.0
 
-The assignment ``u[i].where[s[i] >= 5] = u[i] + 10`` depends on whether ``s[i]`` is greater or 
+The assignment ``u[i].where[s[i] >= 5] = s[i] + 10`` depends on whether ``s[i]`` is greater or 
 equal to 5. If this is the case, an assignment is made, otherwise not.
 
 .. _bitwise-operators:

@@ -78,7 +78,7 @@ def test_operations(data):
 
     # Operation with two indices
     sum_op = Sum((i, j), c[i, j] * x[i, j]) == z
-    assert sum_op.gamsRepr() == "sum((i,j),(c(i,j) * x(i,j))) =e= z"
+    assert sum_op.gamsRepr() == "sum((i,j),c(i,j) * x(i,j)) =e= z"
 
     # PROD
     # Operation with one index
@@ -87,7 +87,7 @@ def test_operations(data):
 
     # Operation with two indices
     sum_op = Product((i, j), c[i, j] * x[i, j]) == z
-    assert sum_op.gamsRepr() == "prod((i,j),(c(i,j) * x(i,j))) =e= z"
+    assert sum_op.gamsRepr() == "prod((i,j),c(i,j) * x(i,j)) =e= z"
 
     # Smin
     # Operation with one index
@@ -96,7 +96,7 @@ def test_operations(data):
 
     # Operation with two indices
     sum_op = Smin((i, j), c[i, j] * x[i, j]) == z
-    assert sum_op.gamsRepr() == "smin((i,j),(c(i,j) * x(i,j))) =e= z"
+    assert sum_op.gamsRepr() == "smin((i,j),c(i,j) * x(i,j)) =e= z"
 
     # Smax
     # Operation with one index
@@ -105,7 +105,7 @@ def test_operations(data):
 
     # Operation with two indices
     smax_op = Smax((i, j), c[i, j] * x[i, j]) == z
-    assert smax_op.gamsRepr() == "smax((i,j),(c(i,j) * x(i,j))) =e= z"
+    assert smax_op.gamsRepr() == "smax((i,j),c(i,j) * x(i,j)) =e= z"
 
     # Sand
     # Operation with one index
@@ -114,7 +114,7 @@ def test_operations(data):
 
     # Operation with two indices
     sand_op = Sand((i, j), c[i, j] * x[i, j]) == z
-    assert sand_op.gamsRepr() == "sand((i,j),(c(i,j) * x(i,j))) =e= z"
+    assert sand_op.gamsRepr() == "sand((i,j),c(i,j) * x(i,j)) =e= z"
 
     # Sor
     # Operation with one index
@@ -123,7 +123,7 @@ def test_operations(data):
 
     # Operation with two indices
     sor_op = Sor((i, j), c[i, j] * x[i, j]) == z
-    assert sor_op.gamsRepr() == "sor((i,j),(c(i,j) * x(i,j))) =e= z"
+    assert sor_op.gamsRepr() == "sor((i,j),c(i,j) * x(i,j)) =e= z"
 
     # Ord, Card
     with pytest.raises(ValidationError):
@@ -133,31 +133,31 @@ def test_operations(data):
         _ = Card("bla")
 
     expression = Ord(i) == Ord(j)
-    assert expression.gamsRepr() == "(ord(i) eq ord(j))"
+    assert expression.gamsRepr() == "ord(i) eq ord(j)"
     expression = Ord(i) != Ord(j)
-    assert expression.gamsRepr() == "(ord(i) ne ord(j))"
+    assert expression.gamsRepr() == "ord(i) ne ord(j)"
     expression = Ord(i) <= 5
-    assert expression.gamsRepr() == "(ord(i) <= 5)"
+    assert expression.gamsRepr() == "ord(i) <= 5"
     expression = Ord(i) >= 5
-    assert expression.gamsRepr() == "(ord(i) >= 5)"
+    assert expression.gamsRepr() == "ord(i) >= 5"
     expression = -Ord(i)
-    assert expression.gamsRepr() == "( - ord(i))"
+    assert expression.gamsRepr() == "(-ord(i))"
     expression = Card(i) == 5
-    assert expression.gamsRepr() == "(card(i) eq 5)"
+    assert expression.gamsRepr() == "card(i) eq 5"
     expression = Card(i) != 5
-    assert expression.gamsRepr() == "(card(i) ne 5)"
+    assert expression.gamsRepr() == "card(i) ne 5"
     expression = Card(i) <= 5
-    assert expression.gamsRepr() == "(card(i) <= 5)"
+    assert expression.gamsRepr() == "card(i) <= 5"
     expression = Card(i) >= 5
-    assert expression.gamsRepr() == "(card(i) >= 5)"
+    assert expression.gamsRepr() == "card(i) >= 5"
     expression = -Card(i)
-    assert expression.gamsRepr() == "( - card(i))"
+    assert expression.gamsRepr() == "(-card(i))"
 
     sum_op = Sum((i, j), c[i, j] * x[i, j])
     expression = sum_op != sum_op
     assert (
         expression.gamsRepr()
-        == "(sum((i,j),(c(i,j) * x(i,j))) ne sum((i,j),(c(i,j) * x(i,j))))"
+        == "sum((i,j),c(i,j) * x(i,j)) ne sum((i,j),c(i,j) * x(i,j))"
     )
 
 
@@ -220,8 +220,7 @@ def test_operation_overloads(data):
     profit = Equation(m, "profit", domain=s)
     profit[s] = -Sum(c, a[c, s] * p[c]) >= 0
     assert (
-        profit.getDefinition()
-        == "profit(s) .. ( - sum(c,(a(c,s) * p(c)))) =g= 0;"
+        profit.getDefinition() == "profit(s) .. (-sum(c,a(c,s) * p(c))) =g= 0;"
     )
 
     # test ne
@@ -229,7 +228,7 @@ def test_operation_overloads(data):
     bla2 = Parameter(m, "bla2", domain=s)
     bla[...] = bla2[...] != 0
 
-    assert bla.getAssignment() == "bla(s) = (bla2(s) ne 0);"
+    assert bla.getAssignment() == "bla(s) = bla2(s) ne 0;"
 
 
 def test_truth_value(data):
@@ -281,11 +280,11 @@ def test_condition(data):
 
     card_j = Parameter(m, "card_j", domain=jj)
     card_j[jj] = Card(jj).where[depot[jj]]
-    assert card_j.getAssignment() == "card_j(jj) = (card(jj) $ depot(jj));"
+    assert card_j.getAssignment() == "card_j(jj) = card(jj) $ (depot(jj));"
 
     ord_j = Parameter(m, "ord_j", domain=jj)
     ord_j[jj] = Ord(jj).where[depot[jj]]
-    assert ord_j.getAssignment() == "ord_j(jj) = (ord(jj) $ depot(jj));"
+    assert ord_j.getAssignment() == "ord_j(jj) = ord(jj) $ (depot(jj));"
 
 
 def test_control_domain(data):
@@ -463,8 +462,8 @@ def test_number():
     i = Set(m, name="i", records=[f"i{j}" for j in range(10)])
     x = Variable(m, name="x", domain=i)
     e = Equation(m, name="e", definition=Sum(i, x[i] * x[i]) == Number(1))
-    assert e.getDefinition() == "e .. sum(i,(x(i) * x(i))) =e= 1;"
+    assert e.getDefinition() == "e .. sum(i,x(i) * x(i)) =e= 1;"
     f = Equation(m, name="f", definition=Number(1) == Sum(i, x[i] * x[i]))
-    assert f.getDefinition() == "f .. 1 =e= sum(i,(x(i) * x(i)));"
+    assert f.getDefinition() == "f .. 1 =e= sum(i,x(i) * x(i));"
 
     m.close()

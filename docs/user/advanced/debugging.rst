@@ -144,6 +144,15 @@ up to that point as a string. In order to use this function, ``debugging_level``
     ... # Definition of your model
     print(m.generateGamsString())
 
+One can also redirect the executed GAMS code into a file by providing ``path`` argument: ::
+
+.. code-block:: python
+
+    from gamspy import Container
+    m = Container(debugging_level="keep")
+    ... # Definition of your model
+    print(m.generateGamsString(path="executed_code.gms"))
+
 By default, ``generateGamsString`` returns exactly the same string that is executed, but ``show_raw`` argument
 allows users to see only the raw model without any data or dollar calls or other necessary statements to make the model work.
 
@@ -386,8 +395,6 @@ Here is a list of package wide options:
 | GAMS_SYSDIR                  | str   | Path to the GAMS system directory. Set to gamspy_base directory by default.                                                              |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | MAP_SPECIAL_VALUES           | int   | Map special values. Can be disabled for performance if there are no special values in the records. Set to 1 by default.                  |
-+------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-| LAZY_EVALUATION              | int   | Whether to evaluate expressions lazily. Lazy evaluation might cause recursion depth errors for very long expression. Set to 0 by default |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | ASSUME_VARIABLE_SUFFIX       | int   | Activates or deactivates the automatic addition of .l or .scale attribute to variables on the right-hand side of assignments. Set to 1   |
 |                              |       | by default. 0: deactivate, 1: use .l attribute, 2: use .scale attribute.                                                                 |

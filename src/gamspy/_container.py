@@ -31,7 +31,7 @@ from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
-    from typing import Any, Literal
+    from typing import Any, Literal, TypeAlias, Union
 
     from pandas import DataFrame
 
@@ -47,6 +47,8 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy.math.matrix import Dim
+
+    SymbolType: TypeAlias = Union[Set, Alias, Parameter, Variable, Equation]
 
 LOOPBACK = "127.0.0.1"
 IS_MIRO_INIT = os.getenv("MIRO", False)
@@ -561,8 +563,8 @@ class Container(gt.Container):
     def _setup_paths(self) -> tuple[str, str, str]:
         suffix = "_" + utils._get_unique_name()
         job = os.path.join(self.working_directory, suffix)
-        gdx_in = os.path.join(self.working_directory, f"{suffix}in.gdx")
-        gdx_out = os.path.join(self.working_directory, f"{suffix}out.gdx")
+        gdx_in = f"{job}in.gdx"
+        gdx_out = f"{job}out.gdx"
 
         return job, gdx_in, gdx_out
 
@@ -771,6 +773,45 @@ class Container(gt.Container):
         self._read(load_from, symbol_names, load_records, mode, encoding)
         self._synch_with_gams()
 
+    def setRecords(
+        self,
+        records: dict[SymbolType, Any],
+        *,
+        uels_on_axes: bool | list[bool] = False,
+    ) -> None:
+        """
+        Batched setRecords call where one can set the records of many symbols at once.
+
+        Parameters
+        ----------
+        records : dict[SymbolType, Any]
+            Dictionary of records where keys are symbols are values are their records.
+        uels_on_axes : bool, optional
+            If uels_on_axes=True setRecords will assume that all domain information is contained in the axes of the pandas object. Data will be flattened (if necessary).
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> k = gp.Set(m, "k")
+        >>> m.setRecords({i: range(10), k: range(5)})
+
+        """
+        if not isinstance(uels_on_axes, list):
+            uels_on_axes = [uels_on_axes] * len(records)
+
+        if len(uels_on_axes) != len(records):
+            raise ValidationError(
+                f"Length of `records` and `uels_on_axes` must match. Size of records: {len(records)}, size of uels_on_axes: {len(uels_on_axes)}"
+            )
+
+        for item, uels_on_axe in zip(records.items(), uels_on_axes):
+            symbol, record = item
+            symbol._setRecords(record, uels_on_axes=uels_on_axe)
+
+        self._synch_with_gams()
+
     def write(
         self,
         write_to: str,
@@ -862,12 +903,16 @@ class Container(gt.Container):
                 self.system_directory, options_file_name, solver
             )
 
-    def generateGamsString(self, show_raw: bool = False) -> str:
+    def generateGamsString(
+        self, path: str | None = None, *, show_raw: bool = False
+    ) -> str:
         """
         Generates the GAMS code
 
         Parameters
         ----------
+        path : str, optional
+            Path to the file that will contain the executed GAMS code.
         show_raw : bool, optional
             Shows the raw model without data and other necessary
             GAMS statements, by default False.
@@ -889,10 +934,15 @@ class Container(gt.Container):
                 "`debug_level` argument of the container must be set to 'keep' to use this function."
             )
 
-        if not show_raw:
-            return self._gams_string
+        gams_string = self._gams_string
+        if show_raw:
+            gams_string = utils._filter_gams_string(self._gams_string)
 
-        return utils._filter_gams_string(self._gams_string)
+        if path:
+            with open(path, "w") as file:
+                file.write(gams_string)
+
+        return gams_string
 
     def loadRecordsFromGdx(
         self,

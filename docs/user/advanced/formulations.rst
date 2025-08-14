@@ -24,6 +24,7 @@ Neural Network Related Formulations
 GAMSPy supports following neural network related formulations:
 
 - :meth:`Linear <gamspy.formulations.Linear>`
+- :meth:`Conv1d <gamspy.formulations.Conv1d>`
 - :meth:`Conv2d <gamspy.formulations.Conv2d>`
 - :meth:`MaxPool2d <gamspy.formulations.MaxPool2d>`
 - :meth:`MinPool2d <gamspy.formulations.MinPool2d>`
@@ -85,7 +86,7 @@ With using either formulation, we can do as following:
          y, eqs = gp.formulations.pwl_convexity_formulation(
              x,
              x_points=[0, 1, 3, 3, 4],
-             x_points=[2, 1, 1, 2, 3],
+             y_points=[2, 1, 1, 2, 3],
          )
 
 **Discontinuities**

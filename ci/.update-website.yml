@@ -1,6 +1,7 @@
 leg-update-website:
   stage: website
   needs: []
+  allow_failure: true
   tags: [puma]
   image:
     name: $MACHINES_CONTAINER_REG/leg/builder-full:latest

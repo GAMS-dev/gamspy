@@ -4,10 +4,12 @@ import gc
 import glob
 import math
 import os
+import platform
 import shutil
 import subprocess
 import sys
 import tempfile
+import timeit
 import uuid
 from pathlib import Path
 
@@ -1292,3 +1294,58 @@ def test_expert_sync():
         assert a.records is None
     a.synchronize = True
     assert a.toList() == [("i1", "i1", 0.4)]
+
+
+def one_by_one(n: int, m: Container):
+    sets = [Set(m) for _ in range(10)]
+    for set in sets:
+        set.setRecords(range(n))
+
+    params = [Parameter(m) for _ in range(10)]
+    for param in params:
+        param.setRecords(n)
+
+
+def batched(n: int, m: Container):
+    sets = [Set(m) for _ in range(10)]
+    values = [range(n)] * 10
+    m.setRecords(dict(zip(sets, values)))
+
+    params = [Parameter(m) for _ in range(10)]
+    values = [n] * 10
+    m.setRecords(dict(zip(params, values)))
+
+
+@pytest.mark.skipif(
+    platform.system() != "Linux",
+    reason="Test only for linux because other build machines are slow enough and there is no platform dependent behavior.",
+)
+@pytest.mark.unit
+def test_batch_setRecords():
+    n = 10
+    m = Container()
+    one_by_one_result = timeit.repeat(
+        "one_by_one(n, m)",
+        globals={"n": n, "one_by_one": one_by_one, "m": m},
+        repeat=30,
+        number=1,
+    )
+
+    m = Container()
+    batched_result = timeit.repeat(
+        "batched(n, m)",
+        globals={"n": n, "batched": batched, "m": m},
+        repeat=30,
+        number=1,
+    )
+    assert min(one_by_one_result) > min(batched_result)
+    m.close()
+
+    m = Container()
+    i = Set(m, "i")
+    k = Set(m, "k")
+
+    with pytest.raises(ValidationError):
+        m.setRecords(
+            {i: range(10), k: range(5)}, uels_on_axes=[True, False, True]
+        )

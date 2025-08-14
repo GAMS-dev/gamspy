@@ -94,7 +94,7 @@ def test_condition_on_expression(data):
 
     assert (
         muf.getAssignment()
-        == "muf(i,j) = ((2.48 + (0.0084 * rd(i,j))) $ rd(i,j));"
+        == "muf(i,j) = (2.48 + 0.0084 * rd(i,j)) $ (rd(i,j));"
     )
 
 
@@ -143,7 +143,7 @@ def test_condition_on_number(data):
     )
 
     expression = Sum(i, muf[i, j]).where[muf[i, j] > 0]
-    assert expression.getDeclaration() == "(sum(i,muf(i,j)) $ (muf(i,j) > 0))"
+    assert expression.getDeclaration() == "sum(i,muf(i,j)) $ (muf(i,j) > 0)"
 
     k["ahmsa"] = True
     assert k.getAssignment() == 'k("ahmsa") = yes;'
@@ -185,8 +185,7 @@ def test_condition_on_number(data):
 
     assert (
         Util_gap.getAssignment()
-        == "Util_gap(t) = (1 $ (round(Util_lic(t),10) ne round("
-        "Util_lic2(t),10)));"
+        == "Util_gap(t) = 1 $ (round(Util_lic(t),10) ne round(Util_lic2(t),10));"
     )
 
 
@@ -305,7 +304,7 @@ def test_condition_on_equation(data):
 
     assert (
         minw.getDefinition()
-        == "minw(t) $ tm(t) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);"
+        == "minw(t) $ (tm(t)) .. sum(w $ (td(w,t)),x(w,t)) =g= tm(t);"
     )
 
     m = Container()
@@ -320,13 +319,13 @@ def test_condition_on_equation(data):
     defopLS[o, p] = op[o, p] == Number(1).where[sumc[o, p] >= 0.5]
     assert (
         defopLS.getDefinition()
-        == "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));"
+        == "defopLS(o,p) .. op(o,p) =e= 1 $ (sumc(o,p) >= 0.5);"
     )
 
     k = Set(m, "k", domain=[p])
     k[p].where[k[p]] = True
 
-    assert k.getAssignment() == "k(p) $ k(p) = yes;"
+    assert k.getAssignment() == "k(p) $ (k(p)) = yes;"
 
     m = Container()
     p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
@@ -443,8 +442,8 @@ def test_condition_on_condition():
     i = Set(m, "i")
     a = Parameter(m, "a", domain=i)
 
-    assert a[i].where[a[i]].where[a[i]].gamsRepr() == "((a(i) $ a(i)) $ a(i))"
+    assert a[i].where[a[i]].where[a[i]].gamsRepr() == "a(i) $ (a(i)) $ (a(i))"
     assert (
         a[i].where[a[i]].where[a[i]].where[a[i]].gamsRepr()
-        == "(((a(i) $ a(i)) $ a(i)) $ a(i))"
+        == "a(i) $ (a(i)) $ (a(i)) $ (a(i))"
     )
