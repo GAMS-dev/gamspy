@@ -1,6 +1,10 @@
 GAMSPy 1.15.0 (2025-08-14)
 ==========================
 
+Dependencies
+------------
+- Upgrade gamspy_base and gamsapi to 50.4.0
+
 New features
 ------------
 - #653: Allow bulk setRecords via Container.setRecords function.
