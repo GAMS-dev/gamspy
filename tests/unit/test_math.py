@@ -700,3 +700,23 @@ def test_softmax(data):
 
     y, equations = gams_math.softmax(x)
     assert "exp" in equations[0].getDefinition()
+
+
+def test_tanh_activation(data):
+    m, *_ = data
+    m = Container()
+
+    x = Variable(m, name="x", domain=gams_math.dim([30, 3]))
+
+    x.lo[...] = -5
+    x.up[...] = "inf"
+
+    y, eqs = gams_math.activation.tanh(x)
+
+    assert len(y.domain) == 2
+    assert len(y.domain[0]) == 30
+    assert len(y.domain[1]) == 3
+    assert len(eqs) == 1
+
+    assert np.isclose(y.records["lower"].iloc[0], np.tanh(-5))
+    assert np.isclose(y.records["upper"].iloc[0], 1)

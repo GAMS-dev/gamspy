@@ -247,6 +247,22 @@ def test_conv_make_variable(data):
             padding=padding_type,
         )
         conv1.make_variable()
+        assert conv1.weight.records is None
+        assert conv1.bias.records is None
+
+        conv2 = layer(
+            m,
+            in_channels=1,
+            out_channels=2,
+            kernel_size=3,
+            bias=True,
+            padding=padding_type,
+        )
+        # setting init_weights initializes bias and weight
+        conv2.make_variable(init_weights=True)
+        assert conv2.weight.records is not None
+        assert conv2.bias.records is not None
+
         w1 = np.random.rand(*[2, 1, 3, 3][:shape_len])
         b1 = np.random.rand(2)
         pytest.raises(ValidationError, conv1.load_weights, w1, b1)
@@ -2943,6 +2959,13 @@ def test_linear_make_variable(data):
     m, *_ = data
     lin1 = Linear(m, 4, 2)
     lin1.make_variable()
+    assert lin1.weight.records is None
+    assert lin1.bias.records is None
+
+    lin2 = Linear(m, 4, 2)
+    lin2.make_variable(init_weights=True)
+    assert lin2.weight.records is not None
+    assert lin2.bias.records is not None
     w1 = np.random.rand(2, 4)
     b1 = np.random.rand(2)
     pytest.raises(ValidationError, lin1.load_weights, w1, b1)
