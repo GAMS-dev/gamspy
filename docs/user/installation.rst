@@ -93,6 +93,11 @@ is as follows:
 
     gamspy retrieve license <access code> -i info.json -o license.txt
 
+One can add --checkout-duration (-c) option if they want to checkout their **network license**.
+For example, the following command checks out the license for 4 hours: ::
+
+    gamspy retrieve license <access code> -i info.json -o license.txt -c 4
+
 3. Move license.txt to the machine that does not have an internet connection and run: ::
 
     gamspy install license license.txt   
