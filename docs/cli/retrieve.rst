@@ -33,6 +33,10 @@ Usage
      - -o
      - None
      - Output path for the license file.
+   * - -\-checkout-duration
+     - -c
+     - None
+     - Specifies a duration in hours to checkout a session.
 
 Examples
 ~~~~~~~~
