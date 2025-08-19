@@ -1,0 +1,2 @@
+- Introduce a convenience function for `tanh` in gamspy.math.activations to generate the output variable and equations.
+- Add `init_weights` parameter in `make_variable` for `Linear`, `Conv1d` and `Conv2d` formulations.

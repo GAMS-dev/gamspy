@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -294,14 +295,20 @@ class Conv2d:
         output.lo[...] = out_bounds[("0",) + tuple(output.domain)]
         output.up[...] = out_bounds[("1",) + tuple(output.domain)]
 
-    def make_variable(self) -> None:
+    def make_variable(self, *, init_weights=False) -> None:
         """
         Mark Conv2d as variable. After this is called `load_weights`
         cannot be called. Use this when you need to learn the weights
         of your convolutional layer in your optimization model.
 
-        This does not initialize the weights, it is highly recommended
-        that you set initial values to `weight` and `bias` variables.
+        Parameters
+        ----------
+        init_weights : Optional[bool]
+               False by default.
+               Whether to initialize weights. It is suggested you set
+               this to True unless you want to initialize weights yourself.
+               When `init_weights` is set to True, values are initialized from
+               :math:`\mathcal{U}(-\sqrt{k},\sqrt{k})`, where :math:`k = 1/[C_{in} * \prod_{i=0}^{1}{kernel\_size_n}]`.
         """
         if self._state == 1:
             raise ValidationError(
@@ -315,12 +322,17 @@ class Conv2d:
             self.kernel_size[1],
         )
 
+        sk = math.sqrt(
+            1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1])
+        )
         if self.weight is None:
             self.weight = gp.Variable(
                 self.container,
                 domain=dim(expected_shape),
                 name=utils._generate_name("v", self._name_prefix, "weight"),
             )
+            if init_weights:
+                self.weight.l[...] = gp.math.uniform(-sk, sk)
 
         if self.use_bias and self.bias is None:
             self.bias = gp.Variable(
@@ -328,6 +340,8 @@ class Conv2d:
                 domain=dim([self.out_channels]),
                 name=utils._generate_name("v", self._name_prefix, "bias"),
             )
+            if init_weights:
+                self.bias.l[...] = gp.math.uniform(-sk, sk)
 
         self._state = 2
 

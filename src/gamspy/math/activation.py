@@ -40,6 +40,20 @@ def _get_ub(x: Variable, default_ub: float):
     return ub
 
 
+def tanh(x: Variable) -> tuple[Variable, list[Equation]]:
+    """
+    Convenience wrapper that uses gamspy.math.tanh. Unlike gamspy.math.tanh,
+    this function creates a new variable and the equation that
+    sets it to follow formulations structure.
+    """
+    y = x.container.addVariable(domain=x.domain)
+    set_y = x.container.addEquation(domain=x.domain)
+    set_y[...] = y == gamspy.math.tanh(x)
+    y.lo[...] = gamspy.math.tanh(x.lo[...])
+    y.up[...] = gamspy.math.tanh(x.up[...])
+    return y, [set_y]
+
+
 def relu_with_sos1_var(
     x: (
         Parameter
