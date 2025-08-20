@@ -620,7 +620,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
         >>> a[i] = a[i] * 5
         >>> a.getAssignment()
-        'a(i) = (a(i) * 5);'
+        'a(i) = a(i) * 5;'
 
         """
         if self._assignment is None:

@@ -1,1 +1,0 @@
-Allow bulk setRecords via Container.setRecords function.

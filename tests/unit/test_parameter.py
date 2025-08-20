@@ -90,9 +90,9 @@ def test_parameter_string(data):
 
     b = Parameter(m, "b")
     assert b.getDeclaration() == "Parameter b / /;"
-    assert (b == 5).gamsRepr() == "(b eq 5)"
-    assert (-b).getDeclaration() == "( - b)"
-    assert (b != 5).gamsRepr() == "(b ne 5)"
+    assert (b == 5).gamsRepr() == "b eq 5"
+    assert (-b).getDeclaration() == "(-b)"
+    assert (b != 5).gamsRepr() == "b ne 5"
 
 
 def test_implicit_parameter_string(data):
@@ -111,7 +111,7 @@ def test_implicit_parameter_string(data):
 
     a[i] = -a[i] * 5
 
-    assert a.getAssignment() == "a(i) = (( - a(i)) * 5);"
+    assert a.getAssignment() == "a(i) = (-a(i)) * 5;"
 
     cont = Container()
 
@@ -159,7 +159,7 @@ def test_implicit_parameter_assignment(data):
     v = Variable(m, "v", domain=[i])
     v.l[i] = v.l[i] * 5
 
-    assert v.getAssignment() == "v.l(i) = (v.l(i) * 5);"
+    assert v.getAssignment() == "v.l(i) = v.l(i) * 5;"
 
 
 def test_equality(data):

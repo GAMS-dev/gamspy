@@ -14,6 +14,6 @@ $gdxLoadAll /home/muhammet/Documents/gams_workspace/gamspy/tmp/to_gams/transport
 $offMulti
 supply(i) .. sum(j,x(i,j)) =l= a(i);
 demand(j) .. sum(i,x(i,j)) =g= b(j);
-transport_objective .. sum((i,j),(c(i,j) * x(i,j))) =e= transport_objective_variable;
+transport_objective .. sum((i,j),c(i,j) * x(i,j)) =e= transport_objective_variable;
 transport.dictfile = 0;
 solve transport using LP MIN transport_objective_variable;

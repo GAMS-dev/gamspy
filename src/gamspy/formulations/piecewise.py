@@ -227,7 +227,7 @@ def _indicator(
     if not isinstance(expr, gp.Expression):
         raise ValidationError("expr needs to be an expression")
 
-    if expr.data not in {"=l=", "=e=", "=g="}:
+    if expr.operator not in {"=l=", "=e=", "=g="}:
         raise ValidationError("expr needs to be inequality or equality")
 
     if len(expr.domain) != len(indicator_var.domain):
@@ -241,7 +241,7 @@ def _indicator(
                 "indicator_var and expr must have the same domain"
             )
 
-    if expr.data == "=e=":
+    if expr.operator == "=e=":
         # sos1(bin_var, lhs - rhs) might be better
         eqs1 = _indicator(
             indicator_var,
@@ -255,7 +255,7 @@ def _indicator(
         )
         return [*eqs1, *eqs2]
 
-    if expr.data == "=g=":
+    if expr.operator == "=g=":
         return _indicator(
             indicator_var,
             indicator_val,

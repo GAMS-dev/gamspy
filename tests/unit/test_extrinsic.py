@@ -90,7 +90,7 @@ def test_extrinsic_functions(data):
     # Test the interaction with other components
     d3 = Parameter(m, "d3")
     d3[...] = trilib.myCos(90, 1) * 3
-    assert d3.getAssignment() == "d3 = (myCos(90,1) * 3);"
+    assert d3.getAssignment() == "d3 = myCos(90,1) * 3;"
     assert int(d3.toValue()) == 0
 
     v = Variable(m, "v")
@@ -104,10 +104,10 @@ def test_extrinsic_functions(data):
     e = Equation(
         m, name="e", definition=Sum(i, x[i] * x[i]) == trilib.myCos(90)
     )
-    assert e.getDefinition() == "e .. sum(i,(x(i) * x(i))) =e= myCos(90);"
+    assert e.getDefinition() == "e .. sum(i,x(i) * x(i)) =e= myCos(90);"
     f = Equation(
         m, name="f", definition=trilib.myCos(90) == Sum(i, x[i] * x[i])
     )
-    assert f.getDefinition() == "f .. myCos(90) =e= sum(i,(x(i) * x(i)));"
+    assert f.getDefinition() == "f .. myCos(90) =e= sum(i,x(i) * x(i));"
 
     m.close()

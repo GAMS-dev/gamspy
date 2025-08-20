@@ -1591,7 +1591,7 @@ def test_latex_repr(data):
         e.latexRepr()
 
     e[...] = c * c - a >= 0
-    assert e.latexRepr() == "$\n((c \\cdot c) - a) \\geq 0\n$"
+    assert e.latexRepr() == "$\nc \\cdot c - a \\geq 0\n$"
 
 
 def test_symbol_name_with_underscore():
@@ -1641,6 +1641,6 @@ def test_symbol_name_with_underscore():
     assert (
         fuel_balance_air.latexRepr()
         == r"""$
-fuel\_at\_landing_{cities} = (fuel\_at\_takeoff_{cities - 1} - ((1 + \frac{(0.5 \cdot (fuel\_at\_takeoff_{cities - 1} + fuel\_at\_landing_{cities}))}{2000}) \cdot distance\_for\_next\_city_{cities - 1}))\hfill \forall cities ~ | ~ (ord(cities) > 1)
+fuel\_at\_landing_{cities} = fuel\_at\_takeoff_{cities - 1} - (1 + \frac{0.5 \cdot (fuel\_at\_takeoff_{cities - 1} + fuel\_at\_landing_{cities})}{2000}) \cdot distance\_for\_next\_city_{cities - 1}\hfill \forall cities ~ | ~ ord(cities) > 1
 $"""
     )

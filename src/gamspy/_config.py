@@ -43,10 +43,6 @@ def _set_default_options() -> None:
     map_special_values = int(os.getenv("GAMSPY_MAP_SPECIAL_VALUES", 1))
     configuration["MAP_SPECIAL_VALUES"] = map_special_values
 
-    # Lazy evaluation
-    evaluate_lazily = int(os.getenv("GAMSPY_LAZY_EVALUATION", 0))
-    configuration["LAZY_EVALUATION"] = evaluate_lazily
-
     # Assume .l or .scale for variables in assignments
     assume_level = int(os.getenv("GAMSPY_ASSUME_VARIABLE_SUFFIX", 1))
     configuration["ASSUME_VARIABLE_SUFFIX"] = assume_level
@@ -68,7 +64,6 @@ def set_options(
             "DOMAIN_VALIDATION",
             "SOLVER_OPTION_VALIDATION",
             "MAP_SPECIAL_VALUES",
-            "LAZY_EVALUATION",
             "ASSUME_VARIABLE_SUFFIX",
             "USE_PY_VAR_NAME",
             "DROP_DOMAIN_VIOLATIONS",
