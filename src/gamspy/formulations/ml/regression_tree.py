@@ -225,20 +225,34 @@ class RegressionTree:
         set_of_samples: gp.Set = input.domain[0]
         set_of_features: gp.Set = input.domain[-1]
 
-        [set_of_output_dim] = gp.math._generate_dims(
-            self.container, dims=[output_dim]
+        [
+            set_of_output_dim,
+            set_of_lb_ub,
+            set_of_leafs,
+        ] = gp.math._generate_dims(
+            self.container, dims=[output_dim, 2, nleafs]
         )
 
-        set_of_leafs = gp.Set._constructor_bypass(
-            self.container,
-            name=utils._generate_name("s", self._name_prefix, "leafs"),
-            domain=["*"],
+        [
+            set_of_samples,
+            set_of_features,
+            set_of_output_dim,
+            set_of_lb_ub,
+            set_of_leafs,
+        ] = utils._next_domains(
+            [
+                set_of_samples,
+                set_of_features,
+                set_of_output_dim,
+                set_of_lb_ub,
+                set_of_leafs,
+            ],
+            [],
         )
 
-        set_of_lb_ub = self.container.addSet(
-            name=utils._generate_name("s", self._name_prefix, "lb_ub"),
-            records=["lb", "ub"],
-        )
+        lb = ge = "0"
+        ub = le = "1"
+        cons_type = set_of_lb_ub
 
         feat_par = gp.Parameter._constructor_bypass(
             self.container,
@@ -283,10 +297,10 @@ class RegressionTree:
             domain=[set_of_leafs, set_of_output_dim],
         )
 
-        link_indctr_output = gp.Equation._constructor_bypass(
+        link_indicator_output = gp.Equation._constructor_bypass(
             self.container,
             name=utils._generate_name(
-                "e", self._name_prefix, "link_indctr_output"
+                "e", self._name_prefix, "link_indicator_output"
             ),
             domain=[set_of_samples, set_of_output_dim],
             description="Link the indicator variable to the predicted value of the decision tree",
@@ -328,12 +342,6 @@ class RegressionTree:
             domain=uni_domain,
         )
 
-        cons_type = gp.Set._constructor_bypass(
-            self.container,
-            name=utils._generate_name("s", self._name_prefix, "cons_type"),
-            domain=["*"],
-        )
-
         feat_thresh = gp.Parameter._constructor_bypass(
             self.container,
             name=utils._generate_name(
@@ -353,7 +361,7 @@ class RegressionTree:
         ge_cons = gp.Equation._constructor_bypass(
             self.container,
             name=utils._generate_name(
-                "e", self._name_prefix, "link_indctr_feature_ge"
+                "e", self._name_prefix, "link_indicator_feature_ge"
             ),
             domain=uni_domain,
             description="Link the indicator variable with the feature which is Lower bounded using a big-M constraint",
@@ -362,7 +370,7 @@ class RegressionTree:
         le_cons = gp.Equation._constructor_bypass(
             self.container,
             name=utils._generate_name(
-                "e", self._name_prefix, "link_indctr_feature_le"
+                "e", self._name_prefix, "link_indicator_feature_le"
             ),
             domain=uni_domain,
             description="Link the indicator variable with the feature which is Upper bounded using a big-M constraint",
@@ -392,7 +400,7 @@ class RegressionTree:
         mapped_values = self.value[leafs[:, None], jdx]
 
         definition = expression.Expression(
-            link_indctr_output[set_of_samples, set_of_output_dim],
+            link_indicator_output[set_of_samples, set_of_output_dim],
             "..",
             (
                 gp.Sum(
@@ -404,7 +412,7 @@ class RegressionTree:
             ),
         )
         self.container._add_statement(definition)
-        link_indctr_output._definition = definition
+        link_indicator_output._definition = definition
 
         definition = expression.Expression(
             ub_output[...], "..", out <= max_out
@@ -420,7 +428,6 @@ class RegressionTree:
 
         self.container.setRecords(
             {
-                set_of_leafs: range(nleafs),
                 out_link: [
                     (int(i), int(j), v)
                     for i, j, v in np.stack(
@@ -430,38 +437,37 @@ class RegressionTree:
                 feat_par: np.stack([node_lb, node_ub], axis=-1)[:, leafs, :],
                 max_out: np.max(self.value[leafs, :], axis=0),
                 min_out: np.min(self.value[leafs, :], axis=0),
-                cons_type: ["ge", "le"],
             }
         )
 
         ### This generates the set of possible paths given the input data
-        mask = (feat_vars.up[...] >= feat_par[..., "lb"]) & (
-            feat_vars.lo[...] <= feat_par[..., "ub"]
+        mask = (feat_vars.up[...] >= feat_par[..., lb]) & (
+            feat_vars.lo[...] <= feat_par[..., ub]
         )
         mask_lo = (
-            (feat_vars.lo[...] < feat_par[..., "lb"])
+            (feat_vars.lo[...] < feat_par[..., lb])
             & mask
-            & (feat_par[..., "lb"] > -np.inf)
+            & (feat_par[..., lb] > -np.inf)
         )
         mask_up = (
-            (feat_vars.up[...] > feat_par[..., "ub"])
+            (feat_vars.up[...] > feat_par[..., ub])
             & mask
-            & (feat_par[..., "ub"] < np.inf)
+            & (feat_par[..., ub] < np.inf)
         )
         s[...].where[mask_lo | mask_up] = True
 
         self.container._add_statement(
             expression.Expression(
-                feat_thresh[..., "ge"].where[mask_lo],
+                feat_thresh[..., ge].where[mask_lo],
                 "=",
-                feat_par[..., "lb"],
+                feat_par[..., lb],
             )
         )
         self.container._add_statement(
             expression.Expression(
-                feat_thresh[..., "le"].where[mask_up],
+                feat_thresh[..., le].where[mask_up],
                 "=",
-                feat_par[..., "ub"],
+                feat_par[..., ub],
             )
         )
         self.container._add_statement(
@@ -477,13 +483,13 @@ class RegressionTree:
 
         self.container._add_statement(
             expression.Expression(
-                _bound_big_m[s[uni_domain], "ge"].where[mask_lo],
+                _bound_big_m[s[uni_domain], ge].where[mask_lo],
                 "=",
                 (
                     M
                     if M
                     else (
-                        feat_par[set_of_features, set_of_leafs, "lb"]
+                        feat_par[set_of_features, set_of_leafs, lb]
                         - feat_vars.lo[set_of_samples, set_of_features]
                     )
                 ),
@@ -492,14 +498,14 @@ class RegressionTree:
 
         self.container._add_statement(
             expression.Expression(
-                _bound_big_m[s[uni_domain], "le"].where[mask_up],
+                _bound_big_m[s[uni_domain], le].where[mask_up],
                 "=",
                 (
                     M
                     if M
                     else (
                         feat_vars.up[set_of_samples, set_of_features]
-                        - feat_par[set_of_features, set_of_leafs, "ub"]
+                        - feat_par[set_of_features, set_of_leafs, ub]
                     )
                 ),
             )
@@ -515,25 +521,25 @@ class RegressionTree:
 
         definition = expression.Expression(
             ge_cons[uni_domain].where[
-                (feat_thresh[..., "ge"] != 0) & s[uni_domain]
+                (feat_thresh[..., ge] != 0) & s[uni_domain]
             ],
             "..",
             feat_vars
-            >= feat_thresh[..., "ge"]
-            - _bound_big_m[..., "ge"] * (1 - indicator_vars),
+            >= feat_thresh[..., ge]
+            - _bound_big_m[..., ge] * (1 - indicator_vars),
         )
         self.container._add_statement(definition)
         ge_cons._definition = definition
 
         le_cons[uni_domain].where[
-            (feat_thresh[..., "le"] != 0) & s[uni_domain]
-        ] = feat_vars <= feat_thresh[..., "le"] + _bound_big_m[..., "le"] * (
+            (feat_thresh[..., le] != 0) & s[uni_domain]
+        ] = feat_vars <= feat_thresh[..., le] + _bound_big_m[..., le] * (
             1 - indicator_vars
         )
 
         eqns = [
             assign_one_output,
-            link_indctr_output,
+            link_indicator_output,
             ub_output,
             lb_output,
             ge_cons,
