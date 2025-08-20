@@ -8,7 +8,7 @@ import numpy as np
 
 import gamspy as gp
 import gamspy._algebra.expression as expression
-import gamspy.formulations.nn.utils as utils
+import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
 from gamspy.formulations.ml.decision_tree_struct import DecisionTreeStruct
 
