@@ -132,7 +132,6 @@ class RandomForest:
         self,
         input: gp.Parameter | gp.Variable,
         M: float | None = None,
-        **kwargs,
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         rf_out_list: list[gp.Variable] = []
         rf_eqn_list: list[gp.Equation] = []
@@ -156,7 +155,7 @@ class RandomForest:
             self.container,
             name=utils._generate_name("e", self._name_prefix, "rf_eqn"),
             domain=[set_of_samples, set_of_output_dim],
-            description="perdicted out times number of estimators should be equal to the random forest out",
+            description="predicted out times number of estimators should be equal to the random forest out",
         )
 
         self.container._synch_with_gams(gams_to_gamspy=True)

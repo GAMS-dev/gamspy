@@ -219,7 +219,7 @@ class RegressionTree:
         if len(input.domain[-1]) != self.n_features:
             raise ValidationError("number of features do not match")
 
-        if M and not isinstance(M, (float, int)):
+        if M is not None and not isinstance(M, (float, int)):
             raise ValidationError("M can either be of type float or int")
 
         set_of_samples: gp.Set = input.domain[0]
@@ -240,7 +240,7 @@ class RegressionTree:
             records=["lb", "ub"],
         )
 
-        _feat_par = gp.Parameter._constructor_bypass(
+        feat_par = gp.Parameter._constructor_bypass(
             self.container,
             name=utils._generate_name("p", self._name_prefix, "feat_par"),
             domain=[set_of_features, set_of_leafs, set_of_lb_ub],
@@ -252,13 +252,13 @@ class RegressionTree:
             domain=[set_of_samples, set_of_output_dim],
         )
 
-        _feat_vars = gp.Variable._constructor_bypass(
+        feat_vars = gp.Variable._constructor_bypass(
             self.container,
             name=utils._generate_name("v", self._name_prefix, "feature"),
             domain=[set_of_samples, set_of_features],
         )
 
-        ind_vars = gp.Variable._constructor_bypass(
+        indicator_vars = gp.Variable._constructor_bypass(
             self.container,
             name=utils._generate_name("v", self._name_prefix, "indicator"),
             type="binary",
@@ -369,18 +369,19 @@ class RegressionTree:
         )
 
         if isinstance(input, gp.Variable):
-            _feat_vars = input
+            feat_vars = input
         else:
             self.container._add_statement(
-                expression.Expression(_feat_vars.fx[...], "=", input[...])
+                expression.Expression(feat_vars.fx[...], "=", input[...])
             )
 
-        set_of_leafs.setRecords(range(nleafs))
         definition = expression.Expression(
             assign_one_output[set_of_samples],
             "..",
             (
-                gp.Sum(set_of_leafs, ind_vars[set_of_samples, set_of_leafs])
+                gp.Sum(
+                    set_of_leafs, indicator_vars[set_of_samples, set_of_leafs]
+                )
                 == 1
             ),
         )
@@ -389,14 +390,6 @@ class RegressionTree:
 
         idx, jdx = np.indices((nleafs, output_dim), dtype=int)
         mapped_values = self.value[leafs[:, None], jdx]
-        out_link.setRecords(
-            [
-                (int(i), int(j), v)
-                for i, j, v in np.stack(
-                    (idx, jdx, mapped_values), axis=-1
-                ).reshape(-1, 3)
-            ]
-        )
 
         definition = expression.Expression(
             link_indctr_output[set_of_samples, set_of_output_dim],
@@ -405,19 +398,13 @@ class RegressionTree:
                 gp.Sum(
                     set_of_leafs,
                     out_link[set_of_leafs, set_of_output_dim]
-                    * ind_vars[set_of_samples, set_of_leafs],
+                    * indicator_vars[set_of_samples, set_of_leafs],
                 )
                 == out
             ),
         )
         self.container._add_statement(definition)
         link_indctr_output._definition = definition
-
-        _feat_par.setRecords(
-            np.stack([node_lb, node_ub], axis=-1)[:, leafs, :]
-        )
-        max_out.setRecords(np.max(self.value[leafs, :], axis=0))
-        min_out.setRecords(np.min(self.value[leafs, :], axis=0))
 
         definition = expression.Expression(
             ub_output[...], "..", out <= max_out
@@ -430,21 +417,36 @@ class RegressionTree:
         )
         lb_output._definition = definition
         self.container._add_statement(definition)
-        cons_type.setRecords(["ge", "le"])
+
+        self.container.setRecords(
+            {
+                set_of_leafs: range(nleafs),
+                out_link: [
+                    (int(i), int(j), v)
+                    for i, j, v in np.stack(
+                        (idx, jdx, mapped_values), axis=-1
+                    ).reshape(-1, 3)
+                ],
+                feat_par: np.stack([node_lb, node_ub], axis=-1)[:, leafs, :],
+                max_out: np.max(self.value[leafs, :], axis=0),
+                min_out: np.min(self.value[leafs, :], axis=0),
+                cons_type: ["ge", "le"],
+            }
+        )
 
         ### This generates the set of possible paths given the input data
-        mask = (_feat_vars.up[...] >= _feat_par[..., "lb"]) & (
-            _feat_vars.lo[...] <= _feat_par[..., "ub"]
+        mask = (feat_vars.up[...] >= feat_par[..., "lb"]) & (
+            feat_vars.lo[...] <= feat_par[..., "ub"]
         )
         mask_lo = (
-            (_feat_vars.lo[...] < _feat_par[..., "lb"])
+            (feat_vars.lo[...] < feat_par[..., "lb"])
             & mask
-            & (_feat_par[..., "lb"] > -np.inf)
+            & (feat_par[..., "lb"] > -np.inf)
         )
         mask_up = (
-            (_feat_vars.up[...] > _feat_par[..., "ub"])
+            (feat_vars.up[...] > feat_par[..., "ub"])
             & mask
-            & (_feat_par[..., "ub"] < np.inf)
+            & (feat_par[..., "ub"] < np.inf)
         )
         s[...].where[mask_lo | mask_up] = True
 
@@ -452,19 +454,19 @@ class RegressionTree:
             expression.Expression(
                 feat_thresh[..., "ge"].where[mask_lo],
                 "=",
-                _feat_par[..., "lb"],
+                feat_par[..., "lb"],
             )
         )
         self.container._add_statement(
             expression.Expression(
                 feat_thresh[..., "le"].where[mask_up],
                 "=",
-                _feat_par[..., "ub"],
+                feat_par[..., "ub"],
             )
         )
         self.container._add_statement(
             expression.Expression(
-                ind_vars.fx[set_of_samples, set_of_leafs].where[
+                indicator_vars.fx[set_of_samples, set_of_leafs].where[
                     gp.Sum(set_of_features, ~mask)
                 ],
                 "=",
@@ -481,8 +483,8 @@ class RegressionTree:
                     M
                     if M
                     else (
-                        _feat_par[set_of_features, set_of_leafs, "lb"]
-                        - _feat_vars.lo[set_of_samples, set_of_features]
+                        feat_par[set_of_features, set_of_leafs, "lb"]
+                        - feat_vars.lo[set_of_samples, set_of_features]
                     )
                 ),
             )
@@ -496,8 +498,8 @@ class RegressionTree:
                     M
                     if M
                     else (
-                        _feat_vars.up[set_of_samples, set_of_features]
-                        - _feat_par[set_of_features, set_of_leafs, "ub"]
+                        feat_vars.up[set_of_samples, set_of_features]
+                        - feat_par[set_of_features, set_of_leafs, "ub"]
                     )
                 ),
             )
@@ -516,17 +518,17 @@ class RegressionTree:
                 (feat_thresh[..., "ge"] != 0) & s[uni_domain]
             ],
             "..",
-            _feat_vars
+            feat_vars
             >= feat_thresh[..., "ge"]
-            - _bound_big_m[..., "ge"] * (1 - ind_vars),
+            - _bound_big_m[..., "ge"] * (1 - indicator_vars),
         )
         self.container._add_statement(definition)
         ge_cons._definition = definition
 
         le_cons[uni_domain].where[
             (feat_thresh[..., "le"] != 0) & s[uni_domain]
-        ] = _feat_vars <= feat_thresh[..., "le"] + _bound_big_m[..., "le"] * (
-            1 - ind_vars
+        ] = feat_vars <= feat_thresh[..., "le"] + _bound_big_m[..., "le"] * (
+            1 - indicator_vars
         )
 
         eqns = [
