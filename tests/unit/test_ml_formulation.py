@@ -1,15 +1,21 @@
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError
+from unittest import mock
 
 import numpy as np
 import pytest
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 
 import gamspy as gp
 from gamspy import Container, ModelStatus
 from gamspy.exceptions import ValidationError
-from gamspy.formulations.ml import DecisionTreeStruct, RegressionTree
+from gamspy.formulations.ml import (
+    DecisionTreeStruct,
+    RandomForest,
+    RegressionTree,
+)
 from gamspy.math import dim
 
 pytestmark = pytest.mark.unit
@@ -65,6 +71,9 @@ def test_regression_tree_bad_init(data):
     tree = DecisionTreeRegressor(random_state=42)
     pytest.raises(ValidationError, RegressionTree, m, tree)
 
+    with mock.patch.dict("sys.modules", {"sklearn.tree": None}):
+        pytest.raises(ValidationError, RegressionTree, m, tree)
+
 
 def test_regression_tree_incomplete_data(data):
     m, tree_args, *_ = data
@@ -108,6 +117,17 @@ def test_regression_tree_incomplete_data(data):
     broken_tree = DecisionTreeStruct(**tree_args)
     with pytest.raises(FrozenInstanceError):
         broken_tree.capacity = -2
+
+    # capacity must be positive
+    tree_args["capacity"] = -5
+    tree = DecisionTreeStruct(**tree_args)
+    pytest.raises(ValidationError, RegressionTree, m, tree)
+    tree_args["capacity"] = 5
+
+    # n_features must be positive
+    tree_args["n_features"] = -2
+    tree = DecisionTreeStruct(**tree_args)
+    pytest.raises(ValidationError, RegressionTree, m, tree)
 
 
 def test_regression_tree_bad_call(data):
@@ -277,7 +297,7 @@ def test_regression_tree_put_M(data):
     le_cons = [
         ele
         for ele in eqns_m
-        if ele.name.startswith("e_test_big_m_link_indctr_feature_le_")
+        if ele.name.startswith("e_test_big_m_link_indicator_feature_le_")
     ][0]
     df = le_cons.records
     res_bigm = df[df["level"] == 1e3][
@@ -287,7 +307,7 @@ def test_regression_tree_put_M(data):
     le_cons = [
         ele
         for ele in eqns
-        if ele.name.startswith("e_test_bound_big_m_link_indctr_feature_le_")
+        if ele.name.startswith("e_test_bound_big_m_link_indicator_feature_le_")
     ][0]
     df = le_cons.records
     res_m = df[df["level"] > 0][[dom.name for dom in le_cons.domain]].to_numpy(
@@ -556,3 +576,265 @@ def test_regression_tree_no_lower_bound(data):
 
     assert np.allclose(out.toDense().flatten(), expected_out)
     assert model.status == ModelStatus(1)
+
+
+@pytest.fixture
+def data_rf():
+    m = Container()
+    tree1 = {
+        "capacity": 5,
+        "children_left": np.array([1, 2, -1, -1, -1]),
+        "children_right": np.array([4, 3, -1, -1, -1]),
+        "feature": np.array([0, 0, -2, -2, -2]),
+        "n_features": 2,
+        "threshold": np.array([5.5, 4.0, -2.0, -2.0, -2.0]),
+        "value": np.array([[15.6], [11.25], [10.0], [15.0], [33.0]]),
+    }
+    tree2 = {
+        "capacity": 3,
+        "children_left": np.array([1, -1, -1]),
+        "children_right": np.array([2, -1, -1]),
+        "feature": np.array([0, -2, -2]),
+        "n_features": 2,
+        "threshold": np.array([4.0, -2.0, -2.0]),
+        "value": np.array([[13.0], [10.0], [15.0]]),
+    }
+    ensemble = [DecisionTreeStruct(**tree1), DecisionTreeStruct(**tree2)]
+
+    in_data = np.array(
+        [
+            [2, 3],
+            [3, 1],
+            [1, 2],
+            [5, 6],
+            [6, 4],
+        ]
+    )
+
+    output = np.array([10, 10, 10, 15, 33])
+    expected_out = np.array([10, 10, 10, 15, 24])
+    par_input = gp.Parameter(m, domain=dim(in_data.shape), records=in_data)
+    x = gp.Variable(m, "x", domain=dim(in_data.shape), type="positive")
+    yield (
+        m,
+        ensemble,
+        [tree1, tree2],
+        in_data,
+        output,
+        expected_out,
+        par_input,
+        x,
+    )
+    m.close()
+
+
+def test_random_forest_bad_init(data_rf):
+    m, ensemble, tree_attrs, *_ = data_rf
+
+    # No Container
+    pytest.raises(TypeError, RandomForest, ensemble)
+
+    # No regressor
+    pytest.raises(TypeError, RandomForest, m)
+
+    # wrong container object
+    pytest.raises(ValidationError, RandomForest, "m", ensemble)
+
+    # wrong regressor type, it must be either sklearn.tree.DecisionTreeRegressor or DecisionTreeStruct object
+    pytest.raises(ValidationError, RandomForest, m, ensemble[0])
+
+    # initializing the formulation with untrained sklearn.tree
+    ensemble = RandomForestRegressor(n_estimators=2, random_state=42)
+    pytest.raises(ValidationError, RandomForest, m, ensemble)
+
+    # missing package
+    with mock.patch.dict("sys.modules", {"sklearn.ensemble": None}):
+        pytest.raises(ValidationError, RandomForest, m, ensemble)
+
+    # one of the tree instance with missing attribute, this is more of a RegressionTree check
+    t1, t2 = tree_attrs
+    t2.pop("children_left")
+    ensemble = [DecisionTreeStruct(**t1), DecisionTreeStruct(**t2)]
+    pytest.raises(ValidationError, RandomForest, m, ensemble)
+
+
+def test_random_forest_with_sklearn(data_rf):
+    m, _, _, in_data, output, expected_out, par_input, _ = data_rf
+
+    forest = RandomForestRegressor(n_estimators=2, random_state=42)
+    forest.fit(in_data, output)
+
+    rf = RandomForest(m, ensemble=forest)
+
+    out, eqns = rf(par_input)
+
+    model = gp.Model(
+        m,
+        "randomForest",
+        equations=eqns,
+        problem="MIP",
+    )
+    model.solve()
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert model.status == ModelStatus(1)
+
+
+def test_random_forest_valid_variable(data_rf):
+    m, ensemble, _, _, _, expected_out, par_input, x = data_rf
+
+    rf = RandomForest(m, ensemble=ensemble)
+
+    x.fx[:, 0] = par_input[:, 0]
+    x.up[:, 1] = 6
+
+    out, eqns = rf(x)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    model = gp.Model(
+        m,
+        "randomForest",
+        equations=eqns,
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MAX,
+    )
+
+    model.solve(solver="CPLEX")
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 69
+
+
+def test_random_forest_valid_parameter(data_rf):
+    m, ensemble, _, _, _, expected_out, par_input, _ = data_rf
+
+    rf = RandomForest(m, ensemble=ensemble)
+
+    out, eqns = rf(par_input)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    model = gp.Model(
+        m,
+        "randomForest",
+        equations=eqns,
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MIN,
+    )
+
+    model.solve(solver="CPLEX")
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 69
+
+
+def test_random_forest_valid_variable_no_lb(data_rf):
+    m, ensemble, _, in_data, _, _, par_input, _ = data_rf
+
+    rf = RandomForest(m, ensemble=ensemble)
+    x = gp.Variable(m, "x_free", domain=dim(in_data.shape))
+
+    x.up[:, 0] = 6
+    x.fx[:, 1] = par_input[:, 1]
+
+    out, eqns = rf(x)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    model = gp.Model(
+        m,
+        "randomForest",
+        equations=eqns,
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MIN,
+    )
+
+    model.solve(solver="CPLEX")
+
+    expected_out = [10] * 5
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert np.allclose(
+        x[:, 0].l.records["level"].to_numpy(), [-1e10] * 5
+    )  # bigM threshold
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 50
+
+
+def test_random_forest_valid_variable_no_ub(data_rf):
+    m, ensemble, _, in_data, _, _, par_input, _ = data_rf
+
+    rf = RandomForest(m, ensemble=ensemble)
+    x = gp.Variable(m, "x_free", domain=dim(in_data.shape))
+
+    x.lo[:, 0] = 2
+    x.fx[:, 1] = par_input[:, 1]
+
+    out, eqns = rf(x)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    model = gp.Model(
+        m,
+        "randomForest",
+        equations=eqns,
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MAX,
+    )
+
+    model.solve(solver="CPLEX")
+
+    expected_out = [24] * 5
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert np.allclose(x[:, 0].l.records["level"].to_numpy(), [5.5] * 5)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 120
+
+
+def test_random_forest_with_new_constraint(data_rf):
+    m, ensemble, _, _, _, _, par_input, x = data_rf
+
+    rf = RandomForest(m, ensemble=ensemble)
+
+    x.lo[:, 0] = 2
+    x.fx[:, 1] = par_input[:, 1]
+
+    out, eqns = rf(x)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    feat_1 = x[:, 0]
+
+    c1 = gp.Equation(m, "c1", domain=dom[0])
+    c1[...] = feat_1 <= 5
+
+    model = gp.Model(
+        m,
+        "randomForest",
+        equations=eqns + [c1],
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MAX,
+    )
+
+    model.solve(solver="CPLEX")
+
+    expected_out = [15] * 5
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert np.allclose(feat_1.l.records["level"].to_numpy(), [4] * 5)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 75

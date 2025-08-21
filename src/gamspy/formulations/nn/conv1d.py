@@ -7,7 +7,7 @@ import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
 import gamspy as gp
-import gamspy.formulations.nn.utils as utils
+import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
 
@@ -314,7 +314,7 @@ class Conv1d:
                Whether to initialize weights. It is suggested you set
                this to True unless you want to initialize weights yourself.
                When `init_weights` is set to True, values are initialized from
-               :math:`\mathcal{U}(-\sqrt{k},\sqrt{k})`, where :math:`k = 1/[C_{in} * kernel\_size]`.
+               :math:`\\mathcal{U}(-\\sqrt{k},\\sqrt{k})`, where :math:`k = 1/[C_{in} * kernel\\_size]`.
 
         """
         if self._state == 1:

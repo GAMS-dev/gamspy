@@ -59,9 +59,7 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
         ],
     )
 
-    J, I, L = gp.formulations.nn.utils._next_domains(
-        [J, I, L], previous_domains
-    )
+    J, I, L = gp.formulations.utils._next_domains([J, I, L], previous_domains)
     bin_var = m.addVariable(domain=[*previous_domains, L], type="binary")
     gray_code = _generate_gray_code(count_x - 1, l_len)
 
@@ -107,7 +105,7 @@ def _enforce_discontinuity(
         m, [len_x_points, len_x_points, len(combined_indices)]
     )
 
-    J, J2, SB = gp.formulations.nn.utils._next_domains(
+    J, J2, SB = gp.formulations.utils._next_domains(
         [J, J2, SB], previous_domains
     )
 
@@ -463,7 +461,7 @@ def pwl_interval_formulation(
     m = input_x.container
 
     J = gp.math._generate_dims(m, [len(intervals)])[0]
-    J = gp.formulations.nn.utils._next_domains([J], input_domain)[0]
+    J = gp.formulations.utils._next_domains([J], input_domain)[0]
 
     lowerbounds = m.addParameter(domain=[J], records=lowerbounds_input)
     upperbounds = m.addParameter(domain=[J], records=upperbounds_input)
@@ -643,7 +641,7 @@ def pwl_convexity_formulation(
     equations = []
 
     J = gp.math._generate_dims(m, [len(x_points)])[0]
-    J = gp.formulations.nn.utils._next_domains([J], input_domain)[0]
+    J = gp.formulations.utils._next_domains([J], input_domain)[0]
 
     x_par = m.addParameter(domain=[J], records=np.array(x_points))
     y_par = m.addParameter(domain=[J], records=np.array(y_points))

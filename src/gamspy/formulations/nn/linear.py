@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 import gamspy as gp
-import gamspy.formulations.nn.utils as utils
+import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
 
@@ -177,7 +177,7 @@ class Linear:
                Whether to initialize weights. It is suggested you set
                this to True unless you want to initialize weights yourself.
                When `init_weights` is set to True, values are initialized from
-               :math:`\mathcal{U}(-\sqrt{k},\sqrt{k})`, where :math:`k = 1/in\_features`.
+               :math:`\\mathcal{U}(-\\sqrt{k},\\sqrt{k})`, where :math:`k = 1/in\_features`.
         """
         if self._state == 1:
             raise ValidationError(

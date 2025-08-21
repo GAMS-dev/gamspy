@@ -443,15 +443,19 @@ def validate_model(
 
         sense = Sense(sense.upper())
 
-    if (
-        problem not in (Problem.CNS, Problem.MCP)
-        and not isinstance(equations, Iterable)
-        or any(
+    if problem not in (Problem.CNS, Problem.MCP):
+        if not isinstance(equations, Iterable):
+            raise TypeError(
+                f"`equations` must be an Iterable but found {type(equations)}"
+            )
+
+        if any(
             not isinstance(equation, symbols.Equation)
             for equation in equations
-        )
-    ):
-        raise TypeError("`equations` must be an Iterable of Equation objects")
+        ):
+            raise ValueError(
+                "`equations` must be an Iterable of Equation objects"
+            )
 
     if matches is not None:
         if not isinstance(matches, dict):
