@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 class RegressionTree:
     """
-    Formulation generator for Regression Trees in GAMS.
+    Formulation generator for Regression Trees in GAMSPy.
 
     Parameters
     ----------
@@ -198,7 +198,7 @@ class RegressionTree:
             value for the big_M. By default, infer the value using the available bounds for variables.
             If the variable is unbounded, then default to 1e10.
         """
-        is_random_forest = kwargs.get("is_random_forest", False)
+        is_ensemble = kwargs.get("is_ensemble", False)
 
         leafs = self.children_left < 0
         leafs = leafs.nonzero()[0]
@@ -546,7 +546,7 @@ class RegressionTree:
             le_cons,
         ]
 
-        if is_random_forest:
+        if is_ensemble:
             return out, eqns, set_of_output_dim  # type: ignore
 
         else:

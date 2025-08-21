@@ -5,7 +5,7 @@ from unittest import mock
 
 import numpy as np
 import pytest
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 
 import gamspy as gp
@@ -13,6 +13,7 @@ from gamspy import Container, ModelStatus
 from gamspy.exceptions import ValidationError
 from gamspy.formulations.ml import (
     DecisionTreeStruct,
+    GradientBoosting,
     RandomForest,
     RegressionTree,
 )
@@ -838,3 +839,296 @@ def test_random_forest_with_new_constraint(data_rf):
     assert np.allclose(feat_1.l.records["level"].to_numpy(), [4] * 5)
     assert model.status == ModelStatus(1)
     assert model.objective_value == 75
+
+
+@pytest.fixture
+def data_gbt():
+    m = Container()
+    tree1 = {
+        "capacity": 7,
+        "children_left": np.array([1, 2, 3, -1, -1, -1, -1]),
+        "children_right": np.array([6, 5, 4, -1, -1, -1, -1]),
+        "feature": np.array([0, 1, 1, -2, -2, -2, -2]),
+        "n_features": 2,
+        "threshold": np.array([5.5, 4.5, 2.5, -2.0, -2.0, -2.0, -2.0]),
+        "value": np.array(
+            [[0.0], [-4.35], [-5.6], [-5.6], [-5.6], [-0.6], [17.4]]
+        ),
+    }
+    tree2 = {
+        "capacity": 5,
+        "children_left": np.array([1, 2, -1, -1, -1]),
+        "children_right": np.array([4, 3, -1, -1, -1]),
+        "feature": np.array([0, 1, -2, -2, -2]),
+        "n_features": 2,
+        "threshold": np.array([5.5, 4.5, -2.0, -2.0, -2.0]),
+        "value": np.array(
+            [
+                [7.10542736e-16],
+                [-3.915],
+                [-5.04],
+                [-0.54],
+                [15.66],
+            ]
+        ),
+    }
+
+    ensemble = [DecisionTreeStruct(**tree1), DecisionTreeStruct(**tree2)]
+
+    in_data = np.array(
+        [
+            [2, 3],
+            [3, 1],
+            [1, 2],
+            [5, 6],
+            [6, 4],
+        ]
+    )
+
+    output = np.array([10, 10, 10, 15, 33])
+    expected_out = np.array([14.536, 14.536, 14.536, 15.486, 18.906])
+    par_input = gp.Parameter(m, domain=dim(in_data.shape), records=in_data)
+    x = gp.Variable(m, "x", domain=dim(in_data.shape), type="positive")
+    learning_rate = 0.1
+    bias = 15.6
+    yield (
+        m,
+        ensemble,
+        [tree1, tree2],
+        in_data,
+        output,
+        expected_out,
+        par_input,
+        x,
+        [learning_rate, bias],
+    )
+    m.close()
+
+
+def test_gradient_boosting_bad_init(data_gbt):
+    m, ensemble, tree_attrs, *_ = data_gbt
+
+    # No Container
+    pytest.raises(TypeError, GradientBoosting, ensemble)
+
+    # No regressor
+    pytest.raises(TypeError, GradientBoosting, m)
+
+    # wrong container object
+    pytest.raises(ValidationError, GradientBoosting, "m", ensemble)
+
+    # wrong regressor type, it must be either sklearn.tree.DecisionTreeRegressor or DecisionTreeStruct object
+    pytest.raises(ValidationError, GradientBoosting, m, ensemble[0])
+
+    # initializing the formulation with untrained sklearn.tree
+    ensemble = GradientBoostingRegressor(n_estimators=2, random_state=42)
+    pytest.raises(ValidationError, GradientBoosting, m, ensemble)
+
+    # missing package
+    with mock.patch.dict("sys.modules", {"sklearn.ensemble": None}):
+        pytest.raises(ValidationError, GradientBoosting, m, ensemble)
+
+    # one of the tree instance with missing attribute, this is more of a RegressionTree check
+    t1, t2 = tree_attrs
+    t2.pop("children_left")
+    ensemble = [DecisionTreeStruct(**t1), DecisionTreeStruct(**t2)]
+    pytest.raises(ValidationError, GradientBoosting, m, ensemble)
+
+
+def test_gradient_boosting_with_sklearn(data_gbt):
+    m, _, _, in_data, output, expected_out, par_input, _, _ = data_gbt
+
+    ensemble = GradientBoostingRegressor(n_estimators=2, random_state=42)
+    ensemble.fit(in_data, output)
+
+    gbt = GradientBoosting(m, ensemble=ensemble)
+
+    out, eqns = gbt(par_input)
+
+    model = gp.Model(
+        m,
+        "GradientBoosting",
+        equations=eqns,
+        problem="MIP",
+    )
+    model.solve()
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert model.status == ModelStatus(1)
+
+
+def test_gradient_boosting_valid_variable(data_gbt):
+    m, ensemble, _, _, _, _, par_input, x, [learning_rate, bias] = data_gbt
+
+    gbt = GradientBoosting(
+        m, ensemble=ensemble, bias=bias, learning_rate=learning_rate
+    )
+    expected_out = np.array([15.486, 15.486, 15.486, 15.486, 18.906])
+
+    x.fx[:, 0] = par_input[:, 0]
+    x.up[:, 1] = 6
+
+    out, eqns = gbt(x)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    model = gp.Model(
+        m,
+        "GradientBoosting",
+        equations=eqns,
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MAX,
+    )
+
+    model.solve(solver="CPLEX")
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 80.85
+
+
+def test_gradient_boosting_valid_parameter(data_gbt):
+    m, ensemble, _, _, _, expected_out, par_input, _, [learning_rate, bias] = (
+        data_gbt
+    )
+
+    gbt = GradientBoosting(
+        m, ensemble=ensemble, bias=bias, learning_rate=learning_rate
+    )
+
+    out, eqns = gbt(par_input)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    model = gp.Model(
+        m,
+        "GradientBoosting",
+        equations=eqns,
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MIN,
+    )
+
+    model.solve(solver="CPLEX")
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 78
+
+
+def test_gradient_boosting_valid_variable_no_lb(data_gbt):
+    m, ensemble, _, in_data, _, _, par_input, _, [learning_rate, bias] = (
+        data_gbt
+    )
+
+    gbt = GradientBoosting(
+        m, ensemble=ensemble, bias=bias, learning_rate=learning_rate
+    )
+    x = gp.Variable(m, "x_free", domain=dim(in_data.shape))
+
+    x.up[:, 0] = 6
+    x.fx[:, 1] = par_input[:, 1]
+
+    out, eqns = gbt(x)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    model = gp.Model(
+        m,
+        "GradientBoosting",
+        equations=eqns,
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MIN,
+    )
+
+    model.solve(solver="CPLEX")
+
+    expected_out = np.array([14.536, 14.536, 14.536, 15.486, 14.536])
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert np.allclose(
+        x[:, 0].l.records["level"].to_numpy(), [-1e10] * 5
+    )  # bigM threshold
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 73.63
+
+
+def test_gradient_boosting_valid_variable_no_ub(data_gbt):
+    m, ensemble, _, in_data, _, _, par_input, _, [learning_rate, bias] = (
+        data_gbt
+    )
+
+    gbt = GradientBoosting(
+        m, ensemble=ensemble, bias=bias, learning_rate=learning_rate
+    )
+    x = gp.Variable(m, "x_free", domain=dim(in_data.shape))
+
+    x.lo[:, 0] = 2
+    x.fx[:, 1] = par_input[:, 1]
+
+    out, eqns = gbt(x)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    model = gp.Model(
+        m,
+        "GradientBoosting",
+        equations=eqns,
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MAX,
+    )
+
+    model.solve(solver="CPLEX")
+
+    expected_out = np.array([18.906, 18.906, 18.906, 18.906, 18.906])
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert np.allclose(x[:, 0].l.records["level"].to_numpy(), [5.5] * 5)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 94.53
+
+
+def test_gradient_boosting_with_new_constraint(data_gbt):
+    m, ensemble, _, _, _, _, par_input, x, [learning_rate, bias] = data_gbt
+
+    gbt = GradientBoosting(
+        m, ensemble=ensemble, bias=bias, learning_rate=learning_rate
+    )
+
+    x.lo[:, 0] = 2
+    x.fx[:, 1] = par_input[:, 1]
+
+    out, eqns = gbt(x)
+    dom = out.domain
+
+    obj = gp.Sum(dom, out)
+
+    feat_1 = x[:, 0]
+
+    c1 = gp.Equation(m, "c1", domain=dom[0])
+    c1[...] = feat_1 <= 5
+
+    model = gp.Model(
+        m,
+        "GradientBoosting",
+        equations=eqns + [c1],
+        problem="MIP",
+        objective=obj,
+        sense=gp.Sense.MAX,
+    )
+
+    model.solve(solver="CPLEX")
+
+    expected_out = np.array([14.536, 14.536, 14.536, 15.486, 14.536])
+
+    assert np.allclose(out.toDense().flatten(), expected_out)
+    assert np.allclose(feat_1.l.records["level"].to_numpy(), [2] * 5)
+    assert model.status == ModelStatus(1)
+    assert model.objective_value == 73.63
