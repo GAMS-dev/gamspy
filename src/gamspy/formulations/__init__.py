@@ -2,6 +2,7 @@ import gamspy.formulations.nn as nn
 import gamspy.formulations.piecewise as piecewise
 from gamspy.formulations.ml import (
     DecisionTreeStruct,
+    GradientBoosting,
     RandomForest,
     RegressionTree,
 )
@@ -37,4 +38,5 @@ __all__ = [
     "DecisionTreeStruct",
     "TorchSequential",
     "RandomForest",
+    "GradientBoosting",
 ]

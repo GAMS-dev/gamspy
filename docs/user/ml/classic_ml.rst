@@ -127,3 +127,66 @@ It should be noted we are using the `sklearn.ensemble.RandomForestRegressor`_ fo
    Formulating a Random Forest with a large number of trees in GAMSPy can be time-intensive, as the formulation must traverse each tree individually.
 
 .. _sklearn.ensemble.RandomForestRegressor: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html
+
+
+:meth:`GradientBoosting <gamspy.formulations.GradientBoosting>`
+---------------------------------------------------------------
+
+Gradient Boosted trees also fall into the category of ensembling techniques
+where multiple Decision trees are trained sequentially, with each new tree
+learning to correct the errors of the previous ones. The contribution of each
+tree is scaled by a learning rate, and the final prediction is the weighted sum
+of the outputs from all individual trees. Here is an example where we train a
+:meth:`Gradient Boosted Tree <gamspy.formulations.GradientBoosting>` and use the
+formulation to embed in an optimization model.
+
+It should be noted we are using the `sklearn.ensemble.GradientBoostingRegressor`_ for convenience. You can also provide the information from the trained Gradient Boosted Tree as a list of :meth:`DecisionTreeStruct <gamspy.formulations.DecisionTreeStruct>`.
+
+.. code-block:: python
+
+   import numpy as np
+   from sklearn.ensemble import GradientBoostingRegressor
+
+   import gamspy as gp
+   from gamspy.math import dim
+
+   X = np.array(
+      [
+         [2, 3],
+         [3, 1],
+         [1, 2],
+         [5, 6],
+         [6, 4],
+      ]
+   )
+   y = np.array([10, 10, 10, 15, 33])
+
+   ensemble = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1)
+   # This is the ensemble that you want to include in
+   # your optimization model
+   ensemble.fit(X, y)
+
+   m = gp.Container()
+   # Formulation requires the trained ensemble
+   gbt_formulation = gp.formulations.GradientBoosting(m, ensemble)
+   # Let's create a sample input
+   m_input = gp.Parameter(m, "input", domain=dim((5, 2)), records=X)
+
+   # y_pred = ensemble(m_input) and eqns are the equations that
+   # create this relation
+   y_pred, eqns = gbt_formulation(m_input)
+
+   predict_values = gp.Model(
+      m,
+      "gradientBoostedTrees",
+      equations=eqns,
+      problem="MIP",
+   )
+   predict_values.solve()
+   print(y_pred.toDense().flatten())
+   # [10.00014874 10.00014874 10.00014874 15.00001594 32.99953783]
+
+.. note::
+   Formulating Gradient Boosted Trees with a large number of trees in GAMSPy can be time-intensive, as the formulation must traverse each tree individually.
+
+.. _sklearn.ensemble.GradientBoostingRegressor: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
