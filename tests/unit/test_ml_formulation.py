@@ -297,7 +297,7 @@ def test_regression_tree_put_M(data):
     le_cons = [
         ele
         for ele in eqns_m
-        if ele.name.startswith("e_test_big_m_link_indctr_feature_le_")
+        if ele.name.startswith("e_test_big_m_link_indicator_feature_le_")
     ][0]
     df = le_cons.records
     res_bigm = df[df["level"] == 1e3][
@@ -307,7 +307,7 @@ def test_regression_tree_put_M(data):
     le_cons = [
         ele
         for ele in eqns
-        if ele.name.startswith("e_test_bound_big_m_link_indctr_feature_le_")
+        if ele.name.startswith("e_test_bound_big_m_link_indicator_feature_le_")
     ][0]
     df = le_cons.records
     res_m = df[df["level"] > 0][[dom.name for dom in le_cons.domain]].to_numpy(
