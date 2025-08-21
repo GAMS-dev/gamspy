@@ -490,7 +490,7 @@ class GamsConverter:
             file.write(gams_string)
 
         logger.info(
-            f"GAMS (.gms) file has been generated under {os.path.join(self.path, self.model.name + '.gms')}"
+            f"GAMS (.gms) file has been generated under {self.gms_path}"
         )
 
 

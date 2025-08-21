@@ -134,7 +134,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             # reset some properties
             self._requires_state_check = True
             self.container._requires_state_check = True
-            self.modified = True
+            self._modified = True
             self.alias_with = alias_with
         else:
             if container is None:
@@ -157,7 +157,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             self.where = condition.Condition(self)
             self.container._add_statement(self)
 
-            self.modified = False
+            self._modified = False
             self.container._synch_with_gams()
 
     def _serialize(self) -> dict:

@@ -234,7 +234,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                     " domains are equal"
                 )
 
-            if self.domain_forwarding != domain_forwarding:
+            if self._domain_forwarding != domain_forwarding:
                 raise ValueError(
                     "Cannot overwrite symbol in container unless"
                     " 'domain_forwarding' is left unchanged"
@@ -248,8 +248,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
             previous_state = self.container._options.miro_protect
             self.container._options.miro_protect = False
-            self.records = None
-            self.modified = True
+            self._records = None
+            self._modified = True
 
             # only set records if records are provided
             if records is not None:
@@ -301,7 +301,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             if records is not None:
                 super().setRecords(records, uels_on_axes=uels_on_axes)
                 if self.dimension == 0 and not self._is_miro_symbol:
-                    self.modified = False
+                    self._modified = False
 
                 if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
                     if self.hasDomainViolations():
@@ -311,7 +311,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                         self._domain_violations = None
             else:
                 if not self._is_miro_symbol:
-                    self.modified = False
+                    self._modified = False
 
             self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
 
@@ -319,7 +319,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     def _serialize(self) -> dict:
         info = {
-            "_domain_forwarding": self.domain_forwarding,
+            "_domain_forwarding": self._domain_forwarding,
             "_is_miro_input": self._is_miro_input,
             "_is_miro_output": self._is_miro_output,
             "_is_miro_table": self._is_miro_table,
@@ -490,12 +490,12 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self._records = records
 
         self._requires_state_check = True
-        self.modified = True
+        self._modified = True
 
         self.container._requires_state_check = True
         self.container.modified = True
 
-        if self._records is not None and self.domain_forwarding:
+        if self._records is not None and self._domain_forwarding:
             self._domainForwarding()
 
             # reset state check flags for all symbols in the container
@@ -562,7 +562,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         """
         representation = self.name
         if self.domain:
-            representation += self._get_domain_str(self.domain_forwarding)
+            representation += self._get_domain_str(self._domain_forwarding)
 
         return representation
 
