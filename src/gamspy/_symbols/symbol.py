@@ -88,7 +88,7 @@ class Symbol:
             self._synchronize = True
 
             if self._winner == "python":
-                self.modified = True
+                self._modified = True
                 self.container._synch_with_gams()
             else:
                 self.container.loadRecordsFromGdx(

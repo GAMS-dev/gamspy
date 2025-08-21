@@ -2,6 +2,7 @@ import math
 import os
 import shutil
 import subprocess
+import tempfile
 
 import numpy as np
 import pandas as pd
@@ -1907,3 +1908,30 @@ def test_dump_gams_state(data):
     path = os.path.join("tmp", "transport")
     transport.toGams(path, dump_gams_state=True)
     assert os.path.exists(os.path.join(path, "transport.g00"))
+
+
+def test_toGams_with_alias_as_domain():
+    import gamspy as gp
+
+    m = gp.Container()
+
+    i = gp.Set(m, "i", records=range(10))
+    ii = gp.Alias(m, "ii", alias_with=i)
+    j = gp.Set(m, "j", domain=[ii])
+
+    j[i].where[gp.Ord(i) <= 5] = True
+
+    X = gp.Variable(m, "X", domain=[ii])
+
+    eq_obj = gp.Equation(m, "eq_obj", domain=[ii])
+    eq_obj[j] = X[j] <= 5
+
+    test = gp.Model(m, name="test", problem="LP", equations=[eq_obj])
+
+    folder = tempfile.mkdtemp()
+    test.toGams(folder)
+    with open(os.path.join(folder, "test.gms")) as file:
+        content = file.read()
+        assert "Set i(*);" in content
+
+    shutil.rmtree(folder)
