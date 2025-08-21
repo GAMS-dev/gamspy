@@ -135,6 +135,7 @@ class RandomForest:
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         rf_out_list: list[gp.Variable] = []
         rf_eqn_list: list[gp.Equation] = []
+        gp.set_options({"DOMAIN_VALIDATION": 0})
 
         for regression_tree in self._list_of_trees:
             dt_out, dt_eqn, set_of_output_dim = regression_tree(
@@ -161,5 +162,6 @@ class RandomForest:
         self.container._synch_with_gams(gams_to_gamspy=True)
         rf_eqn[...] = len(self._list_of_trees) * out == sum(rf_out_list)
         rf_eqn_list.append(rf_eqn)
+        gp.set_options({"DOMAIN_VALIDATION": 1})
 
         return out, rf_eqn_list
