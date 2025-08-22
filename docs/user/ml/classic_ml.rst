@@ -6,9 +6,12 @@ Classic ML Formulations
    :description: GAMSPy User Guide
    :keywords: Machine Learning, User, Guide, GAMSPy, gamspy, GAMS, gams, mathematical modeling
 
-We often require classical machine learning approaches for our optimization workflows.
-GAMSPy currently provides a formulation for decision trees that can be directly embedded in your optimization models.
-We will roll out additional formulations for other classical machine learning algorithms in the future.
+This module provides formulations for embedding regression trees, random
+forests, and gradient boosted trees directly into GAMSPy optimization models.
+Models trained with scikit-learn can be represented as constraints within an
+optimization problem, enabling seamless integration of machine learning
+predictions with mathematical programming.
+
 
 Supported formulations
 ======================
@@ -16,10 +19,15 @@ Supported formulations
 :meth:`RegressionTree <gamspy.formulations.RegressionTree>`
 -----------------------------------------------------------
 
-When a Decision Tree is trained to predict numerical values (rather than class labels), it is referred to as a :meth:`Regression Tree <gamspy.formulations.RegressionTree>`.
-Here is an example where we train a Regression tree and use the formulation to embed in an optimization model.
+When a Decision Tree is trained to predict numerical values (rather than class
+labels), it is referred to as a :meth:`Regression Tree <gamspy.formulations.RegressionTree>`.
+Here is an example where we train a Regression tree and use the formulation to
+embed in an optimization model.
 
-It should be noted we are using the `sklearn.tree.DecisionTreeRegressor`_ for convenience. You can also provide the information from the trained decision tree as a :meth:`DecisionTreeStruct <gamspy.formulations.DecisionTreeStruct>` instance.
+It should be noted we are using the `sklearn.tree.DecisionTreeRegressor`_ for
+convenience. You can also provide the information from the trained decision
+tree as a :meth:`DecisionTreeStruct <gamspy.formulations.DecisionTreeStruct>`
+instance.
 
 .. image:: ../images/regressionTree.png
   :align: center
@@ -28,7 +36,7 @@ It should be noted we are using the `sklearn.tree.DecisionTreeRegressor`_ for co
 
    import numpy as np
    from sklearn.tree import DecisionTreeRegressor
-   
+
    import gamspy as gp
    from gamspy.math import dim
 
@@ -74,10 +82,15 @@ It should be noted we are using the `sklearn.tree.DecisionTreeRegressor`_ for co
 :meth:`RandomForest <gamspy.formulations.RandomForest>`
 -------------------------------------------------------
 
-Random Forests fall into the category of ensembling techniques where multiple Decision trees are trained in parallel with random parts of the same data. The final prediction is then the average of all the Regression trees predictions.
-Here is an example where we train a :meth:`Random Forest <gamspy.formulations.RandomForest>` and use the formulation to embed in an optimization model.
+Random Forests fall into the category of ensembling techniques where multiple
+Decision trees are trained in parallel with random parts of the same data. The
+final prediction is then the average of all the Regression trees predictions.
+Here is an example where we train a :meth:`Random Forest <gamspy.formulations.RandomForest>`
+and use the formulation to embed in an optimization model.
 
-It should be noted we are using the `sklearn.ensemble.RandomForestRegressor`_ for convenience. You can also provide the information from the trained Random forest as a list of :meth:`DecisionTreeStruct <gamspy.formulations.DecisionTreeStruct>`
+It should be noted we are using the `sklearn.ensemble.RandomForestRegressor`_
+for convenience. You can also provide the information from the trained Random
+forest as a list of :meth:`DecisionTreeStruct <gamspy.formulations.DecisionTreeStruct>`
 
 .. code-block:: python
 
@@ -140,7 +153,10 @@ of the outputs from all individual trees. Here is an example where we train a
 :meth:`Gradient Boosted Tree <gamspy.formulations.GradientBoosting>` and use the
 formulation to embed in an optimization model.
 
-It should be noted we are using the `sklearn.ensemble.GradientBoostingRegressor`_ for convenience. You can also provide the information from the trained Gradient Boosted Tree as a list of :meth:`DecisionTreeStruct <gamspy.formulations.DecisionTreeStruct>`.
+It should be noted we are using the `sklearn.ensemble.GradientBoostingRegressor`_
+for convenience. You can also provide the information from the trained Gradient
+Boosted Tree as a list of
+:meth:`DecisionTreeStruct <gamspy.formulations.DecisionTreeStruct>`.
 
 .. code-block:: python
 
@@ -187,6 +203,8 @@ It should be noted we are using the `sklearn.ensemble.GradientBoostingRegressor`
    # [10.00014874 10.00014874 10.00014874 15.00001594 32.99953783]
 
 .. note::
-   Formulating Gradient Boosted Trees with a large number of trees in GAMSPy can be time-intensive, as the formulation must traverse each tree individually.
+   Formulating Gradient Boosted Trees with a large number of trees in GAMSPy
+   can be time-intensive, as the formulation must traverse each tree
+   individually.
 
 .. _sklearn.ensemble.GradientBoostingRegressor: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
