@@ -53,7 +53,7 @@ Frequently used GAMS operations which accept an index list and an expression can
     
     .. code-block:: python
 
-        from gamspy import Sum, Product, Smin, Smax
+        import gamspy as gp
         
         m = gp.Container()
         i = gp.Set(m, 'i', records=['i1','i2'])
@@ -61,7 +61,7 @@ Frequently used GAMS operations which accept an index list and an expression can
         z = gp.Variable(m, 'z')
 
         eq = gp.Equation(m, name="eq")
-        eq[...] = Sum(i, a[i]) <= z
+        eq[...] = gp.Sum(i, a[i]) <= z
 
     .. code-block:: GAMS
 
@@ -84,10 +84,10 @@ Card and Ord operations can be translated as follows:
         import math
 
         m = gp.Container()
-        i = Set(m, name='i', records=[f'i{i}' for i in range(181)])
-        step = Parameter(m, name="step", records=math.pi / 180)
-        omega = Parameter(m, name="omega", domain=i)
-        omega[i] = (Ord(i) - 1) * step
+        i = gp.Set(m, name='i', records=[f'i{i}' for i in range(181)])
+        step = gp.Parameter(m, name="step", records=math.pi / 180)
+        omega = gp.Parameter(m, name="omega", domain=i)
+        omega[i] = (gp.Ord(i) - 1) * step
 
     .. code-block:: GAMS
         
@@ -110,18 +110,18 @@ This class is exclusively for conditioning on a domain with more than one set.
 
         m = gp.Container()
         bus = gp.Set(m, name="bus", records=[f"i{b}" for b in range(1, 7)])
-        node = Alias(m, name="node", alias_with=bus)
-        conex = Set(m, name="conex", domain=[bus, bus])
+        node = gp.Alias(m, name="node", alias_with=bus)
+        conex = gp.Set(m, name="conex", domain=[bus, bus])
 
-        branch = Parameter(m,"branch", [bus, node, "*"] ,records=...)
+        branch = gp.Parameter(m,"branch", [bus, node, "*"] ,records=...)
 
-        p = Parameter(m, name="p")
+        p = gp.Parameter(m, name="p")
         
         conex[bus, node].where[branch[bus, node, "x"]] = True
         conex[bus, node].where[conex[node, bus]] = True
 
-        p[...] = Smax(
-            Domain(bus, node).where[conex[bus, node]],
+        p[...] = gp.Smax(
+            gp.Domain(bus, node).where[conex[bus, node]],
             branch[bus, node, "bij"] * 3.14 * 2,
         )
 
@@ -172,14 +172,14 @@ This package is for the mathematical operations of GAMS.
 
     .. code-block:: python
 
-        from gamspy import Container, Set, Variable
+        import gamspy as gp
         import gamspy.math as gams_math
         import random
 
-        m = Container()
-        i = Set(m, "i", records=['i1', 'i2'])
-        k = Set(m, "k", records=['k1', 'k2'])
-        sigma = Variable(m, name="sigma", domain=[i, k], type="Positive")
+        m = gp.Container()
+        i = gp.Set(m, "i", records=['i1', 'i2'])
+        k = gp.Set(m, "k", records=['k1', 'k2'])
+        sigma = gp.Variable(m, name="sigma", domain=[i, k], type="Positive")
         sigma.l[i, k] = gams_math.uniform(0.1, 1) # Generates a different value from uniform distribution for each element of the domain.
         print(sigma.records)
         sigma.l[i, k] = random.uniform(0.1, 1) # This is not equivalent to the statement above. This generates only one value for the whole domain.
