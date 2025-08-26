@@ -9,6 +9,7 @@ import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -67,12 +68,22 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         if self.parent.records is None:
             return None
 
-        recs = self.parent.records
-        for idx, literal in self._scalar_domains:
-            column_name = recs.columns[idx]
-            recs = recs[recs[column_name] == literal]
+        if self.extension is not None:
+            raise ValidationError(
+                ".records is not allowed for lag/lead operations."
+            )
 
-        return recs
+        temp_name = "is" + utils._get_unique_name()
+        temp_param = syms.Set._constructor_bypass(
+            self.container, temp_name, self.parent.domain
+        )
+        domain = list(self.domain)
+        for i, d in self._scalar_domains:
+            domain.insert(i, d)
+
+        temp_param[domain] = self
+        del self.container.data[temp_name]
+        return temp_param.records
 
     def latexRepr(self):
         name = self.name.replace("_", "\\_")
