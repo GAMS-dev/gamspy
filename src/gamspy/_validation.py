@@ -337,7 +337,8 @@ def validate_domain(
             if type(given) is str:
                 try:
                     if (
-                        len(actual.records) < 1000
+                        given != "*"
+                        and len(actual.records) < 1000
                         and not actual.records.isin([given]).sum().any()
                     ):
                         raise ValidationError(

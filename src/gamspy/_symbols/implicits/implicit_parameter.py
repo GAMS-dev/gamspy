@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
+import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
@@ -26,6 +27,7 @@ if TYPE_CHECKING:
     )
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._types import EllipsisType
 
 logger = logging.getLogger("GAMSPy")
 logger.setLevel(logging.WARNING)
@@ -41,6 +43,11 @@ ATTR_MAPPING = {
     "lo": "lower",
     "up": "upper",
     "scale": "scale",
+    "range": "range",
+    "slack": "slack",
+    "slacklo": "slacklo",
+    "slackup": "slackup",
+    "infeas": "infeas",
 }
 
 SET_ATTR_MAPPING = {
@@ -81,7 +88,10 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self._records = records
         self._assignment = None
 
-    def __getitem__(self, indices: Iterable | str) -> ImplicitParameter:
+    def __getitem__(
+        self,
+        indices: EllipsisType | slice | Sequence | str | implicits.ImplicitSet,
+    ) -> ImplicitParameter:
         domain = validation.validate_domain(self, indices)
 
         return ImplicitParameter(
@@ -94,7 +104,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
     def __setitem__(
         self,
-        indices: Iterable | str,
+        indices: EllipsisType | slice | Sequence | str | implicits.ImplicitSet,
         rhs: Expression | Operation | ImplicitParameter | int | float,
     ) -> None:
         if (
@@ -146,32 +156,6 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __repr__(self) -> str:
         return f"ImplicitParameter(parent={self.parent}, name='{self.name}', domain={self.domain}, permutation={self.permutation}), parent_scalar_domains={self.parent_scalar_domains})"
 
-    def _add_new_attr_column(
-        self, extension: str, recs: pd.DataFrame
-    ) -> pd.DataFrame:
-        parent_recs: pd.DataFrame = self.parent.records
-        if extension == "range":
-            recs[extension] = parent_recs["lower"] - parent_recs["upper"]
-        elif extension == "slacklo":
-            recs[extension] = (
-                parent_recs["level"] - parent_recs["lower"]
-            ).clip(0)
-        elif extension == "slackup":
-            recs[extension] = (
-                parent_recs["upper"] - parent_recs["level"]
-            ).clip(0)
-        elif extension == "slack":
-            slacklo = (parent_recs["level"] - parent_recs["lower"]).clip(0)
-            slackup = (parent_recs["upper"] - parent_recs["level"]).clip(0)
-            recs[extension] = slacklo.combine(slackup, min)
-        elif extension == "infeas":
-            distance_to_lower = parent_recs["lower"] - parent_recs["level"]
-            distance_to_upper = parent_recs["level"] - parent_recs["upper"]
-            max_distance = distance_to_lower.combine(distance_to_upper, max)
-            recs[extension] = max_distance.clip(lower=0)
-
-        return recs
-
     @property
     def records(self) -> pd.DataFrame | float | None:
         if self.parent.records is None:
@@ -187,37 +171,49 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             del self.container.data[temp_name]
             return temp_param.records
         elif isinstance(self.parent, syms.Parameter):
-            recs = self.parent.records
-            for idx, literal in self._scalar_domains:
-                column_name = recs.columns[idx]
-                recs = recs[recs[column_name] == literal]
+            temp_name = "p" + utils._get_unique_name()
+            temp_param = syms.Parameter._constructor_bypass(
+                self.container, temp_name, self.parent.domain
+            )
+            domain = list(self.domain)
+            for i, d in self._scalar_domains:
+                domain.insert(i, d)
 
-            if all(
-                isinstance(elem, str) and elem != "*" for elem in self.domain
-            ):
+            temp_param[domain] = self[...]
+            del self.container.data[temp_name]
+
+            recs = temp_param.records
+            if len(recs) == 1:
                 return float(recs["value"].squeeze())
 
             return recs
         elif isinstance(self.parent, (syms.Variable, syms.Equation)):
             extension = self.name.split(".")[-1]
-            column_names: list[str] = self.parent.domain_labels
-
-            if extension in ATTR_MAPPING:
+            if self.parent.dimension == 0:
                 extension = ATTR_MAPPING[extension]
-                column_names.append(extension)
+                return float(self.parent.records[extension].squeeze())
 
-            recs = self.parent.records[column_names].copy()
-            if extension not in ATTR_MAPPING:
-                # eq.range, eq.slacklo, eq.slackup, eq.slack, eq.infeas
-                recs = self._add_new_attr_column(extension, recs)
+            temp_name = "ip" + utils._get_unique_name()
+            temp_param = syms.Parameter._constructor_bypass(
+                self.container, temp_name, self.parent.domain
+            )
+            domain = list(self.domain)
+            for i, d in self._scalar_domains:
+                domain.insert(i, d)
 
-            for idx, literal in self._scalar_domains:
-                column_name = recs.columns[idx]
-                recs = recs[recs[column_name] == literal]
+            temp_param[domain] = self
+            del self.container.data[temp_name]
 
-            if all(
-                isinstance(elem, str) and elem != "*" for elem in self.domain
-            ):
+            recs = temp_param.records
+            if recs is None:
+                return recs
+
+            extension = ATTR_MAPPING[extension]
+            columns = recs.columns.to_list()
+            columns[columns.index("value")] = extension
+            recs.columns = columns
+
+            if len(recs) == 1:
                 return float(recs[extension].squeeze())
 
             return recs

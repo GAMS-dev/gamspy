@@ -3201,9 +3201,8 @@ def test_linear_propagate_unbounded_input_with_zero_weight(data):
     x = gp.Variable(m, "x", domain=dim([30, 20, 30, 20]))
 
     out1, _ = lin1(x)
-
-    out1_ub = np.array(out1.up.records.upper).reshape(30, 20, 30, 30)
-    out1_lb = np.array(out1.lo.records.lower).reshape(30, 20, 30, 30)
+    out1_ub = np.array(out1.records.upper).reshape(30, 20, 30, 30)
+    out1_lb = np.array(out1.records.lower).reshape(30, 20, 30, 30)
 
     expected_bounds = np.zeros((30, 20, 30, 30))
 
