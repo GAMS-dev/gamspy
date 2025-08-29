@@ -17,7 +17,7 @@ from __future__ import annotations
 from math import isclose
 from pathlib import Path
 
-from gamspy import Container, Model, Sum
+from gamspy import Container, Model, Number, Sum
 
 
 def main():
@@ -52,7 +52,7 @@ $offText
 $sysInclude mpsgeset HANSEN
 """)
     dummy01, y, p, hh = (m[sym] for sym in ["dummy01", "y", "p", "hh"])
-    dummy01[:] = Sum(s, y[s]) + Sum(c, p[c]) + Sum(h, hh[h]) == 0
+    dummy01[:] = Sum(s, y[s]) + Sum(c, p[c]) + Sum(h, hh[h]) == Number(0)
     hansen = Model(m, name="hansen", equations=m.getEquations(), problem="mcp")
     p.fx[c].where[c.ord == 1] = 1
     m.addGamsCode("$include HANSEN.GEN")
