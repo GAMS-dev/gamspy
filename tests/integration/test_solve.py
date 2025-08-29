@@ -1943,6 +1943,8 @@ def test_subsolver_options():
 
     m.writeSolverOptions("path", {"crash_method": "none", "prox_pert": 0})
 
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "yes"})
+
     with tempfile.NamedTemporaryFile("w", delete=False) as file:
         nash.solve(
             solver="reshop",
@@ -1977,3 +1979,51 @@ def test_subsolver_options():
     ).all()
 
     m.close()
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
+
+
+def test_ambiguity():
+    m = gp.Container()
+
+    c = gp.Parameter(m, name="c", domain=[], records=0.5)
+    x = gp.Variable(m, name="x", type="negative")
+    f = gp.Equation(m, name="f")
+    f[...] = (x - c) >= 0
+    assert f.getDefinition() == "f .. x - c =g= 0;"
+
+    f2 = gp.Equation(m, name="f2", definition=(x - c) >= 0)
+    assert f2.getDefinition() == "f2 .. x - c =g= 0;"
+    assert f.latexRepr() == f2.latexRepr()
+
+    mcp_model = gp.Model(m, "mcp_model", problem="MCP", matches={f: x})
+
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
+
+    with pytest.raises(ValidationError):
+        mcp_model.solve()
+
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "yes"})
+    with pytest.raises(GamspyException):
+        mcp_model.solve()  # error from GAMS bad bound on variable x
+
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "no"})
+
+    with pytest.raises(ValidationError):
+        mcp_model.solve()  # ambiguous equations not allowed
+
+    lp_model = gp.Model(
+        m,
+        "lp_model",
+        problem="LP",
+        equations=[f],
+        objective=x + 2,
+        sense="MIN",
+    )
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
+    lp_model.solve()
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "yes"})
+    lp_model.solve()
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "no"})
+    with pytest.raises(ValidationError):
+        lp_model.solve()
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
