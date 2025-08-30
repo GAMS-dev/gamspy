@@ -1,6 +1,11 @@
 import gamspy.formulations.nn as nn
 import gamspy.formulations.piecewise as piecewise
-from gamspy.formulations.ml import DecisionTreeStruct, RegressionTree
+from gamspy.formulations.ml import (
+    DecisionTreeStruct,
+    GradientBoosting,
+    RandomForest,
+    RegressionTree,
+)
 from gamspy.formulations.nn import (
     AvgPool2d,
     Conv1d,
@@ -32,4 +37,6 @@ __all__ = [
     "RegressionTree",
     "DecisionTreeStruct",
     "TorchSequential",
+    "RandomForest",
+    "GradientBoosting",
 ]

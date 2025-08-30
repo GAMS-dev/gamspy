@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+from typing import Optional
 
 import typer
 
@@ -37,6 +38,7 @@ def license(
         "-o",
         help="Output path for the license file."
     ),
+    checkout_duration: Optional[int] = typer.Option(None, "--checkout-duration", "-c", help="Specifies a duration in hours to checkout a session."),
 ) -> None:
     if input is None or not os.path.isfile(input):
         raise ValidationError(
@@ -49,13 +51,18 @@ def license(
         )
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
+    command = [
+        os.path.join(gamspy_base_dir, "gamsgetkey"),
+        access_code,
+        "-i",
+        input,
+    ]
+    if checkout_duration:
+        command.append("-c")
+        command.append(str(checkout_duration))
+    
     process = subprocess.run(
-        [
-            os.path.join(gamspy_base_dir, "gamsgetkey"),
-            access_code,
-            "-i",
-            input,
-        ],
+        command,
         text=True,
         capture_output=True,
     )

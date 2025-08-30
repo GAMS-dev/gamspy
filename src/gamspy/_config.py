@@ -55,6 +55,10 @@ def _set_default_options() -> None:
     strategy = int(os.getenv("GAMSPY_DROP_DOMAIN_VIOLATIONS", 0))
     configuration["DROP_DOMAIN_VIOLATIONS"] = strategy
 
+    # Do not allow ambiguity in MCP, EMP, MPEC models by default
+    ambiguity = os.getenv("GAMSPY_ALLOW_AMBIGUOUS_EQUATIONS", "auto")
+    configuration["ALLOW_AMBIGUOUS_EQUATIONS"] = ambiguity
+
 
 def set_options(
     options: dict[
@@ -67,6 +71,7 @@ def set_options(
             "ASSUME_VARIABLE_SUFFIX",
             "USE_PY_VAR_NAME",
             "DROP_DOMAIN_VIOLATIONS",
+            "ALLOW_AMBIGUOUS_EQUATIONS",
         ],
         Any,
     ],

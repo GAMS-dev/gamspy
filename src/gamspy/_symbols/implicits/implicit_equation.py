@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import gamspy._symbols as syms
 import gamspy._symbols.alias as alias
 import gamspy._symbols.implicits as implicits
 import gamspy._symbols.set as gams_set
+import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
@@ -141,10 +143,22 @@ class ImplicitEquation(ImplicitSymbol):
         if self.parent.records is None:
             return None
 
-        recs = self.parent.records
-        for idx, literal in self._scalar_domains:
-            column_name = recs.columns[idx]
-            recs = recs[recs[column_name] == literal]
+        temp_name = "ie" + utils._get_unique_name()
+        temp_param = syms.Parameter._constructor_bypass(
+            self.container, temp_name, self.parent.domain
+        )
+        domain = list(self.domain)
+        for i, d in self._scalar_domains:
+            domain.insert(i, d)
+
+        temp_param[domain] = self.l
+        del self.container.data[temp_name]
+
+        recs = temp_param.records
+        if recs is not None:
+            columns = recs.columns.to_list()
+            columns[columns.index("value")] = "level"
+            recs.columns = columns
 
         return recs
 

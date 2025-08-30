@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import gamspy as gp
-import gamspy.formulations.nn.utils as utils
+import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
 

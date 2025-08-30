@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING
 
 import numpy as np
 
 import gamspy as gp
-import gamspy.formulations.nn.utils as utils
+import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
 
@@ -162,14 +163,21 @@ class Linear:
 
         self._state = 1
 
-    def make_variable(self) -> None:
+    def make_variable(self, *, init_weights=False) -> None:
         """
         Mark Linear layer as variable. After this is called `load_weights`
         cannot be called. Use this when you need to learn the weights
         of your linear layer in your optimization model.
 
-        This does not initialize the weights, it is highly recommended
-        that you set initial values to `weight` and `bias` variables.
+
+        Parameters
+        ----------
+        init_weights : Optional[bool]
+               False by default.
+               Whether to initialize weights. It is suggested you set
+               this to True unless you want to initialize weights yourself.
+               When `init_weights` is set to True, values are initialized from
+               :math:`\\mathcal{U}(-\\sqrt{k},\\sqrt{k})`, where :math:`k = 1/in\\_features`.
         """
         if self._state == 1:
             raise ValidationError(
@@ -181,12 +189,15 @@ class Linear:
             self.in_features,
         )
 
+        sk = math.sqrt(1 / self.in_features)
         if self.weight is None:
             self.weight = gp.Variable(
                 self.container,
                 name=utils._generate_name("v", self._name_prefix, "weight"),
                 domain=dim(expected_shape),
             )
+            if init_weights:
+                self.weight.l[...] = gp.math.uniform(-sk, sk)
 
         if self.use_bias and self.bias is None:
             self.bias = gp.Variable(
@@ -194,6 +205,8 @@ class Linear:
                 name=utils._generate_name("v", self._name_prefix, "bias"),
                 domain=dim([self.out_features]),
             )
+            if init_weights:
+                self.bias.l[...] = gp.math.uniform(-sk, sk)
 
         self._state = 2
 

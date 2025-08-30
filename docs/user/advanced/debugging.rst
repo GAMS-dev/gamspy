@@ -403,7 +403,10 @@ Here is a list of package wide options:
 |                              |       | "yes": Try using the variable name as the symbol name. If the variable name is not a valid GAMSPy symbol name, raise ValidationError.    |
 |                              |       | "yes-or-autogenerate": Try using the variable name as the symbol name. If the name is not a valid symbol name, autogenerate a new name.  |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-
+| ALLOW_AMBIGUOUS_EQUATIONS    | str   | "auto": Do not allow ambiguous equations in MCP, EMP, MPEC, and RMPEC models but allow them in other model types.                        |
+|                              |       | "no": Do not allow ambiguous equations in any model types.                                                                               |
+|                              |       | "yes": Allow ambiguous equations in all model types.                                                                                     |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. warning::
     GAMSPy validations are essential during development. Setting `VALIDATION` to 0 should only be done to improve the performance by skipping the validation steps after you are 

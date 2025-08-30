@@ -45,7 +45,11 @@ def load_miro_symbol_records(container: Container):
         for name in names:
             symbol = container[name]
             symbol._already_loaded = True
-            if isinstance(symbol, gp.Parameter) and symbol._is_miro_table:
+            if (
+                isinstance(symbol, gp.Parameter)
+                and symbol._is_miro_table
+                and symbol._records is not None
+            ):
                 symbol._records.columns = symbol.domain_names + ["value"]
 
     # Load records of miro output symbols

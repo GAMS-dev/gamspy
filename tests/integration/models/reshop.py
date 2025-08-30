@@ -6,7 +6,7 @@
 """
 
 import gamspy.math as gpm
-from gamspy import Container, Equation, Model, Set, Variable
+from gamspy import Container, Equation, Model, Number, Set, Variable
 
 
 def ReSHOPAnnotation(m, s):
@@ -48,9 +48,9 @@ def main():
     )
 
     cons = Equation(m, name="cons", domain=a)
-    cons[a] = (
-        sum(c.where[a.sameAs(f"a{i}")] for i, c in enumerate(cterms)) >= 0
-    )
+    cons[a] = sum(
+        c.where[a.sameAs(f"a{i}")] for i, c in enumerate(cterms)
+    ) >= Number(0)
 
     x.lo["a0", "0"] = 0
     x.fx["a1", "0"] = 0

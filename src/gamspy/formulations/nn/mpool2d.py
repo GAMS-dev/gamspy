@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Literal
 
 import gamspy as gp
-import gamspy.formulations.nn.utils as utils
+import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
 

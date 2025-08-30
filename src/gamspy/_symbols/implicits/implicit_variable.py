@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -217,10 +218,22 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         if self.parent.records is None:
             return None
 
-        recs = self.parent.records
-        for idx, literal in self._scalar_domains:
-            column_name = recs.columns[idx]
-            recs = recs[recs[column_name] == literal]
+        temp_name = "iv" + utils._get_unique_name()
+        temp_param = syms.Parameter._constructor_bypass(
+            self.container, temp_name, self.parent.domain
+        )
+        domain = list(self.domain)
+        for i, d in self._scalar_domains:
+            domain.insert(i, d)
+
+        temp_param[domain] = self.l
+        del self.container.data[temp_name]
+
+        recs = temp_param.records
+        if recs is not None:
+            columns = recs.columns.to_list()
+            columns[columns.index("value")] = "level"
+            recs.columns = columns
 
         return recs
 

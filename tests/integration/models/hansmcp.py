@@ -95,7 +95,7 @@ def main():
         * (1 / p[c]) ** esub[h],
     ) + Sum(h.where[esub[h] == 1], i[h] * alpha[c, h] / p[c])
 
-    profit[s] = -Sum(c, a[c, s] * p[c]) >= 0
+    profit[s] = -Sum(c, a[c, s] * p[c]) >= Number(0)
     income[h] = i[h] >= Sum(c, p[c] * e[c, h])
 
     hansen = Model(

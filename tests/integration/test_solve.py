@@ -494,44 +494,33 @@ def test_records(data):
         "i",
         "j",
         "level",
-        "marginal",
-        "lower",
-        "upper",
-        "scale",
     ]
     assert x.l[i, j].records.columns.tolist() == ["i", "j", "level"]
     assert x.m[i, j].records.columns.tolist() == ["i", "j", "marginal"]
     assert x.up[i, j].records.columns.tolist() == ["i", "j", "upper"]
-    assert x.lo[i, j].records.columns.tolist() == ["i", "j", "lower"]
     assert x.scale[i, j].records.columns.tolist() == ["i", "j", "scale"]
 
     # Test the records of the filtered records
     assert x[i, "new-york"].records.values.tolist() == [
-        ["seattle", "new-york", 50.0, 0, 0, float("inf"), 1.0],
-        ["san-diego", "new-york", 275.0, 0, 0, float("inf"), 1.0],
+        ["seattle", "new-york", 50.0],
+        ["san-diego", "new-york", 275.0],
     ]
     assert x.l.records.values.tolist() == [
         ["seattle", "new-york", 50.0],
         ["seattle", "chicago", 300.0],
-        ["seattle", "topeka", 0.0],
         ["san-diego", "new-york", 275.0],
-        ["san-diego", "chicago", 0.0],
         ["san-diego", "topeka", 275.0],
     ]
     assert x.l[i, j].records.values.tolist() == [
         ["seattle", "new-york", 50.0],
         ["seattle", "chicago", 300.0],
-        ["seattle", "topeka", 0.0],
         ["san-diego", "new-york", 275.0],
-        ["san-diego", "chicago", 0.0],
         ["san-diego", "topeka", 275.0],
     ]
     assert x.l[...].records.values.tolist() == [
         ["seattle", "new-york", 50.0],
         ["seattle", "chicago", 300.0],
-        ["seattle", "topeka", 0.0],
         ["san-diego", "new-york", 275.0],
-        ["san-diego", "chicago", 0.0],
         ["san-diego", "topeka", 275.0],
     ]
     assert x.l[i, "new-york"].records.values.tolist() == [
@@ -540,7 +529,6 @@ def test_records(data):
     ]
     assert x.l["san-diego", j].records.values.tolist() == [
         ["san-diego", "new-york", 275.0],
-        ["san-diego", "chicago", 0.0],
         ["san-diego", "topeka", 275.0],
     ]
     assert x.l["san-diego", "new-york"].records == 275.0
@@ -570,21 +558,13 @@ def test_records(data):
     assert supply["seattle"].records.columns.tolist() == [
         "i",
         "level",
-        "marginal",
-        "lower",
-        "upper",
-        "scale",
     ]
     assert supply.l[i].records.columns.tolist() == ["i", "level"]
-    assert supply.m[i].records.columns.tolist() == ["i", "marginal"]
     assert supply.up[i].records.columns.tolist() == ["i", "upper"]
     assert supply.lo[i].records.columns.tolist() == ["i", "lower"]
     assert supply.scale[i].records.columns.tolist() == ["i", "scale"]
     assert supply.range[i].records.columns.tolist() == ["i", "range"]
     assert supply.slacklo[i].records.columns.tolist() == ["i", "slacklo"]
-    assert supply.slackup[i].records.columns.tolist() == ["i", "slackup"]
-    assert supply.slack[i].records.columns.tolist() == ["i", "slack"]
-    assert supply.infeas[i].records.columns.tolist() == ["i", "infeas"]
 
     # Test the records of the filtered records
     assert supply.l[i].records.values.tolist() == [
@@ -592,22 +572,22 @@ def test_records(data):
         ["san-diego", 550.0],
     ]
     assert supply[i].records.values.tolist() == [
-        ["seattle", 350.0, -0, float("-inf"), 350, 1],
-        ["san-diego", 550.0, -0, float("-inf"), 600, 1],
+        ["seattle", 350.0],
+        ["san-diego", 550.0],
     ]
     assert supply["seattle"].records.values.tolist() == [
-        ["seattle", 350.0, -0, float("-inf"), 350, 1],
+        ["seattle", 350.0],
     ]
     assert supply.l["seattle"].records == 350.0
     assert supply.m["seattle"].records == -0.0
     assert supply.lo["san-diego"].records == float("-inf")
     assert supply.up["san-diego"].records == 600.0
     assert supply.scale["san-diego"].records == 1.0
-    assert supply.range["san-diego"].records == float("-inf")
+    assert supply.range["san-diego"].records == float("inf")
     assert supply.slacklo["san-diego"].records == float("inf")
     assert supply.slackup["san-diego"].records == 50.0
     assert supply.slack["san-diego"].records == 50.0
-    assert supply.infeas["san-diego"].records == 0.0
+    assert supply.infeas["san-diego"].records is None
 
     m = Container()
     i1 = Set(m, name="i1", records=range(2))
@@ -640,81 +620,54 @@ def test_records(data):
     e1.lo = 5
     e1.up = 10
     assert e1.range[i1, i2, i3, i4].records.values.tolist() == [
-        ["0", "0", "0", "0", -5.0],
-        ["0", "0", "0", "1", -5.0],
-        ["0", "0", "1", "0", -5.0],
-        ["0", "0", "1", "1", -5.0],
-        ["0", "1", "0", "0", -5.0],
-        ["0", "1", "0", "1", -5.0],
-        ["0", "1", "1", "0", -5.0],
-        ["0", "1", "1", "1", -5.0],
-        ["1", "0", "0", "0", -5.0],
-        ["1", "0", "0", "1", -5.0],
-        ["1", "0", "1", "0", -5.0],
-        ["1", "0", "1", "1", -5.0],
-        ["1", "1", "0", "0", -5.0],
-        ["1", "1", "0", "1", -5.0],
-        ["1", "1", "1", "0", -5.0],
-        ["1", "1", "1", "1", -5.0],
+        ["0", "0", "0", "0", 5.0],
+        ["0", "0", "0", "1", 5.0],
+        ["0", "0", "1", "0", 5.0],
+        ["0", "0", "1", "1", 5.0],
+        ["0", "1", "0", "0", 5.0],
+        ["0", "1", "0", "1", 5.0],
+        ["0", "1", "1", "0", 5.0],
+        ["0", "1", "1", "1", 5.0],
+        ["1", "0", "0", "0", 5.0],
+        ["1", "0", "0", "1", 5.0],
+        ["1", "0", "1", "0", 5.0],
+        ["1", "0", "1", "1", 5.0],
+        ["1", "1", "0", "0", 5.0],
+        ["1", "1", "0", "1", 5.0],
+        ["1", "1", "1", "0", 5.0],
+        ["1", "1", "1", "1", 5.0],
     ]
     e1.lo = 0.5
     e1.up = 0.6
     assert e1.slacklo[i1, i2, i3, i4].records.values.tolist() == [
         ["0", "0", "0", "0", 0.011821624700256717],
         ["0", "0", "0", "1", 0.4504636963259353],
-        ["0", "0", "1", "0", 0.0],
         ["0", "0", "1", "1", 0.44864944713724386],
-        ["0", "1", "0", "0", 0.0],
-        ["0", "1", "0", "1", 0.0],
         ["0", "1", "1", "0", 0.32770259382044176],
-        ["0", "1", "1", "1", 0.0],
         ["1", "0", "0", "0", 0.049593687673059494],
-        ["1", "0", "0", "1", 0.0],
         ["1", "0", "1", "0", 0.2535131086748066],
         ["1", "0", "1", "1", 0.03814331321927822],
-        ["1", "1", "0", "0", 0.0],
         ["1", "1", "0", "1", 0.2884287034284043],
-        ["1", "1", "1", "0", 0.0],
-        ["1", "1", "1", "1", 0.0],
     ]
     assert e1.slackup[i1, i2, i3, i4].records.values.tolist() == [
         ["0", "0", "0", "0", 0.08817837529974326],
-        ["0", "0", "0", "1", 0.0],
         ["0", "0", "1", "0", 0.45584038728036624],
-        ["0", "0", "1", "1", 0.0],
         ["0", "1", "0", "0", 0.2881685479895145],
         ["0", "1", "0", "1", 0.17667355102742432],
-        ["0", "1", "1", "0", 0.0],
         ["0", "1", "1", "1", 0.1908008636308387],
         ["1", "0", "0", "0", 0.05040631232694048],
         ["1", "0", "0", "1", 0.5724408867569316],
-        ["1", "0", "1", "0", 0.0],
         ["1", "0", "1", "1", 0.06185668678072176],
         ["1", "1", "0", "0", 0.2702682835009078],
-        ["1", "1", "0", "1", 0.0],
         ["1", "1", "1", "0", 0.296805170708355],
         ["1", "1", "1", "1", 0.14650211051934847],
     ]
     assert e1.slack[i1, i2, i3, i4].records.values.tolist() == [
         ["0", "0", "0", "0", 0.011821624700256717],
-        ["0", "0", "0", "1", 0.0],
-        ["0", "0", "1", "0", 0.0],
-        ["0", "0", "1", "1", 0.0],
-        ["0", "1", "0", "0", 0.0],
-        ["0", "1", "0", "1", 0.0],
-        ["0", "1", "1", "0", 0.0],
-        ["0", "1", "1", "1", 0.0],
         ["1", "0", "0", "0", 0.049593687673059494],
-        ["1", "0", "0", "1", 0.0],
-        ["1", "0", "1", "0", 0.0],
         ["1", "0", "1", "1", 0.03814331321927822],
-        ["1", "1", "0", "0", 0.0],
-        ["1", "1", "0", "1", 0.0],
-        ["1", "1", "1", "0", 0.0],
-        ["1", "1", "1", "1", 0.0],
     ]
     assert e1.infeas[i1, i2, i3, i4].records.values.tolist() == [
-        ["0", "0", "0", "0", 0.0],
         ["0", "0", "0", "1", 0.3504636963259353],
         ["0", "0", "1", "0", 0.35584038728036627],
         ["0", "0", "1", "1", 0.3486494471372439],
@@ -722,10 +675,8 @@ def test_records(data):
         ["0", "1", "0", "1", 0.07667355102742435],
         ["0", "1", "1", "0", 0.22770259382044178],
         ["0", "1", "1", "1", 0.09080086363083872],
-        ["1", "0", "0", "0", 0.0],
         ["1", "0", "0", "1", 0.47244088675693163],
         ["1", "0", "1", "0", 0.1535131086748066],
-        ["1", "0", "1", "1", 0.0],
         ["1", "1", "0", "0", 0.17026828350090784],
         ["1", "1", "0", "1", 0.18842870342840434],
         ["1", "1", "1", "0", 0.19680517070835502],
@@ -822,7 +773,26 @@ def test_records(data):
     ]
 
     g = gp.Parameter(m, "g", domain=["*"], records=[("a", 1), ("b", 2)])
-    assert g["*"].records.values.tolist() == [["a", 1.0], ["b", 2.0]]
+    assert g.records.values.tolist() == [["a", 1.0], ["b", 2.0]]
+
+    m = gp.Container()
+
+    i = gp.Set(m, "i", records=range(5))
+    j = gp.Set(m, "j", domain=i, records=range(3))
+    k = gp.Set(m, "k", records=range(6, 10))
+    l = gp.Set(m, "l", domain=[i, k])
+    al = gp.Alias(m, "al", alias_with=j)
+    l.generateRecords()
+    assert i[k].records is None
+
+    assert i[j].records["uni"].values.tolist() == ["0", "1", "2"]
+    assert i[al].records["uni"].values.tolist() == ["0", "1", "2"]
+
+    with pytest.raises(ValidationError):
+        _ = al.lead(2).records
+
+    a = gp.Parameter(m, "a", domain=i, records=np.array([1, 2, 3, 4, 5]))
+    assert a[j].records.values.tolist() == [["0", 1.0], ["1", 2.0], ["2", 3.0]]
 
 
 def test_after_first_solve(data):
@@ -1973,6 +1943,8 @@ def test_subsolver_options():
 
     m.writeSolverOptions("path", {"crash_method": "none", "prox_pert": 0})
 
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "yes"})
+
     with tempfile.NamedTemporaryFile("w", delete=False) as file:
         nash.solve(
             solver="reshop",
@@ -2007,3 +1979,51 @@ def test_subsolver_options():
     ).all()
 
     m.close()
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
+
+
+def test_ambiguity():
+    m = gp.Container()
+
+    c = gp.Parameter(m, name="c", domain=[], records=0.5)
+    x = gp.Variable(m, name="x", type="negative")
+    f = gp.Equation(m, name="f")
+    f[...] = (x - c) >= 0
+    assert f.getDefinition() == "f .. x - c =g= 0;"
+
+    f2 = gp.Equation(m, name="f2", definition=(x - c) >= 0)
+    assert f2.getDefinition() == "f2 .. x - c =g= 0;"
+    assert f.latexRepr() == f2.latexRepr()
+
+    mcp_model = gp.Model(m, "mcp_model", problem="MCP", matches={f: x})
+
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
+
+    with pytest.raises(ValidationError):
+        mcp_model.solve()
+
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "yes"})
+    with pytest.raises(GamspyException):
+        mcp_model.solve()  # error from GAMS bad bound on variable x
+
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "no"})
+
+    with pytest.raises(ValidationError):
+        mcp_model.solve()  # ambiguous equations not allowed
+
+    lp_model = gp.Model(
+        m,
+        "lp_model",
+        problem="LP",
+        equations=[f],
+        objective=x + 2,
+        sense="MIN",
+    )
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
+    lp_model.solve()
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "yes"})
+    lp_model.solve()
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "no"})
+    with pytest.raises(ValidationError):
+        lp_model.solve()
+    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})

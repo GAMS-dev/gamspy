@@ -337,7 +337,8 @@ def validate_domain(
             if type(given) is str:
                 try:
                     if (
-                        len(actual.records) < 1000
+                        given != "*"
+                        and len(actual.records) < 1000
                         and not actual.records.isin([given]).sum().any()
                     ):
                         raise ValidationError(
@@ -443,15 +444,19 @@ def validate_model(
 
         sense = Sense(sense.upper())
 
-    if (
-        problem not in (Problem.CNS, Problem.MCP)
-        and not isinstance(equations, Iterable)
-        or any(
+    if problem not in (Problem.CNS, Problem.MCP):
+        if not isinstance(equations, Iterable):
+            raise TypeError(
+                f"`equations` must be an Iterable but found {type(equations)}"
+            )
+
+        if any(
             not isinstance(equation, symbols.Equation)
             for equation in equations
-        )
-    ):
-        raise TypeError("`equations` must be an Iterable of Equation objects")
+        ):
+            raise ValueError(
+                "`equations` must be an Iterable of Equation objects"
+            )
 
     if matches is not None:
         if not isinstance(matches, dict):
@@ -590,12 +595,29 @@ def validate_solver_args(
             )
 
 
+def _check_ambiguity(
+    allow_ambiguous_equations: str, problem: Problem, equation: Equation
+) -> None:
+    if allow_ambiguous_equations == "auto":
+        if problem in {
+            Problem.MCP,
+            Problem.EMP,
+            Problem.MPEC,
+            Problem.RMPEC,
+        }:
+            equation._check_ambiguity()
+    elif allow_ambiguous_equations == "no":
+        equation._check_ambiguity()
+
+
 def validate_equations(model: Model) -> None:
     if not get_option("VALIDATION"):
         return
 
     if model.container._is_restarted:
         return
+
+    allow_ambiguous_equations = get_option("ALLOW_AMBIGUOUS_EQUATIONS").lower()
 
     for equation in model.equations:
         if equation._definition is None:
@@ -613,6 +635,20 @@ def validate_equations(model: Model) -> None:
 
             raise ValidationError(
                 f"`{equation.name}` has been declared as an equation but no equation definition was found."
+            )
+
+        _check_ambiguity(allow_ambiguous_equations, model.problem, equation)
+
+    if model._matches is None:
+        return
+
+    for key in model._matches:
+        if isinstance(key, symbols.Equation):
+            key = [key]
+
+        for equation in key:
+            _check_ambiguity(
+                allow_ambiguous_equations, model.problem, equation
             )
 
 

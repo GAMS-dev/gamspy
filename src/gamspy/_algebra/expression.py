@@ -650,6 +650,9 @@ class Expression(operable.Operable):
 
                 if isinstance(node, Symbol):
                     if node.name not in symbols:
+                        if type(node) is gp_syms.Alias:
+                            symbols.append(node.alias_with.name)
+
                         symbols.append(node.name)
                     stack += node.domain
                     node = None
