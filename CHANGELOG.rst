@@ -1,6 +1,10 @@
 GAMSPy 1.15.1 (2025-08-30)
 ==========================
 
+Dependencies
+------------
+- Upgrade gamspy_base and gamsapi to 50.4.1
+
 New features
 ------------
 - #642: Add RandomForest formulation.
@@ -18,6 +22,7 @@ Improved documentation
 - #655: Add docs for GradientBoosting formulation.
 - #682: Update documentation for training NNs to showcase formulations.
 - #688: Update documentation for ML formulations.
+
 GAMSPy 1.15.0 (2025-08-14)
 ==========================
 
