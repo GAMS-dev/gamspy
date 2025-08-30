@@ -261,7 +261,7 @@ def solver(
                     _ = subprocess.run(command, check=True, encoding="utf-8", stderr=subprocess.PIPE)
                 except subprocess.CalledProcessError as e:
                     raise GamspyException(
-                        f"Could not install gamspy-{solver_name}. Please check your internet connection. If it's not related to your internet connection, PyPI servers might be down. Please retry it later. Here is the error message of pip:\n\n{e.stderr.decode('utf-8')}"
+                        f"Could not install gamspy-{solver_name}. Please check your internet connection. If it's not related to your internet connection, PyPI servers might be down. Please retry it later. Here is the error message of pip:\n\n{e.stderr}"
                     ) from e
             else:
                 try:
