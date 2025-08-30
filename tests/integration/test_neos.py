@@ -817,7 +817,7 @@ def test_mcp():
 
     wdef[d] = w[d] == Sum(s, x[s] * dev[s, d])
 
-    budget[...] = Sum(s, x[s]) == 1.0
+    budget[...] = Sum(s, x[s]) == Number(1.0)
 
     retcon[...] = Sum(s, mean[s] * x[s]) >= totmean * 1.25
 
