@@ -1,1 +1,0 @@
-Allow specifying checkout duration through gamspy retrieve command to allow checking out network licenses.
