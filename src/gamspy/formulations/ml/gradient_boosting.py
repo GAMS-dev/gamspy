@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import importlib
+import itertools
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import gamspy as gp
 import gamspy.formulations.utils as utils
@@ -13,6 +14,14 @@ from gamspy.formulations.ml.regression_tree import RegressionTree
 if TYPE_CHECKING:
     from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.tree import DecisionTreeRegressor
+
+    from gamspy import (
+        Alias,
+        Equation,
+        Parameter,
+        Set,
+        Variable,
+    )
 
 
 class GradientBoosting:
@@ -155,26 +164,42 @@ class GradientBoosting:
         gb_out_list: list[gp.Variable] = []
         gb_eqn_list: list[gp.Equation] = []
 
-        for regression_tree in self._list_of_trees:
-            dt_out, dt_eqn, set_of_output_dim = regression_tree(
-                input, M, is_ensemble=True
-            )
-            gb_out_list.append(dt_out)
-            gb_eqn_list += dt_eqn
+        set_records_total: dict[
+            Set | Alias | Parameter | Variable | Equation, Any
+        ] = {}
+
+        results = (
+            regression_tree._yield_call(input, M)
+            for regression_tree in self._list_of_trees
+        )
+
+        zipped_results = zip(*results)
+        dt_outs = next(zipped_results)
+        gb_out_list.extend(dt_outs)
+
+        set_records_iter = next(zipped_results)
+        set_of_output_dim = None
+        for item, set_records_dict in set_records_iter:
+            set_records_total.update(set_records_dict)
+            set_of_output_dim = item
+
+        self.container.setRecords(set_records_total)
+
+        gb_eqn_list = list(itertools.chain.from_iterable(next(zipped_results)))
 
         set_of_samples = input.domain[0]
 
         out = gp.Variable._constructor_bypass(
             self.container,
             name=utils._generate_name("v", self._name_prefix, "real_output"),
-            domain=[set_of_samples, set_of_output_dim],
+            domain=[set_of_samples, set_of_output_dim],  # type: ignore
         )
 
         gb_eqn = gp.Equation._constructor_bypass(
             self.container,
             name=utils._generate_name("e", self._name_prefix, "gb_eqn"),
-            domain=[set_of_samples, set_of_output_dim],
-            description="perdicted out should be equal to the sum of gradient descent out times the learning rate.",
+            domain=[set_of_samples, set_of_output_dim],  # type: ignore
+            description="predicted out should be equal to the sum of gradient descent out times the learning rate.",
         )
 
         self.container._synch_with_gams(gams_to_gamspy=True)
