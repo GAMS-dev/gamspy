@@ -181,25 +181,11 @@ class RegressionTree:
 
         return node_lb, node_ub
 
-    def __call__(
+    def _yield_call(
         self,
         input: gp.Parameter | gp.Variable,
         M: float | None = None,
-        **kwargs,
-    ) -> tuple[gp.Variable, list[gp.Equation]]:
-        """
-        Generate output variable and equations required for embedding the regression tree.
-
-        Parameters
-        ----------
-        input : gp.Parameter | gp.Variable
-                input for the regression tree, must be in shape (sample_size, number_of_features)
-        M : float
-            value for the big_M. By default, infer the value using the available bounds for variables.
-            If the variable is unbounded, then default to 1e10.
-        """
-        is_ensemble = kwargs.get("is_ensemble", False)
-
+    ):
         leafs = self.children_left < 0
         leafs = leafs.nonzero()[0]
         nleafs = len(leafs)
@@ -265,6 +251,8 @@ class RegressionTree:
             name=utils._generate_name("v", self._name_prefix, "output"),
             domain=[set_of_samples, set_of_output_dim],
         )
+
+        yield out
 
         feat_vars = gp.Variable._constructor_bypass(
             self.container,
@@ -426,19 +414,19 @@ class RegressionTree:
         lb_output._definition = definition
         self.container._add_statement(definition)
 
-        self.container.setRecords(
-            {
-                out_link: [
-                    (int(i), int(j), v)
-                    for i, j, v in np.stack(
-                        (idx, jdx, mapped_values), axis=-1
-                    ).reshape(-1, 3)
-                ],
-                feat_par: np.stack([node_lb, node_ub], axis=-1)[:, leafs, :],
-                max_out: np.max(self.value[leafs, :], axis=0),
-                min_out: np.min(self.value[leafs, :], axis=0),
-            }
-        )
+        set_records_dict = {
+            out_link: [
+                (int(i), int(j), v)
+                for i, j, v in np.stack(
+                    (idx, jdx, mapped_values), axis=-1
+                ).reshape(-1, 3)
+            ],
+            feat_par: np.stack([node_lb, node_ub], axis=-1)[:, leafs, :],
+            max_out: np.max(self.value[leafs, :], axis=0),
+            min_out: np.min(self.value[leafs, :], axis=0),
+        }
+
+        yield [set_of_output_dim, set_records_dict]
 
         ### This generates the set of possible paths given the input data
         mask = (feat_vars.up[...] >= feat_par[..., lb]) & (
@@ -545,9 +533,30 @@ class RegressionTree:
             ge_cons,
             le_cons,
         ]
+        yield eqns
 
-        if is_ensemble:
-            return out, eqns, set_of_output_dim  # type: ignore
+    def __call__(
+        self,
+        input: gp.Parameter | gp.Variable,
+        M: float | None = None,
+    ) -> tuple[gp.Variable, list[gp.Equation]]:
+        """
+        Generate output variable and equations required for embedding the regression tree.
 
-        else:
-            return out, eqns
+        Parameters
+        ----------
+        input : gp.Parameter | gp.Variable
+                input for the regression tree, must be in shape (sample_size, number_of_features)
+        M : float
+            value for the big_M. By default, infer the value using the available bounds for variables.
+            If the variable is unbounded, then default to 1e10.
+        """
+
+        generator = self._yield_call(input, M)
+
+        output = next(generator)
+        _, set_values = next(generator)
+        input.container.setRecords(set_values)
+        eqs = next(generator)
+
+        return output, eqs
