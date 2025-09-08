@@ -175,3 +175,24 @@ def test_assume_variable_suffix(data):
     gp.set_options({"ASSUME_VARIABLE_SUFFIX": 2})
     assert obj.records.values.tolist()[0][0] == 1.053
     gp.set_options({"ASSUME_VARIABLE_SUFFIX": 1})
+
+
+def test_empty_indices():
+    m = gp.Container()
+
+    i = gp.Set(m, "i", records=["x", "y", "z"])
+    a = gp.Parameter(m, "a", domain=i, records=[("x", 1), ("y", 2), ("z", 3)])
+    a.where[a > 2] = a * 3
+    assert a.records["value"].values.tolist() == [1, 2, 9]
+    assert a.getAssignment() == "a(i) $ (a(i) > 2) = a(i) * 3;"
+
+    v = gp.Variable(m, "v", domain=i)
+    v.l = 5
+    assert v.records["level"].values.tolist() == [5, 5, 5]
+
+    e = gp.Equation(m, "e", domain=i)
+    e.m = 5
+    assert e.records["marginal"].values.tolist() == [5, 5, 5]
+
+    e[i].where[gp.Ord(i) > 1] = v <= 5
+    assert e.getDefinition() == "e(i) $ (ord(i) > 1) .. v(i) =l= 5;"

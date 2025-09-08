@@ -1122,10 +1122,13 @@ class Equation(gt.Equation, Symbol):
         >>> i = gp.Set(m, "i", records=['i1','i2'])
         >>> e = gp.Equation(m, "e", domain=[i])
         >>> e.gamsRepr()
-        'e'
+        'e(i)'
 
         """
-        return self.name
+        representation = self.name
+        if self.domain:
+            representation += self._get_domain_str(self._domain_forwarding)
+        return representation
 
     def latexRepr(self) -> str:
         if self._definition is None:
