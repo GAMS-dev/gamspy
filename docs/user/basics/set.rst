@@ -849,7 +849,7 @@ Introduction
 
 In this section we introduce a special type of sets: *dynamic sets*. The sets that 
 we discuss in detail above have their elements stated and the membership is usually
-given at object creation time or through the :meth:`addRecords <gamspy.Set.addRecords>`
+given at object creation time or through the :meth:`setRecords <gamspy.Set.setRecords>`
 function. Therefore they are called *static sets*. In contrast, the elements of dynamic sets are not 
 fixed, but may be changed by GAMSPy assignment statements. Dynamic sets are most often used as 
 :ref:`controlling indices in assignments <dynamic-sets-in-conditional-assignments>` 
