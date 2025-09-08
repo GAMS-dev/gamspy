@@ -8,6 +8,7 @@ import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -103,6 +104,9 @@ class Condition(operable.Operable):
         if isinstance(self.conditioning_on, ImplicitSymbol):
             self.conditioning_on.parent._assignment = statement
             self.conditioning_on.parent._winner = "gams"
+        elif isinstance(self.conditioning_on, Symbol):
+            self.conditioning_on._assignment = statement
+            self.conditioning_on._winner = "gams"
 
         if isinstance(self.conditioning_on, implicits.ImplicitEquation):
             self.conditioning_on.parent._definition = statement
