@@ -1,0 +1,1 @@
+Allow the definition of a nonbinding equation without an equality operator. GAMSPy will automatically add == 0 at the end of the expression.

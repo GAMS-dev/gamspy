@@ -34,9 +34,9 @@ if TYPE_CHECKING:
     from gamspy._types import EllipsisType
 
 
-eq_types = ["=e=", "=l=", "=g="]
+EQ_TYPES = ["=e=", "=l=", "=g=", "=n=", "=x=", "=b="]
 
-non_regular_map = {
+IRREGULAR_EQ_MAP = {
     "nonbinding": "=n=",
     "external": "=x=",
     "boolean": "=b=",
@@ -44,10 +44,10 @@ non_regular_map = {
 
 
 class EquationType(Enum):
-    REGULAR = "REGULAR"
-    NONBINDING = "NONBINDING"
-    EXTERNAL = "EXTERNAL"
-    BOOLEAN = "BOOLEAN"
+    REGULAR = "regular"
+    NONBINDING = "nonbinding"
+    EXTERNAL = "external"
+    BOOLEAN = "boolean"
 
     @classmethod
     def values(cls):
@@ -527,17 +527,24 @@ class Equation(gt.Equation, Symbol):
 
     def _set_definition(self, domain, rhs):
         # self[domain] = rhs
+        rhs_repr = rhs.gamsRepr()
+        if self.type == "nonbinding" and not any(
+            eq_type in rhs_repr for eq_type in EQ_TYPES
+        ):
+            # x - c -> x - c == 0
+            rhs = rhs == 0
 
-        if not any(eq_type in rhs.gamsRepr() for eq_type in eq_types):
+        rhs_repr = rhs.gamsRepr()
+        if not any(eq_type in rhs_repr for eq_type in EQ_TYPES):
             raise ValidationError(
                 "Equation definition must contain at least one equality sign such as ==, <= or >=."
             )
 
+        if self.type in IRREGULAR_EQ_MAP and "=e=" in rhs_repr:
+            rhs.operator = IRREGULAR_EQ_MAP[self.type]
+
         if self.type == "external" and "=e=" not in rhs.gamsRepr():
             raise ValidationError("External equations must contain ==")
-
-        if self.type in non_regular_map:
-            rhs._replace_operator(non_regular_map[self.type])
 
         statement = expression.Expression(
             implicits.ImplicitEquation(
@@ -1258,7 +1265,8 @@ class Equation(gt.Equation, Symbol):
 
 def cast_type(type: str | EquationType) -> str:
     if isinstance(type, str):
-        if type.lower() not in (
+        type = type.lower()
+        if type not in (
             "eq",
             "geq",
             "leq",
@@ -1273,7 +1281,7 @@ def cast_type(type: str | EquationType) -> str:
             )
 
         # assign eq by default
-        if type.upper() == "REGULAR":
+        if type == "regular":
             type = "eq"
 
     elif isinstance(type, EquationType):

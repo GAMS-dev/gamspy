@@ -125,15 +125,14 @@ def test_equation_types(data):
     eq5[i] = y[i] <= c[i]
     assert eq5.type == "eq"
 
-    assert str(EquationType.REGULAR) == "REGULAR"
     eq6 = Equation(m, "eq6", type=EquationType.REGULAR, domain=[i])
     assert eq6.type == "eq"
 
     assert EquationType.values() == [
-        "REGULAR",
-        "NONBINDING",
-        "EXTERNAL",
-        "BOOLEAN",
+        "regular",
+        "nonbinding",
+        "external",
+        "boolean",
     ]
 
     eq6 = Equation(m, "eq6", domain=[i])
@@ -149,11 +148,16 @@ def test_nonbinding(data):
 
     x1 = Variable(m, "x1")
     e1 = Equation(m, "e1", definition=x1 >= 0, type="NONBINDING")
-    assert e1.getDefinition() == "e1 .. x1 =n= 0;"
+    assert e1.getDefinition() == "e1 .. x1 =g= 0;"
 
     x2 = Variable(m, "x2")
     e2 = Equation(m, "e2", definition=x2 <= 0, type="NONBINDING")
-    assert e2.getDefinition() == "e2 .. x2 =n= 0;"
+    assert e2.getDefinition() == "e2 .. x2 =l= 0;"
+
+    c = Parameter(m, "c")
+    f = Equation(m, "f", type="nonbinding")
+    f[...] = x - c
+    assert f.getDefinition() == "f .. x - c =n= 0;"
 
 
 def test_equation_declaration(data):
