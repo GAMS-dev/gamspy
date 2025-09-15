@@ -7,7 +7,9 @@ import platform
 import uuid
 from typing import TYPE_CHECKING
 
+import certifi
 import gams.transfer as gt
+import urllib3
 from gams.core import gdx
 
 import gamspy._model as model
@@ -813,3 +815,17 @@ def _parse_generated_variables(model: Model, listing_file: str) -> None:
         variable._column_listing = listings
 
     return None
+
+
+def _make_http() -> urllib3.PoolManager:
+    proxy_url = os.getenv("HTTPS_PROXY") or os.getenv("HTTP_PROXY")
+    if proxy_url:
+        http = urllib3.ProxyManager(
+            proxy_url, cert_reqs="CERT_REQUIRED", ca_certs=certifi.where()
+        )
+    else:
+        http = urllib3.PoolManager(
+            cert_reqs="CERT_REQUIRED", ca_certs=certifi.where()
+        )
+
+    return http
