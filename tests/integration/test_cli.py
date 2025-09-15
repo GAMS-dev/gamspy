@@ -2,12 +2,19 @@ from __future__ import annotations
 
 import os
 import platform
+import select
 import shutil
+import socket
 import subprocess
 import sys
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlencode
 
 import pytest
+import urllib3
 
+import gamspy.utils as utils
 from gamspy import Container, Set
 
 pytestmark = pytest.mark.cli
@@ -534,3 +541,101 @@ def test_gdx_diff_with_skipids():
         ["diff", DUMMY_GDX, DUMMY_GDX2, "--skipid", "a", "--skipid", "b"]
     )
     assert result.returncode == 0
+
+
+class TunnelingProxy(BaseHTTPRequestHandler):
+    # Class attribute to store the paths of CONNECT requests.
+    # This will be used by the test to verify the proxy was used.
+    handled_connect_requests: list[str] = []
+
+    def do_CONNECT(self):
+        """Handle CONNECT requests to set up the tunnel."""
+        # Record the target host and port.
+        self.handled_connect_requests.append(self.path)
+
+        host, port_str = self.path.split(":")
+        port = int(port_str)
+
+        try:
+            # Establish connection to the upstream server.
+            upstream = socket.create_connection((host, port))
+            self.send_response(200, "Connection established")
+            self.end_headers()
+        except OSError:
+            self.send_error(502)
+            return
+
+        # Tunnel data between the client and the upstream server.
+        sockets = [self.connection, upstream]
+        TIMEOUT = 10
+        while True:
+            # Wait until a socket is ready for reading.
+            read_list, _, _ = select.select(sockets, [], [], TIMEOUT)
+            if not read_list:  # Timeout occurred
+                break
+
+            # if client-proxy socket is in the list, receive the data and send it to the upstream.
+            if self.connection in read_list:
+                data = self.connection.recv(8192)
+                if not data:
+                    break
+                upstream.sendall(data)
+
+            # if proxy-upstream socket is in the list, receive the data and send it to the client.
+            if upstream in read_list:
+                data = upstream.recv(8192)
+                if not data:
+                    break
+                self.connection.sendall(data)
+
+        upstream.close()
+
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+
+
+@pytest.fixture
+def proxy_server():
+    """Starts the proxy server in a separate thread."""
+    # Reset the log of handled requests before each test run.
+    TunnelingProxy.handled_connect_requests = []
+
+    server = HTTPServer(("127.0.0.1", 0), TunnelingProxy)
+    port = server.server_address[1]
+
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    # Yield both the proxy URL and the handler class for inspection.
+    yield f"http://127.0.0.1:{port}", TunnelingProxy
+
+    server.shutdown()
+    thread.join()
+
+
+@pytest.mark.skipif(
+    sys.version_info.minor != 13,
+    reason="One Python version is enough to test it.",
+)
+def test_https_proxy(proxy_server):
+    proxy_url, proxy_handler = proxy_server
+    encoded_args = urlencode({"access_token": os.environ["LOCAL_LICENSE"]})
+
+    os.environ["HTTPS_PROXY"] = proxy_url
+    http = utils._make_http()
+    assert isinstance(http, urllib3.ProxyManager)
+
+    # Make a request to the target server, which should go through the proxy.
+    try:
+        request = http.request(
+            "GET", f"https://license.gams.com/license-type?{encoded_args}"
+        )
+        assert request.status == 200
+    finally:
+        del os.environ["HTTPS_PROXY"]
+
+    # Assert that the proxy handled exactly one CONNECT request.
+    assert len(proxy_handler.handled_connect_requests) == 1
+    # Assert that the request was for the correct destination.
+    assert proxy_handler.handled_connect_requests[0] == "license.gams.com:443"
