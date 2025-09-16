@@ -223,7 +223,9 @@ def _generate_dims(
         expected_name = f"DenseDim{x}_1"
         find_x = m.data.get(expected_name, None)
         if find_x is None:
-            find_x = m.addSet(name=expected_name, records=range(x))
+            find_x = m.addSet(
+                name=expected_name, records=range(x), is_singleton=(x == 1)
+            )
 
         while find_x in sets_so_far:
             find_x = next_alias(find_x)
