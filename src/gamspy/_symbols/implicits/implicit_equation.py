@@ -139,7 +139,7 @@ class ImplicitEquation(ImplicitSymbol):
         return self.parent.slack
 
     @property
-    def records(self) -> pd.DataFrame | float | None:
+    def records(self) -> pd.DataFrame | None:
         if self.parent.records is None:
             return None
 
