@@ -1,1 +1,0 @@
-If no indices are provided in an assignment, assume that the operation is over the whole domain.

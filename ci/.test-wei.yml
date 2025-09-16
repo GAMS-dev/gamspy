@@ -1,7 +1,25 @@
 #### TESTS #####
+wei-test-3.14:
+  stage: test
+  needs: [wei-cli-3.10]
+  tags: [windows]
+  image: winamd64/python:3.14
+  script:
+    - python --version
+    - python -m pip install uv; uv venv .windows_test314; .windows_test314\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - $basePath = Invoke-Expression "& gamspy show base"
+    - $getKeyPath = "$basePath\gamsgetkey"
+    - $outputPath = "$basePath\ci_license.txt"
+    - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
+    - gamspy install solver --install-all-solvers --use-uv
+    - gamspy uninstall solver miles --use-uv
+    - $env:COVERAGE_CORE = 'sysmon'; coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
+    - coverage report -m --data-file=".coverage"
+    - coverage xml --data-file=".coverage"
+
 wei-test-3.13:
   stage: test
-  needs: [wei-cli-3.9]
+  needs: [wei-cli-3.10]
   tags: [windows]
   image: winamd64/python:3.13
   script:
@@ -16,10 +34,14 @@ wei-test-3.13:
     - $env:COVERAGE_CORE = 'sysmon'; coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+      when: on_success
+    - when: never
 
 wei-test-3.12:
   stage: test
-  needs: [wei-cli-3.9]
+  needs: [wei-cli-3.10]
   tags: [windows]
   image: winamd64/python:3.12
   script:
@@ -39,7 +61,7 @@ wei-test-3.12:
 
 wei-test-3.11:
   stage: test
-  needs: [wei-cli-3.9]
+  needs: [wei-cli-3.10]
   tags: [windows]
   image: winamd64/python:3.11
   script:
@@ -59,7 +81,7 @@ wei-test-3.11:
 
 wei-test-3.10:
   stage: test
-  needs: [wei-cli-3.9]
+  needs: [wei-cli-3.10]
   tags: [windows]
   image: winamd64/python:3.10
   script:
@@ -77,14 +99,14 @@ wei-test-3.10:
       when: on_success
     - when: never
 
-wei-test-3.9:
+wei-test-3.10:
   stage: test
-  needs: [wei-cli-3.9]
+  needs: [wei-cli-3.10]
   tags: [windows]
-  image: winamd64/python:3.9
+  image: winamd64/python:3.10
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_test39; .windows_test39\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_test310; .windows_test310\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - $basePath = Invoke-Expression "& gamspy show base"
     - $getKeyPath = "$basePath\gamsgetkey"
     - $outputPath = "$basePath\ci_license.txt"
@@ -95,51 +117,51 @@ wei-test-3.9:
     - python -m pytest -x -v -s -m 'doc'
 
 #### ENGINE #####
-wei-engine-3.13:
+wei-engine-3.14:
   stage: engine
   when: manual
   needs: []
   allow_failure: true
   tags: [windows]
-  image: winamd64/python:3.13
+  image: winamd64/python:3.14
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_engine313; .windows_engine313\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_engine314; .windows_engine314\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'engine' tests
 
-wei-engine-3.9:
+wei-engine-3.10:
   stage: engine
   when: manual
   needs: []
   allow_failure: true
   tags: [windows]
-  image: winamd64/python:3.9
+  image: winamd64/python:3.10
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_engine39; .windows_engine39\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_engine310; .windows_engine310\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'engine' tests
 
 #### NEOS #####
-wei-neos-3.13:
+wei-neos-3.14:
   stage: neos
   when: manual
   needs: []
   allow_failure: true
   tags: [windows]
-  image: winamd64/python:3.13
+  image: winamd64/python:3.14
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_neos313; .windows_neos313\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_neos314; .windows_neos314\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'neos' tests
 
-wei-neos-3.9:
+wei-neos-3.10:
   stage: neos
   when: manual
   needs: []
   allow_failure: true
   tags: [windows]
-  image: winamd64/python:3.9
+  image: winamd64/python:3.10
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_neos39; .windows_neos39\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_neos310; .windows_neos310\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'neos' tests

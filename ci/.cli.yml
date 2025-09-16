@@ -11,12 +11,12 @@ leg-cli-3.13:
     expire_in: 2 hours
     paths: [dist/*]
 
-leg-cli-3.9:
+leg-cli-3.10:
   stage: cli
   tags: [linux]
-  image: python:3.9
+  image: python:3.10
   script:
-    - python -m pip install uv && uv venv venv39 && source venv39/bin/activate && uv pip install pip
+    - python -m pip install uv && uv venv venv310 && source venv310/bin/activate && uv pip install pip
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
 
@@ -33,12 +33,12 @@ lag-cli-3.13:
     expire_in: 2 hours
     paths: [dist/*]
 
-lag-cli-3.9:
+lag-cli-3.10:
   stage: cli
   tags: [linux-arm64]
-  image: python:3.9
+  image: python:3.10
   script:
-    - python -m pip install uv && uv venv venv39 && source venv39/bin/activate && uv pip install pip
+    - python -m pip install uv && uv venv venv310 && source venv310/bin/activate && uv pip install pip
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
 
@@ -62,7 +62,7 @@ dac-cli-3.13:
     expire_in: 2 hours
     paths: [dist/*]
 
-dac-cli-3.9:
+dac-cli-3.10:
   stage: cli
   needs: [dac-cli-3.13]
   tags: [macos-arm64]
@@ -71,12 +71,12 @@ dac-cli-3.9:
       if [ ! -f "${TMPDIR}/uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - ${TMPDIR}uv venv "${TMPDIR}gamspy-env-cli-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
-    - source "${TMPDIR}gamspy-env-cli-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - ${TMPDIR}uv venv "${TMPDIR}gamspy-env-cli-3.10${CI_COMMIT_SHORT_SHA}" --python 3.10
+    - source "${TMPDIR}gamspy-env-cli-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-cli-3.9${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-cli-3.10${CI_COMMIT_SHORT_SHA}"
 
 deg-cli-3.13:
   stage: cli
@@ -97,7 +97,7 @@ deg-cli-3.13:
     expire_in: 2 hours
     paths: [dist/*]
 
-deg-cli-3.9:
+deg-cli-3.10:
   stage: cli
   needs: [deg-cli-3.13]
   tags: [macos]
@@ -106,12 +106,12 @@ deg-cli-3.9:
       if [ ! -f "${TMPDIR}/uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - ${TMPDIR}uv venv "${TMPDIR}gamspy-env-cli-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
-    - source "${TMPDIR}gamspy-env-cli-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - ${TMPDIR}uv venv "${TMPDIR}gamspy-env-cli-3.10${CI_COMMIT_SHORT_SHA}" --python 3.10
+    - source "${TMPDIR}gamspy-env-cli-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-cli-3.9${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-cli-3.10${CI_COMMIT_SHORT_SHA}"
 
 wei-cli-3.13:
   stage: cli
@@ -127,12 +127,12 @@ wei-cli-3.13:
     expire_in: 2 hours
     paths: [dist/*]
 
-wei-cli-3.9:
+wei-cli-3.10:
   stage: cli
   tags: [windows]
-  image: winamd64/python:3.9
+  image: winamd64/python:3.10
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_venv39; .windows_venv39\Scripts\Activate; uv pip install pip
+    - python -m pip install uv; uv venv .windows_venv310; .windows_venv310\Scripts\Activate; uv pip install pip
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
