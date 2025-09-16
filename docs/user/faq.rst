@@ -316,3 +316,16 @@ workflows that launch many short-lived GAMSPy jobs can accumulate noticeable del
 number of such jobs is part of your optimization pipeline, consider checking out the network license 
 for a suitable period. While the license is checked out it behaves like a local license, eliminating 
 per-job connection delays.
+
+I am on a restricted network. How can I use a proxy to install a GAMSPy license?
+--------------------------------------------------------------------------------
+
+If you need to install a license on a restricted network, you can declare ``HTTPS_PROXY`` environment variable 
+that specifies the proxy server: ::
+
+    HTTPS_PROXY=<proxy_server> gamspy install license <access_code>
+
+If you have a network license, you should declare ``CURL_PROXY`` environment variable to perform 
+communication via proxy with the license server: ::
+
+    CURL_PROXY=<proxy_server> python <your_script>.py 

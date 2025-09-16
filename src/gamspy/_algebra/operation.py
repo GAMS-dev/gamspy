@@ -744,12 +744,18 @@ class Ord(operable.Operable):
 
     """
 
-    def __init__(self, symbol: Set | Alias):
+    def __new__(cls, symbol: Set | Alias):
         if not isinstance(symbol, (syms.Set, syms.Alias)):
             raise ValidationError(
                 "Ord operation is only for Set and Alias objects!"
             )
 
+        if symbol.is_singleton:
+            return 1
+
+        return super().__new__(cls)
+
+    def __init__(self, symbol: Set | Alias):
         self._symbol = symbol
         self.container = symbol.container
         self.domain: list[Set | Alias] = []

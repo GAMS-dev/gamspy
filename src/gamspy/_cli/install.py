@@ -5,7 +5,6 @@ import shutil
 import sys
 from typing import Annotated, Iterable, Optional, Union
 
-import certifi
 import typer
 from gamspy.exceptions import GamspyException, ValidationError
 import gamspy.utils as utils
@@ -35,8 +34,6 @@ def license(
     import json
     from urllib.parse import urlencode
 
-    import urllib3
-
     os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
 
     is_alp = not os.path.isfile(license)
@@ -56,10 +53,8 @@ def license(
 
         # Make cmex_type check only for GAMS license server.
         if server == "https://license.gams.com":
-            http = urllib3.PoolManager(
-                cert_reqs="CERT_REQUIRED",
-                ca_certs=certifi.where()
-            )
+            http = utils._make_http()
+
             encoded_args = urlencode({"access_token": alp_id})
             request = http.request(
                 "GET", f"{server}/license-type?" + encoded_args

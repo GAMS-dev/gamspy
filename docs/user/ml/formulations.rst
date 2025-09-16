@@ -2,6 +2,8 @@
 NN Formulations (ReLU, Conv2d...)
 *********************************
 
+.. include:: badges.rst
+
 .. meta::
    :description: GAMSPy User Guide
    :keywords: Machine Learning, User, Guide, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
@@ -72,11 +74,13 @@ Supported formulations:
 
 :meth:`Linear <gamspy.formulations.Linear>`
 -------------------------------------------------------
-Formulation generator for Linear layer in GAMS. It applies a linear mapping 
+|lp-badge|
+
+Formulation generator for Linear layer in GAMS. It applies a linear mapping
 with a transformation and bias to the input data, expressed as :math:`y = x A^T + b`.
 
 .. code-block:: python
-   
+
    import gamspy as gp
    import numpy as np
    from gamspy.math import dim
@@ -94,7 +98,9 @@ with a transformation and bias to the input data, expressed as :math:`y = x A^T 
 
 :meth:`Conv1d <gamspy.formulations.Conv1d>`
 -------------------------------------------------------
-Formulation generator for 1D Convolution symbol in GAMS. It applies a 
+|lp-badge|
+
+Formulation generator for 1D Convolution symbol in GAMS. It applies a
 1D convolution operation on an input signal.
 
 |
@@ -127,7 +133,9 @@ Formulation generator for 1D Convolution symbol in GAMS. It applies a
 
 :meth:`Conv2d <gamspy.formulations.Conv2d>`
 -------------------------------------------------------
-Formulation generator for 2D Convolution symbol in GAMS. It applies a 
+|lp-badge|
+
+Formulation generator for 2D Convolution symbol in GAMS. It applies a
 2D convolution operation on an input signal consisting of multiple input planes.
 
 .. code-block:: python
@@ -153,7 +161,9 @@ Formulation generator for 2D Convolution symbol in GAMS. It applies a
 
 :meth:`MaxPool2d <gamspy.formulations.MaxPool2d>`
 -------------------------------------------------------
-Formulation generator for 2D Max Pooling in GAMS. It applies a 2D 
+|mip-badge|
+
+Formulation generator for 2D Max Pooling in GAMS. It applies a 2D
 max pooling on an input signal consisting of multiple input planes.
 
 .. code-block:: python
@@ -174,7 +184,9 @@ max pooling on an input signal consisting of multiple input planes.
 
 :meth:`MinPool2d <gamspy.formulations.MinPool2d>`
 -------------------------------------------------------
-Formulation generator for 2D Min Pooling in GAMS. It applies a 2D 
+|mip-badge|
+
+Formulation generator for 2D Min Pooling in GAMS. It applies a 2D
 min pooling on an input signal consisting of multiple input planes.
 
 .. code-block:: python
@@ -195,7 +207,9 @@ min pooling on an input signal consisting of multiple input planes.
 
 :meth:`AvgPool2d <gamspy.formulations.AvgPool2d>`
 -------------------------------------------------------
-Formulation generator for 2D Avg Pooling in GAMS. It applies a 2D 
+|lp-badge|
+
+Formulation generator for 2D Avg Pooling in GAMS. It applies a 2D
 average pooling on an input signal consisting of multiple input planes.
 
 .. code-block:: python
@@ -216,6 +230,8 @@ average pooling on an input signal consisting of multiple input planes.
 
 :meth:`flatten_dims <gamspy.formulations.flatten_dims>`
 -------------------------------------------------------
+|lp-badge|
+
 It combines the domains specified by dims into a single unified domain.
 
 .. code-block:: python
@@ -326,7 +342,7 @@ The linearization of the :math:`p = \max(a,b,c,d)` is as follows:
    x_a + x_b + x_c + x_d = 1 \\
    x_a, x_b, x_c, x_d \in \{0, 1\} \\
 
-:math:`x_i` is a binary variable when set to 1 it means :math:`p = i`. 
+:math:`x_i` is a binary variable when set to 1 it means :math:`p = i`.
 
 
 The linearization of the :math:`p = \min(a,b,c,d)` is as follows:
@@ -344,7 +360,7 @@ The linearization of the :math:`p = \min(a,b,c,d)` is as follows:
    x_a + x_b + x_c + x_d = 1 \\
    x_a, x_b, x_c, x_d \in \{0, 1\} \\
 
-:math:`x_i` is a binary variable when set to 1 it means :math:`p = i`. 
+:math:`x_i` is a binary variable when set to 1 it means :math:`p = i`.
 
 
 .. _activation-functions:
@@ -362,37 +378,49 @@ we have implemented the following activation functions:
 
 :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`
 ---------------------------------------------------------------
+|mip-badge|
+
 Implements the ReLU activation function using binary variables.
 
 :meth:`relu_with_complementarity_var <gamspy.math.relu_with_complementarity_var>`
 ---------------------------------------------------------------------------------
+|nlp-badge|
+
 Implements the ReLU activation function using complementarity conditions.
 
 :meth:`relu_with_sos1_var <gamspy.math.relu_with_sos1_var>`
 -----------------------------------------------------------
+|mip-badge|
+
 Implements the ReLU activation function using `SOS1 <https://www.gams.com/47/docs/UG_LanguageFeatures.html?search=sos#UG_LanguageFeatures_SpecialOrderSetsOfType1-SOS1>`_ variables.
+
+:meth:`leaky_relu_with_binary_var <gamspy.math.leaky_relu_with_binary_var>`
+---------------------------------------------------------------------------
+|mip-badge|
+
+Implements the Leaky ReLU activation function using binary variables.
 
 :meth:`softmax <gamspy.math.softmax>`
 -------------------------------------
-Implements the softmax activation function. This function strictly 
-requires a GAMSPy Variable, y = softmax(x).
+|nlp-badge|
 
-:meth:`leaky_relu_with_binary_var <gamspy.math.leaky_relu_with_binary_var>`
----------------------------------------------------------------
-Implements the Leaky ReLU activation function using binary variables.
+Implements the softmax activation function. This function strictly
+requires a GAMSPy Variable, y = softmax(x).
 
 :meth:`log_softmax <gamspy.math.log_softmax>`
 ---------------------------------------------
-Implements the log_softmax activation function. This function strictly 
-requires a GAMSPy Variable, y = log_softmax(x). 
+|nlp-badge|
+
+Implements the log_softmax activation function. This function strictly
+requires a GAMSPy Variable, y = log_softmax(x).
 
 
 Activation Functions Explanation
 --------------------------------
 Unlike other mathematical functions, these activation functions return a
-variable and a list of equations instead of an expression. This is because ReLU 
-cannot be representedby a single expression. Directly writing ``y = max(x, 0)`` 
-without reformulating it would result in a Discontinuous Nonlinear Program (``DNLP``) model, 
+variable and a list of equations instead of an expression. This is because ReLU
+cannot be representedby a single expression. Directly writing ``y = max(x, 0)``
+without reformulating it would result in a Discontinuous Nonlinear Program (``DNLP``) model,
 which is highly undesirable. Currently, you can either use
 :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>` to
 introduce binary variables into your problem, or

@@ -1,1 +1,0 @@
-In model.toGams call, write aliased set to the .gms file as well in case an alias is used as a domain.

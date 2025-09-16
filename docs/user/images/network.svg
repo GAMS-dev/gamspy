@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="543.10229"
+   height="535.82416"
+   version="1.1"
+   id="svg64"
+   sodipodi:docname="nn.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview66"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     fit-margin-top="20"
+     fit-margin-left="20"
+     fit-margin-right="20"
+     fit-margin-bottom="20" />
+  <g
+     transform="matrix(2.2973967,0,0,2.2973967,-1808.4643,-857.60554)"
+     id="g57">
+    <path
+       class="link"
+       d="m 820.33333,413.5 179.99997,-20"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path2" />
+    <path
+       class="link"
+       d="m 820.33333,413.5 179.99997,20"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path4" />
+    <path
+       class="link"
+       d="m 820.33333,413.5 179.99997,60"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path6" />
+    <path
+       class="link"
+       d="m 820.33333,413.5 179.99997,100"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path8" />
+    <path
+       class="link"
+       d="m 820.33333,413.5 179.99997,140"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path10" />
+    <path
+       class="link"
+       d="m 820.33333,453.5 179.99997,-60"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path12" />
+    <path
+       class="link"
+       d="m 820.33333,453.5 179.99997,-20"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path14" />
+    <path
+       class="link"
+       d="m 820.33333,453.5 179.99997,20"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path16" />
+    <path
+       class="link"
+       d="m 820.33333,453.5 179.99997,60"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path18" />
+    <path
+       class="link"
+       d="m 820.33333,453.5 179.99997,100"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path20" />
+    <path
+       class="link"
+       d="m 820.33333,493.5 179.99997,-100"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path22" />
+    <path
+       class="link"
+       d="m 820.33333,493.5 179.99997,-60"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path24" />
+    <path
+       class="link"
+       d="m 820.33333,493.5 179.99997,-20"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path26" />
+    <path
+       class="link"
+       d="m 820.33333,493.5 179.99997,20"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path28" />
+    <path
+       class="link"
+       d="m 820.33333,493.5 179.99997,60"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path30" />
+    <path
+       class="link"
+       d="m 820.33333,533.5 179.99997,-140"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path32" />
+    <path
+       class="link"
+       d="m 820.33333,533.5 179.99997,-100"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path34" />
+    <path
+       class="link"
+       d="m 820.33333,533.5 179.99997,-60"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path36" />
+    <path
+       class="link"
+       d="m 820.33333,533.5 179.99997,-20"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path38" />
+    <path
+       class="link"
+       d="m 820.33333,533.5 179.99997,20"
+       style="fill:none;stroke:#505050;stroke-width:0.5;stroke-opacity:1"
+       id="path40" />
+    <circle
+       r="11"
+       class="node"
+       id="0_0"
+       cx="820.33331"
+       cy="413.5"
+       style="fill:#26c8d4;stroke:#333333" />
+    <circle
+       r="11"
+       class="node"
+       id="0_1"
+       cx="820.33331"
+       cy="453.5"
+       style="fill:#26c8d4;stroke:#333333" />
+    <circle
+       r="11"
+       class="node"
+       id="0_2"
+       cx="820.33331"
+       cy="493.5"
+       style="fill:#26c8d4;stroke:#333333" />
+    <circle
+       r="11"
+       class="node"
+       id="0_3"
+       cx="820.33331"
+       cy="533.5"
+       style="fill:#26c8d4;stroke:#333333" />
+    <circle
+       r="11"
+       class="node"
+       id="1_0"
+       cx="1000.3333"
+       cy="393.5"
+       style="fill:#26c8d4;stroke:#333333" />
+    <circle
+       r="11"
+       class="node"
+       id="1_1"
+       cx="1000.3333"
+       cy="433.5"
+       style="fill:#26c8d4;stroke:#333333" />
+    <circle
+       r="11"
+       class="node"
+       id="1_2"
+       cx="1000.3333"
+       cy="473.5"
+       style="fill:#26c8d4;stroke:#333333" />
+    <circle
+       r="11"
+       class="node"
+       id="1_3"
+       cx="1000.3333"
+       cy="513.5"
+       style="fill:#26c8d4;stroke:#333333" />
+    <circle
+       r="11"
+       class="node"
+       id="1_4"
+       cx="1000.3333"
+       cy="553.5"
+       style="fill:#26c8d4;stroke:#333333" />
+    <text
+       class="text"
+       dy="0.34999999em"
+       x="795.33331"
+       y="593.5"
+       style="font-size:12px"
+       id="text51">a2 ∈ ℝ⁴</text>
+    <text
+       class="text"
+       dy="0.34999999em"
+       x="875.33331"
+       y="393.5"
+       style="font-size:12px"
+       id="text53">w ∈ ℝ⁴ˣ⁵</text>
+    <text
+       class="text"
+       dy="0.34999999em"
+       x="975.33331"
+       y="593.5"
+       style="font-size:12px"
+       id="text55">z3 ∈ ℝ⁵</text>
+  </g>
+  <defs
+     id="defs62">
+    <marker
+       id="arrow"
+       viewBox="0 -5 10 10"
+       markerWidth="7"
+       markerHeight="7"
+       orient="auto"
+       refX="42.799999">
+      <path
+         d="M 0,-5 10,0 0,5"
+         style="fill:none;stroke:#505050"
+         id="path59" />
+    </marker>
+  </defs>
+</svg>

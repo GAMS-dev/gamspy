@@ -11,6 +11,7 @@ All example notebooks and input data files are available on https://github.com/G
 * |colab_trnsport| :doc:`Transportation Problem <notebooks/trnsport>`
 * |colab_clsp| :doc:`Capacitated Lot-Sizing Problem <notebooks/clsp>`
 * |colab_nurses| :doc:`Nurses Assignment Problem <notebooks/nurses>`
+* |colab_tsp| :doc:`Traveling Salesman Problem <notebooks/tsp>`
 
 .. |colab_blend| image:: https://colab.research.google.com/assets/colab-badge.svg
         :target: https://colab.research.google.com/github/GAMS-dev/gamspy/blob/develop/docs/user/notebooks/blend_colab.ipynb
@@ -36,6 +37,10 @@ All example notebooks and input data files are available on https://github.com/G
         :target: https://colab.research.google.com/github/GAMS-dev/gamspy/blob/develop/docs/user/notebooks/nurses_colab.ipynb
         :alt: Open In Colab
 
+.. |colab_tsp| image:: https://colab.research.google.com/assets/colab-badge.svg
+        :target: https://colab.research.google.com/github/GAMS-dev/gamspy/blob/develop/docs/user/notebooks/tsp_colab.ipynb
+        :alt: Open In Colab
+
 .. toctree::
     :hidden:
 
@@ -45,3 +50,4 @@ All example notebooks and input data files are available on https://github.com/G
     Capacitated Lot-Sizing Problem <notebooks/clsp>
     Transportation Problem <notebooks/trnsport>
     Nurses Assignment Problem <notebooks/nurses>
+    Traveling Salesman Problem <notebooks/tsp>

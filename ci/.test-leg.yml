@@ -1,7 +1,7 @@
 #### TESTS #####
 leg-test-3.13:
   stage: test
-  needs: [leg-cli-3.9]
+  needs: [leg-cli-3.10]
   tags: [linux]
   image: python:3.13
   script:
@@ -22,7 +22,7 @@ leg-test-3.13:
 
 leg-test-3.12:
   stage: test
-  needs: [leg-cli-3.9]
+  needs: [leg-cli-3.10]
   tags: [linux]
   image: python:3.12
   script:
@@ -39,7 +39,7 @@ leg-test-3.12:
 
 leg-test-3.11:
   stage: test
-  needs: [leg-cli-3.9]
+  needs: [leg-cli-3.10]
   tags: [linux]
   image: python:3.11
   script:
@@ -56,7 +56,7 @@ leg-test-3.11:
 
 leg-test-3.10:
   stage: test
-  needs: [leg-cli-3.9]
+  needs: [leg-cli-3.10]
   tags: [linux]
   image: python:3.10
   script:
@@ -71,22 +71,6 @@ leg-test-3.10:
       when: on_success
     - when: never
 
-leg-test-3.9:
-  stage: test
-  needs: [leg-cli-3.9]
-  tags: [linux]
-  image: python:3.9
-  script:
-    - python -m pip install uv && uv venv venv39 && source venv39/bin/activate
-    - uv pip install .[dev,test] --force-reinstall
-    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver --install-all-solvers --use-uv
-    - gamspy uninstall solver miles --use-uv
-    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/miro/miro.git --branch gamspy --single-branch miro
-    - if [ "$RUN_MIRO" == "1" ]; then pip install fastapi && cd miro && ./scripts/test_gamspy_models.sh && cd .. && rm -rf miro; fi
-    - python -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
-    - python -m pytest -x -v -s -m 'doc'
-
 #### ENGINE #####
 leg-engine-3.13:
   stage: engine
@@ -100,15 +84,15 @@ leg-engine-3.13:
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'engine' tests
 
-leg-engine-3.9:
+leg-engine-3.10:
   stage: engine
   when: manual
   needs: []
   allow_failure: true
   tags: [linux]
-  image: python:3.9
+  image: python:3.10
   script:
-    - python -m pip install uv && uv venv venv39 && source venv39/bin/activate
+    - python -m pip install uv && uv venv venv310 && source venv310/bin/activate
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'engine' tests
 
@@ -125,14 +109,14 @@ leg-neos-3.13:
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'neos' tests
 
-leg-neos-3.9:
+leg-neos-3.10:
   stage: neos
   when: manual
   needs: []
   allow_failure: true
   tags: [linux]
-  image: python:3.9
+  image: python:3.10
   script:
-    - python -m pip install uv && uv venv venv39 && source venv39/bin/activate
+    - python -m pip install uv && uv venv venv310 && source venv310/bin/activate
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'neos' tests

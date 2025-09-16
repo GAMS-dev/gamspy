@@ -214,7 +214,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         return permute(self, dims)  # type: ignore
 
     @property
-    def records(self) -> pd.DataFrame | float | None:
+    def records(self) -> pd.DataFrame | None:
         if self.parent.records is None:
             return None
 

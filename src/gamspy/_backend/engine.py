@@ -13,9 +13,6 @@ import urllib.parse
 import zipfile
 from typing import TYPE_CHECKING
 
-import certifi
-import urllib3
-
 import gamspy._backend.backend as backend
 import gamspy.utils as utils
 from gamspy._options import Options
@@ -747,9 +744,7 @@ class EngineClient:
         self.is_blocking = is_blocking
         self.tokens: list[str] = []
 
-        self._http = urllib3.PoolManager(
-            cert_reqs="CERT_REQUIRED", ca_certs=certifi.where()
-        )
+        self._http = utils._make_http()
 
         self._engine_config = EngineConfiguration(
             self.host,

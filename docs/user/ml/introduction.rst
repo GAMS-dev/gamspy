@@ -1,6 +1,6 @@
-********************************
-Matrix Operations - Introduction
-********************************
+*****************
+Matrix Operations
+*****************
 
 .. meta::
    :description: GAMSPy User Guide
@@ -18,9 +18,15 @@ indexed algebra is a better choice as it is more intuitive.
 However, for ML practitioners, writing this:
 
 
-.. image:: ../images/network.png
-  :width: 250
+.. image:: ../images/network.svg
+  :width: 350
   :align: center
+  :class: only-light
+
+.. image:: ../images/network_dark.svg
+  :width: 350
+  :align: center
+  :class: only-dark
 
 .. code-block:: python
 
@@ -30,7 +36,7 @@ is much easier than:
 
 .. code-block:: python
 
-   calc_mm_3[m, j] = z3[m, j] == Sum(i,  a2[m, i] @ w2[i, j])
+   calc_mm_3[m, j] = z3[m, j] == Sum(i,  a2[m, i] * w2[i, j])
 
 In this context, ``m`` represents the batch dimension, ``i`` denotes the feature dimension of layer 2,
 and ``j`` represents the feature dimension of layer 3.
@@ -194,6 +200,17 @@ However, you are limited to 20 dimensions as GAMSPy supports up to 20 dimensions
    ...
    # The following would not work
    z = gp.Variable(m, name="z", domain=dim(list(range(1, 100))))
+
+.. versionadded:: 1.6.0
+   Explicit indexing for singleton dimensions is no longer required.
+   Scalars are extracted automatically from 1×1 matrices or tensors.
+
+   .. code-block:: python
+
+      ...
+      par1 = gp.Parameter(m, name="x", domain=dim((1, 1, 1)))
+      var1 = gp.Variable(m, name="y")
+      eq1[...] = var1 == par1 # you can omit [0, 0, 0]
 
 
 .. _matrix-multiplication:

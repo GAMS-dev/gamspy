@@ -275,6 +275,11 @@ equation types in GAMSPy:
 
 .. _equation_expressions:
 
+.. note::
+  The definition of all equation types except nonbinding equations require an equality operator such as ``==``, ``>=``, or ``<=``. 
+  Nonbinding equations can be defined as an expression. For example: ``eq = Equation(m, type="nonbinding", definition = x - c)`` where 
+  ``x`` is a variable and ``c`` is a parameter is a valid equation definition.
+
 Expressions in Equation Definitions
 -----------------------------------
 

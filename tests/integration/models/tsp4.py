@@ -182,7 +182,7 @@ def main():
         for s in S:
             rhs[curcut] = -1
             for u, v in s.edges():
-                if x.l[u, v].records > 0.5:
+                if x.l[u, v].records["level"].squeeze() > 0.5:
                     cutcoeff[curcut, i, j].where[i.sameAs(u) & j.sameAs(v)] = 1
                 rhs[curcut] = rhs[curcut] + 1
             allcuts[curcut] = True  # include this cut in set

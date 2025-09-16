@@ -53,6 +53,9 @@ Install using license file::
 
   $ gamspy install license /home/joe/gamslice.txt
 
+.. note::
+  If one needs to use a proxy server, the proxy server can be specified via "HTTPS_PROXY" environment variable.
+
 Install Solver
 --------------
 

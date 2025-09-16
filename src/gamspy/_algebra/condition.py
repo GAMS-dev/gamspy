@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import gamspy._algebra.domain as domain
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -103,6 +105,9 @@ class Condition(operable.Operable):
         if isinstance(self.conditioning_on, ImplicitSymbol):
             self.conditioning_on.parent._assignment = statement
             self.conditioning_on.parent._winner = "gams"
+        elif isinstance(self.conditioning_on, Symbol):
+            self.conditioning_on._assignment = statement
+            self.conditioning_on._winner = "gams"
 
         if isinstance(self.conditioning_on, implicits.ImplicitEquation):
             self.conditioning_on.parent._definition = statement
@@ -123,13 +128,38 @@ class Condition(operable.Operable):
     def records(self) -> pd.DataFrame | None:
         assert self.container is not None
         assert self.domain is not None
-        temp_name = "a" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, self.domain
-        )
-        temp_param[...] = self
-        del self.container.data[temp_name]
-        return temp_param.records
+        if isinstance(
+            self.conditioning_on,
+            (syms.Set, syms.Alias, implicits.ImplicitSet),
+        ):
+            temp_name = "c" + utils._get_unique_name()
+            temp_sym = syms.Set._constructor_bypass(
+                self.container,
+                temp_name,
+                self.domain,  # type: ignore
+            )
+            temp_sym[...] = self
+            del self.container.data[temp_name]
+        elif isinstance(self.conditioning_on, domain.Domain):
+            temp_name = "c" + utils._get_unique_name()
+            temp_sym = syms.Set._constructor_bypass(
+                self.container,
+                temp_name,
+                self.domain,  # type: ignore
+            )
+            temp_sym[...].where[self.condition] = True
+            del self.container.data[temp_name]
+        else:
+            temp_name = "c" + utils._get_unique_name()
+            temp_sym = syms.Parameter._constructor_bypass(
+                self.container,
+                temp_name,
+                self.domain,  # type: ignore
+            )
+            temp_sym[...] = self
+            del self.container.data[temp_name]
+
+        return temp_sym.records
 
     def gamsRepr(self) -> str:
         condition_str = (

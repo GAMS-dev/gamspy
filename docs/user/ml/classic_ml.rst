@@ -2,6 +2,8 @@
 Classic ML Formulations
 ***********************
 
+.. include:: badges.rst
+
 .. meta::
    :description: GAMSPy User Guide
    :keywords: Machine Learning, User, Guide, GAMSPy, gamspy, GAMS, gams, mathematical modeling
@@ -18,6 +20,8 @@ Supported formulations
 
 :meth:`RegressionTree <gamspy.formulations.RegressionTree>`
 -----------------------------------------------------------
+|mip-badge|
+
 
 When a Decision Tree is trained to predict numerical values (rather than class
 labels), it is referred to as a :meth:`Regression Tree <gamspy.formulations.RegressionTree>`.
@@ -81,6 +85,8 @@ instance.
 
 :meth:`RandomForest <gamspy.formulations.RandomForest>`
 -------------------------------------------------------
+|mip-badge|
+
 
 Random Forests fall into the category of ensembling techniques where multiple
 Decision trees are trained in parallel with random parts of the same data. The
@@ -144,6 +150,8 @@ forest as a list of :meth:`DecisionTreeStruct <gamspy.formulations.DecisionTreeS
 
 :meth:`GradientBoosting <gamspy.formulations.GradientBoosting>`
 ---------------------------------------------------------------
+|mip-badge|
+
 
 Gradient Boosted trees also fall into the category of ensembling techniques
 where multiple Decision trees are trained sequentially, with each new tree

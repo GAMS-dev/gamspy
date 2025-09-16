@@ -425,7 +425,7 @@ def test_records(data):
         ["san-diego", "chicago", 0.162],
         ["san-diego", "topeka", 0.126],
     ]
-    assert c["san-diego", "new-york"].records == 0.225
+    assert c["san-diego", "new-york"].records["value"].squeeze() == 0.225
     e[...] = 5
     assert e.records.values.tolist() == [[5.0]]
 
@@ -531,9 +531,11 @@ def test_records(data):
         ["san-diego", "new-york", 275.0],
         ["san-diego", "topeka", 275.0],
     ]
-    assert x.l["san-diego", "new-york"].records == 275.0
-    assert math.isclose(x.m["san-diego", "chicago"].records, 0.009)
-    assert z.l.records == 153.675
+    assert x.l["san-diego", "new-york"].records["level"].squeeze() == 275.0
+    assert math.isclose(
+        x.m["san-diego", "chicago"].records["marginal"].squeeze(), 0.009
+    )
+    assert z.l.records["level"].squeeze() == 153.675
 
     # Test the columns of equation
     assert cost.records.columns.tolist() == [
@@ -578,15 +580,17 @@ def test_records(data):
     assert supply["seattle"].records.values.tolist() == [
         ["seattle", 350.0],
     ]
-    assert supply.l["seattle"].records == 350.0
-    assert supply.m["seattle"].records == -0.0
-    assert supply.lo["san-diego"].records == float("-inf")
-    assert supply.up["san-diego"].records == 600.0
-    assert supply.scale["san-diego"].records == 1.0
-    assert supply.range["san-diego"].records == float("inf")
-    assert supply.slacklo["san-diego"].records == float("inf")
-    assert supply.slackup["san-diego"].records == 50.0
-    assert supply.slack["san-diego"].records == 50.0
+    assert supply.l["seattle"].records["level"].squeeze() == 350.0
+    assert supply.m["seattle"].records["marginal"].squeeze() == -0.0
+    assert supply.lo["san-diego"].records["lower"].squeeze() == float("-inf")
+    assert supply.up["san-diego"].records["upper"].squeeze() == 600.0
+    assert supply.scale["san-diego"].records["scale"].squeeze() == 1.0
+    assert supply.range["san-diego"].records["range"].squeeze() == float("inf")
+    assert supply.slacklo["san-diego"].records["slacklo"].squeeze() == float(
+        "inf"
+    )
+    assert supply.slackup["san-diego"].records["slackup"].squeeze() == 50.0
+    assert supply.slack["san-diego"].records["slack"].squeeze() == 50.0
     assert supply.infeas["san-diego"].records is None
 
     m = Container()
@@ -686,7 +690,10 @@ def test_records(data):
         ["0", "1", "0", "0", 0.18816854798951455],
         ["0", "1", "0", "1", 0.07667355102742435],
     ]
-    assert e1.infeas["0", "1", "0", "1"].records == 0.07667355102742435
+    assert (
+        e1.infeas["0", "1", "0", "1"].records["infeas"].squeeze()
+        == 0.07667355102742435
+    )
 
     assert v1.l[i1, :, i3, i4].records.values.tolist() == [
         ["0", "0", "0", "0", 0.5118216247002567],
@@ -793,6 +800,27 @@ def test_records(data):
 
     a = gp.Parameter(m, "a", domain=i, records=np.array([1, 2, 3, 4, 5]))
     assert a[j].records.values.tolist() == [["0", 1.0], ["1", 2.0], ["2", 3.0]]
+
+    m = gp.Container()
+    i = gp.Set(m, records=range(5))
+    j = gp.Set(m, records=range(3))
+    ij = gp.Set(m, domain=[i, j])
+    ij.generateRecords()
+    assert ij[i, j].where[
+        (gp.Ord(i) > 2) & (gp.Ord(j) > 2)
+    ].records.values.tolist() == [
+        ["2", "2", ""],
+        ["3", "2", ""],
+        ["4", "2", ""],
+    ]
+    assert gp.Domain(i, j).where[
+        (gp.Ord(i) > 2) & (gp.Ord(j) > 2)
+    ].records.values.tolist() == [
+        ["2", "2", ""],
+        ["3", "2", ""],
+        ["4", "2", ""],
+    ]
+    m.close()
 
 
 def test_after_first_solve(data):
