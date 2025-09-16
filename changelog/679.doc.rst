@@ -1,0 +1,1 @@
+Update matrix operations document for scalar extraction and style changes.

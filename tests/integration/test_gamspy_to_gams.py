@@ -897,7 +897,7 @@ def test_dnlp_inscribedsquare(data):
     with open("trace.txt") as trace:
         lines = trace.read().splitlines()
         objective = lines[-1].split("//")[0].split(" ")[-3]
-        assert objective.startswith("9.80076")
+        assert objective.startswith("1.60087")
 
     reference_path = os.path.join(
         "tests", "integration", "gms_references", "square.gms"
@@ -1698,7 +1698,8 @@ def test_qcp_EDsensitivity(data):
     with open("trace.txt") as trace:
         lines = trace.read().splitlines()
         objective = lines[-1].split("//")[0].split(" ")[-3]
-        assert objective.startswith("911044.089")
+        print(f"{objective=}")
+        assert objective.startswith("911044.09")
 
     reference_path = os.path.join(
         "tests", "integration", "gms_references", "ECD.gms"

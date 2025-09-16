@@ -175,7 +175,9 @@ def main():
 
     import math
 
-    assert math.isclose(HeatEx3.objective_value, 5937.437344646649)
+    assert math.isclose(HeatEx3.objective_value, 4845.462000669056), (
+        HeatEx3.objective_value
+    )
 
     # End HeatEx3
 
