@@ -20,6 +20,11 @@ deg-test-3.13:
     - coverage xml --data-file=".coverage"
   after_script:
     - rm -rf "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+      when: on_success
+    - when: never
+  
 deg-test-3.12:
   stage: test
   needs: [deg-cli-3.10]
