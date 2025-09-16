@@ -39,6 +39,7 @@ class Domain:
         self._sanity_check(sets)
         self.sets = sets
         self.container = self._find_container()  # type: ignore
+        self.domain = sets
         self.where = condition.Condition(self)
 
     def __repr__(self) -> str:

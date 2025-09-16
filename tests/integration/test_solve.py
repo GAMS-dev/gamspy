@@ -794,6 +794,27 @@ def test_records(data):
     a = gp.Parameter(m, "a", domain=i, records=np.array([1, 2, 3, 4, 5]))
     assert a[j].records.values.tolist() == [["0", 1.0], ["1", 2.0], ["2", 3.0]]
 
+    m = gp.Container()
+    i = gp.Set(m, records=range(5))
+    j = gp.Set(m, records=range(3))
+    ij = gp.Set(m, domain=[i, j])
+    ij.generateRecords()
+    assert ij[i, j].where[
+        (gp.Ord(i) > 2) & (gp.Ord(j) > 2)
+    ].records.values.tolist() == [
+        ["2", "2", ""],
+        ["3", "2", ""],
+        ["4", "2", ""],
+    ]
+    assert gp.Domain(i, j).where[
+        (gp.Ord(i) > 2) & (gp.Ord(j) > 2)
+    ].records.values.tolist() == [
+        ["2", "2", ""],
+        ["3", "2", ""],
+        ["4", "2", ""],
+    ]
+    m.close()
+
 
 def test_after_first_solve(data):
     m, canning_plants, markets, capacities, demands, distances = data

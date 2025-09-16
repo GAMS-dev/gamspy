@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import gamspy._algebra.domain as domain
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
@@ -127,13 +128,38 @@ class Condition(operable.Operable):
     def records(self) -> pd.DataFrame | None:
         assert self.container is not None
         assert self.domain is not None
-        temp_name = "a" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, self.domain
-        )
-        temp_param[...] = self
-        del self.container.data[temp_name]
-        return temp_param.records
+        if isinstance(
+            self.conditioning_on,
+            (syms.Set, syms.Alias, implicits.ImplicitSet),
+        ):
+            temp_name = "c" + utils._get_unique_name()
+            temp_sym = syms.Set._constructor_bypass(
+                self.container,
+                temp_name,
+                self.domain,  # type: ignore
+            )
+            temp_sym[...] = self
+            del self.container.data[temp_name]
+        elif isinstance(self.conditioning_on, domain.Domain):
+            temp_name = "c" + utils._get_unique_name()
+            temp_sym = syms.Set._constructor_bypass(
+                self.container,
+                temp_name,
+                self.domain,  # type: ignore
+            )
+            temp_sym[...].where[self.condition] = True
+            del self.container.data[temp_name]
+        else:
+            temp_name = "c" + utils._get_unique_name()
+            temp_sym = syms.Parameter._constructor_bypass(
+                self.container,
+                temp_name,
+                self.domain,  # type: ignore
+            )
+            temp_sym[...] = self
+            del self.container.data[temp_name]
+
+        return temp_sym.records
 
     def gamsRepr(self) -> str:
         condition_str = (
