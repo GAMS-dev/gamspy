@@ -157,7 +157,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         return f"ImplicitParameter(parent={self.parent}, name='{self.name}', domain={self.domain}, permutation={self.permutation}), parent_scalar_domains={self.parent_scalar_domains})"
 
     @property
-    def records(self) -> pd.DataFrame | float | None:
+    def records(self) -> pd.DataFrame | None:
         if self.parent.records is None:
             return None
 
@@ -179,20 +179,16 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             for i, d in self._scalar_domains:
                 domain.insert(i, d)
 
+            if domain == []:
+                domain = [...]
+
             temp_param[domain] = self[...]
             del self.container.data[temp_name]
 
             recs = temp_param.records
-            if len(recs) == 1:
-                return float(recs["value"].squeeze())
-
             return recs
         elif isinstance(self.parent, (syms.Variable, syms.Equation)):
             extension = self.name.split(".")[-1]
-            if self.parent.dimension == 0:
-                extension = ATTR_MAPPING[extension]
-                return float(self.parent.records[extension].squeeze())
-
             temp_name = "ip" + utils._get_unique_name()
             temp_param = syms.Parameter._constructor_bypass(
                 self.container, temp_name, self.parent.domain
@@ -200,6 +196,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             domain = list(self.domain)
             for i, d in self._scalar_domains:
                 domain.insert(i, d)
+
+            if domain == []:
+                domain = [...]
 
             temp_param[domain] = self
             del self.container.data[temp_name]
@@ -212,9 +211,6 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             columns = recs.columns.to_list()
             columns[columns.index("value")] = extension
             recs.columns = columns
-
-            if len(recs) == 1:
-                return float(recs[extension].squeeze())
 
             return recs
 

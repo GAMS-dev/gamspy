@@ -1,0 +1,1 @@
+.records call will return either a DataFrame or None. It will stop squeezing single rows into a float.
