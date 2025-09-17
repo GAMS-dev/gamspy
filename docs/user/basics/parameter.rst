@@ -8,9 +8,6 @@
 Parameter
 *********
 
-Introduction
-============
-
 One very important principle will motivate all our discussions on data:
 
 .. note::
@@ -27,8 +24,8 @@ able to reproduce the results of a study.
 This chapter deals with the data type *parameter*.
 
 
-Scalars
-=======
+Scalar Parameters
+=================
 
 A GAMSPy parameter with zero dimensionality or emtpy domain (``domain=[]``) is called a *scalar*. This means that there are 
 no associated sets, so there is exactly one number associated with the parameter: ::
@@ -40,21 +37,22 @@ no associated sets, so there is exactly one number associated with the parameter
     irr = Parameter(m, "irr")
     life = Parameter(m, "life", records=20)
 
-The statement above initializes ``rho`` and ``life``, but not ``irr``. GAMSPy will automatically
-initalize the value to 0. Assignment statement or the :meth:`setRecords <gamspy.Parameter.setRecords>` function can be used to provide a value for a scalar: ::
+The statement above initializes ``rho`` and ``life``, but not ``irr``. Assignment statement or 
+the :meth:`setRecords <gamspy.Parameter.setRecords>` function can be used to provide a value for a scalar: ::
 
     irr[...] = 0.07
     irr.setRecords(0.08)
 
 .. note::
-    Assignment statements to scalar parameters need the ellipsis literal ``[...]``. 
+    Assignment statements to scalar parameters need the ellipsis ``[...]`` as the index. 
+    This is necessary to prevent Python to override the symbol with the given value.  
 
 
-Parameters
-==========
+Higher Dimensional Parameters
+=============================
 
 Higher dimensional GAMSPy parameters are indexed over one or more sets. The data records in the
-contructor, the :meth:`addParameter <gamspy.Container.addParameter>` function, or the 
+constructor, the :meth:`addParameter <gamspy.Container.addParameter>` function, or the 
 :meth:`setRecords <gamspy.Parameter.setRecords>` function needs to be in a list-like format.
 The `GAMS Transfer Python documentation <https://www.gams.com/latest/docs/API_PY_GAMSTRANSFER_MAIN_CLASSES.html#PY_GAMSTRANSFER_ADD_PARAMETER_RECORDS>`_  gives many examples including lists, pandas dataframe,
 numpy matrix, etc.

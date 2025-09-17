@@ -10,9 +10,6 @@ Equation
 
 .. _equation_introduction:
 
-Introduction
-------------
-
 Equations in GAMSPy are associated with the symbolic algebraic relationships
 that will be used to generate the constraints in a model. The algebraic
 relationships are defined by using constants, mathematical operators,

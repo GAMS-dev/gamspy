@@ -178,9 +178,9 @@ You can load the records of a symbol from a GDX file if the symbol is already de
     print(i.records)
 
 By default, :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>` loads the records of all symbols in the gdx file. 
-Alternatively, one can provide ``symbol_names`` argument to limit which symbol records to be loaded. For example: ::
+Alternatively, one can provide ``symbol_names`` argument to limit which symbol records to be loaded. For example:
 
-    .. code-block:: python
+.. code-block:: python
 
     from gamspy import Container
 

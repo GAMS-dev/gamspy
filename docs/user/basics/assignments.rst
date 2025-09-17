@@ -4,9 +4,6 @@
 Conditions and Assignments
 **************************
 
-Introduction
-============
-
 This chapter deals with the way in which conditional assignments, expressions and 
 equations are handled in GAMSPy. The index operations already described are very 
 powerful, but it is necessary to allow for exceptions of one sort or another. 
