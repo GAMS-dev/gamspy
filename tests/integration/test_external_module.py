@@ -28,9 +28,7 @@ def data():
     m = gp.Container()
     directory = str(pathlib.Path(__file__).parent.resolve())
     external_module = os.path.relpath(
-        os.path.join(
-            directory, "external_module", "build", "libsimple_ext_module"
-        ),
+        os.path.join(directory, "external_module", "build", "libsimple_ext_module"),
         os.getcwd(),
     )
 

@@ -107,9 +107,7 @@ def deserialize(path: str) -> Container:
     for name, model in models.items():
         equations = container.getEquations()
         equations = [
-            equation
-            for equation in equations
-            if equation.name in model["equations"]
+            equation for equation in equations if equation.name in model["equations"]
         ]
 
         deserialized_matches: dict[str, str | Sequence[str]] = model.get(

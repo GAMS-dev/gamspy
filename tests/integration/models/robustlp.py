@@ -103,9 +103,7 @@ def main():
     lpcons = Equation(m, name="lpcons", domain=i)
     defdual = Equation(m, name="defdual", domain=j)
 
-    lpcons[i] = (
-        mu * Sum(j, lmbda[j] + gamma[j]) + Sum(j, a[i, j] * x[j]) <= b[i]
-    )
+    lpcons[i] = mu * Sum(j, lmbda[j] + gamma[j]) + Sum(j, a[i, j] * x[j]) <= b[i]
     defdual[j] = lmbda[j] - gamma[j] == x[j]
 
     lproblp = Model(

@@ -32,9 +32,9 @@ class Operable:
         ):
             return self.lead(other)
 
-        if isinstance(
-            self, (ImplicitSet, expression.SetExpression)
-        ) or isinstance(other, (ImplicitSet, expression.SetExpression)):
+        if isinstance(self, (ImplicitSet, expression.SetExpression)) or isinstance(
+            other, (ImplicitSet, expression.SetExpression)
+        ):
             return expression.SetExpression(self, "+", other)
 
         return expression.Expression(self, "+", other)
@@ -42,9 +42,9 @@ class Operable:
     def __radd__(self, other: OperableType):
         from gamspy._symbols.implicits import ImplicitSet
 
-        if isinstance(
-            self, (ImplicitSet, expression.SetExpression)
-        ) or isinstance(other, (ImplicitSet, expression.SetExpression)):
+        if isinstance(self, (ImplicitSet, expression.SetExpression)) or isinstance(
+            other, (ImplicitSet, expression.SetExpression)
+        ):
             return expression.SetExpression(other, "+", self)
 
         return expression.Expression(other, "+", self)
@@ -58,9 +58,9 @@ class Operable:
         ):
             return self.lag(other)
 
-        if isinstance(
-            self, (ImplicitSet, expression.SetExpression)
-        ) or isinstance(other, (ImplicitSet, expression.SetExpression)):
+        if isinstance(self, (ImplicitSet, expression.SetExpression)) or isinstance(
+            other, (ImplicitSet, expression.SetExpression)
+        ):
             return expression.SetExpression(self, "-", other)
 
         return expression.Expression(self, "-", other)
@@ -68,9 +68,9 @@ class Operable:
     def __rsub__(self, other: OperableType):
         from gamspy._symbols.implicits import ImplicitSet
 
-        if isinstance(
-            self, (ImplicitSet, expression.SetExpression)
-        ) or isinstance(other, (ImplicitSet, expression.SetExpression)):
+        if isinstance(self, (ImplicitSet, expression.SetExpression)) or isinstance(
+            other, (ImplicitSet, expression.SetExpression)
+        ):
             return expression.SetExpression(other, "-", self)
 
         return expression.Expression(other, "-", self)
@@ -87,9 +87,9 @@ class Operable:
     def __mul__(self, other: OperableType):
         from gamspy._symbols.implicits import ImplicitSet
 
-        if isinstance(
-            self, (ImplicitSet, expression.SetExpression)
-        ) or isinstance(other, (ImplicitSet, expression.SetExpression)):
+        if isinstance(self, (ImplicitSet, expression.SetExpression)) or isinstance(
+            other, (ImplicitSet, expression.SetExpression)
+        ):
             return expression.SetExpression(self, "*", other)
 
         return expression.Expression(self, "*", other)
@@ -97,9 +97,9 @@ class Operable:
     def __rmul__(self, other: OperableType):
         from gamspy._symbols.implicits import ImplicitSet
 
-        if isinstance(
-            self, (ImplicitSet, expression.SetExpression)
-        ) or isinstance(other, (ImplicitSet, expression.SetExpression)):
+        if isinstance(self, (ImplicitSet, expression.SetExpression)) or isinstance(
+            other, (ImplicitSet, expression.SetExpression)
+        ):
             return expression.SetExpression(other, "*", self)
 
         return expression.Expression(other, "*", self)
@@ -178,12 +178,8 @@ class Operable:
         import gamspy._algebra.operation as operation
         from gamspy.math.matrix import _validate_matrix_mult_dims
 
-        left_domain, right_domain, sum_domain = _validate_matrix_mult_dims(
-            self, other
-        )
-        return operation.Sum(
-            [sum_domain], self[left_domain] * other[right_domain]
-        )
+        left_domain, right_domain, sum_domain = _validate_matrix_mult_dims(self, other)
+        return operation.Sum([sum_domain], self[left_domain] * other[right_domain])
 
     def gamsRepr(self):
         """Representation of the symbol in GAMS"""

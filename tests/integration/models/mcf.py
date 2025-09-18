@@ -57,13 +57,11 @@ def read_solution(df: pd.DataFrame, cost: float) -> None:
         # Get non-zero flows
         non_zero_flows = df[df[commodity] > 0]
         for (source, target), flow in non_zero_flows[commodity].items():
-            e_cost = [
+            e_cost = next(
                 edge[3]
                 for edge in cost
-                if edge[0] == commodity
-                and edge[1] == source
-                and edge[2] == target
-            ][0]
+                if edge[0] == commodity and edge[1] == source and edge[2] == target
+            )
             flows.append(
                 {
                     "from": source,
@@ -206,9 +204,7 @@ def main():
 
     # PARAMETERS
 
-    paths = Parameter(
-        m, "paths", [p, v, v], initial_paths, description="All paths"
-    )
+    paths = Parameter(m, "paths", [p, v, v], initial_paths, description="All paths")
     cost = Parameter(
         m,
         "cost",
@@ -217,9 +213,7 @@ def main():
         description="Cost of transporting one unit of K_i on edge (u, v)",
     )
 
-    demand = Parameter(
-        m, "demand", k, d, description="Demand for each commodity"
-    )
+    demand = Parameter(m, "demand", k, d, description="Demand for each commodity")
 
     capacity = Parameter(
         m, "capacity", [v, v], cap, description="Capacity of edge (u,v)"
@@ -243,9 +237,7 @@ def main():
         domain=[k, p],
         description="Flow of commodity k on path p",
     )
-    z = Variable(
-        m, name="z", type="free", description="Total transportation cost"
-    )
+    z = Variable(m, name="z", type="free", description="Total transportation cost")
 
     # EQUATIONS
 
@@ -267,14 +259,10 @@ def main():
         description="Flow conservation for each commodity",
     )
 
-    rmp_obj[...] = z == Sum(
-        [k, pp], Sum(e, paths[pp, e] * cost[k, e]) * f[k, pp]
-    )
+    rmp_obj[...] = z == Sum([k, pp], Sum(e, paths[pp, e] * cost[k, e]) * f[k, pp])
 
     # Capacity constraint: Sum of all flows on each edge `e` across all paths does not exceed cap(e)
-    cap_constraint[e[u, v]] = (
-        -Sum([k, pp], paths[pp, e] * f[k, pp]) >= -capacity[e]
-    )
+    cap_constraint[e[u, v]] = -Sum([k, pp], paths[pp, e] * f[k, pp]) >= -capacity[e]
 
     # Flow conservation: Total flow for each commodity must equal demand
     flow_conserve[k] = Sum(pp, path_commodity[k, pp] * f[k, pp]) >= demand[k]
@@ -300,9 +288,7 @@ def main():
     alpha = Parameter(m, name="alpha")
 
     # VARIABLES
-    y = Variable(
-        m, name="y", type="positive", domain=[u, v], description="New path"
-    )
+    y = Variable(m, name="y", type="positive", domain=[u, v], description="New path")
 
     # EQUATIONS
     pricing_obj = Equation(
@@ -339,9 +325,7 @@ def main():
     pricing_cap[e[u, v]] = y[e] <= capacity[e]
     pricing_source[...] = Sum(e[s, v], y[e]) == sub_demand
     pricing_target[...] = Sum(e[u, t], y[e]) == sub_demand
-    pricing_flow[v].where[(~s[v]) & (~t[v])] = Sum(e[v, u], y[e]) == Sum(
-        e[u, v], y[e]
-    )
+    pricing_flow[v].where[(~s[v]) & (~t[v])] = Sum(e[v, u], y[e]) == Sum(e[u, v], y[e])
 
     pricing = Model(
         m,
@@ -380,9 +364,7 @@ def main():
 
             # path that might improve the master model found
             if pricing.objective_value < -0.0001:
-                new_paths = process_solution(
-                    y.toList(), s.toList()[0], t.toList()[0]
-                )
+                new_paths = process_solution(y.toList(), s.toList()[0], t.toList()[0])
                 for path in new_paths:
                     path = [(pi.toList()[0],) + edge for edge in path]
                     initial_paths.extend(path)
@@ -404,9 +386,9 @@ def main():
     print("Objective Function Value:", rmp.objective_value)
     print("Total paths generated:", len(pp) - len(k))
     read_solution(
-        (
-            f.pivot() @ paths.pivot(index=["p_0"], columns=["v_1", "v_2"])
-        ).T.sort_index(level=0),
+        (f.pivot() @ paths.pivot(index=["p_0"], columns=["v_1", "v_2"])).T.sort_index(
+            level=0
+        ),
         edge_cost,
     )
 

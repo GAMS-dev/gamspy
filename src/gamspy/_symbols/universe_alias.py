@@ -69,13 +69,10 @@ class UniverseAlias(gt.UniverseAlias):
 
         return obj
 
-    def __new__(
-        cls, container: Container | None = None, name: str = "universe"
-    ):
+    def __new__(cls, container: Container | None = None, name: str = "universe"):
         if container is not None and not isinstance(container, gp.Container):
             raise TypeError(
-                "Container must of type `Container` but found"
-                f" {type(container)}"
+                f"Container must of type `Container` but found {type(container)}"
             )
 
         if not isinstance(name, str):
@@ -83,9 +80,7 @@ class UniverseAlias(gt.UniverseAlias):
 
         try:
             if not container:
-                container = gp._ctx_managers[
-                    (os.getpid(), threading.get_native_id())
-                ]
+                container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
 
             symbol = container[name]
             if isinstance(symbol, cls):
@@ -98,20 +93,14 @@ class UniverseAlias(gt.UniverseAlias):
         except KeyError:
             return object.__new__(cls)
 
-    def __init__(
-        self, container: Container | None = None, name: str = "universe"
-    ):
+    def __init__(self, container: Container | None = None, name: str = "universe"):
         # check if the name is a reserved word
         name = validation.validate_name(name)
         if container is None:
             try:
-                container = gp._ctx_managers[
-                    (os.getpid(), threading.get_native_id())
-                ]
+                container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
             except KeyError as e:
-                raise ValidationError(
-                    "UniverseAlias requires a container."
-                ) from e
+                raise ValidationError("UniverseAlias requires a container.") from e
 
         super().__init__(container, name)
 

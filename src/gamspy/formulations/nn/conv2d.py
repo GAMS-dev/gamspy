@@ -97,9 +97,7 @@ class Conv2d:
                 )
 
             if padding == "same" and _stride != (1, 1):
-                raise ValidationError(
-                    "'same' padding can only be used with stride=1"
-                )
+                raise ValidationError("'same' padding can only be used with stride=1")
 
             _padding: tuple[int, int, int, int] | str = (
                 (0, 0, 0, 0) if padding == "valid" else "same"
@@ -155,9 +153,7 @@ class Conv2d:
                 self.container,
                 domain=dim(output.shape),
                 records=out_bounds_array,
-                name=utils._generate_name(
-                    "p", self._name_prefix, "output_bounds"
-                ),
+                name=utils._generate_name("p", self._name_prefix, "output_bounds"),
             )
             output.lo[...] = out_bounds
             output.up[...] = out_bounds
@@ -210,19 +206,15 @@ class Conv2d:
         # This ensures that the windows are processed in a left-to-right, top-to-bottom order,
         # prioritizing horizontal traversal first, which is the desired behavior.
 
-        windows_lower = sliding_window_view(
-            input_lower, (batch, in_channels, h_k, w_k)
-        )
-        windows_upper = sliding_window_view(
-            input_upper, (batch, in_channels, h_k, w_k)
-        )
+        windows_lower = sliding_window_view(input_lower, (batch, in_channels, h_k, w_k))
+        windows_upper = sliding_window_view(input_upper, (batch, in_channels, h_k, w_k))
 
-        windows_lower = windows_lower[
-            :, :, ::stride_y, ::stride_x, :, :, :
-        ].transpose(0, 1, 4, 2, 3, 5, 6, 7)
-        windows_upper = windows_upper[
-            :, :, ::stride_y, ::stride_x, :, :, :
-        ].transpose(0, 1, 4, 2, 3, 5, 6, 7)
+        windows_lower = windows_lower[:, :, ::stride_y, ::stride_x, :, :, :].transpose(
+            0, 1, 4, 2, 3, 5, 6, 7
+        )
+        windows_upper = windows_upper[:, :, ::stride_y, ::stride_x, :, :, :].transpose(
+            0, 1, 4, 2, 3, 5, 6, 7
+        )
 
         # # Reshape windows for vectorized computation
         windows_lower = windows_lower.reshape(
@@ -251,13 +243,11 @@ class Conv2d:
             # Lower bound: sum(input_lower * pos_weight + input_upper * neg_weight)
             output_lower[:, c_out, :, :] = (
                 np.sum(
-                    windows_lower
-                    * pos_weight[c_out, np.newaxis, np.newaxis, :, :, :],
+                    windows_lower * pos_weight[c_out, np.newaxis, np.newaxis, :, :, :],
                     axis=(3, 4, 5),
                 )
                 + np.sum(
-                    windows_upper
-                    * neg_weight[c_out, np.newaxis, np.newaxis, :, :, :],
+                    windows_upper * neg_weight[c_out, np.newaxis, np.newaxis, :, :, :],
                     axis=(3, 4, 5),
                 )
                 + bias[c_out]
@@ -266,13 +256,11 @@ class Conv2d:
             # Upper bound: sum(input_lower * neg_weight + input_upper * pos_weight)
             output_upper[:, c_out, :, :] = (
                 np.sum(
-                    windows_lower
-                    * neg_weight[c_out, np.newaxis, np.newaxis, :, :, :],
+                    windows_lower * neg_weight[c_out, np.newaxis, np.newaxis, :, :, :],
                     axis=(3, 4, 5),
                 )
                 + np.sum(
-                    windows_upper
-                    * pos_weight[c_out, np.newaxis, np.newaxis, :, :, :],
+                    windows_upper * pos_weight[c_out, np.newaxis, np.newaxis, :, :, :],
                     axis=(3, 4, 5),
                 )
                 + bias[c_out]
@@ -345,9 +333,7 @@ class Conv2d:
 
         self._state = 2
 
-    def load_weights(
-        self, weight: np.ndarray, bias: np.ndarray | None = None
-    ) -> None:
+    def load_weights(self, weight: np.ndarray, bias: np.ndarray | None = None) -> None:
         """
         Mark Conv2d as parameter and load weights from NumPy arrays.
         After this is called `make_variable` cannot be called. Use this
@@ -397,9 +383,7 @@ class Conv2d:
                 )
 
             if bias.shape != (self.out_channels,):
-                raise ValidationError(
-                    f"bias expected to be ({self.out_channels},)"
-                )
+                raise ValidationError(f"bias expected to be ({self.out_channels},)")
 
         if self.weight is None:
             self.weight = gp.Parameter(
@@ -456,9 +440,7 @@ class Conv2d:
             )
 
         if len(input.domain) != 4:
-            raise ValidationError(
-                f"expected 4D input (got {len(input.domain)}D input)"
-            )
+            raise ValidationError(f"expected 4D input (got {len(input.domain)}D input)")
 
         N, C_in, H_in, W_in = input.domain
 
@@ -534,11 +516,7 @@ class Conv2d:
 
         # If propagate_bounds is True, weight is a parameter and input is a variable,
         # we will propagate the bounds of the input to the output
-        if (
-            propagate_bounds
-            and self._state == 1
-            and isinstance(input, gp.Variable)
-        ):
+        if propagate_bounds and self._state == 1 and isinstance(input, gp.Variable):
             self._propagate_bounds(
                 input,
                 out,

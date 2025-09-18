@@ -33,9 +33,7 @@ def test_utils(data):
     assert utils.checkAllSame([1, 2], [1, 2])
 
     # invalid load from path
-    pytest.raises(
-        Exception, utils._open_gdx_file, m.system_directory, "bla.gdx"
-    )
+    pytest.raises(FatalError, utils._open_gdx_file, m.system_directory, "bla.gdx")
 
 
 def test_isin(data):

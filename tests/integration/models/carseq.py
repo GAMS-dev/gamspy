@@ -139,9 +139,9 @@ def main(mip=True):
         description="positions in the blocks",
     )
 
-    blkc[o, p, pp].where[Ord(p) <= Card(p) - bs[o] + 1] = (
-        Ord(pp) >= Ord(p)
-    ) & (Ord(pp) < Ord(p) + bs[o])
+    blkc[o, p, pp].where[Ord(p) <= Card(p) - bs[o] + 1] = (Ord(pp) >= Ord(p)) & (
+        Ord(pp) < Ord(p) + bs[o]
+    )
     blk[o, p] = Sum(pp.where[blkc[o, p, pp]], 1)
 
     # Variables

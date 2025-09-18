@@ -44,19 +44,11 @@ def main():
     i, l = m.getSymbols(["i", "l"])
 
     # SCALARS #
-    Budget = Parameter(
-        m, name="Budget", description="Nominal investment budget"
-    )
-    MU_TARGET = Parameter(
-        m, name="MU_TARGET", description="Target portfolio return"
-    )
+    Budget = Parameter(m, name="Budget", description="Nominal investment budget")
+    MU_TARGET = Parameter(m, name="MU_TARGET", description="Target portfolio return")
     MU_STEP = Parameter(m, name="MU_STEP", description="Target return step")
-    MIN_MU = Parameter(
-        m, name="MIN_MU", description="Minimum return in universe"
-    )
-    MAX_MU = Parameter(
-        m, name="MAX_MU", description="Maximum return in universe"
-    )
+    MIN_MU = Parameter(m, name="MIN_MU", description="Minimum return in universe")
+    MAX_MU = Parameter(m, name="MAX_MU", description="Maximum return in universe")
 
     Budget[...] = 100.0
 
@@ -240,18 +232,14 @@ def main():
         name="yPosWeightDef",
         type="regular",
         domain=l,
-        description=(
-            "Equations defining the positive deviations with weight attached"
-        ),
+        description=("Equations defining the positive deviations with weight attached"),
     )
     yNegWeightDef = Equation(
         m,
         name="yNegWeightDef",
         type="regular",
         domain=l,
-        description=(
-            "Equations defining the positive deviations with weight attached"
-        ),
+        description=("Equations defining the positive deviations with weight attached"),
     )
 
     yPosWeightDef[l] = y[l] >= lambdaPos * (

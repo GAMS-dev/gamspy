@@ -9,7 +9,7 @@ repos:
     -   id: check-ast
     -   id: check-case-conflict
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.16.1'
+    rev: 'v1.18.1'
     hooks:
     -   id: mypy
         files: '^src\/gamspy\/(.*?)$'
@@ -19,10 +19,10 @@ repos:
     -   id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.0
+    rev: v0.13.0
     hooks:
     # Run the linter.
-    -   id: ruff
+    -   id: ruff-check
         args: [ --fix ]
     # Run the formatter.
     -   id: ruff-format

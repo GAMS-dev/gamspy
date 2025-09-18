@@ -67,42 +67,30 @@ def main():
     e6[...] = (
         x6 * gams_math.sqrt(x2)
         - 0.002597
-        * gams_math.sqrt(
-            x2 * x4 * (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10)
-        )
+        * gams_math.sqrt(x2 * x4 * (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10))
         == 0
     )
     e7[...] = (
         x7 * gams_math.sqrt(x4)
         - 0.003448
-        * gams_math.sqrt(
-            x1 * x4 * (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10)
-        )
+        * gams_math.sqrt(x1 * x4 * (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10))
         == 0
     )
     e8[...] = (
         x4 * x8
-        - 1.799
-        * x2
-        * (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10)
-        / 100000
+        - 1.799 * x2 * (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10) / 100000
         == 0
     )
     e9[...] = (
         x4 * x9
         - 0.0002155
         * x1
-        * gams_math.sqrt(
-            x3 * (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10)
-        )
+        * gams_math.sqrt(x3 * (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10))
         == 0
     )
     e10[...] = (
         x10 * sqr(x4)
-        - 3.84
-        * sqr(x4)
-        * (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10)
-        / 100000
+        - 3.84 * sqr(x4) * (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10) / 100000
         == 0
     )
 

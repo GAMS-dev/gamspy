@@ -77,10 +77,7 @@ def test_operation_special_values(data):
     e = Variable(m, "e", domain=tax)
     results[tax, "x"] = gp.math.Max(x.l[tax] - e.l[tax], gp.SpecialValues.EPS)
 
-    assert (
-        results.getAssignment()
-        == 'results(tax,"x") = max(x.l(tax) - e.l(tax),EPS);'
-    )
+    assert results.getAssignment() == 'results(tax,"x") = max(x.l(tax) - e.l(tax),EPS);'
 
     dummy = Parameter(m, "dummy")
     i = Set(m, "i", records=["i1", "i2"])

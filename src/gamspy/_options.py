@@ -2,21 +2,24 @@ from __future__ import annotations
 
 import io
 import os
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 import warnings
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Container
-    from gamspy._model import Problem
     from types import FrameType
 
+    from gamspy import Container
+    from gamspy._model import Problem
+
 SOLVE_LINK_MAP = {"disk": 2, "memory": 5}
-SOLVE_LINK_MAP_REVERSE = dict(zip(SOLVE_LINK_MAP.values(), SOLVE_LINK_MAP.keys()))
+SOLVE_LINK_MAP_REVERSE = dict(
+    zip(SOLVE_LINK_MAP.values(), SOLVE_LINK_MAP.keys(), strict=False)
+)
 
 # GAMSPy to GAMS option mapping
 OPTION_MAP = {
@@ -73,7 +76,7 @@ OPTION_MAP = {
     "zero_rounding_threshold": "zerores",
     "report_underflow": "zeroresrep",
 }
-OPTION_MAP_REVERSE = dict(zip(OPTION_MAP.values(), OPTION_MAP.keys()))
+OPTION_MAP_REVERSE = dict(zip(OPTION_MAP.values(), OPTION_MAP.keys(), strict=False))
 
 MODEL_ATTR_OPTION_MAP = {
     "generate_name_dict": "dictfile",
@@ -305,70 +308,70 @@ class Options(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    cns: Optional[str] = None
-    dnlp: Optional[str] = None
-    emp: Optional[str] = None
-    lp: Optional[str] = None
-    mcp: Optional[str] = None
-    minlp: Optional[str] = None
-    mip: Optional[str] = None
-    miqcp: Optional[str] = None
-    mpec: Optional[str] = None
-    nlp: Optional[str] = None
-    qcp: Optional[str] = None
-    rminlp: Optional[str] = None
-    rmip: Optional[str] = None
-    rmiqcp: Optional[str] = None
-    rmpec: Optional[str] = None
-    allow_suffix_in_equation: Optional[bool] = None
-    allow_suffix_in_limited_variables: Optional[bool] = None
-    append_to_log_file: Optional[bool] = None
-    basis_detection_threshold: Optional[float] = None
-    compile_error_limit: Optional[int] = None
-    domain_violation_limit: Optional[int] = None
-    generate_name_dict: Optional[bool] = None
-    enable_scaling: Optional[bool] = None
-    enable_prior: Optional[bool] = None
-    infeasibility_tolerance: Optional[float] = None
-    try_partial_integer_solution: Optional[bool] = None
-    examine_linearity: Optional[bool] = None
-    bypass_solver: Optional[bool] = None
-    min_improvement_threshold: Optional[float] = None
-    cutoff: Optional[float] = None
-    default_point: Optional[int] = None
+    cns: str | None = None
+    dnlp: str | None = None
+    emp: str | None = None
+    lp: str | None = None
+    mcp: str | None = None
+    minlp: str | None = None
+    mip: str | None = None
+    miqcp: str | None = None
+    mpec: str | None = None
+    nlp: str | None = None
+    qcp: str | None = None
+    rminlp: str | None = None
+    rmip: str | None = None
+    rmiqcp: str | None = None
+    rmpec: str | None = None
+    allow_suffix_in_equation: bool | None = None
+    allow_suffix_in_limited_variables: bool | None = None
+    append_to_log_file: bool | None = None
+    basis_detection_threshold: float | None = None
+    compile_error_limit: int | None = None
+    domain_violation_limit: int | None = None
+    generate_name_dict: bool | None = None
+    enable_scaling: bool | None = None
+    enable_prior: bool | None = None
+    infeasibility_tolerance: float | None = None
+    try_partial_integer_solution: bool | None = None
+    examine_linearity: bool | None = None
+    bypass_solver: bool | None = None
+    min_improvement_threshold: float | None = None
+    cutoff: float | None = None
+    default_point: int | None = None
     miro_protect: bool = True
-    hold_fixed_variables: Optional[bool] = None
-    iteration_limit: Optional[int] = None
-    keep_temporary_files: Optional[int] = None
-    license: Optional[str] = None
-    listing_file: Optional[str] = None
-    loadpoint: Optional[Union[str, os.PathLike]] = None
-    log_file: Optional[str] = None
+    hold_fixed_variables: bool | None = None
+    iteration_limit: int | None = None
+    keep_temporary_files: int | None = None
+    license: str | None = None
+    listing_file: str | None = None
+    loadpoint: str | os.PathLike | None = None
+    log_file: str | None = None
     variable_listing_limit: int = 0
     equation_listing_limit: int = 0
-    node_limit: Optional[int] = None
-    absolute_optimality_gap: Optional[float] = None
-    relative_optimality_gap: Optional[float] = None
-    monitor_process_tree_memory: Optional[bool] = None
-    memory_tick_interval: Optional[float] = None
-    profile: Optional[int] = None
-    profile_file: Optional[str] = None
-    profile_tolerance: Optional[float] = None
-    reference_file: Optional[str] = None
-    time_limit: Optional[float] = None
-    savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None
-    seed: Optional[int] = None
+    node_limit: int | None = None
+    absolute_optimality_gap: float | None = None
+    relative_optimality_gap: float | None = None
+    monitor_process_tree_memory: bool | None = None
+    memory_tick_interval: float | None = None
+    profile: int | None = None
+    profile_file: str | None = None
+    profile_tolerance: float | None = None
+    reference_file: str | None = None
+    time_limit: float | None = None
+    savepoint: Literal[0, 1, 2, 3, 4] | None = None
+    seed: int | None = None
     report_solution: Literal[0, 1, 2] = 0
-    show_os_memory: Optional[Literal[0, 1, 2]] = None
-    solve_link_type: Optional[Literal["disk", "memory"]] = "disk"
-    merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None
-    step_summary: Optional[bool] = None
-    suppress_compiler_listing: Optional[bool] = None
-    report_solver_status: Optional[bool] = None
-    threads: Optional[int] = None
-    write_listing_file: Optional[bool] = None
-    zero_rounding_threshold: Optional[float] = None
-    report_underflow: Optional[bool] = None
+    show_os_memory: Literal[0, 1, 2] | None = None
+    solve_link_type: Literal["disk", "memory"] | None = "disk"
+    merge_strategy: Literal["replace", "merge", "clear"] | None = None
+    step_summary: bool | None = None
+    suppress_compiler_listing: bool | None = None
+    report_solver_status: bool | None = None
+    threads: int | None = None
+    write_listing_file: bool | None = None
+    zero_rounding_threshold: float | None = None
+    report_underflow: bool | None = None
 
     def model_post_init(self, context: Any) -> None:
         self._extra_options: dict[str, Any] = dict()
@@ -381,7 +384,7 @@ class Options(BaseModel):
     @staticmethod
     def fromGams(options: dict) -> Options:
         """
-        Generates a gp.Options object from a dictionary of GAMS options 
+        Generates a gp.Options object from a dictionary of GAMS options
         where keys are the GAMS option names.
 
         Parameters
@@ -412,14 +415,16 @@ class Options(BaseModel):
                 if key.lower() == "solvelink":
                     try:
                         value = SOLVE_LINK_MAP_REVERSE[value]
-                    except KeyError:
-                        raise ValidationError(f"`{value}` is not a valid value for `{key}`. Possible values are 2 and 5.")
+                    except KeyError as e:
+                        raise ValidationError(
+                            f"`{value}` is not a valid value for `{key}`. Possible values are 2 and 5."
+                        ) from e
 
                 gamspy_options[OPTION_MAP_REVERSE[key.lower()]] = value
             else:
                 raise ValidationError(f"`{key}` is not a supported option in GAMSPy.")
 
-        return Options(**gamspy_options) 
+        return Options(**gamspy_options)
 
     def _get_gams_compatible_options(
         self, output: io.TextIOWrapper | None = None
@@ -461,9 +466,7 @@ class Options(BaseModel):
             value = int(value) if isinstance(value, bool) else value
             gams_options[OPTION_MAP[key]] = value
 
-        gams_options["previouswork"] = (
-            1  # # In case GAMS version differs on backend
-        )
+        gams_options["previouswork"] = 1  # # In case GAMS version differs on backend
         gams_options["traceopt"] = 3
 
         if self.log_file:
@@ -532,7 +535,7 @@ class Options(BaseModel):
             lines = file.readlines()
 
             for line in lines:
-                if line == "\n" or line == "":
+                if line in {"\n", ""}:
                     continue  # pragma: no cover
 
                 key, value = line.split("=")
@@ -550,9 +553,7 @@ class Options(BaseModel):
         """
         self._export(pf_file)
 
-    def _export(
-        self, pf_file: str, output: io.TextIOWrapper | None = None
-    ) -> None:
+    def _export(self, pf_file: str, output: io.TextIOWrapper | None = None) -> None:
         """
         Exports options to the pf_file. Each line contains a key-value pair.
 
@@ -584,27 +585,20 @@ class Options(BaseModel):
         # Generate pf file
         with open(pf_file, "w", encoding="utf-8") as file:
             file.write(
-                "\n".join(
-                    [
-                        f'{key} = "{value}"'
-                        for key, value in all_options.items()
-                    ]
-                )
+                "\n".join([f'{key} = "{value}"' for key, value in all_options.items()])
             )
+
 
 class FreezeOptions(BaseModel):
     no_match_limit: int = 0
     debug: bool = False
-    update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
-        "base_case"
-    )
+    update_type: Literal["0", "base_case", "accumulate", "inherit"] = "base_case"
+
 
 class ModelInstanceOptions(BaseModel):
     no_match_limit: int = 0
     debug: bool = False
-    update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
-        "base_case"
-    )
+    update_type: Literal["0", "base_case", "accumulate", "inherit"] = "base_case"
 
     def __init__(self, **kwargs):
         warnings.warn(
@@ -613,6 +607,7 @@ class ModelInstanceOptions(BaseModel):
             stacklevel=2,
         )
         super().__init__(**kwargs)
+
 
 class ConvertOptions(BaseModel):
     """
@@ -624,21 +619,21 @@ class ConvertOptions(BaseModel):
         Enables binary .nl file. False by default.
     AmplNlInitDual : Optional[int]
         Specifies which initial equation marginal values to write to the .nl file.
-        
-        * **0**: Write no values 
-        
+
+        * **0**: Write no values
+
         * **1**: Write only nondefault values
-        
+
         * **2**: Write all values.
 
         1 by default.
     AmplNlInitPrimal : Optional[int]
         Specifies which initial primal values to write to the .nl file.
-        
+
         * **0**: Write no values
-        
+
         * **1**: Write only nondefault values
-        
+
         * **2**: Write all values.
 
         2 by default.
@@ -671,7 +666,7 @@ class ConvertOptions(BaseModel):
         False by default.
     QExtractAlg : Optional[int]
         Specifies the algorithm used for quadratic extraction.
-        
+
         * **0**: Automatic
 
         * **1**: ThreePass: Uses a three-pass forward / backward / forward AD technique to compute function / gradient / Hessian values and a hybrid scheme for storage.
@@ -689,23 +684,23 @@ class ConvertOptions(BaseModel):
     Width : Optional[int]
         Sets the width for certain output formats, such as tables or reports.
     """
-    
+
     model_config = ConfigDict(extra="forbid")
 
-    AmplNLBin: Optional[bool] = None
-    AmplNlInitDual: Optional[int] = None
-    AmplNlInitPrimal: Optional[int] = None
-    GDXHessian: Optional[bool] = None
-    GDXNames: Optional[bool] = None
-    GDXQuadratic: Optional[bool] = None
-    GDXUELs: Optional[bool] = None
-    GAMSInsert: Optional[str] = None
-    HeaderTimeStamp: Optional[bool] = None
-    GDXIntervalEval: Optional[bool] = None
-    GAMSObjVar: Optional[str] = None
-    PermuteEqus: Optional[bool] = None
-    PermuteVars: Optional[bool] = None
-    QExtractAlg: Optional[int] = None
-    Reform: Optional[int] = None
-    SkipNRows: Optional[int] = None
-    Width: Optional[int] = None
+    AmplNLBin: bool | None = None
+    AmplNlInitDual: int | None = None
+    AmplNlInitPrimal: int | None = None
+    GDXHessian: bool | None = None
+    GDXNames: bool | None = None
+    GDXQuadratic: bool | None = None
+    GDXUELs: bool | None = None
+    GAMSInsert: str | None = None
+    HeaderTimeStamp: bool | None = None
+    GDXIntervalEval: bool | None = None
+    GAMSObjVar: str | None = None
+    PermuteEqus: bool | None = None
+    PermuteVars: bool | None = None
+    QExtractAlg: int | None = None
+    Reform: int | None = None
+    SkipNRows: int | None = None
+    Width: int | None = None

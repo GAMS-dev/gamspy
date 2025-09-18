@@ -163,9 +163,7 @@ def main():
 
     # Variables
     obj = Variable(m, name="obj", type="free", description="objective value")
-    dev = Variable(
-        m, name="dev", type="free", domain=i, description="total deviation"
-    )
+    dev = Variable(m, name="dev", type="free", domain=i, description="total deviation")
     devp = Variable(
         m,
         name="devp",
@@ -193,9 +191,7 @@ def main():
         m,
         name="ddeva",
         domain=i,
-        description=(
-            "definition of deviations using positive and negative deviations"
-        ),
+        description=("definition of deviations using positive and negative deviations"),
     )
     ls1 = Equation(m, name="ls1")
     ls1a = Equation(m, name="ls1a")
@@ -228,9 +224,7 @@ def main():
 
     ls6[...] = obj == Sum(i, gams_math.power(dev[i] / dat[i, "y"], 2))
 
-    ls7[...] = obj == Sum(
-        i, gams_math.power(gams_math.abs(dev[i] / dat[i, "y"]), 3)
-    )
+    ls7[...] = obj == Sum(i, gams_math.power(gams_math.abs(dev[i] / dat[i, "y"]), 3))
 
     ls8[...] = obj == Sum(i, gams_math.power(dev[i] / dat[i, "y"], 4))
 
@@ -317,9 +311,7 @@ def main():
     )
 
     # Reporting Parameter
-    result = Parameter(
-        m, name="result", domain=["*", "*"], description="summary table"
-    )
+    result = Parameter(m, name="result", domain=["*", "*"], description="summary table")
 
     b.l[n] = 1
     dev.l[i] = dat[i, "y"] - Sum(n, b.l[n] * dat[i, n])

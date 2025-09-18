@@ -83,11 +83,7 @@ def main():
     )
 
     cut_coefficients = pd.DataFrame(
-        [
-            [idx, f"d{center}", 0]
-            for idx in range(1, 26)
-            for center in range(1, 6)
-        ]
+        [[idx, f"d{center}", 0] for idx in range(1, 26) for center in range(1, 6)]
     )
 
     # Set
@@ -149,9 +145,7 @@ def main():
         records=[f"{idx}" for idx in range(1, 26)],
         description="max Benders iterations",
     )
-    itActive = Set(
-        m, name="itActive", domain=iter, description="active Benders cuts"
-    )
+    itActive = Set(m, name="itActive", domain=iter, description="active Benders cuts")
 
     # Parameter
     cutconst = Parameter(
@@ -183,9 +177,7 @@ def main():
     theta = Variable(m, name="theta", description="future profit")
 
     # Equation
-    masterobj = Equation(
-        m, name="masterobj", description="master objective function"
-    )
+    masterobj = Equation(m, name="masterobj", description="master objective function")
     production = Equation(
         m,
         name="production",
@@ -202,9 +194,9 @@ def main():
         m, name="optcut", domain=iter, description="Benders optimality cuts"
     )
 
-    masterobj[...] = zmaster == theta - Sum(
-        (i, j), transcost[i, j] * ship[i, j]
-    ) - Sum(i, prodcost * product[i])
+    masterobj[...] = zmaster == theta - Sum((i, j), transcost[i, j] * ship[i, j]) - Sum(
+        i, prodcost * product[i]
+    )
     receive[j] = received[j] == Sum(i, ship[i, j])
     production[i] = product[i] == Sum(j, ship[i, j])
     optcut[itActive] = theta <= cutconst[itActive] + Sum(
@@ -236,24 +228,16 @@ def main():
         type="Positive",
         description="overstocked products",
     )
-    zsub = Variable(
-        m, name="zsub", description="objective variable of sub problem"
-    )
+    zsub = Variable(m, name="zsub", description="objective variable of sub problem")
 
     # Equation
-    subobj = Equation(
-        m, name="subobj", description="subproblem objective function"
-    )
+    subobj = Equation(m, name="subobj", description="subproblem objective function")
     selling = Equation(
         m, name="selling", domain=j, description="part of received is sold"
     )
-    market = Equation(
-        m, name="market", domain=j, description="upperbound on sales"
-    )
+    market = Equation(m, name="market", domain=j, description="upperbound on sales")
 
-    subobj[...] = zsub == Sum(j, price * sales[j]) - Sum(
-        j, wastecost * waste[j]
-    )
+    subobj[...] = zsub == Sum(j, price * sales[j]) - Sum(j, wastecost * waste[j])
     selling[j] = sales[j] + waste[j] == received.l[j]
     market[j] = sales[j] <= demand[j]
 
@@ -297,8 +281,7 @@ def main():
                 scenario, "prob"
             ] * Sum(j, market.m[j] * demand[j])
             cutcoeff[iteration, j] = (
-                cutcoeff[iteration, j]
-                + ScenarioData[scenario, "prob"] * selling.m[j]
+                cutcoeff[iteration, j] + ScenarioData[scenario, "prob"] * selling.m[j]
             )
 
         itActive[iteration] = True

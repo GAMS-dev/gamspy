@@ -203,9 +203,7 @@ def main():
         type="Positive",
         description="weapons assignment",
     )
-    prob = Variable(
-        m, name="prob", domain=t, description="probability for each target"
-    )
+    prob = Variable(m, name="prob", domain=t, description="probability for each target")
 
     # Equations
     maxw = Equation(m, name="maxw", domain=w, description="weapons balance")
@@ -215,20 +213,14 @@ def main():
         domain=t,
         description="minimum number of weapons required per target",
     )
-    probe = Equation(
-        m, name="probe", domain=t, description="probability definition"
-    )
+    probe = Equation(m, name="probe", domain=t, description="probability definition")
 
     maxw[w] = Sum(t.where[td[w, t]], x[w, t]) <= wa[w]
     minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
-    probe[t] = prob[t] == 1 - Product(
-        w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]
-    )
+    probe[t] = prob[t] == 1 - Product(w.where[td[w, t]], (1 - td[w, t]) ** x[w, t])
 
     _ = Sum(t, mv[t] * prob[t])
-    etd = Sum(
-        t, mv[t] * (1 - Product(w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]))
-    )
+    etd = Sum(t, mv[t] * (1 - Product(w.where[td[w, t]], (1 - td[w, t]) ** x[w, t])))
 
     war = Model(
         m,

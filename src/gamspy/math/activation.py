@@ -244,16 +244,14 @@ def leaky_relu_with_binary_var(
         eq[2][...] = y <= x - (1 - sigma) * (1 - negative_slope) * _get_lb(
             x, default_lb
         )
-        eq[3][...] = y <= negative_slope * x + sigma * (
-            1 - negative_slope
-        ) * _get_ub(x, default_ub)
+        eq[3][...] = y <= negative_slope * x + sigma * (1 - negative_slope) * _get_ub(
+            x, default_ub
+        )
         y.lo[...] = x.lo[...] * negative_slope
         y.up[...] = gamspy.math.Max(0, x.up[...])
     else:
         eq[2][...] = y <= x - (1 - sigma) * (1 - negative_slope) * default_lb
-        eq[3][...] = y <= negative_slope * x + sigma * default_ub * (
-            1 - negative_slope
-        )
+        eq[3][...] = y <= negative_slope * x + sigma * default_ub * (1 - negative_slope)
 
     if return_binary_var:
         return y, sigma, eq
@@ -514,9 +512,7 @@ def log_softmax(x: Variable, dim: int = -1, skip_intrinsic: bool = False):
         log_sum_exp = gamspy.math.lse_max(*variables)
         eq[...] = y[...] == x - log_sum_exp
     else:
-        expr_domain = [
-            d if i != dim else sum_domain for (i, d) in enumerate(x.domain)
-        ]
+        expr_domain = [d if i != dim else sum_domain for (i, d) in enumerate(x.domain)]
         sum_expr = gamspy.Sum(sum_domain, gamspy.math.exp(x[expr_domain]))
         eq[...] = y[...] == x - gamspy.math.log(sum_expr)
 
@@ -565,9 +561,7 @@ def softmax(x: Variable, dim: int = -1):
         dim = len(x.domain) + dim
 
     sum_domain = next_alias(x.domain[dim])
-    expr_domain = [
-        d if i != dim else sum_domain for (i, d) in enumerate(x.domain)
-    ]
+    expr_domain = [d if i != dim else sum_domain for (i, d) in enumerate(x.domain)]
 
     y = x.container.addVariable(
         _get_random_name("y"),

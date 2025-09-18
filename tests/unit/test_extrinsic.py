@@ -101,13 +101,9 @@ def test_extrinsic_functions(data):
 
     i = Set(m, name="i", records=[f"i{j}" for j in range(10)])
     x = Variable(m, name="x", domain=i)
-    e = Equation(
-        m, name="e", definition=Sum(i, x[i] * x[i]) == trilib.myCos(90)
-    )
+    e = Equation(m, name="e", definition=Sum(i, x[i] * x[i]) == trilib.myCos(90))
     assert e.getDefinition() == "e .. sum(i,x(i) * x(i)) =e= myCos(90);"
-    f = Equation(
-        m, name="f", definition=trilib.myCos(90) == Sum(i, x[i] * x[i])
-    )
+    f = Equation(m, name="f", definition=trilib.myCos(90) == Sum(i, x[i] * x[i]))
     assert f.getDefinition() == "f .. myCos(90) =e= sum(i,x(i) * x(i));"
 
     m.close()

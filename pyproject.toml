@@ -10,7 +10,7 @@ authors = [
 ]
 readme = "README_PYPI.md"
 description = "Python-based algebraic modeling interface to GAMS"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license-files = ["LICENSE"]
 keywords = ["Optimization", "GAMS"]
 classifiers = [
@@ -36,11 +36,10 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi[transfer] >= 51.1.0",
-  "gamspy_base >= 51.1.0",
+  "gamsapi[transfer] >= 51.1.0, < 52.0.0",
+  "gamspy_base >= 51.1.0, < 52.0.0",
   "pydantic >= 2.0",
-  "certifi >= 2022.09.14",
-  "urllib3 >= 2.0.7",
+  "requests >= 2.28.0",
   "typer >= 0.16.0",
 ]
 
@@ -53,9 +52,9 @@ changelog = "https://github.com/GAMS-dev/gamspy/blob/develop/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
-  "ruff == 0.12.0",
+  "ruff >= 0.13.0",
   "pre-commit >= 3.5.0",
-  "mypy >= 1.11.1",
+  "mypy >= 1.18.1",
 ]
 
 test = [
@@ -211,37 +210,28 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
-    "_cli",
-    "_options.py"
 ]
 
-# Same as PEP8.
-line-length = 79
+# Same as black.
+line-length = 88
 indent-width = 4
 
-# Assume Python 9
-target-version = "py39"
+# Assume Python 3.10
+target-version = "py310"
 
 [tool.ruff.lint]
 select = [
-    # pycodestyle
-    "E",
-    # Pyflakes
-    "F",
-    # pyupgrade
-    "UP",
-    # flake8-bugbear
-    "B",
-    # flake8-simplify
-    "SIM",
-    # isort
-    "I",
-    # flake8-pie
-    "PIE",
-    # Consider merging multiple comparisons
-    "PLR1714",
+    "E",        # pycodestyle
+    "F",        # Pyflakes
+    "UP",       # pyupgrade
+    "B",        # flake8-bugbear
+    "SIM",      # flake8-simplify
+    "I",        # isort
+    "PIE",      # flake8-pie
+    "PLR1714",  # Consider merging multiple comparisons
+    "RUF",      # Ruff-specific rules
 ]
-ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "SIM115", "B028", "B006"]
+ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "SIM115", "B028", "B006", "RUF005", "RUF022"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]

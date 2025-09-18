@@ -38,9 +38,7 @@ def save_to_json(symbol, name, i, model):
 
 def save_to_json_d(d, name, i, model):
     file = os.path.join(model, "data", f"data_{name}{i}.json")
-    df = pd.DataFrame(
-        [(i, m, d[i, m]) for i, m in d], columns=["i", "m", "value"]
-    )
+    df = pd.DataFrame([(i, m, d[i, m]) for i, m in d], columns=["i", "m", "value"])
     df.to_json(file, orient="values")
 
 

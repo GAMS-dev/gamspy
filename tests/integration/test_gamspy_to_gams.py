@@ -161,9 +161,7 @@ def test_lp_transport(data):
         options=Options.fromGams({"lp": "cplex"}),
     )
     with pytest.raises(exceptions.ValidationError):
-        transport.toGams(
-            os.path.join("tmp", "to_gams"), options={"lp": "cplex"}
-        )
+        transport.toGams(os.path.join("tmp", "to_gams"), options={"lp": "cplex"})
 
     transport.toGams(
         os.path.join("tmp", "to_gams"),
@@ -248,9 +246,7 @@ def test_mip_cutstock(data):
     )
 
     # Master model variables
-    xp = Variable(
-        m, "xp", domain=p, type="integer", description="patterns used"
-    )
+    xp = Variable(m, "xp", domain=p, type="integer", description="patterns used")
     z = Variable(m, "z", description="objective variable")
     xp.up[p] = Sum(i, d[i])
 
@@ -277,9 +273,7 @@ def test_mip_cutstock(data):
     y = Variable(m, "y", domain=i, type="integer", description="new pattern")
     y.up[i] = gams_math.ceil(r / w[i])
 
-    defobj = Equation(
-        m, "defobj", definition=z == (1 - Sum(i, demand.m[i] * y[i]))
-    )
+    defobj = Equation(m, "defobj", definition=z == (1 - Sum(i, demand.m[i] * y[i])))
     knapsack = Equation(
         m,
         "knapsack",
@@ -549,9 +543,7 @@ def test_nlp_weapons(data):
 
     maxw[w] = Sum(t.where[td[w, t]], x[w, t]) <= wa[w]
     minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
-    probe[t] = prob[t] == 1 - Product(
-        w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]
-    )
+    probe[t] = prob[t] == 1 - Product(w.where[td[w, t]], (1 - td[w, t]) ** x[w, t])
 
     _ = Sum(t, mv[t] * prob[t])
     etd = Sum(
@@ -592,9 +584,7 @@ def test_nlp_weapons(data):
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert objective.startswith("1735.569579")
 
-    reference_path = os.path.join(
-        "tests", "integration", "gms_references", "war.gms"
-    )
+    reference_path = os.path.join("tests", "integration", "gms_references", "war.gms")
     with open(os.path.join("tmp", "to_gams", "war.gms")) as file1:
         content1 = [
             line
@@ -624,7 +614,7 @@ def test_mcp_qp6(data):
     days, stocks = cont.getSymbols(["days", "stocks"])
 
     # Parameters
-    returns, val = cont.getSymbols(["return", "val"])
+    returns, _val = cont.getSymbols(["return", "val"])
 
     # Set
     d = Set(cont, name="d", domain=[days], description="selected days")
@@ -641,9 +631,7 @@ def test_mcp_qp6(data):
         domain=stocks,
         description="mean of daily return",
     )
-    dev = Parameter(
-        cont, name="dev", domain=[stocks, days], description="deviations"
-    )
+    dev = Parameter(cont, name="dev", domain=[stocks, days], description="deviations")
     totmean = Parameter(cont, name="totmean", description="total mean return")
 
     mean[s] = Sum(d, returns[s, d]) / Card(d)
@@ -730,9 +718,7 @@ def test_mcp_qp6(data):
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert objective.startswith("8.499300")
 
-    reference_path = os.path.join(
-        "tests", "integration", "gms_references", "qp6.gms"
-    )
+    reference_path = os.path.join("tests", "integration", "gms_references", "qp6.gms")
     with open(os.path.join("tmp", "to_gams", "qp6.gms")) as file1:
         content1 = [
             line
@@ -775,24 +761,19 @@ def test_dnlp_inscribedsquare(data):
     x = Variable(
         m,
         name="x",
-        description=(
-            "x-coordinate of lower-left corner of square (=fx(t('1')))"
-        ),
+        description=("x-coordinate of lower-left corner of square (=fx(t('1')))"),
     )
     y = Variable(
         m,
         name="y",
-        description=(
-            "y-coordinate of lower-left corner of square (=fy(t('1')))"
-        ),
+        description=("y-coordinate of lower-left corner of square (=fy(t('1')))"),
     )
     a = Variable(
         m,
         name="a",
         type="Positive",
         description=(
-            "horizontal distance between lower-left and lower-right corner of"
-            " square"
+            "horizontal distance between lower-left and lower-right corner of square"
         ),
     )
     b = Variable(
@@ -800,8 +781,7 @@ def test_dnlp_inscribedsquare(data):
         name="b",
         type="Positive",
         description=(
-            "vertical distance between lower-left and lower-right corner of"
-            " square"
+            "vertical distance between lower-left and lower-right corner of square"
         ),
     )
 
@@ -1474,17 +1454,14 @@ def test_minlp_minlphix(data):
         )
         + Sum(
             [i, cu],
-            fchx * ycu[i, cu]
-            + (vchx / htc) * (qcu[i, cu] / (lmtd[i] + 1 - ycol[i])),
+            fchx * ycu[i, cu] + (vchx / htc) * (qcu[i, cu] / (lmtd[i] + 1 - ycol[i])),
         )
         + Sum(
             [hu, j],
-            fchx * yhu[hu, j]
-            + (vchx / htc) * (qhu[hu, j] / (thu[hu] - tr[j])),
+            fchx * yhu[hu, j] + (vchx / htc) * (qhu[hu, j] / (thu[hu] - tr[j])),
         )
     ) + beta * (
-        Sum([i, cu], costcw * qcu[i, cu])
-        + Sum([hu, j], costhu[hu] * qhu[hu, j])
+        Sum([i, cu], costcw * qcu[i, cu]) + Sum([hu, j], costhu[hu] * qhu[hu, j])
     )
 
     # limit the denominator in the second line of the objective away from zero
@@ -1505,15 +1482,11 @@ def test_minlp_minlphix(data):
 
     artrex2[i] = s3[i] + s4[i] + sl2[i] <= u * (1 - ycol[i])
 
-    material[m2] = Sum(pm[i, m2], spltfrc[i, m2] * f[i]) == Sum(
-        fm[i, m2], f[i]
-    )
+    material[m2] = Sum(pm[i, m2], spltfrc[i, m2] * f[i]) == Sum(fm[i, m2], f[i])
 
     feed[...] = Sum(zlead[i], f[i]) == totflow
 
-    duty[i] = (
-        qc[i] == (kf[i, "a"] + kf[i, "b"] * (tc[i] - tcmin[i])) + s3[i] - s4[i]
-    )
+    duty[i] = qc[i] == (kf[i, "a"] + kf[i, "b"] * (tc[i] - tcmin[i])) + s3[i] - s4[i]
 
     rebcon[zcr[i, j]] = qr[j] == qc[i]
 
@@ -1568,9 +1541,7 @@ def test_minlp_minlphix(data):
             zcrhx[i, j],
             yhx[i, j]
             + Sum(
-                Domain(ip, jp).where[
-                    (Ord(ip) == Ord(j)) & (Ord(jp) == Ord(i))
-                ],
+                Domain(ip, jp).where[(Ord(ip) == Ord(j)) & (Ord(jp) == Ord(i))],
                 yhx[ip, jp],
             ),
         )
@@ -1617,9 +1588,7 @@ def test_minlp_minlphix(data):
         objective = float(lines[-1].split("//")[0].split(" ")[-3])
         assert math.isclose(objective, 316.692694176485, rel_tol=1e-4)
 
-    reference_path = os.path.join(
-        "tests", "integration", "gms_references", "skip.gms"
-    )
+    reference_path = os.path.join("tests", "integration", "gms_references", "skip.gms")
     with open(os.path.join("tmp", "to_gams", "skip.gms")) as file1:
         content1 = [
             line
@@ -1650,9 +1619,7 @@ def test_qcp_EDsensitivity(data):
 
     eq1 = Sum(
         gen,
-        data[gen, "a"] * P[gen] * P[gen]
-        + data[gen, "b"] * P[gen]
-        + data[gen, "c"],
+        data[gen, "a"] * P[gen] * P[gen] + data[gen, "b"] * P[gen] + data[gen, "c"],
     )
 
     eq2 = Equation(m, name="eq2", type="regular")
@@ -1671,9 +1638,9 @@ def test_qcp_EDsensitivity(data):
     )
 
     for idx, cc in enumerate(counter.toList()):
-        load[...] = Sum(gen, data[gen, "Pmin"]) + (
-            (idx) / (Card(counter) - 1)
-        ) * Sum(gen, data[gen, "Pmax"] - data[gen, "Pmin"])
+        load[...] = Sum(gen, data[gen, "Pmin"]) + ((idx) / (Card(counter) - 1)) * Sum(
+            gen, data[gen, "Pmax"] - data[gen, "Pmin"]
+        )
         ECD.solve()
         repGen[cc, gen] = P.l[gen]
         report[cc, "OF"] = ECD.objective_value
@@ -1701,9 +1668,7 @@ def test_qcp_EDsensitivity(data):
         print(f"{objective=}")
         assert objective.startswith("911044.09")
 
-    reference_path = os.path.join(
-        "tests", "integration", "gms_references", "ECD.gms"
-    )
+    reference_path = os.path.join("tests", "integration", "gms_references", "ECD.gms")
     with open(os.path.join("tmp", "to_gams", "ECD.gms")) as file1:
         content1 = [
             line
@@ -1756,9 +1721,7 @@ def test_set_attributes(data):
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert float(objective) == 1
 
-    reference_path = os.path.join(
-        "tests", "integration", "gms_references", "attr.gms"
-    )
+    reference_path = os.path.join("tests", "integration", "gms_references", "attr.gms")
     with open(os.path.join("tmp", "to_gams", "attr.gms")) as file1:
         content1 = [
             line
@@ -1797,9 +1760,7 @@ def test_math_op(data):
     tmp_path = os.path.join("tmp", "to_gams")
     m.toGams(tmp_path)
 
-    reference_path = os.path.join(
-        "tests", "integration", "gms_references", "math.gms"
-    )
+    reference_path = os.path.join("tests", "integration", "gms_references", "math.gms")
     with open(os.path.join("tmp", "to_gams", "math.gms")) as file1:
         content1 = [
             line

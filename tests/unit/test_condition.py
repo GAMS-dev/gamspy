@@ -92,10 +92,7 @@ def test_condition_on_expression(data):
     # Condition
     muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
 
-    assert (
-        muf.getAssignment()
-        == "muf(i,j) = (2.48 + 0.0084 * rd(i,j)) $ (rd(i,j));"
-    )
+    assert muf.getAssignment() == "muf(i,j) = (2.48 + 0.0084 * rd(i,j)) $ (rd(i,j));"
 
 
 def test_condition_on_number(data):
@@ -131,8 +128,7 @@ def test_condition_on_number(data):
     defopLS[o, p].where[sumc[o, p] <= 0.5] = op[o, p] == 1
 
     assert (
-        defopLS.getDefinition()
-        == "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;"
+        defopLS.getDefinition() == "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;"
     )
 
     muf = Parameter(
@@ -179,8 +175,7 @@ def test_condition_on_number(data):
     )
 
     Util_gap[t] = Number(1).where[
-        gamspy_math.Round(Util_lic[t], 10)
-        != gamspy_math.Round(Util_lic2[t], 10)
+        gamspy_math.Round(Util_lic[t], 10) != gamspy_math.Round(Util_lic2[t], 10)
     ]
 
     assert (
@@ -318,8 +313,7 @@ def test_condition_on_equation(data):
     defopLS = Equation(m, name="defopLS", domain=[o, p])
     defopLS[o, p] = op[o, p] == Number(1).where[sumc[o, p] >= 0.5]
     assert (
-        defopLS.getDefinition()
-        == "defopLS(o,p) .. op(o,p) =e= 1 $ (sumc(o,p) >= 0.5);"
+        defopLS.getDefinition() == "defopLS(o,p) .. op(o,p) =e= 1 $ (sumc(o,p) >= 0.5);"
     )
 
     k = Set(m, "k", domain=[p])
@@ -410,9 +404,7 @@ def test_variable_discovery_in_implicit_equation(data):
         domain=[i, t],
         description="Stock balance equation",
     )
-    stock[i, t].where[Ord(t) > 1] = (
-        Z[i, t.lag(1)] + X[i, t] - Z[i, t] == d[i, t]
-    )
+    stock[i, t].where[Ord(t) > 1] = Z[i, t.lag(1)] + X[i, t] - Z[i, t] == d[i, t]
 
     clsp = Model(
         m,

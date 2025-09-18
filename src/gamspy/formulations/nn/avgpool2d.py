@@ -79,9 +79,7 @@ class AvgPool2d:
         subset2 = gp.Set(
             self.container,
             domain=[H_out, W_out, H_in, W_in],
-            name=utils._generate_name(
-                "s", self._name_prefix, "in_out_matching_2"
-            ),
+            name=utils._generate_name("s", self._name_prefix, "in_out_matching_2"),
         )
 
         subset2[H_out, W_out, H_in, W_in] = gp.Sum(
@@ -168,9 +166,7 @@ class AvgPool2d:
             raise ValidationError("Expected a boolean for propagate_bounds")
 
         if len(input.domain) != 4:
-            raise ValidationError(
-                f"expected 4D input (got {len(input.domain)}D input)"
-            )
+            raise ValidationError(f"expected 4D input (got {len(input.domain)}D input)")
 
         N, C_in, H_in, W_in = input.domain
 
@@ -196,24 +192,16 @@ class AvgPool2d:
         )
 
         # expr must have domain N, C, H_out, W_out
-        top_index = (
-            (self.stride[0] * (gp.Ord(H_out) - 1)) - self.padding[0] + 1
-        )
-        left_index = (
-            (self.stride[1] * (gp.Ord(W_out) - 1)) - self.padding[1] + 1
-        )
+        top_index = (self.stride[0] * (gp.Ord(H_out) - 1)) - self.padding[0] + 1
+        left_index = (self.stride[1] * (gp.Ord(W_out) - 1)) - self.padding[1] + 1
         coeff = 1 / (self.kernel_size[0] * self.kernel_size[1])
 
         Hf, Wf = gp.math._generate_dims(self.container, self.kernel_size)
-        Hf, Wf, H_in, W_in = utils._next_domains(
-            [Hf, Wf, H_in, W_in], out_var.domain
-        )
+        Hf, Wf, H_in, W_in = utils._next_domains([Hf, Wf, H_in, W_in], out_var.domain)
 
         subset = gp.Set(
             self.container,
-            name=utils._generate_name(
-                "s", self._name_prefix, "in_out_matching_1"
-            ),
+            name=utils._generate_name("s", self._name_prefix, "in_out_matching_1"),
             domain=[H_out, W_out, Hf, Wf, H_in, W_in],
         )
         subset[

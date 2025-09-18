@@ -72,9 +72,7 @@ def main():
 
     tot = Variable(m, "tot", description="total queens in each army")
 
-    eq1 = Equation(
-        m, "eq1", domain=[i, j, ii, jj], description="keep armies at peace"
-    )
+    eq1 = Equation(m, "eq1", domain=[i, j, ii, jj], description="keep armies at peace")
     eq1[M[i, j, ii, jj]] = b[i, j] + w[ii, jj] <= 1
     _ = Equation(
         m,
@@ -104,9 +102,7 @@ def main():
     def queen_pos(var: Variable):
         res_dict = var.toDict()
         return [
-            (int(coord[0]), int(coord[1]))
-            for coord, v in res_dict.items()
-            if v > 0
+            (int(coord[0]), int(coord[1])) for coord, v in res_dict.items() if v > 0
         ]
 
     bpos, wpos = queen_pos(b), queen_pos(w)

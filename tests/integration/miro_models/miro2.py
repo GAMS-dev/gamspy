@@ -237,12 +237,8 @@ def main():
         description="1 if we ship from i to j, otherwise 0",
     )
 
-    minship = Equation(
-        m, name="minship", domain=[i, j], description="minimum shipment"
-    )
-    maxship = Equation(
-        m, name="maxship", domain=[i, j], description="maimum shipment"
-    )
+    minship = Equation(m, name="minship", domain=[i, j], description="minimum shipment")
+    maxship = Equation(m, name="maxship", domain=[i, j], description="maimum shipment")
 
     minship[i, j] = x[i, j] >= min_s * ship[i, j]
     maxship[i, j] = x[i, j] <= big_m * ship[i, j]

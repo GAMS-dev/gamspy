@@ -72,16 +72,7 @@ def test_domain_checking_config_performance():
     a = gp.Parameter(m, domain=i)
     start = time.time()
     for idx in range(999):
-        _ = (
-            a[idx]
-            + a[idx]
-            + a[idx]
-            + a[idx]
-            + a[idx]
-            + a[idx]
-            + a[idx]
-            + a[idx]
-        )
+        _ = a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx]
 
     timing_with_validation = time.time() - start
 
@@ -91,16 +82,7 @@ def test_domain_checking_config_performance():
     a = gp.Parameter(m, domain=i)
     start = time.time()
     for idx in range(999):
-        _ = (
-            a[idx]
-            + a[idx]
-            + a[idx]
-            + a[idx]
-            + a[idx]
-            + a[idx]
-            + a[idx]
-            + a[idx]
-        )
+        _ = a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx]
     timing_without_validation = time.time() - start
     gp.set_options({"DOMAIN_VALIDATION": 1})
 
@@ -152,9 +134,7 @@ def teardown():
 @pytest.mark.doc
 def test_docs():
     api_files = [
-        file
-        for file in glob.glob("src/**", recursive=True)
-        if file.endswith(".py")
+        file for file in glob.glob("src/**", recursive=True) if file.endswith(".py")
     ]
 
     for file in api_files:

@@ -9,12 +9,11 @@ import subprocess
 import sys
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import urlencode
+from typing import ClassVar
 
 import pytest
-import urllib3
+import requests
 
-import gamspy.utils as utils
 from gamspy import Container, Set
 
 pytestmark = pytest.mark.cli
@@ -29,9 +28,7 @@ user_dir = os.path.expanduser("~")
 if platform.system() == "Linux":
     DEFAULT_DIR = os.path.join(user_dir, ".local", "share", "GAMSPy")
 elif platform.system() == "Darwin":
-    DEFAULT_DIR = os.path.join(
-        user_dir, "Library", "Application Support", "GAMSPy"
-    )
+    DEFAULT_DIR = os.path.join(user_dir, "Library", "Application Support", "GAMSPy")
 elif platform.system() == "Windows":
     DEFAULT_DIR = os.path.join(user_dir, "Documents", "GAMSPy")
 
@@ -537,16 +534,14 @@ def test_gdx_diff_with_ids():
 
 
 def test_gdx_diff_with_skipids():
-    result = run_cli(
-        ["diff", DUMMY_GDX, DUMMY_GDX2, "--skipid", "a", "--skipid", "b"]
-    )
+    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--skipid", "a", "--skipid", "b"])
     assert result.returncode == 0
 
 
 class TunnelingProxy(BaseHTTPRequestHandler):
     # Class attribute to store the paths of CONNECT requests.
     # This will be used by the test to verify the proxy was used.
-    handled_connect_requests: list[str] = []
+    handled_connect_requests: ClassVar[list[str]] = []
 
     def do_CONNECT(self):
         """Handle CONNECT requests to set up the tunnel."""
@@ -620,18 +615,14 @@ def proxy_server():
 )
 def test_https_proxy(proxy_server):
     proxy_url, proxy_handler = proxy_server
-    encoded_args = urlencode({"access_token": os.environ["LOCAL_LICENSE"]})
+    params = {"access_token": os.environ["LOCAL_LICENSE"]}
 
     os.environ["HTTPS_PROXY"] = proxy_url
-    http = utils._make_http()
-    assert isinstance(http, urllib3.ProxyManager)
 
     # Make a request to the target server, which should go through the proxy.
     try:
-        request = http.request(
-            "GET", f"https://license.gams.com/license-type?{encoded_args}"
-        )
-        assert request.status == 200
+        request = requests.get("https://license.gams.com/license-type", params=params)
+        request.raise_for_status()
     finally:
         del os.environ["HTTPS_PROXY"]
 

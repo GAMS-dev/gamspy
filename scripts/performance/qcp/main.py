@@ -76,14 +76,10 @@ def solve_facility_gamspy(G, F, time_limit=0):
         assmt[...] = gp.Sum(facs, z[grid, grid2, facs]) == 1
 
         quadrhs = gp.Equation(domain=[grid, grid2, facs])
-        quadrhs[...] = s[grid, grid2, facs] == d + M * (
-            1 - z[grid, grid2, facs]
-        )
+        quadrhs[...] = s[grid, grid2, facs] == d + M * (1 - z[grid, grid2, facs])
 
         quaddistk1 = gp.Equation(domain=[grid, grid2, facs])
-        quaddistk1[...] = (
-            r[grid, grid2, facs, "1"] == (1 * grid.val) / G - y[facs, "1"]
-        )
+        quaddistk1[...] = r[grid, grid2, facs, "1"] == (1 * grid.val) / G - y[facs, "1"]
 
         quaddistk2 = gp.Equation(domain=[grid, grid2, facs])
         quaddistk2[...] = (

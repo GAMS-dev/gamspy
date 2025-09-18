@@ -273,12 +273,8 @@ def main():
     s.lo["Res_2", "Dec"] = 300
 
     # EQUATIONS #
-    R_no = Equation(
-        m, name="R_no", type="regular", domain=[n, t], description="Node"
-    )
-    R_ns = Equation(
-        m, name="R_ns", type="regular", domain=[n, t], description="Source"
-    )
+    R_no = Equation(m, name="R_no", type="regular", domain=[n, t], description="Node")
+    R_ns = Equation(m, name="R_ns", type="regular", domain=[n, t], description="Source")
     R_nr = Equation(
         m,
         name="R_nr",
@@ -293,9 +289,7 @@ def main():
         domain=[n, t],
         description="Reservoirs node",
     )
-    R_nn = Equation(
-        m, name="R_nn", type="regular", domain=[n, t], description="Node"
-    )
+    R_nn = Equation(m, name="R_nn", type="regular", domain=[n, t], description="Node")
 
     R_no[n, t].where[nn[n]] = r[n, t] == q[n, t]
 

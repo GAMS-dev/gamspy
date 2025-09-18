@@ -111,12 +111,8 @@ class GradientBoosting:
                 return ensemble
             else:
                 try:
-                    sklearn_boosting = importlib.import_module(
-                        "sklearn.ensemble"
-                    )
-                    if isinstance(
-                        ensemble, sklearn_boosting.GradientBoostingRegressor
-                    ):
+                    sklearn_boosting = importlib.import_module("sklearn.ensemble")
+                    if isinstance(ensemble, sklearn_boosting.GradientBoostingRegressor):
                         if not hasattr(ensemble, "estimators_"):
                             raise ValidationError(
                                 f"{ensemble} must be a trained/fitted instance of >sklearn.ensemble.GradientBoostingRegressor<."
@@ -164,16 +160,14 @@ class GradientBoosting:
         gb_out_list: list[gp.Variable] = []
         gb_eqn_list: list[gp.Equation] = []
 
-        set_records_total: dict[
-            Set | Alias | Parameter | Variable | Equation, Any
-        ] = {}
+        set_records_total: dict[Set | Alias | Parameter | Variable | Equation, Any] = {}
 
         results = (
             regression_tree._yield_call(input, M)
             for regression_tree in self._list_of_trees
         )
 
-        zipped_results = zip(*results)
+        zipped_results = zip(*results, strict=False)
         dt_outs = next(zipped_results)
         gb_out_list.extend(dt_outs)
 
@@ -203,9 +197,7 @@ class GradientBoosting:
         )
 
         self.container._synch_with_gams(gams_to_gamspy=True)
-        gb_eqn[...] = (
-            self._bias + self._learning_rate * sum(gb_out_list) == out
-        )
+        gb_eqn[...] = self._bias + self._learning_rate * sum(gb_out_list) == out
         gb_eqn_list.append(gb_eqn)
 
         return out, gb_eqn_list

@@ -187,9 +187,7 @@ class Equation(gt.Equation, Symbol):
         definition_domain: list | None = None,
     ):
         if container is not None and not isinstance(container, gp.Container):
-            raise TypeError(
-                f"Container must of type `Container` but found {container}"
-            )
+            raise TypeError(f"Container must of type `Container` but found {container}")
 
         if name is None:
             return object.__new__(cls)
@@ -265,10 +263,7 @@ class Equation(gt.Equation, Symbol):
                     f" `{type.casefold()}`"
                 )
 
-            if any(
-                d1 != d2
-                for d1, d2 in itertools.zip_longest(self._domain, domain)
-            ):
+            if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
                     " domains are equal"
@@ -304,9 +299,7 @@ class Equation(gt.Equation, Symbol):
                         (os.getpid(), threading.get_native_id())
                     ]
                 except KeyError as e:
-                    raise ValidationError(
-                        "Equation requires a container."
-                    ) from e
+                    raise ValidationError("Equation requires a container.") from e
             assert container is not None
 
             type = cast_type(type)
@@ -409,7 +402,7 @@ class Equation(gt.Equation, Symbol):
             self,
             name=self.name,
             type=self.type,
-            domain=domain,  # type: ignore  # noqa: E501
+            domain=domain,  # type: ignore
         )
 
     def __setitem__(
@@ -594,7 +587,7 @@ class Equation(gt.Equation, Symbol):
                 break  # pragma: no cover
 
     @property
-    def l(self):  # noqa: E741, E743
+    def l(self):
         """
         Level
 
@@ -984,7 +977,7 @@ class Equation(gt.Equation, Symbol):
                     )
 
                 matches = 0
-                for user_filter, set in zip(filters, sets):
+                for user_filter, set in zip(filters, sets, strict=False):
                     if set in user_filter or user_filter == []:
                         matches += 1
 
@@ -1068,7 +1061,7 @@ class Equation(gt.Equation, Symbol):
         """
         Main convenience method to set standard pandas.DataFrame formatted
         records. If uels_on_axes=True setRecords will assume that all domain
-        information is contained in the axes of the pandas object – data will be
+        information is contained in the axes of the pandas object. Data will be
         flattened (if necessary).
 
         Parameters
@@ -1276,8 +1269,7 @@ def cast_type(type: str | EquationType) -> str:
             "boolean",
         ):
             raise ValueError(
-                "Allowed equation types:"
-                f" {EquationType.values()} but found {type}."
+                f"Allowed equation types: {EquationType.values()} but found {type}."
             )
 
         # assign eq by default

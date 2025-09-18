@@ -69,9 +69,7 @@ def main():
         records=[[1, 0.2], [2, 0.3]],
         description="efficiency",
     )
-    pt = Parameter(
-        cont, name="pt", domain=[i, t], description="probability of type"
-    )
+    pt = Parameter(cont, name="pt", domain=[i, t], description="probability of type")
     p = Parameter(
         cont,
         name="p",
@@ -82,18 +80,14 @@ def main():
     icweight = Parameter(
         cont, name="icweight", domain=i, description="weight in ic constraints"
     )
-    ru = Parameter(
-        cont, name="ru", records=0, description="reservation utility"
-    )
+    ru = Parameter(cont, name="ru", records=0, description="reservation utility")
 
     pt[i, t] = gams_math.uniform(0, 1)
     pt[i, t] = pt[i, t] / Sum(j, pt[j, t])
     pt[i, t] = p[i]
 
     # Variable
-    x = Variable(
-        cont, name="x", domain=i, type="Positive", description="quality"
-    )
+    x = Variable(cont, name="x", domain=i, type="Positive", description="quality")
     b = Variable(
         cont,
         name="b",
@@ -101,17 +95,11 @@ def main():
         type="Positive",
         description="maker's revenue",
     )
-    w = Variable(
-        cont, name="w", domain=i, type="Positive", description="price"
-    )
+    w = Variable(cont, name="w", domain=i, type="Positive", description="price")
 
     # Equation
-    rev = Equation(
-        cont, name="rev", domain=i, description="maker's revenue function"
-    )
-    pc = Equation(
-        cont, name="pc", domain=i, description="participation constraint"
-    )
+    rev = Equation(cont, name="rev", domain=i, description="maker's revenue function")
+    pc = Equation(cont, name="pc", domain=i, description="participation constraint")
     ic = Equation(
         cont,
         name="ic",
@@ -130,9 +118,7 @@ def main():
         domain=i,
         description="incentive compatibility constraint",
     )
-    mn = Equation(
-        cont, name="mn", domain=i, description="monotonicity constraint"
-    )
+    mn = Equation(cont, name="mn", domain=i, description="monotonicity constraint")
 
     # maker's utility function
     obj = Sum(i, p[i] * (b[i] - w[i]))
