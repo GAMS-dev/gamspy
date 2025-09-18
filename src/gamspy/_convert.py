@@ -4,7 +4,7 @@ import logging
 import os
 import subprocess
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 import gamspy._symbols as syms
 import gamspy.utils as utils
@@ -12,7 +12,7 @@ from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy.exceptions import LatexException, ValidationError
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeAlias
+    from typing import TypeAlias
 
     from gamspy import (
         Alias,
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
         Variable,
     )
 
-    SymbolType: TypeAlias = Union[Alias, Set, Parameter, Variable, Equation]
+    SymbolType: TypeAlias = Alias | Set | Parameter | Variable | Equation
 
 logger = logging.getLogger("CONVERTER")
 logger.setLevel(logging.INFO)
@@ -347,9 +347,7 @@ def get_convert_solver_options(
         extra_options = options.model_dump(exclude_none=True)
         for key, value in extra_options.items():
             name = OPTION_RENAME_MAP.get(key, key)
-            solver_options[name] = (
-                int(value) if isinstance(value, bool) else value
-            )
+            solver_options[name] = int(value) if isinstance(value, bool) else value
 
     return solver_options
 
@@ -405,9 +403,7 @@ class GamsConverter:
                 else:
                     for equation in key:
                         assert equation._definition is not None
-                        definitions.append(
-                            equation._definition.getDeclaration()
-                        )
+                        definitions.append(equation._definition.getDeclaration())
 
         return definitions
 
@@ -433,9 +429,7 @@ class GamsConverter:
         self.container.write(self.gdx_path, symbols)
 
         # 1. Declarations
-        declarations = [
-            self.container[name].getDeclaration() for name in symbols
-        ]
+        declarations = [self.container[name].getDeclaration() for name in symbols]
 
         if self.model.external_module is not None:
             em_name = self.model._external_module
@@ -456,12 +450,8 @@ class GamsConverter:
         # 4. Model attribute options
         options_strs = []
         if self.options is not None:
-            self.options._export(
-                os.path.join(self.path, f"{self.model.name}.pf")
-            )
-            for key, value in self.options.model_dump(
-                exclude_none=True
-            ).items():
+            self.options._export(os.path.join(self.path, f"{self.model.name}.pf"))
+            for key, value in self.options.model_dump(exclude_none=True).items():
                 if key in MODEL_ATTR_OPTION_MAP:
                     if isinstance(value, bool):
                         value = int(value)
@@ -489,9 +479,7 @@ class GamsConverter:
         with open(self.gms_path, "w", encoding="utf-8") as file:
             file.write(gams_string)
 
-        logger.info(
-            f"GAMS (.gms) file has been generated under {self.gms_path}"
-        )
+        logger.info(f"GAMS (.gms) file has been generated under {self.gms_path}")
 
 
 TABLE_HEADER = """\\begin{tabularx}{\\textwidth}{| l | l | X |}
@@ -521,9 +509,7 @@ class LatexConverter:
                     ):
                         symbols.append(elem.name)
 
-        self.symbols = sorted(
-            symbols, key=list(self.container.data.keys()).index
-        )
+        self.symbols = sorted(symbols, key=list(self.container.data.keys()).index)
 
         for name in self.model._autogen_symbols:
             if name in self.symbols:
@@ -580,9 +566,7 @@ class LatexConverter:
         latex_strs.append(self.footer)
 
         latex_str = "\n".join(latex_strs)
-        with open(
-            self.tex_path, "w", encoding="utf-8"
-        ) as file:  # Write the TEX file
+        with open(self.tex_path, "w", encoding="utf-8") as file:  # Write the TEX file
             file.write(latex_str)
 
         logger.info(
@@ -604,9 +588,7 @@ class LatexConverter:
             text=True,
         )
         if process.returncode:
-            raise LatexException(
-                f"Could not generate pdf file: {process.stderr}"
-            )
+            raise LatexException(f"Could not generate pdf file: {process.stderr}")
 
     def get_table(self, symbol_type) -> str:
         table = [TABLE_HEADER]
@@ -616,15 +598,10 @@ class LatexConverter:
             if isinstance(symbol, symbol_type):
                 summary = symbol.summary
                 domain_str = ",".join(summary["domain"])
-                if (
-                    isinstance(symbol, syms.Variable)
-                    and self.model._limited_variables
-                ):
+                if isinstance(symbol, syms.Variable) and self.model._limited_variables:
                     for elem in self.model._limited_variables:
                         if elem.name == symbol.name:
-                            domain_str = utils._get_domain_str(elem.domain)[
-                                1:-1
-                            ]
+                            domain_str = utils._get_domain_str(elem.domain)[1:-1]
 
                 row = f"{summary['name']} & {domain_str} & {summary['description']}\\\\"
                 row = row.replace("_", "\\_")
@@ -672,13 +649,9 @@ class LatexConverter:
                     symbol.domain_names
                 )
             elif symbol.type == "positive":
-                constraint += "\\geq 0 ~ \\forall " + ",".join(
-                    symbol.domain_names
-                )
+                constraint += "\\geq 0 ~ \\forall " + ",".join(symbol.domain_names)
             elif symbol.type == "negative":
-                constraint += "\\leq 0 ~ \\forall " + ",".join(
-                    symbol.domain_names
-                )
+                constraint += "\\leq 0 ~ \\forall " + ",".join(symbol.domain_names)
             elif symbol.type == "sos1":
                 constraint += "SOS1"
             elif symbol.type == "sos2":

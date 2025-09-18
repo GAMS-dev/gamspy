@@ -77,10 +77,7 @@ class Conv1d:
         out_channels: int,
         kernel_size: int | tuple[int],
         stride: int | tuple[int] = 1,
-        padding: int
-        | tuple[int]
-        | tuple[int, int]
-        | Literal["same", "valid"] = 0,
+        padding: int | tuple[int] | tuple[int, int] | Literal["same", "valid"] = 0,
         name_prefix: str | None = None,
         *,
         bias: bool = True,
@@ -113,9 +110,7 @@ class Conv1d:
                 )
 
             if padding == "same" and stride != 1:
-                raise ValidationError(
-                    "'same' padding can only be used with stride=1"
-                )
+                raise ValidationError("'same' padding can only be used with stride=1")
 
             padding = (0, 0) if padding == "valid" else "same"
 
@@ -170,9 +165,7 @@ class Conv1d:
                 self.container,
                 domain=dim(output.shape),
                 records=out_bounds_array,
-                name=utils._generate_name(
-                    "p", self._name_prefix, "output_bounds"
-                ),
+                name=utils._generate_name("p", self._name_prefix, "output_bounds"),
             )
             output.lo[...] = out_bounds
             output.up[...] = out_bounds
@@ -223,12 +216,8 @@ class Conv1d:
         #
         # This ensures that the windows are processed in a left-to-right order.
 
-        windows_lower = sliding_window_view(
-            input_lower, (batch, in_channels, w_k)
-        )
-        windows_upper = sliding_window_view(
-            input_upper, (batch, in_channels, w_k)
-        )
+        windows_lower = sliding_window_view(input_lower, (batch, in_channels, w_k))
+        windows_upper = sliding_window_view(input_upper, (batch, in_channels, w_k))
 
         windows_lower = windows_lower[:, :, ::stride_x, :, :, :].transpose(
             0, 1, 3, 2, 4, 5
@@ -247,12 +236,8 @@ class Conv1d:
         neg_weight = np.minimum(weight, 0)
 
         # Initialize output bounds
-        output_lower = np.zeros(
-            (batch, out_channels, w_out), dtype=out_arr_dtype
-        )
-        output_upper = np.zeros(
-            (batch, out_channels, w_out), dtype=out_arr_dtype
-        )
+        output_lower = np.zeros((batch, out_channels, w_out), dtype=out_arr_dtype)
+        output_upper = np.zeros((batch, out_channels, w_out), dtype=out_arr_dtype)
 
         if bias is None:
             bias = np.zeros(out_channels)
@@ -349,9 +334,7 @@ class Conv1d:
 
         self._state = 2
 
-    def load_weights(
-        self, weight: np.ndarray, bias: np.ndarray | None = None
-    ) -> None:
+    def load_weights(self, weight: np.ndarray, bias: np.ndarray | None = None) -> None:
         """
         Mark Conv1d as parameter and load weights from NumPy arrays.
         After this is called `make_variable` cannot be called. Use this
@@ -412,9 +395,7 @@ class Conv1d:
                 )
 
             if bias.shape != (self.out_channels,):
-                raise ValidationError(
-                    f"bias expected to be ({self.out_channels},)"
-                )
+                raise ValidationError(f"bias expected to be ({self.out_channels},)")
 
         if self.weight is None:
             self.weight = gp.Parameter(
@@ -474,9 +455,7 @@ class Conv1d:
             )
 
         if len(input.domain) != 3:
-            raise ValidationError(
-                f"expected 3D input (got {len(input.domain)}D input)"
-            )
+            raise ValidationError(f"expected 3D input (got {len(input.domain)}D input)")
 
         N, C_in, W_in = input.domain
 
@@ -485,9 +464,7 @@ class Conv1d:
 
         w_in = len(W_in)
 
-        w_out = utils._calc_w(
-            self.padding, self.kernel_size, self.stride, w_in
-        )
+        w_out = utils._calc_w(self.padding, self.kernel_size, self.stride, w_in)
 
         out = gp.Variable(
             self.container,
@@ -543,11 +520,7 @@ class Conv1d:
 
         # If propagate_bounds is True, weight is a parameter and input is a variable,
         # we will propagate the bounds of the input to the output
-        if (
-            propagate_bounds
-            and self._state == 1
-            and isinstance(input, gp.Variable)
-        ):
+        if propagate_bounds and self._state == 1 and isinstance(input, gp.Variable):
             self._propagate_bounds(
                 input,
                 out,

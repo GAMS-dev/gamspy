@@ -61,9 +61,9 @@ def mtz_formulation(m: gp.Container) -> gp.Equation:
         domain=[n1, n2],
     )
 
-    eq_mtz[i, j].where[
-        ij[i, j] & ~i.sameAs(start_point) & ~j.sameAs(start_point)
-    ] = P[i] - P[j] + 1 <= gp.Card(i) * (1 - X[i, j])
+    eq_mtz[i, j].where[ij[i, j] & ~i.sameAs(start_point) & ~j.sameAs(start_point)] = P[
+        i
+    ] - P[j] + 1 <= gp.Card(i) * (1 - X[i, j])
 
     return [eq_mtz]
 
@@ -104,9 +104,7 @@ def explicit_dfj_formulation(m: gp.Container) -> gp.Equation:
     ] = True
 
     subset_size[s] = gp.Sum(i.where[sn[s, i]], gp.Number(1))
-    filtered_set[s].where[(subset_size[s] > 1) & (subset_size[s] < len(i))] = (
-        True
-    )
+    filtered_set[s].where[(subset_size[s] > 1) & (subset_size[s] < len(i))] = True
 
     eq_dfj = gp.Equation(
         m,
@@ -128,10 +126,7 @@ def explicit_dfj_formulation(m: gp.Container) -> gp.Equation:
 def find_illegal_subtour(sol: pd.DataFrame, start_point):
     G = nx.DiGraph()
     G.add_edges_from(
-        [
-            (i, j)
-            for i, j in sol[["n1", "n2"]].itertuples(index=False, name=None)
-        ]
+        [(i, j) for i, j in sol[["n1", "n2"]].itertuples(index=False, name=None)]
     )
     components = list(nx.strongly_connected_components(G))
 
@@ -180,9 +175,7 @@ def tspModel(
     )
 
     objective_function = gp.Equation(m, name="tsp_objective_function")
-    objective_function[...] = (
-        gp.Sum(ij[i, j], distance[i, j] * X[i, j]) == total_cost
-    )
+    objective_function[...] = gp.Sum(ij[i, j], distance[i, j] * X[i, j]) == total_cost
 
     eq_enter_once = gp.Equation(m, "eq_enter_once", domain=[n1])
     eq_enter_once[j] = gp.Sum(i.where[ij[i, j]], X[i, j]) == 1
@@ -334,9 +327,7 @@ def main():
         id_vars="row.city", var_name="to_city", value_name="distance"
     )
 
-    sol_list, tsp = tspModel(
-        nodes_recs=city_df, distance_recs=distance_df, **options
-    )
+    sol_list, tsp = tspModel(nodes_recs=city_df, distance_recs=distance_df, **options)
     sol, _ = sol_list
 
     path = [start := sol.n1.iloc[0]]

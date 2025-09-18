@@ -8,12 +8,12 @@ from gamspy.formulations.nn.mpool2d import _MPool2d
 from gamspy.formulations.nn.torch_sequential import TorchSequential
 
 __all__ = [
+    "AvgPool2d",
     "Conv1d",
     "Conv2d",
-    "_MPool2d",
+    "Linear",
     "MaxPool2d",
     "MinPool2d",
-    "AvgPool2d",
-    "Linear",
     "TorchSequential",
+    "_MPool2d",
 ]

@@ -55,9 +55,7 @@ def main():
         m,
         name="load",
         domain=t,
-        records=pd.DataFrame(
-            [["period-1", 400], ["period-2", 900], ["period-3", 700]]
-        ),
+        records=pd.DataFrame([["period-1", 400], ["period-2", 900], ["period-3", 700]]),
         description="system load",
     )
     initlev = Parameter(
@@ -82,9 +80,7 @@ def main():
         domain=t,
         description="generation level of oil based unit",
     )
-    others = Variable(
-        m, name="others", domain=t, description="other generation"
-    )
+    others = Variable(m, name="others", domain=t, description="other generation")
     oil = Variable(
         m, name="oil", domain=t, type="Positive", description="oil consumption"
     )

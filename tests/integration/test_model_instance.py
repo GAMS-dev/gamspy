@@ -145,7 +145,7 @@ def test_parameter_change(data):
     ]
 
     transport.freeze(modifiables=[bmult])
-    for b_value, result in zip(bmult_list, results):
+    for b_value, result in zip(bmult_list, results, strict=False):
         bmult[...] = b_value
         summary = transport.solve(solver="conopt")
         assert summary["Solver"].item() == "conopt4"
@@ -184,7 +184,7 @@ def test_parameter_change(data):
         ModelStatus.InfeasibleGlobal,
         ModelStatus.InfeasibleGlobal,
     )
-    for b_value, status in zip(bmult_list, expected_status):
+    for b_value, status in zip(bmult_list, expected_status, strict=False):
         bmult.setRecords(b_value)
         transport2.solve(solver="conopt")
         assert transport2.status == status
@@ -193,9 +193,7 @@ def test_parameter_change(data):
     # different solver
     summary = transport.solve(solver="cplex")
     assert summary["Solver"].item() == "cplex"
-    assert math.isclose(
-        transport.objective_value, 199.77750000000003, rel_tol=1e-6
-    )
+    assert math.isclose(transport.objective_value, 199.77750000000003, rel_tol=1e-6)
 
     # invalid solver
     with pytest.raises(ValidationError):
@@ -268,9 +266,7 @@ def test_fx(data):
     IADJ = Variable(
         m,
         name="IADJ",
-        description=(
-            "investment scaling factor (for fixed capital formation)"
-        ),
+        description=("investment scaling factor (for fixed capital formation)"),
         type="Free",
     )
     MPSADJ = Variable(
@@ -590,9 +586,7 @@ def test_modifiable_in_condition(data):
     maxw[w] = Sum(t.where[td[w, t]], x[w, t]) <= wa[w]
     minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
 
-    probe[t] = prob[t] == 1 - Product(
-        w.where[x.l[w, t]], (1 - td[w, t]) ** x[w, t]
-    )
+    probe[t] = prob[t] == 1 - Product(w.where[x.l[w, t]], (1 - td[w, t]) ** x[w, t])
 
     _ = Sum(t, mv[t] * prob[t])
     etd = Sum(
@@ -657,9 +651,7 @@ def test_modifiable_with_domain(data):
     mymodel.freeze(modifiables=[b])
     b[i] = gp.math.uniform(1, 10)
     mymodel.solve()
-    assert math.isclose(
-        mymodel.objective_value, 32.36124699832342, rel_tol=1e-6
-    )
+    assert math.isclose(mymodel.objective_value, 32.36124699832342, rel_tol=1e-6)
 
 
 @pytest.mark.skipif(
@@ -681,9 +673,7 @@ def test_license():
     e1 = Equation(m, "e1", domain=i)
 
     e1[i] = p2 * v1[i] * p[i] >= z
-    model = Model(
-        m, name="my_model", equations=[e1], sense=Sense.MIN, objective=z
-    )
+    model = Model(m, name="my_model", equations=[e1], sense=Sense.MIN, objective=z)
     with pytest.raises(GamspyException):
         model.freeze(modifiables=[p2])
 
@@ -714,9 +704,7 @@ def test_license():
     e1 = Equation(m, "e1", domain=i)
 
     e1[i] = p2 * v1[i] * p[i] >= z
-    model = Model(
-        m, name="my_model", equations=[e1], sense=Sense.MIN, objective=z
-    )
+    model = Model(m, name="my_model", equations=[e1], sense=Sense.MIN, objective=z)
 
     model.freeze(modifiables=[p2])
     model.solve()
@@ -931,10 +919,7 @@ def test_feasibility():
     b = gp.Parameter(m, "b", records=3)
     e = gp.Equation(m, "e", definition=a * x / gp.math.sqr(b) == 0)
     mi = gp.Model(m, "mi", equations=[e], problem="LP", sense="FEASIBILITY")
-    assert (
-        mi._generate_solve_string()
-        == "solve mi using LP MIN mi_objective_variable"
-    )
+    assert mi._generate_solve_string() == "solve mi using LP MIN mi_objective_variable"
     mi.freeze([a, b])
     mi.solve(solver="cplex")
     mi.unfreeze()
@@ -942,7 +927,7 @@ def test_feasibility():
 
 def test_output_propagation(data):
     _, canning_plants, markets, capacities, demands, distances = data
-    file = tempfile.NamedTemporaryFile("w", delete=False)  # noqa
+    file = tempfile.NamedTemporaryFile("w", delete=False)
     m = Container(output=file)
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
@@ -991,9 +976,7 @@ def test_output_propagation(data):
     m.close()
 
 
-@pytest.mark.skipif(
-    platform.system() != "Linux", reason="Test only for linux."
-)
+@pytest.mark.skipif(platform.system() != "Linux", reason="Test only for linux.")
 def test_interrupt():
     directory = str(pathlib.Path(__file__).parent.resolve())
     process = subprocess.Popen(

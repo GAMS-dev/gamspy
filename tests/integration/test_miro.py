@@ -255,9 +255,7 @@ def test_miro():
                 "_scalarsve_out": {
                     "alias": "Output Variable/Equation Scalars",
                     "symnames": ["z"],
-                    "symtext": [
-                        "total transportation costs in thousands of dollars"
-                    ],
+                    "symtext": ["total transportation costs in thousands of dollars"],
                     "symtypes": ["variable"],
                     "headers": {
                         "scalar": {
@@ -426,9 +424,7 @@ def test_contract():
                 "_scalars_out": {
                     "alias": "Output Scalars",
                     "symnames": ["total_cost"],
-                    "symtext": [
-                        "total transportation costs in thousands of dollars"
-                    ],
+                    "symtext": ["total transportation costs in thousands of dollars"],
                     "symtypes": ["parameter"],
                     "headers": {
                         "scalar": {
@@ -680,9 +676,7 @@ def test_miro_encoder(data):
             "_scalarsve_out": {
                 "alias": "Output Variable/Equation Scalars",
                 "symnames": ["z"],
-                "symtext": [
-                    "total transportation costs in thousands of dollars"
-                ],
+                "symtext": ["total transportation costs in thousands of dollars"],
                 "symtypes": ["variable"],
                 "headers": {
                     "scalar": {

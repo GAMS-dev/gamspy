@@ -56,7 +56,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         )
 
     @property
-    def l(self):  # noqa: E741,E743
+    def l(self):
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.l.name,
@@ -123,9 +123,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     @scale.setter
     def scale(self, value: int | float | Expression):
         if self.parent.type in ("integer", "binary"):
-            raise ValidationError(
-                "Scales cannot be applied to discrete variables."
-            )
+            raise ValidationError("Scales cannot be applied to discrete variables.")
 
         # b[t].scale = 30 -> b.scale[t] = 30
         self.parent.scale[self.domain] = value
@@ -156,9 +154,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     @prior.setter
     def prior(self, value: int | float | Expression):
         if self.parent.type not in ("integer", "binary"):
-            raise ValidationError(
-                "Priorities can only be used on discrete variables."
-            )
+            raise ValidationError("Priorities can only be used on discrete variables.")
 
         # b[t].prior = 30 -> b.prior[t] = 30
         self.parent.prior[self.domain] = value

@@ -146,13 +146,9 @@ def test_conv_load_weights(data):
     w2 = np.random.rand(2, 1, 3)
     b2 = np.random.rand(2)
 
-    for layer, (w, b) in zip([Conv1d, Conv2d], [(w2, b2), (w1, b1)]):
-        conv1 = layer(
-            m, in_channels=1, out_channels=2, kernel_size=3, bias=True
-        )
-        conv2 = layer(
-            m, in_channels=1, out_channels=2, kernel_size=3, bias=False
-        )
+    for layer, (w, b) in zip([Conv1d, Conv2d], [(w2, b2), (w1, b1)], strict=False):
+        conv1 = layer(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
+        conv2 = layer(m, in_channels=1, out_channels=2, kernel_size=3, bias=False)
         # needs bias as well
         pytest.raises(ValidationError, conv1.load_weights, w)
 
@@ -180,14 +176,14 @@ def test_conv_load_weights(data):
 @pytest.mark.unit
 def test_conv_same_indices(data):
     m, *_ = data
-    for layer, l in zip([Conv1d, Conv2d], [3, 4]):
+    for layer, l in zip([Conv1d, Conv2d], [3, 4], strict=False):
         w1 = np.random.rand(*[4] * l)
         b1 = np.random.rand(4)
         conv1 = layer(m, 4, 4, 4, bias=True, name_prefix="conv1")
         conv1.load_weights(w1, b1)
 
         inp = gp.Variable(m, domain=dim([4] * l))
-        out, eqs = conv1(inp)
+        _out, _eqs = conv1(inp)
 
         output_var_found = False
         weight_par_found = False
@@ -207,7 +203,7 @@ def test_conv_same_indices(data):
         # this produces an output that is 4 x 4 too
         conv2 = layer(m, 4, 4, 4, padding=3, stride=2, bias=True)
         conv2.load_weights(w1, b1)
-        out2, eqs2 = conv2(inp)
+        _out2, _eqs2 = conv2(inp)
         conv2.load_weights(w1, b1)
 
 
@@ -215,11 +211,9 @@ def test_conv_same_indices(data):
 def test_conv_reloading_weights(data):
     m, *_ = data
     for layer, random_shape in zip(
-        [Conv1d, Conv2d], [(2, 1, 3), (2, 1, 3, 3)]
+        [Conv1d, Conv2d], [(2, 1, 3), (2, 1, 3, 3)], strict=False
     ):
-        conv1 = layer(
-            m, in_channels=1, out_channels=2, kernel_size=3, bias=True
-        )
+        conv1 = layer(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
         w1 = np.random.rand(*random_shape)
         b1 = np.random.rand(2)
         conv1.load_weights(w1, b1)
@@ -236,7 +230,7 @@ def test_conv_reloading_weights(data):
 def test_conv_make_variable(data):
     m, *_ = data
     for layer, shape_len, padding_type in zip(
-        [Conv1d, Conv2d], [3, 4], ["valid", "same"]
+        [Conv1d, Conv2d], [3, 4], ["valid", "same"], strict=False
     ):
         conv1 = layer(
             m,
@@ -269,16 +263,14 @@ def test_conv_make_variable(data):
         assert isinstance(conv1.weight, gp.Variable)
         assert isinstance(conv1.bias, gp.Variable)
         inp = gp.Variable(m, domain=dim([4, 1, 4, 4][:shape_len]))
-        out, eqs = conv1(inp)
+        _out, _eqs = conv1(inp)
 
 
 @pytest.mark.unit
 def test_conv_load_weight_make_var(data):
     m, *_ = data
-    for layer, shape_len in zip([Conv1d, Conv2d], [3, 4]):
-        conv1 = layer(
-            m, in_channels=1, out_channels=2, kernel_size=3, bias=True
-        )
+    for layer, shape_len in zip([Conv1d, Conv2d], [3, 4], strict=False):
+        conv1 = layer(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
         w1 = np.random.rand(*[2, 1, 3, 3][:shape_len])
         b1 = np.random.rand(2)
         conv1.load_weights(w1, b1)
@@ -290,7 +282,7 @@ def test_conv_load_weight_make_var(data):
 @pytest.mark.unit
 def test_conv_call_bad(data):
     m, *_ = data
-    for layer, shape_len in zip([Conv1d, Conv2d], [3, 4]):
+    for layer, shape_len in zip([Conv1d, Conv2d], [3, 4], strict=False):
         conv1 = layer(m, 4, 4, 4, bias=True)
         inp = gp.Variable(m, domain=dim([4, 4, 4, 4][:shape_len]))
         # requires initialization before
@@ -315,7 +307,7 @@ def test_conv_call_bad(data):
 
 @pytest.mark.unit
 def test_conv2d_simple_correctness(data):
-    m, w1, b1, inp, par_input, *_ = data
+    m, w1, b1, _inp, par_input, *_ = data
     conv1 = Conv2d(m, 1, 2, 3)
     conv1.load_weights(w1, b1)
     out, eqs = conv1(par_input)
@@ -423,7 +415,7 @@ def test_conv1d_simple_correctness(data):
 @pytest.mark.unit
 def test_conv_with_same_padding_odd_kernel(data):
     # when kernel size is odd
-    m, w1, b1, inp, par_input, ii, par_input_2 = data
+    m, _w1, _b1, _inp, par_input, _ii, par_input_2 = data
 
     keep_same_1 = np.array(
         [
@@ -440,7 +432,10 @@ def test_conv_with_same_padding_odd_kernel(data):
     keep_same_2 = np.array([[[0, 1, 0]]])
 
     for layer, weight, inp_par in zip(
-        [Conv1d, Conv2d], [keep_same_2, keep_same_1], [par_input_2, par_input]
+        [Conv1d, Conv2d],
+        [keep_same_2, keep_same_1],
+        [par_input_2, par_input],
+        strict=False,
     ):
         conv1 = layer(m, 1, 1, 3, padding="same", bias=True)
         add_one = np.array([1])
@@ -463,7 +458,7 @@ def test_conv_with_same_padding_odd_kernel(data):
 @pytest.mark.unit
 def test_conv2d_with_same_padding_even_kernel(data):
     # when kernel size is even
-    m, w1, b1, inp, par_input, *_ = data
+    m, _w1, _b1, inp, par_input, *_ = data
 
     conv1 = Conv2d(m, 1, 1, 2, padding="same", bias=False)
     keep_same = np.array(
@@ -495,7 +490,7 @@ def test_conv2d_with_same_padding_even_kernel(data):
 @pytest.mark.unit
 def test_conv2d_with_same_padding_even_kernel_2(data):
     # when kernel size is odd
-    m, w1, b1, inp, par_input, *_ = data
+    m, w1, b1, _inp, par_input, *_ = data
 
     conv1 = Conv2d(m, 1, 2, 2, padding="same", bias=True)
     conv1.load_weights(w1[:, :, :2, :2], b1)
@@ -750,7 +745,7 @@ def test_conv2d_with_same_padding_even_kernel_2(data):
 
 @pytest.mark.unit
 def test_conv2d_with_padding(data):
-    m, w1, b1, inp, par_input, *_ = data
+    m, w1, b1, _inp, par_input, *_ = data
 
     conv_with_valid_padding = Conv2d(m, 1, 2, 3, padding="valid")
     assert conv_with_valid_padding.padding == (0, 0, 0, 0)
@@ -1091,7 +1086,7 @@ def test_conv2d_with_padding(data):
 
 @pytest.mark.unit
 def test_conv2d_with_stride(data):
-    m, w1, b1, inp, par_input, *_ = data
+    m, w1, b1, _inp, par_input, *_ = data
     conv1 = Conv2d(m, 1, 2, 3, stride=(2, 1))
     conv1.load_weights(w1, b1)
     out, eqs = conv1(par_input)
@@ -1146,7 +1141,7 @@ def test_conv2d_with_stride(data):
 
 @pytest.mark.unit
 def test_conv2d_with_padding_and_stride(data):
-    m, w1, b1, inp, par_input, *_ = data
+    m, w1, b1, _inp, par_input, *_ = data
     conv1 = Conv2d(m, 1, 2, 3, stride=(2, 1), padding=(1, 2))
     conv1.load_weights(w1, b1)
     out, eqs = conv1(par_input)
@@ -1408,7 +1403,7 @@ def test_conv2d_propagate_bounds_general(data):
 def test_conv_propagate_bounds_zero_weights_unbounded_input(data):
     m, *_ = data
 
-    for layer, shape_len in zip([Conv1d, Conv2d], [3, 4]):
+    for layer, shape_len in zip([Conv1d, Conv2d], [3, 4], strict=False):
         w1 = np.zeros((3, 1, 2, 2)[:shape_len])
         b1 = np.random.rand(3)
 
@@ -1461,7 +1456,7 @@ def test_conv_propagate_bounds_zero_weights_unbounded_input(data):
 def test_conv_propagate_bounds_input_bounded_by_zero(data):
     m, *_ = data
 
-    for layer, shape_len in zip([Conv1d, Conv2d], [3, 4]):
+    for layer, shape_len in zip([Conv1d, Conv2d], [3, 4], strict=False):
         w1 = np.random.rand(*(3, 1, 2, 2)[:shape_len])
         b1 = np.random.rand(3)
 
@@ -1518,9 +1513,7 @@ def test_conv_propagate_bounds_input_bounded_by_zero(data):
 def test_conv2d_propagate_bounds_complex_bounds(data):
     m, *_ = data
 
-    w1 = np.array(
-        [[[[3, -3], [-2, 0]], [[0, -2], [-1, -3]], [[2, 0], [-4, 1]]]]
-    )
+    w1 = np.array([[[[3, -3], [-2, 0]], [[0, -2], [-1, -3]], [[2, 0], [-4, 1]]]])
 
     b1 = np.array([3])
 
@@ -1809,7 +1802,7 @@ def test_conv2d_propagate_bounds_with_same_padding_even_input(data):
 
 @pytest.mark.unit
 def test_max_pooling(data):
-    m, w1, b1, inp, par_input, ii, *_ = data
+    m, _w1, _b1, _inp, par_input, _ii, *_ = data
 
     mp1 = MaxPool2d(m, 2)
     mp2 = MaxPool2d(m, (2, 1))
@@ -1958,7 +1951,7 @@ def test_max_pooling(data):
 
 @pytest.mark.unit
 def test_pooling_with_bounds(data):
-    m, w1, b1, inp, par_input, ii, *_ = data
+    m, _w1, _b1, inp, par_input, _ii, *_ = data
     mp1 = MinPool2d(m, 2)
     mp2 = MaxPool2d(m, 2)
     ap1 = AvgPool2d(m, 2)
@@ -2109,38 +2102,22 @@ def test_mpooling_with_complex_bounds(data):
     assert out5.records is None
     assert out6.records is None
 
-    assert np.allclose(
-        np.array(out3.records.lower).reshape(out3.shape), exp_lb_par
-    )
-    assert np.allclose(
-        np.array(out3.records.upper).reshape(out3.shape), exp_ub_par
-    )
+    assert np.allclose(np.array(out3.records.lower).reshape(out3.shape), exp_lb_par)
+    assert np.allclose(np.array(out3.records.upper).reshape(out3.shape), exp_ub_par)
 
-    assert np.allclose(
-        np.array(out4.records.lower).reshape(out4.shape), exp_lb_par
-    )
-    assert np.allclose(
-        np.array(out4.records.upper).reshape(out4.shape), exp_ub_par
-    )
+    assert np.allclose(np.array(out4.records.lower).reshape(out4.shape), exp_lb_par)
+    assert np.allclose(np.array(out4.records.upper).reshape(out4.shape), exp_ub_par)
 
-    assert np.allclose(
-        np.array(out7.records.lower).reshape(out7.shape), exp_lb_var
-    )
-    assert np.allclose(
-        np.array(out7.records.upper).reshape(out7.shape), exp_ub_var
-    )
+    assert np.allclose(np.array(out7.records.lower).reshape(out7.shape), exp_lb_var)
+    assert np.allclose(np.array(out7.records.upper).reshape(out7.shape), exp_ub_var)
 
-    assert np.allclose(
-        np.array(out8.records.lower).reshape(out8.shape), exp_lb_var
-    )
-    assert np.allclose(
-        np.array(out8.records.upper).reshape(out8.shape), exp_ub_var
-    )
+    assert np.allclose(np.array(out8.records.lower).reshape(out8.shape), exp_lb_var)
+    assert np.allclose(np.array(out8.records.upper).reshape(out8.shape), exp_ub_var)
 
 
 @pytest.mark.unit
 def test_min_pooling(data):
-    m, w1, b1, inp, par_input, ii, *_ = data
+    m, _w1, _b1, _inp, par_input, _ii, *_ = data
     mp1 = MinPool2d(m, 2)
     mp2 = MinPool2d(m, (2, 1))
     mp3 = MinPool2d(m, 3, stride=(1, 1))
@@ -2287,7 +2264,7 @@ def test_min_pooling(data):
 
 @pytest.mark.unit
 def test_avg_pooling(data):
-    m, w1, b1, inp, par_input, ii, *_ = data
+    m, _w1, _b1, _inp, par_input, _ii, *_ = data
     ap1 = AvgPool2d(m, 2, name_prefix="avgpool1")
     ap2 = AvgPool2d(m, (2, 1))
     ap3 = AvgPool2d(m, 3, stride=(1, 1))
@@ -2452,7 +2429,7 @@ def test_avg_pooling(data):
 
 @pytest.mark.unit
 def test_avg_pool_bounds_neg(data):
-    m, w1, b1, _, par_input, ii, *_ = data
+    m, _w1, _b1, _, _par_input, _ii, *_ = data
     inp = np.array(
         [
             [
@@ -2528,7 +2505,7 @@ def test_avg_pool_bounds_neg(data):
 
 @pytest.mark.unit
 def test_pool_call_bad(data):
-    m, w1, b1, inp, par_input, ii, *_ = data
+    m, _w1, _b1, _inp, _par_input, _ii, *_ = data
     avgpool1 = AvgPool2d(m, (2, 2))
     minpool1 = MinPool2d(m, (2, 2))
     maxpool1 = MaxPool2d(m, (2, 2))
@@ -2552,7 +2529,7 @@ def test_pool_call_bad(data):
 
 @pytest.mark.unit
 def test_flatten_bad(data):
-    m, w1, b1, inp, par_input, ii, *_ = data
+    m, w1, _b1, _inp, par_input, _ii, *_ = data
     # should only work for parameter or variable
     pytest.raises(ValidationError, flatten_dims, w1, [2, 3])
     pytest.raises(ValidationError, flatten_dims, par_input, [0])  # single dim
@@ -2560,9 +2537,7 @@ def test_flatten_bad(data):
     pytest.raises(ValidationError, flatten_dims, par_input, ["a", "b"])
     pytest.raises(ValidationError, flatten_dims, par_input, [-1, 0])
     pytest.raises(ValidationError, flatten_dims, par_input, [5, 6])
-    pytest.raises(
-        ValidationError, flatten_dims, par_input, [1, 3]
-    )  # non consecutive
+    pytest.raises(ValidationError, flatten_dims, par_input, [1, 3])  # non consecutive
     pytest.raises(
         ValidationError,
         flatten_dims,
@@ -2580,7 +2555,7 @@ def test_flatten_bad(data):
 
 @pytest.mark.unit
 def test_flatten_par(data):
-    m, w1, b1, inp, par_input, ii, *_ = data
+    m, _w1, _b1, inp, par_input, ii, *_ = data
     # 3x1x5x5 -> 3x25
     par_flattened, eqs = flatten_dims(par_input, [1, 2, 3])
     out_data = par_flattened.toDense()
@@ -2625,7 +2600,7 @@ def test_flatten_par_with_no_records(data):
 
 @pytest.mark.requires_license
 def test_flatten_var_copied_domain(data):
-    m, w1, b1, inp, par_input, ii, *_ = data
+    m, _w1, _b1, _inp, _par_input, ii, *_ = data
 
     a1 = gp.Alias(m, "ii2", alias_with=ii)
     a2 = gp.Alias(m, "ii3", alias_with=ii)
@@ -2695,12 +2670,8 @@ def test_flatten_2d_propagate_bounds(data):
 
     model.solve()
 
-    assert np.allclose(
-        np.array(var_3.records.lower.tolist()), bound_lo.reshape(2000)
-    )
-    assert np.allclose(
-        np.array(var_3.records.upper.tolist()), bound_up.reshape(2000)
-    )
+    assert np.allclose(np.array(var_3.records.lower.tolist()), bound_lo.reshape(2000))
+    assert np.allclose(np.array(var_3.records.upper.tolist()), bound_up.reshape(2000))
 
 
 @pytest.mark.requires_license
@@ -2932,10 +2903,10 @@ def test_linear_same_indices(data):
     b1 = np.random.rand(4)
     lin1.load_weights(w1, b1)
     inp = gp.Variable(m, domain=dim([4, 4, 4, 4]))
-    out, eqs = lin1(inp)
+    _out, _eqs = lin1(inp)
     lin2 = Linear(m, 4, 4, bias=True)
     lin2.load_weights(w1, b1)
-    out2, eqs2 = lin2(inp)
+    _out2, _eqs2 = lin2(inp)
 
 
 @pytest.mark.unit
@@ -2972,7 +2943,7 @@ def test_linear_make_variable(data):
     assert isinstance(lin1.weight, gp.Variable)
     assert isinstance(lin1.bias, gp.Variable)
     inp = gp.Variable(m, domain=dim([4, 1, 2, 4]))
-    out, eqs = lin1(inp)
+    out, _eqs = lin1(inp)
     assert len(out.domain) == 4
     assert len(set([x.name for x in out.domain])) == 4
 
@@ -3050,9 +3021,7 @@ def test_linear_bias_domain_conflict(data):
     lin1.load_weights(w1, b1)
 
     input_data = np.random.rand(30, 20, 30, 20)
-    par_input = gp.Parameter(
-        m, domain=dim([30, 20, 30, 20]), records=input_data
-    )
+    par_input = gp.Parameter(m, domain=dim([30, 20, 30, 20]), records=input_data)
     out1, eqs1 = lin1(par_input)
 
     last_domain = out1.domain[-1].name
@@ -3116,12 +3085,8 @@ def test_linear_propagate_bounded_input(data):
     expected_ub = np.dot(xub, wpos.T) + np.dot(xlb, wneg.T) + b1
 
     # check if the bounds are propagated correctly
-    assert np.allclose(
-        np.array(out1.lo.records.lower).reshape(2, 3), expected_lb
-    )
-    assert np.allclose(
-        np.array(out1.up.records.upper).reshape(2, 3), expected_ub
-    )
+    assert np.allclose(np.array(out1.lo.records.lower).reshape(2, 3), expected_lb)
+    assert np.allclose(np.array(out1.up.records.upper).reshape(2, 3), expected_ub)
 
     output_var_found = False
     weight_par_found = False
@@ -3250,9 +3215,7 @@ def test_linear_propagate_zero_bounds(data):
     )
 
 
-@pytest.mark.skipif(
-    TORCH_AVAILABLE is False, reason="Requires PyTorch installed"
-)
+@pytest.mark.skipif(TORCH_AVAILABLE is False, reason="Requires PyTorch installed")
 @pytest.mark.unit
 def test_sequential_layer(data):
     m, *_ = data
@@ -3272,7 +3235,7 @@ def test_sequential_layer(data):
     x = gp.Variable(m, domain=dim([10, 3, 32, 32]))
 
     seq_formulation = gp.formulations.TorchSequential(m, model)
-    y, eqs = seq_formulation(x)
+    y, _eqs = seq_formulation(x)
     expected_shape = (10, 4, 5, 5)
     assert tuple(len(d) for d in y.domain) == expected_shape
 
@@ -3285,14 +3248,12 @@ def test_sequential_layer(data):
     x2 = gp.Variable(m, domain=dim([10, 1, 8]))
 
     seq_formulation_2 = gp.formulations.TorchSequential(m, model2)
-    y2, eqs2 = seq_formulation_2(x2)
+    y2, _eqs2 = seq_formulation_2(x2)
     expected_shape = (10, 1, 6)
     assert tuple(len(d) for d in y2.domain) == expected_shape
 
 
-@pytest.mark.skipif(
-    TORCH_AVAILABLE is False, reason="Requires PyTorch installed"
-)
+@pytest.mark.skipif(TORCH_AVAILABLE is False, reason="Requires PyTorch installed")
 @pytest.mark.unit
 def test_sequential_layer_not_implemented(data):
     m, *_ = data
@@ -3320,18 +3281,14 @@ def test_sequential_layer_not_implemented(data):
     model = torch.nn.Sequential(torch.nn.MaxPool2d((2, 2), dilation=2))
     pytest.raises(ValidationError, TorchSequential, m, model)
 
-    model = torch.nn.Sequential(
-        torch.nn.MaxPool2d((2, 2), return_indices=True)
-    )
+    model = torch.nn.Sequential(torch.nn.MaxPool2d((2, 2), return_indices=True))
     pytest.raises(ValidationError, TorchSequential, m, model)
 
     model = torch.nn.Sequential(torch.nn.AvgPool2d((2, 2), ceil_mode=True))
     pytest.raises(ValidationError, TorchSequential, m, model)
 
 
-@pytest.mark.skipif(
-    TORCH_AVAILABLE is False, reason="Requires PyTorch installed"
-)
+@pytest.mark.skipif(TORCH_AVAILABLE is False, reason="Requires PyTorch installed")
 @pytest.mark.unit
 def test_sequential_layer_custom_layer(data):
     m, *_ = data
@@ -3351,9 +3308,7 @@ def test_sequential_layer_custom_layer(data):
     def hardswish_converter(m: gp.Container, layer):
         return hardswish
 
-    TorchSequential(
-        m, model, layer_converters={"Hardswish": hardswish_converter}
-    )
+    TorchSequential(m, model, layer_converters={"Hardswish": hardswish_converter})
 
     # or you can pick a different implementation
     model = torch.nn.Sequential(
@@ -3363,15 +3318,13 @@ def test_sequential_layer_custom_layer(data):
     def relu_converter(m: gp.Container, layer):
         return gp.math.activation.relu_with_complementarity_var
 
-    seq_form = TorchSequential(
-        m, model, layer_converters={"ReLU": relu_converter}
-    )
+    seq_form = TorchSequential(m, model, layer_converters={"ReLU": relu_converter})
 
     x = gp.Variable(m)
-    y, eqs = seq_form(x)
+    _, eqs = seq_form(x)
     assert len(eqs) == 2
 
     seq_form = TorchSequential(m, model)
     x = gp.Variable(m)
-    y, eqs = seq_form(x)
+    _y, eqs = seq_form(x)
     assert len(eqs) == 3

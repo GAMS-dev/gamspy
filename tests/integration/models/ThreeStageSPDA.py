@@ -84,9 +84,7 @@ def main():
         records=["io2", "po7", "po70", "io90"],
         description="Available assets",
     )
-    Time = Set(
-        m, name="Time", records=["t0", "t1", "t2"], description="Time steps"
-    )
+    Time = Set(m, name="Time", records=["t0", "t1", "t2"], description="Time steps")
 
     # ALIASES #
     l = Alias(m, name="l", alias_with=Scenarios)
@@ -138,9 +136,7 @@ def main():
         m,
         name="Output",
         domain=["*", i],
-        description=(
-            "Parameter used to save the optimal holdings for each model"
-        ),
+        description=("Parameter used to save the optimal holdings for each model"),
     )
     PropCost = Parameter(
         m, name="PropCost", description="Proportional transaction cost"
@@ -217,17 +213,14 @@ def main():
     AssetInventoryCon[t, i, l] = (
         buy[t, i, l].where[Ord(t) < Card(t)]
         + (Yield[i, t - 1, l] * hold[t - 1, i, l]).where[Ord(t) > 1]
-        == sell[t, i, l].where[Ord(t) > 1]
-        + hold[t, i, l].where[Ord(t) < Card(t)]
+        == sell[t, i, l].where[Ord(t) > 1] + hold[t, i, l].where[Ord(t) < Card(t)]
     )
 
     CashInventoryCon[t, l] = (
         Sum(i, sell[t, i, l] * (1 - PropCost)).where[Ord(t) > 1]
         + (CashYield[t - 1, l] * cash[t - 1, l]).where[Ord(t) > 1]
         + Number(100).where[Ord(t) == 1]
-        == Sum(i, buy[t, i, l]).where[Ord(t) < Card(t)]
-        + cash[t, l]
-        + Liability[t, l]
+        == Sum(i, buy[t, i, l]).where[Ord(t) < Card(t)] + cash[t, l] + Liability[t, l]
     )
 
     NonAnticConOne[i, l].where[Ord(l) < Card(l)] = (

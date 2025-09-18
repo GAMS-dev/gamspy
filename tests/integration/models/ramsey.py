@@ -42,9 +42,7 @@ def main():
     )
     tfirst = Set(m, name="tfirst", domain=t, description="first interval (t0)")
     tlast = Set(m, name="tlast", domain=t, description="last intervat [T]")
-    tnotlast = Set(
-        m, name="tnotlast", domain=t, description="all intervals but last"
-    )
+    tnotlast = Set(m, name="tnotlast", domain=t, description="all intervals but last")
 
     tfirst[t].where[Ord(t) == 1] = True
     tlast[t].where[Ord(t) == Card(t)] = True
@@ -60,31 +58,21 @@ def main():
         description="capital depreciation factor",
     )
     K0 = Parameter(m, name="K0", records=3.00, description="initial capital")
-    I0 = Parameter(
-        m, name="I0", records=0.07, description="initial investment"
-    )
-    C0 = Parameter(
-        m, name="C0", records=0.95, description="initial consumption"
-    )
+    I0 = Parameter(m, name="I0", records=0.07, description="initial investment")
+    C0 = Parameter(m, name="C0", records=0.95, description="initial consumption")
     L0 = Parameter(m, name="L0", records=1.00, description="initial labor")
-    b = Parameter(
-        m, name="b", records=0.25, description="Cobb Douglas coefficient"
-    )
+    b = Parameter(m, name="b", records=0.25, description="Cobb Douglas coefficient")
     a = Parameter(m, name="a", description="Cobb Douglas coefficient")
 
     # PARAMETERS #
-    L = Parameter(
-        m, name="L", domain=t, description="labor (production input)"
-    )
+    L = Parameter(m, name="L", domain=t, description="labor (production input)")
     beta = Parameter(
         m,
         name="beta",
         domain=t,
         description="weight factor for future utilities",
     )
-    tval = Parameter(
-        m, name="tval", domain=t, description="numerical value of t"
-    )
+    tval = Parameter(m, name="tval", domain=t, description="numerical value of t")
 
     tval[t] = Ord(t) - 1
 

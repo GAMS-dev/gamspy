@@ -71,9 +71,7 @@ def _propagate_bounds(x, out):
     # reshape bounds based on the output variable's shape
     # when bounds.records is None, it means the bounds are zeros
     nb_data = (
-        None
-        if bounds.records is None
-        else bounds.toDense().reshape((2,) + out.shape)
+        None if bounds.records is None else bounds.toDense().reshape((2,) + out.shape)
     )
 
     # set new domain for bounds
@@ -176,9 +174,7 @@ def flatten_dims(
             )
 
         if i > 0 and dims[i - 1] != d - 1:
-            raise ValidationError(
-                "Expected consecutive integers in the dim array"
-            )
+            raise ValidationError("Expected consecutive integers in the dim array")
 
     for domain in x.domain:
         if len(domain) == 0:

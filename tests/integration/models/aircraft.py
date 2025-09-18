@@ -50,9 +50,7 @@ def main():
         records=[f"route-{i}" for i in range(1, 6)],
         description="assigned and unassigned routes",
     )
-    h = Set(
-        m, name="h", records=list(range(1, 6)), description="demand states"
-    )
+    h = Set(m, name="h", records=list(range(1, 6)), description="demand states")
 
     # Alias
     hp = Alias(m, name="hp", alias_with=h)
@@ -193,12 +191,8 @@ def main():
         description="definition of bumped passengers",
     )
     ocd = Equation(m, name="ocd", description="operating cost definition")
-    bcd1 = Equation(
-        m, name="bcd1", description="bumping cost definition: version 1"
-    )
-    bcd2 = Equation(
-        m, name="bcd2", description="bumping cost definition: version 2"
-    )
+    bcd1 = Equation(m, name="bcd1", description="bumping cost definition: version 1")
+    bcd2 = Equation(m, name="bcd2", description="bumping cost definition: version 2")
 
     phi = oc + bc
     ab[i] = Sum(j, x[i, j]) <= aa[i]

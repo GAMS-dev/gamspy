@@ -44,29 +44,17 @@ class DecisionTreeStruct:
         or expects as input. Defaults to 0.
     """
 
-    children_left: np.ndarray = field(
-        default_factory=lambda: np.array([]), repr=False
-    )
-    children_right: np.ndarray = field(
-        default_factory=lambda: np.array([]), repr=False
-    )
-    feature: np.ndarray = field(
-        default_factory=lambda: np.array([]), repr=False
-    )
-    threshold: np.ndarray = field(
-        default_factory=lambda: np.array([]), repr=False
-    )
+    children_left: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
+    children_right: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
+    feature: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
+    threshold: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
     value: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
     capacity: int = 0
     n_features: int = 0
 
     def __repr__(self):
         def arr_info(arr):
-            return (
-                f"shape={arr.shape}, dtype={arr.dtype}"
-                if arr.size
-                else "empty"
-            )
+            return f"shape={arr.shape}, dtype={arr.dtype}" if arr.size else "empty"
 
         return (
             f"{self.__class__.__name__}("

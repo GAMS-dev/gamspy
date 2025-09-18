@@ -75,9 +75,7 @@ def update_release_notes(args: Namespace) -> None:
         file.write("".join(lines))
 
     # create a release note file for the new release
-    release_path = os.path.join(
-        "docs", "release", f"release_{args.new_version}.rst"
-    )
+    release_path = os.path.join("docs", "release", f"release_{args.new_version}.rst")
     process = subprocess.run(
         ["towncrier", "build", "--draft", "--version", args.new_version],
         capture_output=True,

@@ -38,9 +38,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         scalar_domains: list[tuple[int, Set]] | None = None,
         extension: str | None = None,
     ) -> None:
-        super().__init__(
-            parent, name, domain, parent_scalar_domains=scalar_domains
-        )
+        super().__init__(parent, name, domain, parent_scalar_domains=scalar_domains)
         self.extension = extension
 
     def __ge__(self, other) -> Expression:
@@ -69,9 +67,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
             return None
 
         if self.extension is not None:
-            raise ValidationError(
-                ".records is not allowed for lag/lead operations."
-            )
+            raise ValidationError(".records is not allowed for lag/lead operations.")
 
         temp_name = "is" + utils._get_unique_name()
         temp_param = syms.Set._constructor_bypass(
@@ -103,9 +99,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
                 if isinstance(elem, (syms.Set, syms.Alias, ImplicitSet)):
                     set_strs.append(elem.latexRepr())
                 elif isinstance(elem, str):
-                    set_strs.append(
-                        f"\\textquotesingle {elem} \\textquotesingle"
-                    )
+                    set_strs.append(f"\\textquotesingle {elem} \\textquotesingle")
 
             domain_str = "{" + ",".join(set_strs) + "}"
             representation = f"{representation}_{domain_str}"

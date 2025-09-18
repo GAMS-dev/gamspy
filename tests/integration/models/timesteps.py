@@ -102,9 +102,7 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
     # ----     50 Assignment sMinDown      5.819  5.819 SECS 26 MB  850713
     # ----     51 Assignment sMinDownFast  0.187  6.006 SECS 48 MB  850713
 
-    sMinDown[g, t1, t2] = (Ord(t1) >= Ord(t2)) & (
-        Ord(t2) > Ord(t1) - pMinDown[g, t1]
-    )
+    sMinDown[g, t1, t2] = (Ord(t1) >= Ord(t2)) & (Ord(t2) > Ord(t1) - pMinDown[g, t1])
     sMinDownFast[g, t1, t.lead(Ord(t1) - pMinDown[g, t1])].where[
         (tt[t]) & (Ord(t) <= pMinDown[g, t1])
     ] = True
@@ -130,9 +128,7 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
 
     eStartNaive[g, t1] = (
         Sum(
-            t2.where[
-                (Ord(t1) >= Ord(t2)) & (Ord(t2) > Ord(t1) - pMinDown[g, t1])
-            ],
+            t2.where[(Ord(t1) >= Ord(t2)) & (Ord(t2) > Ord(t1) - pMinDown[g, t1])],
             vStart[g, t2],
         )
         <= 1

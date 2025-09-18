@@ -129,9 +129,7 @@ def main():
     # PARAMETERS #
     Price = Parameter(m, name="Price", domain=i, description="Bond prices")
     Coupon = Parameter(m, name="Coupon", domain=i, description="Coupons")
-    Maturity = Parameter(
-        m, name="Maturity", domain=i, description="Maturities"
-    )
+    Maturity = Parameter(m, name="Maturity", domain=i, description="Maturities")
     Liability = Parameter(
         m, name="Liability", domain=t, description="Stream of liabilities"
     )
@@ -254,9 +252,7 @@ def main():
 
     # Simulation for different values of the initial budget
 
-    with open(
-        "HorizonPortfolios_new.csv", "w", encoding="UTF-8"
-    ) as HorizonHandle:
+    with open("HorizonPortfolios_new.csv", "w", encoding="UTF-8") as HorizonHandle:
         budget = 778985.948
         while budget <= 818985.948:
             Budget[...] = budget
@@ -265,9 +261,7 @@ def main():
             for ii in i.toList():
                 horizon_ret = round(HorizonRet.records.level[0], 2)
                 bond_mat = round(BondData.pivot().loc[ii, "Maturity"], 2)
-                coupon = Coupon.records[Coupon.records["i"] == ii].value.array[
-                    0
-                ]
+                coupon = Coupon.records[Coupon.records["i"] == ii].value.array[0]
                 purchased_price = round(
                     x.records[x.records["i"] == ii].level.array[0]
                     * Price.records[Price.records["i"] == ii].value.array[0],
@@ -282,9 +276,7 @@ def main():
             for tt in t.toList():
                 borrow_rec = borrow.records[borrow.records["t"] == tt]
                 borrow_rec = (
-                    round(borrow_rec.level.array[0], 3)
-                    if not borrow_rec.empty
-                    else 0
+                    round(borrow_rec.level.array[0], 3) if not borrow_rec.empty else 0
                 )
                 HorizonHandle.write(f'"{tt}",{borrow_rec}')
                 HorizonHandle.write("\n")

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
         Variable,
     )
 
-    SymbolType = Union[Alias, Set, Parameter, Variable, Equation]
+    SymbolType = Alias | Set | Parameter | Variable | Equation
 
 
 class Symbol:
@@ -105,7 +105,7 @@ class Symbol:
             forwardings = [forwardings] * self.dimension
 
         set_strs = []
-        for elem, forwarding in zip(self.domain, forwardings):
+        for elem, forwarding in zip(self.domain, forwardings, strict=False):
             if isinstance(elem, (gp.Set, gp.Alias, implicits.ImplicitSet)):
                 elem_str = elem.gamsRepr()
                 if forwarding:
@@ -153,9 +153,7 @@ class Symbol:
 
         """
         if not self.domain:
-            raise ValidationError(
-                "Sum operation is not possible on scalar symbols."
-            )
+            raise ValidationError("Sum operation is not possible on scalar symbols.")
 
         op_indices = indices if indices else self.domain
 
@@ -243,9 +241,7 @@ class Symbol:
 
         """
         if not self.domain:
-            raise ValidationError(
-                "Smin operation is not possible on scalar symbols."
-            )
+            raise ValidationError("Smin operation is not possible on scalar symbols.")
 
         op_indices = indices if indices else self.domain
 
@@ -288,9 +284,7 @@ class Symbol:
 
         """
         if not self.domain:
-            raise ValidationError(
-                "Smax operation is not possible on scalar symbols."
-            )
+            raise ValidationError("Smax operation is not possible on scalar symbols.")
 
         op_indices = indices if indices else self.domain
 
@@ -333,9 +327,7 @@ class Symbol:
 
         """
         if not self.domain:
-            raise ValidationError(
-                "Sand operation is not possible on scalar symbols."
-            )
+            raise ValidationError("Sand operation is not possible on scalar symbols.")
 
         op_indices = indices if indices else self.domain
 
@@ -378,9 +370,7 @@ class Symbol:
 
         """
         if not self.domain:
-            raise ValidationError(
-                "Sor operation is not possible on scalar symbols."
-            )
+            raise ValidationError("Sor operation is not possible on scalar symbols.")
 
         op_indices = indices if indices else self.domain
 

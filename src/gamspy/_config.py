@@ -34,9 +34,7 @@ def _set_default_options() -> None:
     configuration["SOLVER_VALIDATION"] = validate_solver
 
     # Solver option validation. Enabled by default.
-    validate_solver_options = int(
-        os.getenv("GAMSPY_SOLVER_OPTION_VALIDATION", 1)
-    )
+    validate_solver_options = int(os.getenv("GAMSPY_SOLVER_OPTION_VALIDATION", 1))
     configuration["SOLVER_OPTION_VALIDATION"] = validate_solver_options
 
     # Special value mapping

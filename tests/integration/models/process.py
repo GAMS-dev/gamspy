@@ -60,9 +60,7 @@ def main():
     dilute = Variable(
         m, name="dilute", type="positive", description="acid dilution factor"
     )
-    f4 = Variable(
-        m, name="f4", type="positive", description="f-4 performance number"
-    )
+    f4 = Variable(m, name="f4", type="positive", description="f-4 performance number")
 
     profit = Variable(m, name="profit")
     rangey = Variable(m, name="rangey")
@@ -71,37 +69,27 @@ def main():
     rangef = Variable(m, name="rangef")
 
     # Equations
-    yield1 = Equation(
-        m, name="yield1", description="alkylate yield definition"
-    )
+    yield1 = Equation(m, name="yield1", description="alkylate yield definition")
     rngyield = Equation(
         m, name="rngyield", description="ranged alkylate yield definition"
     )
-    makeup = Equation(
-        m, name="makeup", description="isobutane makeup definition"
-    )
+    makeup = Equation(m, name="makeup", description="isobutane makeup definition")
     sdef = Equation(m, name="sdef", description="acid strength definition")
     motor = Equation(m, name="motor", description="motor octane number")
-    rngmotor = Equation(
-        m, name="rngmotor", description="ranged motor octane number"
-    )
+    rngmotor = Equation(m, name="rngmotor", description="ranged motor octane number")
     drat = Equation(m, name="drat", description="isobutane to olefin ratio")
     ddil = Equation(m, name="ddil", description="dilution definition")
-    rngddil = Equation(
-        m, name="rngddil", description="ranged dilution definition"
-    )
+    rngddil = Equation(m, name="rngddil", description="ranged dilution definition")
     df4 = Equation(m, name="df4", description="f-4 definition")
     rngdf4 = Equation(m, name="rngdf4", description="ranged f-4 definition")
     dprofit = Equation(m, name="dprofit", description="profit definition")
 
-    yield1[...] = alkylate == olefin * (
-        1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio)
-    )
+    yield1[...] = alkylate == olefin * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio))
     makeup[...] = alkylate == olefin + isom - 0.22 * alkylate
     sdef[...] = acid == alkylate * dilute * strength / (98 - strength) / 1000
-    motor[...] = octane == 86.35 + 1.098 * ratio - 0.038 * sqr(
-        ratio
-    ) - 0.325 * (89 - strength)
+    motor[...] = octane == 86.35 + 1.098 * ratio - 0.038 * sqr(ratio) - 0.325 * (
+        89 - strength
+    )
     drat[...] = ratio == (isor + isom) / olefin
     ddil[...] = dilute == 35.82 - 0.222 * f4
     df4[...] = f4 == -133 + 3 * octane

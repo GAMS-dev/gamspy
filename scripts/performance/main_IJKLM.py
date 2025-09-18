@@ -17,12 +17,8 @@ from IJKLM.run_gamspy import run_gamspy
 
 
 ############## Experiment ##########################
-def run_experiment(
-    cardinality_of_i, cardinality_of_j, repeats, number, time_limit
-):
-    os.makedirs(
-        os.path.join(os.path.dirname(__file__), "IJKLM", "data"), exist_ok=True
-    )
+def run_experiment(cardinality_of_i, cardinality_of_j, repeats, number, time_limit):
+    os.makedirs(os.path.join(os.path.dirname(__file__), "IJKLM", "data"), exist_ok=True)
     os.makedirs(
         os.path.join(os.path.dirname(__file__), "IJKLM", "results"),
         exist_ok=True,

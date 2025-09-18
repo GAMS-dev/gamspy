@@ -44,21 +44,13 @@ def main():
     k = Alias(m, name="k", alias_with=nh)
 
     # Data
-    ca_0 = Parameter(
-        m, name="ca_0", records=1.0, description="initial value for ca"
-    )
-    cb_0 = Parameter(
-        m, name="cb_0", records=0.0, description="initial value for cb"
-    )
+    ca_0 = Parameter(m, name="ca_0", records=1.0, description="initial value for ca")
+    cb_0 = Parameter(m, name="cb_0", records=0.0, description="initial value for cb")
     h = Parameter(m, name="h", records=1)
 
     # Variable
-    ca = Variable(
-        m, name="ca", domain=nh, description="concentration of component A"
-    )
-    cb = Variable(
-        m, name="cb", domain=nh, description="concentration of component B"
-    )
+    ca = Variable(m, name="ca", domain=nh, description="concentration of component A")
+    cb = Variable(m, name="cb", domain=nh, description="concentration of component B")
     t = Variable(
         m,
         name="t",
@@ -81,12 +73,8 @@ def main():
 
     # Equation
     eobj = Equation(m, name="eobj", description="criterion definition")
-    state1 = Equation(
-        m, domain=nh, name="state1", description="state equation 1"
-    )
-    state2 = Equation(
-        m, domain=nh, name="state2", description="state equation 2"
-    )
+    state1 = Equation(m, domain=nh, name="state1", description="state equation 1")
+    state2 = Equation(m, domain=nh, name="state2", description="state equation 2")
     ek1 = Equation(m, domain=nh, name="ek1")
     ek2 = Equation(m, domain=nh, name="ek2")
 

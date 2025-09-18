@@ -411,13 +411,10 @@ def test_set_assignment():
 
     # Set Complement
     assert isinstance(~mpos[m, i], SetExpression)  # not ImplicitSet
-    assert isinstance(
-        ~(mpos[m, i] + hpos[m, i]), SetExpression
-    )  # not SetExpression
+    assert isinstance(~(mpos[m, i] + hpos[m, i]), SetExpression)  # not SetExpression
 
     mpos[m, i] = (
-        (Number(1).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))])
-        - hpos[m, i]
+        (Number(1).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))]) - hpos[m, i]
     )
     assert isinstance(mpos._assignment.right, SetExpression)
 
@@ -428,14 +425,12 @@ def test_set_assignment():
 
     with pytest.raises(ValidationError):
         mpos[m, i] = (
-            (Number(2).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))])
-            - hpos[m, i]
+            (Number(2).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))]) - hpos[m, i]
         )
 
     with pytest.raises(ValidationError):
         mpos[m, i] = (
-            hpos[m, i]
-            + Number(2).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))]
+            hpos[m, i] + Number(2).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))]
         )
 
     reb = Set(container, "reb")

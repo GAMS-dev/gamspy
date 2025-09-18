@@ -42,9 +42,7 @@ def _check_tuple_int(
     allow_zero=False,
 ) -> tuple[int, int]:
     if not isinstance(value, (int, tuple)):
-        raise ValidationError(
-            f"{name} must be an integer or a tuple of integer"
-        )
+        raise ValidationError(f"{name} must be an integer or a tuple of integer")
 
     if isinstance(value, int):
         value = (value, value)
@@ -65,9 +63,7 @@ def _check_tuple_int(
 
 def _check_padding(value: int | tuple[int, int]) -> tuple[int, int, int, int]:
     if not isinstance(value, (int, tuple)):
-        raise ValidationError(
-            "Padding must be an integer or a tuple of two integers"
-        )
+        raise ValidationError("Padding must be an integer or a tuple of two integers")
 
     if isinstance(value, int):
         padding = (value, value, value, value)
@@ -132,8 +128,7 @@ def _calc_w(
         return w_in
 
     w_out = math.floor(
-        1
-        + ((w_in + (padding[0] + padding[1]) - (kernel_size - 1) - 1) / stride)
+        1 + ((w_in + (padding[0] + padding[1]) - (kernel_size - 1) - 1) / stride)
     )
 
     return w_out
@@ -154,18 +149,10 @@ def _calc_hw(
         padding = (padding[0], padding[1], padding[0], padding[1])
 
     h_out = math.floor(
-        1
-        + (
-            (h_in + (padding[0] + padding[2]) - (kernel_size[0] - 1) - 1)
-            / stride[0]
-        )
+        1 + ((h_in + (padding[0] + padding[2]) - (kernel_size[0] - 1) - 1) / stride[0])
     )
     w_out = math.floor(
-        1
-        + (
-            (w_in + (padding[1] + padding[3]) - (kernel_size[1] - 1) - 1)
-            / stride[1]
-        )
+        1 + ((w_in + (padding[1] + padding[3]) - (kernel_size[1] - 1) - 1) / stride[1])
     )
 
     return h_out, w_out

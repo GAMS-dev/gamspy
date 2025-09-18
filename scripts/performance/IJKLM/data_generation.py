@@ -40,15 +40,11 @@ def create_variable_data(n, j, k):
 def fixed_data_to_tuples(JKL, KLM):
     jkl = [
         tuple(x)
-        for x in JKL.loc[JKL["value"] == 1][["j", "k", "l"]].to_dict("split")[
-            "data"
-        ]
+        for x in JKL.loc[JKL["value"] == 1][["j", "k", "l"]].to_dict("split")["data"]
     ]
     klm = [
         tuple(x)
-        for x in KLM.loc[KLM["value"] == 1][["k", "l", "m"]].to_dict("split")[
-            "data"
-        ]
+        for x in KLM.loc[KLM["value"] == 1][["k", "l", "m"]].to_dict("split")["data"]
     ]
     return jkl, klm
 
@@ -56,9 +52,7 @@ def fixed_data_to_tuples(JKL, KLM):
 def variable_data_to_tuples(IJK):
     ijk = [
         tuple(x)
-        for x in IJK.loc[IJK["value"] == 1][["i", "j", "k"]].to_dict("split")[
-            "data"
-        ]
+        for x in IJK.loc[IJK["value"] == 1][["i", "j", "k"]].to_dict("split")["data"]
     ]
     return ijk
 

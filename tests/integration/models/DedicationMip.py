@@ -131,9 +131,7 @@ def main():
     # PARAMETERS #
     Price = Parameter(m, name="Price", domain=i, description="Bond prices")
     Coupon = Parameter(m, name="Coupon", domain=i, description="Coupons")
-    Maturity = Parameter(
-        m, name="Maturity", domain=i, description="Maturities"
-    )
+    Maturity = Parameter(m, name="Maturity", domain=i, description="Maturities")
     Liability = Parameter(
         m, name="Liability", domain=t, description="Stream of liabilities"
     )
@@ -141,9 +139,7 @@ def main():
     F = Parameter(m, name="F", domain=[t, i], description="Cashflows")
 
     # Bond data. Prices, coupons and maturities from the Danish market
-    BondData = Parameter(
-        m, name="BondData", domain=[i, "*"], records=BondDataTable()
-    )
+    BondData = Parameter(m, name="BondData", domain=[i, "*"], records=BondDataTable())
 
     # Copy/transform data. Note division by 100 to get unit data, and
     # subtraction of "Now" from Maturity date (so consistent with tau):
@@ -252,14 +248,10 @@ def main():
 
     for tt, _ in t.records.itertuples(index=False):
         borrow_rec = borrow.records[borrow.records["t"] == tt]
-        borrow_rec = (
-            round(borrow_rec.level.array[0], 3) if not borrow_rec.empty else 0
-        )
+        borrow_rec = round(borrow_rec.level.array[0], 3) if not borrow_rec.empty else 0
         surplus_rec = surplus.records[surplus.records["t"] == tt]
         surplus_rec = (
-            round(surplus_rec.level.array[0], 3)
-            if not surplus_rec.empty
-            else 0
+            round(surplus_rec.level.array[0], 3) if not surplus_rec.empty else 0
         )
         output_csv += f'"{tt}",{borrow_rec},{surplus_rec}\n'
 
@@ -327,23 +319,17 @@ def main():
 
     for tt, _ in t.records.itertuples(index=False):
         borrow_rec = borrow.records[borrow.records["t"] == tt]
-        borrow_rec = (
-            round(borrow_rec.level.array[0], 3) if not borrow_rec.empty else 0
-        )
+        borrow_rec = round(borrow_rec.level.array[0], 3) if not borrow_rec.empty else 0
         surplus_rec = surplus.records[surplus.records["t"] == tt]
         surplus_rec = (
-            round(surplus_rec.level.array[0], 3)
-            if not surplus_rec.empty
-            else 0
+            round(surplus_rec.level.array[0], 3) if not surplus_rec.empty else 0
         )
         output_csv += f'"{tt}",{borrow_rec},{surplus_rec}\n'
 
     # Third model - Dedication plus fixed and variable transaction costs
 
     # VARIABLES #
-    TotalCost = Variable(
-        m, name="TotalCost", description="Total cost to minimize"
-    )
+    TotalCost = Variable(m, name="TotalCost", description="Total cost to minimize")
     TransCosts = Variable(
         m,
         name="TransCosts",
@@ -364,9 +350,7 @@ def main():
         m,
         name="CostDef",
         type="regular",
-        description=(
-            "Equation definining the total cost including transaction costs"
-        ),
+        description=("Equation definining the total cost including transaction costs"),
     )
     TransDef = Equation(
         m,
@@ -420,14 +404,10 @@ def main():
 
     for tt, _ in t.records.itertuples(index=False):
         borrow_rec = borrow.records[borrow.records["t"] == tt]
-        borrow_rec = (
-            round(borrow_rec.level.array[0], 3) if not borrow_rec.empty else 0
-        )
+        borrow_rec = round(borrow_rec.level.array[0], 3) if not borrow_rec.empty else 0
         surplus_rec = surplus.records[surplus.records["t"] == tt]
         surplus_rec = (
-            round(surplus_rec.level.array[0], 3)
-            if not surplus_rec.empty
-            else 0
+            round(surplus_rec.level.array[0], 3) if not surplus_rec.empty else 0
         )
         output_csv += f'"{tt}",{borrow_rec},{surplus_rec}\n'
 
@@ -462,20 +442,14 @@ def main():
 
     for tt, _ in t.records.itertuples(index=False):
         borrow_rec = borrow.records[borrow.records["t"] == tt]
-        borrow_rec = (
-            round(borrow_rec.level.array[0], 3) if not borrow_rec.empty else 0
-        )
+        borrow_rec = round(borrow_rec.level.array[0], 3) if not borrow_rec.empty else 0
         surplus_rec = surplus.records[surplus.records["t"] == tt]
         surplus_rec = (
-            round(surplus_rec.level.array[0], 3)
-            if not surplus_rec.empty
-            else 0
+            round(surplus_rec.level.array[0], 3) if not surplus_rec.empty else 0
         )
         output_csv += f'"{tt}",{borrow_rec},{surplus_rec}\n'
 
-    with open(
-        "DedicationMIPPortfolios.csv", "w", encoding="UTF-8"
-    ) as DedicationHandle:
+    with open("DedicationMIPPortfolios.csv", "w", encoding="UTF-8") as DedicationHandle:
         DedicationHandle.write(output_csv)
 
 

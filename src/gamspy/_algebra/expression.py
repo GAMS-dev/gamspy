@@ -181,14 +181,10 @@ def create_gams_expression(root_node: Expression) -> str:
             right_str, right_prec = eval_stack.pop()
             left_str, left_prec = eval_stack.pop()
 
-            if left_prec < op_prec or (
-                left_prec == op_prec and op_assoc == "right"
-            ):
+            if left_prec < op_prec or (left_prec == op_prec and op_assoc == "right"):
                 left_str = f"({left_str})"
 
-            if right_prec < op_prec or (
-                right_prec == op_prec and op_assoc == "left"
-            ):
+            if right_prec < op_prec or (right_prec == op_prec and op_assoc == "left"):
                 right_str = f"({right_str})"
 
             # get around 80000 line length limitation in GAMS
@@ -272,20 +268,14 @@ def create_latex_expression(root_node: Expression) -> str:
             right_str, right_prec = eval_stack.pop()
             left_str, left_prec = eval_stack.pop()
 
-            if left_prec < op_prec or (
-                left_prec == op_prec and op_assoc == "right"
-            ):
+            if left_prec < op_prec or (left_prec == op_prec and op_assoc == "right"):
                 left_str = f"({left_str})"
 
-            if right_prec < op_prec or (
-                right_prec == op_prec and op_assoc == "left"
-            ):
+            if right_prec < op_prec or (right_prec == op_prec and op_assoc == "left"):
                 right_str = f"({right_str})"
 
             if op == "/":
-                eval_stack.append(
-                    (f"\\frac{{{left_str}}}{{{right_str}}}", op_prec)
-                )
+                eval_stack.append((f"\\frac{{{left_str}}}{{{right_str}}}", op_prec))
                 continue
 
             op = op_map.get(op, op)
@@ -334,16 +324,10 @@ class Expression(operable.Operable):
         operator: str,
         right: OperableType | str | None,
     ):
-        self.left = (
-            utils._map_special_values(left)
-            if isinstance(left, float)
-            else left
-        )
+        self.left = utils._map_special_values(left) if isinstance(left, float) else left
         self.operator = operator
         self.right = (
-            utils._map_special_values(right)
-            if isinstance(right, float)
-            else right
+            utils._map_special_values(right) if isinstance(right, float) else right
         )
 
         if operator == "=" and isinstance(right, Expression):
@@ -725,9 +709,7 @@ class Expression(operable.Operable):
     def _validate_definition(
         self, control_stack: list[Set | Alias | ImplicitSet]
     ) -> None:
-        if not get_option("DOMAIN_VALIDATION") or not get_option(
-            "DOMAIN_VALIDATION"
-        ):
+        if not get_option("DOMAIN_VALIDATION") or not get_option("DOMAIN_VALIDATION"):
             return
 
         stack = []
@@ -747,10 +729,7 @@ class Expression(operable.Operable):
                         if hasattr(elem, "is_singleton") and elem.is_singleton:
                             continue
 
-                        if (
-                            isinstance(elem, Symbol)
-                            and elem not in control_stack
-                        ):
+                        if isinstance(elem, Symbol) and elem not in control_stack:
                             raise ValidationError(
                                 f"Uncontrolled set `{elem}` entered as constant!"
                             )

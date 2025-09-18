@@ -127,22 +127,16 @@ def main():
         records=15000000,
         description="Maximum trading value allowed for Swiss bonds (in CHF)",
     )
-    HoldVal = Parameter(
-        m, name="HoldVal", description="Value of the initial holdings"
-    )
+    HoldVal = Parameter(m, name="HoldVal", description="Value of the initial holdings")
     InitAccrCash = Parameter(
         m,
         name="InitAccrCash",
         description="Accrued cash originated by the initial holdings",
     )
-    InitVal = Parameter(
-        m, name="InitVal", description="Initial portfolio value"
-    )
+    InitVal = Parameter(m, name="InitVal", description="Initial portfolio value")
 
     # Calculate initial portfolio value
-    HoldVal[...] = Sum(
-        JxI[j, i], ExchangeRates0[j] * InitialHoldings[i] * Price0[i]
-    )
+    HoldVal[...] = Sum(JxI[j, i], ExchangeRates0[j] * InitialHoldings[i] * Price0[i])
     InitAccrCash[...] = Sum(
         JxI[j, i], ExchangeRates0[j] * InitialHoldings[i] * Accruals0[i]
     )
@@ -174,9 +168,7 @@ def main():
         m,
         name="Cash",
         type="positive",
-        description=(
-            "Amount of cash resulting from trading (sell and buy) today."
-        ),
+        description=("Amount of cash resulting from trading (sell and buy) today."),
     )
     FinalCash = Variable(
         m,
@@ -229,10 +221,7 @@ def main():
     CashInventoryCon[...] = (
         CashInfusion
         + Sum(JxI[j, i], ExchangeRates0[j] * Y0[i] * Price0[i] * (1 - TrnCstS))
-        == Sum(
-            JxI[j, i], ExchangeRates0[j] * X0[i] * Price0[i] * (1 + TrnCstB)
-        )
-        + Cash
+        == Sum(JxI[j, i], ExchangeRates0[j] * X0[i] * Price0[i] * (1 + TrnCstB)) + Cash
     )
 
     FinalCashCon[l] = (
@@ -312,9 +301,7 @@ def main():
         description="Column headers",
     )
 
-    SummaryReport = Parameter(
-        m, name="SummaryReport", domain=["*", ColHeaders]
-    )
+    SummaryReport = Parameter(m, name="SummaryReport", domain=["*", ColHeaders])
 
     SummaryReport[i, "FaceValue"] = Z0.l[i]
     SummaryReport[i, "USDValue"] = CurrentValue[i]
@@ -323,9 +310,7 @@ def main():
 
     print("Summary Report: \n", SummaryReport.pivot().round(3))
     print("\nEpsTolerance: \n", round(EpsTolerance.records.value[0], 3))
-    print(
-        "\nObjective Function Value: \n", round(BondIndex.objective_value, 3)
-    )
+    print("\nObjective Function Value: \n", round(BondIndex.objective_value, 3))
     print("\nInitVal: \n", round(InitVal.records.value[0], 3))
     print(CurrentValue.records)
 
@@ -337,8 +322,7 @@ def main():
             f'"Final Epsilon", {round(EpsTolerance.records.value[0], 3)}\n'
         )
         ResultHandle.write(
-            '"Initial Portfolio Value in USD",'
-            f" {round(InitVal.records.value[0], 3)}\n"
+            f'"Initial Portfolio Value in USD", {round(InitVal.records.value[0], 3)}\n'
         )
         ResultHandle.write("\n")
         ResultHandle.write(

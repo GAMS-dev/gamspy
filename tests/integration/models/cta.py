@@ -103,17 +103,11 @@ def main():
 
     # do some basic data checks
     check = Parameter(m, name="check")
-    check[...] = Sum(
-        [i, k], Round(Sum(j, dat[k, i, j]) - 2 * dat[k, i, "total"])
-    )
+    check[...] = Sum([i, k], Round(Sum(j, dat[k, i, j]) - 2 * dat[k, i, "total"]))
     assert math.isclose(check.toList()[0], 0), "row totals are incorrect"
-    check[...] = Sum(
-        [j, k], Round(Sum(i, dat[k, i, j]) - 2 * dat[k, "total", j])
-    )
+    check[...] = Sum([j, k], Round(Sum(i, dat[k, i, j]) - 2 * dat[k, "total", j]))
     assert math.isclose(check.toList()[0], 0), "column totals are incorrect"
-    check[...] = Sum(
-        [i, j], Round(Sum(k, dat[k, i, j]) - 2 * dat["total", i, j])
-    )
+    check[...] = Sum([i, j], Round(Sum(k, dat[k, i, j]) - 2 * dat["total", i, j]))
     assert math.isclose(check.toList()[0], 0), "plane totals are incorrect"
 
     # Parameter BigM
@@ -124,9 +118,7 @@ def main():
     )
 
     # Variables
-    t = Variable(
-        m, name="t", description="adjusted cell value", domain=[i, j, k]
-    )
+    t = Variable(m, name="t", description="adjusted cell value", domain=[i, j, k])
     adjn = Variable(m, name="adjn", domain=[i, j, k], type="Positive")
     adjp = Variable(m, name="adjp", domain=[i, j, k], type="Positive")
     b = Variable(m, name="b", domain=[i, j, k], type="Binary")
@@ -138,15 +130,9 @@ def main():
         description="define new cell values",
         domain=[i, j, k],
     )
-    addrow = Equation(
-        m, name="addrow", description="add up for rows", domain=[i, k]
-    )
-    addcol = Equation(
-        m, name="addcol", description="add up for columns", domain=[j, k]
-    )
-    addpla = Equation(
-        m, name="addpla", description="add up for plane", domain=[i, j]
-    )
+    addrow = Equation(m, name="addrow", description="add up for rows", domain=[i, k])
+    addcol = Equation(m, name="addcol", description="add up for columns", domain=[j, k])
+    addpla = Equation(m, name="addpla", description="add up for plane", domain=[i, j])
     pmin = Equation(
         m,
         name="pmin",
@@ -190,9 +176,7 @@ def main():
         options=cmd_params,
     )
 
-    rep = Parameter(
-        m, name="rep", description="summary report", domain=[k, i, j]
-    )
+    rep = Parameter(m, name="rep", description="summary report", domain=[k, i, j])
     adjsum = Parameter(
         m,
         name="adjsum",
@@ -259,21 +243,11 @@ def main():
         cutone = Equation(m, name=f"cutone_{it}")
         cuttwo = Equation(m, name=f"cuttwo_{it}")
         cutone[...] = (
-            sum(
-                [
-                    1 - b[rec[:-1]] if rec[3] > 0.5 else b[rec[:-1]]
-                    for rec in b_list
-                ]
-            )
+            sum([1 - b[rec[:-1]] if rec[3] > 0.5 else b[rec[:-1]] for rec in b_list])
             >= 1
         )
         cuttwo[...] = (
-            sum(
-                [
-                    1 - b[rec[:-1]] if rec[3] < 0.5 else b[rec[:-1]]
-                    for rec in b_list
-                ]
-            )
+            sum([1 - b[rec[:-1]] if rec[3] < 0.5 else b[rec[:-1]] for rec in b_list])
             >= 1
         )
 

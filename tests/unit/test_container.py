@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-import urllib3
+import requests
 
 import gamspy.utils as utils
 from gamspy import (
@@ -205,8 +205,7 @@ def test_str(data):
 
     _ = Set(m, "i")
     assert (
-        str(m)
-        == f"<Container ({hex(id(m))}) with {len(m)} symbols: {m.data.keys()}>"
+        str(m) == f"<Container ({hex(id(m))}) with {len(m)} symbols: {m.data.keys()}>"
     )
 
 
@@ -397,7 +396,7 @@ def test_add_gams_code_on_actual_models():
     }
 
     for link in links.values():
-        data = urllib3.request("GET", link).data.decode("utf-8")
+        data = requests.get(link).content.decode("utf-8")
         with Container() as m:
             m.addGamsCode(data)
 
@@ -961,7 +960,7 @@ def test_mcp_serialization(data) -> None:
     hansen2 = m2.models["hansen"]
 
     for unserialized, serialized in zip(
-        hansen._matches.items(), hansen2._matches.items()
+        hansen._matches.items(), hansen2._matches.items(), strict=False
     ):
         orig_equation, orig_variable = unserialized
         serialized_equation, serialized_variable = serialized
@@ -1118,9 +1117,7 @@ def test_explicit_license_path():
         records=[f"dice{idx}" for idx in range(1, 20)],
     )
 
-    flo = gp.Parameter(
-        m, name="flo", description="lowest face value", records=1
-    )
+    flo = gp.Parameter(m, name="flo", description="lowest face value", records=1)
     fup = gp.Parameter(
         m, "fup", description="highest face value", records=len(dice) * len(f)
     )
@@ -1192,45 +1189,31 @@ def test_writeSolverOptions():
     with open(solver_options_path) as file:
         assert "rtmaxv" in file.read()
 
-    m.writeSolverOptions(
-        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=2
-    )
+    m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=2)
     solver_options_path = os.path.join(m.working_directory, "conopt.op2")
     assert os.path.exists(solver_options_path)
 
-    m.writeSolverOptions(
-        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=9
-    )
+    m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=9)
     solver_options_path = os.path.join(m.working_directory, "conopt.op9")
     assert os.path.exists(solver_options_path)
 
-    m.writeSolverOptions(
-        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=10
-    )
+    m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=10)
     solver_options_path = os.path.join(m.working_directory, "conopt.o10")
     assert os.path.exists(solver_options_path)
 
-    m.writeSolverOptions(
-        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=99
-    )
+    m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=99)
     solver_options_path = os.path.join(m.working_directory, "conopt.o99")
     assert os.path.exists(solver_options_path)
 
-    m.writeSolverOptions(
-        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=100
-    )
+    m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=100)
     solver_options_path = os.path.join(m.working_directory, "conopt.100")
     assert os.path.exists(solver_options_path)
 
-    m.writeSolverOptions(
-        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=999
-    )
+    m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=999)
     solver_options_path = os.path.join(m.working_directory, "conopt.999")
     assert os.path.exists(solver_options_path)
 
-    m.writeSolverOptions(
-        "conopt", solver_options={"rtmaxv": "1.e12"}, file_number=1234
-    )
+    m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=1234)
     solver_options_path = os.path.join(m.working_directory, "conopt.1234")
     assert os.path.exists(solver_options_path)
 
@@ -1309,11 +1292,11 @@ def one_by_one(n: int, m: Container):
 def batched(n: int, m: Container):
     sets = [Set(m) for _ in range(10)]
     values = [range(n)] * 10
-    m.setRecords(dict(zip(sets, values)))
+    m.setRecords(dict(zip(sets, values, strict=False)))
 
     params = [Parameter(m) for _ in range(10)]
     values = [n] * 10
-    m.setRecords(dict(zip(params, values)))
+    m.setRecords(dict(zip(params, values, strict=False)))
 
 
 @pytest.mark.skipif(
@@ -1346,6 +1329,4 @@ def test_batch_setRecords():
     k = Set(m, "k")
 
     with pytest.raises(ValidationError):
-        m.setRecords(
-            {i: range(10), k: range(5)}, uels_on_axes=[True, False, True]
-        )
+        m.setRecords({i: range(10), k: range(5)}, uels_on_axes=[True, False, True])

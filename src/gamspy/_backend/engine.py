@@ -13,6 +13,8 @@ import urllib.parse
 import zipfile
 from typing import TYPE_CHECKING
 
+import requests
+
 import gamspy._backend.backend as backend
 import gamspy.utils as utils
 from gamspy._options import Options
@@ -131,7 +133,6 @@ class Endpoint: ...
 class Auth(Endpoint):
     def __init__(self, client: EngineClient) -> None:
         self.client = client
-        self._http = client._http
         self.engine_options = client.engine_options
 
     def post(
@@ -165,7 +166,7 @@ class Auth(Endpoint):
         GamspyException
             In case the status code is unrecognized
         """
-        info = {"expires_in": str(expires_in)}
+        params = {"expires_in": str(expires_in)}
 
         if isinstance(scope, list):
             for elem in scope:
@@ -173,41 +174,35 @@ class Auth(Endpoint):
                     raise ValidationError(f"{elem} is not a valid scope")
 
             scope_info = " ".join(scope)
-            info.update({"scope": scope_info})
+            params.update({"scope": scope_info})
 
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
-            r = self._http.request(
-                "POST",
-                self.client._engine_config.host
-                + "/auth/?"
-                + urllib.parse.urlencode(info, doseq=True),
+            r = requests.post(
+                f"{self.client._engine_config.host}/auth",
+                params=params,
                 headers=self.client.get_request_headers(),
             )
 
-            response_data = r.data.decode("utf-8", errors="replace")
+            response_data = r.content.decode("utf-8", errors="replace")
 
-            if r.status in (200, 400, 401, 500):
+            if r.status_code in (200, 400, 401, 500):
                 info = json.loads(response_data)
 
-            if r.status == 200:
+            if r.status_code == 200:
                 return info["token"]
-            elif r.status == 400:
+            elif r.status_code == 400:
                 raise EngineClientException(f"Bad request: {info['message']}")
-            elif r.status == 401:
+            elif r.status_code == 401:
                 raise EngineClientException("Unauthorized!")
-            elif r.status == 429:
+            elif r.status_code == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
-            elif r.status == 500:
-                raise EngineClientException(
-                    f"Internal error: {info['message']}"
-                )
+            elif r.status_code == 500:
+                raise EngineClientException(f"Internal error: {info['message']}")
 
-        raise GamspyException(f"Unrecognized status code {r.status}")
+        raise GamspyException(f"Unrecognized status code {r.status_code}")
 
-    def login(
-        self, expires_in: int = 14400, scope: list[str] | None = None
-    ) -> str:
+    def login(self, expires_in: int = 14400, scope: list[str] | None = None) -> str:
         """
         Creates a JSON Web Token(JWT) for authentication (username and password in request body)
 
@@ -222,7 +217,7 @@ class Auth(Endpoint):
         -------
         str
         """
-        info = {
+        payload = {
             "username": self.client._engine_config.username,
             "password": self.client._engine_config.password,
             "expires_in": expires_in,
@@ -234,34 +229,31 @@ class Auth(Endpoint):
                     raise ValidationError(f"{elem} is not a valid scope")
 
             scope_info = " ".join(scope)
-            info.update({"scope": scope_info})
+            payload.update({"scope": scope_info})
 
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
-            r = self._http.request(
-                "POST",
-                self.client._engine_config.host + "/auth/login",
-                fields=info,
+            r = requests.post(
+                f"{self.client._engine_config.host}/auth/login",
+                data=payload,
             )
 
-            response_data = r.data.decode("utf-8", errors="replace")
-            if r.status in (200, 400, 401, 500):
+            response_data = r.content.decode("utf-8", errors="replace")
+            if r.status_code in (200, 400, 401, 500):
                 info = json.loads(response_data)
 
-            if r.status == 200:
+            if r.status_code == 200:
                 return info["token"]  # type: ignore
-            elif r.status == 400:
+            elif r.status_code == 400:
                 raise EngineClientException(f"Bad request: {info['message']}")
-            elif r.status == 401:
+            elif r.status_code == 401:
                 raise EngineClientException(f"Unauthorized: {info['message']}")
-            elif r.status == 429:
+            elif r.status_code == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
-            elif r.status == 500:
-                raise EngineClientException(
-                    f"Internal error: {info['message']}"
-                )
+            elif r.status_code == 500:
+                raise EngineClientException(f"Internal error: {info['message']}")
 
-        raise GamspyException(f"Unrecognized status code {r.status}")
+        raise GamspyException(f"Unrecognized status code {r.status_code}")
 
     def logout(self) -> str:
         """
@@ -272,33 +264,31 @@ class Auth(Endpoint):
         str
         """
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
-            r = self._http.request(
-                "POST",
-                self.client._engine_config.host + "/auth/logout",
+            r = requests.post(
+                f"{self.client._engine_config.host}/auth/logout",
                 headers=self.client.get_request_headers(),
             )
 
-            if r.status == 200:
-                response_data = r.data.decode("utf-8", errors="replace")
+            if r.status_code == 200:
+                response_data = r.content.decode("utf-8", errors="replace")
                 info = json.loads(response_data)
                 return info["message"]
-            elif r.status == 400:
+            elif r.status_code == 400:
                 raise EngineClientException("Bad request!")
-            elif r.status == 401:
+            elif r.status_code == 401:
                 raise EngineClientException("Unauthorized!")
-            elif r.status == 429:
+            elif r.status_code == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
-            elif r.status == 500:
+            elif r.status_code == 500:
                 raise EngineClientException("Internal error!")
 
-        raise GamspyException(f"Unrecognized status code {r.status}")
+        raise GamspyException(f"Unrecognized status code {r.status_code}")
 
 
 class Job(Endpoint):
     def __init__(self, client: EngineClient) -> None:
         self.client = client
-        self._http = client._http
         self.engine_options = client.engine_options
 
     def get(self, token: str) -> tuple[int, str, int | None]:
@@ -322,14 +312,13 @@ class Job(Endpoint):
             If get request has failed.
         """
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
-            r = self._http.request(
-                "GET",
-                self.client._engine_config.host + f"/jobs/{token}",
+            r = requests.get(
+                f"{self.client._engine_config.host}/jobs/{token}",
                 headers=self.client.get_request_headers(),
             )
-            response_data = r.data.decode("utf-8", errors="replace")
+            response_data = r.content.decode("utf-8", errors="replace")
 
-            if r.status == 200:
+            if r.status_code == 200:
                 info = json.loads(response_data)
                 job_status = int(info["status"])
                 return (
@@ -337,14 +326,14 @@ class Job(Endpoint):
                     STATUS_MAP[job_status],
                     info["process_status"],
                 )
-            elif r.status == 403:
+            elif r.status_code == 403:
                 raise EngineClientException("Unauthorized!")
-            elif r.status == 404:
+            elif r.status_code == 404:
                 raise EngineClientException(f"Job {token} not found!")
-            elif r.status == 429:
+            elif r.status_code == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
-            elif r.status == 500:
+            elif r.status_code == 500:
                 raise EngineClientException("Internal error!")
 
         raise EngineClientException(
@@ -383,45 +372,37 @@ class Job(Endpoint):
         EngineClientException
             If post request has failed.
         """
-        model_data_zip = self._create_zip_file(
-            working_directory, gms_file, pf_file
-        )
+        model_data_zip = self._create_zip_file(working_directory, gms_file, pf_file)
         gms_file = os.path.relpath(gms_file, working_directory)
         pf_file = (
-            os.path.relpath(pf_file, working_directory)
-            if pf_file is not None
-            else None
+            os.path.relpath(pf_file, working_directory) if pf_file is not None else None
         )
-        query_params, file_params = self._get_params(
-            model_data_zip, gms_file, pf_file
-        )
+        query_params, file_params = self._get_params(model_data_zip, gms_file, pf_file)
 
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
-            r = self._http.request(
-                "POST",
-                self.client._engine_config.host
-                + "/jobs/?"
-                + urllib.parse.urlencode(query_params, doseq=True),
-                fields=file_params,
+            r = requests.post(
+                f"{self.client._engine_config.host}/jobs",
+                params=query_params,
+                files=file_params,
                 headers=self.client.get_request_headers(),
             )
-            response_data = r.data.decode("utf-8", errors="replace")
-            if r.status == 201:
+            response_data = r.content.decode("utf-8", errors="replace")
+            if r.status_code == 201:
                 return json.loads(response_data)["token"]
-            elif r.status == 400:
+            elif r.status_code == 400:
                 raise EngineClientException("Input is not valid!")
-            elif r.status == 401:
+            elif r.status_code == 401:
                 raise EngineClientException("Invalid authentication!")
-            elif r.status == 402:
+            elif r.status_code == 402:
                 raise EngineClientException("Quota exceeded!")
-            elif r.status == 403:
+            elif r.status_code == 403:
                 raise EngineClientException("Unauthorized access!")
-            elif r.status == 404:
+            elif r.status_code == 404:
                 raise EngineClientException("Namespace could not be found!")
-            elif r.status == 429:
+            elif r.status_code == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
-            elif r.status == 500:
+            elif r.status_code == 500:
                 raise EngineClientException("Internal error!")
 
         raise EngineClientException(
@@ -453,26 +434,22 @@ class Job(Endpoint):
             os.makedirs(working_directory, exist_ok=True)
 
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
-            r = self._http.request(
-                "GET",
-                self.client._engine_config.host + f"/jobs/{token}/result",
+            r = requests.get(
+                f"{self.client._engine_config.host}/jobs/{token}/result",
                 headers=self.client.get_request_headers(),
-                preload_content=False,
+                stream=True,
             )
 
-            if r.status == 200:
+            if r.status_code == 200:
                 fd, path = tempfile.mkstemp()
 
                 try:
                     with open(path, "wb") as out:
-                        while True:
-                            data = r.read(6000)
-                            if not data:
-                                break
-                            out.write(data)
+                        for chunk in r.iter_content(chunk_size=6000):
+                            out.write(chunk)
                             out.flush()
 
-                    r.release_conn()
+                    r.close()
 
                     with zipfile.ZipFile(path, "r") as zip_ref:
                         zip_ref.extractall(working_directory)
@@ -483,22 +460,22 @@ class Job(Endpoint):
                 logger.info(
                     f"Results have been extracted to your working directory: {working_directory}."
                 )
-            elif r.status == 400:
+            elif r.status_code == 400:
                 raise EngineClientException("Bad request!")
-            elif r.status == 401:
+            elif r.status_code == 401:
                 raise EngineClientException("Unauthorized!")
-            elif r.status == 403:
+            elif r.status_code == 403:
                 raise EngineClientException("Job data does not exist!")
-            elif r.status == 404:
+            elif r.status_code == 404:
                 raise EngineClientException("No job found!")
-            elif r.status == 429:
+            elif r.status_code == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
             else:
-                response_data = r.data.decode("utf-8", errors="replace")
+                response_data = r.content.decode("utf-8", errors="replace")
                 raise EngineClientException(
                     "Fatal error while getting the results back from engine. GAMS"
-                    f" Engine return code: {r.status}. Error message:"
+                    f" Engine return code: {r.status_code}. Error message:"
                     f" {response_data}"
                 )
 
@@ -520,31 +497,30 @@ class Job(Endpoint):
             If delete request has failed.
         """
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
-            r = self._http.request(
-                "DELETE",
-                self.client._engine_config.host + "/jobs/" + token + "/result",
+            r = requests.delete(
+                f"{self.client._engine_config.host}/jobs/{token}/result",
                 headers=self.client.get_request_headers(),
             )
-            response_data = r.data.decode("utf-8", errors="replace")
+            response_data = r.content.decode("utf-8", errors="replace")
 
-            if r.status == 200:
+            if r.status_code == 200:
                 logger.info(f"Results for {token} have been deleted.")
                 return
-            elif r.status == 400:
+            elif r.status_code == 400:
                 raise EngineClientException("Bad request!")
-            elif r.status == 401:
+            elif r.status_code == 401:
                 raise EngineClientException("Unauthorized!")
-            elif r.status == 403:
+            elif r.status_code == 403:
                 raise EngineClientException("Job data does not exist!")
-            elif r.status == 404:
+            elif r.status_code == 404:
                 raise EngineClientException("No job found!")
-            elif r.status == 429:
+            elif r.status_code == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
 
         raise EngineClientException(
             "Removing job result failed with status code: "
-            + str(r.status)
+            + str(r.status_code)
             + ". Message: "
             + response_data
         )
@@ -570,32 +546,31 @@ class Job(Endpoint):
             If get request has failed.
         """
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
-            r = self._http.request(
-                "DELETE",
-                self.client._engine_config.host + f"/jobs/{token}/unread-logs",
+            r = requests.delete(
+                f"{self.client._engine_config.host}/jobs/{token}/unread-logs",
                 headers=self.client.get_request_headers(),
             )
-            response_data = r.data.decode("utf-8", errors="replace")
+            response_data = r.content.decode("utf-8", errors="replace")
 
-            if r.status == 200:
+            if r.status_code == 200:
                 info = json.loads(response_data)
                 return info["message"], info["queue_finished"]
-            elif r.status == 308:
+            elif r.status_code == 308:
                 info = json.loads(response_data)
                 return info["message"], True
-            elif r.status == 403:
+            elif r.status_code == 403:
                 raise EngineClientException(
                     "Cannot get logs of pending job / Unauthorized access!"
                 )
-            elif r.status == 404:
+            elif r.status_code == 404:
                 raise EngineClientException("No job found!")
-            elif r.status == 429:
+            elif r.status_code == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
 
         raise EngineClientException(
             "Getting logs failed with status code: "
-            + str(r.status)
+            + str(r.status_code)
             + ". "
             + response_data
             + "."
@@ -615,9 +590,7 @@ class Job(Endpoint):
         model_files += self.client.extra_model_files
         model_files = get_relative_paths(model_files, working_directory)
 
-        with zipfile.ZipFile(
-            model_data_zip, "w", zipfile.ZIP_DEFLATED
-        ) as model_data:
+        with zipfile.ZipFile(model_data_zip, "w", zipfile.ZIP_DEFLATED) as model_data:
             for model_file in model_files:
                 model_data.write(
                     os.path.join(working_directory, model_file),
@@ -630,9 +603,7 @@ class Job(Endpoint):
 
     def _get_params(self, model_data_zip, gms_file, pf_file: str | None):
         file_params = {}
-        query_params = (
-            copy.deepcopy(self.engine_options) if self.engine_options else {}
-        )
+        query_params = copy.deepcopy(self.engine_options) if self.engine_options else {}
 
         query_params["namespace"] = self.client._engine_config.namespace
 
@@ -744,8 +715,6 @@ class EngineClient:
         self.is_blocking = is_blocking
         self.tokens: list[str] = []
 
-        self._http = utils._make_http()
-
         self._engine_config = EngineConfiguration(
             self.host,
             self.username,
@@ -784,9 +753,7 @@ class GAMSEngine(backend.Backend):
             )
 
         if solver.lower() == "mpsge":
-            raise ValidationError(
-                f"`{solver}` is not a valid solver for GAMS Engine."
-            )
+            raise ValidationError(f"`{solver}` is not a valid solver for GAMS Engine.")
 
         super().__init__(
             "engine",
@@ -865,8 +832,7 @@ class GAMSEngine(backend.Backend):
 
                 if job_status in (-1, -3):
                     raise EngineException(
-                        "Could not get job results because the job is"
-                        f" {message}.",
+                        f"Could not get job results because the job is {message}.",
                         return_code=job_status,
                         status_code=job_status,
                     )
@@ -884,9 +850,7 @@ class GAMSEngine(backend.Backend):
                     if is_finished:
                         job_status = 10
 
-                self.client.job.get_results(
-                    token, self.container.working_directory
-                )
+                self.client.job.get_results(token, self.container.working_directory)
 
                 engine_output_path = os.path.join(
                     self.container.working_directory, "log_stdout.txt"
@@ -960,9 +924,7 @@ class GAMSEngine(backend.Backend):
         )
         dirty_str = ",".join(symbols)
         with open(self.gms_file, "w", encoding="utf-8") as gams_file:
-            gams_file.write(
-                f'execute_load "{self.container._gdx_out}", {dirty_str};'
-            )
+            gams_file.write(f'execute_load "{self.container._gdx_out}", {dirty_str};')
 
         options = Options()
         extra_options = self._prepare_dummy_options()

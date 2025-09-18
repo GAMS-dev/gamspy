@@ -70,9 +70,7 @@ class ExtrinsicFunction(operable.Operable):
 
     def __call__(self, *args, **kwds) -> ExtrinsicFunction:
         if kwds:
-            raise ValidationError(
-                "External functions do not accept keyword arguments"
-            )
+            raise ValidationError("External functions do not accept keyword arguments")
 
         self.args = args
         return self
@@ -84,9 +82,7 @@ class ExtrinsicFunction(operable.Operable):
             arg_strs = []
             for arg in self.args:
                 arg_str = (
-                    str(arg)
-                    if isinstance(arg, (int, float, str))
-                    else arg.gamsRepr()
+                    str(arg) if isinstance(arg, (int, float, str)) else arg.gamsRepr()
                 )
                 arg_strs.append(arg_str)
 
@@ -141,9 +137,7 @@ class ExtrinsicLibrary:
         Functions to be imported from the extrinsic library.
     """
 
-    def __init__(
-        self, container: Container, path: str, functions: dict[str, str]
-    ):
+    def __init__(self, container: Container, path: str, functions: dict[str, str]):
         self.container = container
         self.name = "ext" + utils._get_unique_name()
         self.path = path
@@ -160,9 +154,7 @@ class ExtrinsicLibrary:
         library_str = f"$funclibin {self.name} {self.path}\n"
 
         for gamspy_name, actual_name in self.functions.items():
-            library_str += (
-                f"function {gamspy_name} / {self.name}.{actual_name} /;\n"
-            )
+            library_str += f"function {gamspy_name} / {self.name}.{actual_name} /;\n"
 
         return library_str
 

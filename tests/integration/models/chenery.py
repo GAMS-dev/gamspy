@@ -67,14 +67,10 @@ def main():
             "efy",
         ]
     )
-    lbar, plab, kbar, dbar = container.getSymbols(
-        ["lbar", "plab", "kbar", "dbar"]
-    )
+    lbar, plab, kbar, dbar = container.getSymbols(["lbar", "plab", "kbar", "dbar"])
 
     # Variables
-    x, v, y, p, l, k, e = container.getSymbols(
-        ["x", "v", "y", "p", "l", "k", "e"]
-    )
+    x, v, y, p, l, k, e = container.getSymbols(["x", "v", "y", "p", "l", "k", "e"])
     m, g, h, pk, pi, pd, td, vv = container.getSymbols(
         ["m", "g", "h", "pk", "pi", "pd", "td", "vv"]
     )
@@ -102,16 +98,12 @@ def main():
     )
     dl[i] = (
         l[i] * efy[i]
-        == ((deli[i] / vv[i] + (1 - deli[i])) ** (1 / rho[i])).where[
-            sig[i] != 0
-        ]
+        == ((deli[i] / vv[i] + (1 - deli[i])) ** (1 / rho[i])).where[sig[i] != 0]
         + Number(1).where[sig[i] == 0]
     )
     dk[i] = (
         k[i] * efy[i]
-        == ((deli[i] + (1 - deli[i]) * vv[i]) ** (1 / rho[i])).where[
-            sig[i] != 0
-        ]
+        == ((deli[i] + (1 - deli[i]) * vv[i]) ** (1 / rho[i])).where[sig[i] != 0]
         + deli[i].where[sig[i] == 0]
     )
     dv[i] = v[i] == pk * k[i] + plab * l[i]
@@ -167,19 +159,13 @@ def main():
     pk.l = 3.5
     pi.l = pk.l / plab
 
-    vv.l[i].where[sig[i]] = (pi.l * (1 - deli[i]) / deli[i]) ** (
-        -rho[i] / (1 + rho[i])
-    )
+    vv.l[i].where[sig[i]] = (pi.l * (1 - deli[i]) / deli[i]) ** (-rho[i] / (1 + rho[i]))
     l.l[i] = (
-        ((deli[i] / vv.l[i] + (1 - deli[i])) ** (1 / rho[i])).where[
-            sig[i] != 0
-        ]
+        ((deli[i] / vv.l[i] + (1 - deli[i])) ** (1 / rho[i])).where[sig[i] != 0]
         + Number(1).where[sig[i] == 0]
     ) / efy[i]
     k.l[i] = (
-        ((deli[i] + (1 - deli[i]) * vv.l[i]) ** (1 / rho[i])).where[
-            sig[i] != 0
-        ]
+        ((deli[i] + (1 - deli[i]) * vv.l[i]) ** (1 / rho[i])).where[sig[i] != 0]
         + deli[i].where[sig[i] == 0]
     ) / efy[i]
     v.l[i] = pk.l * k.l[i] + plab * l.l[i]

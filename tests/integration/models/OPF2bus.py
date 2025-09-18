@@ -74,9 +74,7 @@ def main():
 
     eq1 = Sum(
         gen,
-        data[gen, "a"] * P[gen] * P[gen]
-        + data[gen, "b"] * P[gen]
-        + data[gen, "c"],
+        data[gen, "a"] * P[gen] * P[gen] + data[gen, "b"] * P[gen] + data[gen, "c"],
     )
     eq2[...] = P["g1"] == P12
     eq3[...] = P["g2"] + P12 == L2 / Sbase

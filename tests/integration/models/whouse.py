@@ -97,9 +97,7 @@ def main():
     )
 
     # Equations
-    sb = Equation(
-        m, name="sb", domain=t, description="stock balance at time t (units)"
-    )
+    sb = Equation(m, name="sb", domain=t, description="stock balance at time t (units)")
 
     sb[t] = stock[t] == stock[t - 1] + buy[t] - sell[t] + istock[t]
 

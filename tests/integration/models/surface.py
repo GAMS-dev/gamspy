@@ -58,9 +58,7 @@ def main():
     objfun = (1 / sqr(K)) * Sum(
         Domain(X, Y).where[inside[X, Y]],
         gams_math.sqrt(
-            sqr((f[X + 1, Y] - f[X, Y]) / K)
-            + sqr((f[X, Y + 1] - f[X, Y]) / K)
-            + 1
+            sqr((f[X + 1, Y] - f[X, Y]) / K) + sqr((f[X, Y + 1] - f[X, Y]) / K) + 1
         ),
     )
 

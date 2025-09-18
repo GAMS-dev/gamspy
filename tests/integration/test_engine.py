@@ -108,9 +108,7 @@ def network_license():
 
 
 def test_network_license(network_license):
-    m, canning_plants, markets, capacities, demands, distances = (
-        network_license
-    )
+    m, canning_plants, markets, capacities, demands, distances = network_license
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -280,9 +278,7 @@ def test_logoption(data):
 
     # logoption=3
     transport.solve(backend="engine", client=client, output=sys.stdout)
-    assert not os.path.exists(
-        os.path.join(m.working_directory, "log_stdout.txt")
-    )
+    assert not os.path.exists(os.path.join(m.working_directory, "log_stdout.txt"))
 
     # logoption=4
     log_file_path = os.path.join("tmp", "bla2.log")
@@ -355,9 +351,7 @@ def test_extra_files(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
 
-    with open(
-        m.working_directory + os.sep + "test.txt", "w"
-    ) as same_directory_file:
+    with open(m.working_directory + os.sep + "test.txt", "w") as same_directory_file:
         client = EngineClient(
             host=os.environ["ENGINE_URL"],
             username=os.environ["ENGINE_USER"],
@@ -788,9 +782,7 @@ def test_savepoint(data):
     )
     assert transport.num_iterations == 0
 
-    with tempfile.NamedTemporaryFile(
-        "w", suffix=".txt", delete=False
-    ) as temp_file:
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as temp_file:
         transport.solve(
             output=temp_file, options=Options(loadpoint=Path(savepoint_path))
         )
@@ -805,9 +797,7 @@ def test_savepoint(data):
 def test_external_equation_on_engine(data):
     directory = str(pathlib.Path(__file__).parent.resolve())
     external_module = os.path.relpath(
-        os.path.join(
-            directory, "external_module", "build", "libsimple_ext_module"
-        ),
+        os.path.join(directory, "external_module", "build", "libsimple_ext_module"),
         os.getcwd(),
     )
 

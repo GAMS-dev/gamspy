@@ -21,9 +21,7 @@ def run_gamspy(I, repeats, number):
         system_directory=gamspy_base.directory,
         load_from=os.path.join(os.path.dirname(__file__), "data", "data.gdx"),
     )
-    gamspy_container = gp.Container(
-        options=gp.Options(write_listing_file=False)
-    )
+    gamspy_container = gp.Container(options=gp.Options(write_listing_file=False))
     gamspy_container.addSet("i", records=m["i"].records)
     gamspy_container.addSet("j", records=m["j"].records)
     gamspy_container.addSet("k", records=m["k"].records)
@@ -69,10 +67,7 @@ def gamspy_model(c, IJK, JKL, KLM):
     x = gp.Variable(c, "x", type="free", domain=[i, j, k, l, m])
 
     ei = gp.Equation(c, "ei", domain=i)
-    ei[i] = (
-        gp.Sum((ijk[i, j, k], jkl[j, k, l], klm[k, l, m]), x[i, j, k, l, m])
-        >= 0
-    )
+    ei[i] = gp.Sum((ijk[i, j, k], jkl[j, k, l], klm[k, l, m]), x[i, j, k, l, m]) >= 0
 
     model = gp.Model(
         c,

@@ -295,21 +295,21 @@ def test_regression_tree_put_M(data):
     )
     m2.solve()
 
-    le_cons = [
+    le_cons = next(
         ele
         for ele in eqns_m
         if ele.name.startswith("e_test_big_m_link_indicator_feature_le_")
-    ][0]
+    )
     df = le_cons.records
-    res_bigm = df[df["level"] == 1e3][
-        [dom.name for dom in le_cons.domain]
-    ].to_numpy(dtype=int)
+    res_bigm = df[df["level"] == 1e3][[dom.name for dom in le_cons.domain]].to_numpy(
+        dtype=int
+    )
 
-    le_cons = [
+    le_cons = next(
         ele
         for ele in eqns
         if ele.name.startswith("e_test_bound_big_m_link_indicator_feature_le_")
-    ][0]
+    )
     df = le_cons.records
     res_m = df[df["level"] > 0][[dom.name for dom in le_cons.domain]].to_numpy(
         dtype=int
@@ -851,9 +851,7 @@ def data_gbt():
         "feature": np.array([0, 1, 1, -2, -2, -2, -2]),
         "n_features": 2,
         "threshold": np.array([5.5, 4.5, 2.5, -2.0, -2.0, -2.0, -2.0]),
-        "value": np.array(
-            [[0.0], [-4.35], [-5.6], [-5.6], [-5.6], [-0.6], [17.4]]
-        ),
+        "value": np.array([[0.0], [-4.35], [-5.6], [-5.6], [-5.6], [-0.6], [17.4]]),
     }
     tree2 = {
         "capacity": 5,
@@ -960,9 +958,7 @@ def test_gradient_boosting_with_sklearn(data_gbt):
 def test_gradient_boosting_valid_variable(data_gbt):
     m, ensemble, _, _, _, _, par_input, x, [learning_rate, bias] = data_gbt
 
-    gbt = GradientBoosting(
-        m, ensemble=ensemble, bias=bias, learning_rate=learning_rate
-    )
+    gbt = GradientBoosting(m, ensemble=ensemble, bias=bias, learning_rate=learning_rate)
     expected_out = np.array([15.486, 15.486, 15.486, 15.486, 18.906])
 
     x.fx[:, 0] = par_input[:, 0]
@@ -990,13 +986,9 @@ def test_gradient_boosting_valid_variable(data_gbt):
 
 
 def test_gradient_boosting_valid_parameter(data_gbt):
-    m, ensemble, _, _, _, expected_out, par_input, _, [learning_rate, bias] = (
-        data_gbt
-    )
+    m, ensemble, _, _, _, expected_out, par_input, _, [learning_rate, bias] = data_gbt
 
-    gbt = GradientBoosting(
-        m, ensemble=ensemble, bias=bias, learning_rate=learning_rate
-    )
+    gbt = GradientBoosting(m, ensemble=ensemble, bias=bias, learning_rate=learning_rate)
 
     out, eqns = gbt(par_input)
     dom = out.domain
@@ -1020,13 +1012,9 @@ def test_gradient_boosting_valid_parameter(data_gbt):
 
 
 def test_gradient_boosting_valid_variable_no_lb(data_gbt):
-    m, ensemble, _, in_data, _, _, par_input, _, [learning_rate, bias] = (
-        data_gbt
-    )
+    m, ensemble, _, in_data, _, _, par_input, _, [learning_rate, bias] = data_gbt
 
-    gbt = GradientBoosting(
-        m, ensemble=ensemble, bias=bias, learning_rate=learning_rate
-    )
+    gbt = GradientBoosting(m, ensemble=ensemble, bias=bias, learning_rate=learning_rate)
     x = gp.Variable(m, "x_free", domain=dim(in_data.shape))
 
     x.up[:, 0] = 6
@@ -1059,13 +1047,9 @@ def test_gradient_boosting_valid_variable_no_lb(data_gbt):
 
 
 def test_gradient_boosting_valid_variable_no_ub(data_gbt):
-    m, ensemble, _, in_data, _, _, par_input, _, [learning_rate, bias] = (
-        data_gbt
-    )
+    m, ensemble, _, in_data, _, _, par_input, _, [learning_rate, bias] = data_gbt
 
-    gbt = GradientBoosting(
-        m, ensemble=ensemble, bias=bias, learning_rate=learning_rate
-    )
+    gbt = GradientBoosting(m, ensemble=ensemble, bias=bias, learning_rate=learning_rate)
     x = gp.Variable(m, "x_free", domain=dim(in_data.shape))
 
     x.lo[:, 0] = 2
@@ -1098,9 +1082,7 @@ def test_gradient_boosting_valid_variable_no_ub(data_gbt):
 def test_gradient_boosting_with_new_constraint(data_gbt):
     m, ensemble, _, _, _, _, par_input, x, [learning_rate, bias] = data_gbt
 
-    gbt = GradientBoosting(
-        m, ensemble=ensemble, bias=bias, learning_rate=learning_rate
-    )
+    gbt = GradientBoosting(m, ensemble=ensemble, bias=bias, learning_rate=learning_rate)
 
     x.lo[:, 0] = 2
     x.fx[:, 1] = par_input[:, 1]

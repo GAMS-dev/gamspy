@@ -567,11 +567,9 @@ def test_leaky_relu(data):
     y_vals = [-10, -5, 0, 50, 100]
     b_vals = [[0], [0], [0, 1], [1], [1]]
 
-    model = Model(
-        m, name="leaky_relu", equations=m.getEquations(), problem="MIP"
-    )
+    model = Model(m, name="leaky_relu", equations=m.getEquations(), problem="MIP")
 
-    for x_val, y_val, b_val in zip(x_vals, y_vals, b_vals):
+    for x_val, y_val, b_val in zip(x_vals, y_vals, b_vals, strict=False):
         x.fx[...] = x_val
         model.solve()
         assert y.toDense()[0] == y_val
@@ -579,7 +577,7 @@ def test_leaky_relu(data):
 
 
 def test_relu_2(data):
-    m, markets, demands = data
+    m, _markets, _demands = data
     m = Container()
 
     i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
@@ -678,7 +676,7 @@ def test_log_softmax(data):
 
 
 def test_softmax(data):
-    m, markets, demands = data
+    m, _markets, _demands = data
     m = Container()
 
     labels = Set(m, name="labels", domain=gams_math.dim([30, 3]))
@@ -698,7 +696,7 @@ def test_softmax(data):
     # dim out of bounds
     pytest.raises(IndexError, gams_math.softmax, x, 2)
 
-    y, equations = gams_math.softmax(x)
+    _y, equations = gams_math.softmax(x)
     assert "exp" in equations[0].getDefinition()
 
 

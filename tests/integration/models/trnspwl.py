@@ -227,9 +227,7 @@ def main():
     )
 
     # Parameters
-    p = Parameter(
-        m, name="p", domain=s, description="x coordinate of sample point"
-    )
+    p = Parameter(m, name="p", domain=s, description="x coordinate of sample point")
     sqrtp = Parameter(
         m, name="sqrtp", domain=s, description="y coordinate of sample point"
     )

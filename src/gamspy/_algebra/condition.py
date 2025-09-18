@@ -96,9 +96,7 @@ class Condition(operable.Operable):
         statement = expression.Expression(lhs, op_type, rhs)
 
         if isinstance(self.conditioning_on, ImplicitSymbol):
-            statement._validate_definition(
-                utils._unpack(self.conditioning_on.domain)
-            )
+            statement._validate_definition(utils._unpack(self.conditioning_on.domain))
 
         self.conditioning_on.container._add_statement(statement)
 

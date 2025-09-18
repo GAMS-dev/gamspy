@@ -120,9 +120,7 @@ def main():
     tau[t] = Ord(t) - 1
 
     Coupon = Parameter(m, name="Coupon", domain=i, description="Coupons")
-    Maturity = Parameter(
-        m, name="Maturity", domain=i, description="Maturities"
-    )
+    Maturity = Parameter(m, name="Maturity", domain=i, description="Maturities")
     F = Parameter(m, name="F", domain=[t, i], description="Cashflows")
     BondData = Parameter(
         m,
@@ -212,31 +210,19 @@ def main():
     # and Convexity (Q_i), for both the bonds and the liabilities:
     # Present value, Fisher & Weil duration, and convexity for
     # the bonds.
-    PV = Parameter(
-        m, name="PV", domain=i, description="Present value of assets"
-    )
+    PV = Parameter(m, name="PV", domain=i, description="Present value of assets")
     Dur = Parameter(m, name="Dur", domain=i, description="Duration of assets")
-    Conv = Parameter(
-        m, name="Conv", domain=i, description="Convexity of assets"
-    )
+    Conv = Parameter(m, name="Conv", domain=i, description="Convexity of assets")
 
     # Present value, Fisher & Weil duration, and convexity for
     # the liability.
-    PV_Liab = Parameter(
-        m, name="PV_Liab", description="Present value of liability"
-    )
-    Dur_Liab = Parameter(
-        m, name="Dur_Liab", description="Duration of liability"
-    )
-    Conv_Liab = Parameter(
-        m, name="Conv_Liab", description="Convexity of liability"
-    )
+    PV_Liab = Parameter(m, name="PV_Liab", description="Present value of liability")
+    Dur_Liab = Parameter(m, name="Dur_Liab", description="Duration of liability")
+    Conv_Liab = Parameter(m, name="Conv_Liab", description="Convexity of liability")
 
     PV[i] = Sum(t, F[t, i] * gams_math.exp(-r[t] * tau[t]))
 
-    Dur[i] = (1.0 / PV[i]) * Sum(
-        t, tau[t] * F[t, i] * gams_math.exp(-r[t] * tau[t])
-    )
+    Dur[i] = (1.0 / PV[i]) * Sum(t, tau[t] * F[t, i] * gams_math.exp(-r[t] * tau[t]))
 
     Conv[i] = (1.0 / PV[i]) * Sum(
         t, sqr(tau[t]) * F[t, i] * gams_math.exp(-r[t] * tau[t])
@@ -278,9 +264,7 @@ def main():
     PresentValueMatch = Equation(
         m,
         name="PresentValueMatch",
-        description=(
-            "Equation matching the present value of asset and liability"
-        ),
+        description=("Equation matching the present value of asset and liability"),
     )
     DurationMatch = Equation(
         m,

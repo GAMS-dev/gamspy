@@ -110,9 +110,7 @@ def _cast_values(
     num_variables: str,
     solver_time: str,
 ) -> tuple[float, int | float, int | float, float]:
-    objective = (
-        float("nan") if objective_value == "NA" else float(objective_value)
-    )
+    objective = float("nan") if objective_value == "NA" else float(objective_value)
     equations = float("nan") if num_equations == "NA" else int(num_equations)
     variables = float("nan") if num_variables == "NA" else int(num_variables)
     time = float("nan") if solver_time == "NA" else float(solver_time)
@@ -193,9 +191,7 @@ class Backend(ABC):
             gdx_in = os.path.basename(gdx_in)
         elif self.backend_type == "neos":
             gdx_in = "in.gdx"
-        gams_string = self.container._generate_gams_string(
-            gdx_in, modified_names
-        )
+        gams_string = self.container._generate_gams_string(gdx_in, modified_names)
         self.make_unmodified(modified_names)
 
         return gams_string
@@ -225,9 +221,7 @@ class Backend(ABC):
             symbols = filtered_names
 
         if len(symbols) != 0:
-            self.container._load_records_from_gdx(
-                self.container._gdx_out, symbols
-            )
+            self.container._load_records_from_gdx(self.container._gdx_out, symbols)
             self.make_unmodified(symbols)
 
         if relaxed_domain_mapping:
@@ -237,11 +231,7 @@ class Backend(ABC):
 
                 new_domain = []
                 for elem in symbol.domain:
-                    if (
-                        type(elem) is str
-                        and elem != "*"
-                        and elem in self.container
-                    ):
+                    if type(elem) is str and elem != "*" and elem in self.container:
                         new_domain.append(self.container[elem])
                     else:
                         new_domain.append(elem)
@@ -293,10 +283,8 @@ class Backend(ABC):
                 _,
             ) = line.split(",")
 
-        objective_value, num_equations, num_variables, solver_time = (
-            _cast_values(
-                objective_value, num_equations, num_variables, solver_time
-            )
+        objective_value, num_equations, num_variables, solver_time = _cast_values(
+            objective_value, num_equations, num_variables, solver_time
         )
 
         dataframe = pd.DataFrame(

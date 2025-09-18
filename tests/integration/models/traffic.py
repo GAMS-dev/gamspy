@@ -67,19 +67,11 @@ def main():
         type="Positive",
         description="flow to k along arc i-j",
     )
-    x = gp.Variable(
-        m, "x", domain=[i, j], description="aggregate flow on arc i-j"
-    )
-    objpnlp = gp.Variable(
-        m, "objpnlp", description="objective for nlp formulation"
-    )
-    objdnlp = gp.Variable(
-        m, "objdnlp", description="objective for nlp formulation"
-    )
+    x = gp.Variable(m, "x", domain=[i, j], description="aggregate flow on arc i-j")
+    objpnlp = gp.Variable(m, "objpnlp", description="objective for nlp formulation")
+    objdnlp = gp.Variable(m, "objdnlp", description="objective for nlp formulation")
 
-    balance = gp.Equation(
-        m, "balance", domain=[i, j], description="material balance"
-    )
+    balance = gp.Equation(m, "balance", domain=[i, j], description="material balance")
     vdef = gp.Equation(
         m, "vdef", domain=[i, j], description="arc travel time definition"
     )
@@ -142,17 +134,11 @@ def main():
     v.lo[a] = ca[a]
     y.fx[a[i, j], i] = 0
 
-    rep = gp.Parameter(
-        m, "rep", domain=[i, k, "*"], description="summary report"
-    )
+    rep = gp.Parameter(m, "rep", domain=[i, k, "*"], description="summary report")
 
     mcp.solve(options=gp.Options(domain_violation_limit=100000))
-    pnlp.solve(
-        solver="conopt", options=gp.Options(domain_violation_limit=100000)
-    )
-    dnlp.solve(
-        solver="conopt", options=gp.Options(domain_violation_limit=100000)
-    )
+    pnlp.solve(solver="conopt", options=gp.Options(domain_violation_limit=100000))
+    dnlp.solve(solver="conopt", options=gp.Options(domain_violation_limit=100000))
     rep[i, j, "mcp"] = t.l[i, j]
     rep[i, j, "primal"] = balance.m[i, j]
     rep[i, j, "dual"] = t.l[i, j]
@@ -161,9 +147,7 @@ def main():
 
     import math
 
-    assert math.isclose(
-        mcp.objective_value, 5.485113163672395e-08, abs_tol=1e-6
-    )
+    assert math.isclose(mcp.objective_value, 5.485113163672395e-08, abs_tol=1e-6)
     assert math.isclose(pnlp.objective_value, 5148.830098447451, abs_tol=1e-6)
     assert math.isclose(dnlp.objective_value, 5148.830098449257, abs_tol=1e-6)
 

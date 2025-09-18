@@ -87,9 +87,7 @@ def main():
     eq2 = Sum(node, alpha[node])
 
     eq3 = Equation(m, name="eq3", domain=bus)
-    eq3[bus] = (
-        PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= alpha[bus]
-    )
+    eq3[bus] = PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= alpha[bus]
 
     placement3 = Model(
         m,
