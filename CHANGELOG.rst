@@ -229,7 +229,9 @@ Improved documentation
 
 GAMSPy 1.9.0
 ============
-- General
+
+General
+-------
   - Validate solver options for most of the solvers. It can be disable through VALIDATE_SOLVER_OPTIONS option.
   - get the value of objective estimation and the number of nodes used after frozen solves
   - Add description argument for model objects.
@@ -245,15 +247,21 @@ GAMSPy 1.9.0
   - Propagate the output option of the container to `model.freeze`.
   - Raise warning in case the frozen solve is interrupted.
   - Improve the performance of symbol declarations without any records and declaration of 0 dimensional symbols with records.
-- Documentation
+
+Documentation
+-------------
   - Add additional instructions to deploy a GAMSPy/GAMS MIRO model.
   - Fix name mismatch between the argument name and the docstring of loadRecordsFromGdx function.
-- Testing
+
+Testing
+-------
   - Run all pre-commit hooks instead of running selectively.
 
 GAMSPy 1.8.0
 ============
-- General
+
+General
+-------
   - Improve the performance of frozen solves.
   - Add support for new equation, variable matching syntax for MCP models.
   - Ignore empty and newlines in the existing solvers file.
@@ -262,30 +270,42 @@ GAMSPy 1.8.0
   - Fix the bug in the case of multiple frozen models in one container.
   - Perform pip audit check in the pipeline instead of pre-commit.
   - Upgrade gamspy_base and gamsapi dependencies.
-- Documentation
+
+Documentation
+-------------
   - Add `Examples` section under `Machine Learning` documentation.
   - Add a Thermal Reformer example demonstrating neural network surrogate modeling.
-- Testing
+
+Testing
+-------
   - Fix the issue of mac jobs deleting each others environments.
 
 GAMSPy 1.7.0
 ============
-- General
+
+General
+-------
   - Allow container serialization/deserialization.
   - Support an alternative syntax for operations. For example, x.sum() is equivalent to Sum(x.domain, x[x.domain]).
   - Fix a bug when starting from a GAMS restart file.
   - Allow propagating bounds of the output in `Conv2D` class.
   - Introduce `name_prefix` option to NN formulations for ease of debugging.
-- Documentation
+
+Documentation
+-------------
   - Add a section in FAQ about the compatibiltiy issues of the Python interpreter from the Microsoft Store.
   - Fix minor issue in embedding Neural Network documentation.
-- Testing
+
+Testing
+-------
   - Enforce the order of tests. Run unit tests first, and model library tests last.
   - Use spawn method for multiprocessing to avoid possible deadlocks with fork method.
 
 GAMSPy 1.6.0
 ============
-- General
+
+General
+-------
   - Upgrade pre-commit dependencies.
   - Enhance bound propagation for `AvgPool2d` class.
   - Allow adding debug options to Options objects.
@@ -300,28 +320,40 @@ GAMSPy 1.6.0
   - Provide ssl context explicitly for NEOS backend.
   - Add configurable options via set_options and get_option.
   - Fix bug in an edge case of the vector-matrix multiplication.
-- Testing
+
+Testing
+-------
   - Add an lp and a qcp benchmark for performance comparison.
-- Documentation
+
+Documentation
+-------------
   - Add CNNs to embedding Neural Network documentation.
 
 GAMSPy 1.5.1
 ============
-- General
+
+General
+-------
   - Fix the bugs in dynamic set assignments.
   - Rewrite parts of GAMS Control API.
   - Fix debugging level bug of NEOS backend.
   - Fix license issue of big models that are solved with frozen solve.
   - Allow loadRecordsFromGdx to domain forward.
   - Enhance bound propagation for `MaxPool2d` and `MinPool2d` classes.
-- Testing
+
+Testing
+-------
   - Add bound propagation tests for `MaxPool2d` and `MinPool2d` classes.
-- Documentation
+
+Documentation
+-------------
   - Update embedding Neural Network documentation.
 
 GAMSPy 1.5.0
 ============
-- General
+
+General
+-------
   - Fix implicit parameter validation bug.
   - Migrate GAMSPy CLI to Typer.
   - Threads can now create a container since we register the signal only to the main thread.
@@ -329,25 +361,35 @@ GAMSPy 1.5.0
   - Synchronize after read.
   - Upgrade gamspy_base and gamsapi dependencies.
   - Add `--checkout-duration` and `--renew` options to `gamspy install license`.
-- Testing
+
+Testing
+-------
   - Lower the number of dices in the interrupt test and put a time limit to the solve.
   - Add tests for piecewise linear functions.
-- Documentation
+
+Documentation
+-------------
   - Install dependencies in the first cell of the example transportation notebook.
   - Add Formulations page to list piecewise linear functions and nn formulations.
 
 GAMSPy 1.4.0
 ============
-- General
+
+General
+-------
   - Resolve static code analysis issues to improve code quality.
   - Return the value as a float if the given domain sets are all literals.
   - Add an automation script to update pyproject.toml, switcher, version test, and the release notes.
   - Allow propagating bounds of the output in the Linear class.
   - Allow GAMS to find the available port and connect to it.
   - Upgrade gamspy_base and gamsapi dependencies.
-- Testing
+
+Testing
+-------
   - Set COVERAGE_CORE to sysmon to make use of the new sys.monitoring package in Python.
-- Documentation
+
+Documentation
+-------------
   - Add an example demonstrating how to solve the Minimum Cost Multi-Commodity Flow Problem using Column Generation in GAMSPy.
   - Remove non-negative variable type from the docs.
   - Add plausible.js for analytics.
@@ -357,12 +399,16 @@ GAMSPy 1.4.0
 
 GAMSPy 1.3.1
 ============
-- General
+
+General
+-------
   - Fix the bug in equality type traversal. Use post-traversal instead of in-order traversal.
 
 GAMSPy 1.3.0
 ============
-- General
+
+General
+-------
   - Change the way to show limited variables in latex file.
   - Overload __rpower__ for operables.
   - Support __neg__ overload for Card and Ord operations.
@@ -371,27 +417,37 @@ GAMSPy 1.3.0
   - Add `map_value` function to the math library.
   - Allow conditioning on conditions.
   - Upgrade gamspy_base and gamsapi dependencies. 
-- Documentation
+
+Documentation
+-------------
   - Add a section for limited variables. 
   - Add an example that shows how to read from another Container.
 
 GAMSPy 1.2.0
 ============
-- General
+
+General
+-------
   - Fix non-zero return code issue in case there is an error in the script. In case the return code is non-zero, GAMSPy will not launch GAMS MIRO.
   - Fix the behaviour of CTRL+C. 
   - Allow alternative `set +/- n` syntax for lead and lag operations. 
   - Upgrade gamspy_base and gamsapi dependencies.
   - Expose the filename and the line number of the solve to the listing file.
   - Improve the performance of `load_from` argument of Container.
-- Testing
+
+Testing
+-------
   - Add a new performance test which compares the performance of GAMS Transfer read and GAMSPy read.
-- Documentation
+
+Documentation
+-------------
   - Add a favicon.
 
 GAMSPy 1.1.0
 ============
-- General
+
+General
+-------
   - Allow printing the records of variable/equation attributes with a print(variable.attribute[domain].records) syntax.
   - Allow printing the records of a subset of a parameter with print(parameter['literal'].records) syntax.
   - Allow printing the records of a subset of a set with print(set['literal'].records) syntax.
@@ -401,7 +457,9 @@ GAMSPy 1.1.0
   - Fix minor bug of domain conflict in batched matrix multiplication
   - Improve the error messages of the thrown exceptions in case the user provide a model option at Container creation time.
   - Do not allow models with the same name to override each other.
-- Testing
+
+Testing
+-------
   - Fix race conditions in the pipeline.
   - Remove redundant setRecords in gapmin.py example.
   - Add sq.py model to the test model suite.
@@ -409,12 +467,16 @@ GAMSPy 1.1.0
   - Fix lower bound in reshop model.
   - Add tests for the Linear layer
   - Add a script to measure the overhead of GAMSPy and Python in general for each model in the model library.
-- Documentation
+
+Documentation
+-------------
   - Add documentation for the Linear layer
 
 GAMSPy 1.0.4
 ============
-- General
+
+General
+-------
   - Do not create a GDX file when it's not necessary. 
   - Do not carry solver options from the previous solve to the new solve.
   - Fix toGams bug of MathOp symbols.
@@ -422,26 +484,36 @@ GAMSPy 1.0.4
   - Add "same" and "valid" options for Conv2d padding.
   - Update dependencies. gamspy_base -> 48.1.1 and gamsapi -> 48.1.0.
   - Make minimum supported Python version 3.9 and add support for Python 3.13.
-- Documentation
+
+Documentation
+-------------
   - Fix documented type of model.solve_status.
   - Add num_equations attribute to the model page of user guide.
   - Add synchronization docs to reference api.
-- Testing
+
+Testing
+-------
   - Add one to one comparison tests with reference files in toGams tests.
   - Add tests for "same" and "valid" padding options of Conv2d.
 
 GAMSPy 1.0.3
 ============
-- General
+
+General
+-------
   - Fix solver installation bug in case of a solver installation before the license installation.
   - Fix the validation bug on multiple operations in a row.
   - Fix set attribute comparison bug.
-- Testing
+
+Testing
+-------
   - Remove leftover files after running all tests.
 
 GAMSPy 1.0.2
 ============
-- General
+
+General
+-------
   - Validate whether the solver is installed only for local backend.
   - Change the default value of sense to Sense.FEASIBILITY.
   - Support output in Container constructor.
@@ -460,7 +532,9 @@ GAMSPy 1.0.2
   - Fix incorrect domain information of symbols created by addGamsCode 
   - Fix network license issue on NEOS Server.
   - Replace non-utf8 bytes of stdout.
-- Testing
+
+Testing
+-------
   - Remove license uninstall test to avoid crashing parallel tests on the same machine.
   - Add tests for the generated solve strings for different type of problems.
   - Add a test for Container output argument.
@@ -469,7 +543,9 @@ GAMSPy 1.0.2
   - Add memory check script for the performance CI step.
   - Add tests for the alternative syntax for variable/equation attributes.
   - Add tests for pooling layers and flatten_dims
-- Documentation
+
+Documentation
+-------------
   - Fix broken links in the documentation.
   - Add a ci step to check doc links.
   - Improve the wording of debugging document.
@@ -477,7 +553,9 @@ GAMSPy 1.0.2
 
 GAMSPy 1.0.1
 ============
-- General
+
+General
+-------
   - Fix frozen solve with non-scalar symbols.
   - Fix the definition update problem while redefining an equation with definition argument.
   - Introduce default directories to keep license information on upgrade.
@@ -488,7 +566,9 @@ GAMSPy 1.0.1
   - Add Conv2d formulation for convenience
   - Map GAMSPy problem types to NEOS problem types before sending the job.
   - Upgrade gamspy_base and gamsapi versions to 47.6.0. 
-- Testing
+
+Testing
+-------
   - Add test for the frozen solve with non-scalar symbols.
   - Add a test to verify the behaviour of equation redefinition with definition argument.
   - Test the usage of a license that is in one of the default paths.
@@ -498,13 +578,17 @@ GAMSPy 1.0.1
   - Add tests to verify correctness of Conv2d formulation
   - Add a test to verify GAMSPy -> NEOS mapping.
   - Add an execution error test.
-- Documentation
+
+Documentation
+-------------
   - Update the documentation of install/uninstall command line arguments.
   - Add a section for NN formulations
 
 GAMSPy 1.0.0
 ============
-- General
+
+General
+-------
   - Fix starting from a loadpoint for GAMS Engine backend.
   - Fix solver options issue for GAMS Engine backend.
   - Fix solver options issue for NEOS backend.
@@ -522,25 +606,35 @@ GAMSPy 1.0.0
   - Allow UniverseAlias in assignments.
   - Add performance ci step to check model generation time difference.
   - Update gamspy_base and gamsapi to 47.5.0.
-- Documentation
+
+Documentation
+-------------
   - Add a warning about the manipulation of records via .records. 
   - Fix model attribute return type.
-- Testing
+
+Testing
+-------
   - Add sat problem to the example models.
 
 GAMSPy 0.14.7
 =============
-- General
+
+General
+-------
   - Include variable infeasibilities in model.computeInfeasibilities().
   - Remove cone equation type.
   - Fix empty space issue in paths.
-- Documentation
+
+Documentation
+-------------
   - Add gamspy probe and gamspy retrieve to the cli reference page.
   - Fix typo in miro docs.
 
 GAMSPy 0.14.6
 =============
-- General
+
+General
+-------
   - Fix GAMS Engine get_logs return values according to the status code.
   - Allow explicit port definition via environment variable to communicate with GAMS. 
   - Replace GamsWorkspace with GAMSPy workspace implementation.
@@ -556,7 +650,9 @@ GAMSPy 0.14.6
   - Do not convert eps to zero by default.
   - Add Sand and Sor operations.
   - Ensure that external equations contain == operation.
-- Testing
+
+Testing
+-------
   - Use the Container that is created in the setup phase instead of creating a new one.
   - Remove unnecessary init files in tests.
   - Add a test for invalid port.
@@ -565,7 +661,9 @@ GAMSPy 0.14.6
   - Add tests for gamspy probe and gamspy retrieve license.
   - Add test to use UniverseAlias object as domain.
   - Add tests to verify that symbol creation with no name is possible.
-- Documentation
+
+Documentation
+-------------
   - Add what is gamspy page to docs.
   - Update indexing docs.
   - Add a link to model library on the landing page.
@@ -581,20 +679,28 @@ GAMSPy 0.14.6
 
 GAMSPy 0.14.5
 =============
-- General
+
+General
+-------
   - Retry login with exponential backoff in GAMS Engine backend.
   - Allow to set all model attributes that can be set before solve in GAMS.
   - Fix equation listing, variable listing parsing when listing file is specified.
-- Testing
+
+Testing
+-------
   - Use contextmanager to create atomic conda environments.
   - Add tests for model attribute options.
-- Documentation
+
+Documentation
+-------------
   - Fix links in the api reference.
   - Add an example that shows how to embed NN to an optimization problem.
 
 GAMSPy 0.14.4
 =============
-- General
+
+General
+-------
   - Add container.in_miro flag to selectively load data.
   - Parse error message after verifying the return code for engine backend.
   - Fix the behaviour of Model if it's declared twice with objective function.
@@ -603,14 +709,18 @@ GAMSPy 0.14.4
   - Fix exception on solve in case listing file is specified.
   - Add external equations support.
   - Do not raise exception in case GAMS Engine returns 308 on get_logs call.
-- Testing
+
+Testing
+-------
   - Add test for container.in_miro flag.
   - Add tests to simulate Jupyter Notebook behaviour.
   - Remove system_directory for tests.
   - Add a test which specifies the listing file and fails because the license does not allow to run the model.
   - Add tests for external equations support.
   - Add traffic model to the model library.
-- Documentation
+
+Documentation
+-------------
   - Document in_miro flag.
   - Add docstring for setBaseEqual.
   - Add section "External Equations" under Advanced documentation.
@@ -618,21 +728,29 @@ GAMSPy 0.14.4
 
 GAMSPy 0.14.3
 =============
-- General
+
+General
+-------
   - Add getEquationListing function to be able to inspect generated equations.
   - Add infeasibility threshold filter for equation listings.
   - Add getVariableListing function to be able to inspect generated variables.
-- Testing
+
+Testing
+-------
   - Add tests for getEquationListing function.
   - Add tests for getVariableListing function.
   - Test infeasibility threshold.
-- Documentation
+
+Documentation
+-------------
   - Add docs for getEquationListing.
   - Add docs for getVariableListing.
 
 GAMSPy 0.14.2
 =============
-- General
+
+General
+-------
   - Add generate_name_dict option.
   - Disable solution report by default.
   - Fix the order of equations in toGams utility.
@@ -642,7 +760,9 @@ GAMSPy 0.14.2
 
 GAMSPy 0.14.1
 =============
-- General
+
+General
+-------
   - Add SOS1 ReLU implementation.
   - Add __repr__ to all GAMSPy language constructs for better debugging.
   - Give a warning in case the domain is not initialized by the time there is an attribute assigment.
@@ -651,10 +771,14 @@ GAMSPy 0.14.1
   - Add selective loading for solve statements.
   - Change default port to communicate with license server to 443.
   - Fix installing licenses from a path.
-- Documentation
+
+Documentation
+-------------
   - Add API docs for SOS1 ReLU implementation.
   - Explain the working directory - debugging level relationship.
-- Testing
+
+Testing
+-------
   - Add tests for SOS1 ReLU implementation.
   - Shorten attribute assignments in model library (variable.l[...] = ... -> variable.l = ...).
   - Add tests for indexing on alias symbols.
@@ -665,17 +789,23 @@ GAMSPy 0.14.1
 
 GAMSPy 0.14.0
 =============
-- General
+
+General
+-------
   - Introduce matrix multiplication operator `@`.
   - Add most common activation functions for machine learning.
   - Improve domain checking.
   - Write division with frac in toLatex function.
   - Allow specifying port for the communication with GAMS license server with --port argument of GAMSPy CLI.
-- Documentation
+
+Documentation
+-------------
   - Add GAMSPy and Machine Learning section.
   - Add ML examples.
   - Give more information about the restrictions of frozen solve.
-- Testing
+
+Testing
+-------
   - Add tests for different cases of matrix multiplication.
   - Add tests for activation functions.
   - Add tests for domain checking.
@@ -684,125 +814,175 @@ GAMSPy 0.14.0
 
 GAMSPy 0.13.7
 =============
-- General
+
+General
+-------
   - Support .where syntax for Card and Ord.
   - Return condition on where operations on the right instead of expression.
   - Support custom streams for output redirection.
   - Catch set is already under control errors early.
-- Documentation
+
+Documentation
+-------------
   - Fix docstring of the Card operation.
   - Add warning about non-professional licenses in addGamsCode docstring.
   - Add an example to show how to redirect output to a custom stream.
-- Testing
+
+Testing
+-------
   - Add tests for .where syntax for Card and Ord.
   - Add tests to catch set is already under control errors.
   - Add a test which redirects output to a custom stream.
 
 GAMSPy 0.13.6
 =============
-- General
+
+General
+-------
   - Make all file read and writes with utf-8 encoding.
   - Fix model instance record columns.
   - Allow all iterables for equations argument of model.
   - Fix the bug in socket connection messages.
-- Testing
+
+Testing
+-------
   - Add a test to verify the columns of symbols in model instance solves.
   - Test set difference for model equations argument.
 
 GAMSPy 0.13.5
 =============
-- General
+
+General
+-------
   - Make trace file name dynamic to avoid race condition on parallel runs.
   - Fix log options for GAMS Engine backend.
   - Initial support for GAMSPy to Latex.
   - Generate solver options file under container working directory instead of current directory.
   - Fix implicit set issues for toGams function.
-- Documentation
+
+Documentation
+-------------
   - Add links to the api reference for symbols and functions mentioned in the documentation.
   - Minor documentation corrections.
-- Testing
+
+Testing
+-------
   - Logout from GAMS Engine only on Python 3.12 to avoid unauthorized calls on parallel jobs.
   - Add tests to verify the behaviour of different logoption values.
   - Add tests for GAMSPy to Latex.
 
 GAMSPy 0.13.4
 =============
-- General
+
+General
+-------
   - Fix hanging issue on Windows for GAMS Engine backend.
   - Refactor toGams converter.
   - Fix solver options file path bug.
-- Testing
+
+Testing
+-------
   - Add more tests for GAMS MIRO.
 
 GAMSPy 0.13.3
 =============
-- General
+
+General
+-------
   - Change default solvers to 'CONOPT', 'CONVERT', 'CPLEX', 'GUSS', 'IPOPT', 'IPOPTH', 'KESTREL', 'NLPEC', 'PATH', and 'SHOT'
   - Fix the version of gamspy_base when "gamspy update" command is being executed.
   - Fix the order issue for Alias in toGams function.
   - Add exponential backoff for GAMS Engine logout api.
   - Add symbol validation for Ord operation.
-- Testing
+
+Testing
+-------
   - Update model library tests according to the new default solvers.
   - Add a test to verify that modifiable symbols cannot be in conditions for model instance runs.
   - Add new tests for symbol validation.
 
 GAMSPy 0.13.2
 =============
-- General
+
+General
+-------
   - Set the records of objective value in model instance solves. 
   - Allow using an environment variable to set the GAMS system directory (given environment variable will override the system directory even if the user provides a system directory argument to Container).
   - Use gdxSymbols commandline option instead of manually marking symbols dirty.
   - Add memory_tick_interval, monitor_process_tree_memory, and profile_file options.
   - Change the way to generate GAMS model from a GAMSPy model.
   - Remove import_symbols argument for addGamsCode since it is not needed anymore.
-- Documentation
+
+Documentation
+-------------
   - Redirect model library page to gamspy-examples Github repo.
   - Update toGams docs.
   - Update doctest of addGamsCode.
-- Testing
+
+Testing
+-------
   - Add model instance tests that check the objective value.
   - Update system directory test to adjust to the environment variable support.
   - Add tests for profiling options.
 
 GAMSPy 0.13.1
 =============
-- General
+
+General
+-------
   - Support output redirection for NEOS backend.
   - Support GAMSPy to GAMS automatic conversion.
   - Add support for old way of installing a license. 
-- Documentation
+
+Documentation
+-------------
   - Update model documentation to show how to redirect NEOS output to a file.
   - Add examples to all public functions in API Reference.
-- Testing
+
+Testing
+-------
   - Add a new model (knapsack) to the model library.
 
 GAMSPy 0.13.0
 =============
-- General
+
+General
+-------
   - Communicate with GAMS executable via socket instead of spawning a new job everytime.
-- Documentation
+
+Documentation
+-------------
   - Adjust debugging page according to the new .gms generation rules.
   - Update installation page to adjust to the new licensing scheme.
-- Testing
+
+Testing
+-------
   - Add new tests to verify correct license installation and listing solvers.
 
 GAMSPy 0.12.7
 =============
-- General
+
+General
+-------
   - Fix equation/variable listing bug.
   - Exclude autogen statements in generateGamsString raw.
   - Upgrade gamspy_base and gamsapi versions to 47.1.0.
   - Fix parameter equality bug in equations.
   - Set upper bound of numpy version below 2 until gamsapi supports it.
-- Documentation
+
+Documentation
+-------------
   - Fix the alignment of code section in debugging page.
-- Testing
+
+Testing
+-------
   - Add test to verify the correctness of parameter equality in equations.
 
 GAMSPy 0.12.6
 =============
-- General
+
+General
+-------
   - Do not open gdx file in case there is nothing to load.
   - Fix solver capability check bug.
   - Enable explicit expert synchronization for symbols.
@@ -814,7 +994,9 @@ Testing
 
 GAMSPy 0.12.5
 =============
-- General
+
+General
+-------
   - Do not pick the default solver if the given solver is not compatible with the problem type.
   - Add extrinsic function support.
   - Expose addGamsCode to user.
@@ -822,20 +1004,26 @@ GAMSPy 0.12.5
   - Show better error messages.
   - Fix number of arguments that log_gamma takes.
   - Rename getStatement to getDeclaration.
-- Testing
+
+Testing
+-------
   - Add tests for extrinsic functions.
   - Test whether the given solver is capable of solving the problem type.
   - Add an addGamsCode test for each problem type. 
   - Test Jupyter Notebooks in docs automatically.
   - update log option tests.
-- Documentation
+
+Documentation
+-------------
   - Remove unnecessary GTP functions from documentation
   - Add a doctest for addGamsCode.
   - Update the documentation on generating log files.
 
 GAMSPy 0.12.4
 =============
-- General
+
+General
+-------
   - Add checks on model name.
   - Adjust when to throw an exception and when to throw a warning for different SolveStatus values.
   - Make autogenerated model attribute symbol names independent of the model name.
@@ -843,23 +1031,31 @@ GAMSPy 0.12.4
   - Add deprecation message for getStatement and expose getDeclaration and getDefinition.
   - Override __repr__ and __str__ of Container.
   - Synchronize gamspy_base and gamsapi versions.
-- Testing
+
+Testing
+-------
   - Test invalid model names.
   - Add tests for expressions and symbols that are used as truth values.
   - Add tests for __repr__ and __str__ of Container.
 
 GAMSPy 0.12.3
 =============
-- General
+
+General
+-------
   - Set log and listing file option relative to os.cwd instead of workspace.working_directory.
   - Simplify expression generation and fix incorrect expression data. 
   - Add logoption=4.
   - Add show_raw option to the generateGamsString function.
-- Testing
+
+Testing
+-------
   - Test relative path for listing file and log file creation options.
   - Update log option tests.
   - Add new tests for generateGamString.
-- Documentation
+
+Documentation
+-------------
   - Remove the remnants of .definition and .assignment syntax from documentation.
   - Fix the example in gamspy for gams users.
   - Add notes about the equivalent operation in GAMS to .where syntax in GAMSPy.
@@ -867,19 +1063,25 @@ GAMSPy 0.12.3
 
 GAMSPy 0.12.2
 =============
-- General
+
+General
+-------
   - Add infeasibility_tolerance as a model attribute.
   - Make urllib3 a true dependency instead of an optional one.
   - Do not suppress compiler listing by default.
   - Improve the performance of model attribute loading.
   - Load miro input symbols once.
   - Fix license path for model instance.
-- Documentation
+
+Documentation
+-------------
   - Add documentation about solver specific infeasibility options.
 
 GAMSPy 0.12.1
 =============
-- General
+
+General
+-------
   - Fix dataframe column names of GAMS MIRO input tables.
   - Catch solve status errors and throw necessary exceptions.
   - __pow__ returns sqrt instead of rPower if the exponent is 0.5.
@@ -893,7 +1095,9 @@ GAMSPy 0.12.1
   - Add calculate_infeasibilities function for variables, equations and models.
   - Add 'gamspy show license', and 'gamspy show base' commands.
   - Replace __del__ with atexit.register function.
-- Testing
+
+Testing
+-------
   - Replace cta PandasExcelReader and PandasExcelWriter with new ExcelReader and ExcelWriter from GAMS Connect correspondingly. 
   - Add a new model (Nurses) to the model library and the Notebook examples.
   - Add an AC optimal power flow (ACOPF) model to the model library.
@@ -903,7 +1107,9 @@ GAMSPy 0.12.1
   - Add a test for creating lst file with arbitrary name.
   - Add a test for creating gdx file with arbitrary name.
   - Add tests for infeasibility calculations.
-- Documentation
+
+Documentation
+-------------
   - Remove FAQ about Google Colab (it is resolved) and add FAQ about Windows Defender.
   - Remove documentation for delayed execution mode.
   - Add an example for providing solver options.
@@ -911,26 +1117,38 @@ GAMSPy 0.12.1
 
 GAMSPy 0.12.0
 =============
-- General
+
+General
+-------
   - Implement GAMS MIRO integration.
   - Update minimum gamsapi and gamspy_base version to 46.1.0.
-- Testing
+
+Testing
+-------
   - Add tests for GAMS MIRO.
-- Documentation
+
+Documentation
+-------------
   - Add documentation of GAMS MIRO integration.
   
 GAMSPy 0.11.10
 ==============
-- General
+
+General
+-------
   - Adapt debugging level to GAMS 46 debugging levels.
   - Adapt getInstalledSolvers to renaming of SCENSOLVER
-- Testing
+
+Testing
+-------
   - Add test for GAMS Engine extra model files with incorrect relative path.
   - Update the results of model instance tests (CONOPT3 -> CONOPT4).
 
 GAMSPy 0.11.9
 =============
-- General
+
+General
+-------
   - Fix relative path issue of GAMS Engine backend.
   - Use $loadDC instead of $load to better catch domain violations.
   - Bypass constructor while creating a Container copy.
@@ -938,46 +1156,62 @@ GAMSPy 0.11.9
   - Update the behavior of `gamspy install/uninstall license`.
   - Implement GAMS Engine Client and consolidate NeosClient and EngineClient into one argument in solve.
   - Fix finding variables to mark in power and sameAs operations.
-- Testing
+
+Testing
+-------
   - Add test for GAMS Engine extra model files with incorrect relative path.
   - Add tests for new GAMS Engine Client.
   - Add a test to catch domain violation.
   - Remove declaration of objective variables and functions and add the equations into Python variables.
   - Add a new test to verify the license installation/uninstallation behavior.
   - Add a test to find variables in power operation.
-- Documentation
+
+Documentation
+-------------
   - Add a note in model documentation to warn about relative path requirement of GAMS Engine.
   - Add documentation for solving models asynchronously with GAMS Engine.
   - Modify model library table generation script to add more information and better table styling.
 
 GAMSPy 0.11.8
 =============
-- General
+
+General
+-------
   - Allow assigning VariableType enum or EquationType enum as an attribute after object creation for Equation and Variable.
   - Fix running twice on symbol declaration with records
   - Return better error messages for incorrectly provided solver, options, and output arguments.
   - Fix missing uels_on_axes argument in setRecords.
   - Start using pylint to improve code quality.
-- Testing
+
+Testing
+-------
   - Add tests for assigning type to Variable and Equation after creation.
   - Add models information at the top of each model's docstring.
   - Add tests for setRecords with uels on axes.
-- Documentation
+
+Documentation
+-------------
   - Add docs for translating GAMS Macros to GAMSPy.
 
 GAMSPy 0.11.7
 =============
-- General
+
+General
+-------
   - Implement GAMS MIRO integration.
   - Allow variable/equation attribute assignment without any index.
   - Run GAMS on symbol declaration and setRecords.
   - Add debugging_level argument to Container.
   - Performance improvements (~25-30%).
-- Testing
+
+Testing
+-------
   - Add tests for GAMS MIRO.
   - Test scalar variable/equation assignment without any index.
   - Test uel order.
-- Documentation
+
+Documentation
+-------------
   - Add documentation of GAMS MIRO integration.
   - Document assigning to scalar variable/equation.
   - Update documentation of frozen solve (model instance in GAMS). 
@@ -985,25 +1219,33 @@ GAMSPy 0.11.7
 
 GAMSPy 0.11.6
 =============
-- General
+
+General
+-------
   - Support slices for indexing.
   - Fix unary operator for expressions
   - Fixes SpecialValues bug in expressions.
   - Fix the bug for nonbinding equations.
   - Fix discovery of variables in math operations.
   - Fix literal while checking for domain validation.
-- Testing
+
+Testing
+-------
   - Add tests for slicing and ellipsis.
   - Add tests for unary operator applied to expressions.
   - Add tests to verify the correctness of SpecialValues in expressions.
   - Add more tests for nonbinding equations.
-- Documentation
+
+Documentation
+-------------
   - Document indexing with slices and ellipsis.
 
 
 GAMSPy 0.11.5
 =============
-- General
+
+General
+-------
   - Verify dimensionality of the symbol and the given indices to provide better error messages.
   - Allow Model object to also accept tuple of equations.
   - List available and installed solvers in alphabetically sorted order.
@@ -1015,17 +1257,23 @@ GAMSPy 0.11.5
   - Add more data validation functions.
   - Clear autogenerated symbols from the container if there is an exception.
   - Fix Alias bug while preparing modified symbols list.
-- Testing
+
+Testing
+-------
   - Add tests to check if incompatible dimensionality throws exception.
   - Test validation errors.
   - Allow providing system directory for the tests via environment variable.
-- Documentation
+
+Documentation
+-------------
   - Add documentation for `matches` argument of Model.
 
 
 GAMSPy 0.11.4
 =============
-- General
+
+General
+-------
   - Expose GTP special values via gp.SpecialValues
   - Fix NEOS bug when the previous workfile comes from another backend.
   - Optimize read function of Container by assigning the symbols' attributes directly while casting.
@@ -1035,11 +1283,15 @@ GAMSPy 0.11.4
   - Abstract backends to allow easier extension.
   - Add compress, mode, eps_to_zero arguments to write
   - Add load_records, mode, and encoding arguments to read
-- Documentation
+
+Documentation
+-------------
   - Fix Variable attribute assignments in user guide.
   - Add more examples in docstrings.
   - Add docs for collecting the results of non-blocking NEOS Server solves.
-- Testing
+
+Testing
+-------
   - Test the special value usage in assignments for Parameter, ImplicitParameter and Operation (Sum, Smax, Smin, Product).
   - Add hansmpsge model to the model library.
   - Add tests for the new arguments of write
@@ -1048,10 +1300,14 @@ GAMSPy 0.11.4
 
 GAMSPy 0.11.3
 =============
-- General
+
+General
+-------
   - Fix setRecords bug
   - Run after an equation is defined
-- Testing
+
+Testing
+-------
   - Fix incorrect order of setRecords in gapmin model
   - Fix domain violation in the unit tests revealed by the execution of 
   equation definitions in immediate mode.
@@ -1060,38 +1316,54 @@ GAMSPy 0.11.3
 
 GAMSPy 0.11.2
 =============
-- General
+
+General
+-------
   - Fix the bug in writing only modified symbols.
   - Return summary dataframe for all synchronous backends.
   - Fix the bug in using set, alias attributes in conditions.
-- Documentation
+
+Documentation
+-------------
   - Re-run notebooks to reflect the changes in solve summary.
-- Testing
+
+Testing
+-------
   - Add tests for the returned summary dataframe from solve.
   - Add tests for solve with trace options.
 
 
 GAMSPy 0.11.1
 =============
-- General
+
+General
+-------
   - Fix missing atttributes of Alias such as .first, .last etc.
   - Fix global option bug
   - Display summary on Jupyter Notebook.
-- Testing
+
+Testing
+-------
   - Add tests for Alias attributes.
 
 GAMSPy 0.11.0
 =============
-- General
+
+General
+-------
   - Generate expression representation as soon as it is created to avoid tall recursions.
   - Find variables in equations by iteratively traversing instead of doing recursion.
   - Add NEOS Server as a backend to solve models.
   - Fix domain for the equations that were specified in the constructor of the equation.
   - Check if the container of domain symbols of a symbol match with the symbol's container.
   - Check if the container is valid before running the model.
-- Documentation
+
+Documentation
+-------------
   - Add documentation for NEOS backend.
-- Testing
+
+Testing
+-------
   - Add NEOS Server as a backend to solve models.
   - Add tests for NEOS backend.
   - Add tests for equations that were defined in the constructor.
@@ -1099,50 +1371,76 @@ GAMSPy 0.11.0
 
 GAMSPy 0.10.5
 =============
-- General
+
+General
+-------
   - Fix the issue of not setting options that are set to 0 (bug fix)
-- Testing
+
+Testing
+-------
   - Remove duplicated equations in models for MCP models.
 
 GAMSPy 0.10.4
 =============
-- General
+
+General
+-------
   - Fix not equals overload of Ord and Card operations (bug fix)
   - Refactor generation of GAMS string
-- Documentation
+
+Documentation
+-------------
   - Move doc dependencies to pyproject.toml
 
 GAMSPy 0.10.3
 =============
-- General
+
+General
+-------
   - Allow creating log file in working directory.
   - Forbid extra arguments for pydantic models (Options, EngineCofig)
-- Documentation
+
+Documentation
+-------------
   - Update model options table
   - Update jupyter notebook examples
-- Testing
+
+Testing
+-------
   - Adapt tests to new Options class instead of using dictionary.
 
 GAMSPy 0.10.2
 =============
-- General
+
+General
+-------
   - Write and read only dirty symbols instead of all symbols to improve performance (~30% improvement on running all model library models).
   - Make gdx file names thread safe by using uuid.
-- Documentation
+
+Documentation
+-------------
   - Fix api reference for inherited members.
   - Make execution modes and debugging section of container documentation a separate page.
-- Testing
+
+Testing
+-------
   - Add a new test for sending extra files to GAMS Engine.
   - Add scripts/atomic_conda_env.py to avoid race condition for parallel builds in the pipeline.
 
 GAMSPy 0.10.1
 =============
-- General
+
+General
+-------
   - Fix ellipsis syntax bug for variable and equation attributes
   - Introduce Pydantic as a dependency for options and engine config validation
-- Documentation
+
+Documentation
+-------------
   - Change reference API structure so that each class has its own page
-- Testing
+
+Testing
+-------
   - Simplify reinstall.py script
   - Add tests for options
   - Update tests for symbol creation
