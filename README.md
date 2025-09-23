@@ -3,6 +3,7 @@
 -----------------
 [![PyPI version](https://img.shields.io/pypi/v/gamspy.svg?maxAge=3600)](https://gamspy.readthedocs.io/en/latest/)
 [![Downloads](https://static.pepy.tech/badge/gamspy)](https://pepy.tech/project/gamspy)
+[![Supported versions](https://img.shields.io/pypi/pyversions/gamspy.svg)](https://pypi.python.org/pypi/gamspy)
 [![Documentation Status](https://readthedocs.org/projects/gamspy/badge/?version=latest)](https://gamspy.readthedocs.io/en/latest/)
 
 # GAMSPy: Algebraic Modeling Interface to GAMS
