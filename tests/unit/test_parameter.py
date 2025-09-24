@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy as gp
 from gamspy import (
     Alias,
     Container,
@@ -304,6 +305,23 @@ def test_expert_sync2(data):
         True  # Python: 3 GAMS: 3 (Python wins because the user has setRecords last)
     )
     assert f.toValue() == 3
+
+
+def test_expert_sync3():
+    m = gp.Container()
+    a = gp.Parameter(m, "a")
+    b = gp.Parameter(m, "b")
+
+    a.synchronize = False
+    a[...] = 2
+    b[...] = 1
+    assert b.toValue() == 1
+    assert a.records is None
+    a.synchronize = True
+
+    assert a.toValue() == 2
+    assert b.toValue() == 1
+    m.close()
 
 
 def test_control_domain(data):
