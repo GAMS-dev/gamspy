@@ -55,6 +55,7 @@ dev = [
   "ruff >= 0.13.0",
   "pre-commit >= 3.5.0",
   "mypy >= 1.18.1",
+  "griffe >= 1.14.0",
 ]
 
 test = [
