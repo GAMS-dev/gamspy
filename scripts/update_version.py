@@ -6,6 +6,27 @@ from argparse import ArgumentParser, Namespace
 from gamspy import __version__
 
 
+def check_backward_compatibility() -> None:
+    process = subprocess.run(
+        [
+            "griffe",
+            "check",
+            "--search",
+            "src",
+            "gamspy",
+            "--verbose",
+            "--against",
+            f"v{__version__}",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    assert process.returncode == 0, process.stdout
+
+    print("All updates are backward compatible!")
+
+
 def update_pyproject(args: Namespace) -> None:
     with open("pyproject.toml") as file:
         content = file.read()
@@ -101,6 +122,7 @@ def main():
     args = parser.parse_args()
     assert args.new_version
 
+    check_backward_compatibility()
     update_pyproject(args)
     update_switcher(args)
     update_version_test(args)

@@ -111,6 +111,7 @@ We have a memory usage test to observe whether GAMSPy memory usage accumulates w
 How to make a release
 =====================
 
+0. Ensure that the changes in the new version are all backward compatible. One can run ``griffe check --search src gamspy --verbose`` to do an automatic verification. 
 1. Update the version in ``pyproject.toml``.
 2. Update the unit test that checks the version of the package. It's under ``tests/test_gamspy.py::test_version``.
 3. Update the switcher. Switcher is the dropdown which shows the documentation versions of gamspy. Go to `GAMSPy Docs <https://gamspy.readthedocs.io>`_ and look at the top bar. You will see it there. To update it, open ``docs/_static/switcher.json`` and add the new version to the json. 
