@@ -1,22 +1,4 @@
 #### TESTS #####
-wei-test-3.14:
-  stage: test
-  needs: [wei-cli-3.10]
-  tags: [windows]
-  image: winamd64/python:3.14
-  script:
-    - python --version
-    - python -m pip install uv; uv venv .windows_test3.14; .windows_test3.14\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
-    - $basePath = Invoke-Expression "& gamspy show base"
-    - $getKeyPath = "$basePath\gamsgetkey"
-    - $outputPath = "$basePath\ci_license.txt"
-    - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
-    - gamspy install solver --install-all-solvers --use-uv
-    - gamspy uninstall solver miles --use-uv
-    - $env:COVERAGE_CORE = 'sysmon'; coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
-    - coverage report -m --data-file=".coverage"
-    - coverage xml --data-file=".coverage"
-
 wei-test-3.13:
   stage: test
   needs: [wei-cli-3.10]
@@ -24,7 +6,7 @@ wei-test-3.13:
   image: winamd64/python:3.13
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_test3.13; .windows_test3.13\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_test313; .windows_test313\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - $basePath = Invoke-Expression "& gamspy show base"
     - $getKeyPath = "$basePath\gamsgetkey"
     - $outputPath = "$basePath\ci_license.txt"
@@ -34,10 +16,6 @@ wei-test-3.13:
     - $env:COVERAGE_CORE = 'sysmon'; coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
 
 wei-test-3.12:
   stage: test
@@ -46,7 +24,7 @@ wei-test-3.12:
   image: winamd64/python:3.12
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_test3.12; .windows_test3.12\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_test312; .windows_test312\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - $basePath = Invoke-Expression "& gamspy show base"
     - $getKeyPath = "$basePath\gamsgetkey"
     - $outputPath = "$basePath\ci_license.txt"
@@ -66,7 +44,7 @@ wei-test-3.11:
   image: winamd64/python:3.11
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_test3.11; .windows_test3.11\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_test311; .windows_test311\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - $basePath = Invoke-Expression "& gamspy show base"
     - $getKeyPath = "$basePath\gamsgetkey"
     - $outputPath = "$basePath\ci_license.txt"
@@ -86,7 +64,7 @@ wei-test-3.10:
   image: winamd64/python:3.10
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_test3.10; .windows_test3.10\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_test310; .windows_test310\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - $basePath = Invoke-Expression "& gamspy show base"
     - $getKeyPath = "$basePath\gamsgetkey"
     - $outputPath = "$basePath\ci_license.txt"
@@ -106,7 +84,7 @@ wei-test-3.10:
   image: winamd64/python:3.10
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_test3.10; .windows_test3.10\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_test310; .windows_test310\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - $basePath = Invoke-Expression "& gamspy show base"
     - $getKeyPath = "$basePath\gamsgetkey"
     - $outputPath = "$basePath\ci_license.txt"
@@ -117,16 +95,16 @@ wei-test-3.10:
     - python -m pytest -x -v -s -m 'doc'
 
 #### ENGINE #####
-wei-engine-3.14:
+wei-engine-3.13:
   stage: engine
   when: manual
   needs: []
   allow_failure: true
   tags: [windows]
-  image: winamd64/python:3.14
+  image: winamd64/python:3.13
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_engine3.14; .windows_engine3.14\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_engine313; .windows_engine313\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'engine' tests
 
 wei-engine-3.10:
@@ -138,20 +116,20 @@ wei-engine-3.10:
   image: winamd64/python:3.10
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_engine3.10; .windows_engine3.10\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_engine310; .windows_engine310\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'engine' tests
 
 #### NEOS #####
-wei-neos-3.14:
+wei-neos-3.13:
   stage: neos
   when: manual
   needs: []
   allow_failure: true
   tags: [windows]
-  image: winamd64/python:3.14
+  image: winamd64/python:3.13
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_neos3.14; .windows_neos3.14\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_neos313; .windows_neos313\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'neos' tests
 
 wei-neos-3.10:
@@ -163,5 +141,5 @@ wei-neos-3.10:
   image: winamd64/python:3.10
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_neos3.10; .windows_neos3.10\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_neos310; .windows_neos310\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'neos' tests
