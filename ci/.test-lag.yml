@@ -1,11 +1,11 @@
 #### TESTS #####
-lag-test-3.13:
+lag-test-3.14:
   stage: test
   needs: [lag-cli-3.10]
   tags: [linux-arm64]
-  image: python:3.13
+  image: python:3.14
   script:
-    - python -m pip install uv && uv venv venv313 && source venv313/bin/activate
+    - python -m pip install uv && uv venv venv3.14 && source venv3.14/bin/activate
     - uv pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
@@ -14,13 +14,30 @@ lag-test-3.13:
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
 
+lag-test-3.13:
+  stage: test
+  needs: [lag-cli-3.10]
+  tags: [linux-arm64]
+  image: python:3.13
+  script:
+    - python -m pip install uv && uv venv venv3.13 && source venv3.13/bin/activate
+    - uv pip install .[dev,test] --force-reinstall
+    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
+    - gamspy install solver --install-all-solvers --use-uv
+    - gamspy uninstall solver miles --use-uv
+    - python -m pytest -x -v -s -m 'unit or integration or model_library or requires_license or doc' tests
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+      when: on_success
+    - when: never
+
 lag-test-3.12:
   stage: test
   needs: [lag-cli-3.10]
   tags: [linux-arm64]
   image: python:3.12
   script:
-    - python -m pip install uv && uv venv venv312 && source venv312/bin/activate
+    - python -m pip install uv && uv venv venv3.12 && source venv3.12/bin/activate
     - uv pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
@@ -37,7 +54,7 @@ lag-test-3.11:
   tags: [linux-arm64]
   image: python:3.11
   script:
-    - python -m pip install uv && uv venv venv311 && source venv311/bin/activate
+    - python -m pip install uv && uv venv venv3.11 && source venv3.11/bin/activate
     - uv pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
@@ -54,7 +71,7 @@ lag-test-3.10:
   tags: [linux-arm64]
   image: python:3.10
   script:
-    - python -m pip install uv && uv venv venv310 && source venv310/bin/activate
+    - python -m pip install uv && uv venv venv3.10 && source venv3.10/bin/activate
     - uv pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver --install-all-solvers --use-uv
@@ -66,15 +83,15 @@ lag-test-3.10:
     - when: never
 
 #### ENGINE #####
-lag-engine-3.13:
+lag-engine-3.14:
   stage: engine
   when: manual
   needs: []
   allow_failure: true
   tags: [linux-arm64]
-  image: python:3.13
+  image: python:3.14
   script:
-    - python -m pip install uv && uv venv venv313 && source venv313/bin/activate
+    - python -m pip install uv && uv venv venv3.14 && source venv3.14/bin/activate
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'engine' tests
 
@@ -86,20 +103,20 @@ lag-engine-3.10:
   tags: [linux-arm64]
   image: python:3.10
   script:
-    - python -m pip install uv && uv venv venv310 && source venv310/bin/activate
+    - python -m pip install uv && uv venv venv3.10 && source venv3.10/bin/activate
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'engine' tests
 
 #### NEOS #####
-lag-neos-3.13:
+lag-neos-3.14:
   stage: neos
   when: manual
   needs: []
   allow_failure: true
   tags: [linux-arm64]
-  image: python:3.13
+  image: python:3.14
   script:
-    - python -m pip install uv && uv venv venv313 && source venv313/bin/activate
+    - python -m pip install uv && uv venv venv3.14 && source venv3.14/bin/activate
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'neos' tests
 
@@ -111,6 +128,6 @@ lag-neos-3.10:
   tags: [linux-arm64]
   image: python:3.10
   script:
-    - python -m pip install uv && uv venv venv310 && source venv310/bin/activate
+    - python -m pip install uv && uv venv venv3.10 && source venv3.10/bin/activate
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'neos' tests
