@@ -8,9 +8,6 @@
 Variable
 ********
 
-Introduction
-============
-
 This chapter covers the declaration and manipulation of GAMSPy 
 :meth:`Variables <gamspy.Variable>`. Many concepts from previous chapters apply 
 here as well.
@@ -104,9 +101,6 @@ bounds may be changed using variable attributes and assignment statements, see s
 
 Variable Attributes
 ===================
-
-Introduction
-------------
 
 While a GAMSPy :ref:`parameter <parameter>` has one number associated with each unique 
 label combination, a variable has several attributes. They represent:

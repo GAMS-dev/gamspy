@@ -11,12 +11,8 @@ Set
 Simple Sets
 ===========
 
-Introduction
-------------
-
 Sets are the basic building blocks of a GAMSPy model, corresponding exactly 
-to the indices in the algebraic representations of models. A simple set 
-consists of a set name and the elements of the set. Example: ::
+to the indices in the algebraic representations of models. For example: ::
 
     from gamspy import Container, Set
 
@@ -100,7 +96,7 @@ we will later call an *ordered* set.
     operation of Python.
 
 Subsets
---------
+=======
 
 It is often necessary to define sets whose members must all be members of 
 some larger set. For instance, we may wish to define the sectors in an 
@@ -844,9 +840,6 @@ domain set can be defined through multiple symbols using the same domain.
 Dynamic Sets
 ============
 
-Introduction
--------------
-
 In this section we introduce a special type of sets: *dynamic sets*. The sets that 
 we discuss in detail above have their elements stated and the membership is usually
 given at object creation time or through the :meth:`setRecords <gamspy.Set.setRecords>`
@@ -1414,11 +1407,8 @@ can be rewritten without ``where[]`` as follows: ::
 
 .. _ordered-sets:
 
-Sets as Sequences: Ordered Sets
-================================
-
-Introduction
--------------
+Ordered Sets
+============
 
 We initially stated that in general, sets in GAMSPy are regarded as an unordered collection 
 of labels. However, in some contexts, say, multi-period planning models, some sets need to 
@@ -1477,7 +1467,7 @@ set ``t2`` is not the entry order in the constructor: ::
     In [1]: m.getUELs()
     Out[1]: ['1987', '1988', '1989', '1990', '1991', '1983', '1984', '1985', '1986']
 
-.. note::
+.. tip::
     An expected order can be accomplished by moving its declaration closer to the beginning of the program
     or by adding a dummy set with naturally ordered labels before the real data: ::
 
