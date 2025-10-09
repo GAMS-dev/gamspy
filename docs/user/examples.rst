@@ -5,12 +5,12 @@ This section provides complete modelling examples to demonstrate the capabilitie
 
 All example notebooks and input data files are available on https://github.com/GAMS-dev/gamspy/tree/develop/docs/user/notebooks. 
 
+* |colab_trnsport| :doc:`Transportation Problem <notebooks/trnsport>` (start here!)
+* |colab_nurses| :doc:`Nurses Assignment Problem <notebooks/nurses>`
 * |colab_blend| :doc:`notebooks/blend` 
 * |colab_millco| :doc:`notebooks/millco` 
 * |colab_pickstock| :doc:`notebooks/pickstock` 
-* |colab_trnsport| :doc:`Transportation Problem <notebooks/trnsport>`
 * |colab_clsp| :doc:`Capacitated Lot-Sizing Problem <notebooks/clsp>`
-* |colab_nurses| :doc:`Nurses Assignment Problem <notebooks/nurses>`
 * |colab_tsp| :doc:`Traveling Salesman Problem <notebooks/tsp>`
 
 .. |colab_blend| image:: https://colab.research.google.com/assets/colab-badge.svg
@@ -44,10 +44,10 @@ All example notebooks and input data files are available on https://github.com/G
 .. toctree::
     :hidden:
 
+    Transportation Problem <notebooks/trnsport>
+    Nurses Assignment Problem <notebooks/nurses>
     notebooks/blend
     notebooks/millco
     notebooks/pickstock
     Capacitated Lot-Sizing Problem <notebooks/clsp>
-    Transportation Problem <notebooks/trnsport>
-    Nurses Assignment Problem <notebooks/nurses>
     Traveling Salesman Problem <notebooks/tsp>
