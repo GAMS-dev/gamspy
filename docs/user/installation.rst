@@ -40,15 +40,19 @@ You can run the following command to install GAMSPy from PyPI::
 Licensing
 ---------
 GAMSPy comes with a free demo license which lets you generate and solve small models.
-For more information about GAMS licenses and how to get a new license, check 
-`GAMS Licensing <https://www.gams.com/sales/licensing>`_.
+Check `Demo License Limitations <https://www.gams.com/latest/docs/UG_License.html#UG_License_Additional_Solver_Limits>`_ 
+to get the exact limitations.
+
+.. note::
+    
+    GAMSPy is free for academics. Please check `GAMS Academic Program <https://www.gams.com/academics/>`_ for details.
 
 Installing or updating your license
 ===================================
-A GAMSPy license is a either an ASCII file of six lines or 36 character access code. 
+A GAMSPy license is a either a 36 character access code or an ASCII file of six lines. 
 In order to install your license, all you need to do is to run: ::
 
-    gamspy install license <path_to_ascii_file or access code>
+    gamspy install license <access code or path_to_ascii_file>
 
 You can run: ::
 
@@ -64,10 +68,6 @@ and get a license via a machine connected to the internet. Details about this ca
     GAMS and GAMSPy licenses are different, which means one cannot use an existing GAMS license for GAMSPy.
     We provide GAMSPy licenses for free if you already have a maintained professional GAMS license. 
     Contact sales@gams.com (with your GAMS license) to arrange for the delivery of a GAMSPy license.
-
-.. note::
-    
-    GAMSPy is free for academics. Please check `GAMS Academic Program <https://www.gams.com/academics/>`_ for details.
 
 
 Uninstalling your license
