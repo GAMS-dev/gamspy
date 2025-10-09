@@ -382,10 +382,21 @@ def test_show_license():
         stderr=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         text=True,
+        encoding="utf-8",
     )
 
-    assert process.returncode == 0, process.stdout + process.stderr
+    assert process.returncode == 0, process.stdout
     assert isinstance(process.stdout, str)
+
+    process = subprocess.run(
+        [sys.executable, "-Bm", "gamspy", "show", "license", "-v"],
+        stderr=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+    )
+
+    assert process.returncode == 0, process.stdout
 
 
 def test_show_base():

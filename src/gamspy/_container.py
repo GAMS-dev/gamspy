@@ -407,7 +407,7 @@ class Container(gt.Container):
         with open(self._license_path, encoding="utf-8") as file:
             lines = file.readlines()
 
-        return bool("+" in lines[0] and lines[4][47] == "N")
+        return bool(lines[0][54] == "+" and lines[4][47] == "N")
 
     @staticmethod
     def _release_resources(
