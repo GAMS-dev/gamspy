@@ -310,7 +310,7 @@ class Equation(gt.Equation, Symbol):
                 if is_miro_output:
                     name = name.lower()  # type: ignore
             else:
-                name = utils._get_symbol_name(prefix="e")
+                name = container._get_symbol_name(prefix="e")
 
             previous_state = container._options.miro_protect
             container._options.miro_protect = False

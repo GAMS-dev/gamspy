@@ -65,8 +65,8 @@ def test_set_creation(data):
     pytest.raises(TypeError, Set, 5, "j")
 
     # try to create a symbol with same name but different type
-    _ = Parameter(m, "i")
-    pytest.raises(TypeError, Set, m, "i")
+    _ = Parameter(m, "p")
+    pytest.raises(TypeError, Set, m, "p")
 
     # get already created symbol
     j1 = Set(m, "j")

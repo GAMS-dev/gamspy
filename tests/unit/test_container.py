@@ -1047,6 +1047,30 @@ def test_auto_python_name_retrieval():
 
     gp.set_options({"USE_PY_VAR_NAME": "yes-or-autogenerate"})
     _ = gp.Set(m)  # autogen a name
+    _ = gp.Alias(m, alias_with=i)
+    _ = gp.Parameter(m)  # autogen a name
+    _ = gp.Variable(m)  # autogen a name
+    _ = gp.Equation(m)  # autogen a name
+
+    test_set = gp.Set(m)
+    assert test_set.name == "test_set"
+    test_set = gp.Set(m)
+    assert test_set.name != "test_set"
+
+    test_parameter = gp.Parameter(m)
+    assert test_parameter.name == "test_parameter"
+    test_parameter = gp.Parameter(m)
+    assert test_parameter.name != "test_parameter"
+
+    test_variable = gp.Variable(m)
+    assert test_variable.name == "test_variable"
+    test_variable = gp.Variable(m)
+    assert test_variable.name != "test_variable"
+
+    test_equation = gp.Equation(m)
+    assert test_equation.name == "test_equation"
+    test_equation = gp.Equation(m)
+    assert test_equation.name != "test_equation"
 
     gp.set_options({"USE_PY_VAR_NAME": "no"})
 
