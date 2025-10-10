@@ -399,9 +399,10 @@ Here is a list of package wide options:
 | ASSUME_VARIABLE_SUFFIX       | int   | Activates or deactivates the automatic addition of .l or .scale attribute to variables on the right-hand side of assignments. Set to 1   |
 |                              |       | by default. 0: deactivate, 1: use .l attribute, 2: use .scale attribute.                                                                 |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-| USE_PY_VAR_NAME              | str   | "no": Do not try to use the Python variable name as the GAMSPy symbol name. (default value for this option)                              |
+| USE_PY_VAR_NAME              | str   | "no": Do not try to use the Python variable name as the GAMSPy symbol name.                                                              |
 |                              |       | "yes": Try using the variable name as the symbol name. If the variable name is not a valid GAMSPy symbol name, raise ValidationError.    |
-|                              |       | "yes-or-autogenerate": Try using the variable name as the symbol name. If the name is not a valid symbol name, autogenerate a new name.  |
+|                              |       | "yes-or-autogenerate": Try using the variable name as the symbol name. If the name is not a valid symbol name or if it already exists in |
+|                              |       | the container autogenerate a new name. (default value for this option).                                                                  |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | ALLOW_AMBIGUOUS_EQUATIONS    | str   | "auto": Do not allow ambiguous equations in MCP, EMP, MPEC, and RMPEC models but allow them in other model types.                        |
 |                              |       | "no": Do not allow ambiguous equations in any model types.                                                                               |

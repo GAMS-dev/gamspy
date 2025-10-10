@@ -46,7 +46,7 @@ def _set_default_options() -> None:
     configuration["ASSUME_VARIABLE_SUFFIX"] = assume_level
 
     # Try to use the Python variable name in case the name is not provided.
-    use_py_var_name = os.getenv("GAMSPY_USE_PY_VAR_NAME", "no")
+    use_py_var_name = os.getenv("GAMSPY_USE_PY_VAR_NAME", "yes-or-autogenerate")
     configuration["USE_PY_VAR_NAME"] = use_py_var_name
 
     # Do not drop the domain violations by default

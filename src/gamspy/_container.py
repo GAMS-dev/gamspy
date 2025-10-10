@@ -409,6 +409,30 @@ class Container(gt.Container):
 
         return bool(lines[0][54] == "+" and lines[4][47] == "N")
 
+    def _get_symbol_name(self, prefix: str) -> str:
+        use_py_var_name = get_option("USE_PY_VAR_NAME")
+        if use_py_var_name == "no":
+            name = prefix + utils._get_unique_name() + "gpauto"
+        elif use_py_var_name == "yes":
+            name = utils._get_name_from_stack()
+        elif use_py_var_name == "yes-or-autogenerate":
+            try:
+                name = utils._get_name_from_stack()
+                # if a symbol with the same name exists, autogenerate.
+                try:
+                    _ = self[name]
+                    name = prefix + utils._get_unique_name() + "gpauto"
+                except KeyError:
+                    ...
+            except ValidationError:
+                name = prefix + utils._get_unique_name() + "gpauto"
+        else:
+            raise ValidationError(
+                f'Invalid value `{use_py_var_name}` for `USE_PY_VAR_NAME`. Possible values are "no", "yes", "yes-or-autogenerate"'
+            )
+
+        return name
+
     @staticmethod
     def _release_resources(
         is_socket_open: bool, socket: socket.socket, process: subprocess.Popen

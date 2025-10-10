@@ -159,7 +159,7 @@ def _calc_hw(
 
 
 def _next_domains(
-    input_domain: list[gp.Set], check_domains: list[gp.Set]
+    input_domain: list[gp.Alias | gp.Set], check_domains: list[gp.Set]
 ) -> list[gp.Set]:
     names = {x.name for x in check_domains}
     output = []

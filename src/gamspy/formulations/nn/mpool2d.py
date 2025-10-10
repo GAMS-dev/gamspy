@@ -48,7 +48,7 @@ class _MPool2d:
         default_big_m: int,
         subset: gp.Set,
         out_var: gp.Variable,
-    ) -> tuple[gp.Parameter, gp.Parameter, gp.Parameter]:
+    ) -> gp.Parameter:
         # Extract batch and channel dimensions from input domain
         N, C = input.domain[:2]
         H_out, W_out, Hf, Wf, H_in, W_in = subset.domain

@@ -626,7 +626,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 if is_miro_input or is_miro_output:
                     name = name.lower()  # type: ignore
             else:
-                name = utils._get_symbol_name(prefix="s")
+                name = container._get_symbol_name(prefix="s")
 
             self._singleton_check(is_singleton, records, domain)
             previous_state = container._options.miro_protect

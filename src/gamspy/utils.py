@@ -351,6 +351,7 @@ def _get_name_from_stack() -> str:
         # The second f_back takes us to the __init__ function of
         # the symbol. The third f_back takes us to the user code.
         frame = inspect.currentframe().f_back.f_back.f_back
+        assert frame is not None
 
         # We get the line that defines the symbol. e.g. i = Set(m)
         line = inspect.getframeinfo(frame).code_context[0]
@@ -362,25 +363,6 @@ def _get_name_from_stack() -> str:
         raise ValidationError(
             f"It is not possible to get the Python variable name in this context: {e}"
         ) from e
-
-    return name
-
-
-def _get_symbol_name(prefix: str) -> str:
-    use_py_var_name = get_option("USE_PY_VAR_NAME")
-    if use_py_var_name == "no":
-        name = prefix + _get_unique_name() + "gpauto"
-    elif use_py_var_name == "yes":
-        name = _get_name_from_stack()
-    elif use_py_var_name == "yes-or-autogenerate":
-        try:
-            name = _get_name_from_stack()
-        except ValidationError:
-            name = prefix + _get_unique_name() + "gpauto"
-    else:
-        raise ValidationError(
-            f'Invalid value `{use_py_var_name}` for `USE_PY_VAR_NAME`. Possible values are "no", "yes", "yes-or-autogenerate"'
-        )
 
     return name
 

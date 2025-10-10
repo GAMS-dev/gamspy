@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import gamspy._symbols.implicits as implicits
 import gamspy.math
 import gamspy.utils as utils
+from gamspy._container import Container
 from gamspy._symbols.equation import Equation
 from gamspy._symbols.parameter import Parameter
 from gamspy._symbols.variable import Variable
@@ -123,7 +124,7 @@ def relu_with_sos1_var(
     """
     domain = x.domain
 
-    assert x.container
+    assert isinstance(x.container, Container)
     last_dim = gamspy.math._generate_dims(x.container, [2])[0]
 
     y = x.container.addVariable(
@@ -208,7 +209,7 @@ def leaky_relu_with_binary_var(
     [Set(name='i', domain=['*'])]
 
     """
-    assert x.container
+    assert isinstance(x.container, Container)
 
     if negative_slope <= 0 or negative_slope >= 1:
         raise ValidationError("negative_slope must be in the range (0, 1).")
@@ -323,7 +324,7 @@ def relu_with_binary_var(
     [Set(name='i', domain=['*'])]
 
     """
-    assert x.container
+    assert isinstance(x.container, Container)
     domain = x.domain
     sigma = x.container.addVariable(
         _get_random_name("bin"),
@@ -408,7 +409,7 @@ def relu_with_complementarity_var(
     2
 
     """
-    assert x.container
+    assert isinstance(x.container, Container)
     domain = x.domain
 
     y = x.container.addVariable(

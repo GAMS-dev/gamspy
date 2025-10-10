@@ -144,7 +144,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             if name is not None:
                 name = validation.validate_name(name)
             else:
-                name = utils._get_symbol_name(prefix="a")
+                name = container._get_symbol_name(prefix="a")
 
             super().__init__(container, name, alias_with)
 

@@ -292,12 +292,6 @@ class Model:
         if equations is None:
             equations = []
 
-        if name is not None:
-            name = validation.validate_name(name)
-            self.name = validation.validate_model_name(name)
-        else:
-            self.name = utils._get_symbol_name(prefix="m")
-
         self.description = description
 
         if container is not None:
@@ -306,6 +300,13 @@ class Model:
             self.container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
 
         assert self.container is not None
+
+        if name is not None:
+            name = validation.validate_name(name)
+            self.name = validation.validate_model_name(name)
+        else:
+            self.name = self.container._get_symbol_name(prefix="m")
+
         self._matches = matches
         self.problem, self.sense = validation.validate_model(
             equations, matches, problem, sense

@@ -1,5 +1,6 @@
 import gamspy.formulations.nn as nn
 import gamspy.formulations.piecewise as piecewise
+import gamspy.formulations.utils as utils
 from gamspy.formulations.ml import (
     DecisionTreeStruct,
     GradientBoosting,
@@ -39,4 +40,5 @@ __all__ = [
     "piecewise",
     "pwl_convexity_formulation",
     "pwl_interval_formulation",
+    "utils",
 ]
