@@ -24,7 +24,7 @@ def main():
     m = Container(
         load_from=str(Path(__file__).parent.absolute()) + "/hansmge.gdx",
     )
-    c, n, h, s, e, d, esub, data = (
+    c, _n, h, s, _e, _d, _esub, _data = (
         m[sym] for sym in ["c", "n", "h", "s", "e", "d", "esub", "data"]
     )
     m.addGamsCode("""

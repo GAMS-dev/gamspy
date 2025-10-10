@@ -1,15 +1,19 @@
 from __future__ import annotations
+
 import importlib
-import shutil
-
-import sys
-from typing import Annotated, Iterable, Optional, Union
-
-import typer
-from gamspy.exceptions import GamspyException, ValidationError
-import gamspy.utils as utils
 import os
+import shutil
 import subprocess
+import sys
+from collections.abc import Iterable
+from typing import Annotated
+
+import requests
+import typer
+
+import gamspy.utils as utils
+from gamspy.exceptions import GamspyException, ValidationError
+
 from .util import add_solver_entry
 
 app = typer.Typer(
@@ -19,20 +23,42 @@ app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 
+
 @app.command(
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy install license <access_code> or <path/to/license/file>",
-    short_help="To install a new license"
+    short_help="To install a new license",
 )
 def license(
-    license: Annotated[str, typer.Argument(help="access code or path to the license file.")],
-    checkout_duration: Optional[int] = typer.Option(None, "--checkout-duration", "-c", help="Specify a duration in hours to checkout a session."),
-    server: Optional[str] = typer.Option("https://license.gams.com", "--server", "-s", help="License server adress."),
-    port: Optional[int] = typer.Option(None, "--port", "-p", help="Port for the license server connection."),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Specify a file path to write the license file."),
-    uses_port: Annotated[Union[int, None], typer.Option("--uses-port", help="Interprocess communication starting port.")] = None,
+    license: Annotated[
+        str, typer.Argument(help="access code or path to the license file.")
+    ],
+    checkout_duration: int | None = typer.Option(
+        None,
+        "--checkout-duration",
+        "-c",
+        help="Specify a duration in hours to checkout a session.",
+    ),
+    server: str | None = typer.Option(
+        "https://license.gams.com",
+        "--server",
+        "-s",
+        help="License server adress.",
+    ),
+    port: int | None = typer.Option(
+        None, "--port", "-p", help="Port for the license server connection."
+    ),
+    output: str | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Specify a file path to write the license file.",
+    ),
+    uses_port: Annotated[
+        int | None,
+        typer.Option("--uses-port", help="Interprocess communication starting port."),
+    ] = None,
 ):
     import json
-    from urllib.parse import urlencode
 
     os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
 
@@ -53,26 +79,33 @@ def license(
 
         # Make cmex_type check only for GAMS license server.
         if server == "https://license.gams.com":
-            http = utils._make_http()
-
-            encoded_args = urlencode({"access_token": alp_id})
-            request = http.request(
-                "GET", f"{server}/license-type?" + encoded_args
-            )
-            if request.status != 200:
+            params = {"access_token": alp_id}
+            request = requests.get(f"{server}/license-type", params=params)
+            if request.status_code != 200:
                 raise ValidationError(
-                    f"License server did not respond in an expected way. Request status: {request.status}. Reason: {request.data.decode('utf-8', errors='replace')}"
+                    f"License server did not respond in an expected way. Request status: {request.status_code}. Reason: {request.content.decode('utf-8', errors='replace')}"
                 )
 
-            data = request.data.decode("utf-8", errors="replace")
+            data = request.content.decode("utf-8", errors="replace")
             cmex_type = json.loads(data)["cmex_type"]
-            if cmex_type not in ("demo", "community", "gamspy", "gamspy++", "gamsall"):
+            if cmex_type not in (
+                "demo",
+                "community",
+                "gamspy",
+                "gamspy++",
+                "gamsall",
+            ):
                 raise ValidationError(
                     f"Given access code `{alp_id} ({cmex_type})` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
 
-        command = [os.path.join(gamspy_base_dir, "gamsgetkey"), alp_id, "-s", server]
+        command = [
+            os.path.join(gamspy_base_dir, "gamsgetkey"),
+            alp_id,
+            "-s",
+            server,
+        ]
 
         # On-prem license server licenses start with abcdef12
         if alp_id.startswith("abcdef12"):
@@ -110,13 +143,15 @@ def license(
         license_file_path = output if output else license_path
         with open(license_file_path) as file:
             license_text = file.read()
-            
+
         lines = license_text.splitlines()
         try:
             license_type = lines[0][54]
-        except (Exception, IndexError):
-            raise ValidationError(f"Invalid license text. \nLicense text: {license_text}\nstdout: {process.stdout}\nstderr: {process.stderr}")
-        
+        except (Exception, IndexError) as e:
+            raise ValidationError(
+                f"Invalid license text. \nLicense text: {license_text}\nstdout: {process.stdout}\nstderr: {process.stderr}"
+            ) from e
+
         if license_type == "+":
             if lines[2][:2] not in ("00", "07", "08", "09"):
                 raise ValidationError(
@@ -149,6 +184,7 @@ def license(
 
         shutil.copy(license, license_path)
 
+
 def append_dist_info(files, gamspy_base_dir: str):
     """Updates dist-info/RECORD in site-packages for pip uninstall"""
     import gamspy as gp
@@ -156,12 +192,8 @@ def append_dist_info(files, gamspy_base_dir: str):
     gamspy_path: str = gp.__path__[0]
     dist_info_path = f"{gamspy_path}-{gp.__version__}.dist-info"
 
-    with open(
-        dist_info_path + os.sep + "RECORD", "a", encoding="utf-8"
-    ) as record:
-        gamspy_base_relative_path = os.sep.join(
-            gamspy_base_dir.split(os.sep)[-3:]
-        )
+    with open(dist_info_path + os.sep + "RECORD", "a", encoding="utf-8") as record:
+        gamspy_base_relative_path = os.sep.join(gamspy_base_dir.split(os.sep)[-3:])
 
         lines = []
         for file in files:
@@ -170,36 +202,35 @@ def append_dist_info(files, gamspy_base_dir: str):
 
         record.write("\n".join(lines) + "\n")
 
+
 @app.command(
     short_help="To install solvers",
-    help="[bold][yellow]Examples[/yellow][/bold]: gamspy install solver <solver_name>"
+    help="[bold][yellow]Examples[/yellow][/bold]: gamspy install solver <solver_name>",
 )
 def solver(
-    solver: list[str] = typer.Argument(
+    solver: list[str] = typer.Argument(  # noqa: B008
         None,
         help="solver names to be installed",
-        autocompletion=lambda: [s.lower() for s in utils.getAvailableSolvers()]
+        autocompletion=lambda: [s.lower() for s in utils.getAvailableSolvers()],
     ),
     install_all_solvers: bool = typer.Option(
         False,
         "--install-all-solvers",
-        help="Installs all available add-on solvers."
+        help="Installs all available add-on solvers.",
     ),
     existing_solvers: bool = typer.Option(
         False,
         "--existing-solvers",
-        help="Reinstalls previously installed add-on solvers."
+        help="Reinstalls previously installed add-on solvers.",
     ),
     skip_pip_install: bool = typer.Option(
         False,
         "--skip-pip-install",
         "-s",
-        help="If you already have the solver installed, skip pip install and update gamspy installed solver list."
+        help="If you already have the solver installed, skip pip install and update gamspy installed solver list.",
     ),
     use_uv: bool = typer.Option(
-        False,
-        "--use-uv",
-        help="Use uv instead of pip to install solvers."
+        False, "--use-uv", help="Use uv instead of pip to install solvers."
     ),
 ):
     try:
@@ -222,15 +253,15 @@ def solver(
             if solver_name.upper() not in installable_solvers:
                 raise ValidationError(
                     f'Given solver name ("{solver_name}") is not valid. Available'
-                    f" solvers that can be installed: {installable_solvers}")
-            
+                    f" solvers that can be installed: {installable_solvers}"
+                )
+
             installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
             if solver_name.upper() in installed_solvers:
                 print(f"`{solver_name}` is already installed, skipping...")
                 continue
 
             if not skip_pip_install:
-
                 solver_version = gamspy_base.__version__
                 # install specified solver
                 if use_uv:
@@ -253,16 +284,19 @@ def solver(
                         "--force-reinstall",
                     ]
                 try:
-                    _ = subprocess.run(command, check=True, encoding="utf-8", stderr=subprocess.PIPE)
+                    _ = subprocess.run(
+                        command,
+                        check=True,
+                        encoding="utf-8",
+                        stderr=subprocess.PIPE,
+                    )
                 except subprocess.CalledProcessError as e:
                     raise GamspyException(
                         f"Could not install gamspy-{solver_name}. Please check your internet connection. If it's not related to your internet connection, PyPI servers might be down. Please retry it later. Here is the error message of pip:\n\n{e.stderr}"
                     ) from e
             else:
                 try:
-                    solver_lib = importlib.import_module(
-                        f"gamspy_{solver_name}"
-                    )
+                    solver_lib = importlib.import_module(f"gamspy_{solver_name}")
                 except ModuleNotFoundError as e:
                     e.msg = f"You must install gamspy-{solver_name} first!"
                     raise e
@@ -284,9 +318,7 @@ def solver(
                 with open(addons_path) as file:
                     installed = file.read().splitlines()
                     installed = [
-                        solver
-                        for solver in installed
-                        if solver != "" and solver != "\n"
+                        solver for solver in installed if solver not in {"", "\n"}
                     ]
             except FileNotFoundError:
                 installed = []
@@ -310,7 +342,7 @@ def solver(
         try:
             with open(addons_path) as file:
                 solvers = file.read().splitlines()
-                solvers = [solver for solver in solvers if solver != "" and solver != "\n"]
+                solvers = [solver for solver in solvers if solver not in {"", "\n"}]
                 install_addons(solvers)
                 return
         except FileNotFoundError as e:
@@ -322,6 +354,7 @@ def solver(
         )
 
     install_addons(solver)
+
 
 if __name__ == "__main__":
     app()

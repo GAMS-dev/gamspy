@@ -54,9 +54,7 @@ def load_miro_symbol_records(container: Container):
 
     # Load records of miro output symbols
     if MIRO_GDX_OUT and container._miro_output_symbols:
-        container._load_records_from_gdx(
-            MIRO_GDX_OUT, container._miro_output_symbols
-        )
+        container._load_records_from_gdx(MIRO_GDX_OUT, container._miro_output_symbols)
 
     for name in container._miro_input_symbols + container._miro_output_symbols:
         container[name].modified = False
@@ -171,9 +169,7 @@ class MiroJSONEncoder:
 
         return sp_scalars_dict, ve_scalars_dict
 
-    def validate_table(
-        self, symbol: Set | Parameter | Variable | Equation, last_item
-    ):
+    def validate_table(self, symbol: Set | Parameter | Variable | Equation, last_item):
         if not gp.get_option("VALIDATION"):
             return
 
@@ -190,12 +186,8 @@ class MiroJSONEncoder:
             )
 
         if (
-            isinstance(symbol.domain_forwarding, list)
-            and symbol.domain_forwarding[-1]
-        ) or (
-            isinstance(symbol.domain_forwarding, bool)
-            and symbol.domain_forwarding
-        ):
+            isinstance(symbol.domain_forwarding, list) and symbol.domain_forwarding[-1]
+        ) or (isinstance(symbol.domain_forwarding, bool) and symbol.domain_forwarding):
             raise ValidationError(
                 "Cannot use domain forwarding feature for miro tables."
             )
@@ -205,9 +197,7 @@ class MiroJSONEncoder:
                 "The last column of miro table cannot be a miro input!"
             )
 
-    def prepare_headers_dict(
-        self, symbol: Set | Parameter | Variable | Equation
-    ):
+    def prepare_headers_dict(self, symbol: Set | Parameter | Variable | Equation):
         def rename_duplicates(items: list[str]) -> list[str]:
             # Renames duplicate domain names. For example:
             # p = gp.Parameter(c,'p',domain=[i,i], is_miro_input=True)
@@ -237,9 +227,7 @@ class MiroJSONEncoder:
                 set_values = last_item.records["uni"].values.tolist()
 
                 domain_keys = domain_keys[:-2]
-                types = ["string"] * len(domain_keys) + ["numeric"] * len(
-                    set_values
-                )
+                types = ["string"] * len(domain_keys) + ["numeric"] * len(set_values)
                 domain_keys += set_values
         elif isinstance(symbol, (gp.Variable, gp.Equation)):
             domain_keys = symbol.domain_names + [
@@ -255,13 +243,11 @@ class MiroJSONEncoder:
         uni_counter = 0
         for idx, key in enumerate(domain_keys):
             if key == "*":
-                domain_keys[idx] = (
-                    "uni" if uni_counter == 0 else f"uni#{uni_counter}"
-                )
+                domain_keys[idx] = "uni" if uni_counter == 0 else f"uni#{uni_counter}"
                 uni_counter += 1
 
         domain_keys = rename_duplicates(domain_keys)
-        for column, column_type in zip(domain_keys, types):
+        for column, column_type in zip(domain_keys, types, strict=False):
             try:
                 elem = self.container[column]
                 alias = elem.description if elem.description else column
@@ -271,7 +257,7 @@ class MiroJSONEncoder:
             domain_values.append({"type": column_type, "alias": alias})
 
         assert len(domain_keys) == len(domain_values)
-        return dict(zip(domain_keys, domain_values))
+        return dict(zip(domain_keys, domain_values, strict=False))
 
     def prepare_symbols(self, symbols: list[str]) -> list[dict]:
         type_map = {
@@ -290,9 +276,7 @@ class MiroJSONEncoder:
             info.append(
                 {
                     "alias": (
-                        symbol.description
-                        if symbol.description
-                        else symbol.name
+                        symbol.description if symbol.description else symbol.name
                     ),
                     "symtype": type_map[type(symbol)],  # type: ignore
                     "headers": headers_dict,
@@ -332,17 +316,13 @@ class MiroJSONEncoder:
             keys.append("_scalarsve_out")
             values.append(scalars_ve_dict)
 
-        symbols_dict = dict(zip(keys, values))
+        symbols_dict = dict(zip(keys, values, strict=False))
 
         return symbols_dict
 
     def prepare_dict(self) -> dict:
-        input_symbols_dict = self.prepare_symbols_dict(
-            True, self.input_symbols
-        )
-        output_symbols_dict = self.prepare_symbols_dict(
-            False, self.output_symbols
-        )
+        input_symbols_dict = self.prepare_symbols_dict(True, self.input_symbols)
+        output_symbols_dict = self.prepare_symbols_dict(False, self.output_symbols)
 
         miro_dict = {
             "modelTitle": self.model_title,

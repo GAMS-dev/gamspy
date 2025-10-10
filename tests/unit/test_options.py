@@ -191,15 +191,13 @@ def test_global_options(data):
     )
     transport.solve()
 
-    with open(
-        os.path.join(m.working_directory, m.gamsJobName() + ".pf")
-    ) as file:
+    with open(os.path.join(m.working_directory, m.gamsJobName() + ".pf")) as file:
         assert 'lp = "conopt"' in file.read()
 
 
 @pytest.mark.unit
 def test_gamspy_to_gams_options(data):
-    m, canning_plants, markets, capacities, _, distances = data
+    _m, _canning_plants, _markets, _capacities, _, _distances = data
     options = Options(
         allow_suffix_in_equation=False,
         allow_suffix_in_limited_variables=False,
@@ -264,12 +262,8 @@ def test_log_option(data):
 
     file = tempfile.NamedTemporaryFile("w", delete=False)
     file.close()
-    transport.solve(
-        options=Options(log_file=file.name, append_to_log_file=True)
-    )
-    transport.solve(
-        options=Options(log_file=file.name, append_to_log_file=True)
-    )
+    transport.solve(options=Options(log_file=file.name, append_to_log_file=True))
+    transport.solve(options=Options(log_file=file.name, append_to_log_file=True))
     with open(file.name) as log_file:
         content = log_file.read()
         matches = re.findall("Status: Normal completion", content)
@@ -586,9 +580,7 @@ def test_model_attribute_options(data):
     )
     transport.solve(options=Options(infeasibility_tolerance=1e-6))
     transport.solve(options=Options(infeasibility_tolerance=1e-6))
-    assert "transport.tolInfRep = 1e-06;" in m.generateGamsString(
-        show_raw=True
-    )
+    assert "transport.tolInfRep = 1e-06;" in m.generateGamsString(show_raw=True)
 
 
 @pytest.mark.unit
@@ -712,9 +704,7 @@ def test_loadpoint(data):
     transport.solve(options=Options(loadpoint="transport_p.gdx"))
     assert transport.num_iterations == 0
 
-    with tempfile.NamedTemporaryFile(
-        "w", suffix=".txt", delete=False
-    ) as temp_file:
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as temp_file:
         transport.solve(
             output=temp_file,
             options=Options(loadpoint=Path("transport_p.gdx")),

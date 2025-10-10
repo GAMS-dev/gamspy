@@ -176,9 +176,7 @@ def main():
     waterdata = Parameter(
         m, name="waterdata", domain=[w, "*"], records=data_records()[2]
     )
-    PWdata = Parameter(
-        m, name="PWdata", domain=[t, "*"], records=data_records()[3]
-    )
+    PWdata = Parameter(m, name="PWdata", domain=[t, "*"], records=data_records()[3])
 
     # FREE VARIABLES #
     TC = Variable(m, name="TC")
@@ -267,9 +265,7 @@ def main():
     )
     DEDcostbased.solve(options=Options(time_limit=2))
 
-    print(
-        "Objective Function Value:  ", round(DEDcostbased.objective_value, 4)
-    )
+    print("Objective Function Value:  ", round(DEDcostbased.objective_value, 4))
 
 
 if __name__ == "__main__":

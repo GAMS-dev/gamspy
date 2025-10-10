@@ -35,9 +35,7 @@ def teardown():
 
 
 def test_full_models(teardown):
-    paths = glob.glob(
-        os.path.join(str(Path(__file__).parent), "models", "*.py")
-    )
+    paths = glob.glob(os.path.join(str(Path(__file__).parent), "models", "*.py"))
 
     for idx, path in enumerate(paths):
         print(f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}", flush=True)

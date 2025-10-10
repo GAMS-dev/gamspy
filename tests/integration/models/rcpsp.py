@@ -79,9 +79,7 @@ def build_abstract_model():
         m,
         name="pred",
         domain=[i, j],
-        description=(
-            "yes if and only if i is predecessor of j (order relation)"
-        ),
+        description=("yes if and only if i is predecessor of j (order relation)"),
     )
 
     tw = Set(
@@ -120,14 +118,11 @@ def build_abstract_model():
         name="demands",
         domain=[j, r],
         description=(
-            "Number of resource units from r the job j requires/occupies while"
-            " active"
+            "Number of resource units from r the job j requires/occupies while active"
         ),
     )
 
-    makespan = Variable(
-        m, name="makespan", description="total project duration"
-    )
+    makespan = Variable(m, name="makespan", description="total project duration")
     x = Variable(
         m,
         name="x",
@@ -266,14 +261,10 @@ def parse_psplib(filename):
         my_set("r", nres),
         my_set("t", nperiods),
     )
-    succs = {
-        j: succs_from_line(lines[prec_offset + ix])
-        for ix, j in enumerate(jobs)
-    }
+    succs = {j: succs_from_line(lines[prec_offset + ix]) for ix, j in enumerate(jobs)}
     job_durations = column(lines, 2, attrs_offset, njobs)
     resource_demands = [
-        ints(lines[ix].split()[3:])
-        for ix in range(attrs_offset, attrs_offset + njobs)
+        ints(lines[ix].split()[3:]) for ix in range(attrs_offset, attrs_offset + njobs)
     ]
     resource_capacities = ints(lines[caps_offset].split())
     return dict(
@@ -378,9 +369,7 @@ def fill_records(dataset, symbols):
             and eft[j] <= tix + 1 <= lft[j]
         ]
     )
-    capacities.setRecords(
-        [(r, resource_capacities[rix]) for rix, r in enumerate(res)]
-    )
+    capacities.setRecords([(r, resource_capacities[rix]) for rix, r in enumerate(res)])
     durations.setRecords([(j, job_durations[ix]) for ix, j in enumerate(jobs)])
     demands.setRecords(
         [

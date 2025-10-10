@@ -131,9 +131,7 @@ def network_license():
 
 
 def test_network_license(network_license):
-    m, canning_plants, markets, capacities, demands, distances = (
-        network_license
-    )
+    m, canning_plants, markets, capacities, demands, distances = network_license
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -534,9 +532,7 @@ def test_rmip(data):
     )
 
     # Master model variables
-    xp = Variable(
-        m, "xp", domain=p, type="integer", description="patterns used"
-    )
+    xp = Variable(m, "xp", domain=p, type="integer", description="patterns used")
     z = Variable(m, "z", description="objective variable")
     xp.up[p] = Sum(i, d[i])
 
@@ -563,9 +559,7 @@ def test_rmip(data):
     y = Variable(m, "y", domain=i, type="integer", description="new pattern")
     y.up[i] = gams_math.ceil(r / w[i])
 
-    defobj = Equation(
-        m, "defobj", definition=z == (1 - Sum(i, demand.m[i] * y[i]))
-    )
+    defobj = Equation(m, "defobj", definition=z == (1 - Sum(i, demand.m[i] * y[i])))
     knapsack = Equation(
         m,
         "knapsack",
@@ -670,24 +664,19 @@ def test_dnlp(data):
     x = Variable(
         m,
         name="x",
-        description=(
-            "x-coordinate of lower-left corner of square (=fx(t('1')))"
-        ),
+        description=("x-coordinate of lower-left corner of square (=fx(t('1')))"),
     )
     y = Variable(
         m,
         name="y",
-        description=(
-            "y-coordinate of lower-left corner of square (=fy(t('1')))"
-        ),
+        description=("y-coordinate of lower-left corner of square (=fy(t('1')))"),
     )
     a = Variable(
         m,
         name="a",
         type="Positive",
         description=(
-            "horizontal distance between lower-left and lower-right corner of"
-            " square"
+            "horizontal distance between lower-left and lower-right corner of square"
         ),
     )
     b = Variable(
@@ -695,8 +684,7 @@ def test_dnlp(data):
         name="b",
         type="Positive",
         description=(
-            "vertical distance between lower-left and lower-right corner of"
-            " square"
+            "vertical distance between lower-left and lower-right corner of square"
         ),
     )
 
@@ -771,7 +759,7 @@ def test_mcp():
     days, stocks = cont.getSymbols(["days", "stocks"])
 
     # Parameters
-    returns, val = cont.getSymbols(["return", "val"])
+    returns, _val = cont.getSymbols(["return", "val"])
 
     # Set
     d = Set(cont, name="d", domain=[days], description="selected days")
@@ -785,9 +773,7 @@ def test_mcp():
     mean = Parameter(
         cont, name="mean", domain=stocks, description="mean of daily return"
     )
-    dev = Parameter(
-        cont, name="dev", domain=[stocks, days], description="deviations"
-    )
+    dev = Parameter(cont, name="dev", domain=[stocks, days], description="deviations")
     totmean = Parameter(cont, name="totmean", description="total mean return")
 
     mean[s] = Sum(d, returns[s, d]) / Card(d)
@@ -994,9 +980,7 @@ def test_cns():
     rhoc = Parameter(
         cont, name="rhoc", domain=i, description="Armington function exponent"
     )
-    rhot = Parameter(
-        cont, name="rhot", domain=i, description="cet function exponent"
-    )
+    rhot = Parameter(cont, name="rhot", domain=i, description="cet function exponent")
     at = Parameter(
         cont, name="at", domain=i, description="cet function shift parameter"
     )
@@ -1018,9 +1002,7 @@ def test_cns():
         domain=i,
         description="government consumption shares",
     )
-    depr = Parameter(
-        cont, name="depr", domain=i, description="depreciation rates"
-    )
+    depr = Parameter(cont, name="depr", domain=i, description="depreciation rates")
     dstr = Parameter(
         cont,
         name="dstr",
@@ -1034,9 +1016,7 @@ def test_cns():
         description="shares of investment by sector of destination",
     )
     te = Parameter(cont, name="te", domain=i, description="export duty rates")
-    itax = Parameter(
-        cont, name="itax", domain=i, description="indirect tax rates"
-    )
+    itax = Parameter(cont, name="itax", domain=i, description="indirect tax rates")
     htax = Parameter(
         cont,
         name="htax",
@@ -1055,9 +1035,7 @@ def test_cns():
         domain=i,
         description="world market price of exports    (in dollars)",
     )
-    tm = Parameter(
-        cont, name="tm", domain=i, description="tariff rates on imports"
-    )
+    tm = Parameter(cont, name="tm", domain=i, description="tariff rates on imports")
     pwts = Parameter(cont, name="pwts", domain=i, description="cpi weights")
 
     htax["lab_hh"] = 0.08910
@@ -1123,9 +1101,7 @@ def test_cns():
         cont,
         name="cles",
         domain=[i, hh],
-        records=np.array(
-            [[0.47000, 0.47000], [0.31999, 0.31999], [0.21001, 0.21001]]
-        ),
+        records=np.array([[0.47000, 0.47000], [0.31999, 0.31999], [0.21001, 0.21001]]),
         description="private consumption shares",
     )
 
@@ -1162,9 +1138,7 @@ def test_cns():
         cont,
         name="er",
         type="free",
-        description=(
-            "real exchange rate                          (won per dollar)"
-        ),
+        description=("real exchange rate                          (won per dollar)"),
     )
     pd1 = Variable(
         cont, name="pd1", type="free", domain=i, description="domestic prices"
@@ -1222,45 +1196,35 @@ def test_cns():
         name="x",
         type="free",
         domain=i,
-        description=(
-            "composite goods supply                        ('68 bill won)"
-        ),
+        description=("composite goods supply                        ('68 bill won)"),
     )
     xd = Variable(
         cont,
         name="xd",
         type="free",
         domain=i,
-        description=(
-            "domestic output by sector                     ('68 bill won)"
-        ),
+        description=("domestic output by sector                     ('68 bill won)"),
     )
     xxd = Variable(
         cont,
         name="xxd",
         type="free",
         domain=i,
-        description=(
-            "domestic sales                                ('68 bill won)"
-        ),
+        description=("domestic sales                                ('68 bill won)"),
     )
     e = Variable(
         cont,
         name="e",
         type="free",
         domain=i,
-        description=(
-            "exports by sector                             ('68 bill won)"
-        ),
+        description=("exports by sector                             ('68 bill won)"),
     )
     m = Variable(
         cont,
         name="m",
         type="free",
         domain=i,
-        description=(
-            "imports                                       ('68 bill won)"
-        ),
+        description=("imports                                       ('68 bill won)"),
     )
 
     # factors block
@@ -1269,36 +1233,28 @@ def test_cns():
         name="k",
         type="free",
         domain=i,
-        description=(
-            "capital stock by sector                       ('68 bill won)"
-        ),
+        description=("capital stock by sector                       ('68 bill won)"),
     )
     wa = Variable(
         cont,
         name="wa",
         type="free",
         domain=lc,
-        description=(
-            "average wage rate by labor category     (mill won pr person)"
-        ),
+        description=("average wage rate by labor category     (mill won pr person)"),
     )
     ls = Variable(
         cont,
         name="ls",
         type="free",
         domain=lc,
-        description=(
-            "labor supply by labor category                (1000 persons)"
-        ),
+        description=("labor supply by labor category                (1000 persons)"),
     )
     l = Variable(
         cont,
         name="l",
         type="free",
         domain=[i, lc],
-        description=(
-            "employment by sector and labor category       (1000 persons)"
-        ),
+        description=("employment by sector and labor category       (1000 persons)"),
     )
 
     # demand block
@@ -1307,133 +1263,101 @@ def test_cns():
         name="intr",
         type="free",
         domain=i,
-        description=(
-            "intermediates uses                            ('68 bill won)"
-        ),
+        description=("intermediates uses                            ('68 bill won)"),
     )
     cd = Variable(
         cont,
         name="cd",
         type="free",
         domain=i,
-        description=(
-            "final demand for private consumption          ('68 bill won)"
-        ),
+        description=("final demand for private consumption          ('68 bill won)"),
     )
     gd = Variable(
         cont,
         name="gd",
         type="free",
         domain=i,
-        description=(
-            "final demand for government consumption       ('68 bill won)"
-        ),
+        description=("final demand for government consumption       ('68 bill won)"),
     )
     id = Variable(
         cont,
         name="id",
         type="free",
         domain=i,
-        description=(
-            "final demand for productive investment        ('68 bill won)"
-        ),
+        description=("final demand for productive investment        ('68 bill won)"),
     )
     dst = Variable(
         cont,
         name="dst",
         type="free",
         domain=i,
-        description=(
-            "inventory investment by sector                ('68 bill won)"
-        ),
+        description=("inventory investment by sector                ('68 bill won)"),
     )
     y = Variable(
         cont,
         name="y",
         type="free",
-        description=(
-            "private gdp                                       (bill won)"
-        ),
+        description=("private gdp                                       (bill won)"),
     )
     gr = Variable(
         cont,
         name="gr",
         type="free",
-        description=(
-            "government revenue                                (bill won)"
-        ),
+        description=("government revenue                                (bill won)"),
     )
     tariff = Variable(
         cont,
         name="tariff",
         type="free",
-        description=(
-            "tariff revenue                                    (bill won)"
-        ),
+        description=("tariff revenue                                    (bill won)"),
     )
     indtax = Variable(
         cont,
         name="indtax",
         type="free",
-        description=(
-            "indirect tax revenue                              (bill won)"
-        ),
+        description=("indirect tax revenue                              (bill won)"),
     )
     netsub = Variable(
         cont,
         name="netsub",
         type="free",
-        description=(
-            "export duty revenue                               (bill won)"
-        ),
+        description=("export duty revenue                               (bill won)"),
     )
     gdtot = Variable(
         cont,
         name="gdtot",
         type="free",
-        description=(
-            "total volume of government consumption        ('68 bill won)"
-        ),
+        description=("total volume of government consumption        ('68 bill won)"),
     )
     hhsav = Variable(
         cont,
         name="hhsav",
         type="free",
-        description=(
-            "total household savings                           (bill won)"
-        ),
+        description=("total household savings                           (bill won)"),
     )
     govsav = Variable(
         cont,
         name="govsav",
         type="free",
-        description=(
-            "government savings                                (bill won)"
-        ),
+        description=("government savings                                (bill won)"),
     )
     deprecia = Variable(
         cont,
         name="deprecia",
         type="free",
-        description=(
-            "total depreciation expenditure                    (bill won)"
-        ),
+        description=("total depreciation expenditure                    (bill won)"),
     )
     invest = Variable(
         cont,
         name="invest",
         type="free",
-        description=(
-            "total investment                                  (bill won)"
-        ),
+        description=("total investment                                  (bill won)"),
     )
     savings = Variable(
         cont,
         name="savings",
         type="free",
-        description=(
-            "total savings                                     (bill won)"
-        ),
+        description=("total savings                                     (bill won)"),
     )
     mps = Variable(
         cont,
@@ -1446,59 +1370,45 @@ def test_cns():
         cont,
         name="fsav",
         type="free",
-        description=(
-            "foreign savings                               (bill dollars)"
-        ),
+        description=("foreign savings                               (bill dollars)"),
     )
     dk = Variable(
         cont,
         name="dk",
         type="free",
         domain=i,
-        description=(
-            "volume of investment by sector of destination ('68 bill won)"
-        ),
+        description=("volume of investment by sector of destination ('68 bill won)"),
     )
     ypr = Variable(
         cont,
         name="ypr",
         type="free",
-        description=(
-            "total premium income accruing to capitalists      (bill won)"
-        ),
+        description=("total premium income accruing to capitalists      (bill won)"),
     )
     remit = Variable(
         cont,
         name="remit",
         type="free",
-        description=(
-            "net remittances from abroad                   (bill dollars)"
-        ),
+        description=("net remittances from abroad                   (bill dollars)"),
     )
     fbor = Variable(
         cont,
         name="fbor",
         type="free",
-        description=(
-            "net flow of foreign borrowing                 (bill dollars)"
-        ),
+        description=("net flow of foreign borrowing                 (bill dollars)"),
     )
     yh = Variable(
         cont,
         name="yh",
         type="free",
         domain=hh,
-        description=(
-            "total income by household type                    (bill won)"
-        ),
+        description=("total income by household type                    (bill won)"),
     )
     tothhtax = Variable(
         cont,
         name="tothhtax",
         type="free",
-        description=(
-            "household tax revenue                             (bill won)"
-        ),
+        description=("household tax revenue                             (bill won)"),
     )
 
     # welfare indicator for objective function
@@ -1506,9 +1416,7 @@ def test_cns():
         cont,
         name="omega",
         type="free",
-        description=(
-            "objective function variable                   ('68 bill won)"
-        ),
+        description=("objective function variable                   ('68 bill won)"),
     )
 
     er.l[...] = 1.0000
@@ -1684,9 +1592,7 @@ def test_cns():
         cont, name="lmequil", domain=lc, description="labor market equilibrium"
     )
     cet = Equation(cont, name="cet", domain=i, description="cet function")
-    esupply = Equation(
-        cont, name="esupply", domain=i, description="export supply"
-    )
+    esupply = Equation(cont, name="esupply", domain=i, description="export supply")
     armington = Equation(
         cont,
         name="armington",
@@ -1719,13 +1625,9 @@ def test_cns():
     cdeq = Equation(
         cont, name="cdeq", domain=i, description="private consumption behavior"
     )
-    dsteq = Equation(
-        cont, name="dsteq", domain=i, description="inventory investment"
-    )
+    dsteq = Equation(cont, name="dsteq", domain=i, description="inventory investment")
     gdp = Equation(cont, name="gdp", description="private gdp")
-    labory = Equation(
-        cont, name="labory", description="total income accruing to labor"
-    )
+    labory = Equation(cont, name="labory", description="total income accruing to labor")
     capitaly = Equation(
         cont, name="capitaly", description="total income accruing to capital"
     )
@@ -1742,9 +1644,7 @@ def test_cns():
     )
     greq = Equation(cont, name="greq", description="government revenue")
     tariffdef = Equation(cont, name="tariffdef", description="tariff revenue")
-    premium = Equation(
-        cont, name="premium", description="total import premium income"
-    )
+    premium = Equation(cont, name="premium", description="total import premium income")
     indtaxdef = Equation(
         cont,
         name="indtaxdef",
@@ -1755,9 +1655,7 @@ def test_cns():
     # savings-investment block
     hhsaveq = Equation(cont, name="hhsaveq", description="household savings")
     gruse = Equation(cont, name="gruse", description="government savings")
-    depreq = Equation(
-        cont, name="depreq", description="depreciation expenditure"
-    )
+    depreq = Equation(cont, name="depreq", description="depreciation expenditure")
     totsav = Equation(cont, name="totsav", description="total savings")
     prodinv = Equation(
         cont,
@@ -1790,9 +1688,7 @@ def test_cns():
 
     pedef[it] = pe[it] == pwe[it] * (1 + te[it]) * er
 
-    absorption[i] = (
-        p[i] * x[i] == pd1[i] * xxd[i] + (pm[i] * m[i]).where[it[i]]
-    )
+    absorption[i] = p[i] * x[i] == pd1[i] * xxd[i] + (pm[i] * m[i]).where[it[i]]
 
     sales[i] = px[i] * xd[i] == pd1[i] * xxd[i] + (pe[i] * e[i]).where[it[i]]
 
@@ -1878,24 +1774,19 @@ def test_cns():
 
     totsav[...] = savings == hhsav + govsav + deprecia + fsav * er
 
-    prodinv[i] = pk[i] * dk[i] == kio[i] * invest - kio[i] * Sum(
-        j, dst[j] * p[j]
-    )
+    prodinv[i] = pk[i] * dk[i] == kio[i] * invest - kio[i] * Sum(j, dst[j] * p[j])
 
     ieq[i] = id[i] == Sum(j, imat[i, j] * dk[j])
 
     # balance of payments
     caeq[...] = (
-        Sum(it, pwm[it] * m[it])
-        == Sum(it, pwe[it] * e[it]) + fsav + remit + fbor
+        Sum(it, pwm[it] * m[it]) == Sum(it, pwe[it] * e[it]) + fsav + remit + fbor
     )
     # market clearing
     equil[i] = x[i] == intr[i] + cd[i] + gd[i] + id[i] + dst[i]
 
     # objective function
-    obj[...] = omega == Product(
-        i.where[cles[i, "lab_hh"]], cd[i] ** cles[i, "lab_hh"]
-    )
+    obj[...] = omega == Product(i.where[cles[i, "lab_hh"]], cd[i] ** cles[i, "lab_hh"])
 
     er.fx[...] = er.l
     fsav.fx[...] = fsav.l
@@ -1906,9 +1797,7 @@ def test_cns():
     gdtot.fx[...] = gdtot.l
     ls.fx[lc] = ls.l[lc]
 
-    model1 = Model(
-        cont, name="model1", equations=cont.getEquations(), problem="cns"
-    )
+    model1 = Model(cont, name="model1", equations=cont.getEquations(), problem="cns")
     client = NeosClient(email=os.environ["NEOS_EMAIL"])
     summary = model1.solve(
         solver="path", output=sys.stdout, backend="neos", client=client
@@ -1932,9 +1821,7 @@ def test_minlp(data):
         m,
         name="load",
         domain=t,
-        records=pd.DataFrame(
-            [["period-1", 400], ["period-2", 900], ["period-3", 700]]
-        ),
+        records=pd.DataFrame([["period-1", 400], ["period-2", 900], ["period-3", 700]]),
         description="system load",
     )
     initlev = Parameter(
@@ -1959,9 +1846,7 @@ def test_minlp(data):
         domain=t,
         description="generation level of oil based unit",
     )
-    others = Variable(
-        m, name="others", domain=t, description="other generation"
-    )
+    others = Variable(m, name="others", domain=t, description="other generation")
     oil = Variable(
         m, name="oil", domain=t, type="Positive", description="oil consumption"
     )
@@ -2062,9 +1947,7 @@ def test_qcp(data):
     h = Variable(m, name="h", domain=k)
     t = Variable(m, name="t")
     v2 = Variable(m, name="v2", description="for conic variable u - t")
-    v3 = Variable(
-        m, name="v3", type="Positive", description="for conic variable u + t"
-    )
+    v3 = Variable(m, name="v3", type="Positive", description="for conic variable u + t")
     u = Variable(m, name="u", type="Positive")
     v = Variable(m, name="v", type="Positive")
 

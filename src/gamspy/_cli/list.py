@@ -19,23 +19,15 @@ app = typer.Typer(
 
 @app.command()
 def solvers(
-    all: bool = typer.Option(
-        False,
-        "--all",
-        "-a",
-        help="Shows all available solvers."
-    ),
+    all: bool = typer.Option(False, "--all", "-a", help="Shows all available solvers."),
     installables: bool = typer.Option(
         False,
         "--installables",
         "-i",
-        help="Shows solvers that can be installed."
+        help="Shows solvers that can be installed.",
     ),
     defaults: bool = typer.Option(
-        False,
-        "--defaults",
-        "-d",
-        help="Shows default solvers."
+        False, "--defaults", "-d", help="Shows default solvers."
     ),
 ) -> None:
     try:
@@ -51,7 +43,9 @@ def solvers(
         print("[bold]Available Solvers[/bold]")
         print("=" * 17)
         print(", ".join(solvers))
-        print("\n[bold]Model types that can be solved with the installed solvers[/bold]\n")
+        print(
+            "\n[bold]Model types that can be solved with the installed solvers[/bold]\n"
+        )
         table = Table("Solver", "Problem Types")
         for solver in solvers:
             try:
@@ -82,7 +76,9 @@ def solvers(
         print("=" * 17)
         print(", ".join(solvers))
 
-        print("\n[bold]Model types that can be solved with the installed solvers[/bold]")
+        print(
+            "\n[bold]Model types that can be solved with the installed solvers[/bold]"
+        )
         print("=" * 57)
         table = Table("Solver", "Problem Types")
         for solver in solvers:

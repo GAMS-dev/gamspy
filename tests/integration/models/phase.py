@@ -43,9 +43,7 @@ def main():
         domain=i,
         description="mole fraction of component i in candidate phase",
     )
-    feedz = Parameter(
-        m, name="feedz", description="compressibility of candidate phase"
-    )
+    feedz = Parameter(m, name="feedz", description="compressibility of candidate phase")
     feedfc = Parameter(
         m,
         name="feedfc",
@@ -115,12 +113,8 @@ def main():
         type="regular",
         description="equation of state constraint",
     )
-    defa = Equation(
-        m, name="defa", type="regular", description="definition of Amix"
-    )
-    defb = Equation(
-        m, name="defb", type="regular", description="definition of Bmix"
-    )
+    defa = Equation(m, name="defa", type="regular", description="definition of Amix")
+    defb = Equation(m, name="defb", type="regular", description="definition of Bmix")
     molesum = Equation(
         m,
         name="molesum",

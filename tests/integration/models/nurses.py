@@ -78,15 +78,13 @@ def preprocess_data():
         "saturday",
         "sunday",
     ]
-    day_of_weeks = dict(zip(days, range(7)))
+    day_of_weeks = dict(zip(days, range(7), strict=False))
     df_shifts["dow"] = df_shifts.day.apply(day_to_day_of_week)
 
     # Compute the absolute start and end times of each shift.
     df_shifts["wstart"] = df_shifts.start_time + 24 * df_shifts.dow
     df_shifts["wend"] = df_shifts.apply(
-        lambda row: calculate_absolute_endtime(
-            row.start_time, row.end_time, row.dow
-        ),
+        lambda row: calculate_absolute_endtime(row.start_time, row.end_time, row.dow),
         axis=1,
     )
 
@@ -95,9 +93,9 @@ def preprocess_data():
 
     # Merge the vacations dataframe with the shifts dataframe to get the vacations of each nurse.
     df_vacations["dow"] = df_vacations.day.apply(day_to_day_of_week)
-    nurse_vacations = df_vacations.merge(
-        df_shifts.reset_index()[["dow", "shiftId"]]
-    )[["nurse", "shiftId"]]
+    nurse_vacations = df_vacations.merge(df_shifts.reset_index()[["dow", "shiftId"]])[
+        ["nurse", "shiftId"]
+    ]
 
     # Obtain the conflicting shifts
     proc_shifts = (
@@ -199,9 +197,7 @@ def main():
         type="Positive",
         description="Total working time of each nurse",
     )
-    salary = Variable(
-        m, name="salary", type="free", description="Total salaries spent"
-    )
+    salary = Variable(m, name="salary", type="free", description="Total salaries spent")
 
     # Equations
     conflicts = Equation(
@@ -226,9 +222,7 @@ def main():
         m,
         name="incompatibilities",
         domain=[n, n, s],
-        description=(
-            "Nurses that dont get along together should not work together"
-        ),
+        description=("Nurses that dont get along together should not work together"),
     )
     working_time = Equation(
         m,
@@ -289,9 +283,7 @@ def main():
     ########################################################################
 
     sd_shifts1 = x.pivot().sum(axis=1).std()
-    sd_hours1 = (
-        y.records[["n", "level"]].set_index(y.records["n"])["level"].std()
-    )
+    sd_hours1 = y.records[["n", "level"]].set_index(y.records["n"])["level"].std()
 
     avg_shifts = Parameter(
         m,
@@ -351,9 +343,7 @@ def main():
     nurses2.solve()
 
     sd_shifts2 = x.pivot().sum(axis=1).std()
-    sd_hours2 = (
-        y.records[["n", "level"]].set_index(y.records["n"])["level"].std()
-    )
+    sd_hours2 = y.records[["n", "level"]].set_index(y.records["n"])["level"].std()
 
     # Display the results
     report = Parameter(

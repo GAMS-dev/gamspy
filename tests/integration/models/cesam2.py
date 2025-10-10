@@ -190,9 +190,7 @@ def main(is_centropy=False):
         domain=[i, i],
         description="SAM elements that can be nonzero and hence estimated",
     )
-    ii = Set(
-        m, name="ii", domain=i, description="all accounts in i except total"
-    )
+    ii = Set(m, name="ii", domain=i, description="all accounts in i except total")
     macro = Set(
         m,
         name="macro",
@@ -437,10 +435,7 @@ def main(is_centropy=False):
     ColSum0[ii] = (SAM[ii, "TOTAL"] + SAM["TOTAL", ii]) / 2
     gdpfc0[...] = SAM["FAC", "ACT"]
     gdp0[...] = (
-        SAM["FAC", "ACT"]
-        + SAM["GOV", "ACT"]
-        - SAM["ACT", "GOV"]
-        + SAM["GOV", "COM"]
+        SAM["FAC", "ACT"] + SAM["GOV", "ACT"] - SAM["ACT", "GOV"] + SAM["GOV", "COM"]
     )
 
     macrov0["gdp2"] = gdp0
@@ -479,13 +474,11 @@ def main(is_centropy=False):
         if record.i != "TOTAL" and record.j != "TOTAL":
             #  Set standard deviation for errors on cell values or coefficients
             #  Additive errors
-            sigmay3[record.i, record.j].where[ival[record.i, record.j]] = (
-                stderr3 * abs(SAM0[record.i, record.j])
+            sigmay3[record.i, record.j].where[ival[record.i, record.j]] = stderr3 * abs(
+                SAM0[record.i, record.j]
             )
             #  Multiplicative errors
-            sigmay3[record.i, record.j].where[icoeff[record.i, record.j]] = (
-                stderr3
-            )
+            sigmay3[record.i, record.j].where[icoeff[record.i, record.j]] = stderr3
             vbar3[record.i, record.j, "1"] = -3 * sigmay3[record.i, record.j]
             vbar3[record.i, record.j, "2"] = 0
             vbar3[record.i, record.j, "3"] = 3 * sigmay3[record.i, record.j]
@@ -506,13 +499,9 @@ def main(is_centropy=False):
         domain=[i, j],
         description="posterior matrix of SAM transactions",
     )
-    MACROV = Variable(
-        m, name="MACROV", domain=macro, description="macro aggregates"
-    )
+    MACROV = Variable(m, name="MACROV", domain=macro, description="macro aggregates")
     Y = Variable(m, name="Y", domain=i, description="row Sum of SAM")
-    ERR1 = Variable(
-        m, name="ERR1", domain=i, description="error value on column sums"
-    )
+    ERR1 = Variable(m, name="ERR1", domain=i, description="error value on column sums")
     ERR2 = Variable(
         m,
         name="ERR2",
@@ -656,9 +645,7 @@ def main(is_centropy=False):
     # Estimating SAM elements from prior values or coefficients
     SAMCOEF[ii, jj].where[NONZERO[ii, jj]] = TSAM[ii, jj] == A[ii, jj] * Y[jj]
 
-    TSAMEQ[ii, jj].where[ival[ii, jj]] = (
-        TSAM[ii, jj] == SAM0[ii, jj] + ERR3[ii, jj]
-    )
+    TSAMEQ[ii, jj].where[ival[ii, jj]] = TSAM[ii, jj] == SAM0[ii, jj] + ERR3[ii, jj]
 
     ASAMEQ[ii, jj].where[icoeff[ii, jj]] = A[ii, jj] == Abar0[ii, jj] * exp(
         ERR3[ii, jj]
@@ -680,9 +667,7 @@ def main(is_centropy=False):
     # Definition of errors as probability weighted sums of support sets
     ERROR1EQ[ii] = ERR1[ii] == Sum(jwt1, W1[ii, jwt1] * vbar1[ii, jwt1])
 
-    ERROR2EQ[macro] = ERR2[macro] == Sum(
-        jwt2, W2[macro, jwt2] * vbar2[macro, jwt2]
-    )
+    ERROR2EQ[macro] = ERR2[macro] == Sum(jwt2, W2[macro, jwt2] * vbar2[macro, jwt2])
 
     ERROR3EQ[ii, jj].where[NONZERO[ii, jj]] = ERR3[ii, jj] == Sum(
         jwt3, W3[ii, jj, jwt3] * vbar3[ii, jj, jwt3]
@@ -701,10 +686,7 @@ def main(is_centropy=False):
             Sum(
                 Domain(ii, jj, jwt3).where[NONZERO[ii, jj]],
                 W3[ii, jj, jwt3]
-                * (
-                    log(W3[ii, jj, jwt3] + delta)
-                    - log(wbar3[ii, jj, jwt3] + delta)
-                ),
+                * (log(W3[ii, jj, jwt3] + delta) - log(wbar3[ii, jj, jwt3] + delta)),
             )
             + Sum(
                 [ii, jwt1],
@@ -714,10 +696,7 @@ def main(is_centropy=False):
             + Sum(
                 [macro, jwt2],
                 W2[macro, jwt2]
-                * (
-                    log(W2[macro, jwt2] + delta)
-                    - log(wbar2[macro, jwt2] + delta)
-                ),
+                * (log(W2[macro, jwt2] + delta) - log(wbar2[macro, jwt2] + delta)),
             )
         ) == DENTROPY
     else:
@@ -786,9 +765,7 @@ def main(is_centropy=False):
     Macsam1["TOTAL", jj] = Sum(ii, Macsam1[ii, jj])
     Macsam1[ii, "TOTAL"] = Sum(jj, Macsam1[ii, jj])
     Macsam2[i, j] = Macsam1[i, j] * scalesam
-    percent1[i, j].where[SAM0[i, j]] = (
-        100 * (Macsam1[i, j] - SAM0[i, j]) / SAM0[i, j]
-    )
+    percent1[i, j].where[SAM0[i, j]] = 100 * (Macsam1[i, j] - SAM0[i, j]) / SAM0[i, j]
     Diffrnce[i, j] = Macsam1[i, j] - SAM0[i, j]
     SAMBALCHK[jj] = TSAM.l["TOTAL", jj] - TSAM.l[jj, "TOTAL"]
 

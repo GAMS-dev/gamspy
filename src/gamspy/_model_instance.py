@@ -157,9 +157,7 @@ class GamsModifier:
                     f"GAMS Symbol must be GAMSVariable for {update_action}"
                 )
         elif update_action in (4, 5):
-            if not (
-                isinstance(self.gams_symbol, (GamsVariable, GamsEquation))
-            ):
+            if not (isinstance(self.gams_symbol, (GamsVariable, GamsEquation))):
                 raise GamspyException(
                     f"GAMS Symbol must be GAMSVariable or GAMSEquation for {update_action}"
                 )
@@ -301,8 +299,7 @@ class ModelInstance:
                 )
             else:
                 raise ValidationError(
-                    f"Symbol type {type(symbol)} cannot be modified in a"
-                    " frozen solve"
+                    f"Symbol type {type(symbol)} cannot be modified in a frozen solve"
                 )
 
         return modifiers
@@ -320,9 +317,7 @@ class ModelInstance:
         # Write pf file
         extra_options = self._prepare_gams_options()
         options._set_extra_options(extra_options)
-        options.log_file = os.path.join(
-            self.container.working_directory, "gamslog.dat"
-        )
+        options.log_file = os.path.join(self.container.working_directory, "gamslog.dat")
         options._export(self.pf_file, self.output)
 
         # Run
@@ -438,9 +433,7 @@ class ModelInstance:
 
         # Close Log and status file and remove
         if output:
-            gevSwitchLogStat(
-                self._gev, 0, "", False, "", False, None, None, None
-            )
+            gevSwitchLogStat(self._gev, 0, "", False, "", False, None, None, None)
             ls_handle = gevGetLShandle(self._gev)
             gevRestoreLogStatRewrite(self._gev, ls_handle)
 
@@ -466,26 +459,18 @@ class ModelInstance:
                 opt_file.writelines(
                     [
                         "gams "
-                        + os.path.join(
-                            self.workspace.working_directory, "gams.gms"
-                        ),
+                        + os.path.join(self.workspace.working_directory, "gams.gms"),
                         "dumpgdx "
-                        + os.path.join(
-                            self.workspace.working_directory, "dump.gdx\n"
-                        ),
+                        + os.path.join(self.workspace.working_directory, "dump.gdx\n"),
                         "dictmap "
-                        + os.path.join(
-                            self.workspace.working_directory, "dictmap.gdx"
-                        ),
+                        + os.path.join(self.workspace.working_directory, "dictmap.gdx"),
                     ]
                 )
 
                 gmoOptFileSet(self._gmo, 1)
                 gmoNameOptFileSet(
                     self._gmo,
-                    os.path.join(
-                        self.workspace.working_directory, "convert.opt"
-                    ),
+                    os.path.join(self.workspace.working_directory, "convert.opt"),
                 )
                 rc = gmdCallSolver(self.sync_db.gmd, "convert")
                 self.sync_db._check_for_gmd_error(rc, self.workspace)
@@ -493,9 +478,7 @@ class ModelInstance:
         gmoOptFileSet(self._gmo, option_file)
         gmoNameOptFileSet(
             self._gmo,
-            os.path.join(
-                self.workspace.working_directory, solver.lower() + ".opt"
-            ),
+            os.path.join(self.workspace.working_directory, solver.lower() + ".opt"),
         )
 
         rc = gmdCallSolver(self.sync_db.gmd, solver)
@@ -505,9 +488,7 @@ class ModelInstance:
             gevRestoreLogStat(self._gev, ls_handle)
 
         if output is not None and output != sys.stdout:
-            gevSwitchLogStat(
-                self._gev, 0, "", False, "", False, None, None, ls_handle
-            )
+            gevSwitchLogStat(self._gev, 0, "", False, "", False, None, None, ls_handle)
             ls_handle = gevGetLShandle(self._gev)
             with open(gevGetStrOpt(self._gev, gevNameLogFile)) as file:
                 for line in file.readlines():
@@ -532,13 +513,9 @@ class ModelInstance:
         self.model._num_iterations = gmoGetHeadnTail(self._gmo, gmoHiterused)
         self.model._marginals = gmoGetHeadnTail(self._gmo, gmoHmarginals)
         self.model._algorithm_time = gmoGetHeadnTail(self._gmo, gmoHetalg)
-        self.model._objective_estimation = gmoGetHeadnTail(
-            self._gmo, gmoTmipbest
-        )
+        self.model._objective_estimation = gmoGetHeadnTail(self._gmo, gmoTmipbest)
         self.model._num_nodes_used = gmoGetHeadnTail(self._gmo, gmoTmipnod)
-        self.model._num_domain_violations = gmoGetHeadnTail(
-            self._gmo, gmoHdomused
-        )
+        self.model._num_domain_violations = gmoGetHeadnTail(self._gmo, gmoHdomused)
         self.model._objective_value = gmoGetHeadnTail(self._gmo, gmoHobjval)
         self.summary.loc[0] = [
             str(self.model._solve_status),
@@ -577,20 +554,14 @@ class ModelInstance:
 
                 assign_str = f"{auto_id}__{symbol.name}({auto_id}__"
                 if symbol.dimension:
-                    assign_str += "," + ",".join(
-                        [f"{auto_id}__"] * symbol.dimension
-                    )
+                    assign_str += "," + ",".join([f"{auto_id}__"] * symbol.dimension)
 
                 assign_str += ") = Eps;"
                 lines.append(assign_str)
 
-            scenario = (
-                f"Set {auto_id}_dict(*,*,*) / '{auto_id}__'.'scenario'.''"
-            )
+            scenario = f"Set {auto_id}_dict(*,*,*) / '{auto_id}__'.'scenario'.''"
             for symbol in params:
-                scenario += (
-                    f",\n'{symbol.name}'.'param'.'{auto_id}__{symbol.name}'"
-                )
+                scenario += f",\n'{symbol.name}'.'param'.'{auto_id}__{symbol.name}'"
             scenario += "/;"
             lines.append(scenario)
 
@@ -624,9 +595,7 @@ class ModelInstance:
         symbols_in_conditions: list[str] = []
         for equation in self.model.equations:
             assert equation._definition is not None
-            symbols_in_conditions += (
-                equation._definition._find_symbols_in_conditions()
-            )
+            symbols_in_conditions += equation._definition._find_symbols_in_conditions()
 
         will_be_modified: list[Parameter | ImplicitParameter] = []
         for symbol in modifiables:
@@ -706,9 +675,7 @@ class ModelInstance:
             if name in self.container.data:
                 self.container._options.miro_protect = False
                 self.container[name].records = temp[name].records
-                self.container[name].domain_labels = self.container[
-                    name
-                ].domain_names
+                self.container[name].domain_labels = self.container[name].domain_names
 
             if name in (symbol.name for symbol in self.modifiables):
                 generated_var = name + "_var"
@@ -720,9 +687,7 @@ class ModelInstance:
                         records=temp[generated_var].records,
                     )
                 else:
-                    self.container[generated_var]._records = temp[
-                        generated_var
-                    ].records
+                    self.container[generated_var]._records = temp[generated_var].records
 
         self.container._options.miro_protect = prev_state
 

@@ -239,9 +239,7 @@ def main():
         records=demand_distribution,
         description="distribution of demand",
     )
-    d = Parameter(
-        cont, name="d", domain=[c, j], description="demand for steel in 1979"
-    )
+    d = Parameter(cont, name="d", domain=[c, j], description="demand for steel in 1979")
 
     d["steel", j] = dt * (1 + rse / 100) * dd[j] / 100
 
@@ -259,12 +257,8 @@ def main():
         domain=[i, j],
         description="transport rate: final products",
     )
-    muv = Parameter(
-        cont, name="muv", domain=j, description="transport rate: imports"
-    )
-    mue = Parameter(
-        cont, name="mue", domain=i, description="transport rate: exports"
-    )
+    muv = Parameter(cont, name="muv", domain=j, description="transport rate: imports")
+    mue = Parameter(cont, name="mue", domain=i, description="transport rate: exports")
 
     muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
     muv[j] = (2.48 + 0.0084 * rd["import", j]).where[rd["import", j]]
@@ -308,12 +302,8 @@ def main():
         type="Positive",
         description="purchase of domestic materials",
     )
-    v = Variable(
-        cont, name="v", domain=[c, j], type="Positive", description="imports"
-    )
-    e = Variable(
-        cont, name="e", domain=[c, i], type="Positive", description="exports"
-    )
+    v = Variable(cont, name="v", domain=[c, j], type="Positive", description="imports")
+    e = Variable(cont, name="e", domain=[c, i], type="Positive", description="exports")
     phipsi = Variable(cont, name="phipsi", description="raw material cost")
     philam = Variable(cont, name="philam", description="transport cost")
     phipi = Variable(cont, name="phipi", description="import cost")

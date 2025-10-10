@@ -303,14 +303,10 @@ class SetMixin:
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
         if type == "circular":
-            return implicits.ImplicitSet(
-                self, name=self.name, extension=f" -- {jump}"
-            )
+            return implicits.ImplicitSet(self, name=self.name, extension=f" -- {jump}")
 
         if type == "linear":
-            return implicits.ImplicitSet(
-                self, name=self.name, extension=f" - {jump}"
-            )
+            return implicits.ImplicitSet(self, name=self.name, extension=f" - {jump}")
 
         raise ValueError("Lag type must be linear or circular")
 
@@ -359,14 +355,10 @@ class SetMixin:
         jump = n if isinstance(n, int) else f"({n.gamsRepr()})"  # type: ignore
 
         if type == "circular":
-            return implicits.ImplicitSet(
-                self, name=self.name, extension=f" ++ {jump}"
-            )
+            return implicits.ImplicitSet(self, name=self.name, extension=f" ++ {jump}")
 
         if type == "linear":
-            return implicits.ImplicitSet(
-                self, name=self.name, extension=f" + {jump}"
-            )
+            return implicits.ImplicitSet(self, name=self.name, extension=f" + {jump}")
 
         raise ValueError("Lead type must be linear or circular")
 
@@ -504,12 +496,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         cls,
         container: Container | None = None,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str]
-        | Set
-        | Alias
-        | str
-        | Dim
-        | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | str | Dim | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
@@ -520,17 +507,14 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     ):
         if container is not None and not isinstance(container, gp.Container):
             raise TypeError(
-                "Container must of type `Container` but found"
-                f" {type(container)}"
+                f"Container must of type `Container` but found {type(container)}"
             )
 
         if name is None:
             return object.__new__(cls)
         else:
             if not isinstance(name, str):
-                raise TypeError(
-                    f"Name must of type `str` but found {type(name)}"
-                )
+                raise TypeError(f"Name must of type `str` but found {type(name)}")
             try:
                 if not container:
                     container = gp._ctx_managers[
@@ -553,12 +537,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self,
         container: Container | None = None,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str]
-        | Set
-        | Alias
-        | str
-        | Dim
-        | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | str | Dim | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
@@ -595,10 +574,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             has_symbol = True
 
         if has_symbol:
-            if any(
-                d1 != d2
-                for d1, d2 in itertools.zip_longest(self._domain, domain)
-            ):
+            if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
                     " domains are equal"
@@ -650,7 +626,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 if is_miro_input or is_miro_output:
                     name = name.lower()  # type: ignore
             else:
-                name = utils._get_symbol_name(prefix="s")
+                name = container._get_symbol_name(prefix="s")
 
             self._singleton_check(is_singleton, records, domain)
             previous_state = container._options.miro_protect
@@ -681,9 +657,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             else:
                 if not self._is_miro_symbol:
                     self._modified = False
-                self.container._synch_with_gams(
-                    gams_to_gamspy=self._is_miro_input
-                )
+                self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
 
             container._options.miro_protect = previous_state
 
@@ -734,12 +708,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
     def __setitem__(
         self,
-        indices: Sequence
-        | str
-        | int
-        | implicits.ImplicitSet
-        | EllipsisType
-        | slice,
+        indices: Sequence | str | int | implicits.ImplicitSet | EllipsisType | slice,
         rhs,
     ):
         # self[domain] = rhs
@@ -773,9 +742,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     ):
         if is_singleton:
             if records is not None and len(records) != 1:
-                raise ValidationError(
-                    "Singleton set records size must be one."
-                )
+                raise ValidationError("Singleton set records size must be one.")
 
             if len(domain) != 1:
                 raise ValidationError(
@@ -853,7 +820,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         """
         Main convenience method to set standard pandas.DataFrame formatted
         records. If uels_on_axes=True setRecords will assume that all domain
-        information is contained in the axes of the pandas object – data will be
+        information is contained in the axes of the pandas object. Data will be
         flattened (if necessary).
 
         Parameters

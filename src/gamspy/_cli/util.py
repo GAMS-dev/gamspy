@@ -27,15 +27,11 @@ class SolverInfo:
         )
 
 
-def add_solver_entry(
-    system_directory: str, solver_name: str, verbatims: list[str]
-):
+def add_solver_entry(system_directory: str, solver_name: str, verbatims: list[str]):
     capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
     installed_solvers = utils.getInstalledSolvers(system_directory)
     if solver_name.upper() in installed_solvers:
-        print(
-            f"`{solver_name}` already exists in the capabilities file, skipping"
-        )
+        print(f"`{solver_name}` already exists in the capabilities file, skipping")
         return
 
     with open(capabilities_path, encoding="utf-8") as f:
@@ -57,7 +53,7 @@ def find_bounds(system_directory: str, solver_name: str) -> tuple[int, int]:
     line_count = 0
     while True:
         line = lines.pop(0)
-        if line.startswith("*") or line == "" or line == "\n":
+        if line.startswith("*") or line in {"", "\n"}:
             start_idx += 1
             continue
         if line == "DEFAULTS":

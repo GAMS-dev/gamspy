@@ -10,6 +10,4 @@ letters = gp.Set(
     records=[x for x in "abcdefghijklmnopqrstuvwxyz"],
 )
 
-pick_letter = gp.Set(
-    m, name="pick_letter", domain=[letters], is_miro_input=True
-)
+pick_letter = gp.Set(m, name="pick_letter", domain=[letters], is_miro_input=True)

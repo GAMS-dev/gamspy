@@ -47,9 +47,7 @@ class MinPool2d(_MPool2d):
         padding: int = 0,
         name_prefix: str | None = None,
     ):
-        super().__init__(
-            "min", container, kernel_size, stride, padding, name_prefix
-        )
+        super().__init__("min", container, kernel_size, stride, padding, name_prefix)
 
     def __call__(
         self,

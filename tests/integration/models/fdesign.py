@@ -76,9 +76,7 @@ def main():
     h = Variable(m, name="h", domain=k)
     t = Variable(m, name="t")
     v2 = Variable(m, name="v2", description="for conic variable u - t")
-    v3 = Variable(
-        m, name="v3", type="Positive", description="for conic variable u + t"
-    )
+    v3 = Variable(m, name="v3", type="Positive", description="for conic variable u + t")
     u = Variable(m, name="u", type="Positive")
     v = Variable(m, name="v", type="Positive")
 

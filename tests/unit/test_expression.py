@@ -92,14 +92,10 @@ def test_expression_evaluation():
 
     # mathop.records
     f = gp.Parameter(m, "f", records=5)
-    assert math.isclose(
-        gp.math.exp(f).records.values.item(), 148.4131591025766
-    )
+    assert math.isclose(gp.math.exp(f).records.values.item(), 148.4131591025766)
 
     k = gp.Set(m, name="k", records=["k1", "k2", "k3"])
-    g = gp.Parameter(
-        m, "g", domain=k, records=[("k1", 4), ("k2", 10), ("k3", 0.5)]
-    )
+    g = gp.Parameter(m, "g", domain=k, records=[("k1", 4), ("k2", 10), ("k3", 0.5)])
     assert gp.math.lse_max(g[k], 5).records.values.tolist() == [
         ["k1", 5.313261687518223],
         ["k2", 10.006715348489118],

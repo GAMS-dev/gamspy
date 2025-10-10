@@ -39,7 +39,7 @@ class ImplicitEquation(ImplicitSymbol):
         return f"ImplicitEquation(parent={self.parent}, name='{self.name}', domain={self.domain}, type={self.type})"
 
     @property
-    def l(self):  # noqa: E741,E743
+    def l(self):
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.l.name,
@@ -171,9 +171,7 @@ class ImplicitEquation(ImplicitSymbol):
         if len(domain):
             set_strs = []
             for set in domain:
-                if isinstance(
-                    set, (gams_set.Set, alias.Alias, implicits.ImplicitSet)
-                ):
+                if isinstance(set, (gams_set.Set, alias.Alias, implicits.ImplicitSet)):
                     set_strs.append(set.gamsRepr())
                 elif isinstance(set, str):
                     if set == "*":

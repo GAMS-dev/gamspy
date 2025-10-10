@@ -31,7 +31,7 @@ from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
-    from typing import Any, Literal, TypeAlias, Union
+    from typing import Any, Literal, TypeAlias
 
     from pandas import DataFrame
 
@@ -48,7 +48,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy.math.matrix import Dim
 
-    SymbolType: TypeAlias = Union[Set, Alias, Parameter, Variable, Equation]
+    SymbolType: TypeAlias = Set | Alias | Parameter | Variable | Equation
 
 LOOPBACK = "127.0.0.1"
 IS_MIRO_INIT = os.getenv("MIRO", False)
@@ -60,12 +60,8 @@ is_windows = platform.system() == "Windows"
 def add_sysdir_to_path(system_directory: str) -> None:
     if is_windows:
         if "PATH" in os.environ:
-            if not os.environ["PATH"].startswith(
-                system_directory + os.pathsep
-            ):
-                os.environ["PATH"] = (
-                    system_directory + os.pathsep + os.environ["PATH"]
-                )
+            if not os.environ["PATH"].startswith(system_directory + os.pathsep):
+                os.environ["PATH"] = system_directory + os.pathsep + os.environ["PATH"]
         else:
             os.environ["PATH"] = system_directory
 
@@ -265,9 +261,7 @@ class Container(gt.Container):
         load_from: str | os.PathLike | Container | gt.Container | None = None,
         system_directory: str | os.PathLike | None = None,
         working_directory: str | os.PathLike | None = None,
-        debugging_level: Literal[
-            "keep", "keep_on_error", "delete"
-        ] = "keep_on_error",
+        debugging_level: Literal["keep", "keep_on_error", "delete"] = "keep_on_error",
         options: Options | None = None,
         output: io.TextIOWrapper | None = None,
     ):
@@ -305,9 +299,7 @@ class Container(gt.Container):
 
         self._job, self._gdx_in, self._gdx_out = self._setup_paths()
 
-        self._temp_container = gt.Container(
-            system_directory=self.system_directory
-        )
+        self._temp_container = gt.Container(system_directory=self.system_directory)
 
         # needed for miro
         self._miro_input_symbols: list[str] = []
@@ -415,7 +407,31 @@ class Container(gt.Container):
         with open(self._license_path, encoding="utf-8") as file:
             lines = file.readlines()
 
-        return bool("+" in lines[0] and lines[4][47] == "N")
+        return bool(lines[0][54] == "+" and lines[4][47] == "N")
+
+    def _get_symbol_name(self, prefix: str) -> str:
+        use_py_var_name = get_option("USE_PY_VAR_NAME")
+        if use_py_var_name == "no":
+            name = prefix + utils._get_unique_name() + "gpauto"
+        elif use_py_var_name == "yes":
+            name = utils._get_name_from_stack()
+        elif use_py_var_name == "yes-or-autogenerate":
+            try:
+                name = utils._get_name_from_stack()
+                # if a symbol with the same name exists, autogenerate.
+                try:
+                    _ = self[name]
+                    name = prefix + utils._get_unique_name() + "gpauto"
+                except KeyError:
+                    ...
+            except ValidationError:
+                name = prefix + utils._get_unique_name() + "gpauto"
+        else:
+            raise ValidationError(
+                f'Invalid value `{use_py_var_name}` for `USE_PY_VAR_NAME`. Possible values are "no", "yes", "yes-or-autogenerate"'
+            )
+
+        return name
 
     @staticmethod
     def _release_resources(
@@ -476,9 +492,7 @@ class Container(gt.Container):
             encoder = MiroJSONEncoder(self)
             encoder.write_json()
         except Exception:
-            self._release_resources(
-                self._is_socket_open, self._socket, self._process
-            )
+            self._release_resources(self._is_socket_open, self._socket, self._process)
             self._is_socket_open = False
             traceback.print_exc()
             os._exit(1)
@@ -501,9 +515,7 @@ class Container(gt.Container):
 
             if isinstance(gtp_symbol, gt.Alias):
                 alias_with = self.data[gtp_symbol.alias_with.name]
-                _ = gp.Alias._constructor_bypass(
-                    self, gtp_symbol._name, alias_with
-                )
+                _ = gp.Alias._constructor_bypass(self, gtp_symbol._name, alias_with)
             elif isinstance(gtp_symbol, gt.UniverseAlias):
                 _ = gp.UniverseAlias._constructor_bypass(
                     self,
@@ -656,9 +668,7 @@ class Container(gt.Container):
                         and not IS_MIRO_INIT
                         and MIRO_GDX_IN
                     ):
-                        miro_load = miro.get_load_input_str(
-                            loadable.name, gdx_in
-                        )
+                        miro_load = miro.get_load_input_str(loadable.name, gdx_in)
                         strings.append(miro_load)
                     else:
                         strings.append(f"$loadDC {loadable.name}")
@@ -684,9 +694,7 @@ class Container(gt.Container):
 
         return gams_string
 
-    def _load_records_from_gdx(
-        self, load_from: str, names: Iterable[str]
-    ) -> None:
+    def _load_records_from_gdx(self, load_from: str, names: Iterable[str]) -> None:
         self._temp_container.read(load_from, names)
         original_state = self._options.miro_protect
         self._options.miro_protect = False
@@ -702,9 +710,7 @@ class Container(gt.Container):
         self._options.miro_protect = original_state
         self._temp_container.data = {}
 
-    def _load_records_with_rename(
-        self, load_from: str, names: dict[str, str]
-    ) -> None:
+    def _load_records_with_rename(self, load_from: str, names: dict[str, str]) -> None:
         self._temp_container.read(load_from, list(names.keys()))
         original_state = self._options.miro_protect
         self._options.miro_protect = False
@@ -713,9 +719,7 @@ class Container(gt.Container):
             if gamspy_name in self.data:
                 updated_records = self._temp_container[gdx_name].records
                 self[gamspy_name].records = updated_records
-                self[gamspy_name].domain_labels = self[
-                    gamspy_name
-                ].domain_names
+                self[gamspy_name].domain_labels = self[gamspy_name].domain_names
             else:
                 raise ValidationError(
                     f"Invalid renaming. `{gamspy_name}` does not exist in the container."
@@ -806,7 +810,7 @@ class Container(gt.Container):
                 f"Length of `records` and `uels_on_axes` must match. Size of records: {len(records)}, size of uels_on_axes: {len(uels_on_axes)}"
             )
 
-        for item, uels_on_axe in zip(records.items(), uels_on_axes):
+        for item, uels_on_axe in zip(records.items(), uels_on_axes, strict=False):
             symbol, record = item
             symbol._setRecords(record, uels_on_axes=uels_on_axe)
 
@@ -1020,9 +1024,7 @@ class Container(gt.Container):
         to communicate with the GAMS execution engine, e.g. creating new symbols, changing data,
         solves, etc. The container data (Container.data) is still available for read operations.
         """
-        self._release_resources(
-            self._is_socket_open, self._socket, self._process
-        )
+        self._release_resources(self._is_socket_open, self._socket, self._process)
         self._is_socket_open = False
 
     def addAlias(
@@ -1133,12 +1135,7 @@ class Container(gt.Container):
     def addParameter(
         self,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str]
-        | Set
-        | Alias
-        | Dim
-        | str
-        | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
@@ -1207,12 +1204,7 @@ class Container(gt.Container):
         self,
         name: str | None = None,
         type: str = "free",
-        domain: Sequence[Set | Alias | str]
-        | Set
-        | Alias
-        | Dim
-        | str
-        | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",

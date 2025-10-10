@@ -88,9 +88,7 @@ def main():
         records=data["products"],
     )
     j = Set(m, name="j", description="resources", records=data["resources"])
-    t = Set(
-        m, name="t", description="time periods", records=data["time_periods"]
-    )
+    t = Set(m, name="t", description="time periods", records=data["time_periods"])
 
     KJ = Set(
         m,

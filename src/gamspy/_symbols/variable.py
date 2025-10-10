@@ -91,12 +91,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container,
         name: str,
         type: str = "free",
-        domain: Sequence[Set | Alias | str]
-        | Set
-        | Alias
-        | Dim
-        | str
-        | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
         records: Any | None = None,
         description: str = "",
     ):
@@ -163,12 +158,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container | None = None,
         name: str | None = None,
         type: str = "free",
-        domain: Sequence[Set | Alias | str]
-        | Set
-        | Alias
-        | Dim
-        | str
-        | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
@@ -210,12 +200,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container | None = None,
         name: str | None = None,
         type: str = "free",
-        domain: Sequence[Set | Alias | str]
-        | Set
-        | Alias
-        | Dim
-        | str
-        | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
@@ -257,10 +242,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                     f" `{type.casefold()}`"
                 )
 
-            if any(
-                d1 != d2
-                for d1, d2 in itertools.zip_longest(self._domain, domain)
-            ):
+            if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
                     " domains are equal"
@@ -295,9 +277,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                         (os.getpid(), threading.get_native_id())
                     ]
                 except KeyError as e:
-                    raise ValidationError(
-                        "Variable requires a container."
-                    ) from e
+                    raise ValidationError("Variable requires a container.") from e
             assert container is not None
 
             type = cast_type(type)
@@ -308,7 +288,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 if is_miro_output:
                     name = name.lower()  # type: ignore
             else:
-                name = utils._get_symbol_name(prefix="v")
+                name = container._get_symbol_name(prefix="v")
 
             previous_state = container._options.miro_protect
             container._options.miro_protect = False
@@ -504,7 +484,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         )
 
     @property
-    def l(self):  # noqa: E741,E743
+    def l(self):
         """
         Level
 
@@ -642,9 +622,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     @scale.setter
     def scale(self, value: int | float | Expression):
         if self.type in ("integer", "binary"):
-            raise ValidationError(
-                "Scales cannot be applied to discrete variables."
-            )
+            raise ValidationError("Scales cannot be applied to discrete variables.")
 
         self._s[...] = value
 
@@ -703,9 +681,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     @prior.setter
     def prior(self, value: int | float | Expression):
         if self.type not in ("integer", "binary"):
-            raise ValidationError(
-                "Priorities can only be used on discrete variables."
-            )
+            raise ValidationError("Priorities can only be used on discrete variables.")
 
         self._prior[...] = value
 
@@ -805,7 +781,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                     )
 
                 matches = 0
-                for user_filter, set in zip(filters, sets):
+                for user_filter, set in zip(filters, sets, strict=False):
                     if set in user_filter or user_filter == []:
                         matches += 1
 
@@ -877,7 +853,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         Main convenience method to set standard pandas.DataFrame formatted
         records. If uels_on_axes=True setRecords will assume that all domain
-        information is contained in the axes of the pandas object – data will be
+        information is contained in the axes of the pandas object. Data will be
         flattened (if necessary).
 
         Parameters
@@ -1012,8 +988,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 def cast_type(type: str | VariableType) -> str:
     if isinstance(type, str) and type.lower() not in VariableType.values():
         raise ValueError(
-            f"Allowed variable types: {VariableType.values()} but"
-            f" found {type}."
+            f"Allowed variable types: {VariableType.values()} but found {type}."
         )
 
     if isinstance(type, VariableType):

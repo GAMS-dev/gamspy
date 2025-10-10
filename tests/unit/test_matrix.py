@@ -47,12 +47,8 @@ def test_simple_matrix_matrix(data):
 
     a_recs = np.random.randint(1, 11, size=(3, 3))
     b_recs = np.random.randint(1, 11, size=(3, 3))
-    a = Parameter(
-        m, name="a", domain=[i, j], records=a_recs, uels_on_axes=True
-    )
-    b = Parameter(
-        m, name="b", domain=[j, k], records=b_recs, uels_on_axes=True
-    )
+    a = Parameter(m, name="a", domain=[i, j], records=a_recs, uels_on_axes=True)
+    b = Parameter(m, name="b", domain=[j, k], records=b_recs, uels_on_axes=True)
     c = a @ b
     assert c.domain == [i, k]
 
@@ -62,9 +58,7 @@ def test_simple_matrix_matrix(data):
     c_recs = c.toDense()
     assert np.allclose(c_recs, a_recs @ b_recs)
 
-    a2 = Parameter(
-        m, name="a2", domain=[k, k], records=a_recs, uels_on_axes=True
-    )
+    a2 = Parameter(m, name="a2", domain=[k, k], records=a_recs, uels_on_axes=True)
     # dims do not match
     pytest.raises(ValidationError, lambda: a2 @ b)
 
@@ -78,9 +72,7 @@ def test_simple_matrix_vector(data):
 
     a_recs = np.random.randint(1, 11, size=(3, 3))
     b_recs = np.random.randint(1, 11, size=(3))
-    a = Parameter(
-        m, name="a", domain=[i, j], records=a_recs, uels_on_axes=True
-    )
+    a = Parameter(m, name="a", domain=[i, j], records=a_recs, uels_on_axes=True)
     b = Parameter(m, name="b", domain=[j], records=b_recs, uels_on_axes=True)
     c = a @ b
     assert c.domain == [i]
@@ -89,9 +81,7 @@ def test_simple_matrix_vector(data):
     c_recs = c.toDense()
     assert np.allclose(c_recs, a_recs @ b_recs)
 
-    a2 = Parameter(
-        m, name="a2", domain=[j, i], records=a_recs, uels_on_axes=True
-    )
+    a2 = Parameter(m, name="a2", domain=[j, i], records=a_recs, uels_on_axes=True)
     # dims do not match
     pytest.raises(ValidationError, lambda: a2 @ b)
 
@@ -144,9 +134,7 @@ def test_simple_vector_matrix(data):
     a_recs = np.random.randint(1, 11, size=(3))
     b_recs = np.random.randint(1, 11, size=(3, 3))
     a = Parameter(m, name="a", domain=[i], records=a_recs, uels_on_axes=True)
-    b = Parameter(
-        m, name="b", domain=[i, j], records=b_recs, uels_on_axes=True
-    )
+    b = Parameter(m, name="b", domain=[i, j], records=b_recs, uels_on_axes=True)
     c = a @ b
     assert c.domain == [j]
     c = Parameter(m, name="c", domain=[j])
@@ -260,9 +248,7 @@ def test_batched_matrix_matrix_2(data):
         records=a_recs,
         uels_on_axes=True,
     )
-    b = Parameter(
-        m, name="b", domain=[j, k], records=b_recs, uels_on_axes=True
-    )
+    b = Parameter(m, name="b", domain=[j, k], records=b_recs, uels_on_axes=True)
     c = a @ b
     assert c.domain == [n, i, k]
     c = Parameter(m, name="c", domain=[n, i, k])
@@ -308,12 +294,8 @@ def test_square_matrix_mult(data):
 
     a_recs = np.random.randint(1, 11, size=(3, 3))
     b_recs = np.random.randint(1, 11, size=(3, 3))
-    a = Parameter(
-        m, name="a", domain=[i, i], records=a_recs, uels_on_axes=True
-    )
-    b = Parameter(
-        m, name="b", domain=[i, i], records=b_recs, uels_on_axes=True
-    )
+    a = Parameter(m, name="a", domain=[i, i], records=a_recs, uels_on_axes=True)
+    b = Parameter(m, name="b", domain=[i, i], records=b_recs, uels_on_axes=True)
 
     c2 = a[i, j] @ b[j, k]
     assert c2.domain == [i, k]
@@ -604,21 +586,13 @@ def test_domain_relabeling(data):
     assert expr5.gamsRepr() == "sum(n,a(n,i,j) + a(n,i,j) + (b(j,k) + b(j,k)))"
 
     expr6 = expr5[i2, j, k]
-    assert (
-        expr6.gamsRepr() == "sum(n,a(n,i2,j) + a(n,i2,j) + (b(j,k) + b(j,k)))"
-    )
+    assert expr6.gamsRepr() == "sum(n,a(n,i2,j) + a(n,i2,j) + (b(j,k) + b(j,k)))"
 
     expr7 = Sum(j, expr6)
-    assert (
-        expr7.gamsRepr()
-        == "sum(j,sum(n,a(n,i2,j) + a(n,i2,j) + (b(j,k) + b(j,k))))"
-    )
+    assert expr7.gamsRepr() == "sum(j,sum(n,a(n,i2,j) + a(n,i2,j) + (b(j,k) + b(j,k))))"
 
     expr8 = expr7[i, k2]
-    assert (
-        expr8.gamsRepr()
-        == "sum(j,sum(n,a(n,i,j) + a(n,i,j) + (b(j,k2) + b(j,k2))))"
-    )
+    assert expr8.gamsRepr() == "sum(j,sum(n,a(n,i,j) + a(n,i,j) + (b(j,k2) + b(j,k2))))"
 
 
 def test_vector_norm_not_implemented(data):

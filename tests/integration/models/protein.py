@@ -43,21 +43,11 @@ def main():
 
     # SCALARS #
     tf = Parameter(m, name="tf", records=10, description="final time")
-    x1_0 = Parameter(
-        m, name="x1_0", records=1, description="initial value for x1"
-    )
-    x2_0 = Parameter(
-        m, name="x2_0", records=5, description="initial value for x2"
-    )
-    x3_0 = Parameter(
-        m, name="x3_0", records=0, description="initial value for x3"
-    )
-    x4_0 = Parameter(
-        m, name="x4_0", records=0, description="initial value for x4"
-    )
-    x5_0 = Parameter(
-        m, name="x5_0", records=1, description="initial value for x5"
-    )
+    x1_0 = Parameter(m, name="x1_0", records=1, description="initial value for x1")
+    x2_0 = Parameter(m, name="x2_0", records=5, description="initial value for x2")
+    x3_0 = Parameter(m, name="x3_0", records=0, description="initial value for x3")
+    x4_0 = Parameter(m, name="x4_0", records=0, description="initial value for x4")
+    x5_0 = Parameter(m, name="x5_0", records=1, description="initial value for x5")
     h = Parameter(m, name="h")
     h[...] = tf / n
 
@@ -196,9 +186,7 @@ def main():
         options=Options(time_limit=60000, iteration_limit=80000),
     )
 
-    print(
-        "Objective Function Value:  ", round(protein.objective_value, 4), "\n"
-    )
+    print("Objective Function Value:  ", round(protein.objective_value, 4), "\n")
 
     # REPORTING PARAMETER #
     rep = Parameter(m, name="rep", domain=[nh, "*"])

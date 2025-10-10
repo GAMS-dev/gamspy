@@ -383,9 +383,7 @@ def main():
     )
 
     # Variables
-    cPP = Variable(
-        cont, name="cPP", type="positive", description="cost of PP usage"
-    )
+    cPP = Variable(cont, name="cPP", type="positive", description="cost of PP usage")
     pPP = Variable(
         cont,
         name="pPP",
@@ -622,17 +620,15 @@ def main():
     LFCmu[...] = Sum(b, mu[b]) == 1
 
     # connect the 'mu' variables with the total energy amount eq. (19)
-    LFCenergyS[...] = eLFCtot == Sum(
-        b.where[Ord(b) > 1], eLFCb[b - 1] * mu[b]
-    ) + Sum(b, eLFCs[b])
+    LFCenergyS[...] = eLFCtot == Sum(b.where[Ord(b) > 1], eLFCb[b - 1] * mu[b]) + Sum(
+        b, eLFCs[b]
+    )
 
     # accumulated energy amount for segment "b1" eq. (20)
     LFCemuo[...] = eLFCs["b1"] <= eLFCb["b1"] * mu["b1"]
 
     # accumulated energy amount for all other segments (then "b1") eq. (20)
-    LFCemug[b].where[Ord(b) > 1] = (
-        eLFCs[b] <= (eLFCb[b] - eLFCb[b - 1]) * mu[b]
-    )
+    LFCemug[b].where[Ord(b) > 1] = eLFCs[b] <= (eLFCb[b] - eLFCb[b - 1]) * mu[b]
 
     energy = Model(
         cont,

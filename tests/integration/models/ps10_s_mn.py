@@ -64,9 +64,7 @@ def main():
 
     # Parameters
     theta = Parameter(m, name="theta", domain=i, description="efficiency")
-    pt = Parameter(
-        m, name="pt", domain=[i, t], description="probability of type"
-    )
+    pt = Parameter(m, name="pt", domain=[i, t], description="probability of type")
     p = Parameter(m, name="p", domain=i, description="probability of type")
 
     theta[i] = Ord(i) / Card(i)
@@ -90,9 +88,7 @@ def main():
         description="no MHRC combination between i and i-1",
     )
     # (MHRC: monotone hazard rate condition)
-    noMHRC = Parameter(
-        m, name="noMHRC", domain=t, description=">=1: no MHRC case"
-    )
+    noMHRC = Parameter(m, name="noMHRC", domain=t, description=">=1: no MHRC case")
 
     F[i, t] = Sum(j.where[Ord(j) <= Ord(i)], pt[j, t])
     noMHRC0[i, t].where[Ord(i) < Card(i)] = Number(1).where[
@@ -104,9 +100,7 @@ def main():
 
     # Definition of Primal/Dual Variables
     x = Variable(m, name="x", type="positive", domain=i, description="quality")
-    b = Variable(
-        m, name="b", type="positive", domain=i, description="maker's revenue"
-    )
+    b = Variable(m, name="b", type="positive", domain=i, description="maker's revenue")
     w = Variable(m, name="w", type="positive", domain=i, description="price")
 
     # Equations
@@ -183,9 +177,7 @@ def main():
     )
 
     # Parameters
-    Util_lic = Parameter(
-        m, name="Util_lic", domain=t, description="util solved w/o MN"
-    )
+    Util_lic = Parameter(m, name="Util_lic", domain=t, description="util solved w/o MN")
     Util_lic2 = Parameter(
         m, name="Util_lic2", domain=t, description="util solved w/ MN"
     )
@@ -195,12 +187,8 @@ def main():
         domain=t,
         description="gap between these two util",
     )
-    x_lic = Parameter(
-        m, name="x_lic", domain=[i, t], description="x solved in w/o MN"
-    )
-    x_lic2 = Parameter(
-        m, name="x_lic2", domain=[i, t], description="x solved in w/ MN"
-    )
+    x_lic = Parameter(m, name="x_lic", domain=[i, t], description="x solved in w/o MN")
+    x_lic2 = Parameter(m, name="x_lic2", domain=[i, t], description="x solved in w/ MN")
     MN_lic = Parameter(
         m,
         name="MN_lic",
@@ -222,27 +210,19 @@ def main():
 
         Util_lic[tt] = SB_lic.objective_value
         x_lic[i, tt] = x.l[i]
-        MN_lic[tt] = Sum(
-            i, Number(1).where[Round(x.l[i], 10) < Round(x.l[i + 1], 10)]
-        )
+        MN_lic[tt] = Sum(i, Number(1).where[Round(x.l[i], 10) < Round(x.l[i + 1], 10)])
 
         #  Solving the model w/ MN
         SB_lic2.solve(options=Options(solve_link_type="memory"))
 
         Util_lic2[tt] = SB_lic2.objective_value
         x_lic2[i, tt] = x.l[i]
-        MN_lic2[tt] = Sum(
-            i, Number(1).where[Round(x.l[i], 10) < Round(x.l[i + 1], 10)]
-        )
+        MN_lic2[tt] = Sum(i, Number(1).where[Round(x.l[i], 10) < Round(x.l[i + 1], 10)])
 
-    Util_gap[t] = Number(1).where[
-        Round(Util_lic[t], 10) != Round(Util_lic2[t], 10)
-    ]
+    Util_gap[t] = Number(1).where[Round(Util_lic[t], 10) != Round(Util_lic2[t], 10)]
 
     # Computing probability that MHRC and MN holds.
-    p_noMHRC = Parameter(
-        m, name="p_noMHRC", description="no MHRC case          [%]"
-    )
+    p_noMHRC = Parameter(m, name="p_noMHRC", description="no MHRC case          [%]")
     p_noMN_lic = Parameter(
         m, name="p_noMN_lic", description="no MN case            [%]"
     )

@@ -82,9 +82,7 @@ class Linear:
 
         self._name_prefix = name_prefix
 
-    def load_weights(
-        self, weight: np.ndarray, bias: np.ndarray | None = None
-    ) -> None:
+    def load_weights(self, weight: np.ndarray, bias: np.ndarray | None = None) -> None:
         """
         Mark Linear as parameter and load weights from NumPy arrays.
         After this is called `make_variable` cannot be called. Use this
@@ -122,9 +120,7 @@ class Linear:
             self.in_features,
         )
         if weight.shape != expected_shape:
-            raise ValidationError(
-                f"weight expected to be in shape {expected_shape}"
-            )
+            raise ValidationError(f"weight expected to be in shape {expected_shape}")
 
         if bias is not None:
             if len(bias.shape) != 1:
@@ -237,9 +233,7 @@ class Linear:
             )
 
         if len(input.domain) == 0:
-            raise ValidationError(
-                "expected an input with at least 1 dimension"
-            )
+            raise ValidationError("expected an input with at least 1 dimension")
 
         if len(input.domain[-1]) != self.in_features:
             raise ValidationError("in_features does not match")
@@ -265,16 +259,10 @@ class Linear:
 
         # If propagate_bounds is True, weight is a parameter and input is a variable,
         # we will propagate the bounds of the input to the output
-        if (
-            propagate_bounds
-            and self._state == 1
-            and isinstance(input, gp.Variable)
-        ):
+        if propagate_bounds and self._state == 1 and isinstance(input, gp.Variable):
             x_bounds = gp.Parameter(
                 self.container,
-                name=utils._generate_name(
-                    "p", self._name_prefix, "input_bounds"
-                ),
+                name=utils._generate_name("p", self._name_prefix, "input_bounds"),
                 domain=dim([2, *input.shape]),
             )
             x_bounds[("0",) + tuple(input.domain)] = input.lo[...]
@@ -290,9 +278,7 @@ class Linear:
 
                 out_bounds = gp.Parameter(
                     self.container,
-                    name=utils._generate_name(
-                        "p", self._name_prefix, "output_bounds"
-                    ),
+                    name=utils._generate_name("p", self._name_prefix, "output_bounds"),
                     domain=dim(out.shape),
                     records=out_bounds_array,
                 )
@@ -344,9 +330,7 @@ class Linear:
 
             out_bounds = gp.Parameter(
                 self.container,
-                name=utils._generate_name(
-                    "p", self._name_prefix, "output_bounds"
-                ),
+                name=utils._generate_name("p", self._name_prefix, "output_bounds"),
                 domain=dim([2, *out.shape]),
                 records=out_bounds_array,
             )

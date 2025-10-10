@@ -61,18 +61,14 @@ def main():
     i = Alias(m, name="i", alias_with=nh)
 
     # SCALARS #
-    L = Parameter(
-        m, name="L", records=4, description="length of the suspended chain"
-    )
+    L = Parameter(m, name="L", records=4, description="length of the suspended chain")
     a = Parameter(
         m, name="a", records=1, description="height of the chain at t=0 (left)"
     )
     b = Parameter(
         m, name="b", records=3, description="height of the chain at t=1 (left)"
     )
-    tf = Parameter(
-        m, name="tf", records=1, description="ODEs defined in [0 tf]"
-    )
+    tf = Parameter(m, name="tf", records=1, description="ODEs defined in [0 tf]")
     h = Parameter(m, name="h", description="uniform interval length")
     n = Parameter(m, name="n", description="number of subintervals")
     tmin = Parameter(m, name="tmin")

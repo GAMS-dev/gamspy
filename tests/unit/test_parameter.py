@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy as gp
 from gamspy import (
     Alias,
     Container,
@@ -82,9 +83,7 @@ def test_parameter_string(data):
     pytest.raises(ValidationError, Parameter, m, "set")
 
     i = Set(m, name="i", records=canning_plants, description="Canning Plants")
-    a = Parameter(
-        m, name="a", domain=[i], records=capacities, description="capacities"
-    )
+    a = Parameter(m, name="a", domain=[i], records=capacities, description="capacities")
 
     assert a.getDeclaration() == 'Parameter a(i) "capacities";'
 
@@ -302,8 +301,27 @@ def test_expert_sync2(data):
     assert f.toValue() == 2
     f.setRecords(3)  # Python: 3 GAMS: 1
     assert f.toValue() == 3
-    f.synchronize = True  # Python: 3 GAMS: 3 (Python wins because the user has setRecords last)
+    f.synchronize = (
+        True  # Python: 3 GAMS: 3 (Python wins because the user has setRecords last)
+    )
     assert f.toValue() == 3
+
+
+def test_expert_sync3():
+    m = gp.Container()
+    a = gp.Parameter(m, "a")
+    b = gp.Parameter(m, "b")
+
+    a.synchronize = False
+    a[...] = 2
+    b[...] = 1
+    assert b.toValue() == 1
+    assert a.records is None
+    a.synchronize = True
+
+    assert a.toValue() == 2
+    assert b.toValue() == 1
+    m.close()
 
 
 def test_control_domain(data):

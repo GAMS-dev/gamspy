@@ -21,9 +21,9 @@ def _generate_gray_code(n: int, n_bits: int) -> np.ndarray:
     a = np.arange(n)
     b = a >> 1
     numbers = a ^ b
-    numbers_in_bit_array = (
-        (numbers[:, None] & (1 << np.arange(n_bits))) > 0
-    ).astype(int)
+    numbers_in_bit_array = ((numbers[:, None] & (1 << np.arange(n_bits))) > 0).astype(
+        int
+    )
     return numbers_in_bit_array
 
 
@@ -105,28 +105,22 @@ def _enforce_discontinuity(
         m, [len_x_points, len_x_points, len(combined_indices)]
     )
 
-    J, J2, SB = gp.formulations.utils._next_domains(
-        [J, J2, SB], previous_domains
-    )
+    J, J2, SB = gp.formulations.utils._next_domains([J, J2, SB], previous_domains)
 
-    di_param = [
-        (str(i), str(j), str(j + 1)) for i, j in enumerate(combined_indices)
-    ]
+    di_param = [(str(i), str(j), str(j + 1)) for i, j in enumerate(combined_indices)]
 
     select_set = m.addSet(domain=[SB, J, J2], records=di_param)
     select_var = m.addVariable(domain=[*previous_domains, SB], type="binary")
 
     select_equation = m.addEquation(domain=[*previous_domains, SB, J, J2])
     select_equation[[*previous_domains, select_set[SB, J, J2]]] = (
-        lambda_var[[*previous_domains, J]]
-        <= select_var[[*previous_domains, SB]]
+        lambda_var[[*previous_domains, J]] <= select_var[[*previous_domains, SB]]
     )
     equations.append(select_equation)
 
     select_equation_2 = m.addEquation(domain=[*previous_domains, SB, J, J2])
     select_equation_2[[*previous_domains, select_set[SB, J, J2]]] = (
-        lambda_var[[*previous_domains, J2]]
-        <= 1 - select_var[[*previous_domains, SB]]
+        lambda_var[[*previous_domains, J2]] <= 1 - select_var[[*previous_domains, SB]]
     )
     equations.append(select_equation_2)
 
@@ -149,9 +143,7 @@ def _check_points(
         raise ValidationError("y_points are expected to be a sequence")
 
     if len(x_points) < 2:
-        raise ValidationError(
-            "piecewise linear functions require at least 2 points"
-        )
+        raise ValidationError("piecewise linear functions require at least 2 points")
 
     if len(y_points) != len(x_points):
         raise ValidationError("x_points and y_points have different lenghts")
@@ -159,10 +151,8 @@ def _check_points(
     if x_points[0] is None or x_points[-1] is None:
         raise ValidationError("x_points cannot start or end with a None value")
 
-    for x_p, y_p in zip(x_points, y_points):
-        if (x_p is None and y_p is not None) or (
-            x_p is not None and y_p is None
-        ):
+    for x_p, y_p in zip(x_points, y_points, strict=False):
+        if (x_p is None and y_p is not None) or (x_p is not None and y_p is None):
             raise ValidationError(
                 "Both x and y must either be None or neither of them should be None"
             )
@@ -175,9 +165,7 @@ def _check_points(
 
     for i in range(len(x_points) - 1):
         if x_points[i] is None and x_points[i + 1] is None:
-            raise ValidationError(
-                "x_points cannot contain two consecutive None values"
-            )
+            raise ValidationError("x_points cannot contain two consecutive None values")
 
         if x_points[i] is None and x_points[i - 1] >= x_points[i + 1]:
             raise ValidationError(
@@ -189,9 +177,7 @@ def _check_points(
             and (x_points[i + 1] is not None)
             and (x_points[i + 1] < x_points[i])
         ):
-            raise ValidationError(
-                "x_points should be in an non-decreasing order"
-            )
+            raise ValidationError("x_points should be in an non-decreasing order")
 
         if x_points[i] is not None:
             return_x.append(x_points[i])
@@ -229,15 +215,11 @@ def _indicator(
         raise ValidationError("expr needs to be inequality or equality")
 
     if len(expr.domain) != len(indicator_var.domain):
-        raise ValidationError(
-            "indicator_var and expr must have the same domain"
-        )
+        raise ValidationError("indicator_var and expr must have the same domain")
 
     for i in range(len(expr.domain)):
         if expr.domain[i].name != indicator_var.domain[i].name:
-            raise ValidationError(
-                "indicator_var and expr must have the same domain"
-            )
+            raise ValidationError("indicator_var and expr must have the same domain")
 
     if expr.operator == "=e=":
         # sos1(bin_var, lhs - rhs) might be better
@@ -275,13 +257,9 @@ def _indicator(
     sos1_var = m.addVariable(domain=[*expr.domain, sos_dim], type="sos1")
     sos1_eq_1 = m.addEquation(domain=expr.domain)
     if indicator_val == 1:
-        sos1_eq_1[...] = (
-            sos1_var[[*expr.domain, "0"]] == indicator_var[expr_domain]
-        )
+        sos1_eq_1[...] = sos1_var[[*expr.domain, "0"]] == indicator_var[expr_domain]
     else:
-        sos1_eq_1[...] = (
-            sos1_var[[*expr.domain, "0"]] == 1 - indicator_var[expr_domain]
-        )
+        sos1_eq_1[...] = sos1_var[[*expr.domain, "0"]] == 1 - indicator_var[expr_domain]
     equations.append(sos1_eq_1)
 
     sos1_eq_2 = m.addEquation(domain=expr.domain)
@@ -307,9 +285,7 @@ def points_to_intervals(
     y_points: typing.Sequence[int | float],
     discontinuous_points: typing.Sequence[int],
 ) -> list[tuple[int | float, int | float, int | float, int | float]]:
-    result: list[
-        tuple[int | float, int | float, int | float, int | float]
-    ] = []
+    result: list[tuple[int | float, int | float, int | float, int | float]] = []
     finished_at_disc = True
     for i in range(len(x_points) - 1):
         x1 = x_points[i]
@@ -518,10 +494,7 @@ def pwl_interval_formulation(
 
     set_y = m.addEquation(domain=input_domain)
     set_y[...] = (
-        out_y
-        == gp.Sum(J, lambda_var * slopes)
-        + gp.Sum(J, bin_var * offsets)
-        + y_term
+        out_y == gp.Sum(J, lambda_var * slopes) + gp.Sum(J, bin_var * offsets) + y_term
     )
     equations.append(set_y)
 

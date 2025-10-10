@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import subprocess
-from typing import Optional
 
 import typer
 
@@ -19,26 +18,25 @@ app = typer.Typer(
 
 @app.command(
     short_help="Retrives the license with the given node information.",
-    help="[bold][yellow]Examples[/yellow][/bold]: gamspy retrieve license <access_code> [--input <input_path>.json] [--output <output_path>.json]"
+    help="[bold][yellow]Examples[/yellow][/bold]: gamspy retrieve license <access_code> [--input <input_path>.json] [--output <output_path>.json]",
 )
 def license(
-    access_code: str = typer.Argument(
-        ...,
-        help="Access code of the license."
-    ),
+    access_code: str = typer.Argument(..., help="Access code of the license."),
     input: str = typer.Option(
         None,
         "--input",
         "-i",
-        help="Input json file path to retrieve the license based on the node information."
+        help="Input json file path to retrieve the license based on the node information.",
     ),
     output: str = typer.Option(
-        None,
-        "--output",
-        "-o",
-        help="Output path for the license file."
+        None, "--output", "-o", help="Output path for the license file."
     ),
-    checkout_duration: Optional[int] = typer.Option(None, "--checkout-duration", "-c", help="Specifies a duration in hours to checkout a session."),
+    checkout_duration: int | None = typer.Option(
+        None,
+        "--checkout-duration",
+        "-c",
+        help="Specifies a duration in hours to checkout a session.",
+    ),
 ) -> None:
     if input is None or not os.path.isfile(input):
         raise ValidationError(
@@ -46,9 +44,7 @@ def license(
         )
 
     if access_code is None:
-        raise ValidationError(
-            f"Given licence id `{access_code}` is not valid!"
-        )
+        raise ValidationError(f"Given licence id `{access_code}` is not valid!")
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
     command = [
@@ -60,7 +56,7 @@ def license(
     if checkout_duration:
         command.append("-c")
         command.append(str(checkout_duration))
-    
+
     process = subprocess.run(
         command,
         text=True,

@@ -110,26 +110,22 @@ def main():
     DEM[r, c] = AlphaD[r, c] + Sum(cc, (BetaD[r, c, cc] * P[r, c])) == Qd[r, c]
 
     DEMLOG[r, c] = (
-        AlphaD[r, c] + Sum(cc, (BetaD[r, c, cc] * gams_math.log(P[r, c])))
-        == Qd[r, c]
+        AlphaD[r, c] + Sum(cc, (BetaD[r, c, cc] * gams_math.log(P[r, c]))) == Qd[r, c]
     )
 
     DEMINT[r, c] = (
         DINT[r, c]
-        == AlphaD[r, c] * P[r, c]
-        + Sum(cc, BetadSq[r, c, cc] * P[r, cc]) * P[r, c]
+        == AlphaD[r, c] * P[r, c] + Sum(cc, BetadSq[r, c, cc] * P[r, cc]) * P[r, c]
     )
 
     SUP[r, c] = AlphaS[r, c] + Sum(cc, (BetaS[r, c, cc] * P[r, c])) == Qs[r, c]
     SUPLOG[r, c] = (
-        AlphaS[r, c] + Sum(cc, (BetaS[r, c, cc] * gams_math.log(P[r, c])))
-        == Qs[r, c]
+        AlphaS[r, c] + Sum(cc, (BetaS[r, c, cc] * gams_math.log(P[r, c]))) == Qs[r, c]
     )
 
     SUPINT[r, c] = (
         SINT[r, c]
-        == AlphaS[r, c] * P[r, c]
-        + Sum(cc, BetasSq[r, c, cc] * P[r, cc]) * P[r, c]
+        == AlphaS[r, c] * P[r, c] + Sum(cc, BetasSq[r, c, cc] * P[r, cc]) * P[r, c]
     )
 
     SDBAL[c] = Sum(r, Qd[r, c]) == Sum(r, Qs[r, c])

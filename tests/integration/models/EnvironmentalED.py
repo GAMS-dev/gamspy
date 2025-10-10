@@ -79,9 +79,7 @@ def main():
     eq1[...] = (
         Sum(
             gen,
-            data[gen, "a"] * P[gen] * P[gen]
-            + data[gen, "b"] * P[gen]
-            + data[gen, "c"],
+            data[gen, "a"] * P[gen] * P[gen] + data[gen, "b"] * P[gen] + data[gen, "c"],
         )
         == TC
     )
@@ -89,9 +87,7 @@ def main():
     eq3[...] = (
         Sum(
             gen,
-            data[gen, "d"] * P[gen] * P[gen]
-            + data[gen, "e"] * P[gen]
-            + data[gen, "f"],
+            data[gen, "d"] * P[gen] * P[gen] + data[gen, "e"] * P[gen] + data[gen, "f"],
         )
         == TE
     )

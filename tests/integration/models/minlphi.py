@@ -148,9 +148,7 @@ def main():
         description="reboilers",
     )
     # the set of all hot utilities available
-    hu = Set(
-        cont, name="hu", records=["lp", "ex"], description="hot utilities"
-    )
+    hu = Set(cont, name="hu", records=["lp", "ex"], description="hot utilities")
     # the set of all cold utilities available
     cu = Set(cont, name="cu", records=["cw"], description="cold utilities")
     # an index for linear fit coefficients
@@ -182,9 +180,7 @@ def main():
     )
     k = Set(cont, name="k", domain=km, description="dynamic iterations")
     kiter = Set(cont, name="kiter", domain=km, description="dynamic counter")
-    kdynmax = Set(
-        cont, name="kdynmax", domain=km, description="dynamic loop control"
-    )
+    kdynmax = Set(cont, name="kdynmax", domain=km, description="dynamic loop control")
 
     # alias sets for condensers and reboilers
     ip = Alias(cont, name="ip", alias_with=i)
@@ -485,9 +481,7 @@ def main():
 
     # Storage of variable levels for each iteration
     # Identifier derived from name of variable with letter "k" appended
-    fk = Parameter(
-        cont, name="fk", domain=[i, km], description="storage of flowrates"
-    )
+    fk = Parameter(cont, name="fk", domain=[i, km], description="storage of flowrates")
     qrk = Parameter(
         cont,
         name="qrk",
@@ -1027,9 +1021,7 @@ def main():
         domain=m,
         description="restricts superstructure to a single sequence",
     )
-    lead = Equation(
-        cont, name="lead", type="regular", description="sequence control"
-    )
+    lead = Equation(cont, name="lead", type="regular", description="sequence control")
     limutil = Equation(
         cont,
         name="limutil",
@@ -1092,16 +1084,12 @@ def main():
             )
             + Sum(
                 [hu, j],
-                fchx * yhup[hu, j]
-                + (vchx / htc) * (qhu[hu, j] / (thu[hu] - tr[j])),
+                fchx * yhup[hu, j] + (vchx / htc) * (qhu[hu, j] / (thu[hu] - tr[j])),
             )
         )
         # operating costs
         + beta
-        * (
-            (costcw * Sum([i, cu], qcu[i, cu]))
-            + Sum([hu, j], costhu[hu] * qhu[hu, j])
-        )
+        * ((costcw * Sum([i, cu], qcu[i, cu])) + Sum([hu, j], costhu[hu] * qhu[hu, j]))
     )
 
     lmtdsn[i] = (
@@ -1116,40 +1104,26 @@ def main():
 
     nartrex2[i] = s3[i] + s4[i] + sl2[i] - u * (1 - ycolp[i]) <= 0
 
-    ntempset[i] = (
-        tc[i] + lmtd[i] + Sum(j.where[zcr[i, j]], tr[j]) - u * ycolp[i] <= 0
-    )
+    ntempset[i] = tc[i] + lmtd[i] + Sum(j.where[zcr[i, j]], tr[j]) - u * ycolp[i] <= 0
 
     material[m] = (
-        Sum(i.where[pm[i, m]], spltfrc[i, m] * f[i])
-        - Sum(i.where[fm[i, m]], f[i])
-        == 0
+        Sum(i.where[pm[i, m]], spltfrc[i, m] * f[i]) - Sum(i.where[fm[i, m]], f[i]) == 0
     )
 
     feed[...] = Sum(i.where[zlead[i]], f[i]) == totflow
 
     duty[i] = (
-        qc[i]
-        - (kf[i, "a"] + kf[i, "b"] * (tc[i] - tcmin[i]))
-        - (s3[i] - s4[i])
-        == 0
+        qc[i] - (kf[i, "a"] + kf[i, "b"] * (tc[i] - tcmin[i])) - (s3[i] - s4[i]) == 0
     )
 
     rebcon[i, j].where[zcr[i, j]] = qr[j] - qc[i] == 0
 
-    conheat[i] = qc[i] == Sum(j.where[zcrhx[i, j]], qcr[i, j]) + Sum(
-        cu, qcu[i, cu]
-    )
+    conheat[i] = qc[i] == Sum(j.where[zcrhx[i, j]], qcr[i, j]) + Sum(cu, qcu[i, cu])
 
-    rebheat[j] = qr[j] == Sum(i.where[zcrhx[i, j]], qcr[i, j]) + Sum(
-        hu, qhu[hu, j]
-    )
+    rebheat[j] = qr[j] == Sum(i.where[zcrhx[i, j]], qcr[i, j]) + Sum(hu, qhu[hu, j])
 
     trtcdef[i, j].where[zcr[i, j]] = (
-        tr[j]
-        - (af[i, "a"] + af[i, "b"] * (tc[i] - tcmin[i]))
-        - (s1[i] - s2[i])
-        == 0
+        tr[j] - (af[i, "a"] + af[i, "b"] * (tc[i] - tcmin[i])) - (s1[i] - s2[i]) == 0
     )
 
     nmatlog[i] = f[i] - u * ycolp[i] <= 0
@@ -1231,8 +1205,7 @@ def main():
         )
         + (vchx / htc) * (vqcr[k] + vqhu[k] + vqcu[k])
     ) + beta * (
-        (costcw * Sum([i, cu], qcu[i, cu]))
-        + Sum([hu, j], costhu[hu] * qhu[hu, j])
+        (costcw * Sum([i, cu], qcu[i, cu])) + Sum([hu, j], costhu[hu] * qhu[hu, j])
     )
 
     # ==========================================================================
@@ -1253,10 +1226,7 @@ def main():
             )
             * ycolk[i, k]
             + (
-                (
-                    qcrk[i, j, k]
-                    / (sqr(tck[i, k] - trk[j, k]) + 1 - ycolk[i, k])
-                )
+                (qcrk[i, j, k] / (sqr(tck[i, k] - trk[j, k]) + 1 - ycolk[i, k]))
                 * ((tr[j] - trk[j, k]) - (tc[i] - tck[i, k]))
             )
         ),
@@ -1268,10 +1238,7 @@ def main():
             (qhuk[hu, j, k] / (thu[hu] - trk[j, k]))
             + ((1 / (thu[hu] - trk[j, k])) * (qhu[hu, j] - qhuk[hu, j, k]))
             * Sum(i.where[zcr[i, j]], ycolk[i, k])
-            + (
-                (qhuk[hu, j, k] / sqr(thu[hu] - trk[j, k]))
-                * (tr[j] - trk[j, k])
-            )
+            + ((qhuk[hu, j, k] / sqr(thu[hu] - trk[j, k])) * (tr[j] - trk[j, k]))
         ),
     )
 
@@ -1279,10 +1246,7 @@ def main():
         [i, cu],
         (
             (qcuk[i, cu, k] / (lmtdk[i, k] + 1 - ycolk[i, k]))
-            + (
-                (1 / (lmtdk[i, k] + 1 - ycolk[i, k]))
-                * (qcu[i, cu] - qcuk[i, cu, k])
-            )
+            + ((1 / (lmtdk[i, k] + 1 - ycolk[i, k])) * (qcu[i, cu] - qcuk[i, cu, k]))
             * ycolk[i, k]
             - (
                 (qcuk[i, cu, k] / (sqr(lmtdk[i, k]) + 1 - ycolk[i, k]))
@@ -1295,8 +1259,7 @@ def main():
         lmtdmar[i, k]
         * (
             lmtd[i]
-            - (2 / 3)
-            * gams_math.sqrt((tck[i, k] - tcin) * (tck[i, k] - tcout))
+            - (2 / 3) * gams_math.sqrt((tck[i, k] - tcin) * (tck[i, k] - tcout))
             - (1 / 6) * ((tck[i, k] - tcin) + (tck[i, k] - tcout))
             - (
                 (1 / 3)
@@ -1304,9 +1267,7 @@ def main():
                     (
                         (2 * tck[i, k] - (tcin + tcout))
                         / gams_math.sqrt(
-                            sqr(tck[i, k])
-                            - (tcin + tcout) * tck[i, k]
-                            + (tcin * tcout)
+                            sqr(tck[i, k]) - (tcin + tcout) * tck[i, k] + (tcin * tcout)
                         )
                     )
                     + 1
@@ -1322,17 +1283,13 @@ def main():
 
     artrex2[i] = s3[i] + s4[i] + sl2[i] - u * (1 - ycol[i]) <= 0
 
-    tempset[i] = (
-        tc[i] + lmtd[i] + Sum(j.where[zcr[i, j]], tr[j]) - u * ycol[i] <= 0
-    )
+    tempset[i] = tc[i] + lmtd[i] + Sum(j.where[zcr[i, j]], tr[j]) - u * ycol[i] <= 0
 
     matlog[i] = f[i] - u * ycol[i] <= 0
 
     dtminc[i] = (tcmin[i] - tc[i] - u * (1 - ycol[i])) <= 0
 
-    dtmincr[i, j].where[zcrhx[i, j]] = (
-        tr[j] - tc[i] - u * (1 - yhx[i, j]) + dtmin <= 0
-    )
+    dtmincr[i, j].where[zcrhx[i, j]] = tr[j] - tc[i] - u * (1 - yhx[i, j]) + dtmin <= 0
 
     dtminex[j] = dtmin - (thu["ex"] - tr[j]) - u * (1 - yhu["ex", j]) <= 0
 
@@ -1346,9 +1303,7 @@ def main():
 
     # pure binary constraints
     # material balances determine sequence
-    sequen[m] = (
-        Sum(i.where[pm[i, m]], ycol[i]) - Sum(i.where[fm[i, m]], ycol[i]) == 0
-    )
+    sequen[m] = Sum(i.where[pm[i, m]], ycol[i]) - Sum(i.where[fm[i, m]], ycol[i]) == 0
 
     # select 1 sequence
     lead[...] = Sum(i.where[zlead[i]], ycol[i]) == 1
@@ -1373,9 +1328,7 @@ def main():
             j.where[zcrhx[i, j]],
             yhx[i, j]
             + Sum(
-                Domain(ip, jp).where[
-                    (Ord(ip) == Ord(j)) & (Ord(jp) == Ord(i))
-                ],
+                Domain(ip, jp).where[(Ord(ip) == Ord(j)) & (Ord(jp) == Ord(i))],
                 yhx[ip, jp],
             ),
         )
@@ -1590,9 +1543,7 @@ def main():
         # ======================================================================
         lmtdmar[i, kiter] = (
             Number(-1)
-            * gams_math.sign(lmtdsn.m[i]).where[
-                lmtdsn.m[i] != float_info.epsilon
-            ]
+            * gams_math.sign(lmtdsn.m[i]).where[lmtdsn.m[i] != float_info.epsilon]
         )
 
         # ======================================================================

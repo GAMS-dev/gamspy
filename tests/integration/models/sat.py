@@ -43,15 +43,15 @@ def main():
 
     xc = gp.Variable(m, domain=c, type="binary")
     def_conjunction = gp.Equation(m, domain=c)
-    def_conjunction[c] = xc[c] == gp.Sor(
-        j.where[cnf_data[c, j] > 0], x[j]
-    ) | gp.Sor(j.where[cnf_data[c, j] < 0], ~x[j])
+    def_conjunction[c] = xc[c] == gp.Sor(j.where[cnf_data[c, j] > 0], x[j]) | gp.Sor(
+        j.where[cnf_data[c, j] < 0], ~x[j]
+    )
 
     xd = gp.Variable(m, domain=d, type="binary")
     def_disjunction = gp.Equation(m, domain=d)
-    def_disjunction[d] = xd[d] == gp.Sand(
-        j.where[dnf_data[d, j] > 0], x[j]
-    ) | gp.Sand(j.where[dnf_data[d, j] < 0], ~x[j])
+    def_disjunction[d] = xd[d] == gp.Sand(j.where[dnf_data[d, j] > 0], x[j]) | gp.Sand(
+        j.where[dnf_data[d, j] < 0], ~x[j]
+    )
 
     cnf = gp.Model(
         m,

@@ -41,12 +41,8 @@ def main():
     cont = Container()
 
     # SETS #
-    n = Set(
-        cont, name="n", records=["consumpt", "invest"], description="states"
-    )
-    m = Set(
-        cont, name="m", records=["gov-expend", "money"], description="controls"
-    )
+    n = Set(cont, name="n", records=["consumpt", "invest"], description="states")
+    m = Set(cont, name="m", records=["gov-expend", "money"], description="controls")
     k = Set(
         cont,
         name="k",
@@ -165,8 +161,7 @@ def main():
     )
 
     stateq[n, k + 1] = (
-        x[n, k + 1]
-        == Sum(nn, a[n, nn] * x[nn, k]) + Sum(m, b[n, m] * u[m, k]) + c[n]
+        x[n, k + 1] == Sum(nn, a[n, nn] * x[nn, k]) + Sum(m, b[n, m] * u[m, k]) + c[n]
     )
 
     macro = Model(

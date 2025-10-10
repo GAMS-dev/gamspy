@@ -206,9 +206,7 @@ def test_indexing(m):
         "r",
         domain=row,
         records=[
-            [record, 4]
-            if record in row.records["uni"][:7].values
-            else [record, 5]
+            [record, 4] if record in row.records["uni"][:7].values else [record, 5]
             for record in row.records["uni"]
         ],
     )
@@ -217,9 +215,7 @@ def test_indexing(m):
         "c",
         domain=col,
         records=[
-            [record, 3]
-            if record in col.records["uni"][:5].values
-            else [record, 2]
+            [record, 3] if record in col.records["uni"][:5].values else [record, 2]
             for record in col.records["uni"]
         ],
     )

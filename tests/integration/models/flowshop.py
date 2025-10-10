@@ -46,9 +46,7 @@ def flow_shop(process_time_df, last_machine, last_item):
     c = gap.Container()
 
     # Sets
-    i = c.addSet(
-        name="i", description="item", records=process_time_df["item"].unique()
-    )
+    i = c.addSet(name="i", description="item", records=process_time_df["item"].unique())
     m = c.addSet(
         name="m",
         description="machine",
@@ -122,9 +120,7 @@ def flow_shop(process_time_df, last_machine, last_item):
     oneRankPer[i] = gap.Sum(k, rank[i, k]) == 1
     onMachRel[m, k + 1] = start[m, k + 1] >= comp[m, k]
     perMachRel[m + 1, k] = start[m + 1, k] >= comp[m, k]
-    defComp[m, k] = comp[m, k] == start[m, k] + gap.Sum(
-        i, proctime[m, i] * rank[i, k]
-    )
+    defComp[m, k] = comp[m, k] == start[m, k] + gap.Sum(i, proctime[m, i] * rank[i, k])
 
     defObj[...] = totwait >= comp[last_machine, last_item]
 

@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import os
 import subprocess
-from typing import Optional
 
 import typer
 
-from gamspy.exceptions import ValidationError
 import gamspy.utils as utils
+from gamspy.exceptions import ValidationError
 
 app = typer.Typer(
     rich_markup_mode="rich",
@@ -16,7 +15,8 @@ app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 
-def _probe(json_out: Optional[str]) -> None:
+
+def _probe(json_out: str | None) -> None:
     gamspy_base_dir = utils._get_gamspy_base_directory()
     process = subprocess.run(
         [os.path.join(gamspy_base_dir, "gamsprobe")],
@@ -35,16 +35,18 @@ def _probe(json_out: Optional[str]) -> None:
 
     raise typer.Exit()
 
+
 @app.callback()
 def callback(
-    json_out: Optional[str] = typer.Option(
+    json_out: str | None = typer.Option(
         None,
-        "--json-out", "-j",
+        "--json-out",
+        "-j",
         help="Output path for the JSON file.",
-        callback=_probe
+        callback=_probe,
     ),
-) -> None:
-    ...
+) -> None: ...
+
 
 if __name__ == "__main__":
     app()

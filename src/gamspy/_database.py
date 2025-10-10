@@ -197,9 +197,7 @@ class Database:
         self.workspace = ws
         self.gmd = new_gmdHandle_tp()
 
-        ret = gmdCreateD(
-            self.gmd, utils._get_gamspy_base_directory(), GMS_SSSIZE
-        )
+        ret = gmdCreateD(self.gmd, utils._get_gamspy_base_directory(), GMS_SSSIZE)
         if not ret[0]:
             raise GamspyException(ret[1])
 
@@ -249,9 +247,7 @@ class Database:
         explanatory_text: str = "",
         settype: int = 0,
     ) -> GamsSet:
-        return GamsSet(
-            self, name, dimension, explanatory_text, settype=settype
-        )
+        return GamsSet(self, name, dimension, explanatory_text, settype=settype)
 
     def add_parameter(
         self, name: str, dimension: int, explanatory_text: str = ""

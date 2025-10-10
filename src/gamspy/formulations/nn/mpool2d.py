@@ -48,7 +48,7 @@ class _MPool2d:
         default_big_m: int,
         subset: gp.Set,
         out_var: gp.Variable,
-    ) -> tuple[gp.Parameter, gp.Parameter, gp.Parameter]:
+    ) -> gp.Parameter:
         # Extract batch and channel dimensions from input domain
         N, C = input.domain[:2]
         H_out, W_out, Hf, Wf, H_in, W_in = subset.domain
@@ -56,9 +56,7 @@ class _MPool2d:
         # Create subset2 mapping output positions to input positions
         subset2 = gp.Set(
             self.container,
-            name=utils._generate_name(
-                "s", self._name_prefix, "in_out_matching_2"
-            ),
+            name=utils._generate_name("s", self._name_prefix, "in_out_matching_2"),
             domain=[H_out, W_out, H_in, W_in],
         )
         subset2[H_out, W_out, H_in, W_in] = gp.Sum(
@@ -128,9 +126,7 @@ class _MPool2d:
             raise ValidationError("Expected a boolean for propagate_bounds")
 
         if len(input.domain) != 4:
-            raise ValidationError(
-                f"expected 4D input (got {len(input.domain)}D input)"
-            )
+            raise ValidationError(f"expected 4D input (got {len(input.domain)}D input)")
 
         # Extract dimensions from input (Batch, Channel, Height, Width)
         N, C, H_in, W_in = input.domain
@@ -153,25 +149,17 @@ class _MPool2d:
         # Calculate input window positions (top - left)
         # These indices determine where pooling windows start in the input tensor
         # Formula accounts for padding and stride
-        top_index = (
-            (self.stride[0] * (gp.Ord(H_out) - 1)) - self.padding[0] + 1
-        )
-        left_index = (
-            (self.stride[1] * (gp.Ord(W_out) - 1)) - self.padding[1] + 1
-        )
+        top_index = (self.stride[0] * (gp.Ord(H_out) - 1)) - self.padding[0] + 1
+        left_index = (self.stride[1] * (gp.Ord(W_out) - 1)) - self.padding[1] + 1
 
         # Create filter dimensions and domain relationships
         Hf, Wf = gp.math._generate_dims(self.container, self.kernel_size)
-        Hf, Wf, H_in, W_in = utils._next_domains(
-            [Hf, Wf, H_in, W_in], out_var.domain
-        )
+        Hf, Wf, H_in, W_in = utils._next_domains([Hf, Wf, H_in, W_in], out_var.domain)
 
         # Create mapping between input/output positions
         subset = gp.Set(
             self.container,
-            name=utils._generate_name(
-                "s", self._name_prefix, "in_out_matching_1"
-            ),
+            name=utils._generate_name("s", self._name_prefix, "in_out_matching_1"),
             domain=[H_out, W_out, Hf, Wf, H_in, W_in],
         )
         # Create relationship between output positions and their corresponding input windows
@@ -226,14 +214,12 @@ class _MPool2d:
                 out_var[N, C, H_out, W_out] >= input[N, C, H_in, W_in]
             )
             less_than[N, C, subset[H_out, W_out, Hf, Wf, H_in, W_in]] = (
-                out_var[N, C, H_out, W_out]
-                <= input[N, C, H_in, W_in] + big_m_expr
+                out_var[N, C, H_out, W_out] <= input[N, C, H_in, W_in] + big_m_expr
             )
         else:
             # For min pooling:
             greater_than[N, C, subset[H_out, W_out, Hf, Wf, H_in, W_in]] = (
-                out_var[N, C, H_out, W_out] + big_m_expr
-                >= input[N, C, H_in, W_in]
+                out_var[N, C, H_out, W_out] + big_m_expr >= input[N, C, H_in, W_in]
             )
             less_than[N, C, subset[H_out, W_out, Hf, Wf, H_in, W_in]] = (
                 out_var[N, C, H_out, W_out] <= input[N, C, H_in, W_in]

@@ -201,8 +201,7 @@ def test_operation_indices(data):
         <= 1
     )
     assert (
-        eStartFast.getDefinition()
-        == "eStartFast(g,t1) .. sum(tt(t) $ (ord(t) <="
+        eStartFast.getDefinition() == "eStartFast(g,t1) .. sum(tt(t) $ (ord(t) <="
         " pMinDown(g,t1)),vStart(g,t + (ord(t1) - pMinDown(g,t1))))"
         " =l= 1;"
     )
@@ -219,9 +218,7 @@ def test_operation_overloads(data):
     # test neq
     profit = Equation(m, "profit", domain=s)
     profit[s] = -Sum(c, a[c, s] * p[c]) >= 0
-    assert (
-        profit.getDefinition() == "profit(s) .. (-sum(c,a(c,s) * p(c))) =g= 0;"
-    )
+    assert profit.getDefinition() == "profit(s) .. (-sum(c,a(c,s) * p(c))) =g= 0;"
 
     # test ne
     bla = Parameter(m, "bla", domain=s)
@@ -240,9 +237,9 @@ def test_truth_value(data):
     eq = Equation(m, "eq", domain=[i, j])
 
     with pytest.raises(ValidationError):
-        eq[i, j].where[
-            (Ord(i) < Card(i)) and (Ord(j) > 1) and (Ord(j) < Card(j))
-        ] = x[i, j] >= 1
+        eq[i, j].where[(Ord(i) < Card(i)) and (Ord(j) > 1) and (Ord(j) < Card(j))] = (
+            x[i, j] >= 1
+        )
 
     with pytest.raises(ValidationError):
         if Card(i):
@@ -400,9 +397,7 @@ def test_multiple_ops(data):
             ("E", "F"),
         ],
     )
-    duration = m.addParameter(
-        "duration", [I], records=np.array([6, 9, 8, 7, 10, 12])
-    )
+    duration = m.addParameter("duration", [I], records=np.array([6, 9, 8, 7, 10, 12]))
 
     t = m.addVariable("t", "positive", [I], description="time activity starts")
     projDur = m.addVariable("projDur", "free")

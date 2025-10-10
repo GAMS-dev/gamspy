@@ -152,9 +152,7 @@ def main():
     # Equation
     cut = Equation(m, name="cut", domain=cc, description="dynamic cuts")
 
-    cut[allcuts] = (
-        Sum([i, j], cutcoeff[allcuts, i, j] * x[i, j]) <= rhs[allcuts]
-    )
+    cut[allcuts] = Sum([i, j], cutcoeff[allcuts, i, j] * x[i, j]) <= rhs[allcuts]
 
     tspcut = Model(
         m,
@@ -171,7 +169,7 @@ def main():
         G = nx.DiGraph()
         G.add_nodes_from(i.getUELs())
         x_filtered = x.records[x.records["level"] > 0.5].loc[:, :"level"]
-        edges = list(zip(x_filtered["ii"], x_filtered["jj"]))
+        edges = list(zip(x_filtered["ii"], x_filtered["jj"], strict=False))
         G.add_edges_from(edges)
         S = [G.subgraph(c).copy() for c in nx.strongly_connected_components(G)]
 
