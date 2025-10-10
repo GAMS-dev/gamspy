@@ -31,12 +31,7 @@ if TYPE_CHECKING:
 class Operation(operable.Operable):
     def __init__(
         self,
-        domain: Set
-        | Alias
-        | ImplicitSet
-        | Sequence[Set | Alias]
-        | Domain
-        | Condition,
+        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
         rhs: (
             Expression
             | Operation
@@ -160,9 +155,7 @@ class Operation(operable.Operable):
         for elem in self.raw_domain:
             if isinstance(elem, implicits.ImplicitSet):
                 control_stack += [
-                    member
-                    for member in elem.domain
-                    if member not in control_stack
+                    member for member in elem.domain if member not in control_stack
                 ] + [elem.parent]
 
             if elem in control_stack:
@@ -178,11 +171,7 @@ class Operation(operable.Operable):
         if len(self.op_domain) == 1:
             return self.op_domain[0].gamsRepr()
 
-        return (
-            "("
-            + ",".join([index.gamsRepr() for index in self.op_domain])
-            + ")"
-        )
+        return "(" + ",".join([index.gamsRepr() for index in self.op_domain]) + ")"
 
     def __eq__(self, other):
         return expression.Expression(self, "=e=", other)
@@ -266,9 +255,7 @@ class Operation(operable.Operable):
             if isinstance(self.rhs, (int, float, str))
             else self.rhs.latexRepr()
         )
-        representation = (
-            f"\\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
-        )
+        representation = f"\\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
         return representation
 
 
@@ -305,12 +292,7 @@ class Sum(Operation):
 
     def __init__(
         self,
-        domain: Set
-        | Alias
-        | ImplicitSet
-        | Sequence[Set | Alias]
-        | Domain
-        | Condition,
+        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
         expression: Operation
         | Expression
         | MathOp
@@ -381,12 +363,7 @@ class Product(Operation):
 
     def __init__(
         self,
-        domain: Set
-        | Alias
-        | ImplicitSet
-        | Sequence[Set | Alias]
-        | Domain
-        | Condition,
+        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
         expression: Operation
         | Expression
         | MathOp
@@ -457,12 +434,7 @@ class Smin(Operation):
 
     def __init__(
         self,
-        domain: Set
-        | Alias
-        | ImplicitSet
-        | Sequence[Set | Alias]
-        | Domain
-        | Condition,
+        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
         expression: Operation
         | Expression
         | MathOp
@@ -533,12 +505,7 @@ class Smax(Operation):
 
     def __init__(
         self,
-        domain: Set
-        | Alias
-        | ImplicitSet
-        | Sequence[Set | Alias]
-        | Domain
-        | Condition,
+        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
         expression: Operation
         | Expression
         | MathOp
@@ -609,12 +576,7 @@ class Sand(Operation):
 
     def __init__(
         self,
-        domain: Set
-        | Alias
-        | ImplicitSet
-        | Sequence[Set | Alias]
-        | Domain
-        | Condition,
+        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
         expression: Operation
         | Expression
         | MathOp
@@ -684,12 +646,7 @@ class Sor(Operation):
 
     def __init__(
         self,
-        domain: Set
-        | Alias
-        | ImplicitSet
-        | Sequence[Set | Alias]
-        | Domain
-        | Condition,
+        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
         expression: Operation
         | Expression
         | MathOp
@@ -746,9 +703,7 @@ class Ord(operable.Operable):
 
     def __new__(cls, symbol: Set | Alias):
         if not isinstance(symbol, (syms.Set, syms.Alias)):
-            raise ValidationError(
-                "Ord operation is only for Set and Alias objects!"
-            )
+            raise ValidationError("Ord operation is only for Set and Alias objects!")
 
         if symbol.is_singleton:
             return 1

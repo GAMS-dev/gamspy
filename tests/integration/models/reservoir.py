@@ -104,9 +104,7 @@ def main():
                 ["res1", "enda", 200],
             ]
         ),
-        description=(
-            "required released water from the first reservoir rez1 (mil.m3)"
-        ),
+        description=("required released water from the first reservoir rez1 (mil.m3)"),
     )
 
     # Variable
@@ -135,8 +133,7 @@ def main():
     )
 
     bal1[n, t].where[~tt[t]] = (
-        s["res1", t] - s["res1", t - 1]
-        == q["res1", t] + r2[t] - q2[t] - r["res1", t]
+        s["res1", t] - s["res1", t - 1] == q["res1", t] + r2[t] - q2[t] - r["res1", t]
     )
     bal2[n, t].where[~tt[t]] = s["res2", t] - s["res2", t - 1] == q2[t] - r2[t]
     dec[n, t].where[~tt[t]] = (s["res2", t] - s["res1", t]) - (

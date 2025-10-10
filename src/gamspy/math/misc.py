@@ -1001,9 +1001,7 @@ def rand_binomial(n: int | float, p: int | float) -> MathOp:
     return MathOp("randBinomial", (n, p))
 
 
-def rand_linear(
-    low: int | float, slope: int | float, high: int | float
-) -> MathOp:
+def rand_linear(low: int | float, slope: int | float, high: int | float) -> MathOp:
     """
     Generate a random number between low and high with linear distribution.
     ``slope`` must be less than ``2 / (high - low)`` and greater than ``0``
@@ -1032,9 +1030,7 @@ def rand_linear(
     return MathOp("randLinear", (low, slope, high))
 
 
-def rand_triangle(
-    low: int | float, mid: int | float, high: int | float
-) -> MathOp:
+def rand_triangle(low: int | float, mid: int | float, high: int | float) -> MathOp:
     """
     Generate a random number between ``low`` and ``high`` with triangular distribution.
     ``mid`` is the most probable number.
@@ -1226,9 +1222,7 @@ def ifthen(
     >>> x = ifthen(tt == 2, 3, 4 + y)
 
     """
-    condition._representation = utils._replace_equality_signs(
-        condition.gamsRepr()
-    )
+    condition._representation = utils._replace_equality_signs(condition.gamsRepr())
 
     return MathOp("ifthen", (condition, yes_return, no_return))
 

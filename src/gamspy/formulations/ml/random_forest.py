@@ -100,12 +100,8 @@ class RandomForest:
                 return ensemble
             else:
                 try:
-                    sklearn_forest = importlib.import_module(
-                        "sklearn.ensemble"
-                    )
-                    if isinstance(
-                        ensemble, sklearn_forest.RandomForestRegressor
-                    ):
+                    sklearn_forest = importlib.import_module("sklearn.ensemble")
+                    if isinstance(ensemble, sklearn_forest.RandomForestRegressor):
                         if not hasattr(ensemble, "estimators_"):
                             raise ValidationError(
                                 f"{ensemble} must be a trained/fitted instance of >sklearn.ensemble.RandomForestRegressor<."
@@ -147,16 +143,14 @@ class RandomForest:
         previous_value = gp.get_option("DOMAIN_VALIDATION")
         gp.set_options({"DOMAIN_VALIDATION": 0})
 
-        set_records_total: dict[
-            Set | Alias | Parameter | Variable | Equation, Any
-        ] = {}
+        set_records_total: dict[Set | Alias | Parameter | Variable | Equation, Any] = {}
 
         results = (
             regression_tree._yield_call(input, M)
             for regression_tree in self._list_of_trees
         )
 
-        zipped_results = zip(*results)
+        zipped_results = zip(*results, strict=False)
         dt_outs = next(zipped_results)
         rf_out_list.extend(dt_outs)
 

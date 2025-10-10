@@ -203,13 +203,8 @@ def validate_one_dimensional_sets(
 
     given_path = get_domain_path(given)
 
-    if (
-        type(actual) is symbols.Set
-        and actual.name not in given_path
-        or (
-            type(actual) is symbols.Alias
-            and actual.alias_with.name not in given_path  # type: ignore
-        )
+    if (type(actual) is symbols.Set and actual.name not in given_path) or (
+        type(actual) is symbols.Alias and actual.alias_with.name not in given_path  # type: ignore
     ):
         raise ValidationError(
             f"`Given set `{given.name}` is not a valid domain for declared"
@@ -273,9 +268,7 @@ def _expand_ellipsis_slice(
         return []
 
     if sum(type(item) is EllipsisType for item in indices) > 1:
-        raise ValidationError(
-            "There cannot be more than one ellipsis in indexing"
-        )
+        raise ValidationError("There cannot be more than one ellipsis in indexing")
 
     new_domain: list = []
     index = 0
@@ -372,8 +365,7 @@ def validate_container(
             and set.container != symbol.container
         ):
             raise ValidationError(
-                f"`Domain `{set}` must be in the same container"
-                f" with `{symbol}`"
+                f"`Domain `{set}` must be in the same container with `{symbol}`"
             )
 
 
@@ -430,8 +422,7 @@ def validate_model(
     if isinstance(problem, str):
         if problem.upper() not in Problem.values():
             raise ValueError(
-                f"Allowed problem types: {Problem.values()} but found"
-                f" {problem}."
+                f"Allowed problem types: {Problem.values()} but found {problem}."
             )
 
         problem = Problem(problem.upper())
@@ -450,19 +441,12 @@ def validate_model(
                 f"`equations` must be an Iterable but found {type(equations)}"
             )
 
-        if any(
-            not isinstance(equation, symbols.Equation)
-            for equation in equations
-        ):
-            raise ValueError(
-                "`equations` must be an Iterable of Equation objects"
-            )
+        if any(not isinstance(equation, symbols.Equation) for equation in equations):
+            raise ValueError("`equations` must be an Iterable of Equation objects")
 
     if matches is not None:
         if not isinstance(matches, dict):
-            raise TypeError(
-                f"`matches` must be of type dict but found {type(matches)}"
-            )
+            raise TypeError(f"`matches` must be of type dict but found {type(matches)}")
 
         if any(
             not isinstance(key, (symbols.Equation, Sequence))
@@ -498,14 +482,11 @@ def validate_model_name(name: str) -> str:
 
     if len(name) > GAMS_SYMBOL_MAX_LENGTH:
         raise ValueError(
-            "Model 'name' is too long, "
-            f"max is {GAMS_SYMBOL_MAX_LENGTH} characters"
+            f"Model 'name' is too long, max is {GAMS_SYMBOL_MAX_LENGTH} characters"
         )
 
     if name[0] == "_":
-        raise ValidationError(
-            "Valid GAMS names cannot begin with a '_' character."
-        )
+        raise ValidationError("Valid GAMS names cannot begin with a '_' character.")
 
     if not all(True if i == "_" else i.isalnum() for i in name):
         raise ValidationError(
@@ -531,9 +512,7 @@ def validate_solver_args(
 
     # Check validity of options
     if options is not None and not isinstance(options, Options):
-        raise TypeError(
-            f"`options` must be of type Option but found {type(options)}"
-        )
+        raise TypeError(f"`options` must be of type Option but found {type(options)}")
 
     # Check validity of output
     if output is not None and (
@@ -562,14 +541,10 @@ def validate_solver_args(
         raise TypeError("`solver` argument must be a string.")
 
     if backend == "neos" and solver.lower() in ("mpsge", "kestrel"):
-        raise ValidationError(
-            f"`{solver}` is not a valid solver for NEOS Server."
-        )
+        raise ValidationError(f"`{solver}` is not a valid solver for NEOS Server.")
 
     if backend == "engine" and solver.lower() == "mpsge":
-        raise ValidationError(
-            f"`{solver}` is not a valid solver for GAMS Engine."
-        )
+        raise ValidationError(f"`{solver}` is not a valid solver for GAMS Engine.")
 
     # No need to check whether the solver is installed on client's machine for NEOS or ENGINE.
     if (
@@ -647,9 +622,7 @@ def validate_equations(model: Model) -> None:
             key = [key]
 
         for equation in key:
-            _check_ambiguity(
-                allow_ambiguous_equations, model.problem, equation
-            )
+            _check_ambiguity(allow_ambiguous_equations, model.problem, equation)
 
 
 def validate_global_options(options: Options | None) -> Options:
@@ -662,9 +635,7 @@ def validate_global_options(options: Options | None) -> Options:
         return options
 
     if options is not None and not isinstance(options, Options):
-        raise TypeError(
-            f"`options` must be of type Option but found {type(options)}"
-        )
+        raise TypeError(f"`options` must be of type Option but found {type(options)}")
 
     if isinstance(options, Options):
         options_dict = options.model_dump(exclude_none=True)

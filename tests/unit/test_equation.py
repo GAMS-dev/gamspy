@@ -175,10 +175,7 @@ def test_equation_declaration(data):
     # Equation declaration without an index
     cost = Equation(m, name="cost", description="define objective function")
     assert cost.gamsRepr() == "cost"
-    assert (
-        cost.getDeclaration()
-        == 'Equation cost "define objective function" / /;'
-    )
+    assert cost.getDeclaration() == 'Equation cost "define objective function" / /;'
 
     # Equation declaration with an index
     supply = Equation(
@@ -262,9 +259,7 @@ def test_equation_definition(data):
         description="define objective function",
         definition=Sum((i, j), c[i, j] * x[i, j]) == z,
     )
-    assert (
-        cost2.getDefinition() == "cost2 .. sum((i,j),c(i,j) * x(i,j)) =e= z;"
-    )
+    assert cost2.getDefinition() == "cost2 .. sum((i,j),c(i,j) * x(i,j)) =e= z;"
 
     # Equation definition in addEquation
     cost3 = m.addEquation(
@@ -272,9 +267,7 @@ def test_equation_definition(data):
         description="define objective function",
         definition=Sum((i, j), c[i, j] * x[i, j]) == z,
     )
-    assert (
-        cost3.getDefinition() == "cost3 .. sum((i,j),c(i,j) * x(i,j)) =e= z;"
-    )
+    assert cost3.getDefinition() == "cost3 .. sum((i,j),c(i,j) * x(i,j)) =e= z;"
 
     # eq[bla][...] test
     bla2 = Equation(
@@ -308,9 +301,7 @@ def test_equation_definition(data):
 
     eStartNaive[g, t1] = (
         Sum(
-            t2.where[
-                (Ord(t1) >= Ord(t2)) & (Ord(t2) > Ord(t1) - pMinDown[g, t1])
-            ],
+            t2.where[(Ord(t1) >= Ord(t2)) & (Ord(t2) > Ord(t1) - pMinDown[g, t1])],
             vStart[g, t2],
         )
         <= 1
@@ -329,10 +320,7 @@ def test_equation_definition(data):
     c = Variable(m, name="c", domain=[i, j])
     assign_1 = Equation(m, name="assign_1", domain=[i, j])
     assign_1[...] = a[i, j] == b[i, j] + c[i, j]
-    assert (
-        assign_1.getDefinition()
-        == "assign_1(i,j) .. a(i,j) =e= b(i,j) + c(i,j);"
-    )
+    assert assign_1.getDefinition() == "assign_1(i,j) .. a(i,j) =e= b(i,j) + c(i,j);"
 
     m = Container()
     k = Set(m, "k")
@@ -352,22 +340,16 @@ def test_equation_definition(data):
         description="Don't drink too much",
         definition=x["OJ"] + x["1M"] <= 3,
     )
-    assert (
-        drinking_eqn.getDefinition()
-        == 'drinking_eqn .. x("OJ") + x("1M") =l= 3;'
-    )
+    assert drinking_eqn.getDefinition() == 'drinking_eqn .. x("OJ") + x("1M") =l= 3;'
 
-    s = m.addVariable(
-        "s", "free", description="Surplus variable for drinking_eqn"
-    )
+    s = m.addVariable("s", "free", description="Surplus variable for drinking_eqn")
     drinking_eqn = m.addEquation(
         "drinking_eqn",
         description="Don't drink too much",
         definition=x["OJ"] + x["1M"] <= 3 + s,
     )
     assert (
-        drinking_eqn.getDefinition()
-        == 'drinking_eqn .. x("OJ") + x("1M") =l= 3 + s;'
+        drinking_eqn.getDefinition() == 'drinking_eqn .. x("OJ") + x("1M") =l= 3 + s;'
     )
 
 
@@ -387,19 +369,13 @@ def test_equation_attributes(data):
     assert hasattr(pi, "up") and isinstance(pi.up, implicits.ImplicitParameter)
     assert pi.up.gamsRepr() == "pi.up"
 
-    assert hasattr(pi, "scale") and isinstance(
-        pi.scale, implicits.ImplicitParameter
-    )
+    assert hasattr(pi, "scale") and isinstance(pi.scale, implicits.ImplicitParameter)
     assert pi.scale.gamsRepr() == "pi.scale"
 
-    assert hasattr(pi, "stage") and isinstance(
-        pi.stage, implicits.ImplicitParameter
-    )
+    assert hasattr(pi, "stage") and isinstance(pi.stage, implicits.ImplicitParameter)
     assert pi.stage.gamsRepr() == "pi.stage"
 
-    assert hasattr(pi, "range") and isinstance(
-        pi.range, implicits.ImplicitParameter
-    )
+    assert hasattr(pi, "range") and isinstance(pi.range, implicits.ImplicitParameter)
     assert pi.range.gamsRepr() == "pi.range"
 
     assert hasattr(pi, "slacklo") and isinstance(
@@ -412,14 +388,10 @@ def test_equation_attributes(data):
     )
     assert pi.slackup.gamsRepr() == "pi.slackup"
 
-    assert hasattr(pi, "slack") and isinstance(
-        pi.slack, implicits.ImplicitParameter
-    )
+    assert hasattr(pi, "slack") and isinstance(pi.slack, implicits.ImplicitParameter)
     assert pi.slack.gamsRepr() == "pi.slack"
 
-    assert hasattr(pi, "infeas") and isinstance(
-        pi.infeas, implicits.ImplicitParameter
-    )
+    assert hasattr(pi, "infeas") and isinstance(pi.infeas, implicits.ImplicitParameter)
     assert pi.infeas.gamsRepr() == "pi.infeas"
 
 
@@ -538,9 +510,7 @@ def test_assignment_dimensionality(data):
     )
 
     with pytest.raises(ValidationError):
-        SAMCOEF[ii, jj, kk].where[NONZERO[ii, jj]] = (
-            TSAM[ii, jj] == A[ii, jj] * Y[jj]
-        )
+        SAMCOEF[ii, jj, kk].where[NONZERO[ii, jj]] = TSAM[ii, jj] == A[ii, jj] * Y[jj]
 
 
 def test_type(data):
@@ -747,9 +717,7 @@ def test_equation_listing(data):
         type="Positive",
         description="weapons assignment",
     )
-    prob = Variable(
-        m, name="prob", domain=t, description="probability for each target"
-    )
+    prob = Variable(m, name="prob", domain=t, description="probability for each target")
 
     # Equations
     maxw = Equation(m, name="maxw", domain=w, description="weapons balance")
@@ -759,15 +727,11 @@ def test_equation_listing(data):
         domain=t,
         description="minimum number of weapons required per target",
     )
-    probe = Equation(
-        m, name="probe", domain=t, description="probability definition"
-    )
+    probe = Equation(m, name="probe", domain=t, description="probability definition")
 
     maxw[w] = Sum(t.where[td[w, t]], x[w, t]) <= wa[w]
     minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
-    probe[t] = prob[t] == 1 - Product(
-        w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]
-    )
+    probe[t] = prob[t] == 1 - Product(w.where[td[w, t]], (1 - td[w, t]) ** x[w, t])
 
     _ = Sum(t, mv[t] * prob[t])
     etd = Sum(
@@ -797,9 +761,7 @@ def test_equation_listing(data):
     with pytest.raises(ValidationError):
         maxw.getEquationListing(filters=[["f-bomber"], ["bla"]])
 
-    assert (
-        len(maxw.getEquationListing(filters=[["f-bomber"]]).split("\n")) == 1
-    )
+    assert len(maxw.getEquationListing(filters=[["f-bomber"]]).split("\n")) == 1
 
     assert len(maxw.getEquationListing(n=2).split("\n")) == 2
 
@@ -932,9 +894,7 @@ def test_equation_listing2(data):
         records=pd.DataFrame(steel_plants),
         description="steel plants",
     )
-    j = Set(
-        cont, name="j", records=pd.DataFrame(markets), description="markets"
-    )
+    j = Set(cont, name="j", records=pd.DataFrame(markets), description="markets")
     c = Set(
         cont,
         name="c",
@@ -1004,9 +964,7 @@ def test_equation_listing2(data):
         records=demand_distribution,
         description="distribution of demand",
     )
-    d = Parameter(
-        cont, name="d", domain=[c, j], description="demand for steel in 1979"
-    )
+    d = Parameter(cont, name="d", domain=[c, j], description="demand for steel in 1979")
 
     d["steel", j] = dt * (1 + rse / 100) * dd[j] / 100
 
@@ -1024,12 +982,8 @@ def test_equation_listing2(data):
         domain=[i, j],
         description="transport rate: final products",
     )
-    muv = Parameter(
-        cont, name="muv", domain=j, description="transport rate: imports"
-    )
-    mue = Parameter(
-        cont, name="mue", domain=i, description="transport rate: exports"
-    )
+    muv = Parameter(cont, name="muv", domain=j, description="transport rate: imports")
+    mue = Parameter(cont, name="mue", domain=i, description="transport rate: exports")
 
     muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
     muv[j] = (2.48 + 0.0084 * rd["import", j]).where[rd["import", j]]
@@ -1073,12 +1027,8 @@ def test_equation_listing2(data):
         type="Positive",
         description="purchase of domestic materials",
     )
-    v = Variable(
-        cont, name="v", domain=[c, j], type="Positive", description="imports"
-    )
-    e = Variable(
-        cont, name="e", domain=[c, i], type="Positive", description="exports"
-    )
+    v = Variable(cont, name="v", domain=[c, j], type="Positive", description="imports")
+    e = Variable(cont, name="e", domain=[c, i], type="Positive", description="exports")
     phipsi = Variable(cont, name="phipsi", description="raw material cost")
     philam = Variable(cont, name="philam", description="transport cost")
     phipi = Variable(cont, name="phipi", description="import cost")
@@ -1106,19 +1056,11 @@ def test_equation_listing2(data):
         domain=[c, i],
         description="material balances: raw materials",
     )
-    cc = Equation(
-        cont, name="cc", domain=[m, i], description="capacity constraint"
-    )
-    mr = Equation(
-        cont, name="mr", domain=[c, j], description="market requirements"
-    )
+    cc = Equation(cont, name="cc", domain=[m, i], description="capacity constraint")
+    mr = Equation(cont, name="mr", domain=[c, j], description="market requirements")
     me = Equation(cont, name="me", domain=c, description="maximum export")
-    apsi = Equation(
-        cont, name="apsi", description="accounting: raw material cost"
-    )
-    alam = Equation(
-        cont, name="alam", description="accounting: transport cost"
-    )
+    apsi = Equation(cont, name="apsi", description="accounting: raw material cost")
+    alam = Equation(cont, name="alam", description="accounting: transport cost")
     api = Equation(cont, name="api", description="accounting: import cost")
     aeps = Equation(cont, name="aeps", description="accounting: export cost")
 
@@ -1149,12 +1091,7 @@ def test_equation_listing2(data):
 
     mexss.solve(options=Options(equation_listing_limit=100))
     assert (
-        len(
-            mr.getEquationListing(filters=[["steel"], ["monterrey"]]).split(
-                "\n"
-            )
-        )
-        == 1
+        len(mr.getEquationListing(filters=[["steel"], ["monterrey"]]).split("\n")) == 1
     )
 
     assert len(mr.getEquationListing(filters=[["steel"], []]).split("\n")) == 3

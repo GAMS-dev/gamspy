@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Optional
 import typer
-from . import gdx, install, list, retrieve, run, show, uninstall, probe
+
+from . import gdx, install, list, probe, retrieve, run, show, uninstall
 
 app = typer.Typer(
     rich_markup_mode="rich",
@@ -39,7 +39,7 @@ def version_callback(value: bool):
 
 @app.callback()
 def callback(
-    version: Optional[bool] = typer.Option(
+    version: bool | None = typer.Option(
         None,
         "-v",
         "--version",
@@ -54,7 +54,7 @@ def callback(
 
     Read more in the docs: [link=https://gamspy.readthedocs.io/en/latest/cli/index.html]https://gamspy.readthedocs.io/en/latest/cli/index.html[/link].
     """
-    ...
+
 
 def main():
     """

@@ -79,9 +79,7 @@ def main():
     )
 
     # Master model variables
-    xp = Variable(
-        m, "xp", domain=p, type="integer", description="patterns used"
-    )
+    xp = Variable(m, "xp", domain=p, type="integer", description="patterns used")
     z = Variable(m, "z", description="objective variable")
     xp.up[p] = Sum(i, d[i])
 
@@ -108,9 +106,7 @@ def main():
     y = Variable(m, "y", domain=i, type="integer", description="new pattern")
     y.up[i] = gams_math.ceil(r / w[i])
 
-    defobj = Equation(
-        m, "defobj", definition=z == (1 - Sum(i, demand.m[i] * y[i]))
-    )
+    defobj = Equation(m, "defobj", definition=z == (1 - Sum(i, demand.m[i] * y[i])))
     knapsack = Equation(
         m,
         "knapsack",

@@ -213,9 +213,7 @@ def main():
     improv = Parameter(
         m,
         name="improv",
-        description=(
-            "has the Lagrangian bound improved over the previous iterations"
-        ),
+        description=("has the Lagrangian bound improved over the previous iterations"),
     )
 
     # Equations
@@ -241,12 +239,8 @@ def main():
     )
 
     # Scalar
-    target = Parameter(
-        m, name="target", description="target objective function value"
-    )
-    alpha = Parameter(
-        m, name="alpha", records=[1], description="step adjuster"
-    )
+    target = Parameter(m, name="target", description="target objective function value")
+    alpha = Parameter(m, name="alpha", records=[1], description="step adjuster")
     norm = Parameter(m, name="norm", description="norm of slacks")
     step = Parameter(
         m, name="step", records=[0], description="step size for subgradient"
@@ -264,15 +258,9 @@ def main():
     count = Parameter(
         m, name="count", description="count of iterations without improvement"
     )
-    reset = Parameter(
-        m, name="reset", records=[5], description="reset count counter"
-    )
-    tol = Parameter(
-        m, name="tol", records=[1e-5], description="termination tolerance"
-    )
-    status = Parameter(
-        m, name="status", records=[0], description="outer loop status"
-    )
+    reset = Parameter(m, name="reset", records=[5], description="reset count counter")
+    tol = Parameter(m, name="tol", records=[1e-5], description="termination tolerance")
+    status = Parameter(m, name="status", records=[0], description="outer loop status")
 
     # Parameter
     s = Parameter(m, name="s", domain=j, description="slack variable")
@@ -282,12 +270,8 @@ def main():
     xrep = Parameter(
         m, name="xrep", domain=[j, i, "*"], description="x iteration report"
     )
-    srep = Parameter(
-        m, name="srep", domain=[iter, j], description="slack report"
-    )
-    wrep = Parameter(
-        m, name="wrep", domain=[iter, j], description="w iteration report"
-    )
+    srep = Parameter(m, name="srep", domain=[iter, j], description="slack report")
+    wrep = Parameter(m, name="wrep", domain=[iter, j], description="w iteration report")
 
     # calculate initial Lagrangian multipliers
     # There are many possible ways to find initial multipliers.
@@ -445,26 +429,18 @@ def main():
 
             if status.toValue() == 2:
                 results.write(
-                    "\n\nsubgr. method has converged, status ="
-                    f" {status.toValue()}\n\n"
+                    f"\n\nsubgr. method has converged, status = {status.toValue()}\n\n"
                 )
-                results.write(
-                    "\n\nlast solution found is optimal for IP problem\n\n"
-                )
+                results.write("\n\nlast solution found is optimal for IP problem\n\n")
             # end if
             if status.toValue() == 3:
                 results.write(
-                    "\n\nsubgr. method has converged, status ="
-                    f" {status.toValue()}\n\n"
+                    f"\n\nsubgr. method has converged, status = {status.toValue()}\n\n"
                 )
-                results.write(
-                    "\n\nno duality gap, best sol. found is optimal\n\n"
-                )
+                results.write("\n\nno duality gap, best sol. found is optimal\n\n")
             # end if
             if status.toValue() == 4:
-                results.write(
-                    "\n\nsomething wrong with last Lag. subproblem\n\n"
-                )
+                results.write("\n\nsomething wrong with last Lag. subproblem\n\n")
                 results.write(f"\n\nstatus = {status.toValue()}\n\n")
             # end if
 
@@ -491,9 +467,7 @@ def main():
                     if improv.toValue():  # reset count if improvement
                         count[...] = 1
                     else:
-                        count[...] = (
-                            count + 1
-                        )  # update count if no improvement
+                        count[...] = count + 1  # update count if no improvement
 
             print(
                 "iteration #: ",
@@ -508,9 +482,7 @@ def main():
 
         import math
 
-        assert math.isclose(
-            assign_rmip.objective_value, 175.3883, rel_tol=0.001
-        )
+        assert math.isclose(assign_rmip.objective_value, 175.3883, rel_tol=0.001)
 
         results.write("\n\nDual values on assignment constraint\n")
         for idx, j_loop in enumerate(j.toList()):
@@ -518,9 +490,7 @@ def main():
                 f"\nw('{j_loop}') = {w.records.value.round(3).tolist()[idx]};"
             )
 
-        results.write(
-            f"\n\nbest Lagrangian bound   =   {round(zlbest.toValue(), 3)}"
-        )
+        results.write(f"\n\nbest Lagrangian bound   =   {round(zlbest.toValue(), 3)}")
 
     print("\n\nreport: \n", report.pivot().round(3))
     print("\n\nwrep: \n", wrep.pivot().round(3))

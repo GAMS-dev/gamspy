@@ -165,16 +165,12 @@ def test_lp_transport(data):
     with open(reference_path, encoding="utf-8") as file:
         reference_tex = file.read()
 
-    with open(
-        os.path.join(output_path, "transport.tex"), encoding="utf-8"
-    ) as file:
+    with open(os.path.join(output_path, "transport.tex"), encoding="utf-8") as file:
         generated_tex = file.read()
 
     assert reference_tex == generated_tex
 
-    freeLinks = Set(
-        m, "freeLinks", domain=[i, j], records=[("seattle", "chicago")]
-    )
+    freeLinks = Set(m, "freeLinks", domain=[i, j], records=[("seattle", "chicago")])
     transport2 = Model(
         m,
         name="transport2",
@@ -192,9 +188,7 @@ def test_lp_transport(data):
     with open(reference_path, encoding="utf-8") as file:
         reference_tex = file.read()
 
-    with open(
-        os.path.join(output_path, "transport2.tex"), encoding="utf-8"
-    ) as file:
+    with open(os.path.join(output_path, "transport2.tex"), encoding="utf-8") as file:
         generated_tex = file.read()
 
     assert reference_tex == generated_tex
@@ -240,9 +234,7 @@ def test_mip_cutstock(data):
     )
 
     # Master model variables
-    xp = Variable(
-        m, "xp", domain=p, type="integer", description="patterns used"
-    )
+    xp = Variable(m, "xp", domain=p, type="integer", description="patterns used")
     z = Variable(m, "z", description="objective variable")
     xp.up[p] = Sum(i, d[i])
 
@@ -269,9 +261,7 @@ def test_mip_cutstock(data):
     y = Variable(m, "y", domain=i, type="integer", description="new pattern")
     y.up[i] = gams_math.ceil(r / w[i])
 
-    defobj = Equation(
-        m, "defobj", definition=z == (1 - Sum(i, demand.m[i] * y[i]))
-    )
+    defobj = Equation(m, "defobj", definition=z == (1 - Sum(i, demand.m[i] * y[i])))
     knapsack = Equation(
         m,
         "knapsack",
@@ -516,9 +506,7 @@ def test_nlp_weapons(data):
 
     maxw[w] = Sum(t.where[td[w, t]], x[w, t]) <= wa[w]
     minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
-    probe[t] = prob[t] == 1 - Product(
-        w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]
-    )
+    probe[t] = prob[t] == 1 - Product(w.where[td[w, t]], (1 - td[w, t]) ** x[w, t])
 
     _ = Sum(t, mv[t] * prob[t])
     etd = Sum(
@@ -541,9 +529,7 @@ def test_nlp_weapons(data):
 
     output_path = os.path.join("tmp", "to_latex")
     war.toLatex(os.path.join("tmp", "to_latex"))
-    reference_path = os.path.join(
-        "tests", "integration", "tex_references", "war.tex"
-    )
+    reference_path = os.path.join("tests", "integration", "tex_references", "war.tex")
     with open(reference_path) as file:
         reference_tex = file.read()
 
@@ -565,7 +551,7 @@ def test_mcp_qp6():
     days, stocks = cont.getSymbols(["days", "stocks"])
 
     # Parameters
-    returns, val = cont.getSymbols(["return", "val"])
+    returns, _val = cont.getSymbols(["return", "val"])
 
     # Set
     d = Set(cont, name="d", domain=[days], description="selected days")
@@ -582,9 +568,7 @@ def test_mcp_qp6():
         domain=stocks,
         description="mean of daily return",
     )
-    dev = Parameter(
-        cont, name="dev", domain=[stocks, days], description="deviations"
-    )
+    dev = Parameter(cont, name="dev", domain=[stocks, days], description="deviations")
     totmean = Parameter(cont, name="totmean", description="total mean return")
 
     mean[s] = Sum(d, returns[s, d]) / Card(d)
@@ -652,9 +636,7 @@ def test_mcp_qp6():
 
     output_path = os.path.join("tmp", "to_latex")
     qp6.toLatex(os.path.join("tmp", "to_latex"))
-    reference_path = os.path.join(
-        "tests", "integration", "tex_references", "qp6.tex"
-    )
+    reference_path = os.path.join("tests", "integration", "tex_references", "qp6.tex")
     with open(reference_path) as file:
         reference_tex = file.read()
 
@@ -690,24 +672,19 @@ def test_dnlp_inscribedsquare(data):
     x = Variable(
         m,
         name="x",
-        description=(
-            "x-coordinate of lower-left corner of square (=fx(t('1')))"
-        ),
+        description=("x-coordinate of lower-left corner of square (=fx(t('1')))"),
     )
     y = Variable(
         m,
         name="y",
-        description=(
-            "y-coordinate of lower-left corner of square (=fy(t('1')))"
-        ),
+        description=("y-coordinate of lower-left corner of square (=fy(t('1')))"),
     )
     a = Variable(
         m,
         name="a",
         type="Positive",
         description=(
-            "horizontal distance between lower-left and lower-right corner of"
-            " square"
+            "horizontal distance between lower-left and lower-right corner of square"
         ),
     )
     b = Variable(
@@ -715,8 +692,7 @@ def test_dnlp_inscribedsquare(data):
         name="b",
         type="Positive",
         description=(
-            "vertical distance between lower-left and lower-right corner of"
-            " square"
+            "vertical distance between lower-left and lower-right corner of square"
         ),
     )
 
@@ -1363,17 +1339,14 @@ def test_minlp_minlphix(data):
         )
         + Sum(
             [i, cu],
-            fchx * ycu[i, cu]
-            + (vchx / htc) * (qcu[i, cu] / (lmtd[i] + 1 - ycol[i])),
+            fchx * ycu[i, cu] + (vchx / htc) * (qcu[i, cu] / (lmtd[i] + 1 - ycol[i])),
         )
         + Sum(
             [hu, j],
-            fchx * yhu[hu, j]
-            + (vchx / htc) * (qhu[hu, j] / (thu[hu] - tr[j])),
+            fchx * yhu[hu, j] + (vchx / htc) * (qhu[hu, j] / (thu[hu] - tr[j])),
         )
     ) + beta * (
-        Sum([i, cu], costcw * qcu[i, cu])
-        + Sum([hu, j], costhu[hu] * qhu[hu, j])
+        Sum([i, cu], costcw * qcu[i, cu]) + Sum([hu, j], costhu[hu] * qhu[hu, j])
     )
 
     # limit the denominator in the second line of the objective away from zero
@@ -1394,15 +1367,11 @@ def test_minlp_minlphix(data):
 
     artrex2[i] = s3[i] + s4[i] + sl2[i] <= u * (1 - ycol[i])
 
-    material[m2] = Sum(pm[i, m2], spltfrc[i, m2] * f[i]) == Sum(
-        fm[i, m2], f[i]
-    )
+    material[m2] = Sum(pm[i, m2], spltfrc[i, m2] * f[i]) == Sum(fm[i, m2], f[i])
 
     feed[...] = Sum(zlead[i], f[i]) == totflow
 
-    duty[i] = (
-        qc[i] == (kf[i, "a"] + kf[i, "b"] * (tc[i] - tcmin[i])) + s3[i] - s4[i]
-    )
+    duty[i] = qc[i] == (kf[i, "a"] + kf[i, "b"] * (tc[i] - tcmin[i])) + s3[i] - s4[i]
 
     rebcon[zcr[i, j]] = qr[j] == qc[i]
 
@@ -1457,9 +1426,7 @@ def test_minlp_minlphix(data):
             zcrhx[i, j],
             yhx[i, j]
             + Sum(
-                Domain(ip, jp).where[
-                    (Ord(ip) == Ord(j)) & (Ord(jp) == Ord(i))
-                ],
+                Domain(ip, jp).where[(Ord(ip) == Ord(j)) & (Ord(jp) == Ord(i))],
                 yhx[ip, jp],
             ),
         )
@@ -1486,9 +1453,7 @@ def test_minlp_minlphix(data):
 
     output_path = os.path.join("tmp", "to_latex")
     skip.toLatex(os.path.join("tmp", "to_latex"))
-    reference_path = os.path.join(
-        "tests", "integration", "tex_references", "skip.tex"
-    )
+    reference_path = os.path.join("tests", "integration", "tex_references", "skip.tex")
     with open(reference_path) as file:
         reference_tex = file.read()
 
@@ -1512,9 +1477,7 @@ def test_qcp_EDsensitivity(data):
 
     eq1 = Sum(
         gen,
-        data[gen, "a"] * P[gen] * P[gen]
-        + data[gen, "b"] * P[gen]
-        + data[gen, "c"],
+        data[gen, "a"] * P[gen] * P[gen] + data[gen, "b"] * P[gen] + data[gen, "c"],
     )
 
     eq2 = Equation(m, name="eq2", type="regular")
@@ -1533,9 +1496,9 @@ def test_qcp_EDsensitivity(data):
     )
 
     for idx, cc in enumerate(counter.toList()):
-        load[...] = Sum(gen, data[gen, "Pmin"]) + (
-            (idx) / (Card(counter) - 1)
-        ) * Sum(gen, data[gen, "Pmax"] - data[gen, "Pmin"])
+        load[...] = Sum(gen, data[gen, "Pmin"]) + ((idx) / (Card(counter) - 1)) * Sum(
+            gen, data[gen, "Pmax"] - data[gen, "Pmin"]
+        )
         ECD.solve()
         repGen[cc, gen] = P.l[gen]
         report[cc, "OF"] = ECD.objective_value
@@ -1543,9 +1506,7 @@ def test_qcp_EDsensitivity(data):
 
     output_path = os.path.join("tmp", "to_latex")
     ECD.toLatex(os.path.join("tmp", "to_latex"))
-    reference_path = os.path.join(
-        "tests", "integration", "tex_references", "ECD.tex"
-    )
+    reference_path = os.path.join("tests", "integration", "tex_references", "ECD.tex")
     with open(reference_path) as file:
         reference_tex = file.read()
 
@@ -1572,18 +1533,14 @@ def test_latex_repr(data):
     b = Parameter(m, "b", domain=[i, j])
     assert b.latexRepr() == "b"
     assert b[i, j].latexRepr() == r"b_{i,j}"
-    assert (
-        b[i, "i1"].latexRepr() == r"b_{i,\textquotesingle i1 \textquotesingle}"
-    )
+    assert b[i, "i1"].latexRepr() == r"b_{i,\textquotesingle i1 \textquotesingle}"
 
     c = Variable(m, "c")
     assert c.latexRepr() == "c"
     d = Variable(m, "d", domain=[i, j])
     assert d.latexRepr() == "d"
     assert d[i, j].latexRepr() == r"d_{i,j}"
-    assert (
-        d[i, "i1"].latexRepr() == r"d_{i,\textquotesingle i1 \textquotesingle}"
-    )
+    assert d[i, "i1"].latexRepr() == r"d_{i,\textquotesingle i1 \textquotesingle}"
 
     e = Equation(m, "e")
 
@@ -1600,9 +1557,7 @@ def test_symbol_name_with_underscore():
 
     cities = Set(m, name="cities", records=["LA", "HOU", "NY", "MIA"])
 
-    distance_for_next_city = Parameter(
-        m, name="distance_for_next_city", domain=cities
-    )
+    distance_for_next_city = Parameter(m, name="distance_for_next_city", domain=cities)
     distance_for_next_city.setRecords(
         [("LA", 1500), ("HOU", 1700), ("NY", 1300), ("MIA", 2700)]
     )
@@ -1617,25 +1572,16 @@ def test_symbol_name_with_underscore():
         m, name="fuel_at_landing", domain=cities, type="positive"
     )  # Fuel at landing city
 
-    fuel_balance_ground = Equation(
-        m, name="fuel_balance_ground", domain=cities
-    )
+    fuel_balance_ground = Equation(m, name="fuel_balance_ground", domain=cities)
     fuel_balance_ground[cities] = (
-        fuel_at_landing[cities] + fuel_purchased[cities]
-        == fuel_at_takeoff[cities]
+        fuel_at_landing[cities] + fuel_purchased[cities] == fuel_at_takeoff[cities]
     )
 
     fuel_balance_air = Equation(m, name="fuel_balance_air", domain=cities)
     fuel_balance_air[cities].where[Ord(cities) > 1] = (
         fuel_at_landing[cities]
         == fuel_at_takeoff[cities - 1]
-        - (
-            1
-            + (
-                (0.5 * (fuel_at_takeoff[cities - 1] + fuel_at_landing[cities]))
-                / 2000
-            )
-        )
+        - (1 + ((0.5 * (fuel_at_takeoff[cities - 1] + fuel_at_landing[cities])) / 2000))
         * distance_for_next_city[cities - 1]
     )
 

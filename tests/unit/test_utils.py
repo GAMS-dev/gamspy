@@ -33,9 +33,7 @@ def test_utils(data):
     assert utils.checkAllSame([1, 2], [1, 2])
 
     # invalid load from path
-    pytest.raises(
-        Exception, utils._open_gdx_file, m.system_directory, "bla.gdx"
-    )
+    pytest.raises(FatalError, utils._open_gdx_file, m.system_directory, "bla.gdx")
 
 
 def test_isin(data):
@@ -52,73 +50,38 @@ def test_isin(data):
 def test_available_solvers(data):
     available_solvers = utils.getAvailableSolvers()
 
-    if platform.system() == "Linux":
-        expected = [
-            "BARON",
-            "CBC",
-            "CONOPT3",
-            "CONOPT4",
-            "CONVERT",
-            "COPT",
-            "CPLEX",
-            "DICOPT",
-            "EXAMINER",
-            "EXAMINER2",
-            "GUROBI",
-            "HIGHS",
-            "IPOPT",
-            "IPOPTH",
-            "KESTREL",
-            "KNITRO",
-            "MILES",
-            "MINOS",
-            "MOSEK",
-            "MPSGE",
-            "NLPEC",
-            "PATH",
-            "PATHNLP",
-            "RESHOP",
-            "SBB",
-            "SCIP",
-            "SHOT",
-            "SNOPT",
-            "SOPLEX",
-            "XPRESS",
-        ]
-    else:
-        expected = [
-            "BARON",
-            "CBC",
-            "CONOPT3",
-            "CONOPT4",
-            "CONVERT",
-            "COPT",
-            "CPLEX",
-            "DICOPT",
-            "EXAMINER",
-            "EXAMINER2",
-            "GUROBI",
-            "HIGHS",
-            "IPOPT",
-            "IPOPTH",
-            "KESTREL",
-            "KNITRO",
-            "MILES",
-            "MINOS",
-            "MOSEK",
-            "MPSGE",
-            "NLPEC",
-            "PATH",
-            "PATHNLP",
-            "RESHOP",
-            "SBB",
-            "SBB",  # extra SBB required only for gamspy_base 51.1.0. will be deleted as soon as 51.2.0 is out.
-            "SCIP",
-            "SHOT",
-            "SNOPT",
-            "SOPLEX",
-            "XPRESS",
-        ]
+    expected = [
+        "BARON",
+        "CBC",
+        "CONOPT3",
+        "CONOPT4",
+        "CONVERT",
+        "COPT",
+        "CPLEX",
+        "DICOPT",
+        "EXAMINER",
+        "EXAMINER2",
+        "GUROBI",
+        "HIGHS",
+        "IPOPT",
+        "IPOPTH",
+        "KESTREL",
+        "KNITRO",
+        "MILES",
+        "MINOS",
+        "MOSEK",
+        "MPSGE",
+        "NLPEC",
+        "PATH",
+        "PATHNLP",
+        "RESHOP",
+        "SBB",
+        "SCIP",
+        "SHOT",
+        "SNOPT",
+        "SOPLEX",
+        "XPRESS",
+    ]
 
     if platform.system() == "Linux" and platform.machine() == "aarch64":
         expected.remove("BARON")

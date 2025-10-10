@@ -7,9 +7,7 @@ import platform
 import uuid
 from typing import TYPE_CHECKING
 
-import certifi
 import gams.transfer as gt
-import urllib3
 from gams.core import gdx
 
 import gamspy._model as model
@@ -44,17 +42,13 @@ SPECIAL_VALUE_MAP = {
     gt.SpecialValues.NEGINF: "-INF",
 }
 
-CAPABILITIES_FILE = (
-    "gmscmpNT.txt" if platform.system() == "Windows" else "gmscmpun.txt"
-)
+CAPABILITIES_FILE = "gmscmpNT.txt" if platform.system() == "Windows" else "gmscmpun.txt"
 
 user_dir = os.path.expanduser("~")
 if platform.system() == "Linux":
     DEFAULT_DIR = os.path.join(user_dir, ".local", "share", "GAMSPy")
 elif platform.system() == "Darwin":
-    DEFAULT_DIR = os.path.join(
-        user_dir, "Library", "Application Support", "GAMSPy"
-    )
+    DEFAULT_DIR = os.path.join(user_dir, "Library", "Application Support", "GAMSPy")
 elif platform.system() == "Windows":
     DEFAULT_DIR = os.path.join(user_dir, "Documents", "GAMSPy")
 
@@ -259,9 +253,7 @@ def getInstallableSolvers(system_directory: str) -> list[str]:
         e.msg = "You must first install gamspy_base to use this functionality"
         raise e
 
-    return sorted(
-        list(set(getAvailableSolvers()) - set(gamspy_base.default_solvers))
-    )
+    return sorted(list(set(getAvailableSolvers()) - set(gamspy_base.default_solvers)))
 
 
 def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
@@ -298,7 +290,7 @@ def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
         return False
 
     all_same = True
-    for elem1, elem2 in zip(iterable1, iterable2):
+    for elem1, elem2 in zip(iterable1, iterable2, strict=False):
         if elem1 is not elem2:
             return False
     return all_same
@@ -359,6 +351,7 @@ def _get_name_from_stack() -> str:
         # The second f_back takes us to the __init__ function of
         # the symbol. The third f_back takes us to the user code.
         frame = inspect.currentframe().f_back.f_back.f_back
+        assert frame is not None
 
         # We get the line that defines the symbol. e.g. i = Set(m)
         line = inspect.getframeinfo(frame).code_context[0]
@@ -374,28 +367,7 @@ def _get_name_from_stack() -> str:
     return name
 
 
-def _get_symbol_name(prefix: str) -> str:
-    use_py_var_name = get_option("USE_PY_VAR_NAME")
-    if use_py_var_name == "no":
-        name = prefix + _get_unique_name() + "gpauto"
-    elif use_py_var_name == "yes":
-        name = _get_name_from_stack()
-    elif use_py_var_name == "yes-or-autogenerate":
-        try:
-            name = _get_name_from_stack()
-        except ValidationError:
-            name = prefix + _get_unique_name() + "gpauto"
-    else:
-        raise ValidationError(
-            f'Invalid value `{use_py_var_name}` for `USE_PY_VAR_NAME`. Possible values are "no", "yes", "yes-or-autogenerate"'
-        )
-
-    return name
-
-
-def _get_symbol_names_from_gdx(
-    system_directory: str, load_from: str
-) -> list[str]:
+def _get_symbol_names_from_gdx(system_directory: str, load_from: str) -> list[str]:
     gdx_handle = _open_gdx_file(system_directory, load_from)
     _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
 
@@ -411,22 +383,17 @@ def _get_symbol_names_from_gdx(
 
 
 def _get_variables_of_model(container: Container):
-    names = _get_symbol_names_from_gdx(
-        container.system_directory, container._gdx_out
-    )
+    names = _get_symbol_names_from_gdx(container.system_directory, container._gdx_out)
 
     return [
-        container[name]
-        for name in names
-        if isinstance(container[name], gt.Variable)
+        container[name] for name in names if isinstance(container[name], gt.Variable)
     ]
 
 
 def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame:
     records = symbol.records
     infeas_rows = records.where(
-        (records["level"] < records["lower"])
-        | (records["level"] > records["upper"])
+        (records["level"] < records["lower"]) | (records["level"] > records["upper"])
     ).dropna()
     lower_distance = (infeas_rows["lower"] - infeas_rows["level"]).abs()
     upper_distance = (infeas_rows["upper"] - infeas_rows["level"]).abs()
@@ -546,22 +513,13 @@ def _open_gdx_file(system_directory: str, load_from: str):
         rc = gdx.gdxOpenRead(gdx_handle, load_from)
         assert rc[0]
     except AssertionError as e:
-        raise FatalError(
-            "GAMSPy could not open the gdx file to read from."
-        ) from e
+        raise FatalError("GAMSPy could not open the gdx file to read from.") from e
 
     return gdx_handle
 
 
 def _to_list(
-    obj: EllipsisType
-    | slice
-    | Set
-    | Alias
-    | str
-    | Iterable
-    | Sequence
-    | ImplicitSet,
+    obj: EllipsisType | slice | Set | Alias | str | Iterable | Sequence | ImplicitSet,
 ) -> list:
     """Converts the given object to a list"""
     if type(obj) is tuple:
@@ -605,9 +563,7 @@ def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
     """
     set_strs = []
     for set in domain:
-        if isinstance(
-            set, (gt.Set, gt.Alias, gt.UniverseAlias, implicits.ImplicitSet)
-        ):
+        if isinstance(set, (gt.Set, gt.Alias, gt.UniverseAlias, implicits.ImplicitSet)):
             set_strs.append(set.gamsRepr())
         elif isinstance(set, str):
             if set == "*":
@@ -793,9 +749,7 @@ def _parse_generated_variables(model: Model, listing_file: str) -> None:
     for variable in variables:
         listings: list[str] = []
         idx = 0
-        while idx < len(lines) and not lines[idx].startswith(
-            f"---- {variable.name}"
-        ):
+        while idx < len(lines) and not lines[idx].startswith(f"---- {variable.name}"):
             idx += 1
 
         idx += 2
@@ -815,17 +769,3 @@ def _parse_generated_variables(model: Model, listing_file: str) -> None:
         variable._column_listing = listings
 
     return None
-
-
-def _make_http() -> urllib3.PoolManager:
-    proxy_url = os.getenv("HTTPS_PROXY") or os.getenv("HTTP_PROXY")
-    if proxy_url:
-        http = urllib3.ProxyManager(
-            proxy_url, cert_reqs="CERT_REQUIRED", ca_certs=certifi.where()
-        )
-    else:
-        http = urllib3.PoolManager(
-            cert_reqs="CERT_REQUIRED", ca_certs=certifi.where()
-        )
-
-    return http

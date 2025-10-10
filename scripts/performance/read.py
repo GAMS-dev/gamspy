@@ -30,9 +30,7 @@ def write_gdx(N: int, m: gt.Container):
 
 
 def run_gtp():  # read from a gdx file
-    _ = gt.Container(
-        system_directory=gamspy_base.directory, load_from="in.gdx"
-    )
+    _ = gt.Container(system_directory=gamspy_base.directory, load_from="in.gdx")
 
 
 def run_gp():  # read from a gdx file

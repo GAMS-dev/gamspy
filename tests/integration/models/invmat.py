@@ -62,9 +62,7 @@ def main():
         records=data_records(),
         description="matrix to be inverted",
     )
-    ident = Parameter(
-        m, name="ident", domain=[i, j], description="the identity matrix"
-    )
+    ident = Parameter(m, name="ident", domain=[i, j], description="the identity matrix")
 
     ident[i, i] = 1
 
@@ -101,9 +99,7 @@ def main():
 
     # PARAMETERS #
     b = Parameter(m, name="b", domain=i, description="Righ-hand Side term")
-    ainv = Parameter(
-        m, name="ainv", domain=[i, j], description="inverse matrix of A"
-    )
+    ainv = Parameter(m, name="ainv", domain=[i, j], description="inverse matrix of A")
 
     eobj[...] = obj == 0
     lin[i] = Sum(k, a[i, k] * col[k]) == b[i]

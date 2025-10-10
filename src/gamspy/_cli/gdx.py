@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import platform
 import subprocess
-from typing import Optional
+from typing import Annotated
 
 import gamspy_base
 import typer
@@ -28,20 +28,26 @@ VALID_YN = {"Y", "N"}
 VALID_FIELDS = {"L", "M", "Up", "Lo", "Prior", "Scale", "All"}
 VALID_SETDESC = {"Y", "N"}
 
+
 def complete_delim(ctx: typer.Context, incomplete: str):
     return [d for d in VALID_DELIMS if d.startswith(incomplete)]
+
 
 def complete_decimalsep(ctx: typer.Context, incomplete: str):
     return [s for s in VALID_DECIMAL_SEP if s.startswith(incomplete)]
 
+
 def complete_format(ctx: typer.Context, incomplete: str):
     return [f for f in VALID_FORMATS if f.startswith(incomplete)]
+
 
 def complete_dformat(ctx: typer.Context, incomplete: str):
     return [f for f in VALID_DFORMATS if f.startswith(incomplete)]
 
+
 def complete_yes_no(ctx: typer.Context, incomplete: str):
     return [v for v in VALID_YN if v.startswith(incomplete)]
+
 
 def complete_field(ctx: typer.Context, incomplete: str):
     return [f for f in VALID_FIELDS if f.startswith(incomplete)]
@@ -53,32 +59,91 @@ def complete_field(ctx: typer.Context, incomplete: str):
 )
 def dump(
     filename: str = typer.Argument(..., help="Input GDX filename"),
-    version: bool = typer.Option(False, "--version", "-v", help="Write version info of input file only"),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Write output to file"),
-    symb: Optional[str] = typer.Option(None, "--symb", "-s", help="Select a single identifier"),
-    ueltable: Optional[str] = typer.Option(None, "--ueltable", "-u", help="Include all unique elements"),
-    delim: Optional[str] = typer.Option(None, "--delim", "-d", help="Dimension delimiter", autocompletion=complete_delim),
-    decimalsep: Optional[str] = typer.Option(None, "--decimalsep", "-p", help="Decimal separator", autocompletion=complete_decimalsep),
-    noheader: bool = typer.Option(False, "--noheader", help="Suppress writing of headers"),
+    version: bool = typer.Option(
+        False, "--version", "-v", help="Write version info of input file only"
+    ),
+    output: str | None = typer.Option(
+        None, "--output", "-o", help="Write output to file"
+    ),
+    symb: str | None = typer.Option(
+        None, "--symb", "-s", help="Select a single identifier"
+    ),
+    ueltable: str | None = typer.Option(
+        None, "--ueltable", "-u", help="Include all unique elements"
+    ),
+    delim: str | None = typer.Option(
+        None,
+        "--delim",
+        "-d",
+        help="Dimension delimiter",
+        autocompletion=complete_delim,
+    ),
+    decimalsep: str | None = typer.Option(
+        None,
+        "--decimalsep",
+        "-p",
+        help="Decimal separator",
+        autocompletion=complete_decimalsep,
+    ),
+    noheader: bool = typer.Option(
+        False, "--noheader", help="Suppress writing of headers"
+    ),
     nodata: bool = typer.Option(False, "--nodata", help="Write headers only; no data"),
-    csvallfields: bool = typer.Option(False, "--csvallfields", help="Write all variable/equation fields in CSV"),
-    csvsettext: bool = typer.Option(False, "--csvsettext", help="Write set element text in CSV"),
-    symbols: bool = typer.Option(False, "--symbols", "-S", help="Get list of all symbols"),
-    domaininfo: bool = typer.Option(False, "--domaininfo", help="Show domain information"),
+    csvallfields: bool = typer.Option(
+        False,
+        "--csvallfields",
+        help="Write all variable/equation fields in CSV",
+    ),
+    csvsettext: bool = typer.Option(
+        False, "--csvsettext", help="Write set element text in CSV"
+    ),
+    symbols: bool = typer.Option(
+        False, "--symbols", "-S", help="Get list of all symbols"
+    ),
+    domaininfo: bool = typer.Option(
+        False, "--domaininfo", help="Show domain information"
+    ),
     symbolsasset: bool = typer.Option(False, "--symbolsasset", help="Symbols as set"),
-    symbolsassetdi: bool = typer.Option(False, "--symbolsassetdi", help="Symbols as set incl. domain info"),
+    symbolsassetdi: bool = typer.Option(
+        False, "--symbolsassetdi", help="Symbols as set incl. domain info"
+    ),
     settext: bool = typer.Option(False, "--settext", help="Show set text"),
-    format: Optional[str] = typer.Option(None, "--format", "-f", help="Output format: normal, gamsbas, csv", autocompletion=complete_format),
-    dformat: Optional[str] = typer.Option(None, "--dformat", "-F", help="Data format: normal, hexponential, hexBytes", autocompletion=complete_dformat),
-    cdim: Optional[str] = typer.Option(None, "--cdim", help="Use last dim as column headers (Y/N)", autocompletion=complete_yes_no),
-    filterdef: Optional[str] = typer.Option(None, "--filterdef", "-x", help="Filter default values (Y/N)", autocompletion=complete_yes_no),
-    epsout: Optional[str] = typer.Option(None, "--epsout", help="String for EPS"),
-    naout: Optional[str] = typer.Option(None, "--naout", help="String for NA"),
-    pinfout: Optional[str] = typer.Option(None, "--pinfout", help="String for +Inf"),
-    minfout: Optional[str] = typer.Option(None, "--minfout", help="String for -Inf"),
-    undfout: Optional[str] = typer.Option(None, "--undfout", help="String for Undefined"),
-    zeroout: Optional[str] = typer.Option(None, "--zeroout", help="String for Zero"),
-    header: Optional[str] = typer.Option(None, "--header", help="New header for CSV output"),
+    format: str | None = typer.Option(
+        None,
+        "--format",
+        "-f",
+        help="Output format: normal, gamsbas, csv",
+        autocompletion=complete_format,
+    ),
+    dformat: str | None = typer.Option(
+        None,
+        "--dformat",
+        "-F",
+        help="Data format: normal, hexponential, hexBytes",
+        autocompletion=complete_dformat,
+    ),
+    cdim: str | None = typer.Option(
+        None,
+        "--cdim",
+        help="Use last dim as column headers (Y/N)",
+        autocompletion=complete_yes_no,
+    ),
+    filterdef: str | None = typer.Option(
+        None,
+        "--filterdef",
+        "-x",
+        help="Filter default values (Y/N)",
+        autocompletion=complete_yes_no,
+    ),
+    epsout: str | None = typer.Option(None, "--epsout", help="String for EPS"),
+    naout: str | None = typer.Option(None, "--naout", help="String for NA"),
+    pinfout: str | None = typer.Option(None, "--pinfout", help="String for +Inf"),
+    minfout: str | None = typer.Option(None, "--minfout", help="String for -Inf"),
+    undfout: str | None = typer.Option(None, "--undfout", help="String for Undefined"),
+    zeroout: str | None = typer.Option(None, "--zeroout", help="String for Zero"),
+    header: str | None = typer.Option(
+        None, "--header", help="New header for CSV output"
+    ),
 ):
     GDXDUMP_PATH = os.path.join(gamspy_base.directory, "gdxdump")
     if platform.system() == "Windows":
@@ -188,19 +253,57 @@ def dump(
 def diff(
     file1: str = typer.Argument(..., help="First input GDX file"),
     file2: str = typer.Argument(..., help="Second input GDX file"),
-    diffile: Optional[str] = typer.Argument(None, help="Optional output GDX file for differences"),
-    eps: Optional[float] = typer.Option(None, "--eps", "-e", help="Epsilon for comparison"),
-    releps: Optional[float] = typer.Option(None, "--releps", "-r", help="Relative epsilon for comparison"),
-    field: Optional[str] = typer.Option(None, "--field", "-f", help="Field to compare: L, M, Up, Lo, Prior, Scale, All", autocompletion=complete_field),
-    fldonly: bool = typer.Option(False, "--fldonly", "-o", help="Write only selected field"),
-    diffonly: bool = typer.Option(False, "--diffonly", "-d", help="Write only differences with field dimension"),
-    cmpdefaults: bool = typer.Option(False, "--cmpdefaults", "-c", help="Compare default values"),
-    cmpdomains: bool = typer.Option(False, "--cmpdomains", "-m", help="Compare domain information"),
-    matrixfile: bool = typer.Option(False, "--matrixfile", "-x", help="Compare GAMS matrix files"),
-    ignoreorder: bool = typer.Option(False, "--ignoreorder", help="Ignore UEL order of input files"),
-    setdesc: Optional[str] = typer.Option(None, "--setdesc", help="Compare set element descriptions (Y/N)", autocompletion=complete_yes_no),
-    id: Optional[list[str]] = typer.Option(None, "--id", "-i", help="One or more identifiers to include"),
-    skipid: Optional[list[str]] = typer.Option(None, "--skipid", "-s", help="One or more identifiers to skip"),
+    diffile: str | None = typer.Argument(
+        None, help="Optional output GDX file for differences"
+    ),
+    eps: float | None = typer.Option(
+        None, "--eps", "-e", help="Epsilon for comparison"
+    ),
+    releps: float | None = typer.Option(
+        None, "--releps", "-r", help="Relative epsilon for comparison"
+    ),
+    field: str | None = typer.Option(
+        None,
+        "--field",
+        "-f",
+        help="Field to compare: L, M, Up, Lo, Prior, Scale, All",
+        autocompletion=complete_field,
+    ),
+    fldonly: bool = typer.Option(
+        False, "--fldonly", "-o", help="Write only selected field"
+    ),
+    diffonly: bool = typer.Option(
+        False,
+        "--diffonly",
+        "-d",
+        help="Write only differences with field dimension",
+    ),
+    cmpdefaults: bool = typer.Option(
+        False, "--cmpdefaults", "-c", help="Compare default values"
+    ),
+    cmpdomains: bool = typer.Option(
+        False, "--cmpdomains", "-m", help="Compare domain information"
+    ),
+    matrixfile: bool = typer.Option(
+        False, "--matrixfile", "-x", help="Compare GAMS matrix files"
+    ),
+    ignoreorder: bool = typer.Option(
+        False, "--ignoreorder", help="Ignore UEL order of input files"
+    ),
+    setdesc: str | None = typer.Option(
+        None,
+        "--setdesc",
+        help="Compare set element descriptions (Y/N)",
+        autocompletion=complete_yes_no,
+    ),
+    id: Annotated[
+        list[str] | None,
+        typer.Option("--id", "-i", help="One or more identifiers to include"),
+    ] = None,
+    skipid: Annotated[
+        list[str] | None,
+        typer.Option("--skipid", "-s", help="One or more identifiers to skip"),
+    ] = None,
 ):
     GDXDIFF_PATH = os.path.join(gamspy_base.directory, "gdxdiff")
     if platform.system() == "Windows":
@@ -219,7 +322,7 @@ def diff(
     if not os.path.exists(file2):
         typer.echo(f"File not found: {file2}", err=True)
         raise typer.Exit(code=1)
-    
+
     if diffile and not diffile.endswith(".gdx"):
         diffile += ".gdx"
 
@@ -232,9 +335,7 @@ def diff(
         raise typer.Exit(code=1)
 
     if setdesc and setdesc not in VALID_SETDESC:
-        typer.echo(
-            f"Invalid SetDesc value: '{setdesc}'. Must be Y or N", err=True
-        )
+        typer.echo(f"Invalid SetDesc value: '{setdesc}'. Must be Y or N", err=True)
         raise typer.Exit(code=1)
 
     # Build the command

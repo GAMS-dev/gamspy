@@ -85,9 +85,7 @@ class RegressionTree:
                         f"{regressor} must be an instance of either >sklearn.tree.DecisionTreeRegressor< or >DecisionTreeStruct<"
                     )
             except ModuleNotFoundError:
-                raise ValidationError(
-                    ">sklearn.tree< module not found."
-                ) from None
+                raise ValidationError(">sklearn.tree< module not found.") from None
 
         self._check_tree()
 
@@ -117,9 +115,7 @@ class RegressionTree:
         self.capacity = regressor.tree_.capacity
         self.n_features = regressor.tree_.n_features
 
-    def _initialize_from_decision_tree_struct(
-        self, regressor: DecisionTreeStruct
-    ):
+    def _initialize_from_decision_tree_struct(self, regressor: DecisionTreeStruct):
         """
         Initializes the tree attributes from DecisionTreeStruct.
         """
@@ -215,9 +211,7 @@ class RegressionTree:
             set_of_output_dim,
             set_of_lb_ub,
             set_of_leafs,
-        ] = gp.math._generate_dims(
-            self.container, dims=[output_dim, 2, nleafs]
-        )
+        ] = gp.math._generate_dims(self.container, dims=[output_dim, 2, nleafs])
 
         [
             set_of_samples,
@@ -270,26 +264,20 @@ class RegressionTree:
 
         assign_one_output = gp.Equation._constructor_bypass(
             self.container,
-            name=utils._generate_name(
-                "e", self._name_prefix, "assign_one_output"
-            ),
+            name=utils._generate_name("e", self._name_prefix, "assign_one_output"),
             domain=[set_of_samples],
             description="Activate only one leaf per sample",
         )
 
         out_link = gp.Parameter._constructor_bypass(
             self.container,
-            name=utils._generate_name(
-                "p", self._name_prefix, "predicted_value"
-            ),
+            name=utils._generate_name("p", self._name_prefix, "predicted_value"),
             domain=[set_of_leafs, set_of_output_dim],
         )
 
         link_indicator_output = gp.Equation._constructor_bypass(
             self.container,
-            name=utils._generate_name(
-                "e", self._name_prefix, "link_indicator_output"
-            ),
+            name=utils._generate_name("e", self._name_prefix, "link_indicator_output"),
             domain=[set_of_samples, set_of_output_dim],
             description="Link the indicator variable to the predicted value of the decision tree",
         )
@@ -323,18 +311,14 @@ class RegressionTree:
 
         s = gp.Set._constructor_bypass(
             self.container,
-            name=utils._generate_name(
-                "s", self._name_prefix, "subset_of_paths"
-            ),
+            name=utils._generate_name("s", self._name_prefix, "subset_of_paths"),
             description="Dynamic subset of possible paths",
             domain=uni_domain,
         )
 
         feat_thresh = gp.Parameter._constructor_bypass(
             self.container,
-            name=utils._generate_name(
-                "p", self._name_prefix, "feature_threshold"
-            ),
+            name=utils._generate_name("p", self._name_prefix, "feature_threshold"),
             description="feature splitting value",
             domain=uni_domain + [cons_type],
         )
@@ -374,12 +358,7 @@ class RegressionTree:
         definition = expression.Expression(
             assign_one_output[set_of_samples],
             "..",
-            (
-                gp.Sum(
-                    set_of_leafs, indicator_vars[set_of_samples, set_of_leafs]
-                )
-                == 1
-            ),
+            (gp.Sum(set_of_leafs, indicator_vars[set_of_samples, set_of_leafs]) == 1),
         )
         self.container._add_statement(definition)
         assign_one_output._definition = definition
@@ -402,24 +381,20 @@ class RegressionTree:
         self.container._add_statement(definition)
         link_indicator_output._definition = definition
 
-        definition = expression.Expression(
-            ub_output[...], "..", out <= max_out
-        )
+        definition = expression.Expression(ub_output[...], "..", out <= max_out)
         self.container._add_statement(definition)
         ub_output._definition = definition
 
-        definition = expression.Expression(
-            lb_output[...], "..", out >= min_out
-        )
+        definition = expression.Expression(lb_output[...], "..", out >= min_out)
         lb_output._definition = definition
         self.container._add_statement(definition)
 
         set_records_dict = {
             out_link: [
                 (int(i), int(j), v)
-                for i, j, v in np.stack(
-                    (idx, jdx, mapped_values), axis=-1
-                ).reshape(-1, 3)
+                for i, j, v in np.stack((idx, jdx, mapped_values), axis=-1).reshape(
+                    -1, 3
+                )
             ],
             feat_par: np.stack([node_lb, node_ub], axis=-1)[:, leafs, :],
             max_out: np.max(self.value[leafs, :], axis=0),
@@ -508,21 +483,17 @@ class RegressionTree:
         )
 
         definition = expression.Expression(
-            ge_cons[uni_domain].where[
-                (feat_thresh[..., ge] != 0) & s[uni_domain]
-            ],
+            ge_cons[uni_domain].where[(feat_thresh[..., ge] != 0) & s[uni_domain]],
             "..",
             feat_vars
-            >= feat_thresh[..., ge]
-            - _bound_big_m[..., ge] * (1 - indicator_vars),
+            >= feat_thresh[..., ge] - _bound_big_m[..., ge] * (1 - indicator_vars),
         )
         self.container._add_statement(definition)
         ge_cons._definition = definition
 
-        le_cons[uni_domain].where[
-            (feat_thresh[..., le] != 0) & s[uni_domain]
-        ] = feat_vars <= feat_thresh[..., le] + _bound_big_m[..., le] * (
-            1 - indicator_vars
+        le_cons[uni_domain].where[(feat_thresh[..., le] != 0) & s[uni_domain]] = (
+            feat_vars
+            <= feat_thresh[..., le] + _bound_big_m[..., le] * (1 - indicator_vars)
         )
 
         eqns = [

@@ -88,9 +88,7 @@ def _parse_errors(lines: list[str], index: int) -> str:
     except IndexError:
         ...
 
-    error_message = (
-        f"\n\n{FRAME}\nError Summary\n{FRAME}\n{''.join(error_lines)}"
-    )
+    error_message = f"\n\n{FRAME}\nError Summary\n{FRAME}\n{''.join(error_lines)}"
 
     return error_message.rstrip()
 

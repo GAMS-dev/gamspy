@@ -116,9 +116,7 @@ def main():
         records=data_records()[0],
         description="generator cost characteristics and limits",
     )
-    data = Parameter(
-        m, name="data", domain=[t, "*"], records=data_records()[1]
-    )
+    data = Parameter(m, name="data", domain=[t, "*"], records=data_records()[1])
 
     # VARIABLES #
     p = Variable(
@@ -199,9 +197,7 @@ def main():
 
     import math
 
-    assert math.isclose(
-        DEDESScostbased.objective_value, 223360.0645, rel_tol=0.001
-    )
+    assert math.isclose(DEDESScostbased.objective_value, 223360.0645, rel_tol=0.001)
 
     # Reporting parameter
     rep = Parameter(m, name="rep", domain=[t, "*"])

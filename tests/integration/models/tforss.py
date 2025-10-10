@@ -174,9 +174,7 @@ def main():
 
     landc[s, k] = Sum(at, v[s, k, at] * age[at]) <= land[s] * scd[k]
 
-    ainvc[...] = phik == rho / (1 - power((1 + rho), (-life))) * Sum(
-        m, nu[m] * h[m]
-    )
+    ainvc[...] = phik == rho / (1 - power((1 + rho), (-life))) * Sum(m, nu[m] * h[m])
 
     aproc[...] = phir == Sum(p, pc[p] * z[p])
 
@@ -184,9 +182,7 @@ def main():
 
     acutc[...] = phil == muc * Sum(cl, r[cl])
 
-    aplnt[...] = phip == mup * Sum(
-        [s, k, at], v[s, k, at] * (1 + rho) ** age[at]
-    )
+    aplnt[...] = phip == mup * Sum([s, k, at], v[s, k, at] * (1 + rho) ** age[at])
 
     # Objective Function; total benefits             (discounted cost)
     benefit = phix - phik - phir - phil - phip
@@ -202,9 +198,7 @@ def main():
     )
 
     # Case Selection and Report Definitions
-    rhoset = Set(
-        cont, name="rhoset", records=["rho-03", "rho-05", "rho-07", "rho-10"]
-    )
+    rhoset = Set(cont, name="rhoset", records=["rho-03", "rho-05", "rho-07", "rho-10"])
 
     landcl = Parameter(
         cont, name="landcl", domain=[s, k], description="clean level of landc"
@@ -239,9 +233,7 @@ def main():
         forest.solve()
         landcl[s, k] = Round(landc.l[s, k], 3)
         rep[cl, case] = r.l[cl]
-        reprp[s, k, case] = (landcl[s, k] / Sum(at, v.l[s, k, at])).where[
-            landcl[s, k]
-        ]
+        reprp[s, k, case] = (landcl[s, k] / Sum(at, v.l[s, k, at])).where[landcl[s, k]]
         repsp[s, k, case] = landc.m[s, k]
 
     print("Summary report on log supply (1000m3 per year):")

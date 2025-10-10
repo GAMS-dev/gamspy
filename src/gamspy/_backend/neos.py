@@ -216,13 +216,9 @@ class NeosClient:
         xmlrpc.client.Binary
         """
         if is_blocking:
-            return self.neos.getIntermediateResults(
-                job_number, job_password, offset
-            )
+            return self.neos.getIntermediateResults(job_number, job_password, offset)
 
-        return self.neos.getIntermediateResultsNonBlocking(
-            job_number, job_password
-        )
+        return self.neos.getIntermediateResultsNonBlocking(job_number, job_password)
 
     def download_output(
         self,
@@ -248,16 +244,13 @@ class NeosClient:
         response = self.neos.getOutputFile(job_number, job_password, filename)
         if str(response) == "Output file does not exist":
             raise NeosClientException(
-                "Couldn't get output file from NEOS Server because:"
-                f" {response}"
+                f"Couldn't get output file from NEOS Server because: {response}"
             )
 
         with open(os.path.join(working_directory, filename), "wb") as file:
             file.write(response.data)
 
-        with zipfile.ZipFile(
-            os.path.join(working_directory, filename), "r"
-        ) as zip_ref:
+        with zipfile.ZipFile(os.path.join(working_directory, filename), "r") as zip_ref:
             zip_ref.extractall(working_directory)
 
     def _prepare_xml(
@@ -331,9 +324,7 @@ class NeosClient:
     def print_queue(self):
         """Prints NEOS Server queue"""
         if not self.is_alive():
-            raise NeosClientException(
-                "NeosServer is not alive. Try again later."
-            )
+            raise NeosClientException("NeosServer is not alive. Try again later.")
 
         msg = self.neos.printQueue()
         print(msg)
@@ -361,15 +352,11 @@ class NeosClient:
         NeosClientException
             In case there was an error on NeosServer
         """
-        with open(
-            os.path.join(working_directory, xml_path), encoding="utf-8"
-        ) as file:
+        with open(os.path.join(working_directory, xml_path), encoding="utf-8") as file:
             xml = file.read()
 
         if not self.is_alive():
-            raise NeosClientException(
-                "NeosServer is not alive. Try again later."
-            )
+            raise NeosClientException("NeosServer is not alive. Try again later.")
 
         if self.username is not None and self.password is not None:
             job_number, job_password = self.neos.authenticatedSubmitJob(
@@ -548,9 +535,7 @@ class NEOSServer(backend.Backend):
         )
         dirty_str = ",".join(symbols)
         with open(self.gms_file, "w", encoding="utf-8") as gams_file:
-            gams_file.write(
-                f'execute_load "{self.container._gdx_out}", {dirty_str};'
-            )
+            gams_file.write(f'execute_load "{self.container._gdx_out}", {dirty_str};')
 
         options = Options()
         extra_options = self._prepare_dummy_options()

@@ -1,10 +1,11 @@
 from __future__ import annotations
+
 import os
 import platform
 import subprocess
 import sys
 from enum import Enum
-from typing import List
+from typing import Annotated
 
 import typer
 
@@ -17,47 +18,46 @@ app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 
+
 class ModeEnum(Enum):
     config = "config"
     base = "base"
     deploy = "deploy"
 
+
 @app.command(
-    help="[bold][yellow]Examples[/yellow][/bold]: gamspy run miro [--path <path_to_miro>] [--model <path_to_model>]", 
-    short_help="Runs a GAMSPY model with GAMS MIRO app."
+    help="[bold][yellow]Examples[/yellow][/bold]: gamspy run miro [--path <path_to_miro>] [--model <path_to_model>]",
+    short_help="Runs a GAMSPY model with GAMS MIRO app.",
 )
 def miro(
-    mode: ModeEnum = typer.Option(
-        "base",
-        "--mode",
-        "-m",
-        help="Execution mode of MIRO"
-    ),
-    path: str = typer.Option(
-        None,
-        "--path",
-        "-p",
-        help="Path to the MIRO executable (.exe on Windows, .app on macOS or .AppImage on Linux"
-    ),
-    skip_execution: bool = typer.Option(
-        False,
-        "--skip-execution",
-        help="Whether to skip model execution."
-    ),
-    model: str = typer.Option(
-        None,
-        "--model",
-        "-g",
-        help="Path to the GAMSPy model."
-    ),
-    args: List[str] = typer.Argument(
-        None,
-        help="Arguments to the GAMSPy model."
-    ),
+    mode: Annotated[
+        ModeEnum,
+        typer.Option("--mode", "-m", help="Execution mode of MIRO"),
+    ] = ModeEnum.base,  # type: ignore
+    path: Annotated[
+        str | None,
+        typer.Option(
+            "--path",
+            "-p",
+            help="Path to the MIRO executable (.exe, .app, or .AppImage)",
+        ),
+    ] = None,
+    skip_execution: Annotated[
+        bool,
+        typer.Option("--skip-execution", help="Whether to skip model execution."),
+    ] = False,
+    model: Annotated[
+        str | None,
+        typer.Option("--model", "-g", help="Path to the GAMSPy model."),
+    ] = None,
+    args: Annotated[
+        list[str] | None,
+        typer.Argument(help="Arguments to the GAMSPy model."),
+    ] = None,
 ) -> None:
     if model is None:
         raise ValidationError("--model must be provided to run MIRO")
-    
+
     model = os.path.abspath(model)
     execution_mode = mode.value
     path = os.getenv("MIRO_PATH", None)
@@ -66,14 +66,9 @@ def miro(
         path = path if path is not None else discover_miro()
 
     if path is None:
-        raise GamspyException(
-            "--path must be provided to run MIRO"
-        )
+        raise GamspyException("--path must be provided to run MIRO")
 
-    if (
-        platform.system() == "Darwin"
-        and os.path.splitext(path)[1] == ".app"
-    ):
+    if platform.system() == "Darwin" and os.path.splitext(path)[1] == ".app":
         path = os.path.join(path, "Contents", "MacOS", "GAMS MIRO")
 
     # Initialize MIRO
@@ -103,6 +98,7 @@ def miro(
 
     subprocess.run([path], env=subprocess_env, check=True)
 
+
 def discover_miro():
     system = platform.system()
     if system == "Linux":
@@ -129,9 +125,7 @@ def discover_miro():
             ),
         ],
         "Windows": [
-            os.path.join(
-                "C:\\", "Program Files", "GAMS MIRO", "GAMS MIRO.exe"
-            ),
+            os.path.join("C:\\", "Program Files", "GAMS MIRO", "GAMS MIRO.exe"),
             os.path.join(
                 home,
                 "AppData",
@@ -149,6 +143,7 @@ def discover_miro():
                 return location
 
     return None
+
 
 if __name__ == "__main__":
     app()

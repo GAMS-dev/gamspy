@@ -15,6 +15,19 @@ Usage
 
   gamspy show license
 
+.. list-table::
+   :widths: 20 20 20 40
+   :header-rows: 1
+
+   * - Option
+     - Short
+     - Default
+     - Description
+   * - -\-verbose
+     - -v
+     - False
+     - Show verbose information about the license.
+
 Example::
 
   $ gamspy show license
@@ -23,6 +36,15 @@ Example::
   License Content
   ===============
   [License content will be displayed here]
+
+  License expiration date: xxxx-xx-xx
+
+  License type: <license_type>
+
+  Licensed Solvers:
+  [List of licensed solvers goes here]
+
+
 
 Show Base Directory
 -------------------

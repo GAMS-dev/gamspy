@@ -10,9 +10,7 @@ if TYPE_CHECKING:
     import torch
 
 
-def convert_linear(
-    m: gp.Container, layer: torch.nn.Linear
-) -> gp.formulations.Linear:
+def convert_linear(m: gp.Container, layer: torch.nn.Linear) -> gp.formulations.Linear:
     has_bias = layer.bias is not None
     l = gp.formulations.Linear(
         m,
@@ -20,15 +18,11 @@ def convert_linear(
         out_features=layer.out_features,
         bias=has_bias,
     )
-    l.load_weights(
-        layer.weight.numpy(), layer.bias.numpy() if has_bias else None
-    )
+    l.load_weights(layer.weight.numpy(), layer.bias.numpy() if has_bias else None)
     return l
 
 
-def convert_conv1d(
-    m: gp.Container, layer: torch.nn.Conv1d
-) -> gp.formulations.Conv1d:
+def convert_conv1d(m: gp.Container, layer: torch.nn.Conv1d) -> gp.formulations.Conv1d:
     if layer.dilation[0] != 1:
         raise ValidationError("Conv1d is not supported when dilation is not 1")
 
@@ -36,9 +30,7 @@ def convert_conv1d(
         raise ValidationError("Conv1d is not supported when groups is not 1")
 
     if layer.padding_mode != "zeros":
-        raise ValidationError(
-            "Conv1d is only supported with padding_mode zeros"
-        )
+        raise ValidationError("Conv1d is only supported with padding_mode zeros")
 
     has_bias = layer.bias is not None
     l = gp.formulations.Conv1d(
@@ -51,15 +43,11 @@ def convert_conv1d(
         bias=has_bias,
     )
 
-    l.load_weights(
-        layer.weight.numpy(), layer.bias.numpy() if has_bias else None
-    )
+    l.load_weights(layer.weight.numpy(), layer.bias.numpy() if has_bias else None)
     return l
 
 
-def convert_conv2d(
-    m: gp.Container, layer: torch.nn.Conv2d
-) -> gp.formulations.Conv2d:
+def convert_conv2d(m: gp.Container, layer: torch.nn.Conv2d) -> gp.formulations.Conv2d:
     if layer.dilation[0] != 1 or layer.dilation[-1] != 1:
         raise ValidationError("Conv2d is not supported when dilation is not 1")
 
@@ -67,9 +55,7 @@ def convert_conv2d(
         raise ValidationError("Conv2d is not supported when groups is not 1")
 
     if layer.padding_mode != "zeros":
-        raise ValidationError(
-            "Conv1d is only supported with padding_mode zeros"
-        )
+        raise ValidationError("Conv1d is only supported with padding_mode zeros")
 
     has_bias = layer.bias is not None
     l = gp.formulations.Conv2d(
@@ -82,9 +68,7 @@ def convert_conv2d(
         bias=has_bias,
     )
 
-    l.load_weights(
-        layer.weight.numpy(), layer.bias.numpy() if has_bias else None
-    )
+    l.load_weights(layer.weight.numpy(), layer.bias.numpy() if has_bias else None)
     return l
 
 
@@ -98,9 +82,7 @@ def convert_leaky_relu(m: gp.Container, layer: torch.nn.LeakyReLU):
     )
 
 
-def convert_pool2d(
-    m: gp.Container, layer: torch.nn.MaxPool2d | torch.nn.AvgPool2d
-):
+def convert_pool2d(m: gp.Container, layer: torch.nn.MaxPool2d | torch.nn.AvgPool2d):
     clz = layer.__class__.__name__
     if clz == "MaxPool2d":
         dilation = layer.dilation
@@ -108,14 +90,10 @@ def convert_pool2d(
             dilation = (dilation,)
 
         if dilation[0] != 1 or dilation[-1] != 1:
-            raise ValidationError(
-                "Pool2d is not supported when dilation is not 1"
-            )
+            raise ValidationError("Pool2d is not supported when dilation is not 1")
 
         if layer.return_indices is True:
-            raise ValidationError(
-                "Pool2d is not supported when return_indices is True"
-            )
+            raise ValidationError("Pool2d is not supported when return_indices is True")
 
     if layer.ceil_mode is True:
         raise ValidationError("Pool2d is not supported when ceil_mode is True")
@@ -208,9 +186,7 @@ class TorchSequential:
             self._layer_converters.update(layer_converters)
 
         with torch.no_grad():
-            self.layers = [
-                self._convert_layer(container, layer) for layer in network
-            ]
+            self.layers = [self._convert_layer(container, layer) for layer in network]
 
     def _convert_layer(self, container: gp.Container, layer):
         clz = layer.__class__.__name__
@@ -220,9 +196,7 @@ class TorchSequential:
         l = self._layer_converters[clz](container, layer)
         return l
 
-    def __call__(
-        self, input: gp.Variable
-    ) -> tuple[gp.Variable, list[gp.Equation]]:
+    def __call__(self, input: gp.Variable) -> tuple[gp.Variable, list[gp.Equation]]:
         out = input
         equations = []
         for layer in self.layers:

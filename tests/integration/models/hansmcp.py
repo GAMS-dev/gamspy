@@ -63,9 +63,7 @@ def main():
         domain=[c, h],
         description="demand function share parameter",
     )
-    a = Parameter(
-        m, "a", domain=[c, s], description="activity analysis matrix"
-    )
+    a = Parameter(m, "a", domain=[c, s], description="activity analysis matrix")
 
     alpha[c, h] = d[c, h] / Sum(cc, d[cc, h])
     a[c, s] = data["output", c, s] - data["input", c, s]
@@ -77,12 +75,8 @@ def main():
         domain=c,
         description="commodity price",
     )
-    y = Variable(
-        m, "y", type=VariableType.POSITIVE, domain=s, description="production"
-    )
-    i = Variable(
-        m, "i", type=VariableType.POSITIVE, domain=h, description="income"
-    )
+    y = Variable(m, "y", type=VariableType.POSITIVE, domain=s, description="production")
+    i = Variable(m, "i", type=VariableType.POSITIVE, domain=h, description="income")
 
     mkt = Equation(m, "mkt", domain=c, description="commodity market")
     profit = Equation(m, "profit", domain=s, description="zero profit")
@@ -122,7 +116,7 @@ def main():
         8.5599675080206,
     ]
 
-    for expected, found in zip(correct_result, i.records.level.to_list()):
+    for expected, found in zip(correct_result, i.records.level.to_list(), strict=False):
         assert math.isclose(expected, found)
 
 

@@ -153,9 +153,7 @@ def test_model(data):
         assert os.path.exists(os.path.join(tmpdir, "jacobian.py"))
 
         with open(os.path.join(tmpdir, "jacobian.gms")) as file:
-            assert (
-                "$if not set jacfile $set jacfile jacobian.gdx" in file.read()
-            )
+            assert "$if not set jacfile $set jacfile jacobian.gdx" in file.read()
 
     # Check if the name is reserved
     pytest.raises(ValidationError, Model, m, "set", "", "LP")
@@ -210,15 +208,10 @@ def test_model(data):
         objective=z,
         matches={supply: x, cost: z},
     )
-    assert (
-        test_model5.getDeclaration()
-        == "Model test_model5 / supply.x,cost.z /;"
-    )
+    assert test_model5.getDeclaration() == "Model test_model5 / supply.x,cost.z /;"
 
     # Equations provided as strings
-    pytest.raises(
-        ValueError, Model, m, "test_model5", "", "LP", ["cost", "supply"]
-    )
+    pytest.raises(ValueError, Model, m, "test_model5", "", "LP", ["cost", "supply"])
 
     # Test matches
     test_model6 = Model(
@@ -229,10 +222,7 @@ def test_model(data):
         problem="LP",
         sense="min",
     )
-    assert (
-        test_model6.getDeclaration()
-        == "Model test_model6 / supply,demand.x /;"
-    )
+    assert test_model6.getDeclaration() == "Model test_model6 / supply,demand.x /;"
 
     # Test no name
     _ = Model(
@@ -335,7 +325,7 @@ def test_model(data):
 
 
 def test_feasibility(data):
-    m, canning_plants, markets, distances, capacities, demands = data
+    m, _canning_plants, _markets, distances, capacities, demands = data
     m = Container()
 
     i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -573,9 +563,7 @@ def test_computeInfeasibilities(data):
         "transport_objective_variable",
     ]
 
-    assert [
-        elem.values.tolist() for elem in list(infeasibilities.values())
-    ] == [
+    assert [elem.values.tolist() for elem in list(infeasibilities.values())] == [
         [["san-diego", 1000.0, 0.0, -float("inf"), 600.0, 1.0, 400.0]],
         [
             [
@@ -596,7 +584,7 @@ def test_computeInfeasibilities(data):
 
 
 def test_equations(data):
-    m, canning_plants, markets, distances, capacities, demands = data
+    m, _canning_plants, _markets, _distances, _capacities, _demands = data
     e = Equation(m, "e")
     e.l[...] = -10
     e.lo[...] = 5
@@ -613,7 +601,7 @@ def test_equations(data):
 
 
 def test_equation_listing(data):
-    m, canning_plants, markets, distances, capacities, demands = data
+    m, _canning_plants, markets, _distances, _capacities, _demands = data
     cont = Container()
 
     # Prepare data
@@ -838,12 +826,8 @@ def test_equation_listing(data):
         domain=[i, j],
         description="transport rate: final products",
     )
-    muv = Parameter(
-        cont, name="muv", domain=j, description="transport rate: imports"
-    )
-    mue = Parameter(
-        cont, name="mue", domain=i, description="transport rate: exports"
-    )
+    muv = Parameter(cont, name="muv", domain=j, description="transport rate: imports")
+    mue = Parameter(cont, name="mue", domain=i, description="transport rate: exports")
 
     muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
     muv[j] = (2.48 + 0.0084 * rd["import", j]).where[rd["import", j]]
@@ -987,10 +971,7 @@ def test_equation_listing(data):
 
     mexss.solve(options=Options(equation_listing_limit=100))
     assert len(mexss.getEquationListing().split("\n")) == 74
-    assert (
-        len(mexss.getEquationListing(infeasibility_threshold=2.5).split("\n"))
-        == 2
-    )
+    assert len(mexss.getEquationListing(infeasibility_threshold=2.5).split("\n")) == 2
 
 
 def test_jupyter_behaviour(data):
@@ -1041,7 +1022,7 @@ def test_jupyter_behaviour(data):
 
 
 def test_solve_string_lp(data):
-    m, canning_plants, markets, distances, capacities, demands = data
+    m, _canning_plants, _markets, _distances, _capacities, _demands = data
     i = Set(m, name="i")
     j = Set(m, name="j")
 
@@ -1081,14 +1062,11 @@ def test_solve_string_lp(data):
         sense="min",
         objective=z,
     )
-    assert (
-        test_model._generate_solve_string()
-        == "solve test_model using LP MIN z"
-    )
+    assert test_model._generate_solve_string() == "solve test_model using LP MIN z"
 
 
 def test_solve_string_mcp(data):
-    m, canning_plants, markets, distances, capacities, demands = data
+    m, _canning_plants, _markets, _distances, _capacities, _demands = data
     c = Set(m, "c")
     h = Set(m, "h")
     s = Set(m, "s")
@@ -1147,9 +1125,7 @@ def test_solve_string_mcp(data):
         matches={(mkt, profit, income): i},
     )
 
-    assert (
-        hansen.getDeclaration() == "Model hansen2 / (mkt|profit|income):i /;"
-    )
+    assert hansen.getDeclaration() == "Model hansen2 / (mkt|profit|income):i /;"
 
     # Many to many should fail for now
     with pytest.raises(TypeError):
@@ -1171,7 +1147,7 @@ def test_solve_string_mcp(data):
 
 
 def test_solve_string_cns(data):
-    m, canning_plants, markets, distances, capacities, demands = data
+    m, _canning_plants, _markets, _distances, _capacities, _demands = data
     x = Variable(m, "x")
     f = Equation(m, "f")
     f[...] = x * x == 4
@@ -1190,9 +1166,7 @@ def test_models_with_same_name():
     )
     t = gp.Set(m, "t", records=[f"t{i}" for i in range(1, 20)])
 
-    tiles = gp.Parameter(
-        m, "tiles", domain=t, description="numerical value of tile"
-    )
+    tiles = gp.Parameter(m, "tiles", domain=t, description="numerical value of tile")
 
     tiles[t] = gp.Ord(t)
 
@@ -1253,9 +1227,7 @@ def test_models_with_same_name():
     vdef[slot] = gp.Sum(t, x[slot, t] * tiles[t]) == v[slot]
 
     rotations = gp.Equation(m, "rotations", domain=[slot])
-    rotations[corner[slot]].where[~gp.math.same_as(slot, "a")] = (
-        v[slot] >= v["a"] + 1
-    )
+    rotations[corner[slot]].where[~gp.math.same_as(slot, "a")] = v[slot] >= v["a"] + 1
 
     reflect = gp.Equation(m, "reflect")
     reflect[...] = v["h"] == v["c"] + 1

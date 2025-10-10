@@ -200,9 +200,7 @@ def main():
     reseq = Equation(
         m, name="reseq", domain=k, description="resource restriction on truss"
     )
-    trusscomp = Equation(
-        m, name="trusscomp", description="compliance of truss"
-    )
+    trusscomp = Equation(m, name="trusscomp", description="compliance of truss")
     stiffness = Equation(
         m,
         name="stifness",

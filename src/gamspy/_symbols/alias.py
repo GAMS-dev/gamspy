@@ -84,22 +84,17 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
     ):
         if container is not None and not isinstance(container, gp.Container):
             raise TypeError(
-                "Container must of type `Container` but found"
-                f" {type(container)}"
+                f"Container must of type `Container` but found {type(container)}"
             )
 
         if not isinstance(alias_with, (gp.Set, gp.Alias)):
-            raise TypeError(
-                f"alias_with must be a Set but found {type(alias_with)}"
-            )
+            raise TypeError(f"alias_with must be a Set but found {type(alias_with)}")
 
         if name is None:
             return object.__new__(cls)
         else:
             if not isinstance(name, str):
-                raise TypeError(
-                    f"Name must of type `str` but found {type(name)}"
-                )
+                raise TypeError(f"Name must of type `str` but found {type(name)}")
             try:
                 if not container:
                     container = gp._ctx_managers[
@@ -149,7 +144,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             if name is not None:
                 name = validation.validate_name(name)
             else:
-                name = utils._get_symbol_name(prefix="a")
+                name = container._get_symbol_name(prefix="a")
 
             super().__init__(container, name, alias_with)
 

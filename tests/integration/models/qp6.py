@@ -44,7 +44,7 @@ def main():
     days, stocks = cont.getSymbols(["days", "stocks"])
 
     # Parameters
-    returns, val = cont.getSymbols(["return", "val"])
+    returns, _val = cont.getSymbols(["return", "val"])
 
     # Set
     d = Set(cont, name="d", domain=[days], description="selected days")
@@ -58,9 +58,7 @@ def main():
     mean = Parameter(
         cont, name="mean", domain=stocks, description="mean of daily return"
     )
-    dev = Parameter(
-        cont, name="dev", domain=[stocks, days], description="deviations"
-    )
+    dev = Parameter(cont, name="dev", domain=[stocks, days], description="deviations")
     totmean = Parameter(cont, name="totmean", description="total mean return")
 
     mean[s] = Sum(d, returns[s, d]) / Card(d)

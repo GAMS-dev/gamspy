@@ -24,8 +24,7 @@ from gamspy import Container, Equation, Model, Sense, Sum, Variable
 def main():
     # Define container
     m = Container(
-        load_from=str(Path(__file__).parent.absolute())
-        + "/StochDedicationBL.gdx",
+        load_from=str(Path(__file__).parent.absolute()) + "/StochDedicationBL.gdx",
     )
 
     # Aliases
@@ -56,9 +55,7 @@ def main():
     )
 
     # Variables
-    x = Variable(
-        m, "x", domain=i, type="Positive", description="Face value purchased"
-    )
+    x = Variable(m, "x", domain=i, type="Positive", description="Face value purchased")
     surplus = Variable(
         m,
         "surplus",

@@ -1,5 +1,6 @@
 import gamspy.formulations.nn as nn
 import gamspy.formulations.piecewise as piecewise
+import gamspy.formulations.utils as utils
 from gamspy.formulations.ml import (
     DecisionTreeStruct,
     GradientBoosting,
@@ -22,21 +23,22 @@ from gamspy.formulations.piecewise import (
 from gamspy.formulations.shape import flatten_dims
 
 __all__ = [
-    "nn",
-    "ml",
-    "piecewise",
+    "AvgPool2d",
     "Conv1d",
     "Conv2d",
+    "DecisionTreeStruct",
+    "GradientBoosting",
+    "Linear",
     "MaxPool2d",
     "MinPool2d",
-    "AvgPool2d",
-    "Linear",
+    "RandomForest",
+    "RegressionTree",
+    "TorchSequential",
     "flatten_dims",
+    "ml",
+    "nn",
+    "piecewise",
     "pwl_convexity_formulation",
     "pwl_interval_formulation",
-    "RegressionTree",
-    "DecisionTreeStruct",
-    "TorchSequential",
-    "RandomForest",
-    "GradientBoosting",
+    "utils",
 ]

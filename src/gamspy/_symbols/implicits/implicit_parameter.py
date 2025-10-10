@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     import pandas as pd
 
     from gamspy import (
+        Alias,
         Equation,
         Parameter,
         Set,
@@ -68,7 +69,7 @@ SET_ATTR_MAPPING = {
 class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __init__(
         self,
-        parent: Parameter | Variable | Equation,
+        parent: Set | Alias | Parameter | Variable | Equation,
         name: str,
         domain: list[Set | str] = [],
         records: Any | None = None,

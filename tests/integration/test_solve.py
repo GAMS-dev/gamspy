@@ -586,9 +586,7 @@ def test_records(data):
     assert supply.up["san-diego"].records["upper"].squeeze() == 600.0
     assert supply.scale["san-diego"].records["scale"].squeeze() == 1.0
     assert supply.range["san-diego"].records["range"].squeeze() == float("inf")
-    assert supply.slacklo["san-diego"].records["slacklo"].squeeze() == float(
-        "inf"
-    )
+    assert supply.slacklo["san-diego"].records["slacklo"].squeeze() == float("inf")
     assert supply.slackup["san-diego"].records["slackup"].squeeze() == 50.0
     assert supply.slack["san-diego"].records["slack"].squeeze() == 50.0
     assert supply.infeas["san-diego"].records is None
@@ -691,8 +689,7 @@ def test_records(data):
         ["0", "1", "0", "1", 0.07667355102742435],
     ]
     assert (
-        e1.infeas["0", "1", "0", "1"].records["infeas"].squeeze()
-        == 0.07667355102742435
+        e1.infeas["0", "1", "0", "1"].records["infeas"].squeeze() == 0.07667355102742435
     )
 
     assert v1.l[i1, :, i3, i4].records.values.tolist() == [
@@ -908,9 +905,7 @@ def test_solve(data):
         objective=z,
     )
 
-    freeLinks = Set(
-        m, "freeLinks", domain=[i, j], records=[("seattle", "chicago")]
-    )
+    freeLinks = Set(m, "freeLinks", domain=[i, j], records=[("seattle", "chicago")])
 
     with pytest.raises(ValidationError):
         _ = Model(
@@ -1025,7 +1020,7 @@ def test_solve(data):
     m = Container()
     cost = Equation(m, "cost")
     model = Model(m, "dummy", equations=[cost], problem="LP", sense="min")
-    pytest.raises(Exception, model.solve)
+    pytest.raises(ValidationError, model.solve)
 
 
 @pytest.mark.skipif(
@@ -1285,9 +1280,7 @@ def test_ellipsis(data):
     domain = validation._expand_ellipsis_slice(["a", "b", "c"], ["a", ...])
     assert domain == ["a", "b", "c"]
 
-    domain = validation._expand_ellipsis_slice(
-        ["a", "b", "c"], ["a", ..., "c"]
-    )
+    domain = validation._expand_ellipsis_slice(["a", "b", "c"], ["a", ..., "c"])
     assert domain == ["a", "b", "c"]
 
     domain = validation._expand_ellipsis_slice(["a", "b", "c"], [..., "c"])
@@ -1739,9 +1732,7 @@ def test_marking_updated_symbols(data):
 
     y_recs = np.array(weight_data)
 
-    y = Parameter(
-        m, name="y", domain=[set_15], records=y_recs, uels_on_axes=True
-    )
+    y = Parameter(m, name="y", domain=[set_15], records=y_recs, uels_on_axes=True)
 
     w = Variable(m, name="w", domain=[set_2])
 
@@ -1772,7 +1763,7 @@ def test_multiprocessing():
     expected_values = [153.675, 204.89999999999998, 256.125, 307.35]
     with concurrent.futures.ProcessPoolExecutor() as executor:
         for expected, objective in zip(
-            expected_values, executor.map(transport, f_values)
+            expected_values, executor.map(transport, f_values), strict=False
         ):
             assert math.isclose(expected, objective)
 
@@ -1782,7 +1773,9 @@ def test_multiprocessing_with_ctx():
     expected_values = [153.675, 204.89999999999998, 256.125, 307.35]
     with concurrent.futures.ProcessPoolExecutor() as executor:
         for expected, objective in zip(
-            expected_values, executor.map(transport_with_ctx, f_values)
+            expected_values,
+            executor.map(transport_with_ctx, f_values),
+            strict=False,
         ):
             assert math.isclose(expected, objective)
 
@@ -1794,7 +1787,9 @@ def test_threading_with_ctx():
     expected_values = [153.675, 204.89999999999998, 256.125, 307.35]
     with concurrent.futures.ThreadPoolExecutor() as executor:
         for expected, objective in zip(
-            expected_values, executor.map(transport_with_ctx, f_values)
+            expected_values,
+            executor.map(transport_with_ctx, f_values),
+            strict=False,
         ):
             assert math.isclose(expected, objective)
 
@@ -1879,9 +1874,7 @@ def test_emp():
     cterms = a.toList()
 
     # Agent 0
-    oterms[0] = (
-        beta / 2 * gamspy_math.sqr(x["a0", "0"]) - alpha * x["a0", "0"]
-    ) + (
+    oterms[0] = (beta / 2 * gamspy_math.sqr(x["a0", "0"]) - alpha * x["a0", "0"]) + (
         1 / 2 * gamspy_math.sqr(x["a0", "1"])
         + 3 * x["a0", "1"] * x["a1", "1"]
         - 4 * x["a0", "1"]
@@ -1897,14 +1890,10 @@ def test_emp():
     cterms[1] = x["a1", "1"]
 
     defobj = Equation(m, name="defobj", domain=a)
-    defobj[a] = obj[a] == sum(
-        o.where[a.sameAs(f"a{i}")] for i, o in enumerate(oterms)
-    )
+    defobj[a] = obj[a] == sum(o.where[a.sameAs(f"a{i}")] for i, o in enumerate(oterms))
 
     cons = Equation(m, name="cons", domain=a)
-    cons[a] = (
-        sum(c.where[a.sameAs(f"a{i}")] for i, c in enumerate(cterms)) >= 0
-    )
+    cons[a] = sum(c.where[a.sameAs(f"a{i}")] for i, c in enumerate(cterms)) >= 0
 
     x.lo["a0", "0"] = 0
     x.fx["a1", "0"] = 0
@@ -1929,9 +1918,7 @@ def test_subsolver_options():
     cterms = a.toList()
 
     # Agent 0
-    oterms[0] = (
-        beta / 2 * gamspy_math.sqr(x["a0", "0"]) - alpha * x["a0", "0"]
-    ) + (
+    oterms[0] = (beta / 2 * gamspy_math.sqr(x["a0", "0"]) - alpha * x["a0", "0"]) + (
         1 / 2 * gamspy_math.sqr(x["a0", "1"])
         + 3 * x["a0", "1"] * x["a1", "1"]
         - 4 * x["a0", "1"]
@@ -1947,14 +1934,10 @@ def test_subsolver_options():
     cterms[1] = x["a1", "1"]
 
     defobj = Equation(m, name="defobj", domain=a)
-    defobj[a] = obj[a] == sum(
-        o.where[a.sameAs(f"a{i}")] for i, o in enumerate(oterms)
-    )
+    defobj[a] = obj[a] == sum(o.where[a.sameAs(f"a{i}")] for i, o in enumerate(oterms))
 
     cons = Equation(m, name="cons", domain=a)
-    cons[a] = (
-        sum(c.where[a.sameAs(f"a{i}")] for i, c in enumerate(cterms)) >= 0
-    )
+    cons[a] = sum(c.where[a.sameAs(f"a{i}")] for i, c in enumerate(cterms)) >= 0
 
     x.lo["a0", "0"] = 0
     x.fx["a1", "0"] = 0

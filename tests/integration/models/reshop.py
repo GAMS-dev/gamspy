@@ -36,21 +36,15 @@ def main():
 
     # Agent 1
     oterms[1] = x["a1", "0"] + (
-        1 / 2 * gpm.sqr(x["a1", "1"])
-        + x["a0", "1"] * x["a1", "1"]
-        - 3 * x["a1", "1"]
+        1 / 2 * gpm.sqr(x["a1", "1"]) + x["a0", "1"] * x["a1", "1"] - 3 * x["a1", "1"]
     )
     cterms[1] = x["a1", "1"]
 
     defobj = Equation(m, name="defobj", domain=a)
-    defobj[a] = obj[a] == sum(
-        o.where[a.sameAs(f"a{i}")] for i, o in enumerate(oterms)
-    )
+    defobj[a] = obj[a] == sum(o.where[a.sameAs(f"a{i}")] for i, o in enumerate(oterms))
 
     cons = Equation(m, name="cons", domain=a)
-    cons[a] = sum(
-        c.where[a.sameAs(f"a{i}")] for i, c in enumerate(cterms)
-    ) >= Number(0)
+    cons[a] = sum(c.where[a.sameAs(f"a{i}")] for i, c in enumerate(cterms)) >= Number(0)
 
     x.lo["a0", "0"] = 0
     x.fx["a1", "0"] = 0

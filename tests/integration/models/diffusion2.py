@@ -528,9 +528,7 @@ def main():
 
     # VARIABLES #
     # Model description
-    t = Variable(
-        m, name="t", domain=[x, y], description="field of temperature"
-    )
+    t = Variable(m, name="t", domain=[x, y], description="field of temperature")
     Q = Variable(m, name="Q", description="temperature on boundaries")
 
     # Variable bounds

@@ -64,24 +64,19 @@ def main():
     x = Variable(
         m,
         name="x",
-        description=(
-            "x-coordinate of lower-left corner of square (=fx(t('1')))"
-        ),
+        description=("x-coordinate of lower-left corner of square (=fx(t('1')))"),
     )
     y = Variable(
         m,
         name="y",
-        description=(
-            "y-coordinate of lower-left corner of square (=fy(t('1')))"
-        ),
+        description=("y-coordinate of lower-left corner of square (=fy(t('1')))"),
     )
     a = Variable(
         m,
         name="a",
         type="Positive",
         description=(
-            "horizontal distance between lower-left and lower-right corner of"
-            " square"
+            "horizontal distance between lower-left and lower-right corner of square"
         ),
     )
     b = Variable(
@@ -89,8 +84,7 @@ def main():
         name="b",
         type="Positive",
         description=(
-            "vertical distance between lower-left and lower-right corner of"
-            " square"
+            "vertical distance between lower-left and lower-right corner of square"
         ),
     )
 
@@ -151,9 +145,9 @@ def main():
 
     square.solve()
 
-    assert math.isclose(
-        square.objective_value, 1.600875406785, rel_tol=1e-2
-    ), square.objective_value
+    assert math.isclose(square.objective_value, 1.600875406785, rel_tol=1e-2), (
+        square.objective_value
+    )
 
 
 if __name__ == "__main__":

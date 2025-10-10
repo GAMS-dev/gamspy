@@ -150,9 +150,7 @@ def test_variable_string(data):
         "v3",
         "positive",
         ["*", "*"],
-        records=pd.DataFrame(
-            [("seattle", "san-diego"), ("chicago", "madison")]
-        ),
+        records=pd.DataFrame([("seattle", "san-diego"), ("chicago", "madison")]),
     )
     assert v3.getDeclaration() == "positive Variable v3(*,*);"
 
@@ -211,44 +209,28 @@ def test_variable_attributes(data):
     assert hasattr(pi, "up") and isinstance(pi.up, implicits.ImplicitParameter)
     assert pi.up.gamsRepr() == "pi.up"
 
-    assert hasattr(pi, "scale") and isinstance(
-        pi.scale, implicits.ImplicitParameter
-    )
+    assert hasattr(pi, "scale") and isinstance(pi.scale, implicits.ImplicitParameter)
     assert pi.scale.gamsRepr() == "pi.scale"
 
     assert hasattr(pi, "fx") and isinstance(pi.fx, implicits.ImplicitParameter)
     assert pi.fx.gamsRepr() == "pi.fx"
 
-    assert hasattr(pi, "prior") and isinstance(
-        pi.prior, implicits.ImplicitParameter
-    )
+    assert hasattr(pi, "prior") and isinstance(pi.prior, implicits.ImplicitParameter)
     assert pi.prior.gamsRepr() == "pi.prior"
 
-    assert hasattr(pi, "stage") and isinstance(
-        pi.stage, implicits.ImplicitParameter
-    )
+    assert hasattr(pi, "stage") and isinstance(pi.stage, implicits.ImplicitParameter)
     assert pi.stage.gamsRepr() == "pi.stage"
 
     i = Set(m, name="i", records=["bla", "damn"])
     test = Variable(m, "test", domain=[i])
-    assert hasattr(test, "l") and isinstance(
-        test.l, implicits.ImplicitParameter
-    )
-    assert hasattr(test, "m") and isinstance(
-        test.m, implicits.ImplicitParameter
-    )
-    assert hasattr(test, "lo") and isinstance(
-        test.lo, implicits.ImplicitParameter
-    )
-    assert hasattr(test, "up") and isinstance(
-        test.up, implicits.ImplicitParameter
-    )
+    assert hasattr(test, "l") and isinstance(test.l, implicits.ImplicitParameter)
+    assert hasattr(test, "m") and isinstance(test.m, implicits.ImplicitParameter)
+    assert hasattr(test, "lo") and isinstance(test.lo, implicits.ImplicitParameter)
+    assert hasattr(test, "up") and isinstance(test.up, implicits.ImplicitParameter)
     assert hasattr(test, "scale") and isinstance(
         test.scale, implicits.ImplicitParameter
     )
-    assert hasattr(test, "fx") and isinstance(
-        test.fx, implicits.ImplicitParameter
-    )
+    assert hasattr(test, "fx") and isinstance(test.fx, implicits.ImplicitParameter)
     assert hasattr(test, "prior") and isinstance(
         test.prior, implicits.ImplicitParameter
     )
@@ -479,21 +461,11 @@ def test_variable_listing(data):
             "transport_objective_variable\n                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)\n       -1       transport_objective\n",
         ]
     )
+    assert len(x.getVariableListing(filters=[["seattle"], []]).split("\n\n")) == 3
     assert (
-        len(x.getVariableListing(filters=[["seattle"], []]).split("\n\n")) == 3
+        len(x.getVariableListing(filters=[["seattle"], ["topeka"]]).split("\n\n")) == 1
     )
-    assert (
-        len(
-            x.getVariableListing(filters=[["seattle"], ["topeka"]]).split(
-                "\n\n"
-            )
-        )
-        == 1
-    )
-    assert (
-        len(x.getVariableListing(filters=[["seattle"], []], n=2).split("\n\n"))
-        == 2
-    )
+    assert len(x.getVariableListing(filters=[["seattle"], []], n=2).split("\n\n")) == 2
 
     transport2 = Model(
         m,

@@ -73,12 +73,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         cls,
         container: Container,
         name: str,
-        domain: Sequence[Set | Alias | str]
-        | Set
-        | Alias
-        | Dim
-        | str
-        | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
         records: Any | None = None,
         description: str = "",
     ):
@@ -132,12 +127,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         cls,
         container: Container | None = None,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str]
-        | Set
-        | Alias
-        | Dim
-        | str
-        | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
@@ -148,17 +138,14 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     ):
         if container is not None and not isinstance(container, gp.Container):
             raise TypeError(
-                "Container must of type `Container` but found"
-                f" {type(container)}"
+                f"Container must of type `Container` but found {type(container)}"
             )
 
         if name is None:
             return object.__new__(cls)
         else:
             if not isinstance(name, str):
-                raise TypeError(
-                    f"Name must of type `str` but found {type(name)}"
-                )
+                raise TypeError(f"Name must of type `str` but found {type(name)}")
 
             try:
                 if not container:
@@ -181,12 +168,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self,
         container: Container | None = None,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str]
-        | Set
-        | Alias
-        | Dim
-        | str
-        | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
@@ -225,10 +207,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             has_symbol = True
 
         if has_symbol:
-            if any(
-                d1 != d2
-                for d1, d2 in itertools.zip_longest(self._domain, domain)
-            ):
+            if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
                     " domains are equal"
@@ -262,9 +241,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                         (os.getpid(), threading.get_native_id())
                     ]
                 except KeyError as e:
-                    raise ValidationError(
-                        "Parameter requires a container."
-                    ) from e
+                    raise ValidationError("Parameter requires a container.") from e
             assert container is not None
 
             if name is not None:
@@ -273,7 +250,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 if is_miro_input or is_miro_output:
                     name = name.lower()  # type: ignore
             else:
-                name = utils._get_symbol_name(prefix="p")
+                name = container._get_symbol_name(prefix="p")
 
             previous_state = container._options.miro_protect
             container._options.miro_protect = False
@@ -519,7 +496,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         """
         Main convenience method to set standard pandas.DataFrame formatted
         records. If uels_on_axes=True setRecords will assume that all domain
-        information is contained in the axes of the pandas object – data will be
+        information is contained in the axes of the pandas object. Data will be
         flattened (if necessary).
 
         Parameters

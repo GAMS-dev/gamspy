@@ -60,9 +60,7 @@ class ImplicitSymbol(ABC):
         permutation_indices_to_del = []
         for i, d in enumerate(bare_domain):
             if isinstance(d, str):
-                loc_scalar = (
-                    i if self.permutation is None else self.permutation[i]
-                )
+                loc_scalar = i if self.permutation is None else self.permutation[i]
                 scalars.append((loc_scalar, d))
                 permutation_indices_to_del.append(i)
             else:
@@ -82,7 +80,9 @@ class ImplicitSymbol(ABC):
         self._scalar_domains = scalars
 
     def fix_permutation(self):
-        numbers_pos = list(zip(self.permutation, range(len(self.permutation))))
+        numbers_pos = list(
+            zip(self.permutation, range(len(self.permutation)), strict=False)
+        )
         numbers_pos = sorted(numbers_pos, key=lambda k: k[0])
         new_perm = [-1] * len(self.permutation)
         for i, (_, pos) in enumerate(numbers_pos):
@@ -114,9 +114,7 @@ class ImplicitSymbol(ABC):
                 if isinstance(elem, (gp.Set, gp.Alias, ImplicitSet)):
                     set_strs.append(elem.latexRepr())
                 elif isinstance(elem, str):
-                    set_strs.append(
-                        f"\\textquotesingle {elem} \\textquotesingle"
-                    )
+                    set_strs.append(f"\\textquotesingle {elem} \\textquotesingle")
 
             domain_str = "{" + ",".join(set_strs) + "}"
             representation = f"{representation}_{domain_str}"
@@ -146,9 +144,7 @@ class ImplicitSymbol(ABC):
             In case the symbol is scalar.
         """
         if not self.domain:
-            raise ValidationError(
-                "Sum operation is not possible on scalar parameters."
-            )
+            raise ValidationError("Sum operation is not possible on scalar parameters.")
 
         if not indices:
             indices = self.domain
@@ -306,9 +302,7 @@ class ImplicitSymbol(ABC):
             In case the symbol is scalar.
         """
         if not self.domain:
-            raise ValidationError(
-                "Sor operation is not possible on scalar parameters."
-            )
+            raise ValidationError("Sor operation is not possible on scalar parameters.")
 
         if not indices:
             indices = self.domain

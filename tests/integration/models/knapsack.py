@@ -33,9 +33,7 @@ def main():
     p = Parameter(m, "p", description="profits", domain=i)
     w = Parameter(m, "w", description="weights", domain=i)
     c = Parameter(m, "c", description="capacity")
-    x = Variable(
-        m, "x", domain=i, description="chosen", type=VariableType.BINARY
-    )
+    x = Variable(m, "x", domain=i, description="chosen", type=VariableType.BINARY)
 
     cap_restr = Equation(m, name="capacity_restriction")
     cap_restr[...] = Sum(i, w[i] * x[i]) <= c
@@ -76,12 +74,10 @@ def main():
     # Example instance taken from
     # http://artemisa.unicauca.edu.co/~johnyortega/instances_01_KP/
     # and also available at https://github.com/JordiHOFC/knapsackproblemboolean
-    load_instance_from_file(
-        str(Path(__file__).parent.absolute()) + "/f1_l-d_kp_10_269"
-    )
+    load_instance_from_file(str(Path(__file__).parent.absolute()) + "/f1_l-d_kp_10_269")
     i.setRecords(items)
-    p.setRecords(zip(items, profits))
-    w.setRecords(zip(items, weights))
+    p.setRecords(zip(items, profits, strict=False))
+    w.setRecords(zip(items, weights, strict=False))
     c.setRecords(capacity)
 
     # Run solve and display results

@@ -237,10 +237,7 @@ def _generate_dims(
 
 def trace(
     x: (
-        Parameter
-        | implicits.ImplicitParameter
-        | Variable
-        | implicits.ImplicitVariable
+        Parameter | implicits.ImplicitParameter | Variable | implicits.ImplicitVariable
     ),
     axis1: int = 0,
     axis2: int = 1,
@@ -295,10 +292,7 @@ def trace(
 
 def permute(
     x: (
-        Parameter
-        | implicits.ImplicitParameter
-        | Variable
-        | implicits.ImplicitVariable
+        Parameter | implicits.ImplicitParameter | Variable | implicits.ImplicitVariable
     ),
     dims: list[int],
 ) -> implicits.ImplicitVariable | implicits.ImplicitParameter:
@@ -340,9 +334,7 @@ def permute(
 
     dims_len = len(dims)
     if min(dims) != 0 or max(dims) != dims_len - 1:
-        raise ValidationError(
-            "Permute requires the order of indices from 0 to n-1"
-        )
+        raise ValidationError("Permute requires the order of indices from 0 to n-1")
 
     if len(set(dims)) != dims_len:
         raise ValidationError("Permute dimensions must be unique")
@@ -396,14 +388,12 @@ def _validate_matrix_mult_dims(left, right):
 
     if left_len == 0:
         raise ValidationError(
-            "Matrix multiplication requires at least 1 domain, left side"
-            " is a scalar"
+            "Matrix multiplication requires at least 1 domain, left side is a scalar"
         )
 
     if right_len == 0:
         raise ValidationError(
-            "Matrix multiplication requires at least 1 domain, right side"
-            " is a scalar"
+            "Matrix multiplication requires at least 1 domain, right side is a scalar"
         )
 
     lr = (left_len, right_len)
@@ -434,8 +424,7 @@ def _validate_matrix_mult_dims(left, right):
 
         sum_domain = left.domain[1]
         while (
-            sum_domain in (left_domain, right_domain)
-            or sum_domain in controlled_domain
+            sum_domain in (left_domain, right_domain) or sum_domain in controlled_domain
         ):
             sum_domain = next_alias(sum_domain)
 
@@ -493,9 +482,7 @@ def _validate_matrix_mult_dims(left, right):
             raise ValidationError(dim_no_match_err)
 
         sum_domain = left.domain[-1]
-        while (
-            sum_domain in left.domain[:-1] or sum_domain in controlled_domain
-        ):
+        while sum_domain in left.domain[:-1] or sum_domain in controlled_domain:
             sum_domain = next_alias(sum_domain)
 
         return (
@@ -515,7 +502,7 @@ def _validate_matrix_mult_dims(left, right):
             if len(batch_dim_1) != len(batch_dim_2):
                 raise ValidationError("Batch dimensions do not match")
 
-            if any([x != y for x, y in zip(batch_dim_1, batch_dim_2)]):
+            if any([x != y for x, y in zip(batch_dim_1, batch_dim_2, strict=False)]):
                 raise ValidationError("Batch dimensions do not match")
 
         left_domain = left.domain[-2]

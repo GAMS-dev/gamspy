@@ -88,9 +88,7 @@ def test_pwl_indicator():
     b3 = gp.Variable(m, name="b3", type="binary")
     x5 = gp.Variable(m, name="x5")
 
-    pytest.raises(
-        ValidationError, piecewise._indicator, "indicator_var", 0, x <= 10
-    )
+    pytest.raises(ValidationError, piecewise._indicator, "indicator_var", 0, x <= 10)
 
     pytest.raises(ValidationError, piecewise._indicator, b2, 0, x <= 10)
     pytest.raises(ValidationError, piecewise._indicator, b, -1, x <= 10)
@@ -185,8 +183,8 @@ def test_pwl_with_sos2(data):
     x = data["x"]
     x_points = data["x_points"]
     y_points = data["y_points"]
-    y, eqs = pwl_convexity_formulation(x, x_points, y_points, using="sos2")
-    y2, eqs2 = pwl_convexity_formulation(
+    y, _eqs = pwl_convexity_formulation(x, x_points, y_points, using="sos2")
+    y2, _eqs2 = pwl_convexity_formulation(
         x,
         x_points,
         y_points,
@@ -223,9 +221,9 @@ def test_pwl_with_domain(data):
     x2 = data["x2"]
     x_points = data["x_points"]
     y_points = data["y_points"]
-    y, eqs = pwl_convexity_formulation(x2, x_points, y_points, using="binary")
-    y2, eqs2 = pwl_convexity_formulation(x2, x_points, y_points, using="sos2")
-    y3, eqs3 = pwl_interval_formulation(x2, x_points, y_points)
+    y, _eqs = pwl_convexity_formulation(x2, x_points, y_points, using="binary")
+    y2, _eqs2 = pwl_convexity_formulation(x2, x_points, y_points, using="sos2")
+    y3, _eqs3 = pwl_interval_formulation(x2, x_points, y_points)
 
     assert len(y.domain) == len(x2.domain)
     assert len(y2.domain) == len(x2.domain)
@@ -236,22 +234,22 @@ def test_pwl_with_none(data):
     x = data["x"]
     x_points = [1, None, 2, 3]
     y_points = [10, None, 20, 45]
-    y, eqs = pwl_convexity_formulation(x, x_points, y_points)
-    y2, eqs2 = pwl_interval_formulation(x, x_points, y_points)
+    _y, _eqs = pwl_convexity_formulation(x, x_points, y_points)
+    _y2, _eqs2 = pwl_interval_formulation(x, x_points, y_points)
 
 
 def test_pwl_finished_start_with_disc(data):
     x = data["x"]
     x_points = [1, 1, None, 2, 3, 3]
     y_points = [0, 10, None, 20, 45, 0]
-    y, eqs = pwl_convexity_formulation(
+    _y, _eqs = pwl_convexity_formulation(
         x,
         x_points,
         y_points,
         bound_left=False,
         bound_right=False,
     )
-    y2, eqs2 = pwl_interval_formulation(
+    _y2, _eqs2 = pwl_interval_formulation(
         x,
         x_points,
         y_points,
