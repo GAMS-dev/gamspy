@@ -146,7 +146,7 @@ The following is an example of indexed equation definitions, again taken from th
 `trnsport.py <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/trnsport/trnsport.py>`_ model. Besides the already introduced sets ``i``
 and ``j``, parameters ``a`` and ``b`` are used as well as the :meth:`Sum<gamspy.Sum>` operator::
 
-    from gamspy Parameter, Sum
+    from gamspy import Parameter, Sum
 
     a = Parameter(m, domain=i, records=[["seattle", 350], ["san-diego", 600]])
     b = Parameter(m, domain=j, records=[["new-york", 325], ["chicago", 300], ["topeka", 275]])
