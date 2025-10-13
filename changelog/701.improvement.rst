@@ -1,1 +1,0 @@
-Show licensed solvers in the output of "gamspy show license"

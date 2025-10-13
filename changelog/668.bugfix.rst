@@ -1,1 +1,0 @@
-Fix synchronization bug in expert sync mode when there are other symbols defined after setting the synchronize flag.
