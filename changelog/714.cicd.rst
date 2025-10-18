@@ -1,0 +1,1 @@
+Add a new scheduled job to automatically upgrade pre-commit dependency versions.
