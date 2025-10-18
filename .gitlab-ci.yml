@@ -3,6 +3,7 @@ default:
     - linux
 
 stages:
+  - update
   - precommit
   - cli
   - test
@@ -47,6 +48,7 @@ variables:
 
 # This job updates pre-commit hooks on a schedule
 pre-commit-autoupdate:
+  stage: update
   image: python:3.13
   script:
     - pip install pre-commit
