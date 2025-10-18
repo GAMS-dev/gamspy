@@ -1,0 +1,1 @@
+Update docs for softplus activation function.

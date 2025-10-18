@@ -70,6 +70,7 @@ NN Formulation                                                                  
 :meth:`relu_with_sos1_var <gamspy.math.relu_with_sos1_var>`                            |mip-badge|
 :meth:`leaky_relu_with_binary_var <gamspy.math.leaky_relu_with_binary_var>`            |mip-badge|
 :meth:`softmax <gamspy.math.softmax>`                                                  |nlp-badge|
+:meth:`softplus <gamspy.math.softplus>`                                                |nlp-badge|
 :meth:`log_softmax <gamspy.math.log_softmax>`                                          |nlp-badge|
 :meth:`tanh <gamspy.math.tanh>`                                                        |nlp-badge|
 :meth:`sigmoid <gamspy.math.sigmoid>`                                                  |nlp-badge|

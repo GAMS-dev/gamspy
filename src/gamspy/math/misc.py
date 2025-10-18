@@ -736,7 +736,7 @@ def lse_max_sc(t, *xs) -> MathOp:
     if len(xs) < 1:
         raise ValidationError("lse_max_sc requires at least 1 x")
 
-    return MathOp("lseMaxSc", xs + (t,))
+    return MathOp("lseMaxSc", (t,) + xs)
 
 
 def lse_min(*xs) -> MathOp:
