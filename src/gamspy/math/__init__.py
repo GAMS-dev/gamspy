@@ -7,6 +7,7 @@ from gamspy.math.activation import (
     relu_with_complementarity_var,
     relu_with_sos1_var,
     softmax,
+    softplus,
 )
 from gamspy.math.log_power import (
     cv_power,
@@ -195,6 +196,7 @@ __all__ = [
     "sllog10",
     "slrec",
     "softmax",
+    "softplus",
     "sqexp",
     "sqlog10",
     "sqr",
