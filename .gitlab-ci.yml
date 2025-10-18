@@ -45,6 +45,38 @@ variables:
     value: $PYPI_PASSWORD
     description: "Password for PyPI"
 
+# This job updates pre-commit hooks on a schedule
+pre-commit-autoupdate:
+  image: python:3.13
+  script:
+    - pip install pre-commit
+    - pre-commit autoupdate
+
+    # Check if the autoupdate actually changed the file
+    - |
+      if git diff --quiet .pre-commit-config.yaml; then
+        echo "No pre-commit updates found. Exiting."
+        exit 0
+      fi
+
+    # If changes are found, configure git and push
+    - echo "Updates found. Committing and pushing..."
+    - git config --global user.name "GitLab Bot"
+    - git config --global user.email "gitlab-bot@${CI_SERVER_HOST}"
+    
+    # Use the Access Token to set the remote URL
+    - git remote set-url origin "https://gitlab-ci-token:${PRECOMMIT_UPGRADE_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+    
+    # Checkout the branch the schedule is targeting (e.g., 'develop')
+    - git checkout $CI_COMMIT_REF_NAME
+    - git add .pre-commit-config.yaml
+    
+    # Add [skip ci] to the commit message to prevent this push from triggering another pipeline
+    - git commit -m "[CHORE] Automatically update pre-commit hooks"
+    - git push origin HEAD:$CI_COMMIT_REF_NAME
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+
 
 include: ['ci/.precommit-check.yml',
           'ci/.cli.yml',
