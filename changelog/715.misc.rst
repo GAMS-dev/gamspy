@@ -1,0 +1,1 @@
+Do not install extras of gamsapi and add a direct dependency to pandas.
