@@ -1,0 +1,1 @@
+Add stdcge (a standard cge model) to the test suite.
