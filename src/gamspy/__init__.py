@@ -50,7 +50,7 @@ from gamspy._symbols import (
 
 from .version import __version__
 
-_ctx_managers: dict[tuple[int, int], Container] = dict()
+_ctx_managers: dict[tuple[int, int], Container] = {}
 _set_default_options()
 
 __all__ = [

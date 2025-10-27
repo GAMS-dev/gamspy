@@ -111,7 +111,7 @@ class UniverseAlias(gt.UniverseAlias):
         self.container._synch_with_gams()
 
     def _serialize(self) -> dict:
-        return dict()
+        return {}
 
     def _deserialize(self, info: dict) -> None: ...
 

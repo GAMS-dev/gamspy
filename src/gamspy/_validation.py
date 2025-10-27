@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import io
 import os
 import re
 from collections.abc import Iterable, Sequence
+from types import EllipsisType
 from typing import TYPE_CHECKING, Literal
 
 from gams.core.opt import (
@@ -26,10 +26,11 @@ from gamspy._config import get_option
 from gamspy._model import Problem, Sense
 from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy._symbols.symbol import Symbol
-from gamspy._types import EllipsisType
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    import io
+
     from gamspy import Alias, Equation, Model, Parameter, Set, Variable
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import (
@@ -37,7 +38,6 @@ if TYPE_CHECKING:
         ImplicitSet,
         ImplicitVariable,
     )
-    from gamspy._types import EllipsisType
 
 NAME_MATCH_REGEX = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]{0,62}$")
 
@@ -301,7 +301,7 @@ def validate_domain(
     | ImplicitParameter
     | ImplicitVariable
     | Operation,
-    indices: EllipsisType | slice | Set | Alias | str | Iterable | ImplicitSet,
+    indices: EllipsisType | slice | Set | Alias | str | int | Iterable | ImplicitSet,
 ):
     domain = utils._to_list(indices)
     domain = [str(elem) if type(elem) is int else elem for elem in domain]

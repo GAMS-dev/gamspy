@@ -80,11 +80,11 @@ option js<js2; jd(js) = yes;
 jc(j) = yes;
 jc(jd) = no;
 
-xb.lo(jb)       =xc.lo(jb);  xb.up(jb)       =xc.up(jb);  xb.prior(jb)       =xc.scale(jb); 
-xi.lo(ji)       =xc.lo(ji);  xi.up(ji)       =xc.up(ji);  xi.prior(ji)       =xc.scale(ji); 
-xsc.lo(jsc)     =xc.lo(jsc); xsc.up(jsc)     =xc.up(jsc); xsc.prior(jsc)     =xc.scale(jsc); 
-xsi.lo(jsi)     =xc.lo(jsi); xsi.up(jsi)     =xc.up(jsi); xsi.prior(jsi)     =xc.scale(jsi); 
-xs1.lo(js1(s,j))=xc.lo(j);   xs1.up(js1(s,j))=xc.up(j);   xs1.prior(js1(s,j))=xc.scale(j); 
+xb.lo(jb)       =xc.lo(jb);  xb.up(jb)       =xc.up(jb);  xb.prior(jb)       =xc.scale(jb);
+xi.lo(ji)       =xc.lo(ji);  xi.up(ji)       =xc.up(ji);  xi.prior(ji)       =xc.scale(ji);
+xsc.lo(jsc)     =xc.lo(jsc); xsc.up(jsc)     =xc.up(jsc); xsc.prior(jsc)     =xc.scale(jsc);
+xsi.lo(jsi)     =xc.lo(jsi); xsi.up(jsi)     =xc.up(jsi); xsi.prior(jsi)     =xc.scale(jsi);
+xs1.lo(js1(s,j))=xc.lo(j);   xs1.up(js1(s,j))=xc.up(j);   xs1.prior(js1(s,j))=xc.scale(j);
 xs2.lo(js2(s,j))=xc.lo(j);   xs2.up(js2(s,j))=xc.up(j);   xs2.prior(js2(s,j))=xc.scale(j);
 
 option ij<A;

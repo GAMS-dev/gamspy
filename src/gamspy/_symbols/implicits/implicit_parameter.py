@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import gamspy._algebra.expression as expression
@@ -17,6 +16,9 @@ from gamspy.exceptions import ValidationError
 from gamspy.math.matrix import permute
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from types import EllipsisType
+
     import pandas as pd
 
     from gamspy import (
@@ -28,7 +30,6 @@ if TYPE_CHECKING:
     )
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
-    from gamspy._types import EllipsisType
 
 logger = logging.getLogger("GAMSPy")
 logger.setLevel(logging.WARNING)
@@ -240,7 +241,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         [Set(name='i', domain=['*']), Set(name='j', domain=['*'])]
 
         """
-        dims = [x for x in range(len(self.domain))]
+        dims = list(range(len(self.domain)))
         if len(dims) < 2:
             raise ValidationError(
                 "Parameter must contain at least 2 dimensions to transpose"

@@ -5,7 +5,7 @@ from typing import Any, Literal
 
 from gamspy.exceptions import ValidationError
 
-configuration: dict[str, Any] = dict()
+configuration: dict[str, Any] = {}
 
 
 def _set_default_options() -> None:

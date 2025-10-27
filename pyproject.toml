@@ -223,7 +223,8 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = [
-    "E",        # pycodestyle
+    "E",        # pycodestyle error
+    "W",        # pycodestyle warning
     "F",        # Pyflakes
     "UP",       # pyupgrade
     "B",        # flake8-bugbear
@@ -232,6 +233,8 @@ select = [
     "PIE",      # flake8-pie
     "PLR1714",  # Consider merging multiple comparisons
     "RUF",      # Ruff-specific rules
+    "TC",       # flake8-type-checking
+    "C4",       # flake8-comprehensions
 ]
 ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "SIM115", "B028", "B006", "RUF005", "RUF022"]
 

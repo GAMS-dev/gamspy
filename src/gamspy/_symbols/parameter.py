@@ -3,7 +3,6 @@ from __future__ import annotations
 import itertools
 import os
 import threading
-from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
@@ -23,11 +22,13 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from types import EllipsisType
+
     from gamspy import Alias, Container, Set
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter
-    from gamspy._types import EllipsisType
     from gamspy.math.matrix import Dim
 
 
@@ -113,7 +114,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         obj._synchronize = True
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
-        obj._metadata = dict()
+        obj._metadata = {}
         obj._winner = "python"
 
         # miro support
@@ -177,7 +178,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         is_miro_output: bool = False,
         is_miro_table: bool = False,
     ):
-        self._metadata: dict[str, Any] = dict()
+        self._metadata: dict[str, Any] = {}
         if (is_miro_input or is_miro_output) and name is None:
             raise ValidationError("Please specify a name for miro symbols.")
 
@@ -413,7 +414,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         """
         from gamspy.math.matrix import permute
 
-        dims = [x for x in range(len(self.domain))]
+        dims = list(range(len(self.domain)))
         if len(dims) < 2:
             raise ValidationError(
                 "Parameter must contain at least 2 dimensions to transpose"

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import io
 import logging
 import os
 import sys
@@ -66,7 +65,6 @@ from gamspy._database import (
     GamsParameter,
     GamsVariable,
 )
-from gamspy._options import FreezeOptions, Options
 from gamspy.exceptions import (
     GamspyException,
     ValidationError,
@@ -74,7 +72,10 @@ from gamspy.exceptions import (
 )
 
 if TYPE_CHECKING:
+    import io
+
     from gamspy import Container, Model, Parameter
+    from gamspy._options import FreezeOptions, Options
     from gamspy._symbols.implicits import ImplicitParameter
 
 logger = logging.getLogger("FROZEN MODEL")

@@ -20,8 +20,6 @@ from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
-    from numbers import Real
-
     import pandas as pd
 
     from gamspy import Alias, Set
@@ -150,7 +148,7 @@ def create_gams_expression(root_node: Expression) -> str:
                 s1.append(node.right)
 
     # 2. Build the GAMS expression
-    eval_stack: list[tuple[str, Real]] = []
+    eval_stack: list[tuple[str, float]] = []
     for node in reversed(post_order_nodes):
         if not isinstance(node, Expression):
             eval_stack.append((get_operand_gams_repr(node), LEAF_PRECEDENCE))
@@ -237,7 +235,7 @@ def create_latex_expression(root_node: Expression) -> str:
                 s1.append(node.right)
 
     # 2. Build the GAMS expression
-    eval_stack: list[tuple[str, Real]] = []
+    eval_stack: list[tuple[str, float]] = []
     for node in reversed(post_order_nodes):
         if not isinstance(node, Expression):
             eval_stack.append((get_operand_latex_repr(node), LEAF_PRECEDENCE))
@@ -406,8 +404,8 @@ class Expression(operable.Operable):
 
     def __getitem__(self, indices):
         indices = validation.validate_domain(self, indices)
-        left_domain = [d for d in self._left_domain]
-        right_domain = [d for d in self._right_domain]
+        left_domain = list(self._left_domain)
+        right_domain = list(self._right_domain)
         for i, s in enumerate(indices):
             for lr, pos in self._shadow_domain[i].indices:
                 if lr == "l":

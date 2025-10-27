@@ -284,7 +284,7 @@ def trace(
     if not utils.setBaseEqual(x.domain[axis1], x.domain[axis2]):
         raise ValidationError("Matrix dimensions are not equal")
 
-    domain = [i for i in x.domain]
+    domain = list(x.domain)
     domain[axis1] = domain[axis2]
 
     return operation.Sum(domain[axis2], x[domain])
@@ -502,7 +502,7 @@ def _validate_matrix_mult_dims(left, right):
             if len(batch_dim_1) != len(batch_dim_2):
                 raise ValidationError("Batch dimensions do not match")
 
-            if any([x != y for x, y in zip(batch_dim_1, batch_dim_2, strict=False)]):
+            if any(x != y for x, y in zip(batch_dim_1, batch_dim_2, strict=False)):
                 raise ValidationError("Batch dimensions do not match")
 
         left_domain = left.domain[-2]

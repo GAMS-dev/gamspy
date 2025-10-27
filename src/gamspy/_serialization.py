@@ -5,11 +5,14 @@ import os
 import shutil
 import tempfile
 import zipfile
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from gamspy import Container
 from gamspy._model import ATTRIBUTE_MAP
 from gamspy.exceptions import ValidationError
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def serialize(container: Container, path: str) -> None:
@@ -46,15 +49,15 @@ def serialize(container: Container, path: str) -> None:
         # Dump the GAMS State to disc
         container._options._set_debug_options({"save": g00_path})
         container._synch_with_gams()
-        container._options._set_debug_options(dict())
+        container._options._set_debug_options({})
 
         # Serialize symbols
-        info = dict()
+        info = {}
         for name, symbol in container.data.items():
             info[name] = symbol._serialize()
 
         # Serialize models
-        models = dict()
+        models = {}
         for model in container.models.values():
             models[model.name] = model._serialize()
             info["models"] = models
@@ -113,7 +116,7 @@ def deserialize(path: str) -> Container:
         deserialized_matches: dict[str, str | Sequence[str]] = model.get(
             "_matches", None
         )
-        matches = dict()
+        matches = {}
         if deserialized_matches is not None:
             for key, value in deserialized_matches.items():
                 if isinstance(value, str):
