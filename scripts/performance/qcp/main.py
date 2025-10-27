@@ -116,7 +116,7 @@ def main(Ns=[25, 50, 75, 100]):
 
     results = []
     for n in Ns:
-        poi_dict = dict()
+        poi_dict = {}
         start = time.time()
         model = ipopt.Model()
         solve_facility_poi(model, n, n, 1e-9)

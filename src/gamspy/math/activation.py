@@ -7,7 +7,6 @@ import gamspy.math
 import gamspy.utils as utils
 from gamspy._container import Container
 from gamspy._symbols.equation import Equation
-from gamspy._symbols.parameter import Parameter
 from gamspy._symbols.variable import Variable
 from gamspy.exceptions import ValidationError
 from gamspy.math.matrix import next_alias
@@ -15,6 +14,7 @@ from gamspy.math.matrix import next_alias
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._symbols.parameter import Parameter
 
 
 def _get_random_name(prefix: str) -> str:
@@ -504,7 +504,7 @@ def log_softmax(x: Variable, dim: int = -1, skip_intrinsic: bool = False):
 
     if not skip_intrinsic and len(sum_domain) != 0 and len(sum_domain) <= 20:
         # Use built-in LSE if possible
-        scalars = [rec for rec in sum_domain.records["uni"]]
+        scalars = list(sum_domain.records["uni"])
         variables = []
         for scalar in scalars:
             expr_domain = [*x.domain[:dim], scalar, *x.domain[dim + 1 :]]

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import inspect
-import io
 import logging
 import os
 import threading
@@ -37,6 +36,7 @@ from gamspy._options import (
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
+    import io
     from typing import Literal
 
     import pandas as pd
@@ -394,7 +394,7 @@ class Model:
 
         # matches
         if self._matches is not None:
-            matches: dict = dict()
+            matches: dict = {}
             for key, value in self._matches.items():
                 if isinstance(key, gp.Equation):
                     if isinstance(value, gp.Variable):
@@ -1358,7 +1358,7 @@ class Model:
                 if isinstance(key, gp.Equation):
                     equations_in_matches.append(key)
                 else:
-                    equations_in_matches += [equation for equation in key]
+                    equations_in_matches += list(key)
 
         equations = []
         for equation in self.equations:

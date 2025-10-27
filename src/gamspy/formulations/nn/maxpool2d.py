@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-import gamspy as gp
+from typing import TYPE_CHECKING
+
 from gamspy.formulations.nn.mpool2d import _MPool2d
+
+if TYPE_CHECKING:
+    import gamspy as gp
 
 
 class MaxPool2d(_MPool2d):

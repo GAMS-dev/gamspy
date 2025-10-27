@@ -27,11 +27,11 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from types import EllipsisType
 
     from gamspy import Alias, Container, Set, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
-    from gamspy._types import EllipsisType
 
 
 EQ_TYPES = ["=e=", "=l=", "=g=", "=n=", "=x=", "=b="]
@@ -155,7 +155,7 @@ class Equation(gt.Equation, Symbol):
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._synchronize = True
-        obj._metadata = dict()
+        obj._metadata = {}
         obj._winner = "python"
 
         # create attributes
@@ -227,7 +227,7 @@ class Equation(gt.Equation, Symbol):
         is_miro_output: bool = False,
         definition_domain: list | None = None,
     ):
-        self._metadata: dict[str, Any] = dict()
+        self._metadata: dict[str, Any] = {}
         self._assignment: Expression | None = None
         if is_miro_output and name is None:
             raise ValidationError("Please specify a name for miro symbols.")

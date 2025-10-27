@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 import rich
 import rich.table
@@ -9,6 +9,9 @@ import typer
 
 import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 app = typer.Typer(
     rich_markup_mode="rich",

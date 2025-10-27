@@ -185,23 +185,23 @@ def build_abstract_model():
     )
     makespan.lo = 0
 
-    return dict(
-        m=m,
-        rcpsp=rcpsp,
-        j=j,
-        t=t,
-        r=r,
-        lastJob=lastJob,
-        actual=actual,
-        pred=pred,
-        capacities=capacities,
-        durations=durations,
-        demands=demands,
-        tw=tw,
-        fw=fw,
-        x=x,
-        makespan=makespan,
-    )
+    return {
+        "m": m,
+        "rcpsp": rcpsp,
+        "j": j,
+        "t": t,
+        "r": r,
+        "lastJob": lastJob,
+        "actual": actual,
+        "pred": pred,
+        "capacities": capacities,
+        "durations": durations,
+        "demands": demands,
+        "tw": tw,
+        "fw": fw,
+        "x": x,
+        "makespan": makespan,
+    }
 
 
 def display_results(model, dataset):
@@ -267,15 +267,15 @@ def parse_psplib(filename):
         ints(lines[ix].split()[3:]) for ix in range(attrs_offset, attrs_offset + njobs)
     ]
     resource_capacities = ints(lines[caps_offset].split())
-    return dict(
-        jobs=jobs,
-        periods=periods,
-        res=res,
-        succs=succs,
-        job_durations=job_durations,
-        resource_capacities=resource_capacities,
-        resource_demands=resource_demands,
-    )
+    return {
+        "jobs": jobs,
+        "periods": periods,
+        "res": res,
+        "succs": succs,
+        "job_durations": job_durations,
+        "resource_capacities": resource_capacities,
+        "resource_demands": resource_demands,
+    }
 
 
 def decorate_with_time_windows(instance):
@@ -284,7 +284,7 @@ def decorate_with_time_windows(instance):
     )
 
     def compute_earliest_finishing_times():
-        eft = {j: 0 for j in jobs}
+        eft = dict.fromkeys(jobs, 0)
         for ix, i in enumerate(jobs):
             for j in jobs:
                 if j in succs[i]:
@@ -304,15 +304,15 @@ def decorate_with_time_windows(instance):
 
 
 def mini_project():
-    return dict(
-        jobs=["i1", "i2", "i3"],
-        periods=["t1", "t2", "t3", "t4"],
-        res=["r1"],
-        succs=dict(i1=["i2"], i2=["i3"], i3=[]),
-        job_durations=[0, 1, 0],
-        resource_capacities=[1],
-        resource_demands=[[0], [1], [0]],
-    )
+    return {
+        "jobs": ["i1", "i2", "i3"],
+        "periods": ["t1", "t2", "t3", "t4"],
+        "res": ["r1"],
+        "succs": {"i1": ["i2"], "i2": ["i3"], "i3": []},
+        "job_durations": [0, 1, 0],
+        "resource_capacities": [1],
+        "resource_demands": [[0], [1], [0]],
+    }
 
 
 def fill_records(dataset, symbols):

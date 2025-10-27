@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import threading
-from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
@@ -20,6 +19,8 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from gamspy import Container, Set
     from gamspy._algebra.expression import Expression
 
@@ -72,7 +73,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         # gamspy attributes
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
-        obj._metadata = dict()
+        obj._metadata = {}
 
         return obj
 
@@ -118,7 +119,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         name: str | None = None,
         alias_with: Set | Alias = None,  # type: ignore
     ):
-        self._metadata: dict[str, Any] = dict()
+        self._metadata: dict[str, Any] = {}
         self._assignment: Expression | None = None
         # does symbol exist
         has_symbol = False

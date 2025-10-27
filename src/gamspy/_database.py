@@ -193,7 +193,7 @@ class Database:
     """Communicates data between Python and GAMS"""
 
     def __init__(self, ws: Workspace):
-        self.symbols: dict = dict()
+        self.symbols: dict = {}
         self.workspace = ws
         self.gmd = new_gmdHandle_tp()
 

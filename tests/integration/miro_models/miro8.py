@@ -7,7 +7,7 @@ j = gp.Alias(m, name="j", alias_with=i)
 letters = gp.Set(
     m,
     name="letters",
-    records=[x for x in "abcdefghijklmnopqrstuvwxyz"],
+    records=list("abcdefghijklmnopqrstuvwxyz"),
 )
 
 pick_letter = gp.Set(m, name="pick_letter", domain=[letters], is_miro_input=True)

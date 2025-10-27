@@ -2945,7 +2945,7 @@ def test_linear_make_variable(data):
     inp = gp.Variable(m, domain=dim([4, 1, 2, 4]))
     out, _eqs = lin1(inp)
     assert len(out.domain) == 4
-    assert len(set([x.name for x in out.domain])) == 4
+    assert len({x.name for x in out.domain}) == 4
 
 
 @pytest.mark.unit

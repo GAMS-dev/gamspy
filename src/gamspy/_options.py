@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import io
 import os
 import warnings
 from pathlib import Path
@@ -11,6 +10,7 @@ from pydantic import BaseModel, ConfigDict
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    import io
     from types import FrameType
 
     from gamspy import Container
@@ -374,8 +374,8 @@ class Options(BaseModel):
     report_underflow: bool | None = None
 
     def model_post_init(self, context: Any) -> None:
-        self._extra_options: dict[str, Any] = dict()
-        self._debug_options: dict[str, Any] = dict()
+        self._extra_options: dict[str, Any] = {}
+        self._debug_options: dict[str, Any] = {}
         self._solver: str | None = None
         self._problem: str | None = None
         self._solver_options_file: str = "0"
@@ -458,7 +458,7 @@ class Options(BaseModel):
                 exist_ok=True,
             )
 
-        gams_options = dict()
+        gams_options = {}
         for key, value in gamspy_options.items():
             if key not in OPTION_MAP:
                 continue
@@ -530,7 +530,7 @@ class Options(BaseModel):
         if not os.path.isfile(path):
             raise ValidationError(f"No such file in the given path: {path}")
 
-        attributes = dict()
+        attributes = {}
         with open(path, encoding="utf-8") as file:
             lines = file.readlines()
 
@@ -562,7 +562,7 @@ class Options(BaseModel):
         pf_file : str
         output : io.TextIOWrapper | None, optional
         """
-        all_options = dict()
+        all_options = {}
         # Solver options
         if self._solver is not None:
             all_options[self._problem] = self._solver
