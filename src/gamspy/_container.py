@@ -680,7 +680,8 @@ class Container(gt.Container):
             strings.append("$offDotL")
         elif assume_suffix == 2:
             strings.append("$offDotScale")
-        strings += ["$offUNDF", "$offMulti"]
+
+        strings.extend(["$offUNDF", "$offMulti"])
 
         if not IS_MIRO_INIT and MIRO_GDX_OUT:
             if len(self._miro_output_symbols) == 0:

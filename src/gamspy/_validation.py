@@ -280,7 +280,7 @@ def _expand_ellipsis_slice(
 
         if type(item) is EllipsisType:
             start, end = _get_ellipsis_range(domain, indices)
-            new_domain += domain[start:end]
+            new_domain.extend(domain[start:end])
             index = end
         elif type(item) is slice:
             new_domain.append(domain[index])

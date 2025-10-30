@@ -141,18 +141,43 @@ class SolveStatus(Enum):
     """An enumeration for solve status types"""
 
     NormalCompletion = 1
+    """The solver terminated in a normal way."""
+
     IterationInterrupt = 2
+    """The solver was interrupted because it used too many iterations. The option `iteration_limit` may be used to increase the iteration limit if everything seems normal."""
+
     ResourceInterrupt = 3
+    """The solver was interrupted because it used too much time. The option `time_limit` may be used to increase the time limit if everything seems normal."""
+
     TerminatedBySolver = 4
+    """The solver encountered some difficulty and was unable to continue."""
+
     EvaluationInterrupt = 5
+    """Too many evaluations of nonlinear terms at undefined values. We recommend to use variable bounds to prevent forbidden operations, such as division by zero. The rows in which the errors occur are listed just before the solution."""
+
     CapabilityError = 6
+    """The solver does not have the capability required by the model. For example, some solvers do not support certain types of discrete variables or support a more limited set of functions than other solvers."""
+
     LicenseError = 7
+    """The solver cannot find the appropriate license key needed to use a specific subsolver."""
+
     UserInterrupt = 8
+    """The user has sent a signal to interrupt the solver."""
+
     SetupError = 9
+    """The solver encountered a fatal failure during problem set-up time."""
+
     SolverError = 10
+    """The solver encountered a fatal error."""
+
     InternalError = 11
+    """The solver encountered an internal fatal error."""
+
     Skipped = 12
+    """The entire solve step has been skipped."""
+
     SystemError = 13
+    """This indicates a completely unknown or unexpected error condition."""
 
 
 class FileFormat(Enum):
@@ -924,19 +949,19 @@ class Model:
         return assignment
 
     def _generate_solve_string(self) -> str:
-        solve_string = f"solve {self.name} using {self.problem}"
+        solve_statement = [f"solve {self.name} using {self.problem}"]
 
         if self.sense == gp.Sense.FEASIBILITY:
             # Set sense as min or max for feasibility
             self.sense = gp.Sense("MIN")
 
         if self.problem not in (Problem.MCP, Problem.CNS, Problem.EMP):
-            solve_string += f" {self.sense}"
+            solve_statement.append(str(self.sense))
 
         if self._objective_variable is not None:
-            solve_string += f" {self._objective_variable.gamsRepr()}"
+            solve_statement.append(self._objective_variable.gamsRepr())
 
-        return solve_string
+        return " ".join(solve_statement)
 
     def _add_runtime_options(self, options: Options, backend: str = "local") -> None:
         for key, value in options.model_dump(exclude_none=True).items():

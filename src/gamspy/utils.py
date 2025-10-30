@@ -686,7 +686,7 @@ def _unpack(domain: list[Set | Alias | ImplicitSet]):
                         members.append(member.parent)
                     else:
                         members.append(member)
-                unpacked += [*members, elem.parent]
+                unpacked.extend([*members, elem.parent])
         else:
             unpacked.append(elem)
 

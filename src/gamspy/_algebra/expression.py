@@ -636,16 +636,16 @@ class Expression(operable.Operable):
                             symbols.append(node.alias_with.name)
 
                         symbols.append(node.name)
-                    stack += node.domain
+                    stack.extend(node.domain)
                     node = None
                 elif isinstance(node, ImplicitSymbol):
                     if node.parent.name not in symbols:
                         symbols.append(node.parent.name)
-                    stack += node.domain
-                    stack += node.container[node.parent.name].domain
+                    stack.extend(node.domain)
+                    stack.extend(node.container[node.parent.name].domain)
                     node = None
                 elif isinstance(node, operation.Operation):
-                    stack += node.op_domain
+                    stack.extend(node.op_domain)
                     node = node.rhs
                 elif isinstance(node, condition.Condition):
                     stack.append(node.conditioning_on)
@@ -662,10 +662,10 @@ class Expression(operable.Operable):
                     if isinstance(node.elements[0], Expression):
                         node = node.elements[0]
                     else:
-                        stack += node.elements
+                        stack.extend(node.elements)
                         node = None
                 elif isinstance(node, ExtrinsicFunction):
-                    stack += list(node.args)
+                    stack.extend(list(node.args))
                     node = None
                 else:
                     node = getattr(node, "right", None)
@@ -690,12 +690,12 @@ class Expression(operable.Operable):
                     given_condition = node.condition
 
                     if isinstance(given_condition, Expression):
-                        symbols += given_condition._find_all_symbols()
+                        symbols.extend(given_condition._find_all_symbols())
                     elif isinstance(given_condition, ImplicitSymbol):
                         symbols.append(given_condition.parent.name)
 
                 if isinstance(node, operation.Operation):
-                    stack += node.op_domain
+                    stack.extend(node.op_domain)
                     node = node.rhs
                 else:
                     node = getattr(node, "right", None)
