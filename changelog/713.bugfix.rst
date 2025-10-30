@@ -1,1 +1,0 @@
-Fix bug in `lse_max_sc` where order of arguments were incorrectly put.
