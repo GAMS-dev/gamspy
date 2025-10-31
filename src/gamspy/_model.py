@@ -7,6 +7,7 @@ import threading
 import warnings
 from collections.abc import Sequence
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from gams.core.gdx import GMS_UEL_IDENT_SIZE
@@ -1083,7 +1084,7 @@ class Model:
 
     def convert(
         self,
-        path: str,
+        path: str | Path,
         file_format: FileFormat | Sequence[FileFormat],
         options: ConvertOptions | None = None,
     ) -> None:
@@ -1092,7 +1093,7 @@ class Model:
 
         Parameters
         ----------
-        path : str
+        path : str | Path
             Path to the directory where the converted model files will be saved.
         file_format : FileFormat | Sequence[FileFormat]
             File format(s) to convert the model to. Can be a single FileFormat or a list of FileFormats.
@@ -1115,6 +1116,7 @@ class Model:
         >>> my_model.convert("output_directory", [gp.FileFormat.GAMS, gp.FileFormat.AMPL])
 
         """
+        path = Path(path)
         os.makedirs(path, exist_ok=True)
         solver_options = get_convert_solver_options(path, file_format, options)
         self.solve(solver="convert", solver_options=solver_options)
@@ -1438,7 +1440,7 @@ class Model:
 
     def toGams(
         self,
-        path: str,
+        path: str | Path,
         options: Options | None = None,
         *,
         dump_gams_state: bool = False,
@@ -1448,7 +1450,7 @@ class Model:
 
         Parameters
         ----------
-        path : str
+        path : str | Path
             Path to the directory which will contain the GAMS model.
         options : Options | None, optional
             GAMSPy options, by default None
@@ -1465,18 +1467,20 @@ class Model:
                 f"`options` must be of type gp.Options of found {type(options)}"
             )
 
+        path = Path(path)
         converter = GamsConverter(self, path, options, dump_gams_state)
         converter.convert()
 
-    def toLatex(self, path: str, generate_pdf: bool = False) -> None:
+    def toLatex(self, path: str | Path, generate_pdf: bool = False) -> None:
         """
         Generates a latex file that contains the model definition under path/<model_name>.tex
 
         Parameters
         ----------
-        path : str
+        path : str | Path
             Path to the directory which will contain the .tex file.
         """
+        path = Path(path)
         converter = LatexConverter(self, path)
         converter.convert()
 

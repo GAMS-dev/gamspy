@@ -1,0 +1,1 @@
+Fix handling paths with empty spaces in model.toGams, model.toLatex and model.convert functions.
