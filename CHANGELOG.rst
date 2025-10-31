@@ -8,6 +8,7 @@ New features
 Bug fixes
 ---------
 - #713: Fix bug in `lse_max_sc` where order of arguments were incorrectly put.
+- #719: Fix handling paths with empty spaces in model.toGams, model.toLatex and model.convert functions.
 
 Improved documentation
 ----------------------
@@ -21,6 +22,7 @@ Miscellaneous internal changes
 ------------------------------
 - #715: Do not install extras of gamsapi and add a direct dependency to pandas.
 - #716: Add stdcge (a standard cge model) to the test suite.
+
 GAMSPy 1.17.0 (2025-10-10)
 ==========================
 

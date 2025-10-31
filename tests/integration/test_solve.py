@@ -1904,8 +1904,8 @@ def test_emp():
     m.close()
 
 
-def test_subsolver_options():
-    m = Container()
+def test_subsolver_options(data):
+    m, *_ = data
     t = Set(m, name="m", records=[0, 1])
     a = Set(m, name="a", records=["a0", "a1"])
     beta = 7
@@ -1959,7 +1959,7 @@ def test_subsolver_options():
     with tempfile.NamedTemporaryFile("w", delete=False) as file:
         nash.solve(
             solver="reshop",
-            options=Options(log_file="log.log"),
+            options=Options(log_file=os.path.join("tmp", "log.log")),
             output=file,
             solver_options={"subsolveropt": 1},
         )
@@ -1974,7 +1974,7 @@ def test_subsolver_options():
     with tempfile.NamedTemporaryFile("w", delete=False) as file:
         nash.solve(
             solver="reshop",
-            options=Options(log_file="log.log", mcp="nlpec"),
+            options=Options(log_file=os.path.join("tmp", "log.log"), mcp="nlpec"),
             output=file,
             solver_options={"subsolveropt": 1},
         )
@@ -1989,7 +1989,6 @@ def test_subsolver_options():
         np.array([0.8571428571428571, 2.5, 0.0, 0.5]),
     ).all()
 
-    m.close()
     gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
 
 
