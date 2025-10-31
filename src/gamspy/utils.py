@@ -18,6 +18,8 @@ from gamspy.exceptions import FatalError, ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
+    from types import EllipsisType
+    from typing import TypeAlias
 
     import pandas as pd
     from gams.core.numpy import Gams2Numpy
@@ -29,11 +31,13 @@ if TYPE_CHECKING:
         Equation,
         Expression,
         Model,
+        Parameter,
         Set,
         Variable,
     )
-    from gamspy._symbols.implicits import ImplicitSet
-    from gamspy._types import EllipsisType
+    from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
+
+    SymbolType: TypeAlias = Alias | Set | Parameter | Variable | Equation
 
 SPECIAL_VALUE_MAP = {
     gt.SpecialValues.NA: "NA",
@@ -45,16 +49,15 @@ SPECIAL_VALUE_MAP = {
 CAPABILITIES_FILE = "gmscmpNT.txt" if platform.system() == "Windows" else "gmscmpun.txt"
 
 user_dir = os.path.expanduser("~")
-if platform.system() == "Linux":
-    DEFAULT_DIR = os.path.join(user_dir, ".local", "share", "GAMSPy")
-elif platform.system() == "Darwin":
+DEFAULT_DIR = os.path.join(user_dir, ".local", "share", "GAMSPy")
+if platform.system() == "Darwin":
     DEFAULT_DIR = os.path.join(user_dir, "Library", "Application Support", "GAMSPy")
 elif platform.system() == "Windows":
     DEFAULT_DIR = os.path.join(user_dir, "Documents", "GAMSPy")
 
-_defaults: dict[str, dict[str, str]] = dict()
-_capabilities: dict[str, dict[str, list[str]]] = dict()
-_installed_solvers: dict[str, list[str]] = dict()
+_defaults: dict[str, dict[str, str]] = {}
+_capabilities: dict[str, dict[str, list[str]]] = {}
+_installed_solvers: dict[str, list[str]] = {}
 
 
 def getDefaultSolvers(system_directory: str) -> dict[str, str]:
@@ -86,7 +89,7 @@ def getDefaultSolvers(system_directory: str) -> dict[str, str]:
     with open(capabilities_path, encoding="utf-8") as file:
         lines = file.read().split("DEFAULTS")[1].splitlines()[1:]
 
-    defaults: dict[str, str] = dict()
+    defaults: dict[str, str] = {}
     for line in lines:
         problem, solver = line.split()
         defaults[problem] = solver
@@ -115,7 +118,7 @@ def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
         ...
 
     capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
-    capabilities: dict[str, list[str]] = dict()
+    capabilities: dict[str, list[str]] = {}
 
     with open(capabilities_path, encoding="utf-8") as file:
         lines = file.read().splitlines()
@@ -253,10 +256,12 @@ def getInstallableSolvers(system_directory: str) -> list[str]:
         e.msg = "You must first install gamspy_base to use this functionality"
         raise e
 
-    return sorted(list(set(getAvailableSolvers()) - set(gamspy_base.default_solvers)))
+    return sorted(set(getAvailableSolvers()) - set(gamspy_base.default_solvers))
 
 
-def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
+def checkAllSame(
+    iterable1: Sequence[SymbolType], iterable2: Sequence[SymbolType]
+) -> bool:
     """
     Checks if all elements of a sequence are equal to the all
     elements of another sequence.
@@ -296,7 +301,7 @@ def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
     return all_same
 
 
-def isin(symbol, sequence: Sequence) -> bool:
+def isin(symbol: SymbolType | ImplicitParameter, sequence: Sequence) -> bool:
     """
     Checks whether the given symbol in the sequence.
     Needed for symbol comparison since __eq__ magic
@@ -328,6 +333,37 @@ def isin(symbol, sequence: Sequence) -> bool:
 
     """
     return any(symbol is item for item in sequence)
+
+
+def setBaseEqual(set_a: Set | Alias, set_b: Set | Alias) -> bool:
+    """
+    Checks if two sets are equal considering aliases as equal as well.
+
+    Parameters
+    ----------
+    set_a : Set | Alias
+    set_b : Set | Alias
+
+    Returns
+    -------
+    bool
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i")
+    >>> j = gp.Set(m, "j")
+    >>> gp.utils.setBaseEqual(i, j)
+    False
+    >>> k = gp.Alias(m, "k", i)
+    >>> gp.utils.setBaseEqual(k, i)
+    True
+
+    """
+    a = getattr(set_a, "alias_with", set_a)
+    b = getattr(set_b, "alias_with", set_b)
+    return a == b
 
 
 def _get_scalar_data(gams2np: Gams2Numpy, gdx_handle, symbol_id: str) -> float:
@@ -519,7 +555,15 @@ def _open_gdx_file(system_directory: str, load_from: str):
 
 
 def _to_list(
-    obj: EllipsisType | slice | Set | Alias | str | Iterable | Sequence | ImplicitSet,
+    obj: EllipsisType
+    | slice
+    | Set
+    | Alias
+    | str
+    | int
+    | Iterable
+    | Sequence
+    | ImplicitSet,
 ) -> list:
     """Converts the given object to a list"""
     if type(obj) is tuple:
@@ -612,37 +656,6 @@ def _permute_domain(domain, dims):
     return new_domain
 
 
-def setBaseEqual(set_a: Set | Alias, set_b: Set | Alias) -> bool:
-    """
-    Checks if two sets are equal considering aliases as equal as well.
-
-    Parameters
-    ----------
-    set_a : Set | Alias
-    set_b : Set | Alias
-
-    Returns
-    -------
-    bool
-
-    Examples
-    --------
-    >>> import gamspy as gp
-    >>> m = gp.Container()
-    >>> i = gp.Set(m, "i")
-    >>> j = gp.Set(m, "j")
-    >>> gp.utils.setBaseEqual(i, j)
-    False
-    >>> k = gp.Alias(m, "k", i)
-    >>> gp.utils.setBaseEqual(k, i)
-    True
-
-    """
-    a = getattr(set_a, "alias_with", set_a)
-    b = getattr(set_b, "alias_with", set_b)
-    return a == b
-
-
 # TODO either add description or make private
 def _get_set(domain: list[Set | Alias | Domain | Expression]):
     res = []
@@ -673,7 +686,7 @@ def _unpack(domain: list[Set | Alias | ImplicitSet]):
                         members.append(member.parent)
                     else:
                         members.append(member)
-                unpacked += [*members, elem.parent]
+                unpacked.extend([*members, elem.parent])
         else:
             unpacked.append(elem)
 

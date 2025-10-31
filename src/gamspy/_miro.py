@@ -303,7 +303,7 @@ class MiroJSONEncoder:
 
         symbol_dicts = self.prepare_symbols(non_scalars)
 
-        non_scalars = [name for name in non_scalars]
+        non_scalars = list(non_scalars)
 
         keys = non_scalars
         values = symbol_dicts

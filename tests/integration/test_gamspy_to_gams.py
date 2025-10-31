@@ -205,6 +205,22 @@ def test_lp_transport(data):
 
     assert content1 == content2
 
+    folder_name = "folder with spaces"
+    transport.toGams(os.path.join("tmp", folder_name))
+
+    process = subprocess.run(
+        [
+            os.path.join(m.system_directory, "gams"),
+            os.path.join("tmp", folder_name, "transport.gms"),
+            "traceopt=2",
+            "trace=trace.txt",
+            f"output={os.path.join('tmp', 'transport.lst')}",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert process.returncode == 0, process.stderr
+
 
 def test_mip_cutstock(data):
     m = data

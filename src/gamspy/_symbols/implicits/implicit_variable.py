@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
@@ -10,10 +9,12 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
-from gamspy._types import EllipsisType
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from types import EllipsisType
+
     import pandas as pd
 
     from gamspy import Set, Variable
@@ -198,7 +199,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         """
         from gamspy.math.matrix import permute
 
-        dims = [x for x in range(len(self.domain))]
+        dims = list(range(len(self.domain)))
         if len(dims) < 2:
             raise ValidationError(
                 "Variable must contain at least 2 dimensions to transpose"

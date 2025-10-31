@@ -407,6 +407,13 @@ Implements the Leaky ReLU activation function using binary variables.
 Implements the softmax activation function. This function strictly
 requires a GAMSPy Variable, y = softmax(x).
 
+:meth:`softplus <gamspy.math.softplus>`
+-------------------------------------
+|nlp-badge|
+
+Implements the softplus activation function. This function strictly
+requires a GAMSPy Variable, y = softplus(x).
+
 :meth:`log_softmax <gamspy.math.log_softmax>`
 ---------------------------------------------
 |nlp-badge|

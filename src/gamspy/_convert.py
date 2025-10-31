@@ -4,7 +4,7 @@ import logging
 import os
 import subprocess
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import gamspy._symbols as syms
 import gamspy.utils as utils
@@ -12,6 +12,7 @@ from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy.exceptions import LatexException, ValidationError
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from typing import TypeAlias
 
     from gamspy import (
@@ -80,11 +81,11 @@ option js<js2; jd(js) = yes;
 jc(j) = yes;
 jc(jd) = no;
 
-xb.lo(jb)       =xc.lo(jb);  xb.up(jb)       =xc.up(jb);  xb.prior(jb)       =xc.scale(jb); 
-xi.lo(ji)       =xc.lo(ji);  xi.up(ji)       =xc.up(ji);  xi.prior(ji)       =xc.scale(ji); 
-xsc.lo(jsc)     =xc.lo(jsc); xsc.up(jsc)     =xc.up(jsc); xsc.prior(jsc)     =xc.scale(jsc); 
-xsi.lo(jsi)     =xc.lo(jsi); xsi.up(jsi)     =xc.up(jsi); xsi.prior(jsi)     =xc.scale(jsi); 
-xs1.lo(js1(s,j))=xc.lo(j);   xs1.up(js1(s,j))=xc.up(j);   xs1.prior(js1(s,j))=xc.scale(j); 
+xb.lo(jb)       =xc.lo(jb);  xb.up(jb)       =xc.up(jb);  xb.prior(jb)       =xc.scale(jb);
+xi.lo(ji)       =xc.lo(ji);  xi.up(ji)       =xc.up(ji);  xi.prior(ji)       =xc.scale(ji);
+xsc.lo(jsc)     =xc.lo(jsc); xsc.up(jsc)     =xc.up(jsc); xsc.prior(jsc)     =xc.scale(jsc);
+xsi.lo(jsi)     =xc.lo(jsi); xsi.up(jsi)     =xc.up(jsi); xsi.prior(jsi)     =xc.scale(jsi);
+xs1.lo(js1(s,j))=xc.lo(j);   xs1.up(js1(s,j))=xc.up(j);   xs1.prior(js1(s,j))=xc.scale(j);
 xs2.lo(js2(s,j))=xc.lo(j);   xs2.up(js2(s,j))=xc.up(j);   xs2.prior(js2(s,j))=xc.scale(j);
 
 option ij<A;
@@ -300,7 +301,7 @@ jac.solve(output=sys.stdout, options=options)
 
 
 def get_convert_solver_options(
-    path: str,
+    path: Path,
     file_format: FileFormat | Sequence[FileFormat],
     options: ConvertOptions | None,
 ) -> dict[str, str]:
@@ -319,7 +320,7 @@ def get_convert_solver_options(
     if any(not isinstance(format, FileFormat) for format in file_format):
         raise ValidationError("`file_format` must be a FileFormat enum.")
 
-    solver_options = {}
+    solver_options: dict[str, Any] = {}
     for format in file_format:
         name, value = format.name, format.value
         if name in FORMAT_RENAME_MAP:
@@ -335,13 +336,13 @@ def get_convert_solver_options(
                     "$if not set jacfile $abort Please set --jacfile=<filename>.gdx"
                 )
 
-            with open(os.path.join(path, value), "w") as file:
+            with open(path / value, "w") as file:
                 file.write(jacobian_gms)
         elif format == FileFormat.GAMSPyJacobian:
-            with open(os.path.join(path, value), "w") as file:
+            with open(path / value, "w") as file:
                 file.write(GAMSPY_JACOBIAN)
         else:
-            solver_options[name] = os.path.join(path, value)
+            solver_options[name] = str((path / value).resolve())
 
     if options is not None:
         extra_options = options.model_dump(exclude_none=True)
@@ -375,7 +376,7 @@ class GamsConverter:
     def __init__(
         self,
         model: Model,
-        path: str,
+        path: Path,
         options: Options | None,
         dump_gams_state: bool,
     ) -> None:
@@ -385,9 +386,9 @@ class GamsConverter:
         self.path = path
         self.options = options
         self.dump_gams_state = dump_gams_state
-        self.gdx_path = os.path.join(path, model.name + "_data.gdx")
-        self.gms_path = os.path.join(path, model.name + ".gms")
-        self.g00_path = os.path.join(path, model.name + ".g00")
+        self.gdx_path = str((path / f"{model.name}_data.gdx").resolve())
+        self.gms_path = str((path / f"{model.name}.gms").resolve())
+        self.g00_path = str((path / f"{model.name}.g00").resolve())
 
     def get_definitions(self) -> list[str]:
         definitions = []
@@ -441,7 +442,7 @@ class GamsConverter:
             )
 
         # 2. Load the data from gdx
-        load_str = f"$onMultiR\n$gdxLoadAll {os.path.abspath(self.gdx_path)}\n$offMulti"
+        load_str = f'$onMultiR\n$gdxLoadAll "{self.gdx_path}"\n$offMulti'
 
         # 3. Definitions
         definitions = self.get_definitions()
@@ -493,7 +494,7 @@ TABLE_FOOTER = "\\hline\n\\end{tabularx}"
 
 
 class LatexConverter:
-    def __init__(self, model: Model, path: str) -> None:
+    def __init__(self, model: Model, path: Path) -> None:
         os.makedirs(path, exist_ok=True)
         self.model = model
         self.container = model.container

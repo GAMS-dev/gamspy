@@ -76,7 +76,7 @@ class ImplicitSymbol(ABC):
         self.domain = domain
 
         scalars.extend(parent_scalar_domains)
-        scalars = list(sorted(scalars, key=lambda k: k[0]))
+        scalars = sorted(scalars, key=lambda k: k[0])
         self._scalar_domains = scalars
 
     def fix_permutation(self):
@@ -147,7 +147,7 @@ class ImplicitSymbol(ABC):
             raise ValidationError("Sum operation is not possible on scalar parameters.")
 
         if not indices:
-            indices = self.domain
+            return gp.Sum(self.domain, self[self.domain])
 
         return gp.Sum(indices, self[self.domain])
 
@@ -179,7 +179,7 @@ class ImplicitSymbol(ABC):
             )
 
         if not indices:
-            indices = self.domain
+            return gp.Product(self.domain, self[self.domain])
 
         return gp.Product(indices, self[self.domain])
 
@@ -211,7 +211,7 @@ class ImplicitSymbol(ABC):
             )
 
         if not indices:
-            indices = self.domain
+            return gp.Smin(self.domain, self[self.domain])
 
         return gp.Smin(indices, self[self.domain])
 
@@ -243,7 +243,7 @@ class ImplicitSymbol(ABC):
             )
 
         if not indices:
-            indices = self.domain
+            return gp.Smax(self.domain, self[self.domain])
 
         return gp.Smax(indices, self[self.domain])
 
@@ -275,7 +275,7 @@ class ImplicitSymbol(ABC):
             )
 
         if not indices:
-            indices = self.domain
+            return gp.Sand(self.domain, self[self.domain])
 
         return gp.Sand(indices, self[self.domain])
 
@@ -305,6 +305,6 @@ class ImplicitSymbol(ABC):
             raise ValidationError("Sor operation is not possible on scalar parameters.")
 
         if not indices:
-            indices = self.domain
+            return gp.Sor(self.domain, self[self.domain])
 
         return gp.Sor(indices, self[self.domain])

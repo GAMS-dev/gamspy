@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.condition as condition
@@ -14,6 +13,8 @@ import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     import pandas as pd
 
     from gamspy._algebra import Domain
@@ -70,7 +71,7 @@ class Operation(operable.Operable):
                     self.domain.append(x)
 
         self.dimension: int = validation.get_dimension(self.domain)
-        controlled_domain = [d for d in self._bare_op_domain]
+        controlled_domain = list(self._bare_op_domain)
         controlled_domain.extend(getattr(rhs, "controlled_domain", []))
         self.controlled_domain = list(set(controlled_domain))
 

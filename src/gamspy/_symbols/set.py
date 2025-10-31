@@ -21,11 +21,12 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from types import EllipsisType
 
     from gamspy import Alias, Container
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import EllipsisType, OperableType
+    from gamspy._types import OperableType
     from gamspy.math import Dim
     from gamspy.math.misc import MathOp
 
@@ -483,7 +484,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._synchronize = True
-        obj._metadata = dict()
+        obj._metadata = {}
         obj._winner = "python"
 
         # miro support
@@ -546,7 +547,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
     ):
-        self._metadata: dict[str, Any] = dict()
+        self._metadata: dict[str, Any] = {}
         if (is_miro_input or is_miro_output) and name is None:
             raise ValidationError("Please specify a name for miro symbols.")
 

@@ -82,7 +82,7 @@ def _parse_errors(lines: list[str], index: int) -> str:
         chunk = lines[temp_index : temp_index + CHUNK_SIZE]
 
         while any("****" in err_line for err_line in chunk):
-            error_lines += chunk
+            error_lines.extend(chunk)
             temp_index += CHUNK_SIZE
             chunk = lines[temp_index : temp_index + CHUNK_SIZE]
     except IndexError:

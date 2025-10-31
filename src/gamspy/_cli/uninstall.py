@@ -3,8 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
-from collections.abc import Iterable
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 
@@ -12,6 +11,9 @@ import gamspy.utils as utils
 from gamspy.exceptions import GamspyException, ValidationError
 
 from .util import remove_solver_entry
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 app = typer.Typer(
     rich_markup_mode="rich",

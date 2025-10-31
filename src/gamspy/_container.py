@@ -11,7 +11,6 @@ import threading
 import time
 import traceback
 import weakref
-from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -25,12 +24,12 @@ from gamspy._config import get_option
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem, Sense
-from gamspy._options import Options
 from gamspy._workspace import Workspace
 from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
+    from collections.abc import Iterable, Sequence
     from typing import Any, Literal, TypeAlias
 
     from pandas import DataFrame
@@ -46,6 +45,8 @@ if TYPE_CHECKING:
     )
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._options import Options
+    from gamspy._symbols.implicits import ImplicitVariable
     from gamspy.math.matrix import Dim
 
     SymbolType: TypeAlias = Set | Alias | Parameter | Variable | Equation
@@ -267,7 +268,7 @@ class Container(gt.Container):
     ):
         self.output = output
         self._gams_string = ""
-        self.models: dict[str, Model] = dict()
+        self.models: dict[str, Model] = {}
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
 
@@ -339,7 +340,7 @@ class Container(gt.Container):
                     {"restart": load_from, "gdxSymbols": "all"}
                 )
                 self._synch_with_gams(gams_to_gamspy=True)
-                self._options._set_debug_options(dict())
+                self._options._set_debug_options({})
                 self._clean_modified_symbols()
                 self._unsaved_statements = []
                 self._is_restarted = True
@@ -679,7 +680,8 @@ class Container(gt.Container):
             strings.append("$offDotL")
         elif assume_suffix == 2:
             strings.append("$offDotScale")
-        strings += ["$offUNDF", "$offMulti"]
+
+        strings.extend(["$offUNDF", "$offMulti"])
 
         if not IS_MIRO_INIT and MIRO_GDX_OUT:
             if len(self._miro_output_symbols) == 0:
@@ -1347,7 +1349,7 @@ class Container(gt.Container):
             Variable | Sequence[Variable],
         ]
         | None = None,
-        limited_variables: Sequence[Variable] | None = None,
+        limited_variables: Sequence[ImplicitVariable] | None = None,
         external_module: str | None = None,
     ) -> Model:
         """
@@ -1370,7 +1372,7 @@ class Container(gt.Container):
             Objective variable to minimize or maximize or objective itself.
         matches : dict[Equation | Sequence[Equation], Variable | Sequence[Variable]], optional
             Equation - Variable matches for MCP models.
-        limited_variables : Sequence, optional
+        limited_variables : Sequence[ImplicitVariable], optional
             Allows limiting the domain of variables used in a model.
         external_module: str, optional
             The name of the external module in which the external equations are implemented

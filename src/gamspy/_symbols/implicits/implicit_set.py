@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
@@ -12,11 +11,13 @@ from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from types import EllipsisType
+
     import pandas as pd
 
     from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
-    from gamspy._types import EllipsisType
 
 
 class ImplicitSet(ImplicitSymbol, operable.Operable):

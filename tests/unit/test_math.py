@@ -700,6 +700,36 @@ def test_softmax(data):
     assert "exp" in equations[0].getDefinition()
 
 
+def test_softplus(data):
+    m, _markets, _demands = data
+    m = Container()
+
+    x = Variable(m, name="x", domain=gams_math.dim([3]))
+    x.fx[0] = -10
+    x.fx[1] = 2
+    x.fx[2] = 20
+
+    # computed via pytorch
+    expected_vals = np.array(
+        [
+            [1.030576846e-09, 2.009074926e00, 2.000000000e01],
+            [4.539890142e-05, 2.126928091e00, 2.000000000e01],
+            [3.132616758, 7.981388569, 21.269281387],
+            [9.481539726, 14.887933731, 26.265232086],
+        ]
+    )
+
+    for i, beta in enumerate([2, 1, 1 / 10, 1 / 20]):
+        for skip_intrinsic in [True, False]:
+            y, eqs = gams_math.softplus(x, beta, skip_intrinsic=skip_intrinsic)
+            assert y.domain == x.domain
+            assert len(eqs) == 1
+            model = Model(m, equations=m.getEquations(), problem="NLP")
+            model.solve()
+            rtol = 1e-7
+            assert np.allclose(y.toDense(), expected_vals[i], rtol=rtol)
+
+
 def test_tanh_activation(data):
     m, *_ = data
     m = Container()

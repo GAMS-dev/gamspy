@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import inspect
-import io
 import logging
 import os
 import threading
 import warnings
 from collections.abc import Sequence
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from gams.core.gdx import GMS_UEL_IDENT_SIZE
@@ -37,6 +37,7 @@ from gamspy._options import (
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
+    import io
     from typing import Literal
 
     import pandas as pd
@@ -141,18 +142,43 @@ class SolveStatus(Enum):
     """An enumeration for solve status types"""
 
     NormalCompletion = 1
+    """The solver terminated in a normal way."""
+
     IterationInterrupt = 2
+    """The solver was interrupted because it used too many iterations. The option `iteration_limit` may be used to increase the iteration limit if everything seems normal."""
+
     ResourceInterrupt = 3
+    """The solver was interrupted because it used too much time. The option `time_limit` may be used to increase the time limit if everything seems normal."""
+
     TerminatedBySolver = 4
+    """The solver encountered some difficulty and was unable to continue."""
+
     EvaluationInterrupt = 5
+    """Too many evaluations of nonlinear terms at undefined values. We recommend to use variable bounds to prevent forbidden operations, such as division by zero. The rows in which the errors occur are listed just before the solution."""
+
     CapabilityError = 6
+    """The solver does not have the capability required by the model. For example, some solvers do not support certain types of discrete variables or support a more limited set of functions than other solvers."""
+
     LicenseError = 7
+    """The solver cannot find the appropriate license key needed to use a specific subsolver."""
+
     UserInterrupt = 8
+    """The user has sent a signal to interrupt the solver."""
+
     SetupError = 9
+    """The solver encountered a fatal failure during problem set-up time."""
+
     SolverError = 10
+    """The solver encountered a fatal error."""
+
     InternalError = 11
+    """The solver encountered an internal fatal error."""
+
     Skipped = 12
+    """The entire solve step has been skipped."""
+
     SystemError = 13
+    """This indicates a completely unknown or unexpected error condition."""
 
 
 class FileFormat(Enum):
@@ -394,7 +420,7 @@ class Model:
 
         # matches
         if self._matches is not None:
-            matches: dict = dict()
+            matches: dict = {}
             for key, value in self._matches.items():
                 if isinstance(key, gp.Equation):
                     if isinstance(value, gp.Variable):
@@ -924,19 +950,19 @@ class Model:
         return assignment
 
     def _generate_solve_string(self) -> str:
-        solve_string = f"solve {self.name} using {self.problem}"
+        solve_statement = [f"solve {self.name} using {self.problem}"]
 
         if self.sense == gp.Sense.FEASIBILITY:
             # Set sense as min or max for feasibility
             self.sense = gp.Sense("MIN")
 
         if self.problem not in (Problem.MCP, Problem.CNS, Problem.EMP):
-            solve_string += f" {self.sense}"
+            solve_statement.append(str(self.sense))
 
         if self._objective_variable is not None:
-            solve_string += f" {self._objective_variable.gamsRepr()}"
+            solve_statement.append(self._objective_variable.gamsRepr())
 
-        return solve_string
+        return " ".join(solve_statement)
 
     def _add_runtime_options(self, options: Options, backend: str = "local") -> None:
         for key, value in options.model_dump(exclude_none=True).items():
@@ -1058,7 +1084,7 @@ class Model:
 
     def convert(
         self,
-        path: str,
+        path: str | Path,
         file_format: FileFormat | Sequence[FileFormat],
         options: ConvertOptions | None = None,
     ) -> None:
@@ -1067,7 +1093,7 @@ class Model:
 
         Parameters
         ----------
-        path : str
+        path : str | Path
             Path to the directory where the converted model files will be saved.
         file_format : FileFormat | Sequence[FileFormat]
             File format(s) to convert the model to. Can be a single FileFormat or a list of FileFormats.
@@ -1090,6 +1116,7 @@ class Model:
         >>> my_model.convert("output_directory", [gp.FileFormat.GAMS, gp.FileFormat.AMPL])
 
         """
+        path = Path(path)
         os.makedirs(path, exist_ok=True)
         solver_options = get_convert_solver_options(path, file_format, options)
         self.solve(solver="convert", solver_options=solver_options)
@@ -1358,7 +1385,7 @@ class Model:
                 if isinstance(key, gp.Equation):
                     equations_in_matches.append(key)
                 else:
-                    equations_in_matches += [equation for equation in key]
+                    equations_in_matches += list(key)
 
         equations = []
         for equation in self.equations:
@@ -1413,7 +1440,7 @@ class Model:
 
     def toGams(
         self,
-        path: str,
+        path: str | Path,
         options: Options | None = None,
         *,
         dump_gams_state: bool = False,
@@ -1423,7 +1450,7 @@ class Model:
 
         Parameters
         ----------
-        path : str
+        path : str | Path
             Path to the directory which will contain the GAMS model.
         options : Options | None, optional
             GAMSPy options, by default None
@@ -1440,18 +1467,20 @@ class Model:
                 f"`options` must be of type gp.Options of found {type(options)}"
             )
 
+        path = Path(path)
         converter = GamsConverter(self, path, options, dump_gams_state)
         converter.convert()
 
-    def toLatex(self, path: str, generate_pdf: bool = False) -> None:
+    def toLatex(self, path: str | Path, generate_pdf: bool = False) -> None:
         """
         Generates a latex file that contains the model definition under path/<model_name>.tex
 
         Parameters
         ----------
-        path : str
+        path : str | Path
             Path to the directory which will contain the .tex file.
         """
+        path = Path(path)
         converter = LatexConverter(self, path)
         converter.convert()
 

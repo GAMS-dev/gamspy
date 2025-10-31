@@ -7,7 +7,6 @@ import gamspy.math
 import gamspy.utils as utils
 from gamspy._container import Container
 from gamspy._symbols.equation import Equation
-from gamspy._symbols.parameter import Parameter
 from gamspy._symbols.variable import Variable
 from gamspy.exceptions import ValidationError
 from gamspy.math.matrix import next_alias
@@ -15,6 +14,7 @@ from gamspy.math.matrix import next_alias
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._symbols.parameter import Parameter
 
 
 def _get_random_name(prefix: str) -> str:
@@ -504,7 +504,7 @@ def log_softmax(x: Variable, dim: int = -1, skip_intrinsic: bool = False):
 
     if not skip_intrinsic and len(sum_domain) != 0 and len(sum_domain) <= 20:
         # Use built-in LSE if possible
-        scalars = [rec for rec in sum_domain.records["uni"]]
+        scalars = list(sum_domain.records["uni"])
         variables = []
         for scalar in scalars:
             expr_domain = [*x.domain[:dim], scalar, *x.domain[dim + 1 :]]
@@ -516,6 +516,67 @@ def log_softmax(x: Variable, dim: int = -1, skip_intrinsic: bool = False):
         expr_domain = [d if i != dim else sum_domain for (i, d) in enumerate(x.domain)]
         sum_expr = gamspy.Sum(sum_domain, gamspy.math.exp(x[expr_domain]))
         eq[...] = y[...] == x - gamspy.math.log(sum_expr)
+
+    return y, [eq]
+
+
+def softplus(
+    x: Variable,
+    beta=1.0,
+    *,
+    skip_intrinsic: bool = False,
+) -> tuple[Variable, list[Equation]]:
+    """
+    Implements the softplus activation function. This function uses the
+    :meth:`lse_max_sc <gamspy.math.lse_max_sc>` (log-sum-exp) intrinsic function for
+    improved numerical stability which usually leads to faster solve times. Some solvers
+    do not support :meth:`lse_max_sc <gamspy.math.lse_max_sc>`, in that case you can set
+    ``skip_intrinsic`` parameter to True to not use intrinsic functions.
+
+    ``beta`` value controls the smoothness and slope of the function, by default equals
+    to 1.
+
+    ``skip_intrinsic`` (Default `False`)
+
+    Parameters
+    ----------
+    x : Variable
+    beta : float
+
+    skip_intrinsic: bool
+
+    Returns
+    -------
+    tuple[Variable, list[Equation]]
+
+    Examples
+    --------
+    >>> from gamspy import Container, Variable
+    >>> from gamspy.math import dim
+    >>> from gamspy.math.activation import softplus
+    >>> m = Container()
+    >>> x = Variable(m, "x", domain=dim([500, 10]))
+    >>> y, eqs1 = softplus(x)
+    >>> y.domain
+    [Set(name='DenseDim500_1', domain=['*']), Set(name='DenseDim10_1', domain=['*'])]
+    >>> y2, eqs2 = softplus(x, skip_intrinsic=True) # don't use LSE because of skip_intrinsic
+
+    """
+    y = Variable._constructor_bypass(
+        x.container,
+        _get_random_name("y"),
+        domain=x.domain,
+    )
+    eq = Equation._constructor_bypass(
+        x.container,
+        _get_random_name("eq"),
+        domain=x.domain,
+    )
+
+    if skip_intrinsic:
+        eq[...] = y == (1 / beta) * gamspy.math.log(1 + gamspy.math.exp(beta * x))
+    else:
+        eq[...] = y == gamspy.math.lse_max_sc(beta, 0, x)
 
     return y, [eq]
 

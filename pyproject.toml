@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.17.0"
+version = "1.17.1"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -36,8 +36,9 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi[transfer] >= 51.1.0, < 52.0.0",
+  "gamsapi >= 51.1.0, < 52.0.0",
   "gamspy_base >= 51.1.0, < 52.0.0",
+  "pandas >= 2.2.2, < 2.4",
   "pydantic >= 2.0",
   "requests >= 2.28.0",
   "typer >= 0.16.0",
@@ -222,7 +223,8 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = [
-    "E",        # pycodestyle
+    "E",        # pycodestyle error
+    "W",        # pycodestyle warning
     "F",        # Pyflakes
     "UP",       # pyupgrade
     "B",        # flake8-bugbear
@@ -231,6 +233,8 @@ select = [
     "PIE",      # flake8-pie
     "PLR1714",  # Consider merging multiple comparisons
     "RUF",      # Ruff-specific rules
+    "TC",       # flake8-type-checking
+    "C4",       # flake8-comprehensions
 ]
 ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "SIM115", "B028", "B006", "RUF005", "RUF022"]
 
