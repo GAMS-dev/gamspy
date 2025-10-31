@@ -1,6 +1,7 @@
 import math
 import os
 import shutil
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -156,6 +157,17 @@ def test_lp_transport(data):
 
     output_path = os.path.join("tmp", "to_latex")
     transport.toLatex(output_path, generate_pdf=False)
+
+    output_path2 = Path("tmp") / "folder with blank"
+    transport.toLatex(output_path2, generate_pdf=False)
+    with open(os.path.join(output_path, "transport.tex")) as file1:
+        content1 = file1.read()
+
+    with open(output_path2 / "transport.tex") as file2:
+        content2 = file2.read()
+
+    assert content1 == content2
+
     # assert(
     #     os.path.exists(os.path.join(output_path, "transport.pdf"))
     # )

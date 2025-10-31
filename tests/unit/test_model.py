@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 import uuid
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -153,6 +154,25 @@ def test_model(data):
         assert os.path.exists(os.path.join(tmpdir, "jacobian.py"))
 
         with open(os.path.join(tmpdir, "jacobian.gms")) as file:
+            assert "$if not set jacfile $set jacfile jacobian.gdx" in file.read()
+
+    # Test Path
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir) / "folder with blank"
+        test_model.convert(
+            tmpdir_path,
+            file_format=[
+                FileFormat.GAMSJacobian,
+                FileFormat.GDXJacobian,
+                FileFormat.GAMSPyJacobian,
+            ],
+            options=ConvertOptions(GDXNames=0),
+        )
+        assert os.path.exists(tmpdir_path / "jacobian.gms")
+        assert os.path.exists(tmpdir_path / "jacobian.gdx")
+        assert os.path.exists(tmpdir_path / "jacobian.py")
+
+        with open(tmpdir_path / "jacobian.gms") as file:
             assert "$if not set jacfile $set jacfile jacobian.gdx" in file.read()
 
     # Check if the name is reserved
