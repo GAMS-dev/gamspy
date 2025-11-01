@@ -45,9 +45,16 @@ IRREGULAR_EQ_MAP = {
 
 class EquationType(Enum):
     REGULAR = "regular"
+    """Regular equations with =, >= and <= sign."""
+
     NONBINDING = "nonbinding"
+    """No relationship implied between left-hand side and right-hand side. This equation type is ideally suited for use in MCP models and in variational inequalities."""
+
     EXTERNAL = "external"
+    """Equation is defined by external programs."""
+
     BOOLEAN = "boolean"
+    """Boolean equations."""
 
     @classmethod
     def values(cls):

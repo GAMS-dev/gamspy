@@ -73,21 +73,52 @@ class Problem(Enum):
     """An enumeration for problem all problem types"""
 
     LP = "LP"
+    "Linear Programming"
+
     NLP = "NLP"
+    """Non-Linear Programming"""
+
     QCP = "QCP"
+    """Quadratically Constrained Programs"""
+
     DNLP = "DNLP"
+    """Nonlinear Programming with Discontinuous Derivatives"""
+
     MIP = "MIP"
+    """Mixed Integer Programming"""
+
     RMIP = "RMIP"
+    """Relaxed Mixed Integer Program"""
+
     MINLP = "MINLP"
+    """Mixed Integer Nonlinear Program"""
+
     RMINLP = "RMINLP"
+    """Relaxed Mixed Integer Nonlinear Program"""
+
     MIQCP = "MIQCP"
+    """Mixed Integer Quadratically Constrained Program"""
+
     RMIQCP = "RMIQCP"
+    """Relaxed Mixed Integer Quadratically Constrained Program"""
+
     MCP = "MCP"
+    """Mixed Complementarity Problem"""
+
     CNS = "CNS"
+    """Constrained Nonlinear System"""
+
     MPEC = "MPEC"
+    """Mathematical Programs with Equilibrium Constraints"""
+
     RMPEC = "RMPEC"
+    """Relaxed Mathematical Program with Equilibrium Constraints"""
+
     EMP = "EMP"
+    """Extended Mathematical Program"""
+
     MPSGE = "MPSGE"
+    """General Equilibrium"""
 
     @classmethod
     def values(cls):
@@ -102,8 +133,13 @@ class Sense(Enum):
     """An enumeration for sense types"""
 
     MIN = "MIN"
+    """Minimize the objective."""
+
     MAX = "MAX"
+    """Maximize the objective."""
+
     FEASIBILITY = "FEASIBILITY"
+    """Assess feasibility."""
 
     @classmethod
     def values(cls):
@@ -118,24 +154,61 @@ class ModelStatus(Enum):
     """An enumeration for model status types"""
 
     OptimalGlobal = 1
+    """The solution is optimal, that is, it is feasible (within tolerances) and it has been proven that no other feasible solution with better objective value exists."""
+
     OptimalLocal = 2
+    """A local optimum for an NLP has been found. That is, a solution that is feasible (within tolerances) and it has been proven that there exists a neighborhood of this solution in which no other feasible solution with better objective value exists."""
+
     Unbounded = 3
+    """The solution is unbounded. This message is reliable if the problem is linear, but occasionally it appears for difficult nonlinear problems that are not truly unbounded, but that lack some strategically placed bounds to limit the variables to sensible values."""
+
     InfeasibleGlobal = 4
+    """The problem has been proven to be infeasible. If this was not intended, something is probably misspecified in the logic or the data."""
+
     InfeasibleLocal = 5
+    """No feasible point could be found for the NLP problem from the given starting point. It does not necessarily mean that no feasible point exists."""
+
     InfeasibleIntermed = 6
+    """The current solution is not feasible, but the solver stopped, either because of a limit (for example, iteration or resource) or because of some sort of difficulty. The solver status will give more information."""
+
     Feasible = 7
+    """A feasible solution to a problem without discrete variables has been found."""
+
     Integer = 8
+    """A feasible solution to a problem with discrete variables has been found."""
+
     NonIntegerIntermed = 9
+    """An incomplete solution to a problem with discrete variables. A feasible solution has not yet been found."""
+
     IntegerInfeasible = 10
+    """It has been proven that there is no feasible solution to a problem with discrete variables."""
+
     LicenseError = 11
+    """The solver cannot find the appropriate license key needed to use a specific subsolver."""
+
     ErrorUnknown = 12
+    """After a solver error the model status is unknown."""
+
     ErrorNoSolution = 13
+    """An error occurred and no solution has been returned. No solution will be returned to GAMS because of errors in the solution process."""
+
     NoSolutionReturned = 14
+    """A solution is not expected for this solve. For example, the CONVERT solver only reformats the model but does not give a solution."""
+
     SolvedUnique = 15
+    """Indicates the solution returned is unique, i.e. no other solution exists. Used for CNS models. Examples where this status could be returned include non-singular linear models, triangular models with constant non-zero elements on the diagonal, and triangular models where the functions are monotone in the variable on the diagonal."""
+
     Solved = 16
+    """Indicates the model has been solved: used for CNS models. The solution might or might not be unique. If the solver uses status SOLVED SINGULAR wherever possible then this status implies that the Jacobian is non-singular, i.e. that the solution is at least locally unique."""
+
     SolvedSingular = 17
+    """Indicates the CNS model has been solved, but the Jacobian is singular at the solution. This can indicate that other solutions exist, either along a line (for linear models) or a curve (for nonlinear models) including the solution returned."""
+
     UnboundedNoSolution = 18
+    """The model is unbounded and no solution can be provided."""
+
     InfeasibleNoSolution = 19
+    """The model is infeasible and no solution can be provided."""
 
 
 class SolveStatus(Enum):
@@ -185,21 +258,52 @@ class FileFormat(Enum):
     """An enumeration for file format types"""
 
     AMPL = "ampl.mod"
+    """AMPL input format."""
+
     AMPLNL = "ampl.nl"
+    """AMPL nl format."""
+
     CPLEXLP = "cplex.lp"
+    """CPLEX LP format."""
+
     CPLEXMPS = "cplex.mps"
+    """CPLEX MPS format."""
+
     GAMSDict = "dict.txt"
+    """GAMS dictionary format."""
+
     GAMSDictMap = "dictmap.gdx"
+    """GAMS dictionary map format."""
+
     GAMSJacobian = "jacobian.gms"
+    """Jacobian in GAMS."""
+
     GAMSPyJacobian = "jacobian.py"
+    """Jacobian in GAMSPy."""
+
     GDXJacobian = "jacobian.gdx"
+    """GDX file with model data incl. Jacobian and Hessian evaluated at current point."""
+
     FileList = "files.txt"
+    """List of file formats generated."""
+
     FixedMPS = "fixed.mps"
+    """Fixed format mps file."""
+
     GAMS = "gams.gms"
+    """GAMS scalar model."""
+
     JuMP = "jump.jl"
+    """JuMP scalar model."""
+
     LINGO = "lingo.lng"
+    """Lingo format."""
+
     OSiL = "osil.xml"
+    """Optimization Services instance Language (OSiL) format."""
+
     Pyomo = "pyomo.py"
+    """Pyomo concrete scalar model."""
 
 
 INTERRUPT_STATUS = [

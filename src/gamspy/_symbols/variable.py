@@ -35,14 +35,31 @@ if TYPE_CHECKING:
 
 class VariableType(Enum):
     BINARY = "binary"
+    """Discrete variable that can only take values of 0 or 1."""
+
     INTEGER = "integer"
+    """Discrete variable that can only take integer values between the bounds."""
+
     POSITIVE = "positive"
+    """No negative values are allowed for variable. The user may change both bounds from the default value."""
+
     NEGATIVE = "negative"
+    """No positive values are allowed for variables. The user may change both bounds from the default value."""
+
     FREE = "free"
+    """No bounds on variable. Both bounds may be changed from the default values by the user."""
+
     SOS1 = "sos1"
+    """A set of variables, such that at most one variable within a group may have a non-zero value."""
+
     SOS2 = "sos2"
+    """A set of variables, such that at most two variables within a group may have non-zero values and the two non-zero values are adjacent."""
+
     SEMICONT = "semicont"
+    """Semi-continuous, must be zero or above a given minimum level."""
+
     SEMIINT = "semiint"
+    """Semi-integer, must be zero or above a given minimum level and integer."""
 
     @classmethod
     def values(cls):
