@@ -385,7 +385,8 @@ def _get_name_from_stack() -> str:
         # Current frame is this function (_get_name_from_stack)
         # The first f_back takes us to _get_symbol_name
         # The second f_back takes us to the __init__ function of
-        # the symbol. The third f_back takes us to the user code.
+        # the symbol or addX function of Container. The third f_back
+        # takes us to the user code.
         frame = inspect.currentframe().f_back.f_back.f_back
         assert frame is not None
 

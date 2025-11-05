@@ -385,11 +385,6 @@ def validate_name(word: str) -> str:
             f" words: {RESERVED_WORDS}"
         )
 
-    if word.endswith("gpauto"):
-        raise ValidationError(
-            "Name cannot end with one of the reserved words. `gpauto` is a reserverd word."
-        )
-
     if not re.match(NAME_MATCH_REGEX, word):
         raise ValidationError(
             f"`{word}` is an invalid GAMSPy symbol name. "
