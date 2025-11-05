@@ -1064,6 +1064,9 @@ class Container(gt.Container):
         >>> a = m.addAlias("a", i)
 
         """
+        if name is None:
+            name = self._get_symbol_name(prefix="a")
+
         return gp.Alias(self, name, alias_with)
 
     def addSet(
@@ -1121,6 +1124,9 @@ class Container(gt.Container):
         >>> i = m.addSet("i")
 
         """
+        if name is None:
+            name = self._get_symbol_name(prefix="s")
+
         return gp.Set(
             self,
             name,
@@ -1189,6 +1195,9 @@ class Container(gt.Container):
         >>> a = m.addParameter("a")
 
         """
+        if name is None:
+            name = self._get_symbol_name(prefix="p")
+
         return gp.Parameter(
             self,
             name,
@@ -1252,6 +1261,9 @@ class Container(gt.Container):
         >>> v = m.addVariable("v")
 
         """
+        if name is None:
+            name = self._get_symbol_name(prefix="v")
+
         return gp.Variable(
             self,
             name,
@@ -1322,6 +1334,9 @@ class Container(gt.Container):
         >>> i = m.addEquation("i")
 
         """
+        if name is None:
+            name = self._get_symbol_name(prefix="e")
+
         return gp.Equation(
             self,
             name,
@@ -1389,6 +1404,9 @@ class Container(gt.Container):
         >>> model = m.addModel("my_model", "LP", [e])
 
         """
+        if name is None:
+            name = self._get_symbol_name(prefix="m")
+
         return gp.Model(
             self,
             name,
