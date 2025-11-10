@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 import gamspy.math as gams_math
-from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
+from gamspy import Container, Equation, Model, Number, Parameter, Set, Sum, Variable
 from gamspy._symbols.implicits import ImplicitVariable
 from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
@@ -634,6 +634,80 @@ def test_relu_2(data):
 
 def test_relu_3(data):
     test_relu(data, gams_math.relu_with_sos1_var)
+
+
+def test_relu_with_equilibrium(data):
+    m, _markets, _demands = data
+    m = Container()
+
+    i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
+
+    budget = 200
+
+    c = Parameter(
+        m,
+        name="c",
+        records=[("i1", 100), ("i2", 50), ("i3", 90)],
+        description="min investment before operation",
+        domain=[i],
+    )
+
+    g = Parameter(
+        m,
+        name="g",
+        records=[("i1", 2), ("i2", 1.2), ("i3", 1.5)],
+        description="gain per unit after min investment",
+        domain=[i],
+    )
+
+    x = Variable(
+        m,
+        name="x",
+        description="investment in plant i",
+        domain=[i],
+        type="Positive",
+    )
+
+    output = gams_math.relu_with_equilibrium(x - c)
+    assert len(output.variables_created) == 2
+    assert len(output.equations_created) == 1
+    assert len(output.matches) == 1
+    assert output.extra_return is not None
+    assert "output" in output.variables_created
+    assert "new_input" in output.variables_created
+    assert "set_new_input" in output.equations_created
+    assert len(output) == 3
+
+    # try a variable
+    output_2 = gams_math.relu_with_equilibrium(x)
+    assert len(output_2.variables_created) == 1
+    assert len(output_2.equations_created) == 0
+    assert len(output_2.matches) == 1
+    assert output_2.extra_return is not None
+    assert "output" in output_2.variables_created
+    assert len(output_2) == 3
+
+    y = output.result
+
+    total_budget = Equation(m, name="check_budget")
+    total_budget[...] = Sum(i, x[i]) <= Number(budget)
+
+    budget = Model(
+        m,
+        name="budget",
+        equations=m.getEquations(),
+        problem="MPEC",
+        sense="max",
+        objective=Sum(i, y[i] * g[i]),
+        matches=output.matches,
+    )
+
+    y.l["i1"] = 0
+    y.l["i2"] = 200
+    y.l["i3"] = 0
+    budget.solve(output=sys.stdout)
+
+    assert np.isclose(budget.objective_value, 200)
 
 
 def test_log_softmax(data):

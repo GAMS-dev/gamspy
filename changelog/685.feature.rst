@@ -1,0 +1,1 @@
+Add FormulationResult class for better accessibility into formulations.

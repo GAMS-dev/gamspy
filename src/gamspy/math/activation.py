@@ -5,10 +5,12 @@ from typing import TYPE_CHECKING
 import gamspy._symbols.implicits as implicits
 import gamspy.math
 import gamspy.utils as utils
+from gamspy._algebra.number import Number
 from gamspy._container import Container
 from gamspy._symbols.equation import Equation
 from gamspy._symbols.variable import Variable
 from gamspy.exceptions import ValidationError
+from gamspy.formulations.result import FormulationResult
 from gamspy.math.matrix import next_alias
 
 if TYPE_CHECKING:
@@ -272,7 +274,7 @@ def relu_with_binary_var(
     default_lb: float = -(10**6),
     default_ub: float = 10**6,
     return_binary_var: bool = False,
-):
+) -> FormulationResult:
     """
     Implements the ReLU activation function using binary variables. The ReLU
     function is defined as ReLU(x) = max(x, 0). This implementation **generates**
@@ -292,6 +294,10 @@ def relu_with_binary_var(
 
     Adapted from `OMLT <https://github.com/cog-imperial/OMLT/blob/e60563859a66ac5dd3348bf1763de57eec95171e/src/omlt/neuralnet/activations/relu.py>`_
 
+    FormulationResult:
+        - variables_created: ["output", "binary"]
+        - equations_created: ["y_gte_x", "y_lte_x_1", "y_lte_x_2"]
+
     Parameters
     ----------
     x : Parameter | Variable | implicits.ImplicitParameter | implicits.ImplicitVariable | Expression | Operation
@@ -301,7 +307,7 @@ def relu_with_binary_var(
 
     Returns
     -------
-    tuple[Variable, list[Equation]] | tuple[Variable, Variable, list[Equation]]
+    FormulationResult
 
     Examples
     --------
@@ -310,7 +316,7 @@ def relu_with_binary_var(
     >>> m = Container()
     >>> i = Set(m, "i", records=range(3))
     >>> x = Variable(m, "x", domain=[i])
-    >>> y, eqs = relu_with_binary_var(x)
+    >>> y, eqs = relu_with_binary_var(x) # FormulationResult can be unpacked for backwards compat
     >>> y.type
     'positive'
     >>> len(eqs)
@@ -322,6 +328,9 @@ def relu_with_binary_var(
     [Set(name='i', domain=['*'])]
     >>> b.domain # i many binary variables
     [Set(name='i', domain=['*'])]
+    >>> output = relu_with_binary_var(x) # You can use FormulationResult too
+    >>> binary_var = output.variables_created["binary"]
+    >>> y = output.result
 
     """
     assert isinstance(x.container, Container)
@@ -359,10 +368,127 @@ def relu_with_binary_var(
         eq[2][...] = y <= sigma * default_ub
         y.lo[...] = 0
 
-    if return_binary_var:
-        return y, sigma, eq
+    result = FormulationResult(
+        y,
+        {
+            "y_gte_x": eq[0],
+            "y_lte_x_1": eq[1],
+            "y_lte_x_2": eq[2],
+        },
+    )
+    result.variables_created = {"binary": sigma, "output": y}
+    result.extra_return = sigma if return_binary_var else None
+    return result
+
+
+def relu_with_equilibrium(
+    x: (
+        Parameter
+        | Variable
+        | implicits.ImplicitParameter
+        | implicits.ImplicitVariable
+        | Expression
+        | Operation
+    ),
+) -> FormulationResult:
+    """
+    Implements the ReLU activation function using Equilibrium Constraints.
+    This implementation is suitable for models of type Mathematical Program with
+    Equilibrium Constraints (MPEC) or Mixed Complementarity Problem (MCP).
+    One positive variable is **generated**, which serves as the activation
+    variable and no equations. The activation variable shares the same domain as
+    the input. Lower and upper bounds are not required for this formulation.
+
+    Returns FormulationResult which can be unpacked as activation variable,
+    matches dictionary and the equation list (empty).
+
+    FormulationResult:
+        - variables_created: ["output"]
+        - equations_created: []
+        - matches: {(output - x) : output}
+        - extra_return: yes (matches)
+
+    or if the provided input was not a Variable, this formulation assigns it to a
+    new variable and uses the new variable instead
+
+    FormulationResult:
+        - variables_created: ["output", "new_input"]
+        - equations_created: ["set_new_input"]
+        - matches: {(output - new_input) : output}
+        - extra_return: yes (matches)
+
+
+    Parameters
+    ----------
+    x : Variable
+
+    Returns
+    -------
+    FormulationResult
+
+    Examples
+    --------
+    >>> from gamspy import Container, Variable, Set
+    >>> from gamspy.math.activation import relu_with_equilibrium
+    >>> m = Container()
+    >>> i = Set(m, "i", records=range(3))
+    >>> x = Variable(m, "x", domain=[i])
+    >>> y, matches, eqs = relu_with_equilibrium(x)
+    >>> y.type
+    'positive'
+    >>> len(eqs)
+    0
+    >>> len(matches)
+    1
+    >>> result = relu_with_equilibrium(x)
+    >>> type(result)
+    <class 'gamspy.formulations.result.FormulationResult'>
+    >>> result = relu_with_equilibrium(x - 5)
+    >>> new_input = result.variables_created["new_input"]
+
+    """
+    assert isinstance(x.container, Container)
+    domain = x.domain
+
+    y = x.container.addVariable(
+        type="positive",
+        domain=domain,
+    )
+
+    new_input = None
+    set_new_input = None
+    if not isinstance(x, Variable):
+        new_input = Variable._constructor_bypass(
+            x.container,
+            _get_random_name("new_input"),
+            domain=domain,
+        )
+        set_new_input = Equation._constructor_bypass(
+            x.container,
+            _get_random_name("set_new_input"),
+            domain=domain,
+        )
+        set_new_input[...] = new_input == x
     else:
-        return y, eq
+        new_input = x
+
+    eq = Equation._constructor_bypass(
+        x.container,
+        _get_random_name("matches_eq"),
+        domain=domain,
+    )
+
+    eq[...] = y - new_input >= Number(0)
+
+    result = FormulationResult(y, {})
+    result.variables_created["output"] = y
+    if set_new_input is not None:
+        result.variables_created["new_input"] = new_input
+        result.equations_created["set_new_input"] = set_new_input
+
+    result.extra_return = {eq: y}
+    result.matches = {eq: y}
+    return result
 
 
 def relu_with_complementarity_var(
