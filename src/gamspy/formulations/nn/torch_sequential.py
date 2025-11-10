@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing
 from functools import partial
 from typing import TYPE_CHECKING
 
@@ -196,11 +197,82 @@ class TorchSequential:
         l = self._layer_converters[clz](container, layer)
         return l
 
-    def __call__(self, input: gp.Variable) -> tuple[gp.Variable, list[gp.Equation]]:
-        out = input
-        equations = []
-        for layer in self.layers:
-            out, layer_eqs = layer(out)
-            equations.extend(layer_eqs)
+    def _update_dict_layered(
+        self, large: dict[str, typing.Any], small: dict[str, typing.Any], layer_num: int
+    ):
+        for key in small:
+            large[f"{layer_num}.{key}"] = small[key]
 
-        return out, equations
+    def __call__(self, input: gp.Variable) -> gp.formulations.FormulationResult:
+        """
+
+        This method returns a **`FormulationResult`** object, which includes symbols
+        and outputs created by its underlying layers.
+
+        The way to access these underlying symbols depends on what the sub-layer
+        returns:
+
+        1. **If a Sub-Layer Returns a `FormulationResult`**
+
+        All symbols created by that sub-layer can be accessed within the main
+        `FormulationResult`. Each symbol's name is **prefixed** with its layer
+        number, followed by a dot (`.`).
+
+        * **Access Format:** `<layer_num>.<symbol_name>`
+        * **Example:** If the first layer creates a parameter named `bias`, it is accessed as `0.bias` in `parameters_created`.
+
+        2. **If a Sub-Layer Returns the "Old Style" Output (Output Variable and List of Equations)**
+
+        For backward compatibility, if a sub-layer returns an output variable and
+        a list of equations instead of a `FormulationResult`, they are accessed
+        as follows:
+
+        * **Output Variable:** The main output variable is named:
+            * **Access Format:** `<layer_num>.output`
+        * **Equations:** Each returned equation is sequentially named:
+            * **Access Format:** `<layer_num>.eq_<eq_number>` (where `eq_number` starts at 0, 1, 2...)
+            * **Example:** The first equation from the third layer is accessed as `2.eq_0` in `equations_created`.
+
+
+         Returns
+         -------
+         FormulationResult
+
+        """
+        result = gp.formulations.FormulationResult()
+
+        out: gp.Variable | gp.Parameter | None = input
+        for layer_num, layer in enumerate(self.layers):
+            output = layer(out)
+            if isinstance(output, gp.formulations.FormulationResult):
+                self._update_dict_layered(
+                    result.equations_created, output.equations_created, layer_num
+                )
+                self._update_dict_layered(
+                    result.variables_created, output.variables_created, layer_num
+                )
+                self._update_dict_layered(
+                    result.sets_created, output.sets_created, layer_num
+                )
+                self._update_dict_layered(
+                    result.parameters_created, output.parameters_created, layer_num
+                )
+                self._update_dict_layered(result.other, output.other, layer_num)
+
+                # matches are not named
+                result.matches.update(output.matches)
+                out = output.result
+            else:
+                # old interface only provides output var and list of equations
+                out, layer_eqs = output
+                result.variables_created[f"{layer_num}.output"] = out
+                for eq_num, eq in enumerate(layer_eqs):
+                    result.equations_created[f"{layer_num}.eq_{eq_num}"] = eq
+
+        result.result = out
+
+        # to prevent forgetting matches when unpacking
+        if result.matches:
+            result.extra_return = result.matches
+
+        return result

@@ -3248,7 +3248,14 @@ def test_sequential_layer(data):
     x2 = gp.Variable(m, domain=dim([10, 1, 8]))
 
     seq_formulation_2 = gp.formulations.TorchSequential(m, model2)
-    y2, _eqs2 = seq_formulation_2(x2)
+    output = seq_formulation_2(x2)
+    assert "0.output" in output.variables_created
+    assert "1.y_gte_x" in output.equations_created
+    assert "1.binary" in output.variables_created
+    assert "2.eq_0" in output.equations_created
+    assert "3.y_lte_x_1" in output.equations_created
+
+    y2, _eqs2 = output
     expected_shape = (10, 1, 6)
     assert tuple(len(d) for d in y2.domain) == expected_shape
 
@@ -3326,5 +3333,33 @@ def test_sequential_layer_custom_layer(data):
 
     seq_form = TorchSequential(m, model)
     x = gp.Variable(m)
-    _y, eqs = seq_form(x)
-    assert len(eqs) == 3
+    output = seq_form(x)
+    assert len(output) == 2
+    assert len(output.equations_created) == 3
+    assert "0.output" in output.variables_created
+    assert "0.binary" in output.variables_created
+    assert "0.y_gte_x" in output.equations_created
+    assert "0.y_lte_x_1" in output.equations_created
+    assert "0.y_lte_x_2" in output.equations_created
+
+
+@pytest.mark.skipif(TORCH_AVAILABLE is False, reason="Requires PyTorch installed")
+@pytest.mark.unit
+def test_sequential_layer_with_matches(data):
+    m, *_ = data
+    model = torch.nn.Sequential(
+        torch.nn.ReLU(),
+    )
+
+    def relu_converter(m: gp.Container, layer):
+        return gp.math.activation.relu_with_equilibrium
+
+    seq_form = TorchSequential(m, model, layer_converters={"ReLU": relu_converter})
+
+    x = gp.Variable(m)
+    _, matches, eqs = seq_form(x)
+    assert len(eqs) == 0
+    assert len(matches) == 1
+
+    formulation_result = seq_form(x)
+    str(formulation_result)

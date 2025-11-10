@@ -394,6 +394,13 @@ Implements the ReLU activation function using complementarity conditions.
 
 Implements the ReLU activation function using `SOS1 <https://www.gams.com/47/docs/UG_LanguageFeatures.html?search=sos#UG_LanguageFeatures_SpecialOrderSetsOfType1-SOS1>`_ variables.
 
+:meth:`relu_with_equilibrium <gamspy.math.relu_with_equilibrium>`
+-----------------------------------------------------------
+|mpec-badge| or |mcp-badge|
+
+Implements the ReLU activation function using equilibrium constraints.
+You can learn more about MPEC `here  <https://www.gams.com/51/docs/UG_ModelSolve.html#UG_ModelSolve_ModelClassificationOfModels_MPEC>`_.
+
 :meth:`leaky_relu_with_binary_var <gamspy.math.leaky_relu_with_binary_var>`
 ---------------------------------------------------------------------------
 |mip-badge|
