@@ -1,1 +1,0 @@
-Fix autoretrieval of python name in addX syntax.
