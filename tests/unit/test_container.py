@@ -17,6 +17,7 @@ import pandas as pd
 import pytest
 import requests
 
+import gamspy as gp
 import gamspy.utils as utils
 from gamspy import (
     Alias,
@@ -1354,3 +1355,22 @@ def test_batch_setRecords():
 
     with pytest.raises(ValidationError):
         m.setRecords({i: range(10), k: range(5)}, uels_on_axes=[True, False, True])
+
+
+def test_python_name():
+    m = gp.Container()
+
+    i = m.addSet()
+    assert i.name == "i"
+
+    a = m.addAlias(alias_with=i)
+    assert a.name == "a"
+
+    plusminus = m.addParameter(domain=[i])
+    assert plusminus.name == "plusminus"
+
+    var = m.addVariable(domain=[i])
+    assert var.name == "var"
+
+    eq = m.addEquation(domain=[i])
+    assert eq.name == "eq"

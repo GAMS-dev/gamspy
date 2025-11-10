@@ -20,6 +20,7 @@ from gamspy.formulations.piecewise import (
     pwl_convexity_formulation,
     pwl_interval_formulation,
 )
+from gamspy.formulations.result import FormulationResult
 from gamspy.formulations.shape import flatten_dims
 
 __all__ = [
@@ -41,4 +42,5 @@ __all__ = [
     "pwl_convexity_formulation",
     "pwl_interval_formulation",
     "utils",
+    "FormulationResult",
 ]
