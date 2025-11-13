@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import gc
 import glob
 import math
@@ -1203,6 +1204,7 @@ def test_explicit_license_path():
         xdice.solve()
 
 
+@pytest.mark.unit
 def test_writeSolverOptions():
     m = Container()
     m.writeSolverOptions(
@@ -1357,6 +1359,7 @@ def test_batch_setRecords():
         m.setRecords({i: range(10), k: range(5)}, uels_on_axes=[True, False, True])
 
 
+@pytest.mark.unit
 def test_python_name():
     m = gp.Container()
 
@@ -1374,3 +1377,53 @@ def test_python_name():
 
     eq = m.addEquation(domain=[i])
     assert eq.name == "eq"
+
+
+@pytest.mark.unit
+def test_deepcopy():
+    m = gp.Container()
+
+    # deepcopy set
+    c = gp.Set(m)
+    c2 = copy.deepcopy(c)
+    assert id(c) != id(c2)
+
+    t = gp.Set(m)
+
+    # deepcopy alias
+    a = gp.Alias(m, alias_with=c)
+    a2 = gp.Alias(m, alias_with=c)
+    assert id(a) != id(a2)
+
+    # deepcopy parameter
+    b = gp.Parameter(m)
+    b2 = gp.Parameter(m)
+    assert id(b) != id(b2)
+
+    # deepcopy variable
+    x = gp.Variable(m, domain=[c, t])
+    x2 = gp.Variable(m, domain=[c, t])
+    assert id(x) != id(x2)
+
+    # deepcopy equation
+    e = gp.Equation(m, domain=[c, t])
+    e2 = gp.Equation(m, domain=[c, t])
+    assert id(e) != id(e2)
+
+    # deepcopy expression
+    expr = gp.Sum((c, t), x[c, t])
+    expr2 = copy.deepcopy(expr)
+    assert id(expr) != id(expr2)
+
+    # deepcopy model
+    model = gp.Model(m, equations=[e])
+    model2 = copy.deepcopy(model)
+    assert id(model) != id(model2)
+
+    # deepcopy a container
+    m2 = copy.deepcopy(m)
+    assert id(m) != id(m2)
+    assert len(m.data) == len(m2.data)
+
+    # add a new symbol to the copied container
+    _ = gp.Parameter(m2)
