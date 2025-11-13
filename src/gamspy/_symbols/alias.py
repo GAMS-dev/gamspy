@@ -88,9 +88,6 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
                 f"Container must of type `Container` but found {type(container)}"
             )
 
-        if not isinstance(alias_with, (gp.Set, gp.Alias)):
-            raise TypeError(f"alias_with must be a Set but found {type(alias_with)}")
-
         if name is None:
             return object.__new__(cls)
         else:

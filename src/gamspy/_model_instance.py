@@ -59,6 +59,7 @@ from gams.core.gmo import (
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy._communication import send_job
 from gamspy._database import (
     Database,
     GamsEquation,
@@ -324,7 +325,9 @@ class ModelInstance:
         # Run
         try:
             self.container._job = self.job_name
-            self.container._send_job(self.job_name, self.pf_file, self.output)
+            send_job(
+                self.container._comm_pair_id, self.job_name, self.pf_file, self.output
+            )
         except GamspyException as exception:
             self.container._workspace._errors.append(str(exception))
             message = _customize_exception(

@@ -17,6 +17,7 @@ import requests
 
 import gamspy._backend.backend as backend
 import gamspy.utils as utils
+from gamspy._communication import send_job
 from gamspy._options import Options
 from gamspy.exceptions import (
     EngineClientException,
@@ -916,7 +917,7 @@ class GAMSEngine(backend.Backend):
         options._extra_options["save"] = self.restart_file
         options._export(self.pf_file)
 
-        self.container._send_job(self.job_name, self.pf_file)
+        send_job(self.container._comm_pair_id, self.job_name, self.pf_file)
 
     def _sync(self):
         symbols = utils._get_symbol_names_from_gdx(
@@ -931,7 +932,7 @@ class GAMSEngine(backend.Backend):
         options._set_extra_options(extra_options)
         options._export(self.pf_file)
 
-        self.container._send_job(self.job_name, self.pf_file)
+        send_job(self.container._comm_pair_id, self.job_name, self.pf_file)
 
     def _append_gamspy_files(self) -> list[str]:
         extra_model_files = self.client.extra_model_files + [self.restart_file]

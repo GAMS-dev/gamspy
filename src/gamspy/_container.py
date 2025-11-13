@@ -4,11 +4,8 @@ import atexit
 import os
 import platform
 import signal
-import socket
-import subprocess
 import tempfile
 import threading
-import time
 import traceback
 import weakref
 from typing import TYPE_CHECKING
@@ -20,12 +17,13 @@ import gamspy._miro as miro
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
+from gamspy._communication import close_connection, get_connection, open_connection
 from gamspy._config import get_option
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem, Sense
 from gamspy._workspace import Workspace
-from gamspy.exceptions import FatalError, GamspyException, ValidationError
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     import io
@@ -67,79 +65,6 @@ def add_sysdir_to_path(system_directory: str) -> None:
             os.environ["PATH"] = system_directory
 
 
-def open_connection(
-    system_directory: str, process_directory: str, license_path: str
-) -> tuple[socket.socket, subprocess.Popen]:
-    TIMEOUT = 30
-
-    initial_pf_file = os.path.join(process_directory, "gamspy.pf")
-    with open(initial_pf_file, "w") as file:
-        file.write(
-            'incrementalMode="2"\n'
-            f'procdir="{process_directory}"\n'
-            f'license="{license_path}"\n'
-            f'curdir="{os.getcwd()}"\n'
-        )
-
-    command = [
-        os.path.join(system_directory, "gams"),
-        "GAMSPY_JOB",
-        "pf",
-        initial_pf_file,
-    ]
-
-    certificate_path = os.path.join(utils.DEFAULT_DIR, "gamspy_cert.crt")
-    env = os.environ.copy()
-    if os.path.isfile(certificate_path):
-        env["GAMSLICECRT"] = certificate_path
-
-    process = subprocess.Popen(
-        command,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        errors="replace",
-        start_new_session=platform.system() != "Windows",
-        env=env,
-    )
-
-    port_info = process.stdout.readline().strip()
-
-    try:
-        port = int(port_info.removeprefix("port: "))
-    except ValueError as e:
-        raise ValidationError(
-            f"Error while reading the port! {port_info + process.stdout.read()}"
-        ) from e
-
-    def handler(signum, frame):
-        if platform.system() != "Windows":
-            os.kill(process.pid, signal.SIGINT)
-
-    if threading.current_thread() is threading.main_thread():
-        signal.signal(signal.SIGINT, handler)
-
-    start = time.time()
-    while True:
-        if process.poll() is not None:  # pragma: no cover
-            raise ValidationError(process.communicate()[0])
-
-        try:
-            new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            new_socket.connect((LOOPBACK, port))
-            break
-        except (ConnectionRefusedError, OSError) as e:
-            new_socket.close()
-            end = time.time()
-
-            if end - start > TIMEOUT:  # pragma: no cover
-                raise FatalError(
-                    f"Timeout while establishing the connection with socket. {process.communicate()[0]}"
-                ) from e
-
-    return new_socket, process
-
-
 def get_system_directory(system_directory: str | os.PathLike | None) -> str:
     if isinstance(system_directory, os.PathLike):
         system_directory = os.fspath(system_directory)
@@ -169,65 +94,6 @@ def get_options_file_name(solver: str, file_number: int) -> str:
         options_file_name = f"{solver}.{file_number}"
 
     return options_file_name
-
-
-def check_response(response: bytes, job_name: str) -> None:
-    GAMS_STATUS = {
-        1: "Solver is to be called, the system should never return this number.",
-        2: "There was a compilation error.",
-        3: "There was an execution error.",
-        4: "System limits were reached.",
-        5: "There was a file error.",
-        6: "There was a parameter error.",
-        7: "The solve has failed due to a license error. The license you are using may impose model size limits (demo/community license) or you are using a GAMSPy incompatible professional license. Please contact sales@gams.com to find out about license options.",
-        8: "There was a GAMS system error.",
-        9: "GAMS could not be started.",
-        10: "Out of memory.",
-        11: "Out of disk.",
-        109: "Could not create process/scratch directory.",
-        110: "Too many process/scratch directories.",
-        112: "Could not delete the process/scratch directory.",
-        113: "Could not write the script gamsnext.",
-        114: "Could not write the parameter file.",
-        115: "Could not read environment variable.",
-        400: "Could not spawn the GAMS language compiler (gamscmex).",
-        401: "Current directory (curdir) does not exist.",
-        402: "Cannot set current directory (curdir).",
-        404: "Blank in system directory (UNIX only).",
-        405: "Blank in current directory (UNIX only).",
-        406: "Blank in scratch extension (scrext)",
-        407: "Unexpected cmexRC.",
-        408: "Could not find the process directory (procdir).",
-        409: "CMEX library not be found (experimental).",
-        410: "Entry point in CMEX library could not be found (experimental).",
-        411: "Blank in process directory (UNIX only).",
-        412: "Blank in scratch directory (UNIX only).",
-        909: "Cannot add path / unknown UNIX environment / cannot set environment variable.",
-        1000: "Driver error: incorrect command line parameters for gams.",
-        2000: "Driver error: internal error: cannot install interrupt handler.",
-        3000: "Driver error: problems getting current directory.",
-        4000: "Driver error: internal error: GAMS compile and execute module not found.",
-        5000: "Driver error: internal error: cannot load option handling library.",
-    }
-
-    value = response[: response.find(b"#")].decode("ascii")
-    if not value:
-        raise FatalError(
-            "Error while getting the return code from GAMS backend. This means that GAMS is in a bad state. Try to backtrack for previous errors."
-        )
-
-    return_code = int(value)
-
-    if return_code in GAMS_STATUS:
-        try:
-            info = GAMS_STATUS[return_code]
-        except IndexError:  # pragma: no cover
-            info = ""
-
-        raise GamspyException(
-            f"Return code {return_code}. {info} Check {job_name + '.lst'} for more information.",
-            return_code,
-        )
 
 
 class Container(gt.Container):
@@ -266,13 +132,12 @@ class Container(gt.Container):
         options: Options | None = None,
         output: io.TextIOWrapper | None = None,
     ):
+        self._comm_pair_id = utils._get_unique_name()
         self.output = output
         self._gams_string = ""
         self.models: dict[str, Model] = {}
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
-
-        self._is_socket_open = True
 
         system_directory = get_system_directory(system_directory)
         add_sysdir_to_path(system_directory)
@@ -306,16 +171,8 @@ class Container(gt.Container):
         self._miro_input_symbols: list[str] = []
         self._miro_output_symbols: list[str] = []
 
-        self._socket, self._process = open_connection(
-            self.system_directory, self._process_directory, self._license_path
-        )
-        weakref.finalize(
-            self,
-            self._release_resources,
-            self._is_socket_open,
-            self._socket,
-            self._process,
-        )
+        open_connection(self)
+        weakref.finalize(self, close_connection, self._comm_pair_id)
 
         self._is_restarted = False
         if load_from is not None:
@@ -434,58 +291,12 @@ class Container(gt.Container):
 
         return name
 
-    @staticmethod
-    def _release_resources(
-        is_socket_open: bool, socket: socket.socket, process: subprocess.Popen
-    ):
-        if is_socket_open:
-            try:
-                socket.sendall(b"stop")
-                socket.close()
-
-                if not process.stdout.closed:
-                    process.stdout.close()
-
-                while process.poll() is None:
-                    ...
-            except OSError:  # Socket may have been already closed.
-                ...
-
-    def _read_output(self, output: io.TextIOWrapper | None) -> None:
-        if output is not None:
-            while True:
-                data = self._process.stdout.readline()
-                output.write(data)
-                output.flush()
-                if data.startswith("--- Job ") and "elapsed" in data:
-                    break
-
     def _interrupt(self) -> None:
+        _, process = get_connection(self._comm_pair_id)
         if platform.system() == "Windows":
-            os.kill(self._process.pid, signal.CTRL_C_EVENT)
+            os.kill(process.pid, signal.CTRL_C_EVENT)
         else:
-            os.kill(self._process.pid, signal.SIGINT)
-
-    def _send_job(
-        self,
-        job_name: str,
-        pf_file: str,
-        output: io.TextIOWrapper | None = None,
-    ):
-        try:
-            # Send pf file
-            self._socket.sendall(pf_file.encode("utf-8"))
-
-            # Read output
-            self._read_output(output)
-
-            # Receive response
-            response = self._socket.recv(256)
-            check_response(response, job_name)
-        except ConnectionError as e:
-            raise FatalError(
-                f"There was an error while communicating with GAMS server: {e}",
-            ) from e
+            os.kill(process.pid, signal.SIGINT)
 
     def _write_miro_files(self):
         # create conf_<model>/<model>_io.json
@@ -493,8 +304,7 @@ class Container(gt.Container):
             encoder = MiroJSONEncoder(self)
             encoder.write_json()
         except Exception:
-            self._release_resources(self._is_socket_open, self._socket, self._process)
-            self._is_socket_open = False
+            close_connection(self._comm_pair_id)
             traceback.print_exc()
             os._exit(1)
 
@@ -1026,8 +836,7 @@ class Container(gt.Container):
         to communicate with the GAMS execution engine, e.g. creating new symbols, changing data,
         solves, etc. The container data (Container.data) is still available for read operations.
         """
-        self._release_resources(self._is_socket_open, self._socket, self._process)
-        self._is_socket_open = False
+        close_connection(self._comm_pair_id)
 
     def addAlias(
         self,
