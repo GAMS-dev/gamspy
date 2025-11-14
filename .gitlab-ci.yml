@@ -68,7 +68,7 @@ pre-commit-autoupdate:
     - git add .pre-commit-config.yaml
     # Add [skip ci] to the commit message to prevent this push from triggering another pipeline
     - git commit -m "[CHORE] Automatically update pre-commit hooks [skip ci]"
-    - git push origin HEAD:$CI_COMMIT_REF_NAME
+    - git push origin $CI_COMMIT_REF_NAME
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
 
