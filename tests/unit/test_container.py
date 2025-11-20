@@ -1211,38 +1211,55 @@ def test_writeSolverOptions():
         "conopt",
         solver_options={"rtmaxv": "1.e12"},
     )
-    solver_options_path = os.path.join(m.working_directory, "conopt.opt")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.opt")
     assert os.path.exists(solver_options_path)
     with open(solver_options_path) as file:
         assert "rtmaxv" in file.read()
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=2)
-    solver_options_path = os.path.join(m.working_directory, "conopt.op2")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.op2")
     assert os.path.exists(solver_options_path)
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=9)
-    solver_options_path = os.path.join(m.working_directory, "conopt.op9")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.op9")
     assert os.path.exists(solver_options_path)
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=10)
-    solver_options_path = os.path.join(m.working_directory, "conopt.o10")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.o10")
     assert os.path.exists(solver_options_path)
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=99)
-    solver_options_path = os.path.join(m.working_directory, "conopt.o99")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.o99")
     assert os.path.exists(solver_options_path)
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=100)
-    solver_options_path = os.path.join(m.working_directory, "conopt.100")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.100")
     assert os.path.exists(solver_options_path)
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=999)
-    solver_options_path = os.path.join(m.working_directory, "conopt.999")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.999")
     assert os.path.exists(solver_options_path)
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=1234)
-    solver_options_path = os.path.join(m.working_directory, "conopt.1234")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.1234")
     assert os.path.exists(solver_options_path)
+
+    # Read solver options from an existing file
+    with tempfile.TemporaryDirectory() as tmpdir:
+        options_path = os.path.join(tmpdir, "my_solver_options.opt")
+        with open(options_path, "w") as file:
+            file.write("rtmaxv 1.e12")
+
+        m.writeSolverOptions("conopt", options_path)
+        assert os.path.exists(os.path.join(m.working_directory, "conopt4.opt"))
+
+        with open(options_path) as file:
+            original_file_content = file.read()
+
+        with open(os.path.join(m.working_directory, "conopt4.opt")) as file:
+            copied_file_content = file.read()
+
+        assert original_file_content == copied_file_content
 
     m.close()
 

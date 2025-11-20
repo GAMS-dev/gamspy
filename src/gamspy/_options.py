@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     import io
     from types import FrameType
 
-    from gamspy import Container
     from gamspy._model import Problem
 
 SOLVE_LINK_MAP = {"disk": 2, "memory": 5}
@@ -482,19 +481,14 @@ class Options(BaseModel):
 
         return gams_options
 
-    def _set_solver_options(
-        self,
-        container: Container,
-        solver: str,
-        problem: Problem,
-        solver_options: dict | None,
+    def _set_model_info(
+        self, solver: str, problem: Problem, solver_options: dict | Path | None
     ):
         """Set the solver and the solver options"""
         self._solver = solver
         self._problem = str(problem)
 
         if solver_options:
-            container.writeSolverOptions(solver, solver_options)
             self._solver_options_file = "1"
         else:
             self._solver_options_file = "0"

@@ -74,6 +74,7 @@ from gamspy.exceptions import (
 
 if TYPE_CHECKING:
     import io
+    from pathlib import Path
 
     from gamspy import Container, Model, Parameter
     from gamspy._options import FreezeOptions, Options
@@ -357,14 +358,11 @@ class ModelInstance:
         self,
         solver: str,
         instance_options: FreezeOptions,
-        solver_options: dict | None,
+        solver_options: dict | Path | None,
         output: io.TextIOWrapper | None,
     ) -> pd.DataFrame:
         # write solver options file
-        option_file = 0
-        if solver_options:
-            self.container.writeSolverOptions(solver, solver_options)
-            option_file = 1
+        option_file = 1 if solver_options else 0
 
         names_to_write = []
         for symbol in self.modifiables:
