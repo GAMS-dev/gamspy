@@ -10,6 +10,7 @@ from gamspy.exceptions import GamspyException, _customize_exception
 
 if TYPE_CHECKING:
     import io
+    from pathlib import Path
 
     from gamspy import Container, Model, Options
     from gamspy._symbols.symbol import Symbol
@@ -21,7 +22,7 @@ class Local(backend.Backend):
         container: Container,
         options: Options,
         solver: str | None,
-        solver_options: dict | None,
+        solver_options: dict | Path | None,
         output: io.TextIOWrapper | None,
         model: Model | None,
         load_symbols: list[Symbol] | None,

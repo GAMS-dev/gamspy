@@ -27,6 +27,8 @@ from gamspy.exceptions import (
 )
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from gamspy import Container, Model
     from gamspy._symbols.symbol import Symbol
 
@@ -743,7 +745,7 @@ class GAMSEngine(backend.Backend):
         client: EngineClient | None,
         options: Options,
         solver: str,
-        solver_options: dict | None,
+        solver_options: dict | Path | None,
         output: io.TextIOWrapper | None,
         model: Model,
         load_symbols: list[Symbol] | None,

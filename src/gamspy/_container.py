@@ -3,11 +3,13 @@ from __future__ import annotations
 import atexit
 import os
 import platform
+import shutil
 import signal
 import tempfile
 import threading
 import traceback
 import weakref
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -665,7 +667,7 @@ class Container(gt.Container):
         )
 
     def writeSolverOptions(
-        self, solver: str, solver_options: dict, file_number: int = 1
+        self, solver: str, solver_options: dict | str | Path, file_number: int = 1
     ) -> None:
         """
         Writes solver options of the specified solver to the working directory.
@@ -674,8 +676,8 @@ class Container(gt.Container):
         ----------
         solver : str
             Name of the solver.
-        solver_options : dict
-            Options of the specified solver.
+        solver_options : dict | str | Path
+            Options of the specified solver or path to an existing solver options file.
         file_number : int
             Solver option file number. Equivalent to optfile option of GAMS. See https://gams.com/latest/docs/UG_GamsCall.html#GAMSAOoptfile for more details.
 
@@ -691,17 +693,24 @@ class Container(gt.Container):
                 f"The smallest number `file_number` can get is 1 but received {file_number}"
             )
 
+        if solver.lower() == "conopt":
+            solver = "conopt4"
+
         options_file_name = os.path.join(
             self.working_directory, get_options_file_name(solver, file_number)
         )
 
-        with open(options_file_name, "w", encoding="utf-8") as solver_file:
-            for key, value in solver_options.items():
-                row = f"{key} {value}\n"
-                if solver.upper() in ("SHOT", "SOPLEX", "SCIP", "HIGHS"):
-                    row = f"{key} = {value}\n"
+        if isinstance(solver_options, (str, Path)):
+            path = Path(solver_options)
+            shutil.copy2(path, options_file_name)
+        else:
+            with open(options_file_name, "w", encoding="utf-8") as solver_file:
+                for key, value in solver_options.items():
+                    row = f"{key} {value}\n"
+                    if solver.upper() in ("SHOT", "SOPLEX", "SCIP", "HIGHS"):
+                        row = f"{key} = {value}\n"
 
-                solver_file.write(row)
+                    solver_file.write(row)
 
         # The following solvers do not use the opt<solver>.def file
         if solver.upper() in (

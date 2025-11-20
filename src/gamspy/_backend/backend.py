@@ -12,6 +12,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
+    from pathlib import Path
 
     from gamspy import Container, Model, Options
     from gamspy._backend.engine import EngineClient, GAMSEngine
@@ -52,7 +53,7 @@ def backend_factory(
     container: Container,
     options: Options | None = None,
     solver: str | None = None,
-    solver_options: dict | None = None,
+    solver_options: dict | Path | None = None,
     output: io.TextIOWrapper | None = None,
     backend: Literal["local", "engine", "neos"] = "local",
     client: EngineClient | NeosClient | None = None,
@@ -126,7 +127,7 @@ class Backend(ABC):
         model: Model | None,
         options: Options,
         solver: str | None,
-        solver_options: dict | None,
+        solver_options: dict | Path | None,
         output: io.TextIOWrapper | None,
         load_symbols: list[Symbol] | None,
     ):

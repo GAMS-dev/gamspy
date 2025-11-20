@@ -1233,6 +1233,23 @@ def test_solver_options(data):
     transport.solve(solver="conopt", solver_options={"blabla": "1.e12"})
     gp.set_options({"SOLVER_OPTION_VALIDATION": 1})
 
+    # Read solver options from an existing file
+    with tempfile.TemporaryDirectory() as tmpdir:
+        options_path = os.path.join(tmpdir, "my_solver_options.opt")
+        log_path = os.path.join(tmpdir, "log.txt")
+        with open(options_path, "w") as file:
+            file.write("rtmaxv 1.e12")
+
+        transport.solve(
+            solver="conopt",
+            options=Options(log_file=log_path),
+            solver_options=options_path,
+        )
+
+        with open(log_path) as file:
+            content = file.read()
+            assert ">>  rtmaxv 1.e12" in content
+
 
 def test_ellipsis(data):
     m, canning_plants, markets, capacities, demands, distances = data

@@ -1,0 +1,1 @@
+Accept the path of an existing solver options file as a valid "solver_options" argument in model.solve and container.writeSolverOptions. 
