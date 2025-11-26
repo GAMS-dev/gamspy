@@ -35,8 +35,7 @@ from gamspy._options import (
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    import io
-    from typing import Literal
+    from typing import Literal, TextIO
 
     import pandas as pd
 
@@ -1307,7 +1306,7 @@ class Model:
         options: Options | None = None,
         solver_options: dict | str | Path | None = None,
         freeze_options: FreezeOptions | None = None,
-        output: io.TextIOWrapper | None = None,
+        output: TextIO | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
         client: EngineClient | NeosClient | None = None,
         load_symbols: list[Symbol] | None = None,
@@ -1325,8 +1324,8 @@ class Model:
             Dictionary of solver options or path to an existing option file.
         freeze_options : FreezeOptions, optional
             Options to solve a frozen model.
-        output : TextIOWrapper, optional
-            Output redirection target
+        output : TextIO, optional
+            Output redirection target. Set this to sys.stdout to see the output in your terminal.
         backend : str, optional
             Backend to run on
         client : EngineClient, NeosClient, optional
