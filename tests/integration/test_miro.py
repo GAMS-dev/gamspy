@@ -6,6 +6,7 @@ import pathlib
 import platform
 import subprocess
 import sys
+import tempfile
 
 import pytest
 
@@ -974,3 +975,65 @@ def test_gams_state_of_miro_symbol():
     )
 
     assert process.returncode == 0, process.stderr
+
+
+def test_miro_args():
+    with tempfile.TemporaryDirectory() as dir:
+        model = pathlib.Path(dir) / "test.py"
+        with open(model, "w") as file:
+            file.write("import gamspy as gp\nm = gp.Container()")
+
+        path = pathlib.Path(dir) / "miro.exe"
+        path.touch()
+
+        process = subprocess.run(
+            [sys.executable, "-m", "gamspy", "run", "miro", "--path", "test.exe"],
+            capture_output=True,
+            text=True,
+            encoding="utf8",
+        )
+
+        # miro does not exist in the path
+        assert process.returncode != 0
+        assert "Path 'test.exe' does not exist" in process.stderr.replace(
+            os.linesep, ""
+        ).replace("\n", "")
+
+        # miro.exe exists
+        process = subprocess.run(
+            [sys.executable, "-m", "gamspy", "run", "miro", "--path", path],
+            capture_output=True,
+            text=True,
+            encoding="utf8",
+        )
+        assert process.returncode != 0
+        assert "--model must be provided to run MIRO" in process.stderr.replace(
+            os.linesep, ""
+        ).replace("\n", "")
+
+        # both --path and --model exists but the model does not have any miro symbols.
+        model = pathlib.Path(dir) / "test.py"
+        with open(model, "w") as file:
+            file.write("import gamspy as gp\nm = gp.Container()")
+
+        process = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "gamspy",
+                "run",
+                "miro",
+                "--path",
+                path,
+                "--model",
+                model,
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf8",
+        )
+        assert process.returncode != 0
+        assert (
+            "There must be at least one miro input/output symbol in the model"
+            in process.stderr.replace(os.linesep, "").replace("\n", "")
+        )

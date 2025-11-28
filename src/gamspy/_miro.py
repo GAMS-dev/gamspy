@@ -80,6 +80,14 @@ class MiroJSONEncoder:
         self,
         container: Container,
     ):
+        if (
+            len(container._miro_input_symbols) == 0
+            and len(container._miro_output_symbols) == 0
+        ):
+            raise ValidationError(
+                "There must be at least one miro input/output symbol in the model"
+            )
+
         self.container = container
         self.model_title = "GAMSPy App"
         self.input_symbols = container._miro_input_symbols

@@ -5,6 +5,7 @@ import os
 import platform
 import shutil
 import signal
+import sys
 import tempfile
 import threading
 import traceback
@@ -307,7 +308,7 @@ class Container(gt.Container):
             encoder.write_json()
         except Exception:
             close_connection(self._comm_pair_id)
-            traceback.print_exc()
+            traceback.print_exc(file=sys.stderr)
             os._exit(1)
 
     def _add_statement(self, statement) -> None:

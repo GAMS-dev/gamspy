@@ -5,11 +5,12 @@ import platform
 import subprocess
 import sys
 from enum import Enum
-from typing import Annotated
+from pathlib import Path  # noqa: TC003
+from typing import Annotated, Optional
 
 import typer
 
-from gamspy.exceptions import GamspyException, ValidationError
+from gamspy.exceptions import ValidationError
 
 app = typer.Typer(
     rich_markup_mode="rich",
@@ -19,7 +20,7 @@ app = typer.Typer(
 )
 
 
-class ModeEnum(Enum):
+class ModeEnum(str, Enum):
     config = "config"
     base = "base"
     deploy = "deploy"
@@ -35,10 +36,11 @@ def miro(
         typer.Option("--mode", "-m", help="Execution mode of MIRO"),
     ] = ModeEnum.base,  # type: ignore
     path: Annotated[
-        str | None,
+        Optional[Path],  # noqa: UP045
         typer.Option(
             "--path",
             "-p",
+            exists=True,
             help="Path to the MIRO executable (.exe, .app, or .AppImage)",
         ),
     ] = None,
@@ -47,8 +49,8 @@ def miro(
         typer.Option("--skip-execution", help="Whether to skip model execution."),
     ] = False,
     model: Annotated[
-        str | None,
-        typer.Option("--model", "-g", help="Path to the GAMSPy model."),
+        Optional[Path],  # noqa: UP045,
+        typer.Option("--model", "-g", exists=True, help="Path to the GAMSPy model."),
     ] = None,
     args: Annotated[
         list[str] | None,
@@ -56,17 +58,18 @@ def miro(
     ] = None,
 ) -> None:
     if model is None:
-        raise ValidationError("--model must be provided to run MIRO")
+        typer.echo("--model must be provided to run MIRO", file=sys.stderr)
+        sys.exit(1)
 
     model = os.path.abspath(model)
     execution_mode = mode.value
-    path = os.getenv("MIRO_PATH", None)
+    path = os.getenv("MIRO_PATH", path)
 
     if path is None:
         path = path if path is not None else discover_miro()
 
     if path is None:
-        raise GamspyException("--path must be provided to run MIRO")
+        raise ValidationError("--path must be provided to run MIRO")
 
     if platform.system() == "Darwin" and os.path.splitext(path)[1] == ".app":
         path = os.path.join(path, "Contents", "MacOS", "GAMS MIRO")
@@ -79,10 +82,16 @@ def miro(
         if args is not None:
             command += args
 
-        try:
-            subprocess.run(command, env=subprocess_env, check=True)
-        except subprocess.CalledProcessError:
-            return
+        process = subprocess.run(
+            command,
+            env=subprocess_env,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        if process.returncode != 0:
+            typer.echo(process.stderr, file=sys.stderr)
+            sys.exit(process.returncode)
 
     # Run MIRO
     subprocess_env = os.environ.copy()
