@@ -1,1 +1,0 @@
-Decouple container and socket connection to allow pickling of symbols and containers.

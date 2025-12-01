@@ -110,7 +110,7 @@ def test_install_license(teardown):
             "gamspy",
             "install",
             "license",
-            os.environ["NETWORK_LICENSE_NON_ACADEMIC"],
+            os.environ["NETWORK_LICENSE"],
         ],
         check=True,
     )
@@ -313,12 +313,14 @@ def test_install_solver():
             "gamspy",
             "install",
             "solver",
+            "gurobi",
             "mpsge",
             "scip",
             "reshop",
         ],
-        stderr=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
     )
     assert process.returncode == 0, process.stdout + process.stderr
 

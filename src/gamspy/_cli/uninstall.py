@@ -5,6 +5,7 @@ import subprocess
 import sys
 from typing import TYPE_CHECKING, Annotated
 
+import certifi
 import typer
 
 import gamspy.utils as utils
@@ -70,6 +71,9 @@ def solver(
         ) from e
 
     addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
+    environment_variables = os.environ.copy()
+    if "CURL_CA_BUNDLE" not in environment_variables:
+        environment_variables["CURL_CA_BUNDLE"] = certifi.where()
 
     def remove_addons(addons: Iterable[str]):
         for item in addons:

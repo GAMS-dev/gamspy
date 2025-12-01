@@ -1,1 +1,0 @@
-Fix name mapping of GAMSDict and GAMSDictMap file formats in model.convert function.

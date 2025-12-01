@@ -16,7 +16,7 @@ usual_suspects = [
     "preprocess",
     "execute_gams",
     "postprocess",
-    "_send_job",
+    "send_job",
 ]
 
 
@@ -44,7 +44,7 @@ def main():
             "preprocess",
             "execute_gams",
             "postprocess",
-            "_send_job",
+            "send_job",
             "overhead",
         ],
         columns=columns,
@@ -70,8 +70,9 @@ def main():
             pstats_dict["preprocess"]
             + pstats_dict["execute_gams"]
             + pstats_dict["postprocess"]
-            - pstats_dict["_send_job"]
+            - pstats_dict["send_job"]
         )
+        pstats_dict["time(s)"] = main_time
         df = pd.DataFrame(
             pstats_dict.values(),
             index=pstats_dict.keys(),
@@ -83,6 +84,7 @@ def main():
     final_df = pd.concat(dfs, axis=1)
     final_df = final_df.T.sort_values("overhead", ascending=False).round(2)
     print(final_df)
+    print(f"Total time: {final_df['time(s)'].sum()} seconds")
     print(f"Average overhead {final_df['overhead'].mean(axis=0):.2f}.")
     final_df.to_csv("stats.csv")
 
