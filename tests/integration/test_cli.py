@@ -14,6 +14,8 @@ from typing import ClassVar
 import pytest
 import requests
 
+from gamspy import Container, Set
+
 pytestmark = pytest.mark.cli
 try:
     from dotenv import load_dotenv
@@ -100,112 +102,112 @@ def test_install_license(teardown):
             encoding="utf-8",
         )
 
-    # # Test network license
-    # _ = subprocess.run(
-    #     [
-    #         sys.executable,
-    #         "-Bm",
-    #         "gamspy",
-    #         "install",
-    #         "license",
-    #         os.environ["NETWORK_LICENSE_NON_ACADEMIC"],
-    #     ],
-    #     check=True,
-    # )
+    # Test network license
+    _ = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "install",
+            "license",
+            os.environ["NETWORK_LICENSE"],
+        ],
+        check=True,
+    )
 
-    # gamspy_license_path = os.path.join(DEFAULT_DIR, "gamspy_license.txt")
+    gamspy_license_path = os.path.join(DEFAULT_DIR, "gamspy_license.txt")
 
-    # assert os.path.exists(gamspy_license_path)
+    assert os.path.exists(gamspy_license_path)
 
-    # m = Container()
-    # assert m._network_license
+    m = Container()
+    assert m._network_license
 
-    # _ = Set(m, "i", records=["bla"])
-    # m.close()
+    _ = Set(m, "i", records=["bla"])
+    m.close()
 
-    # # Test invalid access code / license
-    # with pytest.raises(subprocess.CalledProcessError):
-    #     _ = subprocess.run(
-    #         [sys.executable, "-Bm", "gamspy", "install", "license", "blabla"],
-    #         check=True,
-    #         stderr=subprocess.DEVNULL,
-    #         stdout=subprocess.DEVNULL,
-    #     )
+    # Test invalid access code / license
+    with pytest.raises(subprocess.CalledProcessError):
+        _ = subprocess.run(
+            [sys.executable, "-Bm", "gamspy", "install", "license", "blabla"],
+            check=True,
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+        )
 
-    # # Test installing a license from a file path.
-    # shutil.copy(gamspy_license_path, tmp_license_path)
+    # Test installing a license from a file path.
+    shutil.copy(gamspy_license_path, tmp_license_path)
 
-    # process = subprocess.run(
-    #     [
-    #         sys.executable,
-    #         "-Bm",
-    #         "gamspy",
-    #         "install",
-    #         "license",
-    #         tmp_license_path,
-    #     ],
-    #     capture_output=True,
-    #     encoding="utf-8",
-    #     text=True,
-    # )
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "install",
+            "license",
+            tmp_license_path,
+        ],
+        capture_output=True,
+        encoding="utf-8",
+        text=True,
+    )
 
-    # assert process.returncode == 0, process.stderr
+    assert process.returncode == 0, process.stderr
 
-    # # Test checkout
-    # process = subprocess.run(
-    #     [
-    #         sys.executable,
-    #         "-Bm",
-    #         "gamspy",
-    #         "install",
-    #         "license",
-    #         os.environ["CHECKOUT_LICENSE"],
-    #         "-c",
-    #         "1",
-    #         "-o",
-    #         tmp_license_path,
-    #     ],
-    #     capture_output=True,
-    #     encoding="utf-8",
-    #     text=True,
-    # )
+    # Test checkout
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "install",
+            "license",
+            os.environ["CHECKOUT_LICENSE"],
+            "-c",
+            "1",
+            "-o",
+            tmp_license_path,
+        ],
+        capture_output=True,
+        encoding="utf-8",
+        text=True,
+    )
 
-    # assert process.returncode == 0, process.stderr
+    assert process.returncode == 0, process.stderr
 
-    # # Test invalid port (port 100 is below the minimum port (1024))
-    # process = subprocess.run(
-    #     [
-    #         sys.executable,
-    #         "-Bm",
-    #         "gamspy",
-    #         "install",
-    #         "license",
-    #         os.environ["LOCAL_LICENSE"],
-    #         "-p",
-    #         "100",
-    #     ],
-    #     capture_output=True,
-    #     encoding="utf-8",
-    #     text=True,
-    # )
+    # Test invalid port (port 100 is below the minimum port (1024))
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "install",
+            "license",
+            os.environ["LOCAL_LICENSE"],
+            "-p",
+            "100",
+        ],
+        capture_output=True,
+        encoding="utf-8",
+        text=True,
+    )
 
-    # assert process.returncode != 0
+    assert process.returncode != 0
 
-    # if platform.system() == "Linux":
-    #     process = subprocess.run(
-    #         [
-    #             sys.executable,
-    #             "-Bm",
-    #             "gamspy",
-    #             "install",
-    #             "license",
-    #             os.environ["ON_PREM_LICENSE"],
-    #             "-s",
-    #             "alptest.gams.com",
-    #         ],
-    #         capture_output=True,
-    #         text=True,
-    #     )
+    if platform.system() == "Linux":
+        process = subprocess.run(
+            [
+                sys.executable,
+                "-Bm",
+                "gamspy",
+                "install",
+                "license",
+                os.environ["ON_PREM_LICENSE"],
+                "-s",
+                "alptest.gams.com",
+            ],
+            capture_output=True,
+            text=True,
+        )
 
     # Recover local license
     process = subprocess.run(
