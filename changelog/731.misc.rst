@@ -1,1 +1,0 @@
-Change expected type of the "output" argument to TextIO instead of TextIOWrapper in model.solve.

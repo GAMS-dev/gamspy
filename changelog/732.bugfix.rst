@@ -1,1 +1,0 @@
-Fix model and path issues of "gamspy run miro" command on Windows.

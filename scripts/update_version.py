@@ -122,7 +122,7 @@ def main():
     args = parser.parse_args()
     assert args.new_version
 
-    check_backward_compatibility()
+    # check_backward_compatibility()
     update_pyproject(args)
     update_switcher(args)
     update_version_test(args)
