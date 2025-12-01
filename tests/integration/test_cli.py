@@ -110,7 +110,7 @@ def test_install_license(teardown):
             "gamspy",
             "install",
             "license",
-            os.environ["CHECKOUTABLE_NETWORK_LICENSE"],
+            os.environ["NETWORK_LICENSE"],
         ],
         check=True,
     )
