@@ -9,6 +9,8 @@ import threading
 import time
 from typing import TYPE_CHECKING
 
+import certifi
+
 from gamspy import utils
 from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
@@ -45,6 +47,10 @@ def open_connection(container: Container) -> None:
     env = os.environ.copy()
     if os.path.isfile(certificate_path):
         env["GAMSLICECRT"] = certificate_path
+
+    environment_variables = os.environ.copy()
+    if "CURL_CA_BUNDLE" not in environment_variables:
+        environment_variables["CURL_CA_BUNDLE"] = certifi.where()
 
     process = subprocess.Popen(
         command,
