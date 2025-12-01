@@ -121,6 +121,7 @@ def test_install_license(teardown):
 
     m = Container()
     assert m._network_license
+    print(f"{m._license_path=}, {gamspy_license_path=}")
 
     _ = Set(m, "i", records=["bla"])
     m.close()
