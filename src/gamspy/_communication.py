@@ -48,9 +48,9 @@ def open_connection(container: Container) -> None:
     if os.path.isfile(certificate_path):
         env["GAMSLICECRT"] = certificate_path
 
-    environment_variables = os.environ.copy()
-    if "CURL_CA_BUNDLE" not in environment_variables:
-        environment_variables["CURL_CA_BUNDLE"] = certifi.where()
+    env = os.environ.copy()
+    if "CURL_CA_BUNDLE" not in env:
+        env["CURL_CA_BUNDLE"] = certifi.where()
 
     process = subprocess.Popen(
         command,
