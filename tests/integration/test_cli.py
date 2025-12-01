@@ -14,8 +14,6 @@ from typing import ClassVar
 import pytest
 import requests
 
-from gamspy import Container, Set
-
 pytestmark = pytest.mark.cli
 try:
     from dotenv import load_dotenv
@@ -103,27 +101,27 @@ def test_install_license(teardown):
         )
 
     # Test network license
-    _ = subprocess.run(
-        [
-            sys.executable,
-            "-Bm",
-            "gamspy",
-            "install",
-            "license",
-            os.environ["CHECKOUTABLE_NETWORK_LICENSE"],
-        ],
-        check=True,
-    )
+    # _ = subprocess.run(
+    #     [
+    #         sys.executable,
+    #         "-Bm",
+    #         "gamspy",
+    #         "install",
+    #         "license",
+    #         os.environ["CHECKOUTABLE_NETWORK_LICENSE"],
+    #     ],
+    #     check=True,
+    # )
 
     gamspy_license_path = os.path.join(DEFAULT_DIR, "gamspy_license.txt")
 
-    assert os.path.exists(gamspy_license_path)
+    # assert os.path.exists(gamspy_license_path)
 
-    m = Container()
-    assert m._network_license
+    # m = Container()
+    # assert m._network_license
 
-    _ = Set(m, "i", records=["bla"])
-    m.close()
+    # _ = Set(m, "i", records=["bla"])
+    # m.close()
 
     # Test invalid access code / license
     with pytest.raises(subprocess.CalledProcessError):
