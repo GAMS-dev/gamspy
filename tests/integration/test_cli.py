@@ -317,8 +317,9 @@ def test_install_solver():
             "scip",
             "reshop",
         ],
-        stderr=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
     )
     assert process.returncode == 0, process.stdout + process.stderr
 
