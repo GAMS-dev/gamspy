@@ -313,6 +313,7 @@ def test_install_solver():
             "gamspy",
             "install",
             "solver",
+            "gurobi",
             "mpsge",
             "scip",
             "reshop",
