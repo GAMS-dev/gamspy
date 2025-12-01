@@ -121,7 +121,6 @@ wei-cli-3.13:
     - python --version
     - python -m pip install uv; uv venv .windows_venv313; .windows_venv313\Scripts\Activate; uv pip install pip; uv build
     - uv pip install .[dev,test] --force-reinstall
-    - $env:CURL_CA_BUNDLE = $(python -m certifi)
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
     name: windows_3.13
@@ -136,5 +135,4 @@ wei-cli-3.10:
     - python --version
     - python -m pip install uv; uv venv .windows_venv310; .windows_venv310\Scripts\Activate; uv pip install pip
     - uv pip install .[dev,test] --force-reinstall
-    - $env:CURL_CA_BUNDLE = $(python -m certifi)
     - python -m pytest -x -v -s -m 'cli' tests

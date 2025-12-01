@@ -7,6 +7,7 @@ import subprocess
 import sys
 from typing import TYPE_CHECKING, Annotated
 
+import certifi
 import requests
 import typer
 
@@ -133,11 +134,16 @@ def license(
             command.append("-o")
             command.append(license_path)
 
+        environment_variables = os.environ.copy()
+        if "CURL_CA_BUNDLE" not in environment_variables:
+            environment_variables["CURL_CA_BUNDLE"] = certifi.where()
+
         process = subprocess.run(
             command,
             text=True,
             capture_output=True,
             encoding="utf-8",
+            env=environment_variables,
         )
         if process.returncode:
             raise ValidationError(process.stderr)
@@ -243,6 +249,9 @@ def solver(
 
     addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
     os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
+    environment_variables = os.environ.copy()
+    if "CURL_CA_BUNDLE" not in environment_variables:
+        environment_variables["CURL_CA_BUNDLE"] = certifi.where()
 
     def install_addons(addons: Iterable[str]):
         for item in addons:
@@ -291,6 +300,7 @@ def solver(
                         check=True,
                         encoding="utf-8",
                         stderr=subprocess.PIPE,
+                        env=environment_variables,
                     )
                 except subprocess.CalledProcessError as e:
                     raise GamspyException(
