@@ -311,6 +311,8 @@ def get_convert_solver_options(
     FORMAT_RENAME_MAP = {
         "GDXJacobian": "DumpGDX",
         "GDXIntervalEval": "IntervalEval",
+        "GAMSDict": "Dict",
+        "GAMSDictMap": "DictMap",
     }
     OPTION_RENAME_MAP = {"GAMSInsert": "GmsInsert", "GAMSObjVar": "ObjVar"}
 

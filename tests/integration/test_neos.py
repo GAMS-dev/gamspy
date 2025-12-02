@@ -6,12 +6,14 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy as gp
 import gamspy.math as gams_math
 from gamspy import (
     Alias,
@@ -430,6 +432,28 @@ def test_solver_options(data):
 
     with open(log_path) as file:
         assert ">>  aggfill 11" in file.read()
+
+    # Read solver options from an existing file
+    log_path2 = os.path.join("tmp", "neos2.log")
+    gp.set_options({"SOLVER_OPTION_VALIDATION": 0})
+    with tempfile.TemporaryDirectory() as tmpdir:
+        options_path = os.path.join(tmpdir, "my_solver_options.opt")
+        with open(options_path, "w") as file:
+            file.write("aggfill 55")
+
+        transport.solve(
+            solver="cplex",
+            solver_options=options_path,
+            backend="neos",
+            client=client,
+            options=Options(log_file=log_path2),
+        )
+
+    with open(log_path2) as file:
+        content = file.read()
+        assert ">>  aggfill 55" in content
+
+    gp.set_options({"SOLVER_OPTION_VALIDATION": 1})
 
 
 def test_lp(data):

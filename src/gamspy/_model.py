@@ -4,7 +4,6 @@ import inspect
 import logging
 import os
 import threading
-import warnings
 from collections.abc import Sequence
 from enum import Enum
 from pathlib import Path
@@ -31,14 +30,12 @@ from gamspy._options import (
     MODEL_ATTR_OPTION_MAP,
     ConvertOptions,
     FreezeOptions,
-    ModelInstanceOptions,
     Options,
 )
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    import io
-    from typing import Literal
+    from typing import Literal, TextIO
 
     import pandas as pd
 
@@ -1307,10 +1304,9 @@ class Model:
         self,
         solver: str | None = None,
         options: Options | None = None,
-        solver_options: dict | None = None,
-        model_instance_options: ModelInstanceOptions | None = None,
+        solver_options: dict | str | Path | None = None,
         freeze_options: FreezeOptions | None = None,
-        output: io.TextIOWrapper | None = None,
+        output: TextIO | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
         client: EngineClient | NeosClient | None = None,
         load_symbols: list[Symbol] | None = None,
@@ -1324,14 +1320,12 @@ class Model:
             Solver name
         options : Options, optional
             GAMSPy options.
-        solver_options : dict, optional
-            Solver options.
-        model_instance_options : ModelInstanceOptions, optional
-            Options to solve a frozen model. This argument will be deprecated in GAMSPy 1.10.0. Please use freeze_options instead.
+        solver_options : dict | str | Path, optional
+            Dictionary of solver options or path to an existing option file.
         freeze_options : FreezeOptions, optional
             Options to solve a frozen model.
-        output : TextIOWrapper, optional
-            Output redirection target
+        output : TextIO, optional
+            Output redirection target. Set this to sys.stdout to see the output in your terminal.
         backend : str, optional
             Backend to run on
         client : EngineClient, NeosClient, optional
@@ -1395,21 +1389,20 @@ class Model:
         if options is None:
             options = self.container._options
 
+        if isinstance(solver_options, (str, Path)):
+            solver_options = Path(solver_options)
+
         # Only for local until GAMS Engine and NEOS Server backends adopt the new GP_SolveLine option.
         if backend == "local":
             frame = inspect.currentframe().f_back
             assert isinstance(options, gp.Options)
             options._frame = frame
 
+        if solver_options is not None:
+            self.container.writeSolverOptions(solver, solver_options)
+
         if self._is_frozen:
             instance_options = FreezeOptions()
-            if model_instance_options is not None:
-                warnings.warn(
-                    "model_instance_options will be renamed to freeze_options in GAMSPy 1.10.0",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                instance_options = model_instance_options
 
             if freeze_options is not None:
                 instance_options = freeze_options
@@ -1423,12 +1416,7 @@ class Model:
         self._add_runtime_options(options, backend)
         self.container._add_statement(self._generate_solve_string() + "\n")
         self._create_model_attributes()
-        options._set_solver_options(
-            container=self.container,
-            solver=solver,
-            problem=self.problem,
-            solver_options=solver_options,
-        )
+        options._set_model_info(solver, self.problem, solver_options)
 
         runner = backend_factory(
             self.container,

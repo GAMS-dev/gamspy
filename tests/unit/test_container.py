@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import gc
 import glob
 import math
@@ -1203,44 +1204,62 @@ def test_explicit_license_path():
         xdice.solve()
 
 
+@pytest.mark.unit
 def test_writeSolverOptions():
     m = Container()
     m.writeSolverOptions(
         "conopt",
         solver_options={"rtmaxv": "1.e12"},
     )
-    solver_options_path = os.path.join(m.working_directory, "conopt.opt")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.opt")
     assert os.path.exists(solver_options_path)
     with open(solver_options_path) as file:
         assert "rtmaxv" in file.read()
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=2)
-    solver_options_path = os.path.join(m.working_directory, "conopt.op2")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.op2")
     assert os.path.exists(solver_options_path)
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=9)
-    solver_options_path = os.path.join(m.working_directory, "conopt.op9")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.op9")
     assert os.path.exists(solver_options_path)
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=10)
-    solver_options_path = os.path.join(m.working_directory, "conopt.o10")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.o10")
     assert os.path.exists(solver_options_path)
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=99)
-    solver_options_path = os.path.join(m.working_directory, "conopt.o99")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.o99")
     assert os.path.exists(solver_options_path)
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=100)
-    solver_options_path = os.path.join(m.working_directory, "conopt.100")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.100")
     assert os.path.exists(solver_options_path)
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=999)
-    solver_options_path = os.path.join(m.working_directory, "conopt.999")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.999")
     assert os.path.exists(solver_options_path)
 
     m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"}, file_number=1234)
-    solver_options_path = os.path.join(m.working_directory, "conopt.1234")
+    solver_options_path = os.path.join(m.working_directory, "conopt4.1234")
     assert os.path.exists(solver_options_path)
+
+    # Read solver options from an existing file
+    with tempfile.TemporaryDirectory() as tmpdir:
+        options_path = os.path.join(tmpdir, "my_solver_options.opt")
+        with open(options_path, "w") as file:
+            file.write("rtmaxv 1.e12")
+
+        m.writeSolverOptions("conopt", options_path)
+        assert os.path.exists(os.path.join(m.working_directory, "conopt4.opt"))
+
+        with open(options_path) as file:
+            original_file_content = file.read()
+
+        with open(os.path.join(m.working_directory, "conopt4.opt")) as file:
+            copied_file_content = file.read()
+
+        assert original_file_content == copied_file_content
 
     m.close()
 
@@ -1357,6 +1376,7 @@ def test_batch_setRecords():
         m.setRecords({i: range(10), k: range(5)}, uels_on_axes=[True, False, True])
 
 
+@pytest.mark.unit
 def test_python_name():
     m = gp.Container()
 
@@ -1374,3 +1394,53 @@ def test_python_name():
 
     eq = m.addEquation(domain=[i])
     assert eq.name == "eq"
+
+
+@pytest.mark.unit
+def test_deepcopy():
+    m = gp.Container()
+
+    # deepcopy set
+    c = gp.Set(m)
+    c2 = copy.deepcopy(c)
+    assert id(c) != id(c2)
+
+    t = gp.Set(m)
+
+    # deepcopy alias
+    a = gp.Alias(m, alias_with=c)
+    a2 = gp.Alias(m, alias_with=c)
+    assert id(a) != id(a2)
+
+    # deepcopy parameter
+    b = gp.Parameter(m)
+    b2 = gp.Parameter(m)
+    assert id(b) != id(b2)
+
+    # deepcopy variable
+    x = gp.Variable(m, domain=[c, t])
+    x2 = gp.Variable(m, domain=[c, t])
+    assert id(x) != id(x2)
+
+    # deepcopy equation
+    e = gp.Equation(m, domain=[c, t])
+    e2 = gp.Equation(m, domain=[c, t])
+    assert id(e) != id(e2)
+
+    # deepcopy expression
+    expr = gp.Sum((c, t), x[c, t])
+    expr2 = copy.deepcopy(expr)
+    assert id(expr) != id(expr2)
+
+    # deepcopy model
+    model = gp.Model(m, equations=[e])
+    model2 = copy.deepcopy(model)
+    assert id(model) != id(model2)
+
+    # deepcopy a container
+    m2 = copy.deepcopy(m)
+    assert id(m) != id(m2)
+    assert len(m.data) == len(m2.data)
+
+    # add a new symbol to the copied container
+    _ = gp.Parameter(m2)

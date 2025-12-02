@@ -51,7 +51,7 @@ def test_alias_creation(m):
         _ = Alias(m, 5, i)
 
     # no container
-    with pytest.raises(TypeError):
+    with pytest.raises(ValidationError):
         _ = Alias()
 
     # non-container type container

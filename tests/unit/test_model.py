@@ -165,12 +165,16 @@ def test_model(data):
                 FileFormat.GAMSJacobian,
                 FileFormat.GDXJacobian,
                 FileFormat.GAMSPyJacobian,
+                FileFormat.GAMSDict,
+                FileFormat.GAMSDictMap,
             ],
             options=ConvertOptions(GDXNames=0),
         )
         assert os.path.exists(tmpdir_path / "jacobian.gms")
         assert os.path.exists(tmpdir_path / "jacobian.gdx")
         assert os.path.exists(tmpdir_path / "jacobian.py")
+        assert os.path.exists(tmpdir_path / "dict.txt")
+        assert os.path.exists(tmpdir_path / "dictmap.gdx")
 
         with open(tmpdir_path / "jacobian.gms") as file:
             assert "$if not set jacfile $set jacfile jacobian.gdx" in file.read()

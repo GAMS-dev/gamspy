@@ -5,10 +5,12 @@ from typing import TYPE_CHECKING
 
 import gamspy._backend.backend as backend
 import gamspy._miro as miro
+from gamspy._communication import send_job
 from gamspy.exceptions import GamspyException, _customize_exception
 
 if TYPE_CHECKING:
     import io
+    from pathlib import Path
 
     from gamspy import Container, Model, Options
     from gamspy._symbols.symbol import Symbol
@@ -20,7 +22,7 @@ class Local(backend.Backend):
         container: Container,
         options: Options,
         solver: str | None,
-        solver_options: dict | None,
+        solver_options: dict | Path | None,
         output: io.TextIOWrapper | None,
         model: Model | None,
         load_symbols: list[Symbol] | None,
@@ -89,7 +91,9 @@ class Local(backend.Backend):
         self.options._export(self.pf_file, self.output)
 
         try:
-            self.container._send_job(self.job_name, self.pf_file, self.output)
+            send_job(
+                self.container._comm_pair_id, self.job_name, self.pf_file, self.output
+            )
 
             if not self.is_async() and self.model:
                 self.model._update_model_attributes()

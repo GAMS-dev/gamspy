@@ -59,6 +59,7 @@ from gams.core.gmo import (
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy._communication import send_job
 from gamspy._database import (
     Database,
     GamsEquation,
@@ -73,6 +74,7 @@ from gamspy.exceptions import (
 
 if TYPE_CHECKING:
     import io
+    from pathlib import Path
 
     from gamspy import Container, Model, Parameter
     from gamspy._options import FreezeOptions, Options
@@ -324,7 +326,9 @@ class ModelInstance:
         # Run
         try:
             self.container._job = self.job_name
-            self.container._send_job(self.job_name, self.pf_file, self.output)
+            send_job(
+                self.container._comm_pair_id, self.job_name, self.pf_file, self.output
+            )
         except GamspyException as exception:
             self.container._workspace._errors.append(str(exception))
             message = _customize_exception(
@@ -354,14 +358,11 @@ class ModelInstance:
         self,
         solver: str,
         instance_options: FreezeOptions,
-        solver_options: dict | None,
+        solver_options: dict | Path | None,
         output: io.TextIOWrapper | None,
     ) -> pd.DataFrame:
         # write solver options file
-        option_file = 0
-        if solver_options:
-            self.container.writeSolverOptions(solver, solver_options)
-            option_file = 1
+        option_file = 1 if solver_options else 0
 
         names_to_write = []
         for symbol in self.modifiables:

@@ -7,12 +7,14 @@ import shutil
 import ssl
 import xmlrpc.client
 import zipfile
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import certifi
 
 import gamspy._backend.backend as backend
 import gamspy.utils as utils
+from gamspy._communication import send_job
 from gamspy._options import Options
 from gamspy.exceptions import (
     GamspyException,
@@ -256,7 +258,7 @@ class NeosClient:
     def _prepare_xml(
         self,
         gams_string: str,
-        solver_options: dict | None,
+        solver_options: dict | Path | None,
         gdx_path: str,
         restart_path: str,
         options: Options,
@@ -282,6 +284,9 @@ class NeosClient:
 
         solver_options_str = ""
         if solver_options:
+            if isinstance(solver_options, Path):
+                solver_options = _parse_solver_options(solver_options)
+
             solver_options_str = "\n".join(
                 [f"{key} {value}" for key, value in solver_options.items()]
             )
@@ -380,7 +385,7 @@ class NEOSServer(backend.Backend):
         container: Container,
         options: Options,
         solver: str,
-        solver_options: dict | None,
+        solver_options: dict | Path | None,
         client: NeosClient | None,
         output: io.TextIOWrapper | None,
         model: Model,
@@ -527,7 +532,7 @@ class NEOSServer(backend.Backend):
         options._extra_options["save"] = self.restart_file
         options._export(self.pf_file)
 
-        self.container._send_job(self.job_name, self.pf_file)
+        send_job(self.container._comm_pair_id, self.job_name, self.pf_file)
 
     def _sync(self):
         symbols = utils._get_symbol_names_from_gdx(
@@ -542,4 +547,21 @@ class NEOSServer(backend.Backend):
         options._set_extra_options(extra_options)
         options._export(self.pf_file)
 
-        self.container._send_job(self.job_name, self.pf_file)
+        send_job(self.container._comm_pair_id, self.job_name, self.pf_file)
+
+
+def _parse_solver_options(path: Path) -> dict[str, Any]:
+    """Parse solver options to a dict"""
+    solver_options = {}
+    with open(path) as file:
+        lines = file.readlines()
+
+    for line in lines:
+        if not line or line.startswith("*"):
+            continue
+
+        splitter = "=" if "=" in line else " "
+        key, value = line.split(splitter)
+        solver_options[key.strip()] = value
+
+    return solver_options

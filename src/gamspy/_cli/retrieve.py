@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 
+import certifi
 import typer
 
 import gamspy.utils as utils
@@ -46,6 +47,10 @@ def license(
     if access_code is None:
         raise ValidationError(f"Given licence id `{access_code}` is not valid!")
 
+    environment_variables = os.environ.copy()
+    if "CURL_CA_BUNDLE" not in environment_variables:
+        environment_variables["CURL_CA_BUNDLE"] = certifi.where()
+
     gamspy_base_dir = utils._get_gamspy_base_directory()
     command = [
         os.path.join(gamspy_base_dir, "gamsgetkey"),
@@ -58,9 +63,7 @@ def license(
         command.append(str(checkout_duration))
 
     process = subprocess.run(
-        command,
-        text=True,
-        capture_output=True,
+        command, text=True, capture_output=True, env=environment_variables
     )
 
     if process.returncode:
