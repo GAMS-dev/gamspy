@@ -81,7 +81,7 @@ Usage
      - False
      - If you already have the solver installed, skip pip install and update gamspy installed solver list.
    * - -\-install-all-solvers
-     - 
+     - -a
      - False
      - Installs all available add-on solvers.
    * - -\-existing-solvers

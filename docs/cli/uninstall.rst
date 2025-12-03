@@ -44,7 +44,7 @@ Usage
      - False
      - If you already have the solver uninstalled, skip pip uninstall and update gamspy installed solver list.
    * - -\-uninstall-all-solvers
-     - 
+     - -a
      - False
      - Uninstalls all add-on solvers.
    * - -\-use-uv 

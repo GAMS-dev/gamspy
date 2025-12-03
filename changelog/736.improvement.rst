@@ -1,0 +1,1 @@
+Add -a shortcut for gamspy install solver --install-all-solvers command. Add -a shortcut for gamspy uninstall solver --install-all-solvers command.
