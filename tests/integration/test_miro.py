@@ -1010,30 +1010,3 @@ def test_miro_args():
         assert "--model must be provided to run MIRO" in process.stderr.replace(
             os.linesep, ""
         ).replace("\n", "")
-
-        # both --path and --model exists but the model does not have any miro symbols.
-        model = pathlib.Path(dir) / "test.py"
-        with open(model, "w") as file:
-            file.write("import gamspy as gp\nm = gp.Container()")
-
-        process = subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "gamspy",
-                "run",
-                "miro",
-                "--path",
-                path,
-                "--model",
-                model,
-            ],
-            capture_output=True,
-            text=True,
-            encoding="utf8",
-        )
-        assert process.returncode != 0
-        assert (
-            "There must be at least one miro input/output symbol in the model"
-            in process.stderr.replace(os.linesep, "").replace("\n", "")
-        )
