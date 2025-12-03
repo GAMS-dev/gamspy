@@ -1,0 +1,1 @@
+Remove number of miro symbols check since there might be containers with no miro symbols.
