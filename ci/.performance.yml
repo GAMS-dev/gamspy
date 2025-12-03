@@ -18,7 +18,7 @@ leg-performance:
     - uv pip install highsbox llvmlite tccbox
     - gamspy install license $PERFORMANCE_LICENSE
     - echo $GAMS_LICENSE > $(gamspy show base)/gamslice.txt
-    - gamspy install solver --install-all-solvers --use-uv
+    - gamspy install solver -a --use-uv
     - which python
     - gamspy show license
     - python scripts/performance/lp/main.py

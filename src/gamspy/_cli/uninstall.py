@@ -51,7 +51,11 @@ def solver(
         ),
     ] = None,
     uninstall_all_solvers: bool = typer.Option(
-        False, "--uninstall-all-solvers", help="Uninstalls all add-on solvers."
+        False,
+        "--uninstall-all-solvers",
+        "--all",
+        "-a",
+        help="Uninstalls all add-on solvers.",
     ),
     skip_pip_uninstall: bool = typer.Option(
         False,
@@ -95,8 +99,6 @@ def solver(
                     command = [
                         "uv",
                         "pip",
-                        "--python-preference",
-                        "only-system",
                         "uninstall",
                         f"gamspy-{solver_name}",
                     ]
@@ -110,7 +112,12 @@ def solver(
                         "-y",
                     ]
                 try:
-                    _ = subprocess.run(command, check=True)
+                    _ = subprocess.run(
+                        command,
+                        check=True,
+                        encoding="utf-8",
+                        stderr=subprocess.PIPE,
+                    )
                 except subprocess.CalledProcessError as e:
                     raise GamspyException(
                         f"Could not uninstall gamspy-{solver_name}: {e.output}"
