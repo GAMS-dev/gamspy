@@ -1,11 +1,11 @@
 #### TESTS #####
-leg-test-3.13:
+leg-test-3.14:
   stage: test
   needs: [leg-cli-3.10]
   tags: [linux]
-  image: python:3.13
+  image: python:3.14
   script:
-    - python -m pip install uv && uv venv venv313 && source venv313/bin/activate
+    - python -m pip install uv && uv venv venv314 && source venv314/bin/activate
     - uv pip install .[dev,test,torch] --force-reinstall
     - gamspy install license $LOCAL_LICENSE
     - gamspy install solver -a --use-uv
@@ -21,6 +21,23 @@ leg-test-3.13:
         coverage_format: cobertura
         path: coverage.xml
   coverage: '/TOTAL.*\s+(\d+\%)/'
+
+leg-test-3.13:
+  stage: test
+  needs: [leg-cli-3.10]
+  tags: [linux]
+  image: python:3.13
+  script:
+    - python -m pip install uv && uv venv venv313 && source venv313/bin/activate
+    - uv pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
+    - gamspy install solver -a --use-uv
+    - gamspy uninstall solver miles --use-uv
+    - python -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+      when: on_success
+    - when: never
 
 leg-test-3.12:
   stage: test
@@ -68,21 +85,17 @@ leg-test-3.10:
     - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
     - python -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
 
 #### ENGINE #####
-leg-engine-3.13:
+leg-engine-3.14:
   stage: engine
   when: manual
   needs: []
   allow_failure: true
   tags: [linux]
-  image: python:3.13
+  image: python:3.14
   script:
-    - python -m pip install uv && uv venv venv313 && source venv313/bin/activate
+    - python -m pip install uv && uv venv venv314 && source venv314/bin/activate
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'engine' tests
 
@@ -99,15 +112,15 @@ leg-engine-3.10:
     - python -m pytest -x -v -s -m 'engine' tests
 
 #### NEOS #####
-leg-neos-3.13:
+leg-neos-3.14:
   stage: neos
   when: manual
   needs: []
   allow_failure: true
   tags: [linux]
-  image: python:3.13
+  image: python:3.14
   script:
-    - python -m pip install uv && uv venv venv313 && source venv313/bin/activate
+    - python -m pip install uv && uv venv venv314 && source venv314/bin/activate
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'neos' tests
 
