@@ -224,6 +224,8 @@ def solver(
     install_all_solvers: bool = typer.Option(
         False,
         "--install-all-solvers",
+        "--all",
+        "-a",
         help="Installs all available add-on solvers.",
     ),
     existing_solvers: bool = typer.Option(
@@ -279,8 +281,6 @@ def solver(
                     command = [
                         "uv",
                         "pip",
-                        "--python-preference",
-                        "only-system",
                         "install",
                         f"gamspy-{solver_name}=={solver_version}",
                         "--force-reinstall",
