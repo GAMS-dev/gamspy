@@ -3,7 +3,7 @@ lag-test-3.14:
   stage: test
   needs: [lag-cli-3.10]
   tags: [linux-arm64]
-  image: python:3.14
+  image: python:3.14.0
   script:
     - python -m pip install uv && uv venv venv314 && source venv314/bin/activate
     - uv pip install .[dev,test] --force-reinstall
@@ -85,7 +85,7 @@ lag-engine-3.14:
   needs: []
   allow_failure: true
   tags: [linux-arm64]
-  image: python:3.14
+  image: python:3.14.0
   script:
     - python -m pip install uv && uv venv venv314 && source venv314/bin/activate
     - uv pip install .[dev,test] --force-reinstall
@@ -110,7 +110,7 @@ lag-neos-3.14:
   needs: []
   allow_failure: true
   tags: [linux-arm64]
-  image: python:3.14
+  image: python:3.14.0
   script:
     - python -m pip install uv && uv venv venv314 && source venv314/bin/activate
     - uv pip install .[dev,test] --force-reinstall

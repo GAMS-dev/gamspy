@@ -3,7 +3,7 @@ wei-test-3.14:
   stage: test
   needs: [wei-cli-3.10]
   tags: [windows]
-  image: winamd64/python:3.14
+  image: winamd64/python:3.14.0
   script:
     - python --version
     - python -m pip install uv; uv venv .windows_test314; .windows_test314\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
@@ -103,7 +103,7 @@ wei-engine-3.14:
   needs: []
   allow_failure: true
   tags: [windows]
-  image: winamd64/python:3.14
+  image: winamd64/python:3.14.0
   script:
     - python --version
     - python -m pip install uv; uv venv .windows_engine314; .windows_engine314\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
@@ -128,7 +128,7 @@ wei-neos-3.14:
   needs: []
   allow_failure: true
   tags: [windows]
-  image: winamd64/python:3.14
+  image: winamd64/python:3.14.0
   script:
     - python --version
     - python -m pip install uv; uv venv .windows_neos314; .windows_neos314\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
