@@ -1,5 +1,6 @@
 import math
 
+import numpy as np
 import pytest
 
 import gamspy as gp
@@ -93,6 +94,8 @@ def test_expression_evaluation():
     # mathop.records
     f = gp.Parameter(m, "f", records=5)
     assert math.isclose(gp.math.exp(f).records.values.item(), 148.4131591025766)
+    assert math.isclose(gp.math.sin(90).records.values.item(), 0.8939966636005579)
+    assert math.isclose(gp.math.sin(90).toValue(), 0.8939966636005579)
 
     k = gp.Set(m, name="k", records=["k1", "k2", "k3"])
     g = gp.Parameter(m, "g", domain=k, records=[("k1", 4), ("k2", 10), ("k3", 0.5)])
@@ -110,6 +113,26 @@ def test_expression_evaluation():
     # condition.records
     c[...] = a.where[a > 2]
     assert c.records.equals(a.where[a > 2].records)
+
+    seed = 123
+    m = gp.Container()
+    A = gp.Set(m, records=range(2))
+    S = gp.Set(m, records=range(2))
+    AS = gp.Set(m, domain=[A, S])
+    AS.generateRecords(seed=seed)
+    risk_weight = gp.Parameter(m, domain=[A, S])
+    risk_weight.generateRecords(seed=seed)
+    exposure = gp.Parameter(m, domain=[A, S])
+    segment_vars = gp.Parameter(m, domain=[A, S])
+    risk_weight.generateRecords(seed=seed)
+    exposure.generateRecords(seed=seed)
+    segment_vars.generateRecords(seed=seed)
+    assert np.isclose(
+        gp.Sum(AS[A, S], risk_weight[AS] * exposure[AS] * segment_vars[AS])
+        .records["value"]
+        .to_numpy(),
+        np.array([3.17705801e-01, 1.55903456e-04, 1.07003390e-02, 6.26734443e-03]),
+    ).all()
 
     m.close()
 

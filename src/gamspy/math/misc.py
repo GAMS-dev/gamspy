@@ -8,6 +8,7 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
+from gamspy._container import Container
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -55,13 +56,16 @@ class MathOp(operable.Operable):
         -------
         pd.DataFrame | None
         """
-        assert self.container is not None
+        container = self.container
+        if container is None:
+            container = Container()
+
         temp_name = "a" + utils._get_unique_name()
         temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, self.domain
+            container, temp_name, self.domain
         )
         temp_param[...] = self
-        del self.container.data[temp_name]
+        del container.data[temp_name]
         return temp_param.records
 
     def toValue(self) -> float | None:

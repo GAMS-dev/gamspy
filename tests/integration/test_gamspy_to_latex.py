@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy as gp
 import gamspy.math as gams_math
 from gamspy import (
     Alias,
@@ -1562,6 +1563,8 @@ def test_latex_repr(data):
 
     e[...] = c * c - a >= 0
     assert e.latexRepr() == "$\nc \\cdot c - a \\geq 0\n$"
+
+    assert gp.Number(5).latexRepr() == "5"
 
 
 def test_symbol_name_with_underscore():

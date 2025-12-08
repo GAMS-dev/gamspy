@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+import gamspy as gp
 import gamspy._algebra.expression as expression
 from gamspy import Container, Parameter, Set, Variable
 from gamspy.math import sqr
@@ -196,3 +197,11 @@ def test_magics(data):
     assert op2.gamsRepr() == "(-(x(i) + b(i)))"
     assert isinstance(-sqr(k), expression.Expression)
     assert -sqr(k).toValue() == -4
+
+    with pytest.raises(TypeError):
+        gp.Number("bla")
+
+    m = gp.Container()
+    a = gp.Parameter(m)
+    a[...] = gp.Number(2) != 0
+    assert a.toValue() == 1
