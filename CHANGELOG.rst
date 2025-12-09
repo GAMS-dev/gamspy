@@ -1,4 +1,4 @@
-GAMSPy 1.18.1 (2025-12-09)
+GAMSPy 1.18.2 (2025-12-09)
 ==========================
 
 Improvements in existing functionality
