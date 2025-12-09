@@ -8,6 +8,7 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
+from gamspy._container import Container
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -55,13 +56,16 @@ class MathOp(operable.Operable):
         -------
         pd.DataFrame | None
         """
-        assert self.container is not None
+        container = self.container
+        if container is None:
+            container = Container()
+
         temp_name = "a" + utils._get_unique_name()
         temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, self.domain
+            container, temp_name, self.domain
         )
         temp_param[...] = self
-        del self.container.data[temp_name]
+        del container.data[temp_name]
         return temp_param.records
 
     def toValue(self) -> float | None:
@@ -121,11 +125,14 @@ class MathOp(operable.Operable):
             "abs": "\\lvert",
         }
 
-        operands_str = ",".join([_stringify(elem) for elem in self.elements])
+        operands_str = ",".join(
+            [_stringify(elem, latex=True) for elem in self.elements]
+        )
         if self.op_name in op_map:
             return f"{op_map[self.op_name]}{{{operands_str}}}"
 
-        return f"{self.op_name}({operands_str})"
+        op_name = self.op_name.replace("_", r"\_")
+        return f"{op_name}({operands_str})"
 
     def __str__(self):
         return self.gamsRepr()
@@ -134,13 +141,19 @@ class MathOp(operable.Operable):
         return len(self.gamsRepr())
 
 
-def _stringify(x: str | int | float | Symbol | ImplicitSymbol):
+def _stringify(x: str | int | float | Symbol | ImplicitSymbol, *, latex: bool = False):
     if isinstance(x, (int, float)):
         x = utils._map_special_values(x)
 
         return str(x)
     elif isinstance(x, str):
+        if latex:
+            x = x.replace("_", r"\_")
+
         return f'"{x}"'
+
+    if latex:
+        return x.latexRepr()
 
     return x.gamsRepr()  # type: ignore
 

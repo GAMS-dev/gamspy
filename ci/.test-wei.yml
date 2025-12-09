@@ -1,4 +1,19 @@
 #### TESTS #####
+wei-test-3.14:
+  stage: test
+  needs: [wei-cli-3.10]
+  tags: [windows]
+  image: winamd64/python:3.14.0
+  script:
+    - python --version
+    - python -m pip install uv; uv venv .windows_test314; .windows_test314\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
+    - gamspy install solver -a --use-uv
+    - gamspy uninstall solver miles --use-uv
+    - $env:COVERAGE_CORE = 'sysmon'; coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
+    - coverage report -m --data-file=".coverage"
+    - coverage xml --data-file=".coverage"
+
 wei-test-3.13:
   stage: test
   needs: [wei-cli-3.10]
@@ -10,9 +25,11 @@ wei-test-3.13:
     - gamspy install license $LOCAL_LICENSE
     - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
-    - $env:COVERAGE_CORE = 'sysmon'; coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
-    - coverage report -m --data-file=".coverage"
-    - coverage xml --data-file=".coverage"
+    - python -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+      when: on_success
+    - when: never
 
 wei-test-3.12:
   stage: test
@@ -80,16 +97,16 @@ wei-test-3.10:
     - python -m pytest -x -v -s -m 'doc'
 
 #### ENGINE #####
-wei-engine-3.13:
+wei-engine-3.14:
   stage: engine
   when: manual
   needs: []
   allow_failure: true
   tags: [windows]
-  image: winamd64/python:3.13
+  image: winamd64/python:3.14.0
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_engine313; .windows_engine313\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_engine314; .windows_engine314\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'engine' tests
 
 wei-engine-3.10:
@@ -105,16 +122,16 @@ wei-engine-3.10:
     - python -m pytest -x -v -s -m 'engine' tests
 
 #### NEOS #####
-wei-neos-3.13:
+wei-neos-3.14:
   stage: neos
   when: manual
   needs: []
   allow_failure: true
   tags: [windows]
-  image: winamd64/python:3.13
+  image: winamd64/python:3.14.0
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_neos313; .windows_neos313\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_neos314; .windows_neos314\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'neos' tests
 
 wei-neos-3.10:

@@ -1117,7 +1117,7 @@ def test_auto_python_name_retrieval():
     p = gp.Model(m)
     assert p.name == "p"
 
-    gp.set_options({"USE_PY_VAR_NAME": "no"})
+    gp.set_options({"USE_PY_VAR_NAME": "yes-or-autogenerate"})
 
 
 @pytest.mark.unit

@@ -113,6 +113,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         # gamspy attributes
         obj._synchronize = True
         obj.where = condition.Condition(obj)
+        obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
         obj._metadata = {}
         obj._winner = "python"
@@ -263,6 +264,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 description=description,
                 uels_on_axes=uels_on_axes,
             )
+            self._latex_name = self.name.replace("_", r"\_")
 
             if is_miro_input:
                 self._already_loaded = False
