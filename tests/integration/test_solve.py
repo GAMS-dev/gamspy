@@ -1878,6 +1878,7 @@ def test_execution_error(data):
 
 
 def test_emp():
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
     m = Container()
     t = Set(m, name="m", records=[0, 1])
     a = Set(m, name="a", records=["a0", "a1"])
@@ -1919,6 +1920,7 @@ def test_emp():
         _ = Model(m, name="nash", equations=[defobj, cons], problem="emp")
 
     m.close()
+    gp.set_options({"USE_PY_VAR_NAME": "yes-or-autogenerate"})
 
 
 def test_subsolver_options(data):

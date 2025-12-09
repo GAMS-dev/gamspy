@@ -22,10 +22,8 @@
 \hline
 \endhead
 
-days & days & 100 days from 95-11-27 to 96-04-29\\
-stocks & stocks & 170 selected stocks\\
-d & days & selected days\\
-s & stocks & selected stocks\\
+i & * & canning plants\\
+j & * & markets\\
 \hline
 \end{tabularx}
 \subsection*{Parameters}
@@ -35,9 +33,9 @@ s & stocks & selected stocks\\
 \hline
 \endhead
 
-mean & stocks & mean of daily return\\
-dev & stocks,days & deviations\\
-totmean &  & total mean return\\
+a & i & capacity of plant i in cases\\
+b & j & demand at market j in cases\\
+c & i,j & transport cost in thousands of dollars per case\\
 \hline
 \end{tabularx}
 \subsection*{Variables}
@@ -47,11 +45,7 @@ totmean &  & total mean return\\
 \hline
 \endhead
 
-x & stocks & investments\\
-w & days & intermediate variables\\
-m\_budget &  & \\
-m\_wdef & days & \\
-m\_retcon &  & \\
+ρ & i,j & shipment quantities in cases\\
 \hline
 \end{tabularx}
 \subsection*{Equations}
@@ -61,16 +55,25 @@ m\_retcon &  & \\
 \hline
 \endhead
 
-budget &  & \\
-retcon &  & returns constraint\\
-wdef & days & \\
-d\_x & stocks & \\
-d\_w & days & \\
+supply & i & observe supply limit at plant i\\
+demand & j & satisfy demand at market j\\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
-
+\textbf{min} $\sum_{i,j} c_{i,j} \cdot ρ_{i,j}$\\
+\textbf{s.t.}
+\subsubsection*{$supply_{i}$}
+$
+\sum_{j} ρ_{i,j} \leq a_{i}\hfill \forall i
+$
+\vspace{5pt}
+\hrule
+\subsubsection*{$demand_{j}$}
+$
+\sum_{i} ρ_{i,j} \geq b_{j}\hfill \forall j
+$
+\vspace{5pt}
+\hrule
 \bigskip
-$x\geq 0 ~ \forall stocks\\$
-$m\_retcon\geq 0\\$
+$ρ\geq 0 ~ \forall i,j\\$
 \end{document}

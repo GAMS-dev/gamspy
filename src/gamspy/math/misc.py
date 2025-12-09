@@ -125,11 +125,14 @@ class MathOp(operable.Operable):
             "abs": "\\lvert",
         }
 
-        operands_str = ",".join([_stringify(elem) for elem in self.elements])
+        operands_str = ",".join(
+            [_stringify(elem, latex=True) for elem in self.elements]
+        )
         if self.op_name in op_map:
             return f"{op_map[self.op_name]}{{{operands_str}}}"
 
-        return f"{self.op_name}({operands_str})"
+        op_name = self.op_name.replace("_", r"\_")
+        return f"{op_name}({operands_str})"
 
     def __str__(self):
         return self.gamsRepr()
@@ -138,13 +141,19 @@ class MathOp(operable.Operable):
         return len(self.gamsRepr())
 
 
-def _stringify(x: str | int | float | Symbol | ImplicitSymbol):
+def _stringify(x: str | int | float | Symbol | ImplicitSymbol, *, latex: bool = False):
     if isinstance(x, (int, float)):
         x = utils._map_special_values(x)
 
         return str(x)
     elif isinstance(x, str):
+        if latex:
+            x = x.replace("_", r"\_")
+
         return f'"{x}"'
+
+    if latex:
+        return x.latexRepr()
 
     return x.gamsRepr()  # type: ignore
 

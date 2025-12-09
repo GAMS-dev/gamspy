@@ -234,7 +234,7 @@ def create_latex_expression(root_node: Expression) -> str:
             if node.right is not None:
                 s1.append(node.right)
 
-    # 2. Build the GAMS expression
+    # 2. Build the LaTeX expression
     eval_stack: list[tuple[str, float]] = []
     for node in reversed(post_order_nodes):
         if not isinstance(node, Expression):

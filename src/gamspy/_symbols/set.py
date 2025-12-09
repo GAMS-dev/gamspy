@@ -482,6 +482,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         # gamspy attributes
         obj.where = condition.Condition(obj)
+        obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
         obj._synchronize = True
         obj._metadata = {}
@@ -642,6 +643,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 description=description,
                 uels_on_axes=uels_on_axes,
             )
+            self._latex_name = self.name.replace("_", r"\_")
 
             if is_miro_input:
                 self._already_loaded = False

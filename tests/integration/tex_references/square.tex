@@ -3,6 +3,9 @@
 \usepackage[american]{babel}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{fontspec}
+\setmainfont{CMU Serif} % 1. Sets a font that knows Greek in text mode
+\usepackage{unicode-math} % 2. Allows Greek keys to work in math mode
 \usepackage[hidelinks]{hyperref}
 \usepackage{tabularx}
 \usepackage{ltablex}
@@ -67,53 +70,53 @@ e4y &  & define y-coordinate of upper-right corner\\
 \textbf{s.t.}
 \subsubsection*{$e1x$}
 $
-sin(t("1")) \cdot cos(t("1") - t("1") * t("1")) = x
+sin(t_{\textquotesingle 1 \textquotesingle}) \cdot cos(t_{\textquotesingle 1 \textquotesingle} - t_{\textquotesingle 1 \textquotesingle} \cdot t_{\textquotesingle 1 \textquotesingle}) = x
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e1y$}
 $
-t_{\textquotesingle 1 \textquotesingle} \cdot sin(t("1")) = y
+t_{\textquotesingle 1 \textquotesingle} \cdot sin(t_{\textquotesingle 1 \textquotesingle}) = y
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e2x$}
 $
-sin(t("2")) \cdot cos(t("2") - t("2") * t("2")) = x + a
+sin(t_{\textquotesingle 2 \textquotesingle}) \cdot cos(t_{\textquotesingle 2 \textquotesingle} - t_{\textquotesingle 2 \textquotesingle} \cdot t_{\textquotesingle 2 \textquotesingle}) = x + a
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e2y$}
 $
-t_{\textquotesingle 2 \textquotesingle} \cdot sin(t("2")) = y + b
+t_{\textquotesingle 2 \textquotesingle} \cdot sin(t_{\textquotesingle 2 \textquotesingle}) = y + b
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e3x$}
 $
-sin(t("3")) \cdot cos(t("3") - t("3") * t("3")) = x - b
+sin(t_{\textquotesingle 3 \textquotesingle}) \cdot cos(t_{\textquotesingle 3 \textquotesingle} - t_{\textquotesingle 3 \textquotesingle} \cdot t_{\textquotesingle 3 \textquotesingle}) = x - b
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e3y$}
 $
-t_{\textquotesingle 3 \textquotesingle} \cdot sin(t("3")) = y + a
+t_{\textquotesingle 3 \textquotesingle} \cdot sin(t_{\textquotesingle 3 \textquotesingle}) = y + a
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e4x$}
 $
-sin(t("4")) \cdot cos(t("4") - t("4") * t("4")) = x + a - b
+sin(t_{\textquotesingle 4 \textquotesingle}) \cdot cos(t_{\textquotesingle 4 \textquotesingle} - t_{\textquotesingle 4 \textquotesingle} \cdot t_{\textquotesingle 4 \textquotesingle}) = x + a - b
 $
 \vspace{5pt}
 \hrule
 \subsubsection*{$e4y$}
 $
-t_{\textquotesingle 4 \textquotesingle} \cdot sin(t("4")) = y + a + b
+t_{\textquotesingle 4 \textquotesingle} \cdot sin(t_{\textquotesingle 4 \textquotesingle}) = y + a + b
 $
 \vspace{5pt}
 \hrule
 \bigskip
-$a\geq 0 ~ \forall \\$
-$b\geq 0 ~ \forall \\$
+$a\geq 0\\$
+$b\geq 0\\$
 \end{document}

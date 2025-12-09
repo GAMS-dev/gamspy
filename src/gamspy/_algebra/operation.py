@@ -763,7 +763,7 @@ class Ord(operable.Operable):
         -------
         str
         """
-        return f"ord({self._symbol.name})"
+        return f"ord({self._symbol._latex_name})"
 
 
 class Card(operable.Operable):
@@ -842,4 +842,4 @@ class Card(operable.Operable):
         -------
         str
         """
-        return f"card({self._symbol.name})"
+        return f"card({self._symbol._latex_name})"
