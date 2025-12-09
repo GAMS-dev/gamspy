@@ -584,7 +584,9 @@ def _map_special_values(value: float):
     return value
 
 
-def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
+def _get_domain_str(
+    domain: Iterable[Set | Alias | ImplicitSet | str], *, latex: bool = False
+) -> str:
     """
     Creates the string format of a given domain
 
@@ -601,21 +603,29 @@ def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
     Exception
         Given domain must contain only sets, aliases or strings
     """
-    set_strs = []
-    for set in domain:
-        if isinstance(set, (gt.Set, gt.Alias, gt.UniverseAlias, implicits.ImplicitSet)):
-            set_strs.append(set.gamsRepr())
-        elif isinstance(set, str):
-            if set == "*":
-                set_strs.append(set)
+    domain_strs = []
+    for elem in domain:
+        if isinstance(
+            elem, (gt.Set, gt.Alias, gt.UniverseAlias, implicits.ImplicitSet)
+        ):
+            if latex:
+                domain_strs.append(elem.latexRepr())
             else:
-                set_strs.append('"' + set + '"')
+                domain_strs.append(elem.gamsRepr())
+        elif isinstance(elem, str):
+            if elem == "*":
+                domain_strs.append(elem)
+            else:
+                if latex:
+                    domain_strs.append('"' + elem.replace("_", r"\_") + '"')
+                else:
+                    domain_strs.append('"' + elem + '"')
         else:
             raise ValidationError(
-                f"Domain type must be str, Set or Alias but found {type(set)}"
+                f"Domain type must be str, Set or Alias but found {type(elem)}"
             )
 
-    return "(" + ",".join(set_strs) + ")"
+    return "(" + ",".join(domain_strs) + ")"
 
 
 def _permute_domain(domain, dims):

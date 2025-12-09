@@ -83,7 +83,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         return temp_param.records
 
     def latexRepr(self):
-        name = self.name.replace("_", "\\_")
+        name = self._latex_name
         representation = name
 
         if self.extension is not None:
@@ -100,6 +100,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
                 if isinstance(elem, (syms.Set, syms.Alias, ImplicitSet)):
                     set_strs.append(elem.latexRepr())
                 elif isinstance(elem, str):
+                    elem = elem.replace("_", r"\_")
                     set_strs.append(f"\\textquotesingle {elem} \\textquotesingle")
 
             domain_str = "{" + ",".join(set_strs) + "}"

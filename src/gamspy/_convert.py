@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import os
 import subprocess
 from collections.abc import Sequence
@@ -27,14 +26,6 @@ if TYPE_CHECKING:
     )
 
     SymbolType: TypeAlias = Alias | Set | Parameter | Variable | Equation
-
-logger = logging.getLogger("CONVERTER")
-logger.setLevel(logging.INFO)
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.INFO)
-formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
-stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
 
 GAMS_JACOBIAN_TEMPLATE = """$onEmpty
 Set
@@ -388,9 +379,9 @@ class GamsConverter:
         self.path = path
         self.options = options
         self.dump_gams_state = dump_gams_state
-        self.gdx_path = str((path / f"{model.name}_data.gdx").resolve())
-        self.gms_path = str((path / f"{model.name}.gms").resolve())
-        self.g00_path = str((path / f"{model.name}.g00").resolve())
+        self.gdx_path = path / f"{model.name}_data.gdx"
+        self.gms_path = path / f"{model.name}.gms"
+        self.g00_path = path / f"{model.name}.g00"
 
     def get_definitions(self) -> list[str]:
         definitions = []
@@ -438,8 +429,8 @@ class GamsConverter:
             em_name = self.model._external_module
             em_file = self.model._external_module_file
             declarations.append(f"File {em_file} /{em_name}/;")
-            logger.info("Converter will not copy external module files")
-            logger.info(
+            print("Converter will not copy external module files")
+            print(
                 f"You need to ensure your external module is accessible from {self.path}"
             )
 
@@ -482,7 +473,9 @@ class GamsConverter:
         with open(self.gms_path, "w", encoding="utf-8") as file:
             file.write(gams_string)
 
-        logger.info(f"GAMS (.gms) file has been generated under {self.gms_path}")
+        print("=" * 80)
+        print(f"GAMS (.gms) file has been generated under {self.gms_path}")
+        print("=" * 80)
 
 
 TABLE_HEADER = """\\begin{tabularx}{\\textwidth}{| l | l | X |}
@@ -496,7 +489,7 @@ TABLE_FOOTER = "\\hline\n\\end{tabularx}"
 
 
 class LatexConverter:
-    def __init__(self, model: Model, path: Path) -> None:
+    def __init__(self, model: Model, path: Path, rename: dict[str, str] | None) -> None:
         os.makedirs(path, exist_ok=True)
         self.model = model
         self.container = model.container
@@ -512,11 +505,21 @@ class LatexConverter:
                     ):
                         symbols.append(elem.name)
 
+        for name in self.model._autogen_symbols:
+            if name in symbols:
+                symbols.remove(name)
+
         self.symbols = sorted(symbols, key=list(self.container.data.keys()).index)
 
-        for name in self.model._autogen_symbols:
-            if name in self.symbols:
-                self.symbols.remove(name)
+        if rename is not None:
+            for name, latex_name in rename.items():
+                try:
+                    symbol = self.container[name]
+                    symbol._latex_name = latex_name
+                except KeyError as e:
+                    raise KeyError(
+                        f"`{name}` does not exist in the Container. You can only rename symbols that already exist in the container."
+                    ) from e
 
         self.header = self.get_header()
         self.set_header = "\\subsection*{Sets}"
@@ -551,8 +554,9 @@ class LatexConverter:
         if self.model._objective is None:
             ...
         elif isinstance(self.model._objective, syms.Variable):
+            var_name = self.model._objective._latex_name
             latex_strs.append(
-                f"\\textbf{{{str(self.model.sense).lower()}}} ${self.model._objective_variable.name}$\\\\"  # type: ignore
+                f"\\textbf{{{str(self.model.sense).lower()}}} ${var_name}$\\\\"
             )
             latex_strs.append("\\textbf{s.t.}")
         else:
@@ -572,15 +576,18 @@ class LatexConverter:
         with open(self.tex_path, "w", encoding="utf-8") as file:  # Write the TEX file
             file.write(latex_str)
 
-        logger.info(
+        print("=" * 80)
+        print(
             f"LaTeX (.tex) file has been generated under {os.path.join(self.path, self.model.name + '.tex')}"
         )
+        print("=" * 80)
 
         self.latex_str = latex_str
 
     def to_pdf(self) -> None:
-        process = subprocess.run(["pdflatex", "-v"])
+        process = subprocess.run(["pdflatex", "-v"], capture_output=True)
         if process.returncode:
+            print(process.stderr)
             raise ValidationError(
                 "`pdflatex` is required to generate the pdf! Please install `pdflatex` and add it to the path."
             )
@@ -604,10 +611,11 @@ class LatexConverter:
                 if isinstance(symbol, syms.Variable) and self.model._limited_variables:
                     for elem in self.model._limited_variables:
                         if elem.name == symbol.name:
-                            domain_str = utils._get_domain_str(elem.domain)[1:-1]
+                            domain_str = utils._get_domain_str(elem.domain, latex=True)[
+                                1:-1
+                            ]
 
-                row = f"{summary['name']} & {domain_str} & {summary['description']}\\\\"
-                row = row.replace("_", "\\_")
+                row = f"{symbol._latex_name} & {domain_str} & {summary['description']}\\\\"
                 table.append(row)
 
         table.append(TABLE_FOOTER)
@@ -615,13 +623,13 @@ class LatexConverter:
         return "\n".join(table)
 
     def get_definitions(self) -> str:
-        definitions = []
+        definitions: list[str] = []
         for equation in self.model.equations:
             if equation.name in self.model._autogen_symbols:
                 continue
 
-            domain_str = ",".join([elem.name for elem in equation.domain])
-            header = "\\subsubsection*{$" + equation.name.replace("_", "\\_")
+            domain_str = ",".join([elem.latexRepr() for elem in equation.domain])
+            header = "\\subsubsection*{$" + equation._latex_name
             if domain_str:
                 header += f"_{{{domain_str}}}"
             header += "$}\n"
@@ -641,20 +649,33 @@ class LatexConverter:
 
             constraint = "$" + symbol.latexRepr()
             if symbol.type == "binary":
-                constraint += (
-                    "\\in "
-                    + r"\{0,1\}"
-                    + " ~ \\forall "
-                    + ",".join(symbol.domain_names)
-                )
+                constraint += "\\in " + r"\{0,1\}"
+                if symbol.domain:
+                    constraint += (
+                        " ~ \\forall "
+                        + utils._get_domain_str(symbol.domain, latex=True)[1:-1]
+                    )
             elif symbol.type == "integer":
-                constraint += "\\in \\mathbb{Z}_{+} \\forall " + ",".join(
-                    symbol.domain_names
-                )
+                constraint += "\\in \\mathbb{Z}_{+}"
+                if symbol.domain:
+                    constraint += (
+                        " ~ \\forall "
+                        + utils._get_domain_str(symbol.domain, latex=True)[1:-1]
+                    )
             elif symbol.type == "positive":
-                constraint += "\\geq 0 ~ \\forall " + ",".join(symbol.domain_names)
+                constraint += "\\geq 0"
+                if symbol.domain:
+                    constraint += (
+                        " ~ \\forall "
+                        + utils._get_domain_str(symbol.domain, latex=True)[1:-1]
+                    )
             elif symbol.type == "negative":
-                constraint += "\\leq 0 ~ \\forall " + ",".join(symbol.domain_names)
+                constraint += "\\leq 0"
+                if symbol.domain:
+                    constraint += (
+                        " ~ \\forall "
+                        + utils._get_domain_str(symbol.domain, latex=True)[1:-1]
+                    )
             elif symbol.type == "sos1":
                 constraint += "SOS1"
             elif symbol.type == "sos2":
@@ -672,18 +693,21 @@ class LatexConverter:
         return "\n".join(constraints)
 
     def get_header(self) -> str:
-        header = """\\documentclass[11pt]{article}
-\\usepackage{geometry}
-\\usepackage[american]{babel}
-\\usepackage{amsmath}
-\\usepackage{amssymb}
-\\usepackage[hidelinks]{hyperref}
-\\usepackage{tabularx}
-\\usepackage{ltablex}
-\\keepXColumns
+        header = r"""\documentclass[11pt]{article}
+\usepackage{geometry}
+\usepackage[american]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\setmainfont{CMU Serif} % 1. Sets a font that knows Greek in text mode
+\usepackage{unicode-math} % 2. Allows Greek keys to work in math mode
+\usepackage[hidelinks]{hyperref}
+\usepackage{tabularx}
+\usepackage{ltablex}
+\keepXColumns
 
-\\begin{document}
-\\section*{Symbols}
+\begin{document}
+\section*{Symbols}
 
 """
         return header

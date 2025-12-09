@@ -1,4 +1,26 @@
 #### TESTS #####
+dac-test-3.14:
+  stage: test
+  needs: [dac-cli-3.10]
+  tags: [macos-arm64]
+  script:
+    - |
+      if [ ! -f "${TMPDIR}uv" ]; then
+        curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
+      fi
+    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv python install 3.14 --install-dir ${TMPDIR}python3.14${CI_COMMIT_SHORT_SHA}
+    - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-test-3.14${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.14${CI_COMMIT_SHORT_SHA}/cpython*
+    - source "${TMPDIR}gamspy-env-test-3.14${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
+    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
+    - gamspy install solver -a
+    - gamspy uninstall solver miles
+    - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license or doc' tests
+    - coverage report -m --data-file=".coverage"
+    - coverage xml --data-file=".coverage"
+  after_script:
+    - rm -rf "${TMPDIR}gamspy-env-test-3.14${CI_COMMIT_SHORT_SHA}"
+
 dac-test-3.13:
   stage: test
   needs: [dac-cli-3.10]
@@ -8,18 +30,20 @@ dac-test-3.13:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - ${TMPDIR}uv python install 3.13 --install-dir ${TMPDIR}python3.13${CI_COMMIT_SHORT_SHA}
+    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv python install 3.13 --install-dir ${TMPDIR}python3.13${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.13${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver -a
     - gamspy uninstall solver miles
-    - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license or doc' tests
-    - coverage report -m --data-file=".coverage"
-    - coverage xml --data-file=".coverage"
+    - python -B -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
   after_script:
     - rm -rf "${TMPDIR}gamspy-env-test-3.13${CI_COMMIT_SHORT_SHA}"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+      when: on_success
+    - when: never
 
 dac-test-3.12:
   stage: test
@@ -30,7 +54,7 @@ dac-test-3.12:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - ${TMPDIR}uv python install 3.12 --install-dir ${TMPDIR}python3.12${CI_COMMIT_SHORT_SHA}
+    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv python install 3.12 --install-dir ${TMPDIR}python3.12${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.12${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.12${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
@@ -54,7 +78,7 @@ dac-test-3.11:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - ${TMPDIR}uv python install 3.11 --install-dir ${TMPDIR}python3.11${CI_COMMIT_SHORT_SHA}
+    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv python install 3.11 --install-dir ${TMPDIR}python3.11${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.11${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.11${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
@@ -78,7 +102,7 @@ dac-test-3.10:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - ${TMPDIR}uv python install 3.10 --install-dir ${TMPDIR}python3.10${CI_COMMIT_SHORT_SHA}
+    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv python install 3.10 --install-dir ${TMPDIR}python3.10${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.10${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
@@ -90,7 +114,7 @@ dac-test-3.10:
     - rm -rf "${TMPDIR}gamspy-env-test-3.10${CI_COMMIT_SHORT_SHA}"
 
 #### ENGINE #####
-dac-engine-3.13:
+dac-engine-3.14:
   stage: engine
   when: manual
   needs: []
@@ -101,13 +125,13 @@ dac-engine-3.13:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - ${TMPDIR}uv python install 3.13 --install-dir ${TMPDIR}python3.13engine${CI_COMMIT_SHORT_SHA}
-    - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.13engine${CI_COMMIT_SHORT_SHA}/cpython*
-    - source "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv python install 3.14 --install-dir ${TMPDIR}python3.14engine${CI_COMMIT_SHORT_SHA}
+    - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-engine-3.14${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.14engine${CI_COMMIT_SHORT_SHA}/cpython*
+    - source "${TMPDIR}gamspy-env-engine-3.14${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
     - python -B -m pytest -x -v -s -m 'engine' tests
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-engine-3.13${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-engine-3.14${CI_COMMIT_SHORT_SHA}"
 
 dac-engine-3.10:
   stage: engine
@@ -120,7 +144,7 @@ dac-engine-3.10:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - ${TMPDIR}uv python install 3.10 --install-dir ${TMPDIR}python3.10engine${CI_COMMIT_SHORT_SHA}
+    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv python install 3.10 --install-dir ${TMPDIR}python3.10engine${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-engine-3.10${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.10engine${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-engine-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
@@ -129,7 +153,7 @@ dac-engine-3.10:
     - rm -rf "${TMPDIR}gamspy-env-engine-3.10${CI_COMMIT_SHORT_SHA}"
 
 #### NEOS #####
-dac-neos-3.13:
+dac-neos-3.14:
   stage: neos
   when: manual
   needs: []
@@ -140,13 +164,13 @@ dac-neos-3.13:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - ${TMPDIR}uv python install 3.13 --install-dir ${TMPDIR}python3.13neos${CI_COMMIT_SHORT_SHA}
-    - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.13neos${CI_COMMIT_SHORT_SHA}/cpython*
-    - source "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv python install 3.14 --install-dir ${TMPDIR}python3.14neos${CI_COMMIT_SHORT_SHA}
+    - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-neos-3.14${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.14neos${CI_COMMIT_SHORT_SHA}/cpython*
+    - source "${TMPDIR}gamspy-env-neos-3.14${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
     - python -B -m pytest -x -v -s -m 'neos' tests
   after_script:
-    - rm -rf "${TMPDIR}gamspy-env-neos-3.13${CI_COMMIT_SHORT_SHA}"
+    - rm -rf "${TMPDIR}gamspy-env-neos-3.14${CI_COMMIT_SHORT_SHA}"
 
 dac-neos-3.10:
   stage: neos
@@ -159,7 +183,7 @@ dac-neos-3.10:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
-    - ${TMPDIR}uv python install 3.10 --install-dir ${TMPDIR}python3.10neos${CI_COMMIT_SHORT_SHA}
+    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv python install 3.10 --install-dir ${TMPDIR}python3.10neos${CI_COMMIT_SHORT_SHA}
     - ${TMPDIR}uv venv -v "${TMPDIR}gamspy-env-neos-3.10${CI_COMMIT_SHORT_SHA}" --python ${TMPDIR}python3.10neos${CI_COMMIT_SHORT_SHA}/cpython*
     - source "${TMPDIR}gamspy-env-neos-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall

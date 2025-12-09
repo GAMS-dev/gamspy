@@ -120,7 +120,23 @@ class ExtrinsicFunction(operable.Operable):
         -------
         str
         """
-        return self.gamsRepr()
+        representation = self.name.replace("_", r"\_")
+
+        if self.args:
+            arg_strs = []
+            for arg in self.args:
+                arg_str = (
+                    str(arg).replace("_", r"\_")
+                    if isinstance(arg, (int, float, str))
+                    else arg.latexRepr()
+                )
+                arg_strs.append(arg_str)
+
+            args = ",".join(arg_strs)
+
+            representation = f"{representation}({args})"
+
+        return representation
 
 
 class ExtrinsicLibrary:

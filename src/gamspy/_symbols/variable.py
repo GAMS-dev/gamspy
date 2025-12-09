@@ -155,6 +155,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         # gamspy attributes
         obj.where = condition.Condition(obj)
+        obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
         obj._synchronize = True
         obj._metadata = {}
@@ -319,6 +320,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 description=description,
                 uels_on_axes=uels_on_axes,
             )
+            self._latex_name = self.name.replace("_", r"\_")
 
             if is_miro_output:
                 container._miro_output_symbols.append(self.name)
