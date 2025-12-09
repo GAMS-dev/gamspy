@@ -63,6 +63,7 @@ class UniverseAlias(gt.UniverseAlias):
 
         # gamspy attributes
         obj.where = condition.Condition(obj)
+        obj._latex_name = name.replace("_", r"\_")
 
         # add statement
         obj.container._add_statement(obj)
@@ -103,6 +104,7 @@ class UniverseAlias(gt.UniverseAlias):
                 raise ValidationError("UniverseAlias requires a container.") from e
 
         super().__init__(container, name)
+        self._latex_name = self.name.replace("_", r"\_")
 
         # allow conditions
         self.where = condition.Condition(self)
@@ -136,6 +138,25 @@ class UniverseAlias(gt.UniverseAlias):
 
         """
         return self.name
+
+    def latexRepr(self) -> str:
+        """
+        Representation of the UniverseAlias in LaTeX.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.UniverseAlias(m, name="universe_alias")
+        >>> i.latexRepr()
+        'universe\\_alias'
+
+        """
+        return self._latex_name
 
     def getDeclaration(self) -> str:
         """

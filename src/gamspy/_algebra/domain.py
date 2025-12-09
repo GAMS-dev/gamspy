@@ -90,4 +90,4 @@ class Domain:
         -------
         str
         """
-        return utils._get_domain_str(self.sets)[1:-1]
+        return utils._get_domain_str(self.sets, latex=True)[1:-1]

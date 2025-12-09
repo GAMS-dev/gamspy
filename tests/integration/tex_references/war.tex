@@ -3,6 +3,9 @@
 \usepackage[american]{babel}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{fontspec}
+\setmainfont{CMU Serif} % 1. Sets a font that knows Greek in text mode
+\usepackage{unicode-math} % 2. Allows Greek keys to work in math mode
 \usepackage[hidelinks]{hyperref}
 \usepackage{tabularx}
 \usepackage{ltablex}
@@ -58,7 +61,7 @@ minw & t & minimum number of weapons required per target\\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
-\textbf{max} $\sum_{t} mv_{t} \cdot (1 - \prod_{w ~ | ~ td_{w,t}} rPower(1 - td(w,t),x(w,t)))$\\
+\textbf{max} $\sum_{t} mv_{t} \cdot (1 - \prod_{w ~ | ~ td_{w,t}} rPower(1 - td_{w,t},x_{w,t}))$\\
 \textbf{s.t.}
 \subsubsection*{$maxw_{w}$}
 $

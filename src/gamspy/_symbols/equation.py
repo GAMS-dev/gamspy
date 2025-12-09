@@ -160,6 +160,7 @@ class Equation(gt.Equation, Symbol):
         # gamspy attributes
         obj._definition = None
         obj.where = condition.Condition(obj)
+        obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
         obj._synchronize = True
         obj._metadata = {}
@@ -225,7 +226,7 @@ class Equation(gt.Equation, Symbol):
         container: Container | None = None,
         name: str | None = None,
         type: str | EquationType = "regular",
-        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: Sequence[Set | Alias] | Set | Alias | None = None,
         definition: Variable | Operation | Expression | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
@@ -250,7 +251,7 @@ class Equation(gt.Equation, Symbol):
         if domain is None:
             domain = []
 
-        if isinstance(domain, (gp.Set, gp.Alias, str)):
+        if isinstance(domain, (gp.Set, gp.Alias)):
             domain = [domain]
 
         if isinstance(domain, gp.math.Dim):
@@ -330,6 +331,7 @@ class Equation(gt.Equation, Symbol):
                 description=description,
                 uels_on_axes=uels_on_axes,
             )
+            self._latex_name = self.name.replace("_", r"\_")
 
             if is_miro_output:
                 container._miro_output_symbols.append(self.name)
@@ -1143,6 +1145,8 @@ class Equation(gt.Equation, Symbol):
                 "Equation must be defined to get its latex representation."
             )
 
+        # The LHS of an equation definition can either be an ImplicitEquation or a condition.
+        # e.g. e[i] = ... or e[i].where[b[i]] = ...
         assert isinstance(
             self._definition.left,
             (implicits.ImplicitEquation, condition.Condition),
@@ -1152,21 +1156,25 @@ class Equation(gt.Equation, Symbol):
         if isinstance(self._definition.left, implicits.ImplicitEquation):
             if len(self._definition.left.domain) > 0:
                 domain_str = ",".join(
-                    [symbol.name for symbol in self._definition.left.domain]
+                    [symbol.latexRepr() for symbol in self._definition.left.domain]
                 )
                 right_side = f"\\hfill \\forall {domain_str}"
         else:
             domain_str = ",".join(
                 [
-                    symbol.name
+                    symbol.latexRepr()
                     for symbol in self._definition.left.conditioning_on.domain  # type: ignore
                 ]
             )
             domain_str = f"\\forall {domain_str}"
 
-            constraint_str = str(self._definition.left.condition)
+            assert self._definition.left.condition is not None
             if hasattr(self._definition.left.condition, "latexRepr"):
-                constraint_str = self._definition.left.condition.latexRepr()  # type: ignore
+                constraint_str = self._definition.left.condition.latexRepr()
+            else:
+                assert isinstance(self._definition.left.condition, (int, float))
+                constraint_str = str(self._definition.left.condition)
+
             right_side = f"\\hfill {domain_str} ~ | ~ {constraint_str}"
 
         assert self._definition.right is not None
