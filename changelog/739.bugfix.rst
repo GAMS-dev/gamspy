@@ -1,1 +1,0 @@
-Fix evaluation of math expression where container is not available in any of the input symbols.

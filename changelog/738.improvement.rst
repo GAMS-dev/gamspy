@@ -1,1 +1,0 @@
-Allow renaming in toLatex function. Support Greek letters in LaTeX format.
