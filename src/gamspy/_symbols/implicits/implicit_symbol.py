@@ -46,6 +46,10 @@ class ImplicitSymbol(ABC):
 
         self.fix_domain_scalars(parent_scalar_domains)
 
+    @property
+    def _latex_name(self) -> str:
+        return self.parent._latex_name
+
     def __bool__(self):
         raise ValidationError("A symbol cannot be used as a truth value.")
 
@@ -101,7 +105,7 @@ class ImplicitSymbol(ABC):
     def latexRepr(self):
         from .implicit_set import ImplicitSet
 
-        name = self.name.replace("_", "\\_")
+        name = self._latex_name
         representation = name
         domain = list(self.domain)
 
@@ -114,6 +118,7 @@ class ImplicitSymbol(ABC):
                 if isinstance(elem, (gp.Set, gp.Alias, ImplicitSet)):
                     set_strs.append(elem.latexRepr())
                 elif isinstance(elem, str):
+                    elem = elem.replace("_", r"\_")
                     set_strs.append(f"\\textquotesingle {elem} \\textquotesingle")
 
             domain_str = "{" + ",".join(set_strs) + "}"

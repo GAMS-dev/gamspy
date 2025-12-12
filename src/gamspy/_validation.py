@@ -187,7 +187,7 @@ def validate_dimension(
 
     if dimension != symbol.dimension:
         raise ValidationError(
-            f"The `{symbol}` is referenced with"
+            f"The `{symbol.gamsRepr()}` is referenced with"
             f" {'more' if dimension > symbol.dimension else 'less'} indices"
             f" than declared. Declared dimension is {symbol.dimension} but"
             f" given dimension is {dimension}"

@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy as gp
 import gamspy.math as gams_math
 from gamspy import (
     Alias,
@@ -1528,6 +1529,108 @@ def test_qcp_EDsensitivity(data):
     assert reference_tex == generated_tex
 
 
+def test_renaming(data):
+    m = data
+    distances = [
+        ["seattle", "new-york", 2.5],
+        ["seattle", "chicago", 1.7],
+        ["seattle", "topeka", 1.8],
+        ["san-diego", "new-york", 2.5],
+        ["san-diego", "chicago", 1.8],
+        ["san-diego", "topeka", 1.4],
+    ]
+
+    capacities = [["seattle", 350], ["san-diego", 600]]
+    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+    # Set
+    i = Set(
+        m,
+        name="i",
+        records=["seattle", "san-diego"],
+        description="canning plants",
+    )
+    j = Set(
+        m,
+        name="j",
+        records=["new-york", "chicago", "topeka"],
+        description="markets",
+    )
+
+    # Data
+    a = Parameter(
+        m,
+        name="a",
+        domain=i,
+        records=capacities,
+        description="capacity of plant i in cases",
+    )
+    b = Parameter(
+        m,
+        name="b",
+        domain=j,
+        records=demands,
+        description="demand at market j in cases",
+    )
+    d = Parameter(
+        m,
+        name="d",
+        domain=[i, j],
+        records=distances,
+        description="distance in thousands of miles",
+    )
+    c = Parameter(
+        m,
+        name="c",
+        domain=[i, j],
+        description="transport cost in thousands of dollars per case",
+    )
+    c[i, j] = 90 * d[i, j] / 1000
+
+    # Variable
+    x = Variable(
+        m,
+        name="x",
+        domain=[i, j],
+        type="Positive",
+        description="shipment quantities in cases",
+    )
+
+    # Equation
+    supply = Equation(
+        m,
+        name="supply",
+        domain=i,
+        description="observe supply limit at plant i",
+    )
+    demand = Equation(
+        m, name="demand", domain=j, description="satisfy demand at market j"
+    )
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    greek = Model(
+        m,
+        name="greek",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+    output_path = os.path.join("tmp", "to_latex")
+    greek.toLatex(output_path, rename={"x": "ρ"})  # noqa: RUF001
+
+    reference_path = os.path.join("tests", "integration", "tex_references", "greek.tex")
+    with open(reference_path, encoding="utf-8") as file:
+        reference_tex = file.read()
+
+    with open(os.path.join(output_path, "greek.tex"), encoding="utf-8") as file:
+        generated_tex = file.read()
+
+    assert reference_tex == generated_tex
+
+
 def test_latex_repr(data):
     # Other tests are check the equivalency of the generated tex file and the reference tex file.
     # Here we test the latex representation of individual components.
@@ -1562,6 +1665,8 @@ def test_latex_repr(data):
 
     e[...] = c * c - a >= 0
     assert e.latexRepr() == "$\nc \\cdot c - a \\geq 0\n$"
+
+    assert gp.Number(5).latexRepr() == "5"
 
 
 def test_symbol_name_with_underscore():
@@ -1603,3 +1708,33 @@ def test_symbol_name_with_underscore():
 fuel\_at\_landing_{cities} = fuel\_at\_takeoff_{cities - 1} - (1 + \frac{0.5 \cdot (fuel\_at\_takeoff_{cities - 1} + fuel\_at\_landing_{cities})}{2000}) \cdot distance\_for\_next\_city_{cities - 1}\hfill \forall cities ~ | ~ ord(cities) > 1
 $"""
     )
+
+    m = gp.Container()
+    A = gp.Set(m, name="a_underscore")
+    S = gp.Set(m, name="s_underscore")
+    AS = gp.Set(m, domain=[A, S])
+    p1 = gp.Parameter(m, domain=[A, S])
+    p2 = gp.Parameter(
+        m,
+    )
+    p2[...] = gp.Sum(AS[A, S], p1[A, S])
+    assert (
+        p2._assignment.latexRepr()
+        == r"p2 = \sum_{AS_{a\_underscore,s\_underscore}} p1_{a\_underscore,s\_underscore}"
+    )
+
+    v = gp.Variable(m)
+    e = gp.Equation(m, domain=[A, S])
+    e[...].where[AS[A, S]] = v == 5
+    assert (
+        e._definition.latexRepr()
+        == r"e_{a\_underscore,s\_underscore} ~ | ~ AS_{a\_underscore,s\_underscore} .. v = 5"
+    )
+
+    p3 = gp.Parameter(m, name="p3_underscore")
+    p4 = gp.Parameter(m, name="p4_underscore")
+    assert (
+        gp.math.regularized_beta(p3, p4, 2).latexRepr()
+        == r"betaReg(p3\_underscore,p4\_underscore,2)"
+    )
+    assert gp.math.abs(p3).latexRepr() == r"\lvert{p3\_underscore}"

@@ -72,6 +72,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
         # gamspy attributes
         obj.where = condition.Condition(obj)
+        obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
         obj._metadata = {}
 
@@ -145,6 +146,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
                 name = container._get_symbol_name(prefix="a")
 
             super().__init__(container, name, alias_with)
+            self._latex_name = self.name.replace("_", r"\_")
 
             validation.validate_container(self, self.domain)
             self.where = condition.Condition(self)

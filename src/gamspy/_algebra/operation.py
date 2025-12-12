@@ -96,8 +96,15 @@ class Operation(operable.Operable):
         """
         assert self.container is not None
         temp_name = "a" + utils._get_unique_name()
+        domain: list[Set | Alias] = []
+        for elem in self.domain:
+            if hasattr(elem, "dimension") and elem.dimension > 1:
+                domain.extend(elem.domain)
+            else:
+                domain.append(elem)
+
         temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, self.domain
+            self.container, temp_name, domain
         )
         temp_param[...] = self
         del self.container.data[temp_name]
@@ -756,7 +763,7 @@ class Ord(operable.Operable):
         -------
         str
         """
-        return f"ord({self._symbol.name})"
+        return f"ord({self._symbol._latex_name})"
 
 
 class Card(operable.Operable):
@@ -835,4 +842,4 @@ class Card(operable.Operable):
         -------
         str
         """
-        return f"card({self._symbol.name})"
+        return f"card({self._symbol._latex_name})"

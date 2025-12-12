@@ -252,7 +252,7 @@ the :meth:`solve <gamspy.Model.solve>` function.::
 
         def flush(self): ...
     
-    my_stream = MySteam()
+    my_stream = MyStream()
     model.solve(output=my_stream)
 
 Solving Locally
