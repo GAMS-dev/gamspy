@@ -585,20 +585,26 @@ class LatexConverter:
         self.latex_str = latex_str
 
     def to_pdf(self) -> None:
-        process = subprocess.run(["pdflatex", "-v"], capture_output=True)
-        if process.returncode:
-            print(process.stderr)
+        try:
+            subprocess.run(["xelatex", "-version"], check=True, text=True)
+        except subprocess.CalledProcessError as e:
             raise ValidationError(
-                "`pdflatex` is required to generate the pdf! Please install `pdflatex` and add it to the path."
-            )
+                "`xelatex` is required to generate the pdf! Please install `xelatex` and add it to the path."
+            ) from e
 
-        process = subprocess.run(
-            ["pdflatex", f"-output-directory={self.path}", self.tex_path],
-            capture_output=True,
-            text=True,
-        )
-        if process.returncode:
-            raise LatexException(f"Could not generate pdf file: {process.stderr}")
+        try:
+            subprocess.run(
+                [
+                    "xelatex",
+                    "-verbose",
+                    f"-output-directory={self.path}",
+                    self.tex_path,
+                ],
+                check=True,
+                text=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise LatexException(f"Could not generate pdf file: {e}") from e
 
     def get_table(self, symbol_type) -> str:
         table = [TABLE_HEADER]
@@ -629,10 +635,10 @@ class LatexConverter:
                 continue
 
             domain_str = ",".join([elem.latexRepr() for elem in equation.domain])
-            header = "\\subsubsection*{$" + equation._latex_name
+            header = "\\subsubsection*{" + equation._latex_name
             if domain_str:
-                header += f"_{{{domain_str}}}"
-            header += "$}\n"
+                header += f"$_{{{domain_str}}}$"
+            header += "}\n"
 
             footer = "\n\\vspace{5pt}\n\\hrule"
             latex_repr = f"{header}{equation.latexRepr()}{footer}"
@@ -641,13 +647,13 @@ class LatexConverter:
         return "\n".join(definitions)
 
     def get_constraints(self) -> str:
-        constraints = ["\\bigskip"]
+        constraints = [r"\begin{flalign*}"]
         for name in self.symbols:
             symbol = self.container[name]
             if not isinstance(symbol, syms.Variable):
                 continue
 
-            constraint = "$" + symbol.latexRepr()
+            constraint = "&" + symbol.latexRepr()
             if symbol.type == "binary":
                 constraint += "\\in " + r"\{0,1\}"
                 if symbol.domain:
@@ -687,9 +693,10 @@ class LatexConverter:
             else:
                 continue
 
-            constraint += "\\\\$"
+            constraint += "&\\\\"
             constraints.append(constraint)
 
+        constraints.append(r"\end{flalign*}")
         return "\n".join(constraints)
 
     def get_header(self) -> str:

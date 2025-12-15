@@ -68,55 +68,56 @@ e4y &  & define y-coordinate of upper-right corner\\
 \subsection*{Model Definition}
 \textbf{max} $power(a,2) + power(b,2)$\\
 \textbf{s.t.}
-\subsubsection*{$e1x$}
+\subsubsection*{e1x}
 $
 sin(t_{\textquotesingle 1 \textquotesingle}) \cdot cos(t_{\textquotesingle 1 \textquotesingle} - t_{\textquotesingle 1 \textquotesingle} \cdot t_{\textquotesingle 1 \textquotesingle}) = x
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$e1y$}
+\subsubsection*{e1y}
 $
 t_{\textquotesingle 1 \textquotesingle} \cdot sin(t_{\textquotesingle 1 \textquotesingle}) = y
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$e2x$}
+\subsubsection*{e2x}
 $
 sin(t_{\textquotesingle 2 \textquotesingle}) \cdot cos(t_{\textquotesingle 2 \textquotesingle} - t_{\textquotesingle 2 \textquotesingle} \cdot t_{\textquotesingle 2 \textquotesingle}) = x + a
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$e2y$}
+\subsubsection*{e2y}
 $
 t_{\textquotesingle 2 \textquotesingle} \cdot sin(t_{\textquotesingle 2 \textquotesingle}) = y + b
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$e3x$}
+\subsubsection*{e3x}
 $
 sin(t_{\textquotesingle 3 \textquotesingle}) \cdot cos(t_{\textquotesingle 3 \textquotesingle} - t_{\textquotesingle 3 \textquotesingle} \cdot t_{\textquotesingle 3 \textquotesingle}) = x - b
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$e3y$}
+\subsubsection*{e3y}
 $
 t_{\textquotesingle 3 \textquotesingle} \cdot sin(t_{\textquotesingle 3 \textquotesingle}) = y + a
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$e4x$}
+\subsubsection*{e4x}
 $
 sin(t_{\textquotesingle 4 \textquotesingle}) \cdot cos(t_{\textquotesingle 4 \textquotesingle} - t_{\textquotesingle 4 \textquotesingle} \cdot t_{\textquotesingle 4 \textquotesingle}) = x + a - b
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$e4y$}
+\subsubsection*{e4y}
 $
 t_{\textquotesingle 4 \textquotesingle} \cdot sin(t_{\textquotesingle 4 \textquotesingle}) = y + a + b
 $
 \vspace{5pt}
 \hrule
-\bigskip
-$a\geq 0\\$
-$b\geq 0\\$
+\begin{flalign*}
+&a\geq 0&\\
+&b\geq 0&\\
+\end{flalign*}
 \end{document}

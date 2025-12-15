@@ -134,186 +134,187 @@ heat & i & logical integer constraint\\
 \subsection*{Model Definition}
 \textbf{min} $alpha \cdot (\sum_{i} fc_{i} \cdot ycol_{i} + vc_{i} \cdot (tc_{i} - tcmin_{i}) \cdot f_{i} + \sum_{zcrhx_{i,j}} fchx \cdot yhx_{i,j} + \frac{vchx}{htc} \cdot (\frac{qcr_{i,j}}{(tc_{i} - tr_{j} + 1 - ycol_{i})}) + \sum_{i,cu} fchx \cdot ycu_{i,cu} + \frac{vchx}{htc} \cdot (\frac{qcu_{i,cu}}{(lmtd_{i} + 1 - ycol_{i})}) + \sum_{hu,j} fchx \cdot yhu_{hu,j} + \frac{vchx}{htc} \cdot (\frac{qhu_{hu,j}}{(thu_{hu} - tr_{j})})) + beta \cdot (\sum_{i,cu} costcw \cdot qcu_{i,cu} + \sum_{hu,j} costhu_{hu} \cdot qhu_{hu,j})$\\
 \textbf{s.t.}
-\subsubsection*{$tctrlo_{i,j}$}
+\subsubsection*{tctrlo$_{i,j}$}
 $
 tc_{i} - tr_{j} + 1 - ycol_{i} \geq 1\hfill \forall zcrhx_{i,j}
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$lmtdlo_{i}$}
+\subsubsection*{lmtdlo$_{i}$}
 $
 lmtd_{i} \geq 2 \cdot ycol_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$lmtdsn_{i}$}
+\subsubsection*{lmtdsn$_{i}$}
 $
 lmtd_{i} = 0.6666666666666666 \cdot \sqrt{(tc_{i} - tcin) \cdot (tc_{i} - tcout)} + 0.16666666666666666 \cdot (tc_{i} - tcin + (tc_{i} - tcout)) + sl1_{i} - sl2_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$tempset_{i}$}
+\subsubsection*{tempset$_{i}$}
 $
 tc_{i} + lmtd_{i} + \sum_{zcr_{i,j}} tr_{j} \leq u \cdot ycol_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$artrex1_{i}$}
+\subsubsection*{artrex1$_{i}$}
 $
 s1_{i} + s2_{i} + sl1_{i} \leq u \cdot (1 - ycol_{i})\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$artrex2_{i}$}
+\subsubsection*{artrex2$_{i}$}
 $
 s3_{i} + s4_{i} + sl2_{i} \leq u \cdot (1 - ycol_{i})\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$material_{m}$}
+\subsubsection*{material$_{m}$}
 $
 \sum_{pm_{i,m}} spltfrc_{i,m} \cdot f_{i} = \sum_{fm_{i,m}} f_{i}\hfill \forall m
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$feed$}
+\subsubsection*{feed}
 $
 \sum_{zlead_{i}} f_{i} = totflow
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$matlog_{i}$}
+\subsubsection*{matlog$_{i}$}
 $
 f_{i} \leq u \cdot ycol_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$duty_{i}$}
+\subsubsection*{duty$_{i}$}
 $
 qc_{i} = kf_{i,\textquotesingle a \textquotesingle} + kf_{i,\textquotesingle b \textquotesingle} \cdot (tc_{i} - tcmin_{i}) + s3_{i} - s4_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$rebcon_{i,j}$}
+\subsubsection*{rebcon$_{i,j}$}
 $
 qr_{j} = qc_{i}\hfill \forall zcr_{i,j}
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$conheat_{i}$}
+\subsubsection*{conheat$_{i}$}
 $
 qc_{i} = \sum_{zcrhx_{i,j}} qcr_{i,j} + \sum_{cu} qcu_{i,cu}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$rebheat_{j}$}
+\subsubsection*{rebheat$_{j}$}
 $
 qr_{j} = \sum_{zcrhx_{i,j}} qcr_{i,j} + \sum_{hu} qhu_{hu,j}\hfill \forall j
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$dtminlp_{j}$}
+\subsubsection*{dtminlp$_{j}$}
 $
 dtmin - (thu_{\textquotesingle lp \textquotesingle} - tr_{j}) \leq 0\hfill \forall j
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$dtminc_{i}$}
+\subsubsection*{dtminc$_{i}$}
 $
 tcmin_{i} - tc_{i} \leq u \cdot (1 - ycol_{i})\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$trtcdef_{i,j}$}
+\subsubsection*{trtcdef$_{i,j}$}
 $
 tr_{j} = af_{i,\textquotesingle a \textquotesingle} + af_{i,\textquotesingle b \textquotesingle} \cdot (tc_{i} - tcmin_{i}) + s1_{i} - s2_{i}\hfill \forall zcr_{i,j}
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$dtmincr_{i,j}$}
+\subsubsection*{dtmincr$_{i,j}$}
 $
 tr_{j} - tc_{i} - u \cdot (1 - yhx_{i,j}) + dtmin \leq 0\hfill \forall zcrhx_{i,j}
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$dtminex_{j}$}
+\subsubsection*{dtminex$_{j}$}
 $
 dtmin - (thu_{\textquotesingle ex \textquotesingle} - tr_{j}) - u \cdot (1 - yhu_{\textquotesingle ex \textquotesingle,j}) \leq 0\hfill \forall j
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$hxclog_{i,j}$}
+\subsubsection*{hxclog$_{i,j}$}
 $
 qcr_{i,j} \leq u \cdot yhx_{i,j}\hfill \forall zcrhx_{i,j}
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$hxhulog_{hu,j}$}
+\subsubsection*{hxhulog$_{hu,j}$}
 $
 qhu_{hu,j} \leq u \cdot yhu_{hu,j}\hfill \forall hu,j
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$hxculog_{i,cu}$}
+\subsubsection*{hxculog$_{i,cu}$}
 $
 qcu_{i,cu} \leq u \cdot ycu_{i,cu}\hfill \forall i,cu
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$qcqrlog_{i}$}
+\subsubsection*{qcqrlog$_{i}$}
 $
 qc_{i} + \sum_{j ~ | ~ zcr_{i,j}} qr_{j} \leq u \cdot ycol_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$sequen_{m}$}
+\subsubsection*{sequen$_{m}$}
 $
 \sum_{pm_{i,m}} ycol_{i} = \sum_{fm_{i,m}} ycol_{i}\hfill \forall m
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$lead$}
+\subsubsection*{lead}
 $
 \sum_{zlead_{i}} ycol_{i} = 1
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$limutil_{j}$}
+\subsubsection*{limutil$_{j}$}
 $
 \sum_{hu} yhu_{hu,j} \leq 1\hfill \forall j
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$hidirect_{i,j}$}
+\subsubsection*{hidirect$_{i,j}$}
 $
 yhx_{i,j} + \sum_{ip,jp ~ | ~ ord(ip) eq ord(j) \wedge ord(jp) eq ord(i)} yhx_{ip,jp} \leq 1\hfill \forall zlim_{i,j}
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$heat_{i}$}
+\subsubsection*{heat$_{i}$}
 $
 \sum_{zcrhx_{i,j}} yhx_{i,j} + \sum_{ip,jp ~ | ~ ord(ip) eq ord(j) \wedge ord(jp) eq ord(i)} yhx_{ip,jp} + \sum_{hu,zcr_{i,j}} yhu_{hu,j} + \sum_{cu} ycu_{i,cu} \leq uint \cdot ycol_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\bigskip
-$f\geq 0 ~ \forall i\\$
-$qr\geq 0 ~ \forall j\\$
-$qc\geq 0 ~ \forall i\\$
-$qcr\geq 0 ~ \forall i,j\\$
-$qhu\geq 0 ~ \forall hu,j\\$
-$qcu\geq 0 ~ \forall i,cu\\$
-$tc\geq 0 ~ \forall i\\$
-$tr\geq 0 ~ \forall j\\$
-$lmtd\geq 0 ~ \forall i\\$
-$sl1\geq 0 ~ \forall i\\$
-$sl2\geq 0 ~ \forall i\\$
-$s1\geq 0 ~ \forall i\\$
-$s2\geq 0 ~ \forall i\\$
-$s3\geq 0 ~ \forall i\\$
-$s4\geq 0 ~ \forall i\\$
-$yhx\in \{0,1\} ~ \forall i,j\\$
-$yhu\in \{0,1\} ~ \forall hu,j\\$
-$ycu\in \{0,1\} ~ \forall i,cu\\$
-$ycol\in \{0,1\} ~ \forall i\\$
+\begin{flalign*}
+&f\geq 0 ~ \forall i&\\
+&qr\geq 0 ~ \forall j&\\
+&qc\geq 0 ~ \forall i&\\
+&qcr\geq 0 ~ \forall i,j&\\
+&qhu\geq 0 ~ \forall hu,j&\\
+&qcu\geq 0 ~ \forall i,cu&\\
+&tc\geq 0 ~ \forall i&\\
+&tr\geq 0 ~ \forall j&\\
+&lmtd\geq 0 ~ \forall i&\\
+&sl1\geq 0 ~ \forall i&\\
+&sl2\geq 0 ~ \forall i&\\
+&s1\geq 0 ~ \forall i&\\
+&s2\geq 0 ~ \forall i&\\
+&s3\geq 0 ~ \forall i&\\
+&s4\geq 0 ~ \forall i&\\
+&yhx\in \{0,1\} ~ \forall i,j&\\
+&yhu\in \{0,1\} ~ \forall hu,j&\\
+&ycu\in \{0,1\} ~ \forall i,cu&\\
+&ycol\in \{0,1\} ~ \forall i&\\
+\end{flalign*}
 \end{document}
