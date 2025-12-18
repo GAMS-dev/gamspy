@@ -1,0 +1,1 @@
+Read the values of most model attributes from the trace file. Lazily read others if requested. 

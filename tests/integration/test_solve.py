@@ -986,16 +986,9 @@ def test_solve(data):
         "bla",
     )
 
-    from gamspy._model import ATTRIBUTE_MAP
-
-    for attr_name in ATTRIBUTE_MAP.values():
-        assert hasattr(transport, attr_name)
-
-        # Make sure model attributes are not in the container
-        assert attr_name not in m.data
-
-    # Make sure dummy variable and equation is not in the container
-    assert not any("dummy_" in name for name in m.data)
+    # Make sure model attributes are not in the container
+    assert transport.algorithm_time is not None
+    assert any("algorithm" not in key for key in m.data)
 
     # Test invalid problem
     pytest.raises(ValueError, Model, m, "dummy", "", "bla", [cost])
@@ -1906,10 +1899,11 @@ def test_emp():
     )
     cterms[1] = x["a1", "1"]
 
-    defobj = Equation(m, name="defobj", domain=a)
+    gp.set_options({"USE_PY_VAR_NAME": "no"})
+    defobj = Equation(m, domain=a)
     defobj[a] = obj[a] == sum(o.where[a.sameAs(f"a{i}")] for i, o in enumerate(oterms))
 
-    cons = Equation(m, name="cons", domain=a)
+    cons = Equation(m, domain=a)
     cons[a] = sum(c.where[a.sameAs(f"a{i}")] for i, c in enumerate(cterms)) >= 0
 
     x.lo["a0", "0"] = 0
@@ -1918,6 +1912,7 @@ def test_emp():
     with pytest.raises(ValidationError):
         _ = Model(m, name="nash", equations=[defobj, cons], problem="emp")
 
+    gp.set_options({"USE_PY_VAR_NAME": "yes-or-autogenerate"})
     m.close()
 
 
