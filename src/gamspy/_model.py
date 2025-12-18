@@ -472,36 +472,38 @@ class Model:
         self._is_frozen: bool = False
 
         # Attributes
-        self._num_domain_violations: float | None = None
+        self._num_domain_violations: int | None = None
         self._algorithm_time: float | None = None
         self._total_solve_time: float | None = None
         self._total_solver_time: float | None = None
-        self._num_iterations: float | None = None
-        self._marginals: float | None = None
+        self._num_iterations: int | None = None
+        self._marginals: int | None = None
         self._max_infeasibility: float | None = None
         self._mean_infeasibility: float | None = None
         self._status: ModelStatus | None = None
-        self._num_nodes_used: float | None = None
-        self._solve_number: float | None = None
-        self._num_dependencies: float | None = None
-        self._num_discrete_variables: float | None = None
-        self._num_equations: float | None = None
-        self._num_infeasibilities: float | None = None
-        self._num_nonlinear_insts: float | None = None
-        self._num_nonlinear_zeros: float | None = None
-        self._num_nonoptimalities: float | None = None
-        self._num_nonzeros: float | None = None
-        self._num_mcp_redefinitions: float | None = None
-        self._num_variables: float | None = None
-        self._num_bound_projections: float | None = None
+        self._num_nodes_used: int | None = None
+        self._solve_number: int | None = None
+        self._num_dependencies: int | None = None
+        self._num_discrete_variables: int | None = None
+        self._num_equations: int | None = None
+        self._num_infeasibilities: int | None = None
+        self._num_nonlinear_insts: int | None = None
+        self._num_nonlinear_zeros: int | None = None
+        self._num_nonoptimalities: int | None = None
+        self._num_nonzeros: int | None = None
+        self._num_mcp_redefinitions: int | None = None
+        self._num_variables: int | None = None
+        self._num_bound_projections: int | None = None
         self._objective_estimation: float | None = None
         self._objective_value: float | None = None
-        self._used_model_type: float | None = None
+        self._used_model_type: str | None = None
         self._model_generation_time: float | None = None
         self._solve_model_time: float | None = None
         self._sum_infeasibilities: float | None = None
         self._solve_status: SolveStatus | None = None
-        self._solver_version: float | None = None
+        self._solver_version: int | None = None
+
+        self._updated_attrs: dict[str, bool] = {}
 
         self.container.models.update({self.name: self})
         self.container._synch_with_gams()
@@ -560,13 +562,13 @@ class Model:
         )
 
     @property
-    def num_domain_violations(self) -> float | None:
+    def num_domain_violations(self) -> int | None:
         """
         Number of domain violations.
 
         Returns
         -------
-        float | None
+        int | None
         """
         return self._num_domain_violations
 
@@ -617,48 +619,26 @@ class Model:
         return self._total_solver_time
 
     @property
-    def num_iterations(self) -> float | None:
+    def num_iterations(self) -> int | None:
         """
         Number of iterations used.
 
         Returns
         -------
-        float | None
+        int | None
         """
         return self._num_iterations
 
     @property
-    def marginals(self) -> float | None:
+    def marginals(self) -> int | None:
         """
         Indicates whether there are marginals.
 
         Returns
         -------
-        float | None
+        int | None
         """
         return self._marginals
-
-    @property
-    def max_infeasibility(self) -> float | None:
-        """
-        Maximum of infeasibilities
-
-        Returns
-        -------
-        float | None
-        """
-        return self._max_infeasibility
-
-    @property
-    def mean_infeasibility(self) -> float | None:
-        """
-        Mean of infeasibilities
-
-        Returns
-        -------
-        float | None
-        """
-        return self._mean_infeasibility
 
     @property
     def status(self) -> ModelStatus | None:
@@ -672,46 +652,35 @@ class Model:
         return self._status
 
     @property
-    def num_nodes_used(self) -> float | None:
+    def num_nodes_used(self) -> int | None:
         """
         Number of nodes used by the MIP solver.
 
         Returns
         -------
-        float | None
+        int | None
         """
         return self._num_nodes_used
 
     @property
-    def solve_number(self) -> float | None:
+    def solve_number(self) -> int | None:
         """
         Number of the last solve.
 
         Returns
         -------
-        float | None
+        int | None
         """
         return self._solve_number
 
     @property
-    def num_dependencies(self) -> float | None:
-        """
-        Number of dependencies in a CNS model.
-
-        Returns
-        -------
-        float | None
-        """
-        return self._num_dependencies
-
-    @property
-    def num_discrete_variables(self) -> float | None:
+    def num_discrete_variables(self) -> int | None:
         """
         Number of discrete variables.
 
         Returns
         -------
-        float | None
+        int | None
         """
         return self._num_discrete_variables
 
@@ -727,92 +696,37 @@ class Model:
         return self._num_equations
 
     @property
-    def num_infeasibilities(self) -> float | None:
-        """
-        Number of infeasibilities.
-
-        Returns
-        -------
-        float | None
-        """
-        return self._num_infeasibilities
-
-    @property
-    def num_nonlinear_insts(self) -> float | None:
-        """
-        Number of nonlinear instructions.
-
-        Returns
-        -------
-        float | None
-        """
-        return self._num_nonlinear_insts
-
-    @property
-    def num_nonlinear_zeros(self) -> float | None:
+    def num_nonlinear_zeros(self) -> int | None:
         """
         Number of nonlinear nonzeros.
 
         Returns
         -------
-        float | None
+        int | None
         """
         return self._num_nonlinear_zeros
 
     @property
-    def num_nonoptimalities(self) -> float | None:
-        """
-        Number of nonoptimalities.
-
-        Returns
-        -------
-        float | None
-        """
-        return self._num_nonoptimalities
-
-    @property
-    def num_nonzeros(self) -> float | None:
+    def num_nonzeros(self) -> int | None:
         """
         Number of nonzero entries in the model coefficient matrix.
 
         Returns
         -------
-        float | None
+        int | None
         """
         return self._num_nonzeros
 
     @property
-    def num_mcp_redefinitions(self) -> float | None:
-        """
-        Number of MCP redefinitions.
-
-        Returns
-        -------
-        float | None
-        """
-        return self._num_mcp_redefinitions
-
-    @property
-    def num_variables(self) -> float | None:
+    def num_variables(self) -> int | None:
         """
         Number of variables.
 
         Returns
         -------
-        float | None
+        int | None
         """
         return self._num_variables
-
-    @property
-    def num_bound_projections(self) -> float | None:
-        """
-        Number of bound projections during model generation.
-
-        Returns
-        -------
-        float | None
-        """
-        return self._num_bound_projections
 
     @property
     def objective_estimation(self) -> float | None:
@@ -837,13 +751,13 @@ class Model:
         return self._objective_value
 
     @property
-    def used_model_type(self) -> float | None:
+    def used_model_type(self) -> str | None:
         """
-        Integer number that indicates the used model type.
+        Model type.
 
         Returns
         -------
-        float | None
+        str | None
         """
         return self._used_model_type
 
@@ -880,6 +794,105 @@ class Model:
         """
         return self._solve_status
 
+    @solve_status.setter
+    def solve_status(self, value: SolveStatus) -> None:
+        if value in INTERRUPT_STATUS:
+            logger.warning(
+                f"The solve was interrupted! Solve status: {value.name}. "
+                "For further information, see https://gamspy.readthedocs.io/en/latest/reference/gamspy._model.html#gamspy.SolveStatus."
+            )
+        elif value in ERROR_STATUS:
+            raise GamspyException(
+                f"Solve status: {value.name}. {ERROR_STATUS[value]}",
+                value.value,
+            )
+
+        self._solve_status = value
+
+    @property
+    def solver_version(self) -> int | None:
+        """
+        Solver version.
+
+        Returns
+        -------
+        int | None
+        """
+        return self._solver_version
+
+    ### Model attributes that require a call to GAMS to be updated. Other attributes above are updated via trace file generated by the last solve.
+    @property
+    def num_dependencies(self) -> int | None:
+        """
+        Number of dependencies in a CNS model.
+
+        Returns
+        -------
+        int | None
+        """
+        self._update_model_attribute("_num_dependencies", "numDepnd")
+        return self._num_dependencies
+
+    @property
+    def num_infeasibilities(self) -> int | None:
+        """
+        Number of infeasibilities.
+
+        Returns
+        -------
+        int | None
+        """
+        self._update_model_attribute("_num_infeasibilities", "numInfes")
+        return self._num_infeasibilities
+
+    @property
+    def num_nonlinear_insts(self) -> int | None:
+        """
+        Number of nonlinear instructions.
+
+        Returns
+        -------
+        int | None
+        """
+        self._update_model_attribute("_num_nonlinear_insts", "numNLIns")
+        return self._num_nonlinear_insts
+
+    @property
+    def num_nonoptimalities(self) -> int | None:
+        """
+        Number of nonoptimalities.
+
+        Returns
+        -------
+        int | None
+        """
+        self._update_model_attribute("_num_nonoptimalities", "numNOpt")
+        return self._num_nonoptimalities
+
+    @property
+    def num_mcp_redefinitions(self) -> int | None:
+        """
+        Number of MCP redefinitions.
+
+        Returns
+        -------
+        int | None
+        """
+        self._update_model_attribute("_num_mcp_redefinitions", "numRedef")
+        return self._num_mcp_redefinitions
+
+    @property
+    def num_bound_projections(self) -> int | None:
+        """
+        Number of bound projections during model generation.
+
+        Returns
+        -------
+        int | None
+        """
+        self._update_model_attribute("_num_bound_projections", "numVarProj")
+        return self._num_bound_projections
+
     @property
     def sum_infeasibilities(self) -> float | None:
         """
@@ -889,18 +902,32 @@ class Model:
         -------
         float | None
         """
+        self._update_model_attribute("_sum_infeasibilities", "sumInfes")
         return self._sum_infeasibilities
 
     @property
-    def solver_version(self) -> float | None:
+    def max_infeasibility(self) -> float | None:
         """
-        Solver version.
+        Maximum of infeasibilities
 
         Returns
         -------
         float | None
         """
-        return self._solver_version
+        self._update_model_attribute("_max_infeasibility", "maxInfes")
+        return self._max_infeasibility
+
+    @property
+    def mean_infeasibility(self) -> float | None:
+        """
+        Mean of infeasibilities
+
+        Returns
+        -------
+        float | None
+        """
+        self._update_model_attribute("_mean_infeasibility", "meanInfes")
+        return self._mean_infeasibility
 
     @property
     def external_module(self) -> str | None:
@@ -1084,47 +1111,24 @@ class Model:
 
                 self.container._add_statement(f"{EXECUTION_OPTIONS[key]} '{value}';\n")
 
-    def _create_model_attributes(self) -> None:
-        self.container._add_statement("$offListing")
-        for attr_name in ATTRIBUTE_MAP:
-            symbol_name = f"{self._generate_prefix}{attr_name}_{self._auto_id}"
-            Symbol = gp.Parameter._constructor_bypass(self.container, symbol_name)
-            Symbol.modified = False
+    def _update_model_attribute(self, python_attr: str, gams_attr: str) -> None:
+        if self._updated_attrs.get(python_attr, False):
+            # If it's already updated, return
+            return
 
-            self.container._add_statement(f"{symbol_name} = {self.name}.{attr_name};")
-        self.container._add_statement("$onListing")
+        symbol_name = f"{self._generate_prefix}{gams_attr}_{self._auto_id}"
+        self.container._add_statement(f"Parameter {symbol_name};")
+        self.container._add_statement(f"{symbol_name} = {self.name}.{gams_attr};")
+        self.container._synch_with_gams(gams_to_gamspy=True)
 
-    def _update_model_attributes(self) -> None:
         gdx_handle = utils._open_gdx_file(
             self.container.system_directory, self.container._gdx_out
         )
-
-        for gams_attr, python_attr in ATTRIBUTE_MAP.items():
-            symbol_name = f"{self._generate_prefix}{gams_attr}_{self._auto_id}"
-            data = utils._get_scalar_data(
-                self.container._gams2np, gdx_handle, symbol_name
-            )
-
-            if python_attr == "_status":
-                setattr(self, python_attr, ModelStatus(data))
-            elif python_attr == "_solve_status":
-                status = SolveStatus(data)
-                setattr(self, python_attr, status)
-
-                if status in INTERRUPT_STATUS:
-                    logger.warning(
-                        f"The solve was interrupted! Solve status: {status.name}. "
-                        "For further information, see https://gamspy.readthedocs.io/en/latest/reference/gamspy._model.html#gamspy.SolveStatus."
-                    )
-                elif status in ERROR_STATUS:
-                    raise GamspyException(
-                        f"Solve status: {status.name}. {ERROR_STATUS[status]}",
-                        status.value,
-                    )
-            else:
-                setattr(self, python_attr, data)
-
+        data = utils._get_scalar_data(self.container._gams2np, gdx_handle, symbol_name)
+        setattr(self, python_attr, data)
         utils._close_gdx_handle(gdx_handle)
+
+        self._updated_attrs[python_attr] = True
 
     def computeInfeasibilities(self) -> dict[str, pd.DataFrame]:
         """
@@ -1356,6 +1360,7 @@ class Model:
         >>> solved = my_model.solve()
 
         """
+        self._updated_attrs = {}
         if output is None:
             output = self.container.output
 
@@ -1413,7 +1418,6 @@ class Model:
         self.container._add_statement(self.getDeclaration())
         self._add_runtime_options(options, backend)
         self.container._add_statement(self._generate_solve_string() + "\n")
-        self._create_model_attributes()
         options._set_model_info(solver, self.problem, solver_options)
 
         runner = backend_factory(

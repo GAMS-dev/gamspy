@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import os
 import tempfile
+import time
 import uuid
 from pathlib import Path
 
@@ -120,6 +121,40 @@ def test_model(data):
         "test_model_objective",
     ]
     assert test_model.objective_value == 153.675
+    assert test_model.num_infeasibilities == 0
+
+    # make sure that num_infeasibilities call did not add any new symbols to the container.
+    assert list(m.data.keys()) == [
+        "i",
+        "j",
+        "a",
+        "b",
+        "d",
+        "c",
+        "x",
+        "z",
+        "cost",
+        "supply",
+        "demand",
+        "test_model_objective_variable",
+        "test_model_objective",
+    ]
+
+    # make sure that we read model attribute once.
+    assert "_num_infeasibilities" in test_model._updated_attrs
+    test_model.solve()
+    assert "_num_infeasibilities" not in test_model._updated_attrs
+
+    start = time.perf_counter_ns()
+    _ = (
+        test_model.num_infeasibilities
+    )  # this is supposed to be expensive since we call GAMS.
+    expensive = time.perf_counter_ns() - start
+
+    start = time.perf_counter_ns()
+    _ = test_model.num_infeasibilities  # this is supposed to be just an attribute read.
+    cheap = time.perf_counter_ns() - start
+    assert expensive > cheap, f"{expensive=}, {cheap=}"
 
     # Test convert
     with tempfile.TemporaryDirectory() as tmpdir:
