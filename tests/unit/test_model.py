@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import os
 import tempfile
 import uuid
@@ -8,6 +9,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+import gamspy as gp
 from gamspy import (
     Alias,
     Container,
@@ -1292,3 +1294,47 @@ def test_models_with_many_equations():
     # This should not fail.
     _ = Model(m, "my_model", equations=m.getEquations())
     m.close()
+
+
+def test_mpsge_equation_definition():
+    m = gp.Container()
+
+    N = 5
+    lb = 0.5
+    ub = float("inf")
+    assert lb <= ub
+    # ub = 1.5
+    i = gp.Set(m, records=range(N))
+
+    x = gp.Variable(m, domain=i)
+    x.lo[...] = lb
+    x.up[...] = ub
+
+    f = gp.Equation(m, domain=i)
+    g = gp.Equation(m, domain=i, type=gp.EquationType.NONBINDING)
+    h = gp.Equation(
+        m, domain=i, type="nonbinding", definition=gp.math.exp(x[i]) - gp.Ord(i)
+    )
+
+    f[i] = gp.math.exp(x[i]) >= gp.Ord(i)
+    g[i] = gp.math.exp(x[i]) != gp.Ord(i)
+
+    mcpf = gp.Model(m, problem=gp.Problem.MCP, matches={f: x})
+    mcph = gp.Model(m, problem=gp.Problem.MCP, matches={h: x})
+
+    x.l[i] = 1
+
+    mcpf.solve()
+
+    # check correctness
+    correct_result = [min(max(lb, math.log(j + 1)), ub) for j in range(N)]
+
+    xx = x.records.level.to_list()
+    print("solution x:", xx)
+    delta = [(x - y) for x, y in zip(correct_result, xx, strict=True)]
+    print("delta:", delta)
+
+    for expected, found in zip(correct_result, xx, strict=True):
+        assert math.isclose(expected, found, rel_tol=1e-6, abs_tol=1e-8)
+
+    mcph.solve()

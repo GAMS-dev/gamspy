@@ -1,0 +1,1 @@
+Use gp.Number instead of a Python variable in nonbinding equations of MCP models.

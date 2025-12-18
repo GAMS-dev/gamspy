@@ -17,15 +17,12 @@ from __future__ import annotations
 from math import isclose
 from pathlib import Path
 
-from gamspy import Container, Model, Number, Sum
+from gamspy import Container, Model
 
 
 def main():
     m = Container(
         load_from=str(Path(__file__).parent.absolute()) + "/hansmge.gdx",
-    )
-    c, _n, h, s, _e, _d, _esub, _data = (
-        m[sym] for sym in ["c", "n", "h", "s", "e", "d", "esub", "data"]
     )
     m.addGamsCode("""
 $onText
@@ -51,8 +48,7 @@ $offText
 
 $sysInclude mpsgeset HANSEN
 """)
-    dummy01, y, p, hh = (m[sym] for sym in ["dummy01", "y", "p", "hh"])
-    dummy01[:] = Sum(s, y[s]) + Sum(c, p[c]) + Sum(h, hh[h]) == Number(0)
+    p, c = m["p"], m["c"]
     hansen = Model(m, name="hansen", equations=m.getEquations(), problem="mcp")
     p.fx[c].where[c.ord == 1] = 1
     m.addGamsCode("$include HANSEN.GEN")
