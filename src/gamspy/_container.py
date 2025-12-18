@@ -3,6 +3,7 @@ from __future__ import annotations
 import atexit
 import os
 import platform
+import re
 import shutil
 import signal
 import sys
@@ -139,6 +140,7 @@ class Container(gt.Container):
         self.output = output
         self._gams_string = ""
         self.models: dict[str, Model] = {}
+        self._mpsge_models: list[str] = []
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
 
@@ -838,6 +840,14 @@ class Container(gt.Container):
 
         for _, symbol in self:
             symbol.modified = False
+
+        # Unfortunately MPSGE requires a dirty trick
+        pattern = re.compile(r"^\$sysInclude\s+mpsgeset\s+(\w+)\s*$", re.MULTILINE)
+        match = pattern.search(gams_code)
+        if match:
+            model_name = match.group(1)
+            self._mpsge_models.append(model_name.lower())
+
         self._unsaved_statements = []
 
     def close(self) -> None:

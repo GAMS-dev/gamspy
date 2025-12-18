@@ -534,7 +534,7 @@ class Equation(gt.Equation, Symbol):
             eq_type in rhs_repr for eq_type in EQ_TYPES
         ):
             # x - c -> x - c == 0
-            rhs = rhs == 0
+            rhs = rhs == gp.Number(0)
 
         rhs_repr = rhs.gamsRepr()
         if not any(eq_type in rhs_repr for eq_type in EQ_TYPES):

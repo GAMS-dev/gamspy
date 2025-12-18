@@ -338,7 +338,6 @@ def test_enums():
         "MPEC",
         "RMPEC",
         "EMP",
-        "MPSGE",
     ]
 
     assert Sense.values() == ["MIN", "MAX", "FEASIBILITY"]

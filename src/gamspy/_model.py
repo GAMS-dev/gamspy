@@ -114,9 +114,6 @@ class Problem(Enum):
     EMP = "EMP"
     """Extended Mathematical Program"""
 
-    MPSGE = "MPSGE"
-    """General Equilibrium"""
-
     @classmethod
     def values(cls):
         """Convenience function to return all values of enum"""
@@ -371,7 +368,7 @@ class Model:
     equations : Sequence[Equation]
         Sequence of Equation objects.
     problem : Problem | str, optional
-        'LP', 'NLP', 'QCP', 'DNLP', 'MIP', 'RMIP', 'MINLP', 'RMINLP', 'MIQCP', 'RMIQCP', 'MCP', 'CNS', 'MPEC', 'RMPEC', 'EMP', or 'MPSGE',
+        'LP', 'NLP', 'QCP', 'DNLP', 'MIP', 'RMIP', 'MINLP', 'RMINLP', 'MIQCP', 'RMIQCP', 'MCP', 'CNS', 'MPEC', 'RMPEC', 'EMP',
         by default Problem.LP.
     sense : Sense | str, optional
         "MIN", "MAX", or "FEASIBILITY". By default, Sense.FEASIBILITY
@@ -415,6 +412,7 @@ class Model:
         limited_variables: Sequence[ImplicitVariable] | None = None,
         external_module: str | None = None,
     ):
+        self._is_mpsge = False
         self._auto_id = "m" + utils._get_unique_name()
         if equations is None:
             equations = []

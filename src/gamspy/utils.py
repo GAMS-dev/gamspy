@@ -137,6 +137,7 @@ def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
 
         capabilities[solver] = problem_types
 
+    capabilities.pop("MPSGE", None)
     _capabilities[system_directory] = capabilities
     return capabilities
 
