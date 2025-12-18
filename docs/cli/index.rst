@@ -74,6 +74,7 @@ List of Commands
     gdx
     install
     list
+    mps2gms
     probe
     retrieve
     run

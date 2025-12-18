@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typer
 
-from . import gdx, install, list, probe, retrieve, run, show, uninstall
+from . import gdx, install, list, mps2gms, probe, retrieve, run, show, uninstall
 
 app = typer.Typer(
     rich_markup_mode="rich",
@@ -16,6 +16,7 @@ app.add_typer(retrieve.app, name="retrieve")
 app.add_typer(run.app, name="run")
 app.add_typer(show.app, name="show")
 app.add_typer(uninstall.app, name="uninstall")
+app.command(name="mps2gms")(mps2gms.mps2gms)
 
 
 def version_callback(value: bool):
