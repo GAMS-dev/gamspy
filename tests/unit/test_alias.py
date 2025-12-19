@@ -176,6 +176,12 @@ def test_universe_alias(m):
     k = Set(m, name="k", domain=r, records="Chicago")
     assert k.getDeclaration() == "Set k(*);"
 
+    u1 = m.addUniverseAlias(name="universe_name")
+    assert u1.name == "universe_name"
+
+    u2 = m.addUniverseAlias()
+    assert u2.name == "u2"
+
 
 def test_alias_state(m):
     i = Set(m, name="i", records=["a", "b", "c"])

@@ -43,6 +43,7 @@ if TYPE_CHECKING:
         Model,
         Parameter,
         Set,
+        UniverseAlias,
         Variable,
     )
     from gamspy._algebra.expression import Expression
@@ -874,6 +875,37 @@ class Container(gt.Container):
             name = self._get_symbol_name(prefix="a")
 
         return gp.Alias(self, name, alias_with)
+
+    def addUniverseAlias(self, name: str | None = None) -> UniverseAlias:
+        """
+        Creates a new UniverseAlias and adds it to the container
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the universe alias.
+
+        Returns
+        -------
+        UniverseAlias
+
+        Raises
+        ------
+        ValueError
+            If there is symbol with same name but different type in the
+            Container
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = m.addUniverseAlias("a")
+
+        """
+        if name is None:
+            name = self._get_symbol_name(prefix="u")
+
+        return gp.UniverseAlias(self, name)
 
     def addSet(
         self,
