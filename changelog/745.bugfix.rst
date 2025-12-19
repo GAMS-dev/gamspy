@@ -1,0 +1,1 @@
+Retrieve universe alias name from stack in case it's not provided instead of autogenerating a name.

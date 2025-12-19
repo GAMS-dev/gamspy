@@ -96,7 +96,11 @@ class UniverseAlias(gt.UniverseAlias):
 
     def __init__(self, container: Container | None = None, name: str = "universe"):
         # check if the name is a reserved word
-        name = validation.validate_name(name)
+        if name is not None:
+            name = validation.validate_name(name)
+        else:
+            name = container._get_symbol_name(prefix="u")
+
         if container is None:
             try:
                 container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
