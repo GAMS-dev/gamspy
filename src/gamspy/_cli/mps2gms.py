@@ -94,9 +94,9 @@ def mps2gms(
         raise typer.Exit(code=1)
 
     # Determine default names based on input stem
-    input_stem = input_file.stem
-    actual_gdx = gdx_file if gdx_file else f"{input_stem}.gdx"
-    actual_py = py_file if py_file else f"{input_stem}.py"
+    input_name = input_file.with_suffix("")
+    actual_gdx = gdx_file if gdx_file else f"{input_name}.gdx"
+    actual_py = py_file if py_file else f"{input_name}.py"
 
     # mps2gms <input> <gdx>
     cmd = [MPS2GMS_PATH, str(input_file), str(actual_gdx)]

@@ -666,8 +666,8 @@ End"""
 
     # Use a specific filename to test default output naming
     lp_path = os.path.join("tmp", "default_test.lp")
-    expected_gdx = "default_test.gdx"
-    expected_py = "default_test.py"
+    expected_gdx = os.path.join("tmp", "default_test.gdx")
+    expected_py = os.path.join("tmp", "default_test.py")
 
     with open(lp_path, "w") as f:
         f.write(lp_content)
@@ -684,7 +684,7 @@ End"""
     assert os.path.exists(expected_gdx), "Default GDX file was not created."
     assert os.path.exists(expected_py), "Default GAMSPy (.py) file was not created"
     # Verify that .gms was NOT created by default
-    assert not os.path.exists("default_test.gms")
+    assert not os.path.exists(os.path.join("tmp", "default_test.gms"))
 
 
 def test_mps2gms(teardown):
