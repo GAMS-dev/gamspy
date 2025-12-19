@@ -51,6 +51,7 @@ dac-cli-3.14:
       if [ ! -f "${TMPDIR}uv" ]; then
         curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
       fi
+    - ${TMPDIR}uv venv "${TMPDIR}gamspy-env-cli-3.14${CI_COMMIT_SHORT_SHA}" --python 3.14 && ${TMPDIR}uv build
     - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv venv "${TMPDIR}gamspy-env-cli-3.14${CI_COMMIT_SHORT_SHA}" --python 3.14 && ${TMPDIR}uv build
     - source "${TMPDIR}gamspy-env-cli-3.14${CI_COMMIT_SHORT_SHA}"/bin/activate
     - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall

@@ -643,3 +643,111 @@ def test_https_proxy(proxy_server):
     assert len(proxy_handler.handled_connect_requests) == 1
     # Assert that the request was for the correct destination.
     assert proxy_handler.handled_connect_requests[0] == "license.gams.com:443"
+
+
+def test_mps2gms_default_behavior(teardown):
+    lp_content = """\\ Problem name     : sos1a
+Maximize
+ Obj: +0.9 s1 +1 s2 +1.1 s3 + [ x1 * x2 ] / 2
+Subject to
+ e2: +1 s1 +1 s2 +1 s3 + [- s2 * s3] <= +1
+Bounds
+ 0 <= s1 <= 0.8
+ 0 <= s2 <= 0.6
+ 0 <= s3 <= 0.6
+ 1 <= x2 <= 3
+Bin
+  x1
+Semis
+  x2
+SOS
+ sos1_1: S1:: s1:1 s2:2 s3:3
+End"""
+
+    # Use a specific filename to test default output naming
+    lp_path = os.path.join("tmp", "default_test.lp")
+    expected_gdx = os.path.join("tmp", "default_test.gdx")
+    expected_py = os.path.join("tmp", "default_test.py")
+
+    with open(lp_path, "w") as f:
+        f.write(lp_content)
+
+    # Run the command with only the input file
+    process = subprocess.run(
+        [sys.executable, "-Bm", "gamspy", "mps2gms", lp_path],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+
+    assert process.returncode == 0, process.stderr
+    assert os.path.exists(expected_gdx), "Default GDX file was not created."
+    assert os.path.exists(expected_py), "Default GAMSPy (.py) file was not created"
+    # Verify that .gms was NOT created by default
+    assert not os.path.exists(os.path.join("tmp", "default_test.gms"))
+
+
+def test_mps2gms(teardown):
+    lp_content = r"""\ Problem name     : sos1a
+Maximize
+ Obj: +0.9 s1 +1 s2 +1.1 s3 + [ x1 * x2 ] / 2
+Subject to
+ e2: +1 s1 +1 s2 +1 s3 + [- s2 * s3] <= +1
+Bounds
+ 0 <= s1 <= 0.8
+ 0 <= s2 <= 0.6
+ 0 <= s3 <= 0.6
+ 1 <= x2 <= 3
+Bin
+  x1
+Semis
+  x2
+SOS
+ sos1_1: S1:: s1:1 s2:2 s3:3
+End"""
+
+    dec_content = r"""NBLOCKS
+2
+BLOCK 0
+e2
+BLOCK 1
+sos1_1"""
+
+    lp_path = os.path.join("tmp", "sos1a.lp")
+    dec_path = os.path.join("tmp", "sos1a.dec")
+    out_gdx = os.path.join("tmp", "sos1a.gdx")
+    out_py = os.path.join("tmp", "sos1a.py")
+
+    with open(lp_path, "w") as f:
+        f.write(lp_content)
+    with open(dec_path, "w") as f:
+        f.write(dec_content)
+
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "mps2gms",
+            lp_path,
+            out_gdx,
+            "--py",
+            out_py,
+            "--dec",
+            dec_path,
+            "--convertsense",
+            "MAX",
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+
+    assert process.returncode == 0, process.stderr
+    assert os.path.exists(out_gdx)
+    assert os.path.exists(out_py)
+
+    process = subprocess.run(
+        [sys.executable, out_py], capture_output=True, text=True, encoding="utf-8"
+    )
+    assert process.returncode == 0, process.stderr

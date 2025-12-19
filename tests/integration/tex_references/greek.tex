@@ -62,18 +62,19 @@ demand & j & satisfy demand at market j\\
 \subsection*{Model Definition}
 \textbf{min} $\sum_{i,j} c_{i,j} \cdot ρ_{i,j}$\\
 \textbf{s.t.}
-\subsubsection*{$supply_{i}$}
+\subsubsection*{supply$_{i}$}
 $
 \sum_{j} ρ_{i,j} \leq a_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$demand_{j}$}
+\subsubsection*{demand$_{j}$}
 $
 \sum_{i} ρ_{i,j} \geq b_{j}\hfill \forall j
 $
 \vspace{5pt}
 \hrule
-\bigskip
-$ρ\geq 0 ~ \forall i,j\\$
+\begin{flalign*}
+&ρ\geq 0 ~ \forall i,j&\\
+\end{flalign*}
 \end{document}

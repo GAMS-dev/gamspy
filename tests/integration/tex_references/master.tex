@@ -63,18 +63,19 @@ demand & i & meet demand\\
 \subsection*{Model Definition}
 \textbf{min} $z$\\
 \textbf{s.t.}
-\subsubsection*{$numpat$}
+\subsubsection*{numpat}
 $
 z = \sum_{pp} xp_{pp}
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$demand_{i}$}
+\subsubsection*{demand$_{i}$}
 $
 \sum_{pp} aip_{i,pp} \cdot xp_{pp} \geq d_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\bigskip
-$xp\in \mathbb{Z}_{+} ~ \forall p\\$
+\begin{flalign*}
+&xp\in \mathbb{Z}_{+} ~ \forall p&\\
+\end{flalign*}
 \end{document}

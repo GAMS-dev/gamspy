@@ -634,7 +634,7 @@ for all available conversion options.
 Exporting Model To LaTeX
 ========================
 GAMSPy models can be exported to a `.tex` file in LaTeX format by using the :meth:`toLatex <gamspy.Model.toLatex>` function of the model.
-The generated `.tex` file can be automatically compiled into a PDF file by using ``pdflatex`` ::
+The generated `.tex` file can be automatically compiled into a PDF file by using ``xelatex`` ::
 
     from gamspy import Container, Variable, Equation, Model, Sense, Problem
 
@@ -644,10 +644,24 @@ The generated `.tex` file can be automatically compiled into a PDF file by using
     model.toLatex(path=<latex_path>, generate_pdf=True)
 
 .. note::
-    To generate a PDF file from a `.tex` file, you must install `pdflatex` on your system and add it to your `PATH`. 
+    To generate a PDF file from a `.tex` file, you must install `xelatex` on your system and add it to your `PATH`. 
     The :meth:`toLatex <gamspy.Model.toLatex>` function uses the *names* of the GAMSPy symbols. If names are not
     supplied, GAMSPy invents (ugly) names which would show up in the LaTeX source. So for this feature to be useful
     the GAMSPy set, parameter, variable, and equations should be specified with a name.
+
+GAMSPy also supports renaming symbols for LaTeX output in the :meth:`toLatex <gamspy.Model.toLatex>` function. This can be done by providing a dictionary
+mapping the GAMSPy symbol names to LaTeX names. For example: ::
+
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+
+    m = Container()
+    ... # Definition of your model
+    variance = Variable(m, "variance")
+    model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.MAX, objective=variance)
+    
+    rename = {"variance": r"\ensuremath{\sigma}"}
+    
+    model.toLatex(path=<latex_path>, rename=rename) 
 
 Latex representation of the individual equation definitions can be retrieved with :meth:`equation.latexRepr <gamspy.Equation.latexRepr>`. 
 For example: ::

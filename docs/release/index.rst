@@ -39,3 +39,4 @@ Release Notes
    release_1.0.2
    release_1.0.1
    release_1.0.0
+   release_1.0.0
