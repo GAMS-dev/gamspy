@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 from abc import ABC, abstractmethod
-from collections import deque
 from typing import TYPE_CHECKING, Literal, no_type_check
 
 import pandas as pd
@@ -106,8 +105,18 @@ def backend_factory(
     )
 
 
-def _cast_value(value: str, cast_to: type):
-    return float("nan") if value == "NA" else cast_to(value)
+def _cast_values(
+    objective_value: str,
+    num_equations: str,
+    num_variables: str,
+    solver_time: str,
+) -> tuple[float, int | float, int | float, float]:
+    objective = float("nan") if objective_value == "NA" else float(objective_value)
+    equations = float("nan") if num_equations == "NA" else int(num_equations)
+    variables = float("nan") if num_variables == "NA" else int(num_variables)
+    time = float("nan") if solver_time == "NA" else float(solver_time)
+
+    return objective, equations, variables, time
 
 
 class Backend(ABC):
@@ -141,7 +150,6 @@ class Backend(ABC):
         self.pf_file = self.job_name + ".pf"
         self.restart_file = self.job_name + ".g00"
         self.trace_file = self.job_name + ".txt"
-        self.write_trace_template()
 
     @abstractmethod
     def is_async(self): ...
@@ -234,20 +242,6 @@ class Backend(ABC):
                 if type(symbol) in (syms.Variable, syms.Equation):
                     symbol._update_attr_domains()
 
-    def write_trace_template(self) -> None:
-        # Custom trace file template.
-        if os.path.isfile(self.trace_file):
-            return
-
-        lines = [
-            "* Trace Record Definition",
-            "* GamsSolve",
-            "* SolverName NumberOfDomainViolations ETAlg ETSolve ETSolver NumberOfIterations Marginals ModelStatus NumberOfNodes SolveNumber NumberOfDiscreteVariables NumberOfEquations NumberOfNonlinearNonZeros NumberOfNonZeros NumberOfVariables ",
-            "* ObjectiveValueEstimate ObjectiveValue ModelType ModelGenerationTime SolverTime SolverStatus SolverVersion",
-        ]
-        with open(self.trace_file, "w", encoding="utf-8") as file:
-            file.write("\n".join(lines) + "\n")
-
     def parse_listings(self):
         listing_file = (
             self.options.listing_file
@@ -261,70 +255,50 @@ class Backend(ABC):
             utils._parse_generated_variables(self.model, listing_file)
 
     def prepare_summary(self, trace_file: str) -> pd.DataFrame:
-        from gamspy._model import ModelStatus, SolveStatus
+        from gamspy._model import ModelStatus
 
         with open(trace_file, encoding="utf-8") as file:
-            # We only need the last line. deque provides functionality similar to the tail filter in Unix.
-            line = deque(file, maxlen=1)[0]
+            line = file.readlines()[-1]
             (
+                _,
+                model_type,
                 solver_name,
-                num_domain_violations,
-                algorithm_time,
-                total_solve_time,
-                total_solver_time,
-                num_iterations,
-                marginals,
-                model_status,
-                num_nodes,
-                solve_number,
-                num_discrete_variables,
+                _,
+                _,
+                _,
+                _,
                 num_equations,
-                num_nonlinear_zeros,
-                num_nonzeros,
                 num_variables,
-                objective_estimation,
+                _,
+                _,
+                _,
+                _,
+                model_status,
+                solver_status,
                 objective_value,
-                used_model_type,
-                model_generation_time,
-                solve_model_time,
-                solve_status,
-                solver_version,
-            ) = line.split(" ")
+                _,
+                solver_time,
+                _,
+                _,
+                _,
+                _,
+            ) = line.split(",")
 
-        assert self.model is not None
-        self.model._num_domain_violations = _cast_value(num_domain_violations, int)
-        self.model._algorithm_time = _cast_value(algorithm_time, float)
-        self.model._total_solve_time = _cast_value(total_solve_time, float)
-        self.model._total_solver_time = _cast_value(total_solver_time, float)
-        self.model._num_iterations = _cast_value(num_iterations, int)
-        self.model._marginals = _cast_value(marginals, int)
-        self.model._status = ModelStatus(int(model_status))
-        self.model._num_nodes_used = _cast_value(num_nodes, int)
-        self.model._solve_number = _cast_value(solve_number, int)
-        self.model._num_discrete_variables = _cast_value(num_discrete_variables, int)
-        self.model._num_equations = _cast_value(num_equations, int)
-        self.model._num_nonlinear_zeros = _cast_value(num_nonlinear_zeros, int)
-        self.model._num_nonzeros = _cast_value(num_nonzeros, int)
-        self.model._num_variables = _cast_value(num_variables, int)
-        self.model._objective_estimation = _cast_value(objective_estimation, float)
-        self.model._objective_value = _cast_value(objective_value, float)
-        self.model._used_model_type = used_model_type
-        self.model._model_generation_time = _cast_value(model_generation_time, float)
-        self.model._solve_model_time = _cast_value(solve_model_time, float)
-        self.model.solve_status = SolveStatus(int(solve_status))
-        self.model._solver_version = _cast_value(solver_version.strip(), int)
+        objective_value, num_equations, num_variables, solver_time = _cast_values(
+            objective_value, num_equations, num_variables, solver_time
+        )
 
         dataframe = pd.DataFrame(
             [
                 [
-                    SOLVE_STATUS[int(solve_status)],
-                    self.model._status.name,
-                    self.model._objective_value,
-                    self.model._num_equations,
-                    self.model._num_variables,
-                    used_model_type,
+                    SOLVE_STATUS[int(solver_status)],
+                    ModelStatus(int(model_status)).name,
+                    objective_value,
+                    num_equations,
+                    num_variables,
+                    model_type,
                     solver_name,
-                    self.model._total_solver_time,
+                    solver_time,
                 ]
             ],
             columns=HEADER,

@@ -466,6 +466,7 @@ class Options(BaseModel):
             gams_options[OPTION_MAP[key]] = value
 
         gams_options["previouswork"] = 1  # # In case GAMS version differs on backend
+        gams_options["traceopt"] = 3
 
         if self.log_file:
             if output is not None:
