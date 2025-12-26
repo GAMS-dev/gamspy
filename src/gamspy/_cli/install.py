@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import importlib
+import json
 import os
 import shutil
 import subprocess
 import sys
+from importlib.metadata import distribution
 from typing import TYPE_CHECKING, Annotated
 
 import certifi
@@ -193,8 +195,20 @@ def license(
         shutil.copy(license, license_path)
 
 
+def is_editable(package_name: str) -> bool:
+    dist = distribution(package_name)
+    text = dist.read_text("direct_url.json")
+    if not text:
+        return False
+    data = json.loads(text)
+    return data.get("dir_info", {}).get("editable", False)
+
+
 def append_dist_info(files, gamspy_base_dir: str):
     """Updates dist-info/RECORD in site-packages for pip uninstall"""
+    if is_editable("gamspy"):
+        return
+
     import gamspy as gp
 
     gamspy_path: str = gp.__path__[0]
