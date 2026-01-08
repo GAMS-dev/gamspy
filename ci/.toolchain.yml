@@ -10,7 +10,7 @@ variables:
       if [ -f /etc/debian_version ]; then
         apt-get update && apt-get install -y curl ca-certificates
       fi
-    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - curl -LsSf https://astral.sh/uv/install.sh | INSTALLER_NO_MODIFY_PATH=1 sh
     - export PATH="$UV_INSTALL_DIR:$PATH"
     - echo "Downloading Python toolchain..."
     - uv python install 3.10 3.11 3.12 3.13 3.14
@@ -44,6 +44,7 @@ setup-wei-toolchain:
   tags: [windows]
   script:
     - $env:UV_INSTALL_DIR = "$CI_PROJECT_DIR\.uv_bin"
+    - $env:INSTALLER_NO_MODIFY_PATH = "1"
     - irm https://astral.sh/uv/install.ps1 | iex
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - echo "Downloading Python toolchain for Windows..."

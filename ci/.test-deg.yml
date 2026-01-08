@@ -6,16 +6,12 @@
   variables:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
-    # 1. ADD UV TO PATH (from artifact)
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    
-    # 2. Create venv (uses artifact python)
     - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
-    
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver -a
+    - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles
     - python -B -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
 
@@ -23,14 +19,13 @@ deg-test-3.14:
   extends: .deg_template
   variables:
     PYTHON_VERSION: "3.14"
-  # Override script for 3.14 coverage
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python 3.14
     - source .venv/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver -a
+    - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles
     - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license or doc' tests
     - coverage report -m --data-file=".coverage"

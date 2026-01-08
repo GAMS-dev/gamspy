@@ -11,7 +11,7 @@
     - source .venv/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver -a
+    - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles
     - python -B -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
 
@@ -25,7 +25,7 @@ dac-test-3.14:
     - source .venv/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver -a
+    - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles
     - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license or doc' tests
     - coverage report -m --data-file=".coverage"
