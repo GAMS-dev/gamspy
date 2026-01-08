@@ -1,7 +1,7 @@
 leg-cli-3.14:
   stage: cli
   needs: [setup-leg-toolchain]
-  tags: [hodori]
+  tags: [linux]
   image: debian:bookworm-slim
   variables:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
@@ -22,7 +22,7 @@ leg-cli-3.14:
 leg-cli-3.10:
   stage: cli
   needs: [setup-leg-toolchain]
-  tags: [hodori]
+  tags: [linux]
   image: debian:bookworm-slim
   variables:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
