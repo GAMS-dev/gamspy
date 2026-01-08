@@ -1,10 +1,18 @@
 leg-precommit:
   stage: precommit
   when: on_success
+  needs: [setup-leg-toolchain]
   tags: [linux]
-  image: python:3.13
+  image: debian:bookworm-slim
+  variables:
+    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
-    - python -m pip install uv && uv venv .precommit_venv && source .precommit_venv/bin/activate
-    - uv export --no-emit-project --format requirements-txt > requirements.txt && uvx pip-audit -v -r requirements.txt --disable-pip && rm requirements.txt
+    - apt-get update && apt-get install -y git ca-certificates
+    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
+    - uv venv .precommit_venv --python 3.13
+    - source .precommit_venv/bin/activate
+    - uv export --no-emit-project --format requirements-txt > requirements.txt
+    - uvx pip-audit -v -r requirements.txt --disable-pip
+    - rm requirements.txt
     - uv pip install pre-commit
     - pre-commit run --all-files
