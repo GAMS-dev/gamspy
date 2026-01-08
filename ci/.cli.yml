@@ -8,14 +8,10 @@ leg-cli-3.14:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    
-    # Create venv & Build
     - uv venv venv314 --python 3.14
     - source venv314/bin/activate
     - uv pip install pip
     - uv build
-    
-    # Test
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
@@ -33,7 +29,6 @@ leg-cli-3.10:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    
     - uv venv venv310 --python 3.10
     - source venv310/bin/activate
     - uv pip install pip
@@ -50,12 +45,10 @@ lag-cli-3.14:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    
     - uv venv venv314 --python 3.14
     - source venv314/bin/activate
     - uv pip install pip
     - uv build
-    
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
@@ -73,7 +66,6 @@ lag-cli-3.10:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    
     - uv venv venv310 --python 3.10
     - source venv310/bin/activate
     - uv pip install pip
@@ -89,11 +81,9 @@ dac-cli-3.14:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    
     - uv venv .venv --python 3.14
     - source .venv/bin/activate
     - uv build
-    
     - uv pip install .[dev,test] pip --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
@@ -103,17 +93,14 @@ dac-cli-3.14:
 
 dac-cli-3.10:
   stage: cli
-  # Preserving dependency on 3.14 while adding toolchain
   needs: [dac-cli-3.14, setup-dac-toolchain]
   tags: [macos-arm64]
   variables:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    
     - uv venv .venv --python 3.10
     - source .venv/bin/activate
-    
     - uv pip install .[dev,test] pip --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
 
@@ -125,11 +112,9 @@ deg-cli-3.14:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    
     - uv venv .venv --python 3.14
     - source .venv/bin/activate
     - uv build
-    
     - uv pip install .[dev,test] pip --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
@@ -146,10 +131,8 @@ deg-cli-3.10:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    
     - uv venv .venv --python 3.10
     - source .venv/bin/activate
-    
     - uv pip install .[dev,test] pip --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
 
@@ -161,12 +144,10 @@ wei-cli-3.14:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
-    
     - uv venv .venv --python 3.14
     - .venv\Scripts\Activate.ps1
     - uv pip install pip
     - uv build
-    
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
@@ -182,10 +163,8 @@ wei-cli-3.10:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
-    
     - uv venv .venv --python 3.10
     - .venv\Scripts\Activate.ps1
     - uv pip install pip
-    
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
