@@ -4,7 +4,7 @@ leg-build-docs:
   needs: []
   allow_failure: true
   tags: [linux]
-  image: python:3.10
+  image: python:3.13
   script:
     - python -m pip install uv && uv venv .docs_venv && source .docs_venv/bin/activate
     - uv pip install .[test,doc]
