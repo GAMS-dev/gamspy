@@ -291,29 +291,20 @@ def solver(
             if not skip_pip_install:
                 solver_version = gamspy_base.__version__
                 # install specified solver
-                if use_uv:
-                    command = [
-                        "uv",
+                command = ["uv"] if use_uv else [sys.executable, "-m"]
+                command.extend(
+                    [
                         "pip",
                         "install",
                         f"gamspy-{solver_name}=={solver_version}",
                         "--force-reinstall",
                     ]
-                else:
-                    command = [
-                        sys.executable,
-                        "-m",
-                        "pip",
-                        "install",
-                        f"gamspy-{solver_name}=={solver_version}",
-                        "--force-reinstall",
-                    ]
+                )
                 try:
                     _ = subprocess.run(
                         command,
                         check=True,
                         encoding="utf-8",
-                        stderr=subprocess.PIPE,
                         env=environment_variables,
                     )
                 except subprocess.CalledProcessError as e:
