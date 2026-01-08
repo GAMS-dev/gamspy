@@ -21,7 +21,7 @@ deg-test-3.14:
     PYTHON_VERSION: "3.14"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.14
+    - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
