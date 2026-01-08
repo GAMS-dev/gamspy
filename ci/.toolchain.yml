@@ -1,0 +1,57 @@
+variables:
+  UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
+  UV_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_bin"
+  UV_LINK_MODE: "copy"
+
+.setup_template:
+  stage: setup
+  script:
+    - |
+      if [ -f /etc/debian_version ]; then
+        apt-get update && apt-get install -y curl ca-certificates
+      fi
+    - curl -LsSf https://astral.sh/uv/install.sh | INSTALLER_NO_MODIFY_PATH=1 sh
+    - export PATH="$UV_INSTALL_DIR:$PATH"
+    - echo "Downloading Python toolchain..."
+    - uv python install 3.10 3.11 3.12 3.13 3.14
+  artifacts:
+    name: "toolchain-$CI_JOB_NAME"
+    paths:
+      - .uv_pythons/
+      - .uv_bin/
+    expire_in: 2 hours
+
+setup-leg-toolchain:
+  extends: .setup_template
+  tags: [linux]
+  image: debian:bookworm-slim
+
+setup-lag-toolchain:
+  extends: .setup_template
+  tags: [linux-arm64]
+  image: debian:bookworm-slim
+
+setup-deg-toolchain:
+  extends: .setup_template
+  tags: [macos]
+
+setup-dac-toolchain:
+  extends: .setup_template
+  tags: [macos-arm64]
+
+setup-wei-toolchain:
+  stage: setup
+  tags: [windows]
+  script:
+    - $env:UV_INSTALL_DIR = "$CI_PROJECT_DIR\.uv_bin"
+    - $env:INSTALLER_NO_MODIFY_PATH = "1"
+    - irm https://astral.sh/uv/install.ps1 | iex
+    - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
+    - echo "Downloading Python toolchain for Windows..."
+    - uv python install 3.10 3.11 3.12 3.13 3.14
+  artifacts:
+    name: "toolchain-windows"
+    paths:
+      - .uv_pythons/
+      - .uv_bin/
+    expire_in: 2 hours
