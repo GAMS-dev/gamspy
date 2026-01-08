@@ -4,6 +4,7 @@ import doctest
 import glob
 import json
 import os
+import platform
 import shutil
 import time
 from os.path import join
@@ -64,6 +65,10 @@ def test_config():
     gp.set_options({"SOLVER_VALIDATION": 1})
 
 
+@pytest.mark.skipif(
+    platform.system() == "Windows",
+    reason="Windows build machines are not very reliable when it comes to these kind of performance tests.",
+)
 @pytest.mark.unit
 def test_domain_checking_config_performance():
     gp.set_options({"DOMAIN_VALIDATION": 1})
