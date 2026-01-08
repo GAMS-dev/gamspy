@@ -1,9 +1,21 @@
 leg-cli-3.14:
   stage: cli
+  needs: [setup-leg-toolchain]
   tags: [hodori]
-  image: python:3.14
+  image: debian:bookworm-slim
+  variables:
+    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
-    - python -m pip install uv && uv venv venv314 && source venv314/bin/activate && uv pip install pip && uv build
+    - apt-get update && apt-get install -y ca-certificates git
+    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
+    
+    # Create venv & Build
+    - uv venv venv314 --python 3.14
+    - source venv314/bin/activate
+    - uv pip install pip
+    - uv build
+    
+    # Test
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
@@ -13,51 +25,77 @@ leg-cli-3.14:
 
 leg-cli-3.10:
   stage: cli
+  needs: [setup-leg-toolchain]
   tags: [hodori]
-  image: python:3.10
+  image: debian:bookworm-slim
+  variables:
+    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
-    - python -m pip install uv && uv venv venv310 && source venv310/bin/activate && uv pip install pip
+    - apt-get update && apt-get install -y ca-certificates git
+    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
+    
+    - uv venv venv310 --python 3.10
+    - source venv310/bin/activate
+    - uv pip install pip
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
 
 lag-cli-3.14:
   stage: cli
+  needs: [setup-lag-toolchain]
   tags: [linux-arm64]
-  image: python:3.14
+  image: debian:bookworm-slim
+  variables:
+    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
-    - python -m pip install uv && uv venv venv314 && source venv314/bin/activate && uv pip install pip && uv build
+    - apt-get update && apt-get install -y ca-certificates git
+    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
+    
+    - uv venv venv314 --python 3.14
+    - source venv314/bin/activate
+    - uv pip install pip
+    - uv build
+    
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
-    name: linux_3.14
+    name: linux_arm64_3.14
     expire_in: 2 hours
     paths: [dist/*]
 
 lag-cli-3.10:
   stage: cli
+  needs: [setup-lag-toolchain]
   tags: [linux-arm64]
-  image: python:3.10
+  image: debian:bookworm-slim
+  variables:
+    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
-    - python -m pip install uv && uv venv venv310 && source venv310/bin/activate && uv pip install pip
+    - apt-get update && apt-get install -y ca-certificates git
+    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
+    
+    - uv venv venv310 --python 3.10
+    - source venv310/bin/activate
+    - uv pip install pip
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
 
 dac-cli-3.14:
   stage: cli
   when: on_success
+  needs: [setup-dac-toolchain]
   tags: [macos-arm64]
+  variables:
+    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
-    - |
-      if [ ! -f "${TMPDIR}uv" ]; then
-        curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
-      fi
-    - ${TMPDIR}uv venv "${TMPDIR}gamspy-env-cli-3.14${CI_COMMIT_SHORT_SHA}" --python 3.14 && ${TMPDIR}uv build
-    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv venv "${TMPDIR}gamspy-env-cli-3.14${CI_COMMIT_SHORT_SHA}" --python 3.14 && ${TMPDIR}uv build
-    - source "${TMPDIR}gamspy-env-cli-3.14${CI_COMMIT_SHORT_SHA}"/bin/activate
-    - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
+    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
+    
+    - uv venv .venv --python 3.14
+    - source .venv/bin/activate
+    - uv build
+    
+    - uv pip install .[dev,test] pip --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
-  after_script:
-    - rm -rf "${TMPDIR}gamspy-env-cli-3.14${CI_COMMIT_SHORT_SHA}"
   artifacts:
     name: macos_arm64_3.14
     expire_in: 2 hours
@@ -65,34 +103,35 @@ dac-cli-3.14:
 
 dac-cli-3.10:
   stage: cli
-  needs: [dac-cli-3.14]
+  # Preserving dependency on 3.14 while adding toolchain
+  needs: [dac-cli-3.14, setup-dac-toolchain]
   tags: [macos-arm64]
+  variables:
+    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
-    - |
-      if [ ! -f "${TMPDIR}/uv" ]; then
-        curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
-      fi
-    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv venv "${TMPDIR}gamspy-env-cli-3.10${CI_COMMIT_SHORT_SHA}" --python 3.10
-    - source "${TMPDIR}gamspy-env-cli-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
-    - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
+    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
+    
+    - uv venv .venv --python 3.10
+    - source .venv/bin/activate
+    
+    - uv pip install .[dev,test] pip --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
-  after_script:
-    - rm -rf "${TMPDIR}gamspy-env-cli-3.10${CI_COMMIT_SHORT_SHA}"
 
 deg-cli-3.14:
   stage: cli
+  needs: [setup-deg-toolchain]
   tags: [macos]
+  variables:
+    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
-    - |
-      if [ ! -f "${TMPDIR}/uv" ]; then
-        curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
-      fi
-    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv venv "${TMPDIR}gamspy-env-cli-3.14${CI_COMMIT_SHORT_SHA}" --python 3.14 && ${TMPDIR}uv build
-    - source "${TMPDIR}gamspy-env-cli-3.14${CI_COMMIT_SHORT_SHA}"/bin/activate
-    - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
+    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
+    
+    - uv venv .venv --python 3.14
+    - source .venv/bin/activate
+    - uv build
+    
+    - uv pip install .[dev,test] pip --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
-  after_script:
-    - rm -rf "${TMPDIR}gamspy-env-cli-3.14${CI_COMMIT_SHORT_SHA}"
   artifacts:
     name: macos_x86_64_3.14
     expire_in: 2 hours
@@ -100,27 +139,34 @@ deg-cli-3.14:
 
 deg-cli-3.10:
   stage: cli
-  needs: [deg-cli-3.14]
+  # Preserving dependency on 3.14 while adding toolchain
+  needs: [deg-cli-3.14, setup-deg-toolchain]
   tags: [macos]
+  variables:
+    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
-    - |
-      if [ ! -f "${TMPDIR}/uv" ]; then
-        curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=${TMPDIR} INSTALLER_NO_MODIFY_PATH=1 sh
-      fi
-    - UV_PYTHON_BIN_DIR=${TMPDIR} ${TMPDIR}uv venv "${TMPDIR}gamspy-env-cli-3.10${CI_COMMIT_SHORT_SHA}" --python 3.10
-    - source "${TMPDIR}gamspy-env-cli-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
-    - ${TMPDIR}uv pip install .[dev,test] pip --force-reinstall
+    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
+    
+    - uv venv .venv --python 3.10
+    - source .venv/bin/activate
+    
+    - uv pip install .[dev,test] pip --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
-  after_script:
-    - rm -rf "${TMPDIR}gamspy-env-cli-3.10${CI_COMMIT_SHORT_SHA}"
 
 wei-cli-3.14:
   stage: cli
+  needs: [setup-wei-toolchain]
   tags: [windows]
-  image: winamd64/python:3.14
+  variables:
+    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
-    - python --version
-    - python -m pip install uv; uv venv .windows_venv314; .windows_venv314\Scripts\Activate; uv pip install pip; uv build
+    - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
+    
+    - uv venv .venv --python 3.14
+    - .venv\Scripts\Activate.ps1
+    - uv pip install pip
+    - uv build
+    
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
@@ -130,10 +176,16 @@ wei-cli-3.14:
 
 wei-cli-3.10:
   stage: cli
+  needs: [setup-wei-toolchain]
   tags: [windows]
-  image: winamd64/python:3.10
+  variables:
+    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
-    - python --version
-    - python -m pip install uv; uv venv .windows_venv310; .windows_venv310\Scripts\Activate; uv pip install pip
+    - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
+    
+    - uv venv .venv --python 3.10
+    - .venv\Scripts\Activate.ps1
+    - uv pip install pip
+    
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests

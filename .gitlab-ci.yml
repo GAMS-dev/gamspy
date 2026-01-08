@@ -3,6 +3,7 @@ default:
     - linux
 
 stages:
+  - setup
   - update
   - precommit
   - cli
@@ -73,7 +74,8 @@ pre-commit-autoupdate:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
 
 
-include: ['ci/.precommit-check.yml',
+include: ['ci/.toolchain.yml',
+          'ci/.precommit-check.yml',
           'ci/.cli.yml',
           'ci/.test-leg.yml',
           'ci/.test-lag.yml',
