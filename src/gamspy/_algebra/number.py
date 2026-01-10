@@ -66,5 +66,14 @@ class Number(operable.Operable):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m)
+        >>> print(i.latexRepr())
+        i
+
         """
         return f"{self._value}"

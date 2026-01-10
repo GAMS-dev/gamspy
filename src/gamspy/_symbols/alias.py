@@ -236,11 +236,14 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
     def gamsRepr(self) -> str:
         """
-        Representation of this Alias in GAMS language.
+        Returns the string representation of this Alias in the GAMS language.
+
+        (e.g., 'j').
 
         Returns
         -------
         str
+            The GAMS string representation.
 
         Examples
         --------
@@ -256,11 +259,14 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
     def getDeclaration(self):
         """
-        Declaration of the Alias in GAMS
+        Returns the GAMS declaration statement for this Alias.
+
+        (e.g., 'Alias(i, j);').
 
         Returns
         -------
         str
+            The GAMS declaration string.
 
         Examples
         --------

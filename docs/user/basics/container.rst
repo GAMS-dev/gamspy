@@ -8,250 +8,173 @@
 Container
 *********
 
-A :meth:`Container <gamspy.Container>` object in GAMSPy serves as a central hub for managing essential data structures such as sets, parameters, variables, 
-and constraints, providing a structured approach for optimization problems. It is also responsible for creating the connection between with GAMS and GAMSPy.
+The :class:`Container <gamspy.Container>` is the central hub of any GAMSPy session. 
+It acts as a workspace that manages your optimization problem's data, structure, and execution.
 
-===============
-Symbol Creation
-===============
+Functionally, the Container serves two primary purposes:
 
-Every symbol in your optimization problem must belong to a :meth:`Container <gamspy.Container>`.
+1. **Symbol Management:** It stores and organizes all sets, parameters, variables, and equations.
+2. **Execution Interface:** It manages the communication bridge between Python and the GAMS execution engine.
 
-All symbols added to a :meth:`Container <gamspy.Container>` can be accessed by indexing into the :meth:`Container <gamspy.Container>`::
+Initialization
+==============
+You can initialize a :class:`Container <gamspy.Container>` as a fresh workspace or 
+load it from existing data sources.
+
+**Basic Initialization**
+
+.. code-block:: python
+
+    import gamspy as gp
     
-    from gamspy import Container, Set
+    m = gp.Container()
 
-    m = Container()
-    i = Set(m, "i", records=["seattle", "san-diego"])
-    print(m["i"])  # returns a reference to i variable
+**Initialization with Configuration**
 
+You can set the working directory of the container explicitly. This is useful for debugging or managing generated files.
 
-Each symbol is added to the container as soon as it is created. If the symbol already exists in the container, the existing symbol is returned. ::
+.. code-block:: python
 
-    from gamspy import Container, Set
+    import gamspy as gp
 
-    m = Container()
-    i1 = Set(m, "i", records=["seattle", "san-diego"])
-    i2 = Set(m, "i", records=["seattle", "san-diego"])
-    print(id(i1) == id(i2))  # True
+    # Keeps generated files in the specified directory
+    m = gp.Container(
+        working_directory="./debug_workspace",
+        debugging_level="keep"
+    )
 
+**Loading from GDX**
 
-Creating a symbol with the same name but different records overwrites the records of the existing symbol. ::
+You can initialize a container directly from a `GAMS Data eXchange (GDX)` file using the ``load_from`` argument.
 
-    from gamspy import Container, Set
+.. code-block:: python
 
-    m = Container()
-    i1 = Set(m, "i", records=["seattle", "san-diego"])
-    i2 = Set(m, "i", records=["seattle", "san-diego", "topeka"])
-    print(id(i1) == id(i2))  # True
-    print(i2.records)  # ['seattle', 'san-diego', 'topeka']
+    import gamspy as gp
 
-An alternative way to create a symbol in GAMSPy and add it to the container is as follows ::
+    # Load all symbols and data immediately upon creation from data.gdx
+    m = gp.Container(load_from="data.gdx")
 
-    from gamspy import Container
+**Loading from another Container**
 
-    m = Container()
-    i = m.addSet("i", records=["seattle", "san-diego"])
-    print(i.records)
+You can also initialize a container from another Container.
 
-Symbols can be created without any data. Data can be provided later ::
+.. code-block:: python
 
-    from gamspy import Container
+    import gamspy as gp
 
-    m = Container()
-    i = m.addSet("i")
-    i.setRecords(["seattle", "san-diego"])
-    print(i.records)
+    m1 = gp.Container()
+    i = gp.Set(m1, records=range(10))
 
-Explicit symbols names are useful when interacting with parts of the module where symbols need to be recognized by name, e.g. :meth:`toLatex <gamspy.Model.toLatex>` and GDX imports or exports (see below). If no name is provided, GAMSPy will autogenerate a name ::
+    m2 = gp.Container(load_from=m1)
+    print(m2["i"])
 
-    from gamspy import Container
-    
-    m = Container()
-    i = m.addSet()
-    print(i.name) # something like 's795f053a_7d21_4a17_a6c3_5a947e051930'
+Using Context Managers
+======================
 
-.. warning::
-    ``.records`` attribute of a symbol contains a Pandas DataFrame which holds the symbol's records and 
-    should be treated as a read-only attribute. If you want to change the records of a symbol, use 
-    ``setRecords`` function. ``setRecords`` ensures that the GAMSPy state is synchronized with GAMS 
-    execution system.
-
-A container can also be used as a context manager. When a container is used as a context manager, there 
-is no need to specify the container when creating symbols since the context manager container will automatically 
-be used as the container for the symbols.
+The :class:`Container <gamspy.Container>` supports Python's context manager protocol 
+(`with` statement). This approach is recommended as it automatically associates new 
+symbols with the active container, reducing code verbosity.
 
 .. tabs:: 
-    .. group-tab:: With context manager
+    .. group-tab:: With Context Manager (Recommended)
         .. code-block:: python
 
             import gamspy as gp
 
+            # Symbols are automatically added to 'm'
             with gp.Container() as m:
-                i = gp.Set()
-                a = gp.Alias(alias_with=i)
-                p = gp.Parameter()
-                v = gp.Variable()
-                e = gp.Equation()
+                i = gp.Set(description="Sets do not need explicit container arg")
+                p = gp.Parameter(domain=i, description="Parameters find 'm' automatically")
 
-    .. group-tab:: Without context manager
+    .. group-tab:: Without Context Manager
         .. code-block:: python
 
             import gamspy as gp
 
             m = gp.Container()
 
-            i = gp.Set(m)
-            a = gp.Alias(m, alias_with=i)
-            p = gp.Parameter(m)
-            v = gp.Variable(m)
-            e = gp.Equation(m)
+            # You must pass 'm' to every constructor
+            i = gp.Set(m, description="Must explicitly pass container")
+            p = gp.Parameter(m, domain=i)
 
-===========================
-Reading and Writing Symbols
-===========================
+Symbol Management
+=================
 
-The :meth:`Container <gamspy.Container>` class provides I/O functions for reading and writing symbols to `GAMS Data eXchange (GDX) <https://www.gams.com/latest/docs/UG_GDX.html>`_ files.
-
-Writing
--------
-Symbols created within a specific :meth:`Container <gamspy.Container>` can be saved to a GDX file using the :meth:`write <gamspy.Container.write>` function.
-
-.. code-block:: python
-    
-    from gamspy import Container, Set
-    
-    m = Container()
-    i = Set(m, "i", records=["seattle", "san-diego"])
-    m.write("data.gdx")
-
-Reading
--------
-Symbol records can be read from a GDX file by either specifying the ``load_from`` argument during the :meth:`Container <gamspy.Container>` construction or by using the :meth:`read <gamspy.Container.read>` function.
-
-To create a :meth:`Container <gamspy.Container>` with symbols from a GDX file, use the ``load_from`` argument:
-
-.. code-block:: python
-
-    from gamspy import Container
-
-    m = Container(load_from="data.gdx")
-    print(m.listSymbols())
-
-We can verify that symbol ``i`` is in the container ``m``.
-
-Alternatively, you can use the :meth:`read <gamspy.Container.read>` function to populate the container:
-
-.. code-block:: python
-
-    from gamspy import Container
-
-    m = Container()
-    m.read("data.gdx")
-    print(m.listSymbols())
-
-One can also read from another :meth:`Container <gamspy.Container>` instead of reading the records from a gdx file:
-
-.. code-block:: python
-
-    from gamspy import Container, Set
-
-    m1 = Container()
-    i = Set(m1, "i", records=range(3))
-    
-    m2 = Container()
-    m2.read(m1)
-    print(m2.listSymbols())
-
-Loading Records to Existing Symbols
------------------------------------
-
-You can load the records of a symbol from a GDX file if the symbol is already declared by using :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>`.
-
-.. code-block:: python
-
-    from gamspy import Container
-
-    m = Container()
-    i = Set(m, name="i")
-    m.loadRecordsFromGdx("data.gdx")
-    print(i.records)
-
-By default, :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>` loads the records of all symbols in the gdx file. 
-Alternatively, one can provide ``symbol_names`` argument to limit which symbol records to be loaded. For example:
-
-.. code-block:: python
-
-    from gamspy import Container
-
-    m = Container()
-    i = Set(m, name="i", records=range(5))
-    j = Set(m, name="j", records=range(5, 10))
-    m.write("data.gdx")
-
-    m2 = Container()
-    i = Set(m, name="i")
-    j = Set(m, name="j")
-    m2.loadRecordsFromGdx("data.gdx", symbol_names=['j'])
-    print(j.records)  # prints the records of j which is retrieved from data.gdx
-    print(i.records)  # prints None
-
-In this code snippet, we write ``write.gdx`` which contains the records of ``i`` and ``j``. Then, we load the records of ``j`` only.
-
-If you want to map the symbol names in the GDX file to GAMSPy container symbols with different names, you can also provide ``symbol_names`` as a dictionary. 
-For example: ::
-
-    m = Container()
-    i = Set(m, name="i", records=range(5))
-    j = Set(m, name="j", records=range(5, 10))
-    m.write("data.gdx")
-
-    m2 = Container()
-    k = Set(m, name="k")
-    l = Set(m, name="l")
-    m2.loadRecordsFromGdx("data.gdx", symbol_names={'i': 'k', 'j': 'l'})
-    print(k.records)  # prints the records of i in data.gdx
-    print(l.records)  # prints the records of j in data.gdx
-
-Here the keys of the ``symbol_names`` argument are the names in the GDX file and values are the names in the GAMSPy container.
-
-
-Serialization and Deserialization
----------------------------------
-
-Serialization is a process to convert Container objects into a zip file which 
-can be easily stored, transmitted, and reconstructed. Deserialization is the 
-opposite process to reconstruct a Container from a zip file. GAMSPy provides 
-:meth:`gp.serialize <gamspy.serialize>` and :meth:`gp.deserialize <gamspy.deserialize>` 
-functions to perform these processes. One can serialize a container as follows:
+Every optimization symbol must belong to a :class:`Container <gamspy.Container>`. 
+The :class:`Container <gamspy.Container>` acts like a dictionary; you can access 
+symbols using their names as keys.
 
 .. code-block:: python
 
     import gamspy as gp
+
     m = gp.Container()
-    i = gp.Set(m, "i", records=range(3))
-    gp.serialize(m, "path_to_the_zip_file.zip")
+    i = gp.Set(m, name="cities", records=["seattle", "san-diego"])
+    
+    # Access the object via dictionary syntax
+    print(m["cities"].records)
 
-This would create a zip file with the needed information to reconstruct the Container later.
-One can reconstruct a Container from this zip file later as follows:
+Adding Symbols
+--------------
+
+There are two ways to add symbols to a container:
+
+1.  **Direct Instantiation:** Create the object and pass the container.
+2.  **Helper Methods:** Use methods like ``addSet``, ``addParameter``, etc..
 
 .. code-block:: python
 
     import gamspy as gp
-    m = gp.deserialize("path_to_the_zip_file.zip")
-    i = m["i"]
 
-This creates a new container with the information from the zip file. The symbol `i` in the 
-returned Container will be identical to the symbol `i` in the first container that was used 
-to generate the zip file.
+    m = gp.Container()
 
-===========================================
-Setting Records Of Multiple Symbols At Once
-===========================================
-The records of each symbol can be set with its ``setRecords`` function (e.g. :meth:`gp.Set.setRecords <gamspy.Set.setRecords>`). 
-In certain cases setting the records of each symbol separately might be relatively slow (e.g. if you have a lot of symbols) since 
-each ``setRecords`` call synchronizes GAMSPy and the underlying GAMS representation. In 
-those cases, one can set the records in bulk with :meth:`gp.Container.setRecords <gamspy.Container.setRecords>`:
+    # Method 1: Direct Instantiation
+    j = gp.Set(m, "j", records=["p1", "p2"])
+
+    # Method 2: Helper Methods
+    k = m.addSet("k", records=["p1", "p2"])
+
+.. note::
+    If you create a symbol with a name that already exists in the container, 
+    GAMSPy will overwrite the records of the existing symbol rather than creating 
+    a duplicate.
+
+.. warning::
+    If you do not provide a name for a symbol, GAMSPy tries to get the name of the symbol from the stack of Python. 
+    This context might not be available in all environments. If GAMSPy cannot get the name from the stack, it 
+    autogenerates a unique identifier (e.g., `s795f0...`). While convenient for intermediate calculations, explicit 
+    naming is recommended for symbols you intend to inspect or export.
+
+Data Management
+===============
+
+The ``.records`` attribute of a symbol returns a Pandas DataFrame containing the data. 
+This attribute is **read-only**. To modify data, you must use specific setter methods.
+
+Setting Records
+---------------
+
+To update the data of a symbol, use the ``setRecords`` method. This ensures the data is 
+synchronized with the GAMS execution engine.
+
+.. code-block:: python
+
+    import gamspy as gp
+
+    m = gp.Container()
+
+    i = gp.Set(m)
+    
+    # Correct way to set data
+    i.setRecords(["New", "York"])
+
+Bulk Data Operations
+--------------------
+Calling ``setRecords`` on individual symbols triggers a synchronization with the GAMS engine 
+for every call, which can be slow for models with large number of symbols. 
+
+To improve performance, use :meth:`Container.setRecords <gamspy.Container.setRecords>` to 
+update multiple symbols in a single transaction.
 
 .. tabs::
 
@@ -263,7 +186,7 @@ those cases, one can set the records in bulk with :meth:`gp.Container.setRecords
             m = gp.Container()
             i = gp.Set(m)
             k = gp.Set(m)
-            i.setRecords(range(5))
+            i.setRecords(range(10))
             k.setRecords(range(5))
 
     .. tab:: Bulk setRecords
@@ -276,15 +199,110 @@ those cases, one can set the records in bulk with :meth:`gp.Container.setRecords
             k = gp.Set(m)
             m.setRecords({i: range(10), k: range(5)})
 
-In the example code snippets above, the first tab (One by one) shows how you can set the records of each symbol separately. 
-This code snippets synchronizes twice since there are two separate calls. The second tab (Bulk setRecords) show how you 
-can eliminate the extra call. Here ``m.setRecords`` is called once and it sets the records of symbol ``i`` and ``j``.
+Input / Output (GDX)
+====================
 
-=================================
-Generating the Executed GAMS Code
-=================================
+The Container provides robust tools for interacting with GDX files.
 
-GAMSPy utilizes the GAMS execution system and instructs it to perform certain operations. You can check these executed 
-operations by inspecting the corresponding GAMS code at any point in the program by calling :meth:`generateGamsString <gamspy.Container.generateGamsString>`.
-This feature is available for avid GAMS users who want to see what’s being executed behind the scenes. For more details, 
-see the :ref:`generate_gams_string` section of the :doc:`/user/advanced/debugging` page. 
+Writing to GDX
+--------------
+Use :meth:`write <gamspy.Container.write>` to save the current state of symbols to a file.
+
+.. code-block:: python
+    
+    m.write("model_data.gdx")
+
+Reading from GDX
+----------------
+There are multiple ways to read data, depending on whether you want to import symbol definitions or just the data records.
+
+**Read Symbol and Data:** :meth:`container.read <gamspy.Container.read>` imports symbol definitions *and* data from a GDX file or another Container.
+   
+.. code-block:: python
+
+    import gamspy as gp
+
+    m = gp.Container()
+
+    # Reads symbols 'i' and 'j' from the file into container 'm'
+    m.read("input.gdx", symbol_names=["i", "j"])
+
+**Load Data Only:** :meth:`container.loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>` loads data into symbols that *already exist* in your container. 
+This is useful when the model structure is defined in Python, but data comes from an external source.
+
+.. code-block:: python
+
+    import gamspy as gp
+
+    m = gp.Container()
+
+    # 'i' exists in Python, but is empty
+    i = gp.Set(m, "i")
+    
+    # Populates 'i' with data from the GDX file
+    m.loadRecordsFromGdx("data.gdx", symbol_names=["i"])
+
+You can also rename symbols during loading by providing a dictionary:
+
+.. code-block:: python
+
+    # Loads data from symbol 'i_remote' in GDX into symbol 'i_local' in Container
+    m.loadRecordsFromGdx("data.gdx", symbol_names={"i_remote": "i_local"})
+
+Advanced Features
+=================
+
+Serialization
+-------------
+You can archive the entire state of a Container (structure and data) into a zip file using :meth:`gamspy.serialize`. 
+It can be reconstructed later using :meth:`gamspy.deserialize`.
+
+.. code-block:: python
+
+    import gamspy as gp
+
+    # Save state
+    gp.serialize(m, "checkpoint.zip")
+
+    # Restore state
+    m_new = gp.deserialize("checkpoint.zip")
+
+Debugging: Generated GAMS Code
+------------------------------
+GAMSPy generates GAMS code in the background. To inspect this code for debugging or educational purposes, 
+use :meth:`generateGamsString <gamspy.Container.generateGamsString>`.
+
+.. code-block:: python
+
+    import gamspy as gp
+
+    m = gp.Container(debugging_level="keep")
+
+    i = gp.Set(m, records=range(5))
+    j = gp.Set(m, records=range(3))
+
+    print(m.generateGamsString())
+
+For more details, see the :ref:`generate_gams_string` section of the :doc:`/user/advanced/debugging` page. 
+
+Injecting Raw GAMS Code
+-----------------------
+For advanced users, specific GAMS statements can be injected directly into the execution stream using :meth:`addGamsCode <gamspy.Container.addGamsCode>`.
+
+.. warning::
+    This bypasses GAMSPy's safety checks. Use with caution.
+
+.. code-block:: python
+
+    # Adds a scalar directly via GAMS syntax
+    m.addGamsCode("scalar piHalf / [pi/2] /;")
+
+Solver Options File
+-------------------
+If you need to pass specific configuration files to a solver (e.g., a ``conopt.opt`` file), 
+you can generate them using :meth:`writeSolverOptions <gamspy.Container.writeSolverOptions>`.
+
+.. code-block:: python
+
+    # Creates a 'conopt.opt' file in the working directory
+    m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"})
