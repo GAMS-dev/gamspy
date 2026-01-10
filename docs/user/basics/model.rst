@@ -8,31 +8,43 @@
 Model
 *****
 
-The model class is used to group equations and label them for solving.
-It also allows specifying the problem type (e.g. :meth:`LP <gamspy.Problem.LP>`, :meth:`MIP <gamspy.Problem.MIP>`, etc.),
-the sense of the problem
-(:meth:`MIN <gamspy.Sense.MIN>`, :meth:`MAX <gamspy.Sense.MAX>`, :meth:`FEASIBILITY <gamspy.Sense.FEASIBILITY>`),
-and the objective of the problem.
+To create a model, you must instantiate the :meth:`gamspy.Model <gamspy.Model>` class. 
+This instance defines the scope of the problem, including which equations are included, 
+the direction of optimization, and the problem type.
 
-The general syntax for creating a model is as follows: ::
+**Essential Components**
 
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+When initializing a model, you typically provide: 
 
-    m = Container()
-    z = Variable(m, description="objective variable")
-    e1 = Equation(m)
-    e1[...] = ... # definition of the equation
-    e2 = Equation(m)
-    e2[...] = ... # definition of the equation
-    
-    example_model = Model(
+* **Equations**: A list of equations to define the constraints.
+* **Problem**: The type of mathematical problem (e.g. :meth:`LP <gamspy.Problem.LP>`, :meth:`NLP <gamspy.Problem.NLP>`, etc.).
+* **Sense**: The direction of optimization (:meth:`MIN <gamspy.Sense.MIN>`, :meth:`MAX <gamspy.Sense.MAX>`, or :meth:`FEASIBILITY <gamspy.Sense.FEASIBILITY>`).
+* **Objective**: The expression or variable to be optimized.
+
+**Example: A Simple Knapsack Model**
+
+Here is the general syntax for defining a model, illustrated by a knapsack problem: ::
+
+    import gamspy as gp
+
+    # 1. Define Container and Symbols
+    m = gp.Container()
+    i = gp.Set(m, description="items")
+    p = gp.Parameter(m, description="profits", domain=i)
+    w = gp.Parameter(m, description="weights", domain=i)
+    c = gp.Parameter(m, description="capacity")
+    x = gp.Variable(m, domain=i, type=gp.VariableType.BINARY)
+
+    # 2. Define Equations
+    capacity_restriction = gp.Equation(m, definition=gp.Sum(i, w[i] * x[i]) <= c)
+
+    # 3. Instantiate the Model
+    knapsack = gp.Model(
         m,
-        name="myModel",
-        description"description of your model",
-        equations=[e1, e2],
-        problem=Problem.LP,
-        sense=Sense.MAX,
-        objective=z,
+        equations=m.getEquations(), # Automatically grabs all equations in the container
+        problem=gp.Problem.MIP,     # Mixed Integer Program
+        sense=gp.Sense.MAX,         # Maximize profit
+        objective=gp.Sum(i, p[i] * x[i]),
     )
 
 .. note::
@@ -40,12 +52,9 @@ The general syntax for creating a model is as follows: ::
 
 Classification of Models
 ========================
-Various types of problems can be solved with GAMSPy. Note that the model type must be specified before solving. 
-The model types are briefly discussed in this section. GAMSPy verifies that the model is of the specified type 
-and issues error messages if there is a mismatch, such as when a supposedly linear model contains nonlinear 
-terms. Some problems can be solved in multiple ways, and the user must choose the appropriate method. 
-For example, if the model contains binary or integer variables, it can be solved either as a :meth:`MIP <gamspy.Problem.MIP>`
-or as an :meth:`RMIP <gamspy.Problem.RMIP>`.
+You must specify the correct model type (e.g., LP, NLP) before solving. GAMSPy verifies 
+that your formulation matches the specified type and will issue an error if there is a 
+mismatch (e.g., using nonlinear terms in a generic LP model).
 
 ========== ==========================================================
 Model Type Model Type Description
@@ -68,6 +77,12 @@ EMP        Extended Mathematical Program
 MPSGE      General Equilibrium
 ========== ==========================================================
 
+.. tip::
+
+    Some problems allow multiple valid types. For example, a model with binary variables 
+    can be solved as a :meth:`MIP <gamspy.Problem.MIP>` (exact integer solution) or an 
+    :meth:`RMIP <gamspy.Problem.RMIP>` (Relaxed MIP, treating integers as continuous).
+
 All model types are exposed with :meth:`Problem <gamspy.Problem>` enum, but the problem type
 can be specified as a string as well.
 
@@ -75,141 +90,59 @@ Also the direction types of the optimization (:meth:`MIN <gamspy.Sense.MIN>`,
 :meth:`MAX <gamspy.Sense.MAX>`, or :meth:`FEASIBILITY <gamspy.Sense.FEASIBILITY>`) are
 exposed with :meth:`Sense <gamspy.Sense>` enum but it can be specified as a string similarly.
 
-Matches for MCP Models
-======================
-
-Mixed Complementarity Problem (MCP) models can be defined as pair-wise complementarities between
-variables and equations. The ``Model`` class accepts these pair-wise complementarities via the `matches`
-argument in its constructor. ::
-
-    p = Variable(m, type=VariableType.POSITIVE, domain=c)
-    y = Variable(m, type=VariableType.POSITIVE, domain=s)
-    i = Variable(m, type=VariableType.POSITIVE, domain=h)
-
-    mkt = Equation(m, domain=c)
-    profit = Equation(m, domain=s)
-    income = Equation(m, domain=h)
-
-    mkt[c] = Sum(s, a[c, s] * y[s]) + Sum(h, e[c, h]) >= 
-             Sum(h.where[esub[h] != 1],
-                    (i[h] / Sum(cc, alpha[cc, h] * p[cc] ** (1 - esub[h])))
-                  * alpha[c, h]
-                  * (1 / p[c]) ** esub[h],
-                ) + Sum(h.where[esub[h] == 1], i[h] * alpha[c, h] / p[c])
-    profit[s] = -Sum(c, a[c, s] * p[c]) >= 0
-    income[h] = i[h] >= Sum(c, p[c] * e[c, h])
-
-    hansen = Model(
-        m,
-        problem=Problem.MCP,
-        matches={mkt: p, profit: y, income: i},
-    )
-
-You do not need to include equations already provided in `matches` in the `equations` argument.
-
-In addition to this explicit equation, variable matching, some alternative matching constructs with more flexibility are also supported.
-
-**Equation sequence syntax:** ::
-
-    model = Model(m, problem=Problem.MCP, matches={(e1, e2, e3) : v})
-
-This syntax requires that each equation in the sequence be conformant with ``v`` 
-(i.e. each equation has the same domain with the variable) and that the 
-set of tuples defining each equation be disjoint. For each column of ``v``, 
-at most one of ``e1`` or ``e2`` or ``e3`` will have a matching row. This is 
-useful when a variable contains columns of different kinds, e.g. prices for 
-both tradable and non-tradable commodities whose equilibrium conditions are 
-best expressed in different equations.
-
-**Variable sequence syntax:** ::
-
-    model = Model(m, problem=Problem.MCP, matches={e : (v1, v2, v3)})
-
-This construct requires that each variable in the variable sequence be conformant with `e`. 
-This points to the exclusive-or relationship among the non-fixed variables involved in a match. 
-For each row of ``e``, at most one of the matching columns in ``v1`` or ``v2`` or ``v3`` is 
-allowed to be non-fixed. The fixed columns in the match are ignored by the solver, and the row 
-is paired with the one non-fixed column. If all the columns are fixed, this effectively drops the 
-row from the model, just as would happen with a fixed column in the simple match ``e.v``. If no 
-columns exist to match a row of ``e``, this is an error. This construct is useful when a system 
-has too many degrees of freedom if all the variables in question are left endogenous: by fixing 
-some variables (i.e. making them exogenous) we arrive at a square system.
-
-More background information on MCP models can be found `here <https://www.gams.com/latest/docs/UG_ModelSolve.html#UG_ModelSolve_ModelClassificationOfModels_MCP>`_.
-An example MCP model can be found in the model library: `HANSMCP <https://github.com/GAMS-dev/gamspy/blob/master/tests/integration/models/hansmcp.py>`_.
-
-Model Attributes
-================
-
-Models have attributes that store a variety of information, including
-
-* information about the results of solving a model, the results of a solve, and the model’s solution,
-* information about certain features to be used by GAMSPy or the solver,
-* information passed to GAMSPy or the solver specifying various settings that are also available as option.
-
-====================== ===========================
-Model Attribute        Description
-====================== ===========================
-num_domain_violations  Number of domain violations
-algorithm_time         Solver-dependent timing information
-total_solve_time       Elapsed time it took to execute a solve statement in total
-total_solver_time      Elapsed time taken by the solver only
-num_iterations         Number of iterations used
-marginals              Indicator for marginals present
-max_infeasibility      Maximum of infeasibilities
-mean_infeasibility     Mean of infeasibilities
-status                 Integer number that indicates the model status
-num_nodes_used         Number of nodes used by the MIP solver
-solve_number           Number of the last solve
-num_dependencies       Number of dependencies in a CNS model
-num_discrete_variables Number of discrete variables
-num_equations          Number of equations
-num_infeasibilities    Number of infeasibilities
-num_nonlinear_insts    Number of nonlinear instructions
-num_nonlinear_zeros    Number of nonlinear nonzeros
-num_nonoptimalities    Number of nonoptimalities
-num_nonzeros           Number of nonzero entries in the model coefficient matrix
-num_mcp_redefinitions  Number of MCP redefinitions
-num_variables          Number of variables
-num_bound_projections  Number of bound projections during model generation
-objective_estimation   Estimate of the best possible solution for a mixed-integer model
-objective_value        Objective function value
-used_model_type        Integer number that indicates the used model type
-model_generation_time  Time GAMS took to generate the model in wall-clock seconds
-solve_model_time       Time the solver used to solve the model in seconds
-sum_infeasibilities    Sum of infeasibilities
-solve_status           Indicates the solver termination condition
-solver_version         Solver version
-====================== ===========================
-
 Solving a Model
 ===============
 
-The ``Model`` class has a function named :meth:`solve <gamspy.Model.solve>` that allows users to solve the specified model. ::
+Once defined, you trigger the optimization using the :meth:`solve <gamspy.Model.solve>` method. 
 
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem, Options
+**Basic Solve**
 
-    m = Container()
-    z = Variable(m, description="objective variable")
-    e1 = Equation(m)
-    e1[...] = ... # definition of the equation
-    e2 = Equation(m)
-    e2[...] = ... # definition of the equation
-    
-    model = Model(m, equations=[e1, e2], problem=Problem.LP, sense=Sense.MAX, objective=z)
-    summary = model.solve(solver="conopt", options=Options(iteration_limit=2), solver_options={"rtmaxv": "1.e12"})
+In most cases, calling :meth:`model.solve() <gamspy.Model.solve>` without arguments is sufficient. 
+GAMSPy will use the default solver, problem type, sense and options for your problem type: ::
 
-::
+    summary = model.solve()
 
-    In [1]: summary
-    Out[1]:
-      Solver Status   Model Status         Objective Num of Equations Num of Variables Model Type  Solver Solver Time
-    0        Normal  OptimalGlobal  538.811203982966               74               78         LP  CONOPT        0.02
+The function returns a Pandas DataFrame summarizing the run, including the name of the solver, 
+solver status, objective value, and solve time.
+
+For example, the aformentioned knapsack problem would look like the following with the solve statement: ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+    i = gp.Set(m, description="items")
+    p = gp.Parameter(m, description="profits", domain=i)
+    w = gp.Parameter(m, description="weights", domain=i)
+    c = gp.Parameter(m, description="capacity")
+    x = gp.Variable(m, "x", domain=i, type=gp.VariableType.BINARY)
+
+    capacity_restriction = gp.Equation(m, definition=gp.Sum(i, w[i] * x[i]) <= c)
+
+    knapsack = gp.Model(
+        m,
+        equations=m.getEquations(),
+        problem=gp.Problem.MIP,
+        sense=gp.Sense.MAX,
+        objective=gp.Sum(i, p[i] * x[i]),
+    )
+    summary = knapsack.solve()  # This is the only line added.
+
+.. note::
+
+    The data for the model was omitted on purpose to show that GAMSPy does not need data to define the model. 
+    See the full implementation with example data here: 
+    https://github.com/GAMS-dev/gamspy-examples/blob/master/models/knapsack/knapsack.py
+
+
+Specifying A Solver
+-------------------
 
 In most cases, calling the :meth:`solve <gamspy.Model.solve>` function without any parameters is sufficient. 
 In this scenario, the default solver depending on the problem type, default options will be used. 
 However, users who require more control can specify the solver, general options, and solver-specific 
-options. All installed solvers on your system can be queried by running the following command: ::
+options. 
+
+All installed solvers on your system can be queried by running the following command: ::
 
     gamspy list solvers
 
@@ -217,33 +150,51 @@ To see all available solvers that can be installed and used, run the following c
 
     gamspy list solvers -a
 
-:meth:`solve <gamspy.Model.solve>` function returns a Pandas DataFrame which contains the summary of the solve.  
+Let's say we want to use [HIGHS](https://highs.dev/) solver to solve the same knapsack problem. One can 
+install highs with: ::
+
+    gamspy install solver highs
+
+Then, change the solver as follow: ::
+
+    summary = knapsack.solve(solver="highs")  # This is the only line changed.
+
+This solve statement will use highs solver instead of the default solver.
+
 
 Redirecting Output
 ------------------
 
-The output of GAMSPy while solving the model can be redirected to a file, to standard input or to any 
+By default, solver output does not stream into the terminal to avoid cluttering your terminal.
+The output of the solver can be redirected to a file, to standard output or to any 
 custom stream that supports ``write`` and ``flush`` operations by specifying the ``output`` parameter in 
 the :meth:`solve <gamspy.Model.solve>` function.::
     
-    import sys
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+    import gamspy as gp
 
-    m = Container()
-    z = Variable(m, description="objective variable")
-    e1 = Equation(m)
-    e1[...] = ... # definition of the equation
-    e2 = Equation(m)
-    e2[...] = ... # definition of the equation
-    
-    model = Model(m, equations=[e1, e2], problem=Problem.LP, sense=Sense.MAX, objective=z)
-    
-    # redirect output to stdout
-    model.solve(output=sys.stdout)
+    m = gp.Container()
+    i = gp.Set(m, description="items")
+    p = gp.Parameter(m, description="profits", domain=i)
+    w = gp.Parameter(m, description="weights", domain=i)
+    c = gp.Parameter(m, description="capacity")
+    x = gp.Variable(m, "x", domain=i, type=gp.VariableType.BINARY)
+
+    capacity_restriction = gp.Equation(m, definition=gp.Sum(i, w[i] * x[i]) <= c)
+
+    knapsack = gp.Model(
+        m,
+        equations=m.getEquations(),
+        problem=gp.Problem.MIP,
+        sense=gp.Sense.MAX,
+        objective=gp.Sum(i, p[i] * x[i]),
+    )
+
+    # redirect output to standard output (your console)
+    summary = knapsack.solve(output=sys.stdout)
 
     # redirect output to a file
     with open("my_out_file", "w") as file:
-        model.solve(output=file)
+        knapsack.solve(output=file)
 
     # redirect to custom stream
     class MyStream:
@@ -253,176 +204,35 @@ the :meth:`solve <gamspy.Model.solve>` function.::
         def flush(self): ...
     
     my_stream = MyStream()
-    model.solve(output=my_stream)
+    knapsack.solve(output=my_stream)
 
-Solving Locally
----------------
+Solver Options
+==============
 
-By default, models are solved locally (on your machine).
-
-Solving with GAMS Engine
-------------------------
-
-Synchronous Solve
-~~~~~~~~~~~~~~~~~
-
-In order to send your model to be solved with `GAMS Engine <https://www.gams.com/sales/engine_facts/>`_, 
-you need to define the GAMS Engine configuration.
-This can be done by importing ``EngineClient`` and creating an instance. The user can then pass this instance to the 
-:meth:`solve <gamspy.Model.solve>` method and specify the backend as ``engine``. ::
-
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem, EngineClient
-
-    m = Container()
-    z = Variable(m, description="objective variable")
-    e1 = Equation(m)
-    e1[...] = ... # definition of the equation
-    e2 = Equation(m)
-    e2[...] = ... # definition of the equation
-    
-    model = Model(m, equations=[e1, e2], problem=Problem.LP, sense=Sense.MAX, objective=z)
-
-    client = EngineClient(
-        host=os.environ["ENGINE_URL"],
-        username=os.environ["ENGINE_USER"],
-        password=os.environ["ENGINE_PASSWORD"],
-        namespace=os.environ["ENGINE_NAMESPACE"],
-    )
-    model.solve(solver="conopt", backend="engine", client=client)
-
-
-Asynchronous Solve
-~~~~~~~~~~~~~~~~~~
-
-If you just want to send your jobs to GAMS Engine without blocking until the results are received,
-the `is_blocking` parameter can be set to `False` in `EngineClient`.
-
-Tokens of the submitted jobs are stored in `client.tokens` ::
-
-    client = EngineClient(
-        host=os.environ["ENGINE_URL"],
-        username=os.environ["ENGINE_USER"],
-        password=os.environ["ENGINE_PASSWORD"],
-        namespace=os.environ["ENGINE_NAMESPACE"],
-        is_blocking=False,
-    )
-
-    for _ in range(3):
-        ... # changes in your model
-        model.solve(backend="engine", client=client)
-
-    print(client.tokens) # This prints all tokens for the submitted jobs
-
-The results of the non-blocking jobs can be retrieved later. For example if want to retrieve the results of the 
-last submitted job, we can do that following: ::
-
-    token = client.tokens[-1]
-    client.job.get_results(token, working_directory="out_dir")
-
-The results would be downloaded to the given working directory. The downloaded GDX file will have the same name with :meth:`gdxOutputPath <gamspy.Container.gdxOutputPath>`. 
-Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded GDX 
-file: ::
-
-    gdx_out_path = os.path.join("out_dir", os.path.basename(m.gdxOutputPath()))
-    solution_container = Container(load_from=gdx_out_path)
-
-
-Solving with NEOS Server
-------------------------
-
-Synchronous Solve
-~~~~~~~~~~~~~~~~~
-
-In order to send your model to be solved to `NEOS Server <https://neos-server.org/neos/>`_, you need to create a NeosClient.
-This can be done by importing ``NeosClient`` and creating an instance. The user can then pass this instance to the 
-:meth:`solve <gamspy.Model.solve>` method and specify the backend as ``neos``. ::
-
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem, NeosClient
-
-    m = Container()
-    z = Variable(m, description="objective variable")
-    e1 = Equation(m)
-    e1[...] = ... # definition of the equation
-    e2 = Equation(m)
-    e2[...] = ... # definition of the equation
-
-    client = NeosClient(
-        email=os.environ["NEOS_EMAIL"],
-        username=os.environ["NEOS_USER"],
-        password=os.environ["NEOS_PASSWORD"],
-    )
-    model.solve(backend="neos", client=client)
-
-Providing your username and password is optional for the NEOS Server backend, but it is recommended 
-as it allows you to review your models on the `NEOS web client <https://neos-server.org/neos/>`_. The
-environment variables can be set in a `.env` file or with `export` statements on the command line. Example 
-of running your model on NEOS Server without authentication: ::
-
-    NEOS_EMAIL=<your_email> python <your_script>
-
-If one wants to investigate the results later on NEOS Server web client, they can provide the username
-and password in the same way: ::
-
-    NEOS_EMAIL=<your_email> NEOS_USER=<your_username> NEOS_PASSWORD=<your_password> python <your_script>
-
-Alternatively, the output of NEOS can be redirected to a file by specifying the output stream: ::
-
-    model.solve(backend="neos", client=client, output=sys.stdout)
-
-.. note::
-    NEOS Server backend does not support loadpoint option and external equations at the moment.
-
-Asynchronous Solve
-~~~~~~~~~~~~~~~~~~
-
-If you just want to send your jobs to NEOS server without blocking until the results are received,
-`is_blocking` parameter can be set to `False` in `NeosClient`.
-
-All submitted jobs are stored in `client.jobs` in case you want to reach to the job numbers and job passwords
-you already sent to the server. ::
-
-    client = NeosClient(
-        email=os.environ["NEOS_EMAIL"],
-        username=os.environ["NEOS_USER"],
-        password=os.environ["NEOS_PASSWORD"],
-        is_blocking=False,
-    )
-
-    for _ in range(3):
-        ... # changes in your model
-        model.solve(backend="neos", client=client)
-
-    print(client.jobs) # This prints all job numbers and jon passwords as a list of tuples
-
-The results of the non-blocking jobs can be retrieved later. For example if want to retrieve the results of the 
-last submitted job, we can do that following: ::
-
-    job_number, job_password = client.jobs[-1]
-    client.get_final_results(job_number, job_password)
-    client.download_output(job_number, job_password, working_directory="my_out_directory")
-
-The results would be downloaded to the given working directory. The downloaded gdx file will always have the name "output.gdx". 
-Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded gdx 
-file: ::
-
-    solution_container = Container(load_from="my_out_directory/output.gdx")
-
-
-The terms of use for NEOS can be found here: `Terms of use <https://neos-server.org/neos/termofuse.html>`_.
+You can fine-tune the solution process using Solve Options (generic GAMS options) and 
+Solver Options (specific to the algorithm, like CPLEX or Gurobi settings).
 
 .. _solve_options:
 
-Solve Options
--------------
+Generic Solve Options
+---------------------
 
-Solve options can be specified using the :meth:`gamspy.Options` class. For example: ::
+Solve options can be specified using the :meth:`gamspy.Options` class. These control 
+high-level behavior, such as iteration limits or time limits. For example: ::
 
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem, Options
+    import gamspy as gp
 
-    m = Container()
+    m = gp.Container()
     ... # Definition of your model
-    model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.MAX, objective=z)
-    model.solve(options=Options(iteration_limit=2))
+    model = gp.Model(m, equations=m.getEquations(), problem=gp.Problem.LP, sense=gp.Sense.MAX, objective=z)
+    model.solve(options=gp.Options(iteration_limit=2))
+
+**Commonly Used Options**
+
+* **time_limit**: Wall-clock time limit.
+* **iteration_limit**: Maximum number of solver iterations.
+* **absolute_optimality_gap**: Stop when the gap is below this threshold.
+* **threads**: Number of threads/cores to use (if not defined, the solver decides on number of processors to use).
 
 Here is the list of options and their descriptions:
 
@@ -577,16 +387,17 @@ To check all available options, see :meth:`gamspy.Options`.
         model.solve(options=gp.Options.fromGams({"reslim": 5, "lp": "gurobi"}))
 
 
-Solver Options
---------------
+Solver-Specific Options
+-----------------------
 
-In addition to solve options, user can specify solver options as a dictionary.::
+In addition to solve options, user can specify solver options as a dictionary. 
+These are passed as a dictionary and vary by solver (e.g., Gurobi, CONOPT).::
     
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+    import gamspy as gp
 
-    m = Container()
+    m = gp.Container()
     ... # Definition of your model
-    model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.MAX, objective=z)
+    model = gp.Model(m, equations=m.getEquations(), problem=gp.Problem.LP, sense=gp.Sense.MAX, objective=z)
     model.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
 
     
@@ -608,6 +419,212 @@ Solver options can also be created with :meth:`gamspy.Container.writeSolverOptio
     model.solve(solver="reshop", options=Options(mcp="nlpec"), solver_options={"subsolveropt": 1})
 
 In this example, :meth:`gamspy.Container.writeSolverOptions` would create solver options for the `nlpec` solver. 
+
+Execution Backends
+==================
+GAMSPy allows you to solve models locally or on cloud platforms.
+
+Solving Locally
+---------------
+
+By default, models are solved locally (on your machine).
+
+Solving with GAMS Engine
+------------------------
+
+Synchronous Solve
+~~~~~~~~~~~~~~~~~
+
+In order to send your model to be solved with `GAMS Engine <https://www.gams.com/sales/engine_facts/>`_, 
+you need to define the GAMS Engine configuration.
+This can be done by importing ``EngineClient`` and creating an instance. The user can then pass this instance to the 
+:meth:`solve <gamspy.Model.solve>` method and specify the backend as ``engine``. ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+    z = gp.Variable(m, description="objective variable")
+    e1 = gp.Equation(m)
+    e1[...] = ... # definition of the equation
+    e2 = gp.Equation(m)
+    e2[...] = ... # definition of the equation
+    
+    model = gp.Model(m, equations=[e1, e2], problem=gp.Problem.LP, sense=gp.Sense.MAX, objective=z)
+
+    client = gp.EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+    )
+    model.solve(solver="conopt", backend="engine", client=client)
+
+
+Asynchronous Solve
+~~~~~~~~~~~~~~~~~~
+
+If you just want to send your jobs to GAMS Engine without blocking until the results are received,
+the `is_blocking` parameter can be set to `False` in `EngineClient`.
+
+Tokens of the submitted jobs are stored in `client.tokens` ::
+
+    client = gp.EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+        is_blocking=False,
+    )
+
+    for _ in range(3):
+        ... # changes in your model
+        model.solve(backend="engine", client=client)
+
+    print(client.tokens) # This prints all tokens for the submitted jobs
+
+The results of the non-blocking jobs can be retrieved later. For example if want to retrieve the results of the 
+last submitted job, we can do that following: ::
+
+    token = client.tokens[-1]
+    client.job.get_results(token, working_directory="out_dir")
+
+The results would be downloaded to the given working directory. The downloaded GDX file will have the same name with :meth:`gdxOutputPath <gamspy.Container.gdxOutputPath>`. 
+Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded GDX 
+file: ::
+
+    gdx_out_path = os.path.join("out_dir", os.path.basename(m.gdxOutputPath()))
+    solution_container = gp.Container(load_from=gdx_out_path)
+
+
+Solving with NEOS Server
+------------------------
+
+Synchronous Solve
+~~~~~~~~~~~~~~~~~
+
+In order to send your model to be solved to `NEOS Server <https://neos-server.org/neos/>`_, you need to create a NeosClient.
+This can be done by importing ``NeosClient`` and creating an instance. The user can then pass this instance to the 
+:meth:`solve <gamspy.Model.solve>` method and specify the backend as ``neos``. ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+    z = gp.Variable(m, description="objective variable")
+    e1 = gp.Equation(m)
+    e1[...] = ... # definition of the equation
+    e2 = gp.Equation(m)
+    e2[...] = ... # definition of the equation
+
+    model = gp.Model(m, equations=[e1, e2], problem=gp.Problem.LP, sense=gp.Sense.MAX, objective=z)
+
+    client = gp.NeosClient(
+        email=os.environ["NEOS_EMAIL"],
+        username=os.environ["NEOS_USER"],
+        password=os.environ["NEOS_PASSWORD"],
+    )
+    model.solve(backend="neos", client=client)
+
+Providing your username and password is optional for the NEOS Server backend, but it is recommended 
+as it allows you to review your models on the `NEOS web client <https://neos-server.org/neos/>`_. The
+environment variables can be set in a `.env` file or with `export` statements on the command line. Example 
+of running your model on NEOS Server without authentication: ::
+
+    NEOS_EMAIL=<your_email> python <your_script>
+
+If one wants to investigate the results later on NEOS Server web client, they can provide the username
+and password in the same way: ::
+
+    NEOS_EMAIL=<your_email> NEOS_USER=<your_username> NEOS_PASSWORD=<your_password> python <your_script>
+
+Alternatively, the output of NEOS can be redirected to a file by specifying the output stream: ::
+
+    model.solve(backend="neos", client=client, output=sys.stdout)
+
+.. note::
+    NEOS Server backend does not support loadpoint option and external equations at the moment.
+
+Asynchronous Solve
+~~~~~~~~~~~~~~~~~~
+
+If you just want to send your jobs to NEOS server without blocking until the results are received,
+`is_blocking` parameter can be set to `False` in `NeosClient`.
+
+All submitted jobs are stored in `client.jobs` in case you want to reach to the job numbers and job passwords
+you already sent to the server. ::
+
+    client = gp.NeosClient(
+        email=os.environ["NEOS_EMAIL"],
+        username=os.environ["NEOS_USER"],
+        password=os.environ["NEOS_PASSWORD"],
+        is_blocking=False,
+    )
+
+    for _ in range(3):
+        ... # changes in your model
+        model.solve(backend="neos", client=client)
+
+    print(client.jobs) # This prints all job numbers and jon passwords as a list of tuples
+
+The results of the non-blocking jobs can be retrieved later. For example if want to retrieve the results of the 
+last submitted job, we can do that following: ::
+
+    job_number, job_password = client.jobs[-1]
+    client.get_final_results(job_number, job_password)
+    client.download_output(job_number, job_password, working_directory="my_out_directory")
+
+The results would be downloaded to the given working directory. The downloaded gdx file will always have the name "output.gdx". 
+Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded gdx 
+file: ::
+
+    solution_container = gp.Container(load_from="my_out_directory/output.gdx")
+
+
+The terms of use for NEOS can be found here: `Terms of use <https://neos-server.org/neos/termofuse.html>`_.
+
+
+Model Attributes
+================
+
+Models have attributes that store a variety of information, including
+
+* information about the results of solving a model, the results of a solve, and the model's solution,
+* information about certain features to be used by GAMSPy or the solver,
+* information passed to GAMSPy or the solver specifying various settings that are also available as option.
+
+====================== ===========================
+Model Attribute        Description
+====================== ===========================
+num_domain_violations  Number of domain violations
+algorithm_time         Solver-dependent timing information
+total_solve_time       Elapsed time it took to execute a solve statement in total
+total_solver_time      Elapsed time taken by the solver only
+num_iterations         Number of iterations used
+marginals              Indicator for marginals present
+max_infeasibility      Maximum of infeasibilities
+mean_infeasibility     Mean of infeasibilities
+status                 Integer number that indicates the model status
+num_nodes_used         Number of nodes used by the MIP solver
+solve_number           Number of the last solve
+num_dependencies       Number of dependencies in a CNS model
+num_discrete_variables Number of discrete variables
+num_equations          Number of equations
+num_infeasibilities    Number of infeasibilities
+num_nonlinear_insts    Number of nonlinear instructions
+num_nonlinear_zeros    Number of nonlinear nonzeros
+num_nonoptimalities    Number of nonoptimalities
+num_nonzeros           Number of nonzero entries in the model coefficient matrix
+num_mcp_redefinitions  Number of MCP redefinitions
+num_variables          Number of variables
+num_bound_projections  Number of bound projections during model generation
+objective_estimation   Estimate of the best possible solution for a mixed-integer model
+objective_value        Objective function value
+used_model_type        Integer number that indicates the used model type
+model_generation_time  Time GAMS took to generate the model in wall-clock seconds
+solve_model_time       Time the solver used to solve the model in seconds
+sum_infeasibilities    Sum of infeasibilities
+solve_status           Indicates the solver termination condition
+solver_version         Solver version
+====================== ===========================
 
 Converting A Model To A Scalar Format
 =====================================
@@ -636,11 +653,11 @@ Exporting Model To LaTeX
 GAMSPy models can be exported to a `.tex` file in LaTeX format by using the :meth:`toLatex <gamspy.Model.toLatex>` function of the model.
 The generated `.tex` file can be automatically compiled into a PDF file by using ``xelatex`` ::
 
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+    import gamspy as gp
 
-    m = Container()
+    m = gp.Container()
     ... # Definition of your model    
-    model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.MAX, objective=z)
+    model = gp.Model(m, equations=m.getEquations(), problem=gp.Problem.LP, sense=gp.Sense.MAX, objective=z)
     model.toLatex(path=<latex_path>, generate_pdf=True)
 
 .. note::
@@ -652,12 +669,12 @@ The generated `.tex` file can be automatically compiled into a PDF file by using
 GAMSPy also supports renaming symbols for LaTeX output in the :meth:`toLatex <gamspy.Model.toLatex>` function. This can be done by providing a dictionary
 mapping the GAMSPy symbol names to LaTeX names. For example: ::
 
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+    import gamspy as gp
 
-    m = Container()
+    m = gp.Container()
     ... # Definition of your model
-    variance = Variable(m, "variance")
-    model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.MAX, objective=variance)
+    variance = gp.Variable(m)
+    model = gp.Model(m, equations=m.getEquations(), problem=gp.Problem.LP, sense=gp.Sense.MAX, objective=variance)
     
     rename = {"variance": r"\ensuremath{\sigma}"}
     
@@ -666,18 +683,81 @@ mapping the GAMSPy symbol names to LaTeX names. For example: ::
 Latex representation of the individual equation definitions can be retrieved with :meth:`equation.latexRepr <gamspy.Equation.latexRepr>`. 
 For example: ::
 
-    from gamspy import Container, Set, Variable, Equation
+    import gamspy as gp
 
-    m = Container()
-    i = Set(m, "i")
-    v = Variable(m, "v", domain=i)
-    e = Equation(m, "e", domain=i)
+    m = gp.Container()
+    i = gp.Set(m)
+    v = gp.Variable(m, domain=i)
+    e = gp.Equation(m, domain=i)
     e[i] = v[i] >= 5
     print(e.latexRepr())
     
 This would result in: ::
 
     $v_{i} \geq 5\hfill \forall i$
+
+Matches for MCP Models
+======================
+
+Mixed Complementarity Problem (MCP) models can be defined as pair-wise complementarities between
+variables and equations. The ``Model`` class accepts these pair-wise complementarities via the `matches`
+argument in its constructor. ::
+
+    p = gp.Variable(m, type=gp.VariableType.POSITIVE, domain=c)
+    y = gp.Variable(m, type=gp.VariableType.POSITIVE, domain=s)
+    i = gp.Variable(m, type=gp.VariableType.POSITIVE, domain=h)
+
+    mkt = gp.Equation(m, domain=c)
+    profit = gp.Equation(m, domain=s)
+    income = gp.Equation(m, domain=h)
+
+    mkt[c] = gp.Sum(s, a[c, s] * y[s]) + gp.Sum(h, e[c, h]) >= 
+             gp.Sum(h.where[esub[h] != 1],
+                    (i[h] / gp.Sum(cc, alpha[cc, h] * p[cc] ** (1 - esub[h])))
+                  * alpha[c, h]
+                  * (1 / p[c]) ** esub[h],
+                ) + gp.Sum(h.where[esub[h] == 1], i[h] * alpha[c, h] / p[c])
+    profit[s] = -gp.Sum(c, a[c, s] * p[c]) >= 0
+    income[h] = i[h] >= gp.Sum(c, p[c] * e[c, h])
+
+    hansen = gp.Model(
+        m,
+        problem=gp.Problem.MCP,
+        matches={mkt: p, profit: y, income: i},
+    )
+
+You do not need to include equations already provided in `matches` in the `equations` argument.
+
+In addition to this explicit equation, variable matching, some alternative matching constructs with more flexibility are also supported.
+
+**Equation sequence syntax:** ::
+
+    model = gp.Model(m, problem=gp.Problem.MCP, matches={(e1, e2, e3) : v})
+
+This syntax requires that each equation in the sequence be conformant with ``v`` 
+(i.e. each equation has the same domain with the variable) and that the 
+set of tuples defining each equation be disjoint. For each column of ``v``, 
+at most one of ``e1`` or ``e2`` or ``e3`` will have a matching row. This is 
+useful when a variable contains columns of different kinds, e.g. prices for 
+both tradable and non-tradable commodities whose equilibrium conditions are 
+best expressed in different equations.
+
+**Variable sequence syntax:** ::
+
+    model = gp.Model(m, problem=gp.Problem.MCP, matches={e : (v1, v2, v3)})
+
+This construct requires that each variable in the variable sequence be conformant with `e`. 
+This points to the exclusive-or relationship among the non-fixed variables involved in a match. 
+For each row of ``e``, at most one of the matching columns in ``v1`` or ``v2`` or ``v3`` is 
+allowed to be non-fixed. The fixed columns in the match are ignored by the solver, and the row 
+is paired with the one non-fixed column. If all the columns are fixed, this effectively drops the 
+row from the model, just as would happen with a fixed column in the simple match ``e.v``. If no 
+columns exist to match a row of ``e``, this is an error. This construct is useful when a system 
+has too many degrees of freedom if all the variables in question are left endogenous: by fixing 
+some variables (i.e. making them exogenous) we arrive at a square system.
+
+More background information on MCP models can be found `here <https://www.gams.com/latest/docs/UG_ModelSolve.html#UG_ModelSolve_ModelClassificationOfModels_MCP>`_.
+An example MCP model can be found in the model library: `HANSMCP <https://github.com/GAMS-dev/gamspy/blob/master/tests/integration/models/hansmcp.py>`_.
 
 Limiting Domain for Variables
 =============================

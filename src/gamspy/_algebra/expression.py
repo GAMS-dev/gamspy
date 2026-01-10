@@ -293,16 +293,19 @@ def create_latex_expression(root_node: Expression) -> str:
 
 class Expression(operable.Operable):
     """
-    Expression of two operands and an operation.
+    Represents an expression involving two operands and an operator.
+
+    This class constructs a binary expression tree that can be evaluated or
+    translated into GAMS syntax.
 
     Parameters
     ----------
-    left: str | int | float | Parameter | Variable | None
-        Left operand
-    data: str
-        Operation
-    right: str | int | float | Parameter | Variable | None
-        Right operand
+    left : OperableType | ImplicitEquation | None
+        Left operand.
+    operator : str
+        The operator symbol (e.g., '+', '-', '*', '=', 'eq').
+    right : OperableType | str | None
+        Right operand.
 
     Examples
     --------
@@ -529,11 +532,22 @@ class Expression(operable.Operable):
 
     def latexRepr(self) -> str:
         """
-        Representation of this Expression in Latex.
+        Returns the LaTeX representation of this Expression.
 
         Returns
         -------
         str
+            The LaTeX string.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, name="a")
+        >>> b = gp.Parameter(m, name="b")
+        >>> (a + b).latexRepr()
+        'a + b'
+
         """
         return create_latex_expression(self)
 
@@ -745,6 +759,13 @@ class Expression(operable.Operable):
 
 
 class SetExpression(Expression):
+    """
+    Represents an expression involving set operations.
+
+    This class handles operations specifically for Sets and Aliases, such as
+    union, intersection, difference, and complement.
+    """
+
     def __init__(
         self,
         left: OperableType,

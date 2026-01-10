@@ -60,7 +60,8 @@ def serialize(container: Container, path: str) -> None:
         models = {}
         for model in container.models.values():
             models[model.name] = model._serialize()
-            info["models"] = models
+
+        info["models"] = models
 
         with open(json_path, "w") as file:
             json.dump(info, file)
@@ -86,6 +87,17 @@ def deserialize(path: str) -> Container:
     ------
     ValidationError
         In case the given path is not a zip file.
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=["i1"])
+    >>> m.serialize("model.zip")
+    >>> m2 = gp.deserialize("model.zip")
+    >>> print(m2["i"].toList())
+    ['i1']
+
     """
     if not zipfile.is_zipfile(path):
         raise ValidationError(f"`{path}` is not a zip file.")

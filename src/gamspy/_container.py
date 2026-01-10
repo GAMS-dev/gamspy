@@ -103,28 +103,76 @@ def get_options_file_name(solver: str, file_number: int) -> str:
 
 class Container(gt.Container):
     """
-    A container is an object that holds all symbols and operates on them.
+    Central workspace for building, modifying, executing, and exchanging data
+    with GAMS models.
+
+    https://gamspy.readthedocs.io/en/latest/reference/gamspy._container.html
+
+
+    A :class:`Container` owns all GAMSPy symbols (sets, parameters, variables,
+    equations, models) and manages synchronization with the GAMS execution
+    engine.
+
+
+    A container can:
+
+
+    * Create and store symbols
+    * Load symbols and records from GDX/G00 files
+    * Synchronize modified symbols with GAMS
+    * Generate and persist GAMS code and data files
+    * Act as a context manager.
 
     Parameters
     ----------
     load_from : str, os.PathLike, Container, gt.Container, optional
-        Path to the GDX file to be loaded from, by default None
+        Source to initialize the container from:
+
+        * ``.gdx`` file: loads symbols and records from a GDX file.
+        * ``.g00`` file: restarts from a GAMS save file.
+        * Container: Copies symbols from the given container into the new container.
     system_directory : str, os.PathLike, optional
         Path to the directory that holds the GAMS installation, by default None
     working_directory : str, os.PathLike, optional
-        Path to the working directory to store temporary files such .lst, .gms,
-        .gdx, .g00 files.
-    debugging_level : str, optional
-        Decides on keeping the temporary files generate by GAMS, by default
-        "keep_on_error"
+        Directory used for temporary files (``.gms``, ``.lst``, ``.gdx``).
+        If omitted, a temporary directory is created.
+    debugging_level : {"keep", "keep_on_error", "delete"}, optional
+        Controls whether temporary files are retained:
+
+
+        * ``"keep"``: Keep files and generated GAMS code.
+        * ``"keep_on_error"``: Keep files only on errors (default).
+        * ``"delete"``: Always clean up.
     options : Options, optional
         Global options for the overall execution
+    output : io.TextIOWrapper, optional
+        Stream to which GAMS output is written.
 
     Examples
     --------
+    Basic usage
+
+
     >>> import gamspy as gp
     >>> m = gp.Container()
-    >>> i = gp.Set(m, "i")
+    >>> i = gp.Set(m, "i", records=["i1", "i2"])
+
+
+    Loading from an existing GDX
+
+
+    >>> m.write("data.gdx")
+    >>> m2 = gp.Container(load_from="data.gdx")
+    >>> list(m2.data.keys()) == list(m.data.keys())
+    True
+
+
+    Using as a context manager
+
+
+    >>> with gp.Container() as m:
+    ...     i = gp.Set(m, "i")
+    ...     j = gp.Set(m, "j", domain=i)
 
     """
 
@@ -244,26 +292,51 @@ class Container(gt.Container):
     @property
     def working_directory(self) -> str:
         """
-        Working directory path.
+        Absolute path of the working directory used by this container.
+
+
+        The directory contains generated GAMS input/output files such as
+        ``.gms``, ``.lst``, ``.gdx`` and temporary scratch files.
+
 
         Returns
         -------
         str
+
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> m.working_directory # doctest: +ELLIPSIS
+        '...'
+
         """
         return self._working_directory
 
     @property
     def in_miro(self) -> bool:
         """
-        When running a GAMSPy job from GAMS MIRO, you may not want to
-        perform certain expensive operations, such as loading MIRO input
-        data from an Excel workbook, as this data comes from MIRO. In that
-        case, one can conditionally load the data by using the ``in_miro``
-        attribute of `Container`.
+        Indicates whether the container is executed inside a GAMS MIRO context.
+
+
+        When running under MIRO, input data is typically provided by MIRO itself.
+        This flag can be used to skip expensive or redundant data-loading steps
+        (e.g., reading Excel files).
+
 
         Returns
         -------
         bool
+
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> if not m.in_miro:
+        ...     pass # e.g. load data from files
+
         """
         return MIRO_GDX_IN is not None
 
@@ -566,27 +639,50 @@ class Container(gt.Container):
         encoding: str | None = None,
     ) -> None:
         """
-        Reads specified symbols from the GDX file. If symbol_names are
-        not provided, it reads all symbols from the GDX file.
+        Read symbols and records from a GDX file or another container.
+
 
         Parameters
         ----------
-        load_from : str, os.PathLike, Container, gt.Container
-        symbol_names : List[str], optional
-        load_records : bool
+        load_from : str | os.PathLike | Container | gt.Container
+            Source to read from.
+
+
+        symbol_names : list[str], optional
+            Names of symbols to read. If omitted, all symbols are read.
+
+
+        load_records : bool, optional
+            Whether to load symbol records (default: True).
+
+
         mode : str, optional
+            GDX read mode ("category", or "string", default: "category").
+
+
         encoding : str, optional
+            Text encoding for symbol metadata.
+
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
-        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
-        >>> m.write("test.gdx")
-        >>> new_container = gp.Container()
-        >>> new_container.read("test.gdx")
-        >>> new_container.data.keys() == m.data.keys()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> m.write("example.gdx")
+
+
+        >>> m2 = gp.Container()
+        >>> m2.read("example.gdx")
+        >>> "i" in m2.data
         True
+
+
+        Reading selected symbols only
+
+
+        >>> m2 = gp.Container()
+        >>> m2.read("example.gdx", symbol_names=["i"])
 
         """
         if isinstance(load_from, os.PathLike):
@@ -602,22 +698,37 @@ class Container(gt.Container):
         uels_on_axes: bool | list[bool] = False,
     ) -> None:
         """
-        Batched setRecords call where one can set the records of many symbols at once.
+        Set records for multiple symbols in a single batch operation.
+
+
+        This is functionally equivalent to calling ``symbol.setRecords`` for
+        each symbol, but triggers only one synchronization with GAMS.
+
 
         Parameters
         ----------
         records : dict[SymbolType, Any]
-            Dictionary of records where keys are symbols are values are their records.
-        uels_on_axes : bool, optional
-            If uels_on_axes=True setRecords will assume that all domain information is contained in the axes of the pandas object. Data will be flattened (if necessary).
+            Mapping from symbols to their new records.
+
+
+        uels_on_axes : bool | list[bool], optional
+            Whether domain labels (UELs) are stored on pandas axes. Either a single
+            boolean applied to all symbols, or a list matching ``records`` order.
+
+
+        Raises
+        ------
+        ValidationError
+            If ``uels_on_axes`` length does not match ``records`` length.
+
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, "i")
-        >>> k = gp.Set(m, "k")
-        >>> m.setRecords({i: range(10), k: range(5)})
+        >>> j = gp.Set(m, "j")
+        >>> m.setRecords({i: ["a", "b"], j: [1, 2, 3]})
 
         """
         if not isinstance(uels_on_axes, list):
@@ -643,23 +754,37 @@ class Container(gt.Container):
         eps_to_zero: bool = True,
     ) -> None:
         """
-        Writes specified symbols to the GDX file. If symbol_names are
-        not provided, it writes all symbols to the GDX file.
+        Write symbols and records to a GDX file.
+
 
         Parameters
         ----------
         write_to : str
-        symbol_names : List[str], optional
-        compress : bool
+            Target GDX file path.
+
+
+        symbol_names : list[str], optional
+            Symbols to write. If omitted, all symbols are written.
+
+
+        compress : bool, optional
+            Whether to compress the GDX file.
+
+
         mode : str, optional
-        eps_to_zero : bool
+            Write mode (passed to GAMS Transfer).
+
+
+        eps_to_zero : bool, optional
+            Convert EPS values to zero before writing.
+
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
-        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
-        >>> m.write("test.gdx")
+        >>> i = gp.Set(m, "i", records=["x", "y"])
+        >>> m.write("out.gdx")
 
         """
         super().write(
@@ -736,26 +861,42 @@ class Container(gt.Container):
         self, path: str | None = None, *, show_raw: bool = False
     ) -> str:
         """
-        Generates the GAMS code
+        Return the generated GAMS code executed by this container.
+
+
+        Only available when ``debugging_level='keep'`` was specified at
+        container creation time.
+
 
         Parameters
         ----------
         path : str, optional
-            Path to the file that will contain the executed GAMS code.
+            File path to write the generated GAMS code to.
+
+
         show_raw : bool, optional
-            Shows the raw model without data and other necessary
-            GAMS statements, by default False.
+            If True, strips data-loading and auxiliary statements, leaving
+            the core model formulation.
+
 
         Returns
         -------
         str
+            Generated GAMS code.
+
+
+        Raises
+        ------
+        ValidationError
+            If debugging level is not ``"keep"``.
+
 
         Examples
         --------
         >>> import gamspy as gp
         >>> m = gp.Container(debugging_level="keep")
-        >>> i = gp.Set(m, name="i")
-        >>> gams_code = m.generateGamsString()
+        >>> i = gp.Set(m, "i")
+        >>> gams = m.generateGamsString()
 
         """
         if self._debugging_level != "keep":
@@ -853,9 +994,19 @@ class Container(gt.Container):
 
     def close(self) -> None:
         """
-        Stops the socket and releases resources. The container should not be used afterwards
-        to communicate with the GAMS execution engine, e.g. creating new symbols, changing data,
-        solves, etc. The container data (Container.data) is still available for read operations.
+        Close the connection to the GAMS execution engine and release resources.
+
+        After calling this method, the container must not be used for further
+        model execution or data synchronization. Symbol data remains accessible
+        for read-only inspection.
+
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()  # Starts running the GAMS execution engine.
+        >>> m.close()           # Closes the connection to the execution engine.
+
         """
         close_connection(self._comm_pair_id)
 
@@ -943,22 +1094,22 @@ class Container(gt.Container):
         is_miro_output: bool = False,
     ) -> Set:
         """
-        Creates a Set and adds it to the container
+        Creates a Set and adds it to the container.
 
         Parameters
         ----------
         name : str, optional
-            Name of the set. Name is autogenerated by default.
+            Name of the set. If omitted, a unique name is generated.
         domain : Sequence[Set | Alias | str] | Set | Alias | str, optional
-            Domain of the set.
+            Domain over which the set is defined.
         is_singleton : bool, optional
-            Whether the set is a singleton set. Singleton sets cannot contain more than one element.
+            If True, the set may contain at most one element.
         records : pd.DataFrame | np.ndarray | list, optional
-            Records of the set.
+            Initial elements of the set.
         domain_forwarding : bool | list[bool], optional
-            Whether the set forwards the domain.
+            Enable domain forwarding.
         description : str, optional
-            Description of the set.
+            Human-readable description.
         uels_on_axes : bool
             Assume that symbol domain information is contained in the axes of the given records.
         is_miro_input : bool
@@ -980,9 +1131,24 @@ class Container(gt.Container):
 
         Examples
         --------
+        Simple set:
+
+
         >>> import gamspy as gp
         >>> m = gp.Container()
-        >>> i = m.addSet("i")
+        >>> i = m.addSet("i", records=["a", "b"])
+
+
+        Indexed set:
+
+
+        >>> j = m.addSet("j", domain=i)
+
+
+        Singleton set:
+
+
+        >>> s = m.addSet("s", is_singleton=True, records=["s1"])
 
         """
         if name is None:
@@ -1019,15 +1185,15 @@ class Container(gt.Container):
         Parameters
         ----------
         name : str, optional
-            Name of the parameter. Name is autogenerated by default.
+            Name of the parameter. If omitted, a unique name is generated.
         domain : Sequence[Set | Alias | str] | Set | Alias | Dim | str, optional
-            Domain of the parameter.
+            Domain over which the parameter is defined.
         records : int | float | pd.DataFrame | np.ndarray | list, optional
             Records of the parameter.
         domain_forwarding : bool | list[bool], optional
             Whether the parameter forwards the domain.
         description : str, optional
-            Description of the parameter.
+            Human-readable description.
         uels_on_axes : bool
             Assume that symbol domain information is contained in the axes of the given records.
         is_miro_input : bool
@@ -1089,7 +1255,7 @@ class Container(gt.Container):
         Parameters
         ----------
         name : str, optional
-            Name of the variable. Name is autogenerated by default.
+            Name of the variable. If omitted, a unique name is generated.
         type : str, optional
             Type of the variable. "free" by default.
         domain : Sequence[Set | Alias | str] | Set | Alias | Dim | str, optional
@@ -1156,7 +1322,7 @@ class Container(gt.Container):
         Parameters
         ----------
         name : str, optional
-            Name of the equation. Name is autogenerated by default.
+            Name of the equation. If omitted, a unique name is generated.
         type : str
             Type of the equation. "regular" by default.
         domain : Sequence[Set | Alias] | Set | Alias, optional
@@ -1234,7 +1400,7 @@ class Container(gt.Container):
         Parameters
         ----------
         name : str, optional
-            Name of the model. Name is autogenerated by default.
+            Name of the model. If omitted, a unique name is generated.
         description : str, optional
             Description of the model.
         equations : Sequence[Equation]
@@ -1261,8 +1427,9 @@ class Container(gt.Container):
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
-        >>> e = gp.Equation(m, "e")
-        >>> model = m.addModel("my_model", "LP", [e])
+        >>> x = gp.Variable(m, "x")
+        >>> e = gp.Equation(m, "e", definition=x >= 1)
+        >>> model = m.addModel(name="demo", equations=[e], problem="LP", sense="MIN", objective=x)
 
         """
         if name is None:
@@ -1337,6 +1504,14 @@ class Container(gt.Container):
         ----------
         path : str
             Path to the zip file.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=range(3))
+        >>> gp.serialize(m, "serialization_path.zip")
+
         """
         gp.serialize(self, path)
 
@@ -1386,6 +1561,15 @@ class Container(gt.Container):
         ------
         FileNotFoundError
             In case the extrinsic library does not exist in the given path.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> # Assuming 'trilib.so' is a valid library path
+        >>> # lib = m.importExtrinsicLibrary("trilib.so", {"my_cos": "Cosine", "my_sin": "Sine"})
+        >>> # c = lib.my_cos(0)
+
         """
         if not os.path.exists(lib_path):
             raise FileNotFoundError(f"`{lib_path}` is not a valid path.")

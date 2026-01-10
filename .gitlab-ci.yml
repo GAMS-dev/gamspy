@@ -55,7 +55,10 @@ autoupgrade:
     - git config --global user.name "GitLab Bot"
     - git config --global user.email "gitlab-bot@${CI_SERVER_HOST}"
     - git remote set-url origin "https://gitlab-ci-token:${PRECOMMIT_UPGRADE_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
-    - git checkout $CI_COMMIT_REF_NAME && git pull origin $CI_COMMIT_REF_NAME
+    # Fetch the latest state of the branch from remote
+    - git fetch origin $CI_COMMIT_REF_NAME
+    # Force the local checkout to exactly match the remote branch
+    - git checkout -B $CI_COMMIT_REF_NAME origin/$CI_COMMIT_REF_NAME
     - pip install --upgrade pip && pip install pre-commit uv
     - pre-commit autoupdate
     - uv lock --upgrade

@@ -6,6 +6,7 @@ Container
    :keywords: Reference, Container, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
 
 .. autoclass:: gamspy.Container
-   :members: read, write, setRecords, writeSolverOptions, generateGamsString, loadRecordsFromGdx, addAlias, addUniverseAlias, addEquation, addModel, addParameter, addSet, addUniverseAlias, addVariable, addGamsCode, close, getSymbols, getSets, getAliases, getParameters, getVariables, getEquations, copy, describeSets, describeAliases, describeParameters, describeVariables, describeEquations, importExtrinsicLibrary, gamsJobName, gdxInputPath, gdxOutputPath, hasSymbols, in_miro, isValid, summary, system_directory, working_directory
+   :members:
+   :exclude-members: capitalizeUELs, casefoldUELs, countDomainViolations, countDuplicateRecords, describeAliases, describeEquations, describeParameters, describeSets, describeVariables, dropDomainViolations, dropDuplicateRecords, getAliases, getDomainViolations, getParameters, getSets, getSymbols, getUELs, getVariables, hasDomainViolations, hasDuplicateRecords, hasSymbols, isValid, listAliases, listEquations, listParameters, listSets, listSymbols, listVariables, ljustUELs, lowerUELs, lstripUELs, removeSymbols, removeUELs, renameSymbol, renameUELs, reorderSymbols, rjustUELs, rstripUELs, stripUELs, titleUELs, upperUELs
    :undoc-members:
    :show-inheritance:

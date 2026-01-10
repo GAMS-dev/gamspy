@@ -104,7 +104,6 @@ html_theme_options = {
     "show_toc_level": 2,
     "pygments_light_style": "tango",
     "pygments_dark_style": "lightbulb",
-    "announcement": "GAMSPy wheels before version 1.16.0 has been republished with a post release tag due to a licensing issue. We recommend users to always use the latest version of GAMSPy (`pip install gamspy --upgrade`) but If one wants to keep using a version older than 1.16.0, it can be installed with, for example, `pip install gamspy==1.15.0.post1`.",
 }
 
 autodoc_member_order = "groupwise"
