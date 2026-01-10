@@ -1,1 +1,0 @@
-Remove DE, GAMSCHK, LOGMIP, and ODHCPLEX from the list of licensed solvers when running gamspy show license.
