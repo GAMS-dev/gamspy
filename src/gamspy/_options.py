@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -303,6 +302,16 @@ class Options(BaseModel):
         The results of certain operations will be set to zero if abs(result) LE ZeroRes
     report_underflow: bool | None
         Report underflow as a warning when abs(results) LE ZeroRes and result set to zero
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> options = gp.Options(
+    ...     listing_file="output.lst",
+    ...     time_limit=100,
+    ...     iteration_limit=1000
+    ... )
+
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -520,6 +529,20 @@ class Options(BaseModel):
         ------
         ValidationError
             In case the given path is not a file.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import os
+        >>> # Create a dummy option file
+        >>> with open("options.txt", "w") as file:
+        ...     _ = file.write("lp = conopt")
+        >>> options = gp.Options.fromFile("options.txt")
+        >>> options.lp
+        'conopt'
+        >>> # Clean up
+        >>> os.remove("options.txt")
+
         """
         if not os.path.isfile(path):
             raise ValidationError(f"No such file in the given path: {path}")
@@ -544,6 +567,25 @@ class Options(BaseModel):
         Parameters
         ----------
         pf_file : str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import os
+        >>> options = gp.Options(solve_link_type="disk")
+        >>> options.export("options.pf")
+        >>> with open("options.pf") as file:
+        ...     print(file.read())
+        optfile = "0"
+        limcol = "0"
+        limrow = "0"
+        solprint = "0"
+        solvelink = "2"
+        previouswork = "1"
+        traceopt = "3"
+        logoption = "0"
+        >>> os.remove("options.pf")
+
         """
         self._export(pf_file)
 
@@ -584,23 +626,46 @@ class Options(BaseModel):
 
 
 class FreezeOptions(BaseModel):
+    """
+    Options for the freeze method of a Model.
+
+    Attributes
+    ----------
+    no_match_limit : int, optional
+        Maximum number of non-matching elements to allow. Default is 0.
+    debug : bool, optional
+        Enables debug mode. Default is False.
+    update_type : Literal["0", "base_case", "accumulate", "inherit"], optional
+        Specifies the update type for the model instance.
+
+        - "base_case": Update from the base case.
+
+        - "accumulate": Accumulate changes.
+
+        - "inherit": Inherit from the parent.
+
+        Default is "base_case".
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=["i1", "i2"])
+    >>> p = gp.Parameter(m, "p", domain=i, records=[("i1", 1), ("i2", 2)])
+    >>> v = gp.Variable(m, "v", domain=i)
+    >>> e = gp.Equation(m, "e", domain=i)
+    >>> e[i] = v[i] == p[i]
+    >>> model = gp.Model(m, "test", equations=[e], problem="LP", sense="min", objective=gp.Sum(i, v[i]))
+    >>> options = gp.FreezeOptions(update_type="accumulate")
+    >>> instance = model.freeze(modifiables=[p])
+    >>> p["i1"] = 3
+    >>> summary = model.solve(freeze_options=options)
+
+    """
+
     no_match_limit: int = 0
     debug: bool = False
     update_type: Literal["0", "base_case", "accumulate", "inherit"] = "base_case"
-
-
-class ModelInstanceOptions(BaseModel):
-    no_match_limit: int = 0
-    debug: bool = False
-    update_type: Literal["0", "base_case", "accumulate", "inherit"] = "base_case"
-
-    def __init__(self, **kwargs):
-        warnings.warn(
-            "ModelInstanceOptions will be renamed to FreezeOptions in GAMSPy 1.9.0. Please use FreezeOptions instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        super().__init__(**kwargs)
 
 
 class ConvertOptions(BaseModel):
@@ -677,6 +742,19 @@ class ConvertOptions(BaseModel):
         Skip constraints of type `NONBINDING`.
     Width : Optional[int]
         Sets the width for certain output formats, such as tables or reports.
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=["i1", "i2"])
+    >>> x = gp.Variable(m, "x", domain=i)
+    >>> eq = gp.Equation(m, "eq", domain=i)
+    >>> eq[i] = x[i] >= 1
+    >>> model = gp.Model(m, "test_model", equations=[eq], problem="LP", sense="min", objective=gp.Sum(i, x[i]))
+    >>> options = gp.ConvertOptions(GDXNames=False)
+    >>> # model.convert("jacobian", file_format=gp.FileFormat.GDXJacobian, options=options)
+
     """
 
     model_config = ConfigDict(extra="forbid")

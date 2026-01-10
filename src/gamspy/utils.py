@@ -13,6 +13,7 @@ from gams.core import gdx
 import gamspy._model as model
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
+from gamspy import SpecialValues
 from gamspy._config import get_option
 from gamspy.exceptions import FatalError, ValidationError
 
@@ -110,6 +111,14 @@ def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
     Returns
     -------
     dict[str, list[str]]
+
+    Examples
+    --------
+    >>> import gamspy.utils as utils
+    >>> import gamspy_base
+    >>> caps = utils.getSolverCapabilities(gamspy_base.directory)
+    >>> # caps["CPLEX"] would return list like ['LP', 'MIP', ...]
+
     """
     global _capabilities
     try:
@@ -547,6 +556,16 @@ def _open_gdx_file(system_directory: str, load_from: str):
         assert rc[0]
     except AssertionError as e:
         raise FatalError("GAMSPy could not open the gdx file to read from.") from e
+
+    specVals = gdx.doubleArray(gdx.GMS_SVIDX_MAX)
+    specVals[gdx.GMS_SVIDX_UNDEF] = SpecialValues.UNDEF
+    specVals[gdx.GMS_SVIDX_NA] = SpecialValues.NA
+    specVals[gdx.GMS_SVIDX_EPS] = SpecialValues.EPS
+    specVals[gdx.GMS_SVIDX_PINF] = SpecialValues.POSINF
+    specVals[gdx.GMS_SVIDX_MINF] = SpecialValues.NEGINF
+
+    rc = gdx.gdxSetSpecialValues(gdx_handle, specVals)
+    assert rc
 
     return gdx_handle
 

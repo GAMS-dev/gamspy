@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import importlib
+import json
 import os
 import shutil
 import subprocess
 import sys
+from importlib.metadata import distribution
 from typing import TYPE_CHECKING, Annotated
 
 import certifi
@@ -193,8 +195,20 @@ def license(
         shutil.copy(license, license_path)
 
 
+def is_editable(package_name: str) -> bool:
+    dist = distribution(package_name)
+    text = dist.read_text("direct_url.json")
+    if not text:
+        return False
+    data = json.loads(text)
+    return data.get("dir_info", {}).get("editable", False)
+
+
 def append_dist_info(files, gamspy_base_dir: str):
     """Updates dist-info/RECORD in site-packages for pip uninstall"""
+    if is_editable("gamspy"):
+        return
+
     import gamspy as gp
 
     gamspy_path: str = gp.__path__[0]
@@ -277,29 +291,20 @@ def solver(
             if not skip_pip_install:
                 solver_version = gamspy_base.__version__
                 # install specified solver
-                if use_uv:
-                    command = [
-                        "uv",
+                command = ["uv"] if use_uv else [sys.executable, "-m"]
+                command.extend(
+                    [
                         "pip",
                         "install",
                         f"gamspy-{solver_name}=={solver_version}",
                         "--force-reinstall",
                     ]
-                else:
-                    command = [
-                        sys.executable,
-                        "-m",
-                        "pip",
-                        "install",
-                        f"gamspy-{solver_name}=={solver_version}",
-                        "--force-reinstall",
-                    ]
+                )
                 try:
                     _ = subprocess.run(
                         command,
                         check=True,
                         encoding="utf-8",
-                        stderr=subprocess.PIPE,
                         env=environment_variables,
                     )
                 except subprocess.CalledProcessError as e:

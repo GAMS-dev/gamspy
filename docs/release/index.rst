@@ -7,12 +7,14 @@ Release Notes
 .. toctree::
    :maxdepth: 1
 
+   release_1.18.4
+   release_1.18.3
+   release_1.18.2
    release_1.18.1
    release_1.18.0
    release_1.17.2
    release_1.17.1
    release_1.17.0
-   release_1.18.1
    release_1.16.0
    release_1.15.1
    release_1.15.0
@@ -38,5 +40,4 @@ Release Notes
    release_1.0.3
    release_1.0.2
    release_1.0.1
-   release_1.0.0
    release_1.0.0

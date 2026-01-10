@@ -144,7 +144,7 @@ up to that point as a string. In order to use this function, ``debugging_level``
     ... # Definition of your model
     print(m.generateGamsString())
 
-One can also redirect the executed GAMS code into a file by providing ``path`` argument: ::
+One can also redirect the executed GAMS code into a file by providing ``path`` argument:
 
 .. code-block:: python
 

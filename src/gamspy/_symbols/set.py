@@ -35,11 +35,14 @@ class SetMixin:
     @property
     def pos(self: Set | Alias) -> ImplicitParameter:
         """
-        Element position in the current set, starting with 1.
+        Returns the element position in the current set, starting with 1.
+
+        This attribute corresponds to the `.pos` attribute in GAMS.
 
         Returns
         -------
         ImplicitParameter
+            The position of the element.
 
         Examples
         --------
@@ -60,6 +63,7 @@ class SetMixin:
         Returns
         -------
         ImplicitParameter
+            The ordinal position of the element.
 
         Examples
         --------
@@ -75,11 +79,15 @@ class SetMixin:
     @property
     def off(self: Set | Alias) -> ImplicitParameter:
         """
-        Element position in the current set minus 1. So .off = .pos - 1
+        Returns the element position in the current set minus 1.
+
+        Mathematically: `.off` = `.pos` - 1.
+        This attribute corresponds to the `.off` attribute in GAMS.
 
         Returns
         -------
         ImplicitParameter
+            The offset position of the element.
 
         Examples
         --------
@@ -95,12 +103,15 @@ class SetMixin:
     @property
     def rev(self: Set | Alias) -> ImplicitParameter:
         """
-        Reverse element position in the current set, so the value for
-        the last element is 0, the value for the penultimate is 1, etc.
+        Returns the reverse element position in the current set.
+
+        The value for the last element is 0, the penultimate is 1, and so on.
+        This attribute corresponds to the `.rev` attribute in GAMS.
 
         Returns
         -------
         ImplicitParameter
+            The reverse position value.
 
         Examples
         --------
@@ -116,11 +127,14 @@ class SetMixin:
     @property
     def uel(self: Set | Alias) -> ImplicitParameter:
         """
-        Element position in the unique element list.
+        Returns the element position in the global Unique Element List (UEL).
+
+        This attribute corresponds to the `.uel` attribute in GAMS.
 
         Returns
         -------
         ImplicitParameter
+            The position index in the UEL table.
 
         Examples
         --------
@@ -136,11 +150,14 @@ class SetMixin:
     @property
     def len(self: Set | Alias) -> ImplicitParameter:
         """
-        Length of the set element name (a count of the number of characters).
+        Returns the length of the set element name (count of characters).
+
+        This attribute corresponds to the `.len` attribute in GAMS.
 
         Returns
         -------
         ImplicitParameter
+            The character count of the element name.
 
         Examples
         --------
@@ -156,11 +173,14 @@ class SetMixin:
     @property
     def tlen(self: Set | Alias) -> ImplicitParameter:
         """
-        Length of the set element text (a count of the number of characters).
+        Returns the length of the set element explanatory text (count of characters).
+
+        This attribute corresponds to the `.tlen` attribute in GAMS.
 
         Returns
         -------
         ImplicitParameter
+            The character count of the element text.
 
         Examples
         --------
@@ -176,14 +196,15 @@ class SetMixin:
     @property
     def val(self: Set | Alias) -> ImplicitParameter:
         """
-        If a set element is a number, this attribute gives the value of the number.
-        For extended range arithmetic symbols, the symbols are reproduced.
-        If a set element is a string that is not a number, then this attribute is
-        not defined and trying to use it results in an error.
+        Returns the numerical value if the set element name is a number.
+
+        If the element is not a number, this attribute is undefined and may result in an error or ignored record.
+        This attribute corresponds to the `.val` attribute in GAMS.
 
         Returns
         -------
         ImplicitParameter
+            The numerical value of the element name.
 
         Examples
         --------
@@ -199,14 +220,15 @@ class SetMixin:
     @property
     def tval(self: Set | Alias) -> ImplicitParameter:
         """
-        If a set element text is a number, this attribute gives the value of the number.
-        For extended range arithmetic symbols, the symbols are reproduced.
-        If a set element text is a string that is not a number, then this attribute is
-        not defined and trying to use it results in an error.
+        Returns the numerical value if the set element text is a number.
+
+        If the element text is not a number, this attribute is undefined.
+        This attribute corresponds to the `.tval` attribute in GAMS.
 
         Returns
         -------
         ImplicitParameter
+            The numerical value of the element text.
 
         Examples
         --------
@@ -222,11 +244,14 @@ class SetMixin:
     @property
     def first(self: Set | Alias) -> ImplicitParameter:
         """
-        Returns 1 for the first set element, otherwise 0.
+        Returns 1 if the element is the first in the set, otherwise 0.
+
+        This attribute corresponds to the `.first` attribute in GAMS.
 
         Returns
         -------
         ImplicitParameter
+            An implicit parameter with value 1 for the first element.
 
         Examples
         --------
@@ -242,11 +267,14 @@ class SetMixin:
     @property
     def last(self: Set | Alias) -> ImplicitParameter:
         """
-        Returns 1 for the last set element, otherwise 0.
+        Returns 1 if the element is the last in the set, otherwise 0.
+
+        This attribute corresponds to the `.last` attribute in GAMS.
 
         Returns
         -------
         ImplicitParameter
+            An implicit parameter with value 1 for the last element.
 
         Examples
         --------
@@ -265,39 +293,38 @@ class SetMixin:
         type: Literal["linear", "circular"] = "linear",
     ) -> ImplicitSet:
         """
-        Lag operation shifts the values of a Set or Alias by one to the left
+        Shifts the values of a Set or Alias by `n` positions to the left (lag).
 
         Parameters
         ----------
         n : OperableType
+            The number of positions to shift. Can be an integer or a GAMS symbol.
         type : 'linear' or 'circular', optional
+            The type of lag to perform:
+            - 'linear' (default): Elements shifted out of bounds are dropped.
+            - 'circular': Elements shifted out of bounds wrap around to the end.
 
         Returns
         -------
         ImplicitSet
+            The shifted set expression.
 
         Raises
         ------
         ValueError
-            When type is not circular or linear
+            If `type` is not 'linear' or 'circular'.
 
         Examples
         --------
         >>> import gamspy as gp
-        >>>
         >>> m = gp.Container()
         >>> t = gp.Set(m, name="t", description="time sequence", records=[f"y-{x}" for x in range(1987, 1992)])
         >>> a = gp.Parameter(m, name="a", domain=[t])
         >>> b = gp.Parameter(m, name="b", domain=[t])
-        >>> c = gp.Parameter(m, name="c", domain=[t])
         >>> a[t] = 1986 + gp.Ord(t)
-        >>> b[t] = -1
         >>> b[t] = a[t.lag(1, "linear")]
         >>> b.records.values.tolist()
         [['y-1988', 1987.0], ['y-1989', 1988.0], ['y-1990', 1989.0], ['y-1991', 1990.0]]
-        >>> c[t] = a[t.lag(1, "circular")]
-        >>> c.records.values.tolist()
-        [['y-1987', 1991.0], ['y-1988', 1987.0], ['y-1989', 1988.0], ['y-1990', 1989.0], ['y-1991', 1990.0]]
 
         """
         assert isinstance(self, (gp.Set, gp.Alias))
@@ -317,39 +344,38 @@ class SetMixin:
         type: Literal["linear", "circular"] = "linear",
     ) -> ImplicitSet:
         """
-        Lead shifts the values of a Set or Alias by one to the right
+        Shifts the values of a Set or Alias by `n` positions to the right (lead).
 
         Parameters
         ----------
         n : OperableType
+            The number of positions to shift. Can be an integer or a GAMS symbol.
         type : 'linear' or 'circular', optional
+            The type of lead to perform:
+            - 'linear' (default): Elements shifted out of bounds are dropped.
+            - 'circular': Elements shifted out of bounds wrap around to the beginning.
 
         Returns
         -------
         ImplicitSet
+            The shifted set expression.
 
         Raises
         ------
         ValueError
-            When type is not circular or linear
+            If `type` is not 'linear' or 'circular'.
 
         Examples
         --------
         >>> import gamspy as gp
-        >>>
         >>> m = gp.Container()
         >>> t = gp.Set(m, name="t", description="time sequence", records=[f"y-{x}" for x in range(1987, 1992)])
         >>> a = gp.Parameter(m, name="a", domain=[t])
         >>> c = gp.Parameter(m, name="c", domain=[t])
-        >>> d = gp.Parameter(m, name="d", domain=[t])
         >>> a[t] = 1986 + gp.Ord(t)
-        >>> c[t] = -1
         >>> c[t.lead(2, "linear")] = a[t]
         >>> c.records.values.tolist()
-        [['y-1987', -1.0], ['y-1988', -1.0], ['y-1989', 1987.0], ['y-1990', 1988.0], ['y-1991', 1989.0]]
-        >>> d[t.lead(2, "circular")] = a[t]
-        >>> d.records.values.tolist()
-        [['y-1987', 1990.0], ['y-1988', 1991.0], ['y-1989', 1987.0], ['y-1990', 1988.0], ['y-1991', 1989.0]]
+        [['y-1989', 1987.0], ['y-1990', 1988.0], ['y-1991', 1989.0]]
 
         """
         assert isinstance(self, (gp.Set, gp.Alias))
@@ -365,25 +391,28 @@ class SetMixin:
 
     def sameAs(self, other: Set | Alias | str) -> MathOp:
         """
-        Evaluates to true if this set is identical to the given set or alias, false otherwise.
+        Evaluates to True if the current set element is identical to the given symbol or string.
+
+        This corresponds to the `sameAs` operator in GAMS.
 
         Parameters
         ----------
-        other : Set | Alias
+        other : Set | Alias | str
+            The other set, alias, or string label to compare against.
 
         Returns
         -------
         MathOp
+            A boolean expression that evaluates to True (1) if they match, False (0) otherwise.
 
         Examples
         --------
         >>> import gamspy as gp
-
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
         >>> j = gp.Set(m, name="j", records=["new-york", "seattle"])
-        >>> attr = gp.Parameter(m, "attr", domain = [i, j])
-        >>> attr[i,j]  =  i.sameAs(j)
+        >>> attr = gp.Parameter(m, "attr", domain=[i, j])
+        >>> attr[i,j] = i.sameAs(j)
         >>> attr.records.values.tolist()
         [['seattle', 'seattle', 1.0]]
 
@@ -396,36 +425,56 @@ class SetMixin:
 class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     """
     Represents a Set symbol in GAMS.
-    https://gamspy.readthedocs.io/en/latest/user/basics/set.html
+
+    See https://gamspy.readthedocs.io/en/latest/user/basics/set.html for more details.
 
     Parameters
     ----------
     container : Container
-        Container of the set.
+        The Container object that this set belongs to.
     name : str, optional
-        Name of the set. Name is autogenerated by default.
+        Name of the set. If not provided, a unique name is generated automatically.
     domain : Sequence[Set | Alias | str] | Set | Alias | str, optional
-        Domain of the set.
+        The domain of the set. Can be a list of other Sets/Aliases, a single Set/Alias,
+        or strings representing set names. Use "*" for the universe set. Default is ["*"].
     is_singleton : bool, optional
-        Whether the set is a singleton set. Singleton sets cannot contain more than one element.
+        If True, restricts the set to contain at most one element. Default is False.
     records : pd.DataFrame | np.ndarray | list, optional
-        Records of the set.
+        Initial elements to populate the set.
     domain_forwarding : bool | list[bool], optional
-        Whether the set forwards the domain.
+        If True, adding records to this set will implicitly add new elements to the
+        domain sets (if they are dynamic). Default is False.
     description : str, optional
-        Description of the set.
-    uels_on_axes : bool
-        Assume that symbol domain information is contained in the axes of the given records.
-    is_miro_input : bool
-        Whether the symbol is a GAMS MIRO input symbol. See: https://gams.com/miro/tutorial.html
-    is_miro_output : bool
-        Whether the symbol is a GAMS MIRO output symbol. See: https://gams.com/miro/tutorial.html
+        A human-readable description of the set.
+    uels_on_axes : bool, optional
+        If True, implies that the Unique Element Labels (UELs) for the domain are
+        contained in the axes (index/columns) of the provided `records` object
+        (e.g., pandas DataFrame). Default is False.
+    is_miro_input : bool, optional
+        If True, flags this set as an input symbol for GAMS MIRO. Default is False.
+    is_miro_output : bool, optional
+        If True, flags this set as an output symbol for GAMS MIRO. Default is False.
 
     Examples
     --------
+    Simple set:
+
+
     >>> import gamspy as gp
     >>> m = gp.Container()
-    >>> i = gp.Set(m, "i", records=['i1','i2'])
+    >>> i = m.addSet("i", records=["a", "b"])
+
+
+    Indexed set:
+
+
+    >>> j = m.addSet("j", domain=i)
+
+
+    Singleton set:
+
+
+    >>> s = m.addSet("s", is_singleton=True, records=["s1"])
 
     """
 
@@ -821,20 +870,28 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         """
-        Main convenience method to set standard pandas.DataFrame formatted
-        records. If uels_on_axes=True setRecords will assume that all domain
-        information is contained in the axes of the pandas object. Data will be
-        flattened (if necessary).
+        Sets the records (elements) of the Set.
+
+        This is a convenience method to load data into the set. It handles various
+        input formats like lists and pandas DataFrames.
 
         Parameters
         ----------
         records : Any
+            The data to load. Common formats:
+
+
+            - List of strings: `['i1', 'i2']`
+            - List of tuples (for multi-dimensional sets): `[('a', '1'), ('b', '2')]`
+            - pandas DataFrame.
         uels_on_axes : bool, optional
+            If True, assumes that the domain information is located in the axes
+            (index/columns) of the `records` object rather than the data values.
+            Use this when passing a DataFrame where the indices represent the set elements.
 
         Examples
         --------
         >>> import gamspy as gp
-        >>> import numpy as np
         >>> m = gp.Container()
         >>> i = gp.Set(m, name="i")
         >>> i.setRecords(["seattle", "san-diego"])
@@ -906,6 +963,11 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         Returns
         -------
         str
+
+        Raises
+        ------
+        ValueError
+            When type is not circular or linear
 
         Examples
         --------

@@ -395,7 +395,7 @@ Implements the ReLU activation function using complementarity conditions.
 Implements the ReLU activation function using `SOS1 <https://www.gams.com/47/docs/UG_LanguageFeatures.html?search=sos#UG_LanguageFeatures_SpecialOrderSetsOfType1-SOS1>`_ variables.
 
 :meth:`relu_with_equilibrium <gamspy.math.relu_with_equilibrium>`
------------------------------------------------------------
+-----------------------------------------------------------------
 |mpec-badge| or |mcp-badge|
 
 Implements the ReLU activation function using equilibrium constraints.
@@ -415,7 +415,7 @@ Implements the softmax activation function. This function strictly
 requires a GAMSPy Variable, y = softmax(x).
 
 :meth:`softplus <gamspy.math.softplus>`
--------------------------------------
+---------------------------------------
 |nlp-badge|
 
 Implements the softplus activation function. This function strictly

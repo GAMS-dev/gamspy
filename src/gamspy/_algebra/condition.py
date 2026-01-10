@@ -34,6 +34,18 @@ class Condition(operable.Operable):
     ----------
     symbol: ImplicitSymbol | Expression
         Reference to the symbol to be conditioned.
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=["i1", "i2", "i3"])
+    >>> a = gp.Parameter(m, "a", domain=i, records=[("i1", 10), ("i2", 20), ("i3", 30)])
+    >>> # Conditional assignment: Set values to 1 where they exceed 15
+    >>> a[i].where[a[i] > 15] = 1
+    >>> a.records.values.tolist()
+    [['i1', 10.0], ['i2', 1.0], ['i3', 1.0]]
+
     """
 
     def __init__(
@@ -124,6 +136,24 @@ class Condition(operable.Operable):
 
     @property
     def records(self) -> pd.DataFrame | None:
+        """
+        The records of the condition.
+
+        Returns
+        -------
+        pd.DataFrame | None
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2", "i3"])
+        >>> a = gp.Parameter(m, "a", domain=i, records=[("i1", 10), ("i2", 20), ("i3", 5)])
+        >>> condition = a[i].where[a[i] > 9]
+        >>> condition.records.values.tolist()
+        [['i1', 10.0], ['i2', 20.0]]
+
+        """
         assert self.container is not None
         assert self.domain is not None
         if isinstance(
@@ -160,6 +190,24 @@ class Condition(operable.Operable):
         return temp_sym.records
 
     def gamsRepr(self) -> str:
+        """
+        Representation of this condition in GAMS.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> a = gp.Parameter(m, "a", domain=i)
+        >>> condition = a[i].where[a[i] > 5]
+        >>> condition.gamsRepr()
+        'a(i) $ (a(i) > 5)'
+
+        """
         condition_str = (
             self.condition.gamsRepr()  # type: ignore
             if hasattr(self.condition, "gamsRepr")
@@ -185,6 +233,17 @@ class Condition(operable.Operable):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> a = gp.Parameter(m, "a", domain=i)
+        >>> condition = a[i].where[a[i] > 2]
+        >>> condition.latexRepr()
+        'a_{i} ~ | ~ a_{i} > 2'
+
         """
         condition_str = (
             self.condition.latexRepr()  # type: ignore

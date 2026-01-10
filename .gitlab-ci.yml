@@ -3,6 +3,7 @@ default:
     - linux
 
 stages:
+  - setup
   - update
   - precommit
   - cli
@@ -46,34 +47,38 @@ variables:
     value: $PYPI_PASSWORD
     description: "Password for PyPI"
 
-# This job updates pre-commit hooks on a schedule
-pre-commit-autoupdate:
+# This job updates pre-commit hooks and uv lock on a schedule
+autoupgrade:
   stage: update
   image: python:3.13
   script:
     - git config --global user.name "GitLab Bot"
     - git config --global user.email "gitlab-bot@${CI_SERVER_HOST}"
     - git remote set-url origin "https://gitlab-ci-token:${PRECOMMIT_UPGRADE_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
-    - git checkout $CI_COMMIT_REF_NAME
-    - pip install pre-commit
+    # Fetch the latest state of the branch from remote
+    - git fetch origin $CI_COMMIT_REF_NAME
+    # Force the local checkout to exactly match the remote branch
+    - git checkout -B $CI_COMMIT_REF_NAME origin/$CI_COMMIT_REF_NAME
+    - pip install --upgrade pip && pip install pre-commit uv
     - pre-commit autoupdate
+    - uv lock --upgrade
 
-    # Check if the autoupdate actually changed the file
     - |
-      if git diff --quiet .pre-commit-config.yaml; then
-        echo "No pre-commit updates found. Exiting."
+      if git diff --quiet; then
+        echo "No updates found. Exiting."
         exit 0
       fi
 
-    - git add .pre-commit-config.yaml
+    - git add .pre-commit-config.yaml uv.lock
     # Add [skip ci] to the commit message to prevent this push from triggering another pipeline
-    - git commit -m "[CHORE] Automatically update pre-commit hooks [skip ci]"
-    - git pull --rebase origin $CI_COMMIT_REF_NAME && git push origin $CI_COMMIT_REF_NAME
+    - git commit -m "[CHORE] Update pre-commit hooks and uv lock [skip ci]"
+    - git push origin $CI_COMMIT_REF_NAME
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
 
 
-include: ['ci/.precommit-check.yml',
+include: ['ci/.toolchain.yml',
+          'ci/.precommit-check.yml',
           'ci/.cli.yml',
           'ci/.test-leg.yml',
           'ci/.test-lag.yml',
