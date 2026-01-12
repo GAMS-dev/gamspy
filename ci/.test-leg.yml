@@ -10,7 +10,7 @@
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION && source .venv/bin/activate
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
     - gamspy install license $LOCAL_LICENSE
     - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
@@ -24,7 +24,8 @@ leg-test-3.14:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python 3.14 && source .venv/bin/activate
-    - uv pip install .[dev,test,torch] --force-reinstall
+    - uv sync --group test
+    - uv pip install .[torch] --force-reinstall
     - gamspy install license $LOCAL_LICENSE
     - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
@@ -86,7 +87,7 @@ leg-test-3.10:
     - apt-get update && apt-get install -y ca-certificates
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION && source .venv/bin/activate
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
     - python -m pytest -x -v -s -m 'engine' tests
 
 leg-engine-3.14:
@@ -113,7 +114,7 @@ leg-engine-3.10:
     - apt-get update && apt-get install -y ca-certificates
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION && source .venv/bin/activate
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
     - python -m pytest -x -v -s -m 'neos' tests
 
 leg-neos-3.14:

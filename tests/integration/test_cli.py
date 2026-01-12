@@ -61,7 +61,6 @@ def test_install_license(teardown):
             ],
             check=True,
             capture_output=True,
-            encoding="utf-8",
         )
 
     # Try to install a GAMS license (+ license)
@@ -80,7 +79,6 @@ def test_install_license(teardown):
             ],
             check=True,
             capture_output=True,
-            encoding="utf-8",
         )
 
     # Try to install a GAMS license (/ license)
@@ -99,7 +97,6 @@ def test_install_license(teardown):
             ],
             check=True,
             capture_output=True,
-            encoding="utf-8",
         )
 
     # Test network license
@@ -147,7 +144,6 @@ def test_install_license(teardown):
             tmp_license_path,
         ],
         capture_output=True,
-        encoding="utf-8",
         text=True,
     )
 
@@ -168,7 +164,6 @@ def test_install_license(teardown):
             tmp_license_path,
         ],
         capture_output=True,
-        encoding="utf-8",
         text=True,
     )
 
@@ -187,7 +182,6 @@ def test_install_license(teardown):
             "100",
         ],
         capture_output=True,
-        encoding="utf-8",
         text=True,
     )
 
@@ -221,7 +215,6 @@ def test_install_license(teardown):
         ],
         text=True,
         capture_output=True,
-        encoding="utf-8",
     )
 
     assert process.returncode == 0, process.stderr

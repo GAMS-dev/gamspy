@@ -144,7 +144,6 @@ def license(
             command,
             text=True,
             capture_output=True,
-            encoding="utf-8",
             env=environment_variables,
         )
         if process.returncode:
@@ -304,7 +303,6 @@ def solver(
                     _ = subprocess.run(
                         command,
                         check=True,
-                        encoding="utf-8",
                         env=environment_variables,
                     )
                 except subprocess.CalledProcessError as e:

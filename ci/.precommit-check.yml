@@ -8,8 +8,8 @@ dac-precommit:
     PYTHON_VERSION: "3.13"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .precommit_venv --python $PYTHON_VERSION
-    - source .precommit_venv/bin/activate
+    - uv venv .venv --python $PYTHON_VERSION
+    - source .venv/bin/activate
     - uv export --no-emit-project --format requirements-txt > requirements.txt
     - uvx pip-audit -v -r requirements.txt --disable-pip
     - rm requirements.txt
