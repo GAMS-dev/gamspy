@@ -9,7 +9,7 @@
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - uv venv .venv --python $env:PYTHON_VERSION
     - .venv\Scripts\Activate.ps1
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
     - gamspy install license $env:LOCAL_LICENSE
     - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
@@ -23,7 +23,7 @@ wei-test-3.14:
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - uv venv .venv --python 3.14
     - .venv\Scripts\Activate.ps1
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
     - gamspy install license $env:LOCAL_LICENSE
     - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
@@ -81,7 +81,7 @@ wei-test-3.10:
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - uv venv .venv --python $env:PYTHON_VERSION
     - .venv\Scripts\Activate.ps1
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
     - python -m pytest -x -v -s -m 'engine' tests
 
 wei-engine-3.14:
@@ -107,7 +107,7 @@ wei-engine-3.10:
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - uv venv .venv --python $env:PYTHON_VERSION
     - .venv\Scripts\Activate.ps1
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
     - python -m pytest -x -v -s -m 'neos' tests
 
 wei-neos-3.14:

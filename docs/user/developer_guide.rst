@@ -51,7 +51,7 @@ Here are a few helper tools that we use:
 - `coverage <https://coverage.readthedocs.io>`_ shows the test coverage.
 - `pre-commit <https://pre-commit.com/>`_ for automatically enforcing code standards and quality checks before commits. ::
     
-    pip install .[test,dev,doc]
+    uv sync --group test --group doc --group dev
 
 Setup pre-commit
 ----------------
