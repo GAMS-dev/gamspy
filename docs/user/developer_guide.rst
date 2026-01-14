@@ -49,21 +49,21 @@ For running the tests and building the documentation we use additional packages.
 Here are a few helper tools that we use:
 
 - `coverage <https://coverage.readthedocs.io>`_ shows the test coverage.
-- `pre-commit <https://pre-commit.com/>`_ for automatically enforcing code standards and quality checks before commits. ::
+- `prek <https://prek.j178.dev/>`_ for automatically enforcing code standards and quality checks before commits. ::
     
     uv sync --group test --group doc --group dev
 
-Setup pre-commit
-----------------
+Setup prek
+----------
 
-``pre-commit`` allows us to run several checks on the codebase every time a new Git commit is made.
+``prek`` allows us to run several checks on the codebase every time a new Git commit is made.
 This ensures standards and basic quality control for our code.
 
-To setup pre-commit, navigate to this repository's folder and activate it as follows: ::
+To setup prek, navigate to this repository's folder and activate it as follows: ::
     
-    pre-commit install
+    prek install
 
-This will install the necessary dependencies to run ``pre-commit`` every time you make a commit with Git.
+This will install the necessary dependencies to run ``prek`` every time you make a commit with Git.
 
 Building the documentation
 --------------------------

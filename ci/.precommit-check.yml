@@ -13,5 +13,5 @@ dac-precommit:
     - uv export --no-emit-project --format requirements-txt > requirements.txt
     - uvx pip-audit -v -r requirements.txt --disable-pip
     - rm requirements.txt
-    - uv pip install pre-commit
-    - pre-commit run --all-files
+    - uv pip install prek
+    - prek run --all-files
