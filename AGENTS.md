@@ -36,7 +36,7 @@ GAMSPy is built with Python. The codebase is organized into the following layers
 - Run `cd docs && make linkchecker` to check the validitiy of the links in the documentation.
 
 ## Validating Changes
-- Always run `pre-commit run --all-files` before declaring any work complete, then fix all errors before moving forward.
+- Always run `prek run --all-files` before declaring any work complete, then fix all errors before moving forward.
 - Always run `pytest -m 'unit or integration'` before declaring any work complete, then fix all errors before moving forward.
 
 

@@ -70,7 +70,7 @@ explicit = true
 dev = [
     "griffe>=1.15.0",
     "mypy>=1.19.1",
-    "pre-commit>=4.5.1",
+    "prek>=0.2.28",
     "ruff>=0.14.11",
 ]
 doc = [
@@ -100,6 +100,7 @@ test = [
     "pip>=25.3",
     "pytest>=9.0.2",
     "python-dotenv>=1.2.1",
+    "pyyaml>=6.0.3",
     "scikit-learn>=1.7.2",
 ]
 

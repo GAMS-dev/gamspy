@@ -41,12 +41,12 @@ We follow a standard topic-branch workflow:
 
 ### Pre-commit Hooks
 
-We use `pre-commit` to enforce consistent formatting and quality checks.
+We use `prek` to enforce consistent formatting and quality checks.
 
 Install the hooks with:
 
 ```bash
-pre-commit install
+prek install
 ```
 
 This will automatically run checks (e.g. formatting, linting) on every commit.
