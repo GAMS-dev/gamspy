@@ -901,7 +901,7 @@ class Container(gt.Container):
         """
         if self._debugging_level != "keep":
             raise ValidationError(
-                "`debug_level` argument of the container must be set to 'keep' to use this function."
+                "`debugging_level` argument of the container must be set to 'keep' to use this function."
             )
 
         gams_string = self._gams_string

@@ -18,7 +18,7 @@ def validate_arguments(
     if working_directory == "":
         raise ValidationError("`working_directory` cannot be an empty string.")
 
-    # Validate debug_level
+    # Validate debugging_level
     if not isinstance(debugging_level, str) or debugging_level not in DEBUGGING_LEVELS:
         raise ValidationError(f"debugging level must be one of {DEBUGGING_LEVELS}")
 
