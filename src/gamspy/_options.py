@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict
+from typing_extensions import override
 
 from gamspy.exceptions import ValidationError
 
@@ -381,6 +382,7 @@ class Options(BaseModel):
     zero_rounding_threshold: float | None = None
     report_underflow: bool | None = None
 
+    @override
     def model_post_init(self, context: Any) -> None:
         self._extra_options: dict[str, Any] = {}
         self._debug_options: dict[str, Any] = {}
@@ -753,7 +755,7 @@ class ConvertOptions(BaseModel):
     >>> eq[i] = x[i] >= 1
     >>> model = gp.Model(m, "test_model", equations=[eq], problem="LP", sense="min", objective=gp.Sum(i, x[i]))
     >>> options = gp.ConvertOptions(GDXNames=False)
-    >>> # model.convert("jacobian", file_format=gp.FileFormat.GDXJacobian, options=options)
+    >>> model.convert("jacobian", file_format=gp.FileFormat.GDXJacobian, options=options) # doctest: +SKIP
 
     """
 

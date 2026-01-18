@@ -46,6 +46,15 @@ class Symbol:
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> print(i.latexRepr())
+        i
+
         """
         return self._latex_name
 
