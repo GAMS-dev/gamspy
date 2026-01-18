@@ -48,6 +48,22 @@ def tanh(x: Variable) -> tuple[Variable, list[Equation]]:
     Convenience wrapper that uses gamspy.math.tanh. Unlike gamspy.math.tanh,
     this function creates a new variable and the equation that
     sets it to follow formulations structure.
+
+    Parameters
+    ----------
+    x : Variable
+
+    Returns
+    -------
+    tuple[Variable, list[Equation]]
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> v1 = gp.Variable(m)
+    >>> v2, eqs = gp.math.activation.tanh(v1)
+
     """
     y = x.container.addVariable(domain=x.domain)
     set_y = x.container.addEquation(domain=x.domain)

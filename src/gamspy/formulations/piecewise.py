@@ -280,7 +280,7 @@ def _generate_ray(
     return x_var, b_var, eqs
 
 
-def points_to_intervals(
+def _points_to_intervals(
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
     discontinuous_points: typing.Sequence[int],
@@ -422,7 +422,7 @@ def pwl_interval_formulation(
     combined_indices = list({*discontinuous_indices, *none_indices})
     equations = []
 
-    intervals = points_to_intervals(x_points, y_points, combined_indices)
+    intervals = _points_to_intervals(x_points, y_points, combined_indices)
     lowerbounds_input = []
     upperbounds_input = []
     slopes_input = []

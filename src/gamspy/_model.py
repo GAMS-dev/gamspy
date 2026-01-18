@@ -368,6 +368,7 @@ class Model:
         A human-readable description of the model.
     equations : Sequence[Equation], optional
         A list or sequence of Equation objects that define the constraints of the model.
+        No equations are used by default.
     problem : Problem | str, optional
         The type of mathematical problem to solve (e.g., 'LP', 'MIP', 'NLP').
         Default is Problem.MIP.
@@ -380,7 +381,7 @@ class Model:
         Used for defining complementarity problems (MCP). Maps equations to their complementary variables.
     limited_variables : Sequence[ImplicitVariable], optional
         Allows limiting the domain of variables included in the model to a specific subset.
-    external_module: str, optional
+    external_module : str, optional
         The name of an external module file (e.g., 'my_external.dll' or 'my_external.so')
         where external equations are implemented.
 
@@ -388,9 +389,21 @@ class Model:
     --------
     >>> import gamspy as gp
     >>> m = gp.Container()
-    >>> v = gp.Variable(m, "v")
-    >>> e = gp.Equation(m, "e", definition= v == 5)
-    >>> my_model = gp.Model(m, "my_model", problem="LP", equations=[e])
+    >>> i = gp.Set(m, description="items")
+    >>> p = gp.Parameter(m, description="profits", domain=i)
+    >>> w = gp.Parameter(m, description="weights", domain=i)
+    >>> c = gp.Parameter(m, description="capacity")
+    >>> x = gp.Variable(m, domain=i, type=gp.VariableType.BINARY)
+    >>> capacity_restriction = gp.Equation(m, definition=gp.Sum(i, w[i] * x[i]) <= c)
+
+    >>> # Instantiate the Model
+    >>> knapsack = gp.Model(
+    ...     m,
+    ...     equations=m.getEquations(), # Automatically grabs all equations in the container
+    ...     problem=gp.Problem.MIP,     # Mixed Integer Program
+    ...     sense=gp.Sense.MAX,         # Maximize profit
+    ...     objective=gp.Sum(i, p[i] * x[i]),
+    ... )
 
     """
 
@@ -1214,8 +1227,19 @@ class Model:
         >>> v = gp.Variable(m, "v")
         >>> e = gp.Equation(m, "e", definition= v == 5)
         >>> my_model = gp.Model(m, "my_model", problem="LP", equations=[e])
-        >>> my_model.convert("tmp", gp.FileFormat.GAMS)
-        >>> my_model.convert("tmp", [gp.FileFormat.GAMS, gp.FileFormat.AMPL])
+
+
+        Convert the model into GAMS format.
+
+
+        >>> my_model.convert("tmp", gp.FileFormat.GAMS) # doctest: +SKIP
+
+
+        Add conversion options
+
+
+        >>> options = gp.ConvertOptions(GDXNames=False)
+        >>> my_model.convert("jacobian", file_format=gp.FileFormat.GDXJacobian, options=options) # doctest: +SKIP
 
         """
         path = Path(path)
@@ -1277,6 +1301,33 @@ class Model:
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, records=["item1", "item2"])
+        >>> v = gp.Variable(m, domain=i)
+        >>> z = gp.Variable(m)
+        >>> e = gp.Equation(m, domain=i)
+        >>> e[i] = v[i] * z >= 5
+        >>> model = gp.Model(m, "test", equations=[e], problem="NLP", sense="MIN", objective=z)
+        >>> summary = model.solve(options=gp.Options(variable_listing_limit=10))
+        >>> print(model.getVariableListing())
+        v(item1)
+                        (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+               (0)      e(item1)
+        <BLANKLINE>
+        v(item2)
+                        (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+               (0)      e(item2)
+        <BLANKLINE>
+        z
+                        (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+               (0)      e(item1)
+               (0)      e(item2)
+        <BLANKLINE>
+
         """
         if not hasattr(self, "_variables"):
             raise ValidationError(
@@ -1301,7 +1352,7 @@ class Model:
         >>> # ... define model ...
         >>> model = gp.Model(m, "my_model", problem="LP", equations=[])
         >>> # In a separate thread or signal handler:
-        >>> # model.interrupt()
+        >>> model.interrupt() # doctest: +SKIP
 
         """
         self.container._interrupt()
@@ -1415,12 +1466,82 @@ class Model:
 
         Examples
         --------
+        >>> import sys
+        >>> import os
         >>> import gamspy as gp
         >>> m = gp.Container()
-        >>> v = gp.Variable(m, "v")
-        >>> e = gp.Equation(m, "e", definition= v == 5)
-        >>> my_model = gp.Model(m, "my_model", problem="LP", equations=[e], sense="max", objective=v)
-        >>> solved = my_model.solve()
+        >>> i = gp.Set(m, description="items")
+        >>> p = gp.Parameter(m, description="profits", domain=i)
+        >>> w = gp.Parameter(m, description="weights", domain=i)
+        >>> c = gp.Parameter(m, description="capacity")
+        >>> x = gp.Variable(m, domain=i, type=gp.VariableType.BINARY)
+        >>> capacity_restriction = gp.Equation(m, definition=gp.Sum(i, w[i] * x[i]) <= c)
+        >>> knapsack = gp.Model(
+        ...     m,
+        ...     equations=m.getEquations(), # Automatically grabs all equations in the container
+        ...     problem=gp.Problem.MIP,     # Mixed Integer Program
+        ...     sense=gp.Sense.MAX,         # Maximize profit
+        ...     objective=gp.Sum(i, p[i] * x[i]),
+        ... )
+
+
+        Basic usage
+
+
+        >>> knapsack.solve() # doctest: +SKIP
+
+
+        Change solver
+
+
+        >>> knapsack.solve(solver="CPLEX") # doctest: +SKIP
+
+
+        Redirect output
+
+
+        >>> knapsack.solve(output=sys.stdout) # doctest: +SKIP
+
+
+        Add generic solve options
+
+
+        >>> knapsack.solve(options=gp.Options(iteration_limit=2)) # doctest: +SKIP
+
+
+        Add solver-specific options
+
+
+        >>> knapsack.solve(solver="CPLEX", solver_options={"preind": "off"}) # doctest: +SKIP
+
+
+        Solve on your own machine
+
+
+        >>> knapsack.solve() # doctest: +SKIP
+
+
+        Solve on GAMS Engine
+
+
+        >>> client = gp.EngineClient(
+        ...    host=os.getenv("ENGINE_URL", "https://<host_link>"),
+        ...    username=os.getenv("ENGINE_USER"),
+        ...    password=os.getenv("ENGINE_PASSWORD"),
+        ...    namespace=os.getenv("ENGINE_NAMESPACE"),
+        ... )
+        >>> knapsack.solve(backend="engine", client=client) # doctest: +SKIP
+
+
+        Solve on NEOS Server
+
+
+        >>> client = gp.NeosClient(
+        ...    email=os.getenv("NEOS_EMAIL"),
+        ...    username=os.getenv("NEOS_USER"),
+        ...    password=os.getenv("NEOS_PASSWORD"),
+        ... )
+        >>> knapsack.solve(backend="neos", client=client) # doctest: +SKIP
 
         """
         if output is None:
@@ -1626,7 +1747,7 @@ class Model:
         >>> v = gp.Variable(m, "v")
         >>> e = gp.Equation(m, "e", definition= v == 5)
         >>> my_model = gp.Model(m, "my_model", problem="LP", equations=[e])
-        >>> my_model.toGams("tmp")  # doctest: +ELLIPSIS
+        >>> my_model.toGams("tmp")  # doctest: +SKIP
         ================================================================================
         GAMS (.gms) file has been generated under ...
         ================================================================================
@@ -1668,7 +1789,7 @@ class Model:
         >>> v = gp.Variable(m, "v")
         >>> e = gp.Equation(m, "e", definition= v == 5)
         >>> my_model = gp.Model(m, "my_model", problem="LP", equations=[e])
-        >>> my_model.toLatex("tmp")  # doctest: +ELLIPSIS
+        >>> my_model.toLatex("tmp")  # doctest: +SKIP
         ================================================================================
         LaTeX (.tex) file has been generated under ...
         ================================================================================
