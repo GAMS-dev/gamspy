@@ -1,0 +1,1 @@
+Add a new example showing the usage of solution pools.
