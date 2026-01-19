@@ -38,7 +38,7 @@ Temporary directories typically reside in:
 - Windows: **C:\Users\<username>\AppData\Local\Temp**
 
 .. note::
-    If a custom ``working_directory`` is provided, ``debugging_level`` is ignored. 
+    If a custom ``working_directory`` is provided, ``debugging_level`` is ignored and all files are kept. 
     This safeguard prevents accidental deletion of user-specified directories (e.g., / or C:\).
 
 Specifying the Working Directory
