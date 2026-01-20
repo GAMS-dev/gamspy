@@ -1229,7 +1229,7 @@ class Model:
         >>> my_model = gp.Model(m, "my_model", problem="LP", equations=[e])
 
 
-        Convert the model into GAMS format.
+        Convert the model into scalar GAMS format.
 
 
         >>> my_model.convert("tmp", gp.FileFormat.GAMS) # doctest: +SKIP
