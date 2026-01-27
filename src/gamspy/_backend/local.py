@@ -38,10 +38,10 @@ class Local(backend.Backend):
             load_symbols,
         )
 
-    def _prepare_extra_options(self, gams_to_gamspy: bool) -> dict:
+    def _prepare_hidden_options(self, gams_to_gamspy: bool) -> dict:
         scrdir = self.container._process_directory
 
-        extra_options = {
+        hidden_options = {
             "trace": self.trace_file,
             "input": self.gms_file,
             "output": self.lst_file,
@@ -53,13 +53,13 @@ class Local(backend.Backend):
         }
 
         if gams_to_gamspy:
-            extra_options["gdx"] = self.container._gdx_out
-            extra_options["gdxSymbols"] = "newOrChanged"
+            hidden_options["gdx"] = self.container._gdx_out
+            hidden_options["gdxSymbols"] = "newOrChanged"
 
         if self.container._network_license:
-            extra_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
+            hidden_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
 
-        return extra_options
+        return hidden_options
 
     def is_async(self):
         return False
@@ -86,8 +86,8 @@ class Local(backend.Backend):
             gams_file.write(gams_string)
 
         # Write pf file
-        extra_options = self._prepare_extra_options(gams_to_gamspy)
-        self.options._set_extra_options(extra_options)
+        hidden_options = self._prepare_hidden_options(gams_to_gamspy)
+        self.options._set_hidden_options(hidden_options)
         self.options._export(self.pf_file, self.output)
 
         try:

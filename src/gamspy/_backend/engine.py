@@ -798,14 +798,14 @@ class GAMSEngine(backend.Backend):
         return summary
 
     def execute_gams(self, gams_string: str):
-        extra_options = {
+        hidden_options = {
             "gdx": os.path.basename(self.container._gdx_out),
             "gdxSymbols": "newOrChanged",
             "trace": os.path.basename(self.trace_file),
             "restart": os.path.basename(self.restart_file),
             "input": os.path.basename(self.gms_file),
         }
-        self.options._set_extra_options(extra_options)
+        self.options._set_hidden_options(hidden_options)
         self.options._export(self.pf_file, self.output)
 
         with open(self.gms_file, "w", encoding="utf-8") as file:
@@ -891,7 +891,7 @@ class GAMSEngine(backend.Backend):
     def _prepare_dummy_options(self) -> dict:
         scrdir = self.container._process_directory
 
-        extra_options = {
+        hidden_options = {
             "gdx": self.container._gdx_out,
             "gdxSymbols": "newOrChanged",
             "trace": self.trace_file,
@@ -905,18 +905,18 @@ class GAMSEngine(backend.Backend):
         }
 
         if self.container._network_license:
-            extra_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
+            hidden_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
 
-        return extra_options
+        return hidden_options
 
     def _create_restart_file(self):
         with open(self.gms_file, "w", encoding="utf-8") as gams_file:
             gams_file.write("")
 
         options = Options()
-        extra_options = self._prepare_dummy_options()
-        options._set_extra_options(extra_options)
-        options._extra_options["save"] = self.restart_file
+        hidden_options = self._prepare_dummy_options()
+        options._set_hidden_options(hidden_options)
+        options._hidden_options["save"] = self.restart_file
         options._export(self.pf_file)
 
         send_job(self.container._comm_pair_id, self.job_name, self.pf_file)
@@ -930,8 +930,8 @@ class GAMSEngine(backend.Backend):
             gams_file.write(f'execute_load "{self.container._gdx_out}", {dirty_str};')
 
         options = Options()
-        extra_options = self._prepare_dummy_options()
-        options._set_extra_options(extra_options)
+        hidden_options = self._prepare_dummy_options()
+        options._set_hidden_options(hidden_options)
         options._export(self.pf_file)
 
         send_job(self.container._comm_pair_id, self.job_name, self.pf_file)

@@ -740,6 +740,17 @@ sos1_1"""
     assert os.path.exists(out_gdx)
     assert os.path.exists(out_py)
 
+    # temporary workaround. delete this when mps2gms is fixed.
+    with open(out_py) as file:
+        content = file.read()
+        content = content.replace(
+            'i   = gp.Set(cont,             description = "all rows in MPS order")',
+            f'i   = gp.Set(cont,             description = "all rows in MPS order"){os.linesep}ik  = gp.Set(cont, domain=[i], description = "cone rows")',
+        )
+
+    with open(out_py, "w") as file:
+        file.write(content)
+
     process = subprocess.run(
         [sys.executable, out_py], capture_output=True, text=True, encoding="utf-8"
     )
