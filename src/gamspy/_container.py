@@ -585,7 +585,42 @@ class Container(gt.Container):
 
         return gams_string
 
-    def _load_records_from_gdx(self, load_from: str, names: Iterable[str]) -> None:
+    def _filter_load_symbols(
+        self, symbol_names: dict[str, str] | list[str]
+    ) -> dict[str, str] | list[str]:
+        if isinstance(symbol_names, list):
+            names = []
+            for name in symbol_names:
+                if name in self.data:
+                    symbol = self[name]
+                    if not isinstance(symbol, gt.Alias) and symbol.synchronize:
+                        names.append(name)
+                else:
+                    raise ValidationError(
+                        f"Cannot load records of `{name}` because it does not exist in the container."
+                    )
+
+            return names
+
+        mapping = {}
+        for gdx_name, gamspy_name in symbol_names.items():
+            if gamspy_name in self.data:
+                if self[gamspy_name].synchronize:
+                    mapping[gdx_name] = gamspy_name
+            else:
+                raise ValidationError(
+                    f"Invalid renaming. `{gamspy_name}` does not exist in the container."
+                )
+
+        return mapping
+
+    def _load_records_from_gdx(
+        self,
+        load_from: str,
+        names: Iterable[str],
+        *,
+        create_if_not_declared: bool = False,
+    ) -> None:
         self._temp_container.read(load_from, names)
         original_state = self._options.miro_protect
         self._options.miro_protect = False
@@ -596,7 +631,12 @@ class Container(gt.Container):
                 self[name].records = updated_records
                 self[name].domain_labels = self[name].domain_names
             else:
-                self._read(load_from, [name])
+                if create_if_not_declared:
+                    self._read(load_from, [name])
+                else:
+                    raise ValidationError(
+                        f"Cannot load records of `{name}` because it does not exist in the container."
+                    )
 
         self._options.miro_protect = original_state
         self._temp_container.data = {}
@@ -607,14 +647,9 @@ class Container(gt.Container):
         self._options.miro_protect = False
 
         for gdx_name, gamspy_name in names.items():
-            if gamspy_name in self.data:
-                updated_records = self._temp_container[gdx_name].records
-                self[gamspy_name].records = updated_records
-                self[gamspy_name].domain_labels = self[gamspy_name].domain_names
-            else:
-                raise ValidationError(
-                    f"Invalid renaming. `{gamspy_name}` does not exist in the container."
-                )
+            updated_records = self._temp_container[gdx_name].records
+            self[gamspy_name].records = updated_records
+            self[gamspy_name].domain_labels = self[gamspy_name].domain_names
 
         self._options.miro_protect = original_state
         self._temp_container.data = {}
@@ -916,7 +951,7 @@ class Container(gt.Container):
 
     def loadRecordsFromGdx(
         self,
-        load_from: str,
+        load_from: str | Path,
         symbol_names: Iterable[str] | dict[str, str] | None = None,
     ) -> None:
         """
@@ -940,23 +975,46 @@ class Container(gt.Container):
         >>> i = Set(m, "i", records=["i1", "i2"])
         >>> m.write("test.gdx")
         >>> m2 = Container()
+        >>> i = Set(m2, "i")
         >>> m2.loadRecordsFromGdx("test.gdx")
         >>> print(i.records.equals(m2["i"].records))
         True
 
         """
+        if isinstance(load_from, Path):
+            load_from = str(load_from.resolve())
+
         if symbol_names is None:
             # If no symbol names are given, all records in the gdx should be loaded
             symbol_names = utils._get_symbol_names_from_gdx(
                 self.system_directory, load_from
             )
 
+        if isinstance(symbol_names, list):
+            symbol_names = self._filter_load_symbols(symbol_names)
+            self._add_statement(f"$gdxIn {load_from}")
+            symbols_str = " ".join(symbol_names)
+            self._add_statement(f"$loadDC {symbols_str}")
+            self._add_statement("$gdxIn")
+        elif isinstance(symbol_names, dict):
+            symbol_names = self._filter_load_symbols(symbol_names)
+            self._add_statement(f"$gdxIn {load_from}")
+            symbols_str = " ".join(
+                [f"{value}={key}" for key, value in symbol_names.items()]  # type: ignore
+            )
+            self._add_statement(f"$loadDC {symbols_str}")
+            self._add_statement("$gdxIn")
+        else:
+            raise TypeError("`symbol_names` must be either a list or a dictionary.")
+
+        self._options._debug_options["gdx"] = self._gdx_out
+        self._options._debug_options["gdxSymbols"] = "newOrChanged"
+        self._synch_with_gams()
+
         if isinstance(symbol_names, dict):
             self._load_records_with_rename(load_from, symbol_names)
         else:
             self._load_records_from_gdx(load_from, symbol_names)
-
-        self._synch_with_gams()
 
     def addGamsCode(self, gams_code: str) -> None:
         """

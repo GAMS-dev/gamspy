@@ -72,6 +72,8 @@ def calculate_diff(oaX: gp.Parameter) -> int:
             if row1[0] == row2[0] or row1[1] != row2[1] or row1[2] != row2[2]:
                 continue
 
+            print(row1[3], row2[3])
+            print(row1[3] ^ row2[3])
             aggdiff += np.logical_xor(row1[3], row2[3])
 
     return aggdiff
@@ -121,7 +123,9 @@ def main():
     loc = gp.Model(m, equations=m.getEquations(), sense=gp.Sense.MIN, objective=totcost)
 
     soln = gp.Set(m, records=[f"soln_loc_p{idx}" for idx in range(1, 1001)])
-    _ = gp.Set(m, name="solnpool", domain=soln)
+    s1 = gp.Alias(m, "s1", alias_with=soln)
+    s2 = gp.Alias(m, "s2", alias_with=soln)
+    solnpool = gp.Set(m, name="solnpool", domain=soln)
     _ = gp.UniverseAlias(m, name="u")
 
     owX = gp.Parameter(m, domain=[soln, i])
@@ -179,7 +183,12 @@ def main():
     )
     load_solution(m)
 
-    aggdiff = calculate_diff(oaX)
+    aggdiff = gp.Parameter(m, name="aggdiff")
+    aggdiff[...] = gp.Sum(
+        (s1, s2, i, j),
+        ((~gp.math.same_as(s1, s2)) & solnpool[s1] & solnpool[s2])
+        * (oaX[s1, i, j] ^ oaX[s2, i, j]),
+    )
 
     # 4. We repeat the experiment by now setting the solution pool replacement
     #    strategy to 'diversity' and let the populate procedure find many more
@@ -200,8 +209,15 @@ def main():
     )
     load_solution(m)
 
-    aggdiffX = calculate_diff(oaX)
-    assert aggdiffX > aggdiff
+    aggdiffX = gp.Parameter(m, name="aggdiffX")
+    aggdiffX[...] = gp.Sum(
+        (s1, s2, i, j),
+        ((~gp.math.same_as(s1, s2)) & solnpool[s1] & solnpool[s2])
+        * (oaX[s1, i, j] ^ oaX[s2, i, j]),
+    )
+    assert aggdiffX.toValue() > aggdiff.toValue(), (
+        f"{aggdiffX.toValue()=}, {aggdiff.toValue()=}"
+    )
 
     # 5. We can fine tune diversity by using a diversity filter. Suppose that
     #    facilities w1 and w2 are open. Let a solution keeping those two facilities

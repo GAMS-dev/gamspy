@@ -1,0 +1,1 @@
+Make loadRecordsFromGdx respect .synchronize attribute of symbols.
