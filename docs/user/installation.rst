@@ -206,7 +206,7 @@ Prerequisites
 
 Building GAMSPy requires the following software to be installed:
 
-1) Python 3.9.x or newer
+1) Python 3.10.x or newer
 
 2) The GAMSPy source code::
     
@@ -217,7 +217,7 @@ Installation
 
 You can install GAMSPy from source using the following command::
 
-    pip install .
+    pip install .  # or uv sync
 
 Testing
 -------

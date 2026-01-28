@@ -441,13 +441,13 @@ class NEOSServer(backend.Backend):
         if self.container._debugging_level == "keep":
             self.options.log_file = os.path.basename(self.job_name) + ".log"
 
-        extra_options = {
+        hidden_options = {
             "gdx": "output.gdx",
             "gdxSymbols": "newOrChanged",
             "trace": os.path.basename(self.trace_file),
             "forcework": "1",
         }
-        self.options._set_extra_options(extra_options)
+        self.options._set_hidden_options(hidden_options)
 
         self.client._prepare_xml(
             gams_string,
@@ -505,7 +505,7 @@ class NEOSServer(backend.Backend):
     def _prepare_dummy_options(self) -> dict:
         scrdir = self.container._process_directory
 
-        extra_options = {
+        hidden_options = {
             "gdx": self.container._gdx_out,
             "gdxSymbols": "newOrChanged",
             "trace": self.trace_file,
@@ -518,18 +518,18 @@ class NEOSServer(backend.Backend):
         }
 
         if self.container._network_license:
-            extra_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
+            hidden_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
 
-        return extra_options
+        return hidden_options
 
     def _create_restart_file(self):
         with open(self.gms_file, "w", encoding="utf-8") as gams_file:
             gams_file.write("")
 
         options = Options()
-        extra_options = self._prepare_dummy_options()
-        options._set_extra_options(extra_options)
-        options._extra_options["save"] = self.restart_file
+        hidden_options = self._prepare_dummy_options()
+        options._set_hidden_options(hidden_options)
+        options._hidden_options["save"] = self.restart_file
         options._export(self.pf_file)
 
         send_job(self.container._comm_pair_id, self.job_name, self.pf_file)
@@ -543,8 +543,8 @@ class NEOSServer(backend.Backend):
             gams_file.write(f'execute_load "{self.container._gdx_out}", {dirty_str};')
 
         options = Options()
-        extra_options = self._prepare_dummy_options()
-        options._set_extra_options(extra_options)
+        hidden_options = self._prepare_dummy_options()
+        options._set_hidden_options(hidden_options)
         options._export(self.pf_file)
 
         send_job(self.container._comm_pair_id, self.job_name, self.pf_file)

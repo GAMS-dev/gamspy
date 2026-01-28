@@ -27,16 +27,16 @@ details are found in :ref:`reference`.
    advanced/advanced
 
 .. toctree::
+   :caption: Machine Learning
+   :maxdepth: 2
+
+   ml/ml
+   ml/examples
+
+.. toctree::
    :caption: Extras
    :maxdepth: 1
 
    faq
    gamspy_for_gams_users
    developer_guide
-
-.. toctree::
-   :caption: Machine Learning
-   :maxdepth: 2
-
-   ml/ml
-   ml/examples

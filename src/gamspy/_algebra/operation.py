@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from typing_extensions import override
+
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
 import gamspy._algebra.expression as expression
@@ -30,19 +32,45 @@ if TYPE_CHECKING:
 
 
 class Operation(operable.Operable):
-    def __init__(
-        self,
-        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
-        rhs: (
-            Expression
-            | Operation
+    """
+    Base class for different operations (Sum, Product etc.) over a domain.
+
+    Parameters
+    ----------
+    domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
+    rhs : Operation
+            | Expression
             | MathOp
-            | ImplicitSet
             | ImplicitVariable
             | ImplicitParameter
             | int
             | bool
-        ),
+            | Variable
+            | Parameter
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
+    >>> v = gp.Variable(m, "v")
+    >>> e = gp.Equation(m, "e", type="eq")
+    >>> d = gp.Parameter(m, "d", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    >>> e[...] = gp.Sum(i, d[i]) <= v
+
+    """
+
+    def __init__(
+        self,
+        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
+        rhs: Operation
+        | Expression
+        | MathOp
+        | ImplicitVariable
+        | ImplicitParameter
+        | ImplicitSet
+        | int
+        | bool,
         op_name: str,
     ):
         self.op_domain = utils._to_list(domain)  # type: ignore
@@ -93,6 +121,18 @@ class Operation(operable.Operable):
         Returns
         -------
         pd.DataFrame | None
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> a = gp.Parameter(m, "a", domain=i, records=np.array([1,2]))
+        >>> gp.Sum(i, a[i]).records
+           value
+        0    3.0
+
         """
         assert self.container is not None
         temp_name = "a" + utils._get_unique_name()
@@ -117,6 +157,17 @@ class Operation(operable.Operable):
         Returns
         -------
         float | None
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> a = gp.Parameter(m, "a", domain=i, records=np.array([1,2]))
+        >>> gp.Sum(i, a[i]).toValue()
+        np.float64(3.0)
+
         """
         records = self.records
         if records is not None:
@@ -131,6 +182,18 @@ class Operation(operable.Operable):
         Returns
         -------
         list | None
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> j = gp.Set(m, "j", records=["j1", "j2"])
+        >>> a = gp.Parameter(m, "a", domain=[i, j], records=np.array([(1,2), (3,4)]))
+        >>> gp.Sum(i, a[i, j]).toList()
+        [['j1', 4.0], ['j2', 6.0]]
+
         """
         records = self.records
         if records is not None:
@@ -195,6 +258,24 @@ class Operation(operable.Operable):
         return output
 
     def gamsRepr(self) -> str:
+        """
+        Representation of this operation in GAMS.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=range(3))
+        >>> a = gp.Parameter(m, "a", domain=i, records=np.array([3,5,7]))
+        >>> print(gp.Sum(i, a[i]).gamsRepr())
+        sum(i,a(i))
+
+        """
         # Ex: sum((i,j), c(i,j) * x(i,j))
         output = f"{self._op_name}("
 
@@ -231,6 +312,16 @@ class Operation(operable.Operable):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=range(3))
+        >>> a = gp.Parameter(m, "a", domain=i, records=np.array([3,5,7]))
+        >>> print(gp.Sum(i, a[i]).latexRepr()) # doctest: +SKIP
+
         """
         op_map = {
             "sum": "sum",
@@ -274,8 +365,8 @@ class Sum(Operation):
     Parameters
     ----------
     domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
-    expression : (
-            Expression
+    expression : Operation
+            | Expression
             | MathOp
             | ImplicitVariable
             | ImplicitParameter
@@ -283,8 +374,6 @@ class Sum(Operation):
             | bool
             | Variable
             | Parameter
-            | Operation
-        )
 
     Examples
     --------
@@ -315,6 +404,7 @@ class Sum(Operation):
     def __repr__(self) -> str:
         return f"Sum(domain={self.domain}, expression={self.rhs})"
 
+    @override
     def gamsRepr(self):
         """
         Representation of the Sum operation in GAMS language.
@@ -344,9 +434,9 @@ class Product(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
-    expression : (
-            Expression
+    domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
+    expression : Operation
+            | Expression
             | MathOp
             | ImplicitVariable
             | ImplicitParameter
@@ -354,8 +444,6 @@ class Product(Operation):
             | bool
             | Variable
             | Parameter
-            | Operation
-        )
 
     Examples
     --------
@@ -386,6 +474,7 @@ class Product(Operation):
     def __repr__(self) -> str:
         return f"Product(domain={self.domain}, expression={self.rhs})"
 
+    @override
     def gamsRepr(self):
         """
         Representation of the Product operation in GAMS language.
@@ -415,9 +504,9 @@ class Smin(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
-    expression : (
-            Expression
+    domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
+    expression : Operation
+            | Expression
             | MathOp
             | ImplicitVariable
             | ImplicitParameter
@@ -425,8 +514,6 @@ class Smin(Operation):
             | bool
             | Variable
             | Parameter
-            | Operation
-        )
 
     Examples
     --------
@@ -457,6 +544,7 @@ class Smin(Operation):
     def __repr__(self) -> str:
         return f"Smin(domain={self.domain}, expression={self.rhs})"
 
+    @override
     def gamsRepr(self):
         """
         Representation of the Smin operation in GAMS language.
@@ -486,9 +574,9 @@ class Smax(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
-    expression : (
-            Expression
+    domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
+    expression : Operation
+            | Expression
             | MathOp
             | ImplicitVariable
             | ImplicitParameter
@@ -496,8 +584,6 @@ class Smax(Operation):
             | bool
             | Variable
             | Parameter
-            | Operation
-        )
 
     Examples
     --------
@@ -528,6 +614,7 @@ class Smax(Operation):
     def __repr__(self) -> str:
         return f"Smax(domain={self.domain}, expression={self.rhs})"
 
+    @override
     def gamsRepr(self):
         """
         Representation of the Smax operation in GAMS language.
@@ -557,9 +644,9 @@ class Sand(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
-    expression : (
-            Expression
+    domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
+    expression : Operation
+            | Expression
             | MathOp
             | ImplicitVariable
             | ImplicitParameter
@@ -567,8 +654,6 @@ class Sand(Operation):
             | bool
             | Variable
             | Parameter
-            | Operation
-        )
 
     Examples
     --------
@@ -599,6 +684,7 @@ class Sand(Operation):
     def __repr__(self) -> str:
         return f"Sand(domain={self.domain}, expression={self.rhs})"
 
+    @override
     def gamsRepr(self):
         """
         Representation of the Sand operation in GAMS language.
@@ -627,9 +713,9 @@ class Sor(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
-    expression : (
-            Expression
+    domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
+    expression : Operation
+            | Expression
             | MathOp
             | ImplicitVariable
             | ImplicitParameter
@@ -637,8 +723,6 @@ class Sor(Operation):
             | bool
             | Variable
             | Parameter
-            | Operation
-        )
 
     Examples
     --------
@@ -669,6 +753,7 @@ class Sor(Operation):
     def __repr__(self) -> str:
         return f"Sor(domain={self.domain}, expression={self.rhs})"
 
+    @override
     def gamsRepr(self):
         """
         Representation of the Sor operation in GAMS language.
@@ -762,6 +847,15 @@ class Ord(operable.Operable):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> print(gp.Ord(i).latexRepr())
+        ord(i)
+
         """
         return f"ord({self._symbol._latex_name})"
 
@@ -841,5 +935,14 @@ class Card(operable.Operable):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> print(gp.Card(i).latexRepr())
+        card(i)
+
         """
         return f"card({self._symbol._latex_name})"

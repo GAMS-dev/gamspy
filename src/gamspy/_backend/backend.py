@@ -222,7 +222,9 @@ class Backend(ABC):
             symbols = filtered_names
 
         if len(symbols) != 0:
-            self.container._load_records_from_gdx(self.container._gdx_out, symbols)
+            self.container._load_records_from_gdx(
+                self.container._gdx_out, symbols, create_if_not_declared=True
+            )
             self.make_unmodified(symbols)
 
         if relaxed_domain_mapping:

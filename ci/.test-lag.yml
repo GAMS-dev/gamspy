@@ -11,7 +11,8 @@
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
+    - uv pip install gamspy-arm-perf
     - gamspy install license $LOCAL_LICENSE
     - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
@@ -26,7 +27,8 @@ lag-test-3.14:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python 3.14
     - source .venv/bin/activate
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
+    - uv pip install gamspy-arm-perf
     - gamspy install license $LOCAL_LICENSE
     - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
@@ -80,7 +82,8 @@ lag-test-3.10:
     - apt-get update && apt-get install -y ca-certificates
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION && source .venv/bin/activate
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
+    - uv pip install gamspy-arm-perf
     - python -m pytest -x -v -s -m 'engine' tests
 
 lag-engine-3.14:
@@ -107,7 +110,8 @@ lag-engine-3.10:
     - apt-get update && apt-get install -y ca-certificates
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION && source .venv/bin/activate
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
+    - uv pip install gamspy-arm-perf
     - python -m pytest -x -v -s -m 'neos' tests
 
 lag-neos-3.14:

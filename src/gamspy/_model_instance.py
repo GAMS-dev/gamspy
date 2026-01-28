@@ -318,8 +318,8 @@ class ModelInstance:
             gams_file.write(scenario_str)
 
         # Write pf file
-        extra_options = self._prepare_gams_options()
-        options._set_extra_options(extra_options)
+        hidden_options = self._prepare_hidden_options()
+        options._set_hidden_options(hidden_options)
         options.log_file = os.path.join(self.container.working_directory, "gamslog.dat")
         options._export(self.pf_file, self.output)
 
@@ -632,9 +632,9 @@ class ModelInstance:
 
         return will_be_modified
 
-    def _prepare_gams_options(self) -> dict:
+    def _prepare_hidden_options(self) -> dict:
         scrdir = self.container._process_directory
-        extra_options = {
+        hidden_options = {
             "trace": self.trace_file,
             "input": self.gms_file,
             "output": self.lst_file,
@@ -646,11 +646,11 @@ class ModelInstance:
             "solvercntr": self.solver_control_file,
         }
         if self.container._network_license:
-            extra_options["netlicense"] = os.path.join(
+            hidden_options["netlicense"] = os.path.join(
                 self.container._process_directory, "gamslice.dat"
             )
 
-        return extra_options
+        return hidden_options
 
     def _get_columns_to_drop(self, attr: str) -> list[str]:
         attr_map = {

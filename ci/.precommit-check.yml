@@ -1,17 +1,10 @@
-dac-precommit:
+leg-precommit:
   stage: precommit
   when: on_success
-  needs: [setup-dac-toolchain]
-  tags: [macos-arm64]
-  variables:
-    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
-    PYTHON_VERSION: "3.13"
+  tags: [linux]
+  image: python:3.13.11
   script:
-    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .precommit_venv --python $PYTHON_VERSION
-    - source .precommit_venv/bin/activate
-    - uv export --no-emit-project --format requirements-txt > requirements.txt
-    - uvx pip-audit -v -r requirements.txt --disable-pip
-    - rm requirements.txt
-    - uv pip install pre-commit
-    - pre-commit run --all-files
+    - python -m pip install uv && uv venv .venv && source .venv/bin/activate
+    - uv export --no-emit-project --format requirements-txt > requirements.txt && uvx pip-audit -v -r requirements.txt --disable-pip && rm requirements.txt
+    - uv pip install prek
+    - prek run --all-files

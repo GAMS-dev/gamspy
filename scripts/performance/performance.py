@@ -16,7 +16,7 @@ usual_suspects = [
     "preprocess",
     "execute_gams",
     "postprocess",
-    "_send_job",
+    "send_job",
 ]
 
 
@@ -44,7 +44,7 @@ def main():
             "preprocess",
             "execute_gams",
             "postprocess",
-            "_send_job",
+            "send_job",
             "overhead",
         ],
         columns=columns,
@@ -70,7 +70,7 @@ def main():
             pstats_dict["preprocess"]
             + pstats_dict["execute_gams"]
             + pstats_dict["postprocess"]
-            - pstats_dict["_send_job"]
+            - pstats_dict["send_job"]
         )
         df = pd.DataFrame(
             pstats_dict.values(),

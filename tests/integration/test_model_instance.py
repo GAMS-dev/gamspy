@@ -45,8 +45,6 @@ from gamspy._database import (
 from gamspy._workspace import Workspace
 from gamspy.exceptions import GamspyException, ValidationError
 
-pytestmark = pytest.mark.integration
-
 try:
     from dotenv import load_dotenv
 
@@ -89,6 +87,7 @@ def data():
         os.remove("gams.gms")
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
@@ -202,6 +201,7 @@ def test_parameter_change(data):
     assert not transport._is_frozen
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
@@ -249,6 +249,7 @@ def test_variable_change(data):
     transport.unfreeze()
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
@@ -301,6 +302,7 @@ def test_fx(data):
     mm.unfreeze()
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
@@ -378,6 +380,7 @@ def test_validations(data):
             assert ">>  rtmaxv 1.e12" not in f.read()
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
@@ -605,6 +608,7 @@ def test_modifiable_in_condition(data):
         war.freeze(modifiables=[x.l])
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
@@ -646,6 +650,7 @@ def test_modifiable_with_domain(data):
     assert math.isclose(mymodel.objective_value, 32.36124699832342, rel_tol=1e-6)
 
 
+@pytest.mark.requires_license
 @pytest.mark.skipif(
     platform.system() == "Darwin",
     reason="Darwin runners are not dockerized yet.",
@@ -782,6 +787,7 @@ def normal_dice():
     return xdice.model_generation_time
 
 
+@pytest.mark.requires_license
 @pytest.mark.skipif(
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
@@ -870,6 +876,7 @@ def test_timing():
     m.close()
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
@@ -904,6 +911,7 @@ def test_database():
     m.close()
 
 
+@pytest.mark.integration
 def test_feasibility():
     m = gp.Container()
     x = gp.Variable(m, "x", records=2)
@@ -917,6 +925,7 @@ def test_feasibility():
     mi.unfreeze()
 
 
+@pytest.mark.integration
 def test_output_propagation(data):
     _, canning_plants, markets, capacities, demands, distances = data
     file = tempfile.NamedTemporaryFile("w", delete=False)
@@ -968,6 +977,7 @@ def test_output_propagation(data):
     m.close()
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(platform.system() != "Linux", reason="Test only for linux.")
 def test_interrupt():
     directory = str(pathlib.Path(__file__).parent.resolve())

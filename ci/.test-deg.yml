@@ -9,7 +9,7 @@
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
-    - uv pip install .[dev,test] pip --force-reinstall
+    - uv sync --group test
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles
@@ -23,7 +23,7 @@ deg-test-3.14:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
-    - uv pip install .[dev,test] pip --force-reinstall
+    - uv sync --group test
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver -a --use-uv
     - gamspy uninstall solver miles
@@ -84,7 +84,7 @@ deg-test-3.10:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
-    - uv pip install .[dev,test] pip --force-reinstall
+    - uv sync --group test
     - python -B -m pytest -x -v -s -m 'engine' tests
 
 deg-engine-3.14:
@@ -110,7 +110,7 @@ deg-engine-3.10:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
-    - uv pip install .[dev,test] pip --force-reinstall
+    - uv sync --group test
     - python -B -m pytest -x -v -s -m 'neos' tests
 
 deg-neos-3.14:
