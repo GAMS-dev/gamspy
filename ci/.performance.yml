@@ -12,18 +12,16 @@ leg-performance:
     - conda create -y -n performance python=3.12
     - conda activate performance
     - conda install -c conda-forge cyipopt
+    - python -m pip install . --group test --group doc --group dev
+    - python -m pip install highsbox llvmlite tccbox psutil pyoptinterface
+    - python -m gamspy install license $PERFORMANCE_LICENSE
+    - echo $GAMS_LICENSE > $(python -m gamspy show base)/gamslice.txt
+    - python -m gamspy install solver -a
     - which python
-    - python -m pip install uv psutil pyoptinterface
-    - uv sync --group test
-    - uv pip install highsbox llvmlite tccbox
-    - gamspy install license $PERFORMANCE_LICENSE
-    - echo $GAMS_LICENSE > $(gamspy show base)/gamslice.txt
-    - gamspy install solver -a --use-uv
-    - which python
-    - gamspy show license
+    - python -m gamspy show license
     - python scripts/performance/lp/main.py
     - python scripts/performance/qcp/main.py
-    - gamspy install license $LOCAL_LICENSE
+    - python -m gamspy install license $LOCAL_LICENSE
     - python scripts/performance/performance.py
     - python scripts/performance/read.py
     - python scripts/performance/main_IJKLM.py

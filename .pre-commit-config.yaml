@@ -17,7 +17,7 @@ repos:
     rev: v1.5.0
     hooks:
     -   id: detect-secrets
-        args: ['--baseline', '.secrets.baseline']
+        args: [ --baseline, .secrets.baseline, --exclude-files, ^docs/user/notebooks/]
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.14
     hooks:
