@@ -358,6 +358,11 @@ def test_loadRecordsFromGdxSync(tmp_path):
     m.loadRecordsFromGdx(tmp_file, symbol_names={"i": "j"})
     assert j.records is None, j.records
 
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    m.loadRecordsFromGdx(tmp_file)
+    assert "j" in m.data
+
 
 @pytest.mark.unit
 def test_enums():
