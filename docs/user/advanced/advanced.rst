@@ -14,6 +14,7 @@ fundamental GAMSPy ideas and philosophy.
    :maxdepth: 1
 
    ./debugging
+   ./performance
    ./special_features
    ./miro
    ./model_instance

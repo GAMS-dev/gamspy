@@ -338,8 +338,8 @@ def get_convert_solver_options(
             solver_options[name] = str((path / value).resolve())
 
     if options is not None:
-        extra_options = options.model_dump(exclude_none=True)
-        for key, value in extra_options.items():
+        convert_options = options.model_dump(exclude_none=True)
+        for key, value in convert_options.items():
             name = OPTION_RENAME_MAP.get(key, key)
             solver_options[name] = int(value) if isinstance(value, bool) else value
 

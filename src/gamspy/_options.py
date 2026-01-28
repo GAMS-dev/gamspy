@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict
+from typing_extensions import override
 
 from gamspy.exceptions import ValidationError
 
@@ -381,8 +382,9 @@ class Options(BaseModel):
     zero_rounding_threshold: float | None = None
     report_underflow: bool | None = None
 
+    @override
     def model_post_init(self, context: Any) -> None:
-        self._extra_options: dict[str, Any] = {}
+        self._hidden_options: dict[str, Any] = {}
         self._debug_options: dict[str, Any] = {}
         self._solver: str | None = None
         self._problem: str | None = None
@@ -502,9 +504,9 @@ class Options(BaseModel):
         else:
             self._solver_options_file = "0"
 
-    def _set_extra_options(self, options: dict) -> None:
+    def _set_hidden_options(self, options: dict) -> None:
         """Set extra options of the backend"""
-        self._extra_options = options
+        self._hidden_options = options
 
     def _set_debug_options(self, options: dict) -> None:
         """Set debugging options"""
@@ -606,7 +608,7 @@ class Options(BaseModel):
         all_options["optfile"] = self._solver_options_file
 
         # Extra options
-        all_options.update(**self._extra_options)
+        all_options.update(**self._hidden_options)
         all_options.update(**self._debug_options)
 
         if self._frame is not None:
@@ -753,7 +755,7 @@ class ConvertOptions(BaseModel):
     >>> eq[i] = x[i] >= 1
     >>> model = gp.Model(m, "test_model", equations=[eq], problem="LP", sense="min", objective=gp.Sum(i, x[i]))
     >>> options = gp.ConvertOptions(GDXNames=False)
-    >>> # model.convert("jacobian", file_format=gp.FileFormat.GDXJacobian, options=options)
+    >>> model.convert("jacobian", file_format=gp.FileFormat.GDXJacobian, options=options) # doctest: +SKIP
 
     """
 

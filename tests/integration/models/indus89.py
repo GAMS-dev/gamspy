@@ -51,6 +51,7 @@ def main():
 
     z = Set(container, "z", domain=["*"], description="agroclimatic zones")
     pv = Set(container, "pv", domain=["*"], description="provinces and country")
+    p1 = Set(container, "pv1", domain=pv, description="provinces")
     pv2 = Set(container, "pv2", domain=[pv], description="punjab and sind")
     pvz = Set(container, "pvz", domain=[pv, z], description="province to zone map")
     cq = Set(container, "cq", domain=["*"], description="crop and livestock products")
@@ -64,6 +65,7 @@ def main():
     g = Set(container, "g", domain=["*"], description="ground water quality types")
     gf = Set(container, "gf", domain=[g], description="fresh ground water sub-zone")
     gs = Set(container, "gs", domain=[g], description="saline ground water sub-zone")
+    _ = Set(container, "t1", description="sub zones by gw quality")
     r1 = Set(container, "r1", domain=["*"], description="resources")
     dc = Set(
         container, "dc", domain=[r1], description="characteristics of canal command"
@@ -90,6 +92,7 @@ def main():
     ci = Set(container, "ci", domain=["*"], description="crop input outputs")
     p2 = Set(container, "p2", domain=[ci], description="")
     a = Set(container, "a", domain=["*"], description="animal types")
+    _ = Set(container, "ai", domain=["*"], description="animals input output")
     q = Set(container, "q", domain=[cq], description="livestock commodities")
     nt = Set(container, "nt", domain=["*"], description="nutrients for animals")
     is_renamed = Set(

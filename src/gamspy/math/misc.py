@@ -22,6 +22,30 @@ if TYPE_CHECKING:
 
 
 class MathOp(operable.Operable):
+    """
+    Represents a symbolic and numerical mathematical operation.
+
+    Parameters
+    ----------
+    op_name : str
+        Name of the operation.
+    elements : tuple
+        Arguments for the operation.
+    safe_cancel : bool
+        Whether to allow square and square root to cancel each other.
+
+    Examples
+    --------
+    >>> from gamspy import Container, Parameter
+    >>> from gamspy.math import Round, div
+    >>> m = Container()
+    >>> a = Parameter(m, "a", records=200)
+    >>> b = Parameter(m, "b")
+    >>> Round(div(a, 3), 2).toValue()
+    np.float64(66.67)
+
+    """
+
     def __init__(
         self,
         op_name: str,
@@ -55,6 +79,18 @@ class MathOp(operable.Operable):
         Returns
         -------
         pd.DataFrame | None
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter
+        >>> from gamspy.math import Round, div
+        >>> m = Container()
+        >>> a = Parameter(m, "a", records=200)
+        >>> b = Parameter(m, "b")
+        >>> Round(div(a, 3), 2).records
+           value
+        0  66.67
+
         """
         container = self.container
         if container is None:
@@ -80,6 +116,17 @@ class MathOp(operable.Operable):
         ------
         TypeError
             In case the dimension of the expression is not zero.
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter
+        >>> from gamspy.math import Round, div
+        >>> m = Container()
+        >>> a = Parameter(m, "a", records=200)
+        >>> b = Parameter(m, "b")
+        >>> Round(div(a, 3), 2).toValue()
+        np.float64(66.67)
+
         """
         if self.dimension != 0:
             raise TypeError(
@@ -99,6 +146,18 @@ class MathOp(operable.Operable):
         Returns
         -------
         list | None
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from gamspy import Container, Parameter, Set
+        >>> from gamspy.math import Round, div
+        >>> m = Container()
+        >>> i = Set(m, "i", records=["i1", "i2"])
+        >>> a = Parameter(m, "a", domain=i, records=np.array([200, 300]))
+        >>> Round(div(a, 3), 2).toList()
+        [['i1', 66.67], ['i2', 100.0]]
+
         """
         records = self.records
         if records is not None:
@@ -107,6 +166,22 @@ class MathOp(operable.Operable):
         return None
 
     def gamsRepr(self) -> str:
+        """
+        Representation of this MathOp in GAMS.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, "a", records=5)
+        >>> print(gp.math.div(a,5).gamsRepr())
+        div(a,5)
+
+        """
         operands_str = ",".join([_stringify(elem) for elem in self.elements])
         return f"{self.op_name}({operands_str})"
 
@@ -117,6 +192,15 @@ class MathOp(operable.Operable):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, "a", records=5)
+        >>> print(gp.math.div(a,5).latexRepr())
+        div(a,5)
+
         """
         op_map = {
             "sqrt": "\\sqrt",

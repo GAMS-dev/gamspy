@@ -59,8 +59,8 @@ autoupgrade:
     - git fetch origin $CI_COMMIT_REF_NAME
     # Force the local checkout to exactly match the remote branch
     - git checkout -B $CI_COMMIT_REF_NAME origin/$CI_COMMIT_REF_NAME
-    - pip install --upgrade pip && pip install pre-commit uv
-    - pre-commit autoupdate
+    - pip install --upgrade pip && pip install prek uv
+    - prek auto-update
     - uv lock --upgrade
 
     - |

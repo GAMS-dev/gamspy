@@ -8,11 +8,10 @@ leg-cli-3.14:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv venv314 --python 3.14
-    - source venv314/bin/activate
-    - uv pip install pip
+    - uv venv .venv --python 3.14
+    - source .venv/bin/activate
     - uv build
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
     name: linux_3.14
@@ -29,10 +28,9 @@ leg-cli-3.10:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv venv310 --python 3.10
-    - source venv310/bin/activate
-    - uv pip install pip
-    - uv pip install .[dev,test] --force-reinstall
+    - uv venv .venv --python 3.10
+    - source .venv/bin/activate
+    - uv sync --group test
     - python -m pytest -x -v -s -m 'cli' tests
 
 lag-cli-3.14:
@@ -45,11 +43,11 @@ lag-cli-3.14:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv venv314 --python 3.14
-    - source venv314/bin/activate
-    - uv pip install pip
+    - uv venv .venv --python 3.14
+    - source .venv/bin/activate
     - uv build
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
+    - uv pip install gamspy-arm-perf
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
     name: linux_arm64_3.14
@@ -66,10 +64,10 @@ lag-cli-3.10:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv venv310 --python 3.10
-    - source venv310/bin/activate
-    - uv pip install pip
-    - uv pip install .[dev,test] --force-reinstall
+    - uv venv .venv --python 3.10
+    - source .venv/bin/activate
+    - uv sync --group test
+    - uv pip install gamspy-arm-perf
     - python -m pytest -x -v -s -m 'cli' tests
 
 dac-cli-3.14:
@@ -84,7 +82,7 @@ dac-cli-3.14:
     - uv venv .venv --python 3.14
     - source .venv/bin/activate
     - uv build
-    - uv pip install .[dev,test] pip --force-reinstall
+    - uv sync --group test
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
     name: macos_arm64_3.14
@@ -101,7 +99,7 @@ dac-cli-3.10:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python 3.10
     - source .venv/bin/activate
-    - uv pip install .[dev,test] pip --force-reinstall
+    - uv sync --group test
     - python -m pytest -x -v -s -m 'cli' tests
 
 deg-cli-3.14:
@@ -115,7 +113,7 @@ deg-cli-3.14:
     - uv venv .venv --python 3.14
     - source .venv/bin/activate
     - uv build
-    - uv pip install .[dev,test] pip --force-reinstall
+    - uv sync --group test
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
     name: macos_x86_64_3.14
@@ -133,7 +131,7 @@ deg-cli-3.10:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python 3.10
     - source .venv/bin/activate
-    - uv pip install .[dev,test] pip --force-reinstall
+    - uv sync --group test
     - python -m pytest -x -v -s -m 'cli' tests
 
 wei-cli-3.14:
@@ -146,9 +144,8 @@ wei-cli-3.14:
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - uv venv .venv --python 3.14
     - .venv\Scripts\Activate.ps1
-    - uv pip install pip
     - uv build
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
     - python -m pytest -x -v -s -m 'cli' tests
   artifacts:
     name: windows_3.14
@@ -165,6 +162,5 @@ wei-cli-3.10:
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - uv venv .venv --python 3.10
     - .venv\Scripts\Activate.ps1
-    - uv pip install pip
-    - uv pip install .[dev,test] --force-reinstall
+    - uv sync --group test
     - python -m pytest -x -v -s -m 'cli' tests
