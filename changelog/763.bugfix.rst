@@ -1,1 +1,1 @@
-Make loadRecordsFromGdx respect .synchronize attribute of symbols.
+Revert backward breaking change in loadRecordsFromGdx.

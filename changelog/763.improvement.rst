@@ -1,1 +1,0 @@
-Accept Path-like load_from argument in container.loadRecordsFromGdx function.
