@@ -19,8 +19,8 @@ Sample Problem
 ==============
 
 
-.. tabs::
-   .. group-tab:: Feed-forward Neural Network
+.. tab-set::
+   .. tab-item:: Feed-forward Neural Network
 
       Let’s assume you have trained a simple feed-forward neural network for optical
       character recognition, and you want to test the robustness of this neural network.
@@ -28,7 +28,7 @@ Sample Problem
       want to follow this tutorial locally, you can download the `weights
       <https://github.com/GAMS-dev/gamspy/blob/develop/docs/_static/ffn_data.pth?raw=true>`_.
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
 
       Let’s assume you have trained a simple convolutional neural network for optical
       character recognition, and you want to test the robustness of this neural network.
@@ -47,13 +47,13 @@ Proceedings of the IEEE 86.11 (1998): 2278-2324.
 Importing the neural net
 ------------------------
 
-.. tabs::
-   .. group-tab:: Feed-forward Neural Network
+.. tab-set::
+   .. tab-item:: Feed-forward Neural Network
 
      We trained the neural network using PyTorch, with a single hidden layer
      consisting of 20 neurons with ReLU activation function.
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
 
      We trained the convolutional neural network using PyTorch, with 2 hidden
      layers with ReLU activation function.
@@ -73,8 +73,8 @@ Let's start with the imports
 
 And then import the Neural Network, so we can get its weights:
 
-.. tabs::
-   .. group-tab:: Feed-forward Neural Network
+.. tab-set::
+   .. tab-item:: Feed-forward Neural Network
 
       .. code-block:: python
 
@@ -97,7 +97,7 @@ And then import the Neural Network, so we can get its weights:
          network = SimpleModel()
          network.load_state_dict(torch.load("ffn_data.pth", weights_only=True))
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
 
       .. code-block:: python
 
@@ -132,8 +132,8 @@ find the minimum change required for the neural network to misclassify it.
 Testing with a sample
 ---------------------
 
-.. tabs::
-   .. group-tab:: Feed-forward Neural Network
+.. tab-set::
+   .. tab-item:: Feed-forward Neural Network
 
       .. code-block:: python
       
@@ -156,7 +156,7 @@ Testing with a sample
          else:
              print("Pick some other data")
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
 
       .. code-block:: python
       
@@ -185,8 +185,8 @@ Embedding the Neural Net
 Let's create the container and recreate the sample image
 in GAMSPy for later use.
 
-.. tabs::
-   .. group-tab:: Feed-forward Neural Network
+.. tab-set::
+   .. tab-item:: Feed-forward Neural Network
 
       In the feed-forward neural net, we pass the flattened image.
 
@@ -199,7 +199,7 @@ in GAMSPy for later use.
       
          image = gp.Parameter(m, name="image", domain=dim(image_data.shape), records=image_data)
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
 
       In the CNN, we do not flatten the image. Expected shape is Batch x Channel x Height x Width
        
@@ -220,11 +220,11 @@ Get the weights
 Then we start creating GAMSPy parameters contaning the weights from the neural network:
 
 
-.. tabs::
-   .. group-tab:: Feed-forward Neural Network
+.. tab-set::
+   .. tab-item:: Feed-forward Neural Network
       
-      .. tabs::
-         .. group-tab:: Linear Formulation
+      .. tab-set::
+         .. tab-item:: Linear Formulation
       
             Linear formulation will create the parameters for you. 
       
@@ -244,7 +244,7 @@ Then we start creating GAMSPy parameters contaning the weights from the neural n
                l2.load_weights(l2_weight, b2_weight)
             
       
-         .. group-tab:: Matrix Multiplication
+         .. tab-item:: Matrix Multiplication
       
             You need to create `w1`, `b1`, `w2` and `b2` parameters. 
       
@@ -274,7 +274,7 @@ Then we start creating GAMSPy parameters contaning the weights from the neural n
       chose to work directly with the logits, as softmax is a monotonically
       increasing function.
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
       
       Technically, you can write convolutions without formulations but it is kind of
       messy to write. And using formulations over explicitly writing is suggested.
@@ -310,16 +310,16 @@ We create a new variable called `noise`, which will be used to perturb the
 input image. The `noise` variable has the same dimensions as the input image.
 The variable `a1` will serve as the input to the neural network. 
 
-.. tabs::
+.. tab-set::
 
-   .. group-tab:: Feed-forward Neural Network
+   .. tab-item:: Feed-forward Neural Network
 
       .. code-block:: python
 
          noise = gp.Variable(m, name="noise", domain=dim([784]))
          a1 = gp.Variable(m, name="a1", domain=dim([784]))
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
 
       .. code-block:: python
 
@@ -346,13 +346,13 @@ Create the intermediate variables
 
 This step is only required if you do not use formulations.
 
-.. tabs::
-   .. group-tab:: Feed-forward Neural Network
+.. tab-set::
+   .. tab-item:: Feed-forward Neural Network
       If you do not use formulations, you need to explicitly define the
       intermediate variables.
 
-      .. tabs::
-         .. group-tab:: Linear Formulation
+      .. tab-set::
+         .. tab-item:: Linear Formulation
             `z2` and `z3` will be created by linear formulations.
       
             .. code-block:: python
@@ -360,7 +360,7 @@ This step is only required if you do not use formulations.
                # z2 = gp.Variable(m, name="a2", domain=dim([hidden_layer_neurons]))
                # z3 = gp.Variable(m, name="a3", domain=dim([10]))
       
-         .. group-tab:: Matrix Multiplication
+         .. tab-item:: Matrix Multiplication
             We create `z2` and `z3`.
       
             .. code-block:: python
@@ -368,7 +368,7 @@ This step is only required if you do not use formulations.
                z2 = gp.Variable(m, name="a2", domain=dim([hidden_layer_neurons]))
                z3 = gp.Variable(m, name="a3", domain=dim([10]))
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
       
       Formulations that we use, will create intermediate variables
       automatically.
@@ -379,10 +379,10 @@ Forward Pass
 
 Let's mimic the forward pass.
 
-.. tabs::
-   .. group-tab:: Feed-forward Neural Network
-      .. tabs::
-         .. group-tab:: Linear Formulation
+.. tab-set::
+   .. tab-item:: Feed-forward Neural Network
+      .. tab-set::
+         .. tab-item:: Linear Formulation
       
             .. code-block:: python
       
@@ -398,7 +398,7 @@ Let's mimic the forward pass.
       
                z3, _ = l2(a2)
       
-         .. group-tab:: Matrix Multiplication
+         .. tab-item:: Matrix Multiplication
             .. code-block:: python
       
                forward_1 = gp.Equation(m, "eq2", domain=dim([hidden_layer_neurons]))
@@ -420,7 +420,7 @@ Let's mimic the forward pass.
                forward_2[...] = z3 == w2 @ a2 + b2
 
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
       
       .. code-block:: python
 
@@ -458,8 +458,8 @@ correct one.
 
 In this example, the real digit is 7. We want the network to confuse it with 2.
 
-.. tabs::
-   .. group-tab:: Feed-forward Neural Network
+.. tab-set::
+   .. tab-item:: Feed-forward Neural Network
       `z3` is the output of the feed-forward neural net.
 
       .. code-block:: python
@@ -467,7 +467,7 @@ In this example, the real digit is 7. We want the network to confuse it with 2.
          favor_confused = gp.Equation(m, "favor_confused")
          favor_confused[...] = z3["2"] >= z3["7"] + 0.1
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
       `z5` is the output of the CNN.
 
       .. code-block:: python
@@ -515,8 +515,8 @@ Finally, bringing it all together:
 This takes a couple of seconds to solve, after which we can investigate:
 
 
-.. tabs::
-   .. group-tab:: Feed-forward Neural Network
+.. tab-set::
+   .. tab-item:: Feed-forward Neural Network
 
       .. code-block:: python
       
@@ -527,7 +527,7 @@ This takes a couple of seconds to solve, after which we can investigate:
          [ -7.45149396 -13.61945982   0.77687953   2.1609202  -16.85390135
            -4.49846799 -22.13348944   0.67687953  -1.63533975  -8.07978064]
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
 
       .. code-block:: python
       
@@ -544,8 +544,8 @@ However, it's always beneficial to visually inspect the perturbed image and
 verify that the network indeed misclassifies it.
 
 
-.. tabs::
-   .. group-tab:: Feed-forward Neural Network
+.. tab-set::
+   .. tab-item:: Feed-forward Neural Network
 
       .. code-block:: python
       
@@ -560,7 +560,7 @@ verify that the network indeed misclassifies it.
                     0.6769,  -1.6353,  -8.0798]], grad_fn=<AddmmBackward0>)
 
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
 
       .. code-block:: python
       
@@ -593,8 +593,8 @@ But the question remains: would we also confuse the image?
    draw_nn = noise_data + image_data
    plt.imshow(draw_nn.reshape(28, 28), cmap='binary', vmin=0, vmax=1)
 
-.. tabs::
-   .. group-tab:: Feed-forward Neural Network
+.. tab-set::
+   .. tab-item:: Feed-forward Neural Network
       
       .. image:: ../images/noisy_image.png
         :align: center
@@ -602,7 +602,7 @@ But the question remains: would we also confuse the image?
       A human would easily recognize this digit as a 7, not a 3, leading us to
       conclude that this network lacks robustness.
 
-   .. group-tab:: Convolutional Neural Network
+   .. tab-item:: Convolutional Neural Network
 
       .. image:: ../images/noisy_image_2.png
         :align: center

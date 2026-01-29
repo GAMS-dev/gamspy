@@ -591,9 +591,9 @@ boolean varibales satisfies the boolean expression: ::
 
 An altenative syntax for these operations is as follows:
 
-.. tabs:: 
+.. tab-set:: 
 
-    .. tab:: Alternative
+    .. tab-item:: Alternative
     
         .. code-block:: python
 
@@ -624,7 +624,7 @@ An altenative syntax for these operations is as follows:
             totcap = Parameter(m, domain=p, description="total capacity by process")
             totcap[p] = capacity.sum(i)
 
-    .. tab:: Original
+    .. tab-item:: Original
 
         .. code-block:: python
 

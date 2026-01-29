@@ -62,8 +62,8 @@ of the breakpoints. Let's imagine we want to model the following function:
 With using either formulation, we can do as following:
 
 
-.. tabs::
-   .. tab:: Interval formulation
+.. tab-set::
+   .. tab-item:: Interval formulation
       .. code-block:: python
 
          import gamspy as gp
@@ -76,7 +76,7 @@ With using either formulation, we can do as following:
              y_points=[2, 1, 1, 2, 3],
          )
 
-   .. tab:: Convexity formulation
+   .. tab-item:: Convexity formulation
       .. code-block:: python
 
          import gamspy as gp

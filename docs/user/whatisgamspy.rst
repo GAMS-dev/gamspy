@@ -22,9 +22,9 @@ GAMSPy delegates the expensive assignment and solve statements to the GAMS execu
 are at the core of the GAMSPy and GAMS execution system. For example, in many optimization libraries, you would 
 write your equations as shown in the ``Other Libraries`` block below: 
 
-.. tabs::
+.. tab-set::
 
-    .. tab:: Other-Libraries
+    .. tab-item:: Other-Libraries
 
       .. code-block:: python
         :emphasize-lines: 13,14,15
@@ -45,7 +45,7 @@ write your equations as shown in the ``Other Libraries`` block below:
           return sum(m.a[i, j] * m.x[i, j] for j in m.j) >= m.b[i]
         m.e = ol.Equation(m.i, definition=e_definition)
 
-    .. tab:: GAMSPy
+    .. tab-item:: GAMSPy
 
       .. code-block:: python
         :emphasize-lines: 11
