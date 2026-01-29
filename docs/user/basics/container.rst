@@ -75,8 +75,8 @@ The :class:`Container <gamspy.Container>` supports Python's context manager prot
 (`with` statement). This approach is recommended as it automatically associates new 
 symbols with the active container, reducing code verbosity.
 
-.. tabs:: 
-    .. group-tab:: With Context Manager (Recommended)
+.. tab-set:: 
+    .. tab-item:: With Context Manager (Recommended)
         .. code-block:: python
 
             import gamspy as gp
@@ -86,7 +86,7 @@ symbols with the active container, reducing code verbosity.
                 i = gp.Set(description="Sets do not need explicit container arg")
                 p = gp.Parameter(domain=i, description="Parameters find 'm' automatically")
 
-    .. group-tab:: Without Context Manager
+    .. tab-item:: Without Context Manager
         .. code-block:: python
 
             import gamspy as gp
@@ -176,9 +176,9 @@ for every call, which can be slow for models with large number of symbols.
 To improve performance, use :meth:`Container.setRecords <gamspy.Container.setRecords>` to 
 update multiple symbols in a single transaction.
 
-.. tabs::
+.. tab-set::
 
-    .. tab:: One by one
+    .. tab-item:: One by one
 
         .. code-block:: python
 
@@ -189,7 +189,7 @@ update multiple symbols in a single transaction.
             i.setRecords(range(10))
             k.setRecords(range(5))
 
-    .. tab:: Bulk setRecords
+    .. tab-item:: Bulk setRecords
 
          .. code-block:: python
 

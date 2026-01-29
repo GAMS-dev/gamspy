@@ -15,9 +15,9 @@ Set-based indexing is at the core of the GAMSPy and GAMS execution system. They 
 Therefore, we encourage the use of it in most contexts. Yet, in certain cases, one might be inclined to do literal indexing (with a str or an int). 
 Because of that GAMSPy also allows literal indexing.
 
-.. tabs::
+.. tab-set::
 
-    .. tab:: Set-based
+    .. tab-item:: Set-based
 
         .. code-block:: python
             
@@ -28,7 +28,7 @@ Because of that GAMSPy also allows literal indexing.
             a = gp.Parameter(m, domain=i, records=[('i1', 1), ('i2', 2)])
             a[i] = 5 # set-based indexing that sets all records of a to 5
 
-    .. tab:: Literal
+    .. tab-item:: Literal
 
         .. code-block:: python
 

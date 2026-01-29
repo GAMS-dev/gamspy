@@ -10,23 +10,23 @@ Basic Installation
 Creating a virtual environment is highly recommended whenever you start working on a new Python project.
 You can create a virtual environment and activate it as follows:
 
-.. tabs::
+.. tab-set::
 
-    .. tab:: Linux-MacOS
+    .. tab-item:: Linux-MacOS
 
         .. code-block:: bash
 
             python -m venv .gamspy_venv
             source .gamspy_venv/bin/activate
 
-    .. tab:: Windows (Bash)
+    .. tab-item:: Windows (Bash)
         
         .. code-block:: bash
 
             python -m venv .gamspy_venv
             source .gamspy_venv/Scripts/activate
 
-    .. tab:: Windows (PowerShell)
+    .. tab-item:: Windows (PowerShell)
     
         .. code-block:: bash
 
