@@ -9,7 +9,10 @@ python:
   install:
     # Install our python package before building the docs
     - method: pip
-      path: .[doc]
+      path: .
+      args:
+        - "--group"
+        - "doc"
 
 sphinx:
   configuration: docs/conf.py
