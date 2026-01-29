@@ -12,7 +12,7 @@ leg-update-website:
   script:
     - git clone https://engine_ci:${PF_GITLAB_WEBSITE_TOKEN}@git.gams.com/smann/new.gams.com.git --branch master --single-branch website
     - export GAMSPY_VERSION=$(grep '^version' pyproject.toml | sed -E 's/version *= *"([^"]+)"/\1/')
-    - export GAMSPY_RELEASE_DATE=\"$(date --rfc-3339=date)\"
+    - export GAMSPY_RELEASE_DATE=$(date --rfc-3339=date)
     - cd website && sed -i -e 's/^\( *gamspy_release\) *=.*/\1 = "'"${GAMSPY_VERSION}"'"/' ./config.toml && sed -i -e 's/^\( *gamspy_release_date\) *=.*/\1 = "'"${GAMSPY_RELEASE_DATE}"'"/' ./config.toml && git add config.toml && git commit -m "Update gamspy version" && git push origin master
   rules:
     - if: $CI_COMMIT_BRANCH != "master"
