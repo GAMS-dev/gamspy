@@ -527,3 +527,12 @@ def test_alternative_operation_syntax():
     expr = x[i, j].sor(i, j)
     expr2 = Sor((i, j), x[i, j])
     assert expr.gamsRepr() == expr2.gamsRepr()
+
+
+def test_domain_with_no_records_validation():
+    # Should not fail if the domain set does not have any records
+    # See: #766
+    m = gp.Container()
+    i = gp.Set(m)
+    a = gp.Parameter(m, domain=i)
+    assert a["i2"].records is None
