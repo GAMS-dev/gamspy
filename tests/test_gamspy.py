@@ -73,20 +73,20 @@ def test_config():
 def test_domain_checking_config_performance():
     gp.set_options({"DOMAIN_VALIDATION": 1})
     m = gp.Container()
-    i = gp.Set(m, records=range(999))
+    i = gp.Set(m, records=range(99))
     a = gp.Parameter(m, domain=i)
     start = time.time()
-    for idx in range(999):
+    for idx in range(99):
         _ = a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx]
 
     timing_with_validation = time.time() - start
 
     gp.set_options({"DOMAIN_VALIDATION": 0})
     m = gp.Container()
-    i = gp.Set(m, records=range(999))
+    i = gp.Set(m, records=range(99))
     a = gp.Parameter(m, domain=i)
     start = time.time()
-    for idx in range(999):
+    for idx in range(99):
         _ = a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx]
     timing_without_validation = time.time() - start
     gp.set_options({"DOMAIN_VALIDATION": 1})

@@ -331,7 +331,8 @@ def validate_domain(
                 try:
                     if (
                         given != "*"
-                        and len(actual.records) < 1000
+                        and actual.records is not None
+                        and len(actual.records) < 100
                         and not actual.records.isin([given]).sum().any()
                     ):
                         raise ValidationError(
