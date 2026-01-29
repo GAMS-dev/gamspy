@@ -995,6 +995,7 @@ class Container(gt.Container):
             symbol_names = utils._get_symbol_names_from_gdx(
                 self.system_directory, load_from
             )
+            self._add_statement(f"$declareAndLoad {load_from}")
             symbol_names = self._filter_load_symbols(
                 symbol_names,  # type: ignore
                 create_if_not_declared,
