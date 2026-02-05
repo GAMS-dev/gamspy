@@ -975,16 +975,8 @@ def test_solve(data):
     assert transport.status == ModelStatus.OptimalGlobal
     assert transport.solve_status == SolveStatus.NormalCompletion
 
-    pytest.raises(
-        ValidationError,
-        transport.solve,
-        None,
-        None,
-        None,
-        None,
-        None,
-        "bla",
-    )
+    with pytest.raises(ValidationError):
+        transport.solve(None, None, None, None, None, "bla")
 
     from gamspy._model import ATTRIBUTE_MAP
 
@@ -998,29 +990,30 @@ def test_solve(data):
     assert not any("dummy_" in name for name in m.data)
 
     # Test invalid problem
-    pytest.raises(ValueError, Model, m, "dummy", "", "bla", [cost])
+    with pytest.raises(ValueError):
+        Model(m, "dummy", "", "bla", [cost])
 
     # Test invalid sense
-    pytest.raises(ValueError, Model, m, "dummy", "", "LP", [cost], "bla")
+    with pytest.raises(ValueError):
+        Model(m, "dummy", "", "LP", [cost], "bla")
 
     # Test invalid objective variable
-    pytest.raises(TypeError, Model, m, "dummy", "", "LP", [cost], "min", a)
+    with pytest.raises(TypeError):
+        Model(m, "dummy", "", "LP", [cost], "min", a)
 
     # Test invalid commandline options
-    pytest.raises(
-        TypeError,
-        transport.solve,
-        None,
-        {"bla": 100},
-    )
+    with pytest.raises(TypeError):
+        transport.solve(None, {"bla": 100})
 
-    pytest.raises(TypeError, transport.solve, None, 5)
+    with pytest.raises(TypeError):
+        transport.solve(None, 5)
 
     # Try to solve invalid model
     m = Container()
     cost = Equation(m, "cost")
     model = Model(m, "dummy", equations=[cost], problem="LP", sense="min")
-    pytest.raises(ValidationError, model.solve)
+    with pytest.raises(ValidationError):
+        model.solve()
 
 
 @pytest.mark.skipif(

@@ -57,23 +57,31 @@ def test_regression_tree_bad_init(data):
     tree = DecisionTreeStruct(**tree_args)
 
     # No Container
-    pytest.raises(TypeError, RegressionTree, tree)
+    with pytest.raises(TypeError):
+        RegressionTree(tree)
 
     # No regressor
-    pytest.raises(TypeError, RegressionTree, m)
+    with pytest.raises(TypeError):
+        RegressionTree(m)
 
     # wrong container object
-    pytest.raises(ValidationError, RegressionTree, "m", tree)
+    with pytest.raises(ValidationError):
+        RegressionTree("m", tree)
 
     # wrong regressor type, it must be either sklearn.tree.DecisionTreeRegressor or DecisionTreeStruct object
-    pytest.raises(ValidationError, RegressionTree, m, tree_args)
+    with pytest.raises(ValidationError):
+        RegressionTree(m, tree_args)
 
     # initializing the formulation with untrained sklearn.tree
     tree = DecisionTreeRegressor(random_state=42)
-    pytest.raises(ValidationError, RegressionTree, m, tree)
+    with pytest.raises(ValidationError):
+        RegressionTree(m, tree)
 
-    with mock.patch.dict("sys.modules", {"sklearn.tree": None}):
-        pytest.raises(ValidationError, RegressionTree, m, tree)
+    with (
+        mock.patch.dict("sys.modules", {"sklearn.tree": None}),
+        pytest.raises(ValidationError),
+    ):
+        RegressionTree(m, tree)
 
 
 def test_regression_tree_incomplete_data(data):
@@ -83,31 +91,36 @@ def test_regression_tree_incomplete_data(data):
     rm_tree_args = tree_args.copy()
     rm_tree_args.pop("children_left")
     broken_tree = DecisionTreeStruct(**rm_tree_args)
-    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+    with pytest.raises(ValidationError):
+        RegressionTree(m, broken_tree)
 
     # tree instance with missing attribute, children_right
     rm_tree_args = tree_args.copy()
     rm_tree_args.pop("children_right")
     broken_tree = DecisionTreeStruct(**rm_tree_args)
-    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+    with pytest.raises(ValidationError):
+        RegressionTree(m, broken_tree)
 
     # tree instance with missing attribute, features
     rm_tree_args = tree_args.copy()
     rm_tree_args.pop("feature")
     broken_tree = DecisionTreeStruct(**rm_tree_args)
-    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+    with pytest.raises(ValidationError):
+        RegressionTree(m, broken_tree)
 
     # tree instance with missing attribute, threshold
     rm_tree_args = tree_args.copy()
     rm_tree_args.pop("threshold")
     broken_tree = DecisionTreeStruct(**rm_tree_args)
-    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+    with pytest.raises(ValidationError):
+        RegressionTree(m, broken_tree)
 
     # tree instance with missing attribute, value
     rm_tree_args = tree_args.copy()
     rm_tree_args.pop("value")
     broken_tree = DecisionTreeStruct(**rm_tree_args)
-    pytest.raises(ValidationError, RegressionTree, m, broken_tree)
+    with pytest.raises(ValidationError):
+        RegressionTree(m, broken_tree)
 
     # cannot assign values to attributes to once initialized dataclass
     broken_tree = DecisionTreeStruct(**tree_args)
@@ -122,13 +135,15 @@ def test_regression_tree_incomplete_data(data):
     # capacity must be positive
     tree_args["capacity"] = -5
     tree = DecisionTreeStruct(**tree_args)
-    pytest.raises(ValidationError, RegressionTree, m, tree)
+    with pytest.raises(ValidationError):
+        RegressionTree(m, tree)
     tree_args["capacity"] = 5
 
     # n_features must be positive
     tree_args["n_features"] = -2
     tree = DecisionTreeStruct(**tree_args)
-    pytest.raises(ValidationError, RegressionTree, m, tree)
+    with pytest.raises(ValidationError):
+        RegressionTree(m, tree)
 
 
 def test_regression_tree_bad_call(data):
@@ -138,22 +153,27 @@ def test_regression_tree_bad_call(data):
     rt = RegressionTree(m, tree)
 
     # missing required input
-    pytest.raises(TypeError, rt)
+    with pytest.raises(TypeError):
+        rt()
 
     # no input dimension
     in_data_1 = gp.Variable(m)
-    pytest.raises(ValidationError, rt, in_data_1)
+    with pytest.raises(ValidationError):
+        rt(in_data_1)
 
     # wrong input dimension, model has 2 features not 1
     in_data_2 = gp.Variable(m, domain=dim((5, 1)))
-    pytest.raises(ValidationError, rt, in_data_2)
+    with pytest.raises(ValidationError):
+        rt(in_data_2)
 
     # wrong type of input
     in_data_3 = gp.Set(m, domain=dim((5, 2)))
-    pytest.raises(ValidationError, rt, in_data_3)
+    with pytest.raises(ValidationError):
+        rt(in_data_3)
 
     # wrong value type for M either float or int
-    pytest.raises(ValidationError, rt, x, "M")
+    with pytest.raises(ValidationError):
+        rt(x, "M")
 
 
 def test_regression_tree_with_trained_sklearn_tree(data):
@@ -633,30 +653,39 @@ def test_random_forest_bad_init(data_rf):
     m, ensemble, tree_attrs, *_ = data_rf
 
     # No Container
-    pytest.raises(TypeError, RandomForest, ensemble)
+    with pytest.raises(TypeError):
+        RandomForest(ensemble)
 
     # No regressor
-    pytest.raises(TypeError, RandomForest, m)
+    with pytest.raises(TypeError):
+        RandomForest(m)
 
     # wrong container object
-    pytest.raises(ValidationError, RandomForest, "m", ensemble)
+    with pytest.raises(ValidationError):
+        RandomForest("m", ensemble)
 
     # wrong regressor type, it must be either sklearn.tree.DecisionTreeRegressor or DecisionTreeStruct object
-    pytest.raises(ValidationError, RandomForest, m, ensemble[0])
+    with pytest.raises(ValidationError):
+        RandomForest(m, ensemble[0])
 
     # initializing the formulation with untrained sklearn.tree
     ensemble = RandomForestRegressor(n_estimators=2, random_state=42)
-    pytest.raises(ValidationError, RandomForest, m, ensemble)
+    with pytest.raises(ValidationError):
+        RandomForest(m, ensemble)
 
     # missing package
-    with mock.patch.dict("sys.modules", {"sklearn.ensemble": None}):
-        pytest.raises(ValidationError, RandomForest, m, ensemble)
+    with (
+        mock.patch.dict("sys.modules", {"sklearn.ensemble": None}),
+        pytest.raises(ValidationError),
+    ):
+        RandomForest(m, ensemble)
 
     # one of the tree instance with missing attribute, this is more of a RegressionTree check
     t1, t2 = tree_attrs
     t2.pop("children_left")
     ensemble = [DecisionTreeStruct(**t1), DecisionTreeStruct(**t2)]
-    pytest.raises(ValidationError, RandomForest, m, ensemble)
+    with pytest.raises(ValidationError):
+        RandomForest(m, ensemble)
 
 
 def test_random_forest_with_sklearn(data_rf):
@@ -907,30 +936,39 @@ def test_gradient_boosting_bad_init(data_gbt):
     m, ensemble, tree_attrs, *_ = data_gbt
 
     # No Container
-    pytest.raises(TypeError, GradientBoosting, ensemble)
+    with pytest.raises(TypeError):
+        GradientBoosting(ensemble)
 
     # No regressor
-    pytest.raises(TypeError, GradientBoosting, m)
+    with pytest.raises(TypeError):
+        GradientBoosting(m)
 
     # wrong container object
-    pytest.raises(ValidationError, GradientBoosting, "m", ensemble)
+    with pytest.raises(ValidationError):
+        GradientBoosting("m", ensemble)
 
     # wrong regressor type, it must be either sklearn.tree.DecisionTreeRegressor or DecisionTreeStruct object
-    pytest.raises(ValidationError, GradientBoosting, m, ensemble[0])
+    with pytest.raises(ValidationError):
+        GradientBoosting(m, ensemble[0])
 
     # initializing the formulation with untrained sklearn.tree
     ensemble = GradientBoostingRegressor(n_estimators=2, random_state=42)
-    pytest.raises(ValidationError, GradientBoosting, m, ensemble)
+    with pytest.raises(ValidationError):
+        GradientBoosting(m, ensemble)
 
     # missing package
-    with mock.patch.dict("sys.modules", {"sklearn.ensemble": None}):
-        pytest.raises(ValidationError, GradientBoosting, m, ensemble)
+    with (
+        mock.patch.dict("sys.modules", {"sklearn.ensemble": None}),
+        pytest.raises(ValidationError),
+    ):
+        GradientBoosting(m, ensemble)
 
     # one of the tree instance with missing attribute, this is more of a RegressionTree check
     t1, t2 = tree_attrs
     t2.pop("children_left")
     ensemble = [DecisionTreeStruct(**t1), DecisionTreeStruct(**t2)]
-    pytest.raises(ValidationError, GradientBoosting, m, ensemble)
+    with pytest.raises(ValidationError):
+        GradientBoosting(m, ensemble)
 
 
 def test_gradient_boosting_with_sklearn(data_gbt):

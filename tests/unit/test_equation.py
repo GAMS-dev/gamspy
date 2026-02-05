@@ -56,17 +56,21 @@ def test_equation_creation(data):
         _ = e1.getDefinition()
 
     # non-str type name
-    pytest.raises(TypeError, Equation, m, 5)
+    with pytest.raises(TypeError):
+        Equation(m, 5)
 
     # no container
-    pytest.raises(ValidationError, Equation)
+    with pytest.raises(ValidationError):
+        Equation()
 
     # non-container type container
-    pytest.raises(TypeError, Equation, 5, "j")
+    with pytest.raises(TypeError):
+        Equation(5, "j")
 
     # try to create a symbol with same name but different type
     _ = Set(m, "i")
-    pytest.raises(TypeError, Equation, m, "i")
+    with pytest.raises(TypeError):
+        Equation(m, "i")
 
     # get already created symbol
     j1 = Equation(m, "j")
@@ -163,7 +167,8 @@ def test_nonbinding(data):
 def test_equation_declaration(data):
     m, *_ = data
     # Check if the name is reserved
-    pytest.raises(ValidationError, Equation, m, "set")
+    with pytest.raises(ValidationError):
+        Equation(m, "set")
 
     # Prepare data
     canning_plants = ["seattle", "san-diego"]

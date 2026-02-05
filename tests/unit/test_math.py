@@ -54,14 +54,18 @@ def test_math(data):
     assert op2.gamsRepr() == "centropy(v(i),b(i),1e-20)"
     op2 = gams_math.centropy(v[i], b[i], 1e-15)
     assert op2.gamsRepr() == "centropy(v(i),b(i),1e-15)"
-    pytest.raises(ValueError, gams_math.centropy, v[i], b[i], -1)
-    pytest.raises(TypeError, gams_math.centropy, v[i], b[i], s1)
+    with pytest.raises(ValueError):
+        gams_math.centropy(v[i], b[i], -1)
+    with pytest.raises(TypeError):
+        gams_math.centropy(v[i], b[i], s1)
 
     # cvPower
     op2 = gams_math.cv_power(3, b[i])
     assert op2.gamsRepr() == "cvPower(3,b(i))"
-    pytest.raises(ValueError, gams_math.cv_power, s1, b[i])
-    pytest.raises(ValueError, gams_math.cv_power, -1, b[i])
+    with pytest.raises(ValueError):
+        gams_math.cv_power(s1, b[i])
+    with pytest.raises(ValueError):
+        gams_math.cv_power(-1, b[i])
 
     # rPower
     op2 = gams_math.rpower(b[i], 3)
@@ -70,8 +74,10 @@ def test_math(data):
     # signPower
     op2 = gams_math.sign_power(b[i], 3)
     assert op2.gamsRepr() == "signPower(b(i),3)"
-    pytest.raises(ValueError, gams_math.sign_power, b[i], s1)
-    pytest.raises(ValueError, gams_math.sign_power, b[i], -5)
+    with pytest.raises(ValueError):
+        gams_math.sign_power(b[i], s1)
+    with pytest.raises(ValueError):
+        gams_math.sign_power(b[i], -5)
 
     # vcPower
     op2 = gams_math.vc_power(b[i], 3)
@@ -298,22 +304,26 @@ def test_math_2(data):
     op1 = gams_math.lse_max(a[i])
     assert op1.gamsRepr() == "lseMax(a(i))"
 
-    pytest.raises(ValidationError, gams_math.lse_max)
+    with pytest.raises(ValidationError):
+        gams_math.lse_max()
 
     op1 = gams_math.lse_max_sc(a[i], a[i])
     assert op1.gamsRepr() == "lseMaxSc(a(i),a(i))"
 
-    pytest.raises(ValidationError, gams_math.lse_max_sc, 5)
+    with pytest.raises(ValidationError):
+        gams_math.lse_max_sc(5)
 
     op1 = gams_math.lse_min(a[i])
     assert op1.gamsRepr() == "lseMin(a(i))"
 
-    pytest.raises(ValidationError, gams_math.lse_min)
+    with pytest.raises(ValidationError):
+        gams_math.lse_min()
 
     op1 = gams_math.lse_min_sc(a[i], a[i])
     assert op1.gamsRepr() == "lseMinSc(a(i),a(i))"
 
-    pytest.raises(ValidationError, gams_math.lse_min_sc, 5)
+    with pytest.raises(ValidationError):
+        gams_math.lse_min_sc(5)
 
     op1 = gams_math.ncp_cm(a[i], a[i], 3)
     assert op1.gamsRepr() == "ncpCM(a(i),a(i),3)"
@@ -329,7 +339,8 @@ def test_math_2(data):
 
     op1 = gams_math.poly(a[i], 3, 5, 7)
     assert op1.gamsRepr() == "poly(a(i),3,5,7)"
-    pytest.raises(ValidationError, gams_math.poly, a[i], 3)
+    with pytest.raises(ValidationError):
+        gams_math.poly(a[i], 3)
 
     op1 = gams_math.rand_binomial(1, 2)
     assert op1.gamsRepr() == "randBinomial(1,2)"
@@ -558,10 +569,14 @@ def test_leaky_relu(data):
     assert b.type == "binary"
 
     # must be in (0, 1)
-    pytest.raises(ValidationError, leaky_relu, x, -1)
-    pytest.raises(ValidationError, leaky_relu, x, 0)
-    pytest.raises(ValidationError, leaky_relu, x, 2)
-    pytest.raises(ValidationError, leaky_relu, x, 1)
+    with pytest.raises(ValidationError):
+        leaky_relu(x, -1)
+    with pytest.raises(ValidationError):
+        leaky_relu(x, 0)
+    with pytest.raises(ValidationError):
+        leaky_relu(x, 2)
+    with pytest.raises(ValidationError):
+        leaky_relu(x, 1)
 
     x_vals = [-100, -50, 0, 50, 100]
     y_vals = [-10, -5, 0, 50, 100]
@@ -726,10 +741,13 @@ def test_log_softmax(data):
     p = Parameter(m, name="p", domain=gams_math.dim([30, 3]))
 
     # log_softmax requires bare value
-    pytest.raises(ValidationError, gams_math.log_softmax, x - p)
-    pytest.raises(ValidationError, gams_math.log_softmax, x[...])
+    with pytest.raises(ValidationError):
+        gams_math.log_softmax(x - p)
+    with pytest.raises(ValidationError):
+        gams_math.log_softmax(x[...])
     # dim out of bounds
-    pytest.raises(IndexError, gams_math.log_softmax, x, 2)
+    with pytest.raises(IndexError):
+        gams_math.log_softmax(x, 2)
 
     # this uses LSE in background
     y, eqs = gams_math.log_softmax(x)
@@ -765,10 +783,13 @@ def test_softmax(data):
     p = Parameter(m, name="p", domain=gams_math.dim([30, 3]))
 
     # softmax requires bare value
-    pytest.raises(ValidationError, gams_math.softmax, x - p)
-    pytest.raises(ValidationError, gams_math.softmax, x[...])
+    with pytest.raises(ValidationError):
+        gams_math.softmax(x - p)
+    with pytest.raises(ValidationError):
+        gams_math.softmax(x[...])
     # dim out of bounds
-    pytest.raises(IndexError, gams_math.softmax, x, 2)
+    with pytest.raises(IndexError):
+        gams_math.softmax(x, 2)
 
     _y, equations = gams_math.softmax(x)
     assert "exp" in equations[0].getDefinition()

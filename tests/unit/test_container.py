@@ -157,14 +157,17 @@ def test_container(data):
     # test addX syntax
     m = Container()
     i1 = m.addSet("i")
-    pytest.raises(ValueError, m.addSet, "i", i1)
+    with pytest.raises(ValueError):
+        m.addSet("i", i1)
     assert isinstance(i1, Set)
     i2 = m.addSet("i")
     assert id(i1) == id(i2)
     i3 = m.addSet("i", records=["new_record"], description="new desc")
     assert id(i1) == id(i3)
-    pytest.raises(ValueError, m.addSet, "i", [j])
-    pytest.raises(ValueError, m.addSet, "i", None, 5)
+    with pytest.raises(ValueError):
+        m.addSet("i", [j])
+    with pytest.raises(ValueError):
+        m.addSet("i", None, 5)
 
     j1 = m.addAlias("j", i1)
     assert isinstance(j1, Alias)
@@ -174,28 +177,37 @@ def test_container(data):
     assert id(j3) == id(j2)
 
     a1 = m.addParameter("a")
-    pytest.raises(ValueError, m.addParameter, "a", i1)
+    with pytest.raises(ValueError):
+        m.addParameter("a", i1)
     assert isinstance(a1, Parameter)
     a2 = m.addParameter("a")
     assert id(a1) == id(a2)
-    pytest.raises(ValueError, m.addParameter, "a", ["*"])
-    pytest.raises(ValueError, m.addParameter, "a", None, None, 5)
+    with pytest.raises(ValueError):
+        m.addParameter("a", ["*"])
+    with pytest.raises(ValueError):
+        m.addParameter("a", None, None, 5)
 
     v1 = m.addVariable("v")
-    pytest.raises(ValueError, m.addVariable, "v", "free", domain=i1)
+    with pytest.raises(ValueError):
+        m.addVariable("v", "free", domain=i1)
     assert isinstance(v1, Variable)
     v2 = m.addVariable("v", description="blabla", records=pd.DataFrame())
     assert id(v1) == id(v2)
-    pytest.raises(ValueError, m.addVariable, "v", "free", ["*"])
-    pytest.raises(TypeError, m.addVariable, "v", "dayum")
+    with pytest.raises(ValueError):
+        m.addVariable("v", "free", ["*"])
+    with pytest.raises(TypeError):
+        m.addVariable("v", "dayum")
 
     e1 = m.addEquation("e")
-    pytest.raises(ValueError, m.addEquation, "e", "regular", i1)
+    with pytest.raises(ValueError):
+        m.addEquation("e", "regular", i1)
     assert isinstance(e1, Equation)
     e2 = m.addEquation("e")
     assert id(e1) == id(e2)
-    pytest.raises(ValueError, m.addEquation, "e", "bla")
-    pytest.raises(TypeError, m.addEquation, "e", "leq")
+    with pytest.raises(ValueError):
+        m.addEquation("e", "bla")
+    with pytest.raises(TypeError):
+        m.addEquation("e", "leq")
     e3 = m.addEquation("e", records=pd.DataFrame())
     assert id(e3) == id(e1)
 
@@ -514,7 +526,8 @@ def test_copy(data):
     supply[i] = Sum(j, x[i, j]) <= a[i]
     demand[j] = Sum(i, x[i, j]) >= b[j]
 
-    pytest.raises(ValidationError, m.copy, f"tmp{os.sep}copy")
+    with pytest.raises(ValidationError):
+        m.copy(f"tmp{os.sep}copy")
     new_cont = m.copy(working_directory=f"tmp{os.sep}test")
     assert m.data.keys() == new_cont.data.keys()
     assert supply.getDefinition() == new_cont["supply"].getDefinition()
