@@ -346,11 +346,13 @@ def test_loadRecordsFromGdxSync(tmp_path):
     assert i.records is None, i.records
     assert j.toList() == ["0", "1", "2"], j.toList()
 
+    # load a symbol that does not exist in the container
     m = gp.Container()
     i = gp.Set(m, "i")
     i.synchronize = False
-    with pytest.raises(ValidationError):
-        m.loadRecordsFromGdx(tmp_file, symbol_names=["i", "j"])
+    m.loadRecordsFromGdx(tmp_file, symbol_names=["i", "j"])
+    assert list(m.data.keys()) == ["i", "j"]
+    assert m["j"].toList() == ["0", "1", "2"]
 
     j = gp.Set(m, "j")
     m.loadRecordsFromGdx(tmp_file, symbol_names=["i", "j"])

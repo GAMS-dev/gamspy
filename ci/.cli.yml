@@ -141,6 +141,8 @@ wei-cli-3.14:
   variables:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
+    - Expand-Archive -Path uv_toolchain.zip -DestinationPath . -Force
+    - Expand-Archive -Path uv_bin.zip -DestinationPath . -Force
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - uv venv .venv --python 3.14
     - .venv\Scripts\Activate.ps1
@@ -159,6 +161,8 @@ wei-cli-3.10:
   variables:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
+    - Expand-Archive -Path uv_toolchain.zip -DestinationPath . -Force
+    - Expand-Archive -Path uv_bin.zip -DestinationPath . -Force
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - uv venv .venv --python 3.10
     - .venv\Scripts\Activate.ps1
