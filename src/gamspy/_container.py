@@ -588,7 +588,6 @@ class Container(gt.Container):
     def _filter_load_symbols(
         self,
         symbol_names: dict[str, str] | list[str],
-        create_if_not_declared: bool = False,
     ) -> dict[str, str] | list[str]:
         if isinstance(symbol_names, list):
             names = []
@@ -598,12 +597,7 @@ class Container(gt.Container):
                     if not isinstance(symbol, gt.Alias) and symbol.synchronize:
                         names.append(name)
                 else:
-                    if create_if_not_declared:
-                        names.append(name)
-                    else:
-                        raise ValidationError(
-                            f"Cannot load records of `{name}` because it does not exist in the container."
-                        )
+                    names.append(name)
 
             return names
 
@@ -619,13 +613,7 @@ class Container(gt.Container):
 
         return mapping
 
-    def _load_records_from_gdx(
-        self,
-        load_from: str,
-        names: Iterable[str],
-        *,
-        create_if_not_declared: bool = False,
-    ) -> None:
+    def _load_records_from_gdx(self, load_from: str, names: Iterable[str]) -> None:
         self._temp_container.read(load_from, names)
         original_state = self._options.miro_protect
         self._options.miro_protect = False
@@ -636,12 +624,7 @@ class Container(gt.Container):
                 self[name].records = updated_records
                 self[name].domain_labels = self[name].domain_names
             else:
-                if create_if_not_declared:
-                    self._read(load_from, [name])
-                else:
-                    raise ValidationError(
-                        f"Cannot load records of `{name}` because it does not exist in the container."
-                    )
+                self._read(load_from, [name])
 
         self._options.miro_protect = original_state
         self._temp_container.data = {}
@@ -989,54 +972,28 @@ class Container(gt.Container):
         if isinstance(load_from, Path):
             load_from = str(load_from.resolve())
 
-        create_if_not_declared = symbol_names is None
         if symbol_names is None:
             # If no symbol names are given, all records in the gdx should be loaded
             symbol_names = utils._get_symbol_names_from_gdx(
                 self.system_directory, load_from
             )
             self._add_statement(f"$declareAndLoad {load_from}")
-            symbol_names = self._filter_load_symbols(
-                symbol_names,  # type: ignore
-                create_if_not_declared,
-            )
-            self._load_records_from_gdx(
-                load_from, symbol_names, create_if_not_declared=create_if_not_declared
-            )
+            symbol_names = self._filter_load_symbols(symbol_names)  # type: ignore
+            self._load_records_from_gdx(load_from, symbol_names)
             self._synch_with_gams()
             return
 
-        if isinstance(symbol_names, list):
-            symbol_names = self._filter_load_symbols(
-                symbol_names, create_if_not_declared
-            )
-            self._add_statement(f"$gdxIn {load_from}")
-            symbols_str = " ".join(symbol_names)
-            self._add_statement(f"$loadDC {symbols_str}")
-            self._add_statement("$gdxIn")
-        elif isinstance(symbol_names, dict):
-            symbol_names = self._filter_load_symbols(
-                symbol_names, create_if_not_declared
-            )
-            self._add_statement(f"$gdxIn {load_from}")
-            symbols_str = " ".join(
-                [f"{value}={key}" for key, value in symbol_names.items()]  # type: ignore
-            )
-            self._add_statement(f"$loadDC {symbols_str}")
-            self._add_statement("$gdxIn")
+        if isinstance(symbol_names, (list, dict)):
+            symbol_names = self._filter_load_symbols(symbol_names)
         else:
             raise TypeError("`symbol_names` must be either a list or a dictionary.")
-
-        self._options._debug_options["gdx"] = self._gdx_out
-        self._options._debug_options["gdxSymbols"] = "newOrChanged"
-        self._synch_with_gams()
 
         if isinstance(symbol_names, dict):
             self._load_records_with_rename(load_from, symbol_names)
         else:
-            self._load_records_from_gdx(
-                load_from, symbol_names, create_if_not_declared=create_if_not_declared
-            )
+            self._load_records_from_gdx(load_from, symbol_names)
+
+        self._synch_with_gams()
 
     def addGamsCode(self, gams_code: str) -> None:
         """

@@ -6,6 +6,8 @@
   variables:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
+    - Expand-Archive -Path uv_toolchain.zip -DestinationPath . -Force
+    - Expand-Archive -Path uv_bin.zip -DestinationPath . -Force
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - uv venv .venv --python $env:PYTHON_VERSION
     - .venv\Scripts\Activate.ps1
@@ -20,6 +22,8 @@ wei-test-3.14:
   variables:
     PYTHON_VERSION: "3.14"
   script:
+    - Expand-Archive -Path uv_toolchain.zip -DestinationPath . -Force
+    - Expand-Archive -Path uv_bin.zip -DestinationPath . -Force
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - uv venv .venv --python 3.14
     - .venv\Scripts\Activate.ps1
@@ -78,6 +82,8 @@ wei-test-3.10:
   variables:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
+    - Expand-Archive -Path uv_toolchain.zip -DestinationPath . -Force
+    - Expand-Archive -Path uv_bin.zip -DestinationPath . -Force
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - uv venv .venv --python $env:PYTHON_VERSION
     - .venv\Scripts\Activate.ps1
@@ -104,6 +110,8 @@ wei-engine-3.10:
   variables:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
+    - Expand-Archive -Path uv_toolchain.zip -DestinationPath . -Force
+    - Expand-Archive -Path uv_bin.zip -DestinationPath . -Force
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - uv venv .venv --python $env:PYTHON_VERSION
     - .venv\Scripts\Activate.ps1

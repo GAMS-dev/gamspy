@@ -67,9 +67,9 @@ SOLVER_PAGE_MAP = {
 
 # cm: component_map, ia: is_academic
 EVALUATIONS: dict[str, Callable[[dict[str, bool], bool], bool]] = {
-    "ANTIGONE": lambda cm, ia: cm["AT"]
-    and (cm["CP"] or cm["CL"])
-    and (cm["CO"] or cm["SN"]),
+    "ANTIGONE": lambda cm, ia: (
+        cm["AT"] and (cm["CP"] or cm["CL"]) and (cm["CO"] or cm["SN"])
+    ),
     "BARON": lambda cm, ia: cm["BA"],
     "CBC": lambda cm, ia: True,
     "CONOPT": lambda cm, ia: cm["CO"],

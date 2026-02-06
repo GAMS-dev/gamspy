@@ -182,7 +182,8 @@ def test_model(data):
             assert "$if not set jacfile $set jacfile jacobian.gdx" in file.read()
 
     # Check if the name is reserved
-    pytest.raises(ValidationError, Model, m, "set", "", "LP")
+    with pytest.raises(ValidationError):
+        Model(m, "set", "", "LP")
 
     # Equation definition with more than one index
     bla = Equation(
@@ -237,7 +238,8 @@ def test_model(data):
     assert test_model5.getDeclaration() == "Model test_model5 / supply.x,cost.z /;"
 
     # Equations provided as strings
-    pytest.raises(ValueError, Model, m, "test_model5", "", "LP", ["cost", "supply"])
+    with pytest.raises(ValueError):
+        Model(m, "test_model5", "", "LP", ["cost", "supply"])
 
     # Test matches
     test_model6 = Model(
@@ -271,69 +273,56 @@ def test_model(data):
     )
 
     # empty model name
-    pytest.raises(
-        ValueError,
-        Model,
-        m,
-        "",
-        "test_model7",
-        "",
-        m.getEquations(),
-        "min",
-        Sum((i, j), c[i, j] * x[i, j]),
-    )
+    with pytest.raises(ValueError):
+        Model(
+            m,
+            "",
+            "test_model7",
+            "",
+            m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
 
     # model name too long
-    pytest.raises(
-        ValidationError,
-        Model,
-        m,
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "",
-        "LP",
-        m.getEquations(),
-        "min",
-        Sum((i, j), c[i, j] * x[i, j]),
-    )
+    with pytest.raises(ValidationError):
+        Model(
+            m,
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "",
+            "LP",
+            m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
 
     # model name is not an str
-    pytest.raises(
-        TypeError,
-        Model,
-        m,
-        5,
-        "",
-        "LP",
-        m.getEquations(),
-        "min",
-        Sum((i, j), c[i, j] * x[i, j]),
-    )
+    with pytest.raises(TypeError):
+        Model(m, 5, "", "LP", m.getEquations(), "min", Sum((i, j), c[i, j] * x[i, j]))
 
     # model name contains empty space
-    pytest.raises(
-        ValidationError,
-        Model,
-        m,
-        "test_model 8",
-        "",
-        "LP",
-        m.getEquations(),
-        "min",
-        Sum((i, j), c[i, j] * x[i, j]),
-    )
+    with pytest.raises(ValidationError):
+        Model(
+            m,
+            "test_model 8",
+            "",
+            "LP",
+            m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
 
     # model name begins with underscore
-    pytest.raises(
-        ValidationError,
-        Model,
-        m,
-        "_test_model7",
-        "",
-        "LP",
-        m.getEquations(),
-        "min",
-        Sum((i, j), c[i, j] * x[i, j]),
-    )
+    with pytest.raises(ValidationError):
+        Model(
+            m,
+            "_test_model7",
+            "",
+            "LP",
+            m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
 
     test_model8 = Model(
         m,
@@ -385,17 +374,16 @@ def test_feasibility(data):
     transport.solve()
     assert x.records is not None
 
-    pytest.raises(
-        ValidationError,
-        Model,
-        m,
-        "transport2",
-        "",
-        "LP",
-        m.getEquations(),
-        "feasibility",
-        Sum((i, j), c[i, j] * x[i, j]),
-    )
+    with pytest.raises(ValidationError):
+        Model(
+            m,
+            "transport2",
+            "",
+            "LP",
+            m.getEquations(),
+            "feasibility",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
 
 
 def test_tuple_equations(data):

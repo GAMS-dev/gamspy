@@ -53,17 +53,21 @@ def test_variable_creation(data):
         _ = v.getAssignment()
 
     # non-str type name
-    pytest.raises(TypeError, Variable, m, 5)
+    with pytest.raises(TypeError):
+        Variable(m, 5)
 
     # no container
-    pytest.raises(ValidationError, Variable)
+    with pytest.raises(ValidationError):
+        Variable()
 
     # non-container type container
-    pytest.raises(TypeError, Variable, 5, "j")
+    with pytest.raises(TypeError):
+        Variable(5, "j")
 
     # try to create a symbol with same name but different type
     _ = Set(m, "i")
-    pytest.raises(TypeError, Variable, m, "i")
+    with pytest.raises(TypeError):
+        Variable(m, "i")
 
     # get already created symbol
     j1 = Variable(m, "j")
@@ -75,7 +79,8 @@ def test_variable_creation(data):
 
     # Same name, different domain forwarding
     _ = Variable(m, "k")
-    pytest.raises(ValueError, Variable, m, "k", "free", None, None, True)
+    with pytest.raises(ValueError):
+        Variable(m, "k", "free", None, None, True)
 
     set1 = Set(m, "set1")
     with pytest.raises(ValidationError):
@@ -89,7 +94,8 @@ def test_variable_creation(data):
 def test_variable_string(data):
     m, *_ = data
     # Check if the name is reserved
-    pytest.raises(ValidationError, Variable, m, "set")
+    with pytest.raises(ValidationError):
+        Variable(m, "set")
 
     i = Set(m, name="i", records=["bla", "damn"])
     j = Set(m, name="j", records=["test", "test2"])

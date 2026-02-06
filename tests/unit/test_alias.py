@@ -136,14 +136,17 @@ def test_universe_alias_creation(m):
         _ = UniverseAlias(m, 5)
 
     # no container
-    pytest.raises(ValidationError, UniverseAlias)
+    with pytest.raises(ValidationError):
+        UniverseAlias()
 
     # non-container type container
-    pytest.raises(TypeError, UniverseAlias, 5, "j")
+    with pytest.raises(TypeError):
+        UniverseAlias(5, "j")
 
     # try to create a symbol with same name but different type
     _ = Set(m, "i")
-    pytest.raises(TypeError, UniverseAlias, m, "i")
+    with pytest.raises(TypeError):
+        UniverseAlias(m, "i")
 
     # get already created symbol
     j1 = UniverseAlias(m, "j")

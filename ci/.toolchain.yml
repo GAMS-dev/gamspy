@@ -49,9 +49,13 @@ setup-wei-toolchain:
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
     - echo "Downloading Python toolchain for Windows..."
     - uv python install 3.10 3.11 3.12 3.13 3.14
+    # Compress the folder manually to bypass GitLab Runner's symlink/junction issues
+    - echo "Compressing toolchain to avoid 'Incorrect function' artifact error..."
+    - Compress-Archive -Path "$CI_PROJECT_DIR\.uv_pythons" -DestinationPath "$CI_PROJECT_DIR\uv_toolchain.zip" -Force
+    - Compress-Archive -Path "$CI_PROJECT_DIR\.uv_bin" -DestinationPath "$CI_PROJECT_DIR\uv_bin.zip" -Force
   artifacts:
     name: "toolchain-windows"
     paths:
-      - .uv_pythons/
-      - .uv_bin/
+      - uv_toolchain.zip
+      - uv_bin.zip
     expire_in: 2 hours

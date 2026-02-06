@@ -53,17 +53,21 @@ def test_parameter_creation(data):
         _ = a.getAssignment()
 
     # non-str type name
-    pytest.raises(TypeError, Parameter, m, 5)
+    with pytest.raises(TypeError):
+        Parameter(m, 5)
 
     # no container
-    pytest.raises((TypeError, ValidationError), Parameter)
+    with pytest.raises((TypeError, ValidationError)):
+        Parameter()
 
     # non-container type container
-    pytest.raises(TypeError, Parameter, 5, "j")
+    with pytest.raises(TypeError):
+        Parameter(5, "j")
 
     # try to create a symbol with same name but different type
     _ = Set(m, "i")
-    pytest.raises(TypeError, Parameter, m, "i")
+    with pytest.raises(TypeError):
+        Parameter(m, "i")
 
     # get already created symbol
     j1 = Parameter(m, "j")
@@ -80,7 +84,8 @@ def test_parameter_creation(data):
 def test_parameter_string(data):
     m, canning_plants, _, _, capacities, _ = data
     # Check if the name is reserved
-    pytest.raises(ValidationError, Parameter, m, "set")
+    with pytest.raises(ValidationError):
+        Parameter(m, "set")
 
     i = Set(m, name="i", records=canning_plants, description="Canning Plants")
     a = Parameter(m, name="a", domain=[i], records=capacities, description="capacities")
@@ -190,7 +195,8 @@ def test_override(data):
     assert c.description == "new description"
 
     # Try to add the same parameter
-    pytest.raises(ValueError, m.addParameter, "c", [s, s])
+    with pytest.raises(ValueError):
+        m.addParameter("c", [s, s])
 
 
 def test_undef():

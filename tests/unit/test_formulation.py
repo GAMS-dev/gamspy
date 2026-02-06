@@ -88,15 +88,23 @@ def test_pwl_indicator():
     b3 = gp.Variable(m, name="b3", type="binary")
     x5 = gp.Variable(m, name="x5")
 
-    pytest.raises(ValidationError, piecewise._indicator, "indicator_var", 0, x <= 10)
+    with pytest.raises(ValidationError):
+        piecewise._indicator("indicator_var", 0, x <= 10)
 
-    pytest.raises(ValidationError, piecewise._indicator, b2, 0, x <= 10)
-    pytest.raises(ValidationError, piecewise._indicator, b, -1, x <= 10)
-    pytest.raises(ValidationError, piecewise._indicator, b, 0, x)
-    pytest.raises(ValidationError, piecewise._indicator, b, 0, x + 10)
-    pytest.raises(ValidationError, piecewise._indicator, b, 0, x3 >= 10)
-    pytest.raises(ValidationError, piecewise._indicator, b, 0, x2 >= 10)
-    pytest.raises(ValidationError, piecewise._indicator, b, 0, x4 >= 10)
+    with pytest.raises(ValidationError):
+        piecewise._indicator(b2, 0, x <= 10)
+    with pytest.raises(ValidationError):
+        piecewise._indicator(b, -1, x <= 10)
+    with pytest.raises(ValidationError):
+        piecewise._indicator(b, 0, x)
+    with pytest.raises(ValidationError):
+        piecewise._indicator(b, 0, x + 10)
+    with pytest.raises(ValidationError):
+        piecewise._indicator(b, 0, x3 >= 10)
+    with pytest.raises(ValidationError):
+        piecewise._indicator(b, 0, x2 >= 10)
+    with pytest.raises(ValidationError):
+        piecewise._indicator(b, 0, x4 >= 10)
 
     eqs1 = piecewise._indicator(b, 0, x >= 10)
     eqs2 = piecewise._indicator(b, 0, x <= 10)
@@ -277,175 +285,67 @@ def test_pwl_validation(data, fct):
     y_points = data["y_points"]
 
     # incorrect using value
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        x_points,
-        y_points,
-        "hello",
-    )
+    with pytest.raises(ValidationError):
+        fct(x, x_points, y_points, "hello")
 
     # x not a variable
-    pytest.raises(
-        ValidationError,
-        fct,
-        10,
-        x_points,
-        y_points,
-    )
+    with pytest.raises(ValidationError):
+        fct(10, x_points, y_points)
 
     # incorrect x_points, y_points
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        10,
-        y_points,
-    )
+    with pytest.raises(ValidationError):
+        fct(x, 10, y_points)
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        x_points,
-        10,
-    )
+    with pytest.raises(ValidationError):
+        fct(x, x_points, 10)
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [1],
-        [10],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [1], [10])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        x_points,
-        [10],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, x_points, [10])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [*x_points, "a"],
-        [*y_points, 5],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [*x_points, "a"], [*y_points, 5])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [*x_points, 16],
-        [*y_points, "a"],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [*x_points, 16], [*y_points, "a"])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [3, 2, 1],
-        [10, 20, 30],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [3, 2, 1], [10, 20, 30])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [3, 1, 2],
-        [10, 20, 30],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [3, 1, 2], [10, 20, 30])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [1, 3, 2],
-        [10, 20, 30],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [1, 3, 2], [10, 20, 30])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [1],
-        [10],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [1], [10])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [None, 2, 3],
-        [None, 20, 40],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [None, 2, 3], [None, 20, 40])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [2, 3, None],
-        [20, 40, None],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [2, 3, None], [20, 40, None])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [None, 2, 3, None],
-        [None, 20, 40, None],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [None, 2, 3, None], [None, 20, 40, None])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [0, None, 2, 3],
-        [0, 10, 20, 40],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [0, None, 2, 3], [0, 10, 20, 40])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [0, 1, 2, 3],
-        [0, None, 20, 40],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [0, 1, 2, 3], [0, None, 20, 40])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [1, None, None, 2, 3],
-        [10, None, None, 20, 40],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [1, None, None, 2, 3], [10, None, None, 20, 40])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [2, None, 2, 3],
-        [10, None, 20, 40],
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [2, None, 2, 3], [10, None, 20, 40])
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [2, None, 4, 10],
-        [10, None, 20, 40],
-        bound_left="yes",
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [2, None, 4, 10], [10, None, 20, 40], bound_left="yes")
 
-    pytest.raises(
-        ValidationError,
-        fct,
-        x,
-        [2, None, 4, 10],
-        [10, None, 20, 40],
-        bound_right="yes",
-    )
+    with pytest.raises(ValidationError):
+        fct(x, [2, None, 4, 10], [10, None, 20, 40], bound_right="yes")

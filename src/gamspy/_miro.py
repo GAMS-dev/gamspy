@@ -41,9 +41,7 @@ def load_miro_symbol_records(container: Container):
             for name in container._miro_input_symbols
             if not container[name]._already_loaded
         ]
-        container._load_records_from_gdx(
-            MIRO_GDX_IN, names, create_if_not_declared=True
-        )
+        container._load_records_from_gdx(MIRO_GDX_IN, names)
         for name in names:
             symbol = container[name]
             symbol._already_loaded = True
@@ -56,9 +54,7 @@ def load_miro_symbol_records(container: Container):
 
     # Load records of miro output symbols
     if MIRO_GDX_OUT and container._miro_output_symbols:
-        container._load_records_from_gdx(
-            MIRO_GDX_OUT, container._miro_output_symbols, create_if_not_declared=True
-        )
+        container._load_records_from_gdx(MIRO_GDX_OUT, container._miro_output_symbols)
 
     for name in container._miro_input_symbols + container._miro_output_symbols:
         container[name].modified = False

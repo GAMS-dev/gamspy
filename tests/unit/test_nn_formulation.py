@@ -95,45 +95,60 @@ def test_conv_bad_init(data):
     m, *_ = data
     for layer in [Conv1d, Conv2d]:
         # in channel must be integer
-        pytest.raises(ValidationError, layer, m, 2.5, 4, 3)
-        pytest.raises(ValidationError, layer, m, "2", 4, 3)
+        with pytest.raises(ValidationError):
+            layer(m, 2.5, 4, 3)
+        with pytest.raises(ValidationError):
+            layer(m, "2", 4, 3)
         # out channel must be integer
-        pytest.raises(ValidationError, layer, m, 2, 4.1, 3)
-        pytest.raises(ValidationError, layer, m, "2", 4.1, 3)
+        with pytest.raises(ValidationError):
+            layer(m, 2, 4.1, 3)
+        with pytest.raises(ValidationError):
+            layer(m, "2", 4.1, 3)
 
         # in channel must be positive
-        pytest.raises(ValidationError, layer, m, -4, 4, 3)
+        with pytest.raises(ValidationError):
+            layer(m, -4, 4, 3)
 
         # out channel must be positive
-        pytest.raises(ValidationError, layer, m, 4, -4, 3)
+        with pytest.raises(ValidationError):
+            layer(m, 4, -4, 3)
 
         # kernel_size must be integer
-        pytest.raises(ValidationError, layer, m, 4, 4, 3.5)
+        with pytest.raises(ValidationError):
+            layer(m, 4, 4, 3.5)
 
         # stride must be integer
-        pytest.raises(ValidationError, layer, m, 4, 4, 3, stride=0.4)
+        with pytest.raises(ValidationError):
+            layer(m, 4, 4, 3, stride=0.4)
 
         # padding when string must be valid or same
-        pytest.raises(ValidationError, layer, m, 1, 2, 3, 1, "asd")
+        with pytest.raises(ValidationError):
+            layer(m, 1, 2, 3, 1, "asd")
 
         # same padding requires stride = 1
-        pytest.raises(ValidationError, layer, m, 1, 2, 3, 2, "same")
+        with pytest.raises(ValidationError):
+            layer(m, 1, 2, 3, 2, "same")
 
         # bias must be a bool
-        pytest.raises(ValidationError, layer, m, 4, 4, 3, bias=10)
+        with pytest.raises(ValidationError):
+            layer(m, 4, 4, 3, bias=10)
 
     # kernel size must be integer or tuple of integer
     bad_values = [(3, "a"), ("a", 3), 2.4, -1, 0]
     for bad_value in bad_values:
-        pytest.raises(ValidationError, Conv2d, m, 4, 4, bad_value)
+        with pytest.raises(ValidationError):
+            Conv2d(m, 4, 4, bad_value)
     # stride size must be integer or tuple of integer
     for bad_value in bad_values:
-        pytest.raises(ValidationError, Conv2d, m, 4, 4, 3, bad_value)
+        with pytest.raises(ValidationError):
+            Conv2d(m, 4, 4, 3, bad_value)
     # padding size must be integer or tuple of integer
     for bad_value in bad_values[:-1]:
-        pytest.raises(ValidationError, Conv2d, m, 4, 4, 3, 1, bad_value)
+        with pytest.raises(ValidationError):
+            Conv2d(m, 4, 4, 3, 1, bad_value)
 
-    pytest.raises(ValidationError, Conv2d, m, 1, 3, 2, padding=(1, 2, 3))
+    with pytest.raises(ValidationError):
+        Conv2d(m, 1, 3, 2, padding=(1, 2, 3))
 
 
 @pytest.mark.unit
@@ -150,27 +165,35 @@ def test_conv_load_weights(data):
         conv1 = layer(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
         conv2 = layer(m, in_channels=1, out_channels=2, kernel_size=3, bias=False)
         # needs bias as well
-        pytest.raises(ValidationError, conv1.load_weights, w)
+        with pytest.raises(ValidationError):
+            conv1.load_weights(w)
 
         # conv2 does not have bias
-        pytest.raises(ValidationError, conv2.load_weights, w, b)
+        with pytest.raises(ValidationError):
+            conv2.load_weights(w, b)
 
         # test bad shape
         bad1 = np.random.rand(1)
-        pytest.raises(ValidationError, conv1.load_weights, bad1, b)
-        pytest.raises(ValidationError, conv1.load_weights, w, bad1)
+        with pytest.raises(ValidationError):
+            conv1.load_weights(bad1, b)
+        with pytest.raises(ValidationError):
+            conv1.load_weights(w, bad1)
 
         bad2 = np.random.rand(2, 2, 2, 2)
-        pytest.raises(ValidationError, conv1.load_weights, bad2, b)
+        with pytest.raises(ValidationError):
+            conv1.load_weights(bad2, b)
 
         bad3 = np.random.rand(6)
-        pytest.raises(ValidationError, conv1.load_weights, w, bad3)
+        with pytest.raises(ValidationError):
+            conv1.load_weights(w, bad3)
 
         bad4 = np.random.rand(6, 2)
-        pytest.raises(ValidationError, conv1.load_weights, w, bad4)
+        with pytest.raises(ValidationError):
+            conv1.load_weights(w, bad4)
 
         bad5 = np.random.rand(2, 2, 2)
-        pytest.raises(ValidationError, conv1.load_weights, bad5, b)
+        with pytest.raises(ValidationError):
+            conv1.load_weights(bad5, b)
 
 
 @pytest.mark.unit
@@ -259,7 +282,8 @@ def test_conv_make_variable(data):
 
         w1 = np.random.rand(*[2, 1, 3, 3][:shape_len])
         b1 = np.random.rand(2)
-        pytest.raises(ValidationError, conv1.load_weights, w1, b1)
+        with pytest.raises(ValidationError):
+            conv1.load_weights(w1, b1)
         assert isinstance(conv1.weight, gp.Variable)
         assert isinstance(conv1.bias, gp.Variable)
         inp = gp.Variable(m, domain=dim([4, 1, 4, 4][:shape_len]))
@@ -276,7 +300,8 @@ def test_conv_load_weight_make_var(data):
         conv1.load_weights(w1, b1)
         assert isinstance(conv1.weight, gp.Parameter)
         assert isinstance(conv1.bias, gp.Parameter)
-        pytest.raises(ValidationError, conv1.make_variable)
+        with pytest.raises(ValidationError):
+            conv1.make_variable()
 
 
 @pytest.mark.unit
@@ -286,7 +311,8 @@ def test_conv_call_bad(data):
         conv1 = layer(m, 4, 4, 4, bias=True)
         inp = gp.Variable(m, domain=dim([4, 4, 4, 4][:shape_len]))
         # requires initialization before
-        pytest.raises(ValidationError, conv1, inp)
+        with pytest.raises(ValidationError):
+            conv1(inp)
 
         w1 = np.random.rand(*[4, 4, 4, 4][:shape_len])
         b1 = np.random.rand(4)
@@ -294,15 +320,18 @@ def test_conv_call_bad(data):
 
         # needs 3 or 4 dimension
         bad_inp = gp.Variable(m, domain=dim([4] * (shape_len - 1)))
-        pytest.raises(ValidationError, conv1, bad_inp)
+        with pytest.raises(ValidationError):
+            conv1(bad_inp)
 
         # in channel must match 4
         # batch x in_channel x height x width
         bad_inp_2 = gp.Variable(m, domain=dim([10, 3, 4, 4][:shape_len]))
-        pytest.raises(ValidationError, conv1, bad_inp_2)
+        with pytest.raises(ValidationError):
+            conv1(bad_inp_2)
 
         # propagate_bounds must be a boolean
-        pytest.raises(ValidationError, conv1, inp, propagate_bounds="True")
+        with pytest.raises(ValidationError):
+            conv1(inp, propagate_bounds="True")
 
 
 @pytest.mark.unit
@@ -2517,40 +2546,52 @@ def test_pool_call_bad(data):
     var2 = gp.Variable(m, "var2", domain=dim([2, 2, 4, 10]))
 
     for pool in [avgpool1, minpool1, maxpool1]:
-        pytest.raises(ValidationError, pool, "asd")
-        pytest.raises(ValidationError, pool, 5)
-        pytest.raises(ValidationError, pool, new_par)
-        pytest.raises(ValidationError, pool, new_var)
-        pytest.raises(ValidationError, pool, par2, propagate_bounds="True")
-        pytest.raises(ValidationError, pool, var2, propagate_bounds="True")
+        with pytest.raises(ValidationError):
+            pool("asd")
+        with pytest.raises(ValidationError):
+            pool(5)
+        with pytest.raises(ValidationError):
+            pool(new_par)
+        with pytest.raises(ValidationError):
+            pool(new_var)
+        with pytest.raises(ValidationError):
+            pool(par2, propagate_bounds="True")
+        with pytest.raises(ValidationError):
+            pool(var2, propagate_bounds="True")
 
-    pytest.raises(ValidationError, _MPool2d, "sup", m, (2, 2))
+    with pytest.raises(ValidationError):
+        _MPool2d("sup", m, (2, 2))
 
 
 @pytest.mark.unit
 def test_flatten_bad(data):
     m, w1, _b1, _inp, par_input, _ii, *_ = data
     # should only work for parameter or variable
-    pytest.raises(ValidationError, flatten_dims, w1, [2, 3])
-    pytest.raises(ValidationError, flatten_dims, par_input, [0])  # single dim
-    pytest.raises(ValidationError, flatten_dims, par_input, [])  # no dim
-    pytest.raises(ValidationError, flatten_dims, par_input, ["a", "b"])
-    pytest.raises(ValidationError, flatten_dims, par_input, [-1, 0])
-    pytest.raises(ValidationError, flatten_dims, par_input, [5, 6])
-    pytest.raises(ValidationError, flatten_dims, par_input, [1, 3])  # non consecutive
-    pytest.raises(
-        ValidationError,
-        flatten_dims,
-        par_input,
-        [0, 1],
-        propagate_bounds="True",
-    )  # propagate_bounds not bool
+    with pytest.raises(ValidationError):
+        flatten_dims(w1, [2, 3])
+    with pytest.raises(ValidationError):
+        flatten_dims(par_input, [0])  # single dim
+    with pytest.raises(ValidationError):
+        flatten_dims(par_input, [])  # no dim
+    with pytest.raises(ValidationError):
+        flatten_dims(par_input, ["a", "b"])
+    with pytest.raises(ValidationError):
+        flatten_dims(par_input, [-1, 0])
+    with pytest.raises(ValidationError):
+        flatten_dims(par_input, [5, 6])
+    with pytest.raises(ValidationError):
+        flatten_dims(par_input, [1, 3])  # non consecutive
+    with pytest.raises(ValidationError):
+        flatten_dims(
+            par_input, [0, 1], propagate_bounds="True"
+        )  # propagate_bounds not bool
 
     i = gp.Set(m, "i")
     j = gp.Set(m, "j")
     k = gp.Set(m, "k")
     var1 = gp.Variable(m, "var1", domain=[i, j, k])  # j, k not populated yet
-    pytest.raises(ValidationError, flatten_dims, var1, [1, 2])
+    with pytest.raises(ValidationError):
+        flatten_dims(var1, [1, 2])
 
 
 @pytest.mark.unit
@@ -2852,17 +2893,24 @@ def test_flatten_more_complex_propagate_bounds(data):
 def test_linear_bad_init(data):
     m, *_ = data
     # in feature must be integer
-    pytest.raises(ValidationError, Linear, m, 2.5, 4, False)
-    pytest.raises(ValidationError, Linear, m, "2", 4, True)
+    with pytest.raises(ValidationError):
+        Linear(m, 2.5, 4, False)
+    with pytest.raises(ValidationError):
+        Linear(m, "2", 4, True)
     # out feature must be integer
-    pytest.raises(ValidationError, Linear, m, 2, 4.1, True)
-    pytest.raises(ValidationError, Linear, m, 2, "4.1", False)
+    with pytest.raises(ValidationError):
+        Linear(m, 2, 4.1, True)
+    with pytest.raises(ValidationError):
+        Linear(m, 2, "4.1", False)
     # in feature must be positive
-    pytest.raises(ValidationError, Linear, m, -4, 4, False)
+    with pytest.raises(ValidationError):
+        Linear(m, -4, 4, False)
     # out feature must be positive
-    pytest.raises(ValidationError, Linear, m, 4, -4, False)
+    with pytest.raises(ValidationError):
+        Linear(m, 4, -4, False)
     # bias must be a bool
-    pytest.raises(ValidationError, Linear, m, 4, 4, bias=10)
+    with pytest.raises(ValidationError):
+        Linear(m, 4, 4, bias=10)
 
 
 @pytest.mark.unit
@@ -2875,24 +2923,31 @@ def test_linear_load_weights(data):
     b1 = np.random.rand(2)
 
     # needs bias as well
-    pytest.raises(ValidationError, lin1.load_weights, w1)
+    with pytest.raises(ValidationError):
+        lin1.load_weights(w1)
 
     # conv2 does not have bias
-    pytest.raises(ValidationError, lin2.load_weights, w1, b1)
+    with pytest.raises(ValidationError):
+        lin2.load_weights(w1, b1)
 
     # test bad shape
     bad1 = np.random.rand(1)
-    pytest.raises(ValidationError, lin1.load_weights, bad1, b1)
-    pytest.raises(ValidationError, lin1.load_weights, w1, bad1)
+    with pytest.raises(ValidationError):
+        lin1.load_weights(bad1, b1)
+    with pytest.raises(ValidationError):
+        lin1.load_weights(w1, bad1)
 
     bad2 = np.random.rand(2, 2)
-    pytest.raises(ValidationError, lin1.load_weights, bad2, b1)
+    with pytest.raises(ValidationError):
+        lin1.load_weights(bad2, b1)
 
     bad3 = np.random.rand(6)
-    pytest.raises(ValidationError, lin1.load_weights, w1, bad3)
+    with pytest.raises(ValidationError):
+        lin1.load_weights(w1, bad3)
 
     bad4 = np.random.rand(6, 2)
-    pytest.raises(ValidationError, lin1.load_weights, w1, bad4)
+    with pytest.raises(ValidationError):
+        lin1.load_weights(w1, bad4)
 
 
 @pytest.mark.unit
@@ -2939,7 +2994,8 @@ def test_linear_make_variable(data):
     assert lin2.bias.records is not None
     w1 = np.random.rand(2, 4)
     b1 = np.random.rand(2)
-    pytest.raises(ValidationError, lin1.load_weights, w1, b1)
+    with pytest.raises(ValidationError):
+        lin1.load_weights(w1, b1)
     assert isinstance(lin1.weight, gp.Variable)
     assert isinstance(lin1.bias, gp.Variable)
     inp = gp.Variable(m, domain=dim([4, 1, 2, 4]))
@@ -2957,7 +3013,8 @@ def test_linear_load_weight_make_var(data):
     lin1.load_weights(w1, b1)
     assert isinstance(lin1.weight, gp.Parameter)
     assert isinstance(lin1.bias, gp.Parameter)
-    pytest.raises(ValidationError, lin1.make_variable)
+    with pytest.raises(ValidationError):
+        lin1.make_variable()
 
 
 @pytest.mark.unit
@@ -2966,7 +3023,8 @@ def test_linear_call_bad(data):
     lin1 = Linear(m, 4, 4, bias=True)
     inp = gp.Variable(m, domain=dim([4, 4, 4, 4]))
     # requires initialization before
-    pytest.raises(ValidationError, lin1, inp)
+    with pytest.raises(ValidationError):
+        lin1(inp)
 
     w1 = np.random.rand(4, 4)
     b1 = np.random.rand(4)
@@ -2974,11 +3032,13 @@ def test_linear_call_bad(data):
 
     # needs at least 1 dim
     bad_inp = gp.Variable(m, domain=[])
-    pytest.raises(ValidationError, lin1, bad_inp)
+    with pytest.raises(ValidationError):
+        lin1(bad_inp)
 
     # in channel must match 4
     bad_inp_2 = gp.Variable(m, domain=dim([10, 3, 4, 5]))
-    pytest.raises(ValidationError, lin1, bad_inp_2)
+    with pytest.raises(ValidationError):
+        lin1(bad_inp_2)
 
 
 @pytest.mark.requires_license
@@ -3054,7 +3114,8 @@ def test_linear_propagate_bounds_non_boolean(data):
     lin1.load_weights(w1, b1)
 
     par_input = gp.Parameter(m, domain=dim([30, 20, 30, 20]))
-    pytest.raises(ValidationError, lin1, par_input, "True")
+    with pytest.raises(ValidationError):
+        lin1(par_input, "True")
 
 
 @pytest.mark.unit
@@ -3275,24 +3336,30 @@ def test_sequential_layer_not_implemented(data):
         model = torch.nn.Sequential(
             torch.nn.Conv2d(4, 4, 3, bias=True, **bad_input),
         )
-        pytest.raises(ValidationError, TorchSequential, m, model)
+        with pytest.raises(ValidationError):
+            TorchSequential(m, model)
 
         model2 = torch.nn.Sequential(
             torch.nn.Conv1d(2, 2, 3, padding=1, bias=True, **bad_input),
         )
-        pytest.raises(ValidationError, TorchSequential, m, model2)
+        with pytest.raises(ValidationError):
+            TorchSequential(m, model2)
 
     model = torch.nn.Sequential(torch.nn.RNN(10, 20, 2))
-    pytest.raises(ValidationError, TorchSequential, m, model)
+    with pytest.raises(ValidationError):
+        TorchSequential(m, model)
 
     model = torch.nn.Sequential(torch.nn.MaxPool2d((2, 2), dilation=2))
-    pytest.raises(ValidationError, TorchSequential, m, model)
+    with pytest.raises(ValidationError):
+        TorchSequential(m, model)
 
     model = torch.nn.Sequential(torch.nn.MaxPool2d((2, 2), return_indices=True))
-    pytest.raises(ValidationError, TorchSequential, m, model)
+    with pytest.raises(ValidationError):
+        TorchSequential(m, model)
 
     model = torch.nn.Sequential(torch.nn.AvgPool2d((2, 2), ceil_mode=True))
-    pytest.raises(ValidationError, TorchSequential, m, model)
+    with pytest.raises(ValidationError):
+        TorchSequential(m, model)
 
 
 @pytest.mark.skipif(TORCH_AVAILABLE is False, reason="Requires PyTorch installed")
@@ -3302,7 +3369,8 @@ def test_sequential_layer_custom_layer(data):
     model = torch.nn.Sequential(
         torch.nn.Hardswish(),
     )
-    pytest.raises(ValidationError, TorchSequential, m, model)
+    with pytest.raises(ValidationError):
+        TorchSequential(m, model)
 
     def hardswish(x: gp.Variable):
         y = x.container.addVariable(domain=x.domain)

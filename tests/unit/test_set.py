@@ -56,17 +56,21 @@ def test_set_creation(data):
         _ = i.getAssignment()
 
     # non-str type name
-    pytest.raises(TypeError, Set, m, 5)
+    with pytest.raises(TypeError):
+        Set(m, 5)
 
     # no container
-    pytest.raises((ValidationError, TypeError), Set)
+    with pytest.raises((ValidationError, TypeError)):
+        Set()
 
     # non-container type container
-    pytest.raises(TypeError, Set, 5, "j")
+    with pytest.raises(TypeError):
+        Set(5, "j")
 
     # try to create a symbol with same name but different type
     _ = Parameter(m, "p")
-    pytest.raises(TypeError, Set, m, "p")
+    with pytest.raises(TypeError):
+        Set(m, "p")
 
     # get already created symbol
     j1 = Set(m, "j")
@@ -87,7 +91,8 @@ def test_set_creation(data):
 def test_set_string(data):
     m, canning_plants, *_ = data
     # Check if the name is reserved
-    pytest.raises(ValidationError, Set, m, "set")
+    with pytest.raises(ValidationError):
+        Set(m, "set")
 
     # Without records
     b = Set(m, "b")
@@ -223,10 +228,14 @@ def test_lag_and_lead(data):
     assert new_set.gamsRepr() == "A + 5"
 
     # Incorrect type
-    pytest.raises(ValueError, set.lead, 5, "bla")
-    pytest.raises(ValueError, alias.lead, 5, "bla")
-    pytest.raises(ValueError, set.lag, 5, "bla")
-    pytest.raises(ValueError, alias.lag, 5, "bla")
+    with pytest.raises(ValueError):
+        set.lead(5, "bla")
+    with pytest.raises(ValueError):
+        alias.lead(5, "bla")
+    with pytest.raises(ValueError):
+        set.lag(5, "bla")
+    with pytest.raises(ValueError):
+        alias.lag(5, "bla")
 
     m = Container()
     s = Set(m, name="s", records=[f"s{i}" for i in range(1, 4)])

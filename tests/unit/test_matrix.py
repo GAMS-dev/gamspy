@@ -32,9 +32,12 @@ def test_matrix_mult_bad(data):
     b = Parameter(m, name="b", domain=[j], records=b_recs, uels_on_axes=True)
     c = Parameter(m, name="c", domain=[], uels_on_axes=True)
 
-    pytest.raises(ValidationError, lambda: c @ a)
-    pytest.raises(ValidationError, lambda: a @ c)
-    pytest.raises(ValidationError, lambda: a @ b)
+    with pytest.raises(ValidationError):
+        (lambda: c @ a)()
+    with pytest.raises(ValidationError):
+        (lambda: a @ c)()
+    with pytest.raises(ValidationError):
+        (lambda: a @ b)()
 
 
 def test_simple_matrix_matrix(data):
@@ -60,7 +63,8 @@ def test_simple_matrix_matrix(data):
 
     a2 = Parameter(m, name="a2", domain=[k, k], records=a_recs, uels_on_axes=True)
     # dims do not match
-    pytest.raises(ValidationError, lambda: a2 @ b)
+    with pytest.raises(ValidationError):
+        (lambda: a2 @ b)()
 
 
 def test_simple_matrix_vector(data):
@@ -83,7 +87,8 @@ def test_simple_matrix_vector(data):
 
     a2 = Parameter(m, name="a2", domain=[j, i], records=a_recs, uels_on_axes=True)
     # dims do not match
-    pytest.raises(ValidationError, lambda: a2 @ b)
+    with pytest.raises(ValidationError):
+        (lambda: a2 @ b)()
 
 
 def test_simple_vector_vector(data):
@@ -144,7 +149,8 @@ def test_simple_vector_matrix(data):
 
     a2 = Parameter(m, name="a2", domain=[j], records=a_recs, uels_on_axes=True)
 
-    pytest.raises(ValidationError, lambda: a2 @ b)
+    with pytest.raises(ValidationError):
+        (lambda: a2 @ b)()
 
 
 def test_batched_matrix_matrix(data):
@@ -186,7 +192,8 @@ def test_batched_matrix_matrix(data):
         records=a_recs,
         uels_on_axes=True,
     )
-    pytest.raises(ValidationError, lambda: a2 @ b)
+    with pytest.raises(ValidationError):
+        (lambda: a2 @ b)()
 
 
 def test_batched_matrix_vector(data):
@@ -227,7 +234,8 @@ def test_batched_matrix_vector(data):
         records=a_recs,
         uels_on_axes=True,
     )
-    pytest.raises(ValidationError, lambda: a2 @ b)
+    with pytest.raises(ValidationError):
+        (lambda: a2 @ b)()
 
 
 def test_batched_matrix_matrix_2(data):
@@ -283,7 +291,8 @@ def test_vector_batched_matrix(data):
     assert np.allclose(c_recs, b_recs @ a_recs)
 
     b2 = Parameter(m, name="b2", domain=[j], records=b_recs, uels_on_axes=True)
-    pytest.raises(ValidationError, lambda: b2 @ a)
+    with pytest.raises(ValidationError):
+        (lambda: b2 @ a)()
 
 
 def test_square_matrix_mult(data):
@@ -405,8 +414,10 @@ def test_batch_size_matches(data):
     b = Parameter(m, name="b", domain=[z, j, k])
     c = Parameter(m, name="c", domain=[n, z, j, k])
 
-    pytest.raises(ValidationError, lambda: a @ b)
-    pytest.raises(ValidationError, lambda: a @ c)
+    with pytest.raises(ValidationError):
+        (lambda: a @ b)()
+    with pytest.raises(ValidationError):
+        (lambda: a @ c)()
 
 
 def test_domain_conflict_resolution(data):
@@ -528,13 +539,15 @@ def test_trace_on_matrix(data):
         uels_on_axes=True,
     )
 
-    pytest.raises(ValidationError, lambda: trace(rect))
+    with pytest.raises(ValidationError):
+        (lambda: trace(rect))()
 
 
 def test_trace_on_vector(data):
     m = data
     vec = Parameter(m, name="vec", domain=dim([3]))
-    pytest.raises(ValidationError, lambda: trace(vec))
+    with pytest.raises(ValidationError):
+        (lambda: trace(vec))()
 
 
 def test_trace_on_batched_matrix(data):
@@ -575,7 +588,8 @@ def test_domain_relabeling(data):
     assert expr.gamsRepr() == "a(n,i,j) + b(j,k)"
     assert expr2.domain == [n, i2, j, k]
     assert expr2.gamsRepr() == "a(n,i2,j) + b(j,k)"
-    pytest.raises(ValidationError, lambda: expr[n])
+    with pytest.raises(ValidationError):
+        (lambda: expr[n])()
 
     expr3 = (a + a) + (b + b)
     assert expr3.gamsRepr() == "a(n,i,j) + a(n,i,j) + (b(j,k) + b(j,k))"
@@ -599,9 +613,12 @@ def test_vector_norm_not_implemented(data):
     m = data
     i = Set(m, name="i", records=["i1", "i2"])
     a = Variable(m, name="a", domain=[i])
-    pytest.raises(ValidationError, lambda: vector_norm(a, ord=0))
-    pytest.raises(ValidationError, lambda: vector_norm(a, ord=float("inf")))
-    pytest.raises(ValidationError, lambda: vector_norm(a, ord=float("-inf")))
+    with pytest.raises(ValidationError):
+        (lambda: vector_norm(a, ord=0))()
+    with pytest.raises(ValidationError):
+        (lambda: vector_norm(a, ord=float("inf")))()
+    with pytest.raises(ValidationError):
+        (lambda: vector_norm(a, ord=float("-inf")))()
 
 
 def test_vector_norm(data):
@@ -675,18 +692,24 @@ def test_vector_norm_3(data):
 
     assert vector_norm(a[:, "i1"]).domain == []
     assert vector_norm(a["n1", :]).domain == []
-    pytest.raises(ValidationError, lambda: vector_norm(a["n1", "i1"]))
+    with pytest.raises(ValidationError):
+        (lambda: vector_norm(a["n1", "i1"]))()
 
 
 def test_vector_norm_dim(data):
     m = data
     i = Set(m, name="i", records=["i1", "i2"])
     a = Variable(m, name="a", domain=[i])
-    pytest.raises(ValidationError, lambda: vector_norm(a, dim="asd"))
-    pytest.raises(ValidationError, lambda: vector_norm(a, dim=[]))
-    pytest.raises(ValidationError, lambda: vector_norm(a, dim=[0, i]))
-    pytest.raises(ValidationError, lambda: vector_norm(a, dim=["asd"]))
-    pytest.raises(ValidationError, lambda: vector_norm(a, dim=2))
+    with pytest.raises(ValidationError):
+        (lambda: vector_norm(a, dim="asd"))()
+    with pytest.raises(ValidationError):
+        (lambda: vector_norm(a, dim=[]))()
+    with pytest.raises(ValidationError):
+        (lambda: vector_norm(a, dim=[0, i]))()
+    with pytest.raises(ValidationError):
+        (lambda: vector_norm(a, dim=["asd"]))()
+    with pytest.raises(ValidationError):
+        (lambda: vector_norm(a, dim=2))()
 
 
 def test_literal_indexing(data):
@@ -985,11 +1008,16 @@ def test_permute_bad(data):
     k = Set(m, name="k", records=["k1", "k2", "k3"])
     l = Set(m, name="l", records=["l1", "l2", "l3"])
     a = Parameter(m, name="a", domain=[i, j, k, l])
-    pytest.raises(ValidationError, lambda: permute(a, [2, 2, 2, 2]))
-    pytest.raises(ValidationError, lambda: permute(a, [5, 2, 2, 2]))
-    pytest.raises(ValidationError, lambda: permute(a, [-1, 2, 2, 2]))
-    pytest.raises(ValidationError, lambda: permute(a, [0, 2, 2, 3]))
-    pytest.raises(ValidationError, lambda: permute(a, ["1", 2, 3, 4]))
+    with pytest.raises(ValidationError):
+        (lambda: permute(a, [2, 2, 2, 2]))()
+    with pytest.raises(ValidationError):
+        (lambda: permute(a, [5, 2, 2, 2]))()
+    with pytest.raises(ValidationError):
+        (lambda: permute(a, [-1, 2, 2, 2]))()
+    with pytest.raises(ValidationError):
+        (lambda: permute(a, [0, 2, 2, 3]))()
+    with pytest.raises(ValidationError):
+        (lambda: permute(a, ["1", 2, 3, 4]))()
 
 
 def test_transpose(data):
@@ -1009,10 +1037,14 @@ def test_transpose(data):
 
     b = Parameter(m, name="b", domain=[i])
     a2 = Variable(m, name="a2", domain=[i])
-    pytest.raises(ValidationError, lambda: b.T)  # par
-    pytest.raises(ValidationError, lambda: a2.T)  # var
-    pytest.raises(ValidationError, lambda: b[i].T)  # imp par
-    pytest.raises(ValidationError, lambda: a2[i].T)  # imp var
+    with pytest.raises(ValidationError):
+        (lambda: b.T)()  # par
+    with pytest.raises(ValidationError):
+        (lambda: a2.T)()  # var
+    with pytest.raises(ValidationError):
+        (lambda: b[i].T)()  # imp par
+    with pytest.raises(ValidationError):
+        (lambda: a2[i].T)()  # imp var
 
 
 def test_domain_conflict_resolution_3(data):

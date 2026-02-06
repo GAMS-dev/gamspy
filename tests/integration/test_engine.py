@@ -220,16 +220,8 @@ def test_engine(data):
         sense=Sense.MIN,
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
-    pytest.raises(
-        ValidationError,
-        transport3.solve,
-        None,
-        None,
-        None,
-        None,
-        None,
-        "engine",
-    )
+    with pytest.raises(ValidationError):
+        transport3.solve(None, None, None, None, None, "engine")
 
 
 def test_logoption(data):
