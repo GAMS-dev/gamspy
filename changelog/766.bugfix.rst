@@ -1,1 +1,0 @@
-Fix the bug in literal validation where the domain set does not have any records.
