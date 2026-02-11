@@ -1,7 +1,5 @@
 import math
 import os
-import shutil
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -36,7 +34,6 @@ pytestmark = pytest.mark.integration
 @pytest.fixture
 def data():
     # Arrange
-    os.makedirs("tmp", exist_ok=True)
     m = Container()
 
     # Act and assert
@@ -44,7 +41,6 @@ def data():
 
     # Cleanup
     m.close()
-    shutil.rmtree("tmp")
 
 
 def reformat_df(dataframe):
@@ -69,7 +65,7 @@ def data_records():
     return data_recs
 
 
-def test_lp_transport(data):
+def test_lp_transport(data, tmp_path):
     m = data
     i = Set(
         m,
@@ -156,11 +152,11 @@ def test_lp_transport(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
 
-    output_path = os.path.join("tmp", "to_latex")
+    output_path = str(tmp_path / "to_latex")
     transport.toLatex(output_path, generate_pdf=False)
 
-    output_path2 = Path("tmp") / "folder with blank"
-    transport.toLatex(output_path2, generate_pdf=False)
+    output_path2 = tmp_path / "folder with blank"
+    transport.toLatex(str(output_path2), generate_pdf=False)
     with open(os.path.join(output_path, "transport.tex")) as file1:
         content1 = file1.read()
 
@@ -207,7 +203,7 @@ def test_lp_transport(data):
     assert reference_tex == generated_tex
 
 
-def test_mip_cutstock(data):
+def test_mip_cutstock(data, tmp_path):
     m = data
     i = Set(
         m,
@@ -310,8 +306,8 @@ def test_mip_cutstock(data):
 
     master.solve(options=Options(relative_optimality_gap=0))
 
-    output_path = os.path.join("tmp", "to_latex")
-    master.toLatex(os.path.join("tmp", "to_latex"))
+    output_path = str(tmp_path / "to_latex")
+    master.toLatex(output_path)
     reference_path = os.path.join(
         "tests", "integration", "tex_references", "master.tex"
     )
@@ -324,7 +320,7 @@ def test_mip_cutstock(data):
     assert reference_tex == generated_tex
 
 
-def test_nlp_weapons(data):
+def test_nlp_weapons(data, tmp_path):
     m = data
     td_data = pd.DataFrame(
         [
@@ -540,8 +536,8 @@ def test_nlp_weapons(data):
 
     war.solve()
 
-    output_path = os.path.join("tmp", "to_latex")
-    war.toLatex(os.path.join("tmp", "to_latex"))
+    output_path = str(tmp_path / "to_latex")
+    war.toLatex(output_path)
     reference_path = os.path.join("tests", "integration", "tex_references", "war.tex")
     with open(reference_path) as file:
         reference_tex = file.read()
@@ -552,7 +548,7 @@ def test_nlp_weapons(data):
     assert reference_tex == generated_tex
 
 
-def test_mcp_qp6():
+def test_mcp_qp6(tmp_path):
     this = os.path.abspath(os.path.dirname(__file__))
     gdx_file = os.path.join(this, "models", "qp6.gdx")
 
@@ -647,8 +643,8 @@ def test_mcp_qp6():
 
     qp6.solve()
 
-    output_path = os.path.join("tmp", "to_latex")
-    qp6.toLatex(os.path.join("tmp", "to_latex"))
+    output_path = str(tmp_path / "to_latex")
+    qp6.toLatex(output_path)
     reference_path = os.path.join("tests", "integration", "tex_references", "qp6.tex")
     with open(reference_path) as file:
         reference_tex = file.read()
@@ -659,7 +655,7 @@ def test_mcp_qp6():
     assert reference_tex == generated_tex
 
 
-def test_dnlp_inscribedsquare(data):
+def test_dnlp_inscribedsquare(data, tmp_path):
     m = data
 
     def fx(t):
@@ -782,8 +778,8 @@ def test_dnlp_inscribedsquare(data):
 
     square.solve()
 
-    output_path = os.path.join("tmp", "to_latex")
-    square.toLatex(os.path.join("tmp", "to_latex"))
+    output_path = str(tmp_path / "to_latex")
+    square.toLatex(output_path)
     reference_path = os.path.join(
         "tests", "integration", "tex_references", "square.tex"
     )
@@ -796,7 +792,7 @@ def test_dnlp_inscribedsquare(data):
     assert reference_tex == generated_tex
 
 
-def test_minlp_minlphix(data):
+def test_minlp_minlphix(data, tmp_path):
     m = data
     # Set
     i = Set(
@@ -1464,8 +1460,8 @@ def test_minlp_minlphix(data):
 
     skip.solve(options=Options(domain_violation_limit=100))
 
-    output_path = os.path.join("tmp", "to_latex")
-    skip.toLatex(os.path.join("tmp", "to_latex"))
+    output_path = str(tmp_path / "to_latex")
+    skip.toLatex(output_path)
     reference_path = os.path.join("tests", "integration", "tex_references", "skip.tex")
     with open(reference_path) as file:
         reference_tex = file.read()
@@ -1476,7 +1472,7 @@ def test_minlp_minlphix(data):
     assert reference_tex == generated_tex
 
 
-def test_qcp_EDsensitivity(data):
+def test_qcp_EDsensitivity(data, tmp_path):
     m = data
     gen = Set(m, name="gen", records=[f"g{i}" for i in range(1, 6)])
     counter = Set(m, name="counter", records=[f"c{i}" for i in range(1, 12)])
@@ -1517,8 +1513,8 @@ def test_qcp_EDsensitivity(data):
         report[cc, "OF"] = ECD.objective_value
         report[cc, "load"] = load
 
-    output_path = os.path.join("tmp", "to_latex")
-    ECD.toLatex(os.path.join("tmp", "to_latex"))
+    output_path = str(tmp_path / "to_latex")
+    ECD.toLatex(output_path)
     reference_path = os.path.join("tests", "integration", "tex_references", "ECD.tex")
     with open(reference_path) as file:
         reference_tex = file.read()
@@ -1529,7 +1525,7 @@ def test_qcp_EDsensitivity(data):
     assert reference_tex == generated_tex
 
 
-def test_renaming(data):
+def test_renaming(data, tmp_path):
     m = data
     distances = [
         ["seattle", "new-york", 2.5],
@@ -1618,7 +1614,7 @@ def test_renaming(data):
         sense=Sense.MIN,
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
-    output_path = os.path.join("tmp", "to_latex")
+    output_path = str(tmp_path / "to_latex")
     greek.toLatex(output_path, rename={"x": "ρ"})  # noqa: RUF001
 
     reference_path = os.path.join("tests", "integration", "tex_references", "greek.tex")

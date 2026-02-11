@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 import pandas as pd
 import pytest
 
@@ -27,7 +25,6 @@ pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def m():
-    os.makedirs("tmp", exist_ok=True)
     container = Container()
     yield container
     container.close()
@@ -158,8 +155,8 @@ def test_universe_alias_creation(m):
     p[u] = 2
 
 
-def test_universe_alias(m):
-    gdx_path = os.path.join("tmp", "test.gdx")
+def test_universe_alias(m, tmp_path):
+    gdx_path = str(tmp_path / "test.gdx")
 
     h = UniverseAlias(m, "h")
     _ = Set(m, "i", records=["i1", "i2"])

@@ -1,0 +1,1 @@
+Use pytest's tmp_path for tests instead of creating temp directories manually.
