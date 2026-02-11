@@ -8,6 +8,7 @@ import weakref
 from gamspy.exceptions import ValidationError
 
 DEBUGGING_LEVELS = ("delete", "keep_on_error", "keep")
+MAX_PATH_LENGTH = 204
 
 
 def validate_arguments(
@@ -17,6 +18,14 @@ def validate_arguments(
     # Validate working_directory
     if working_directory == "":
         raise ValidationError("`working_directory` cannot be an empty string.")
+
+    if (
+        working_directory is not None
+        and len(os.path.abspath(working_directory)) >= MAX_PATH_LENGTH
+    ):
+        raise ValidationError(
+            f"Working directory path length cannot be greater than {MAX_PATH_LENGTH}! Given working directory path `{working_directory}` has length of `{len(working_directory)}`"
+        )
 
     # Validate debugging_level
     if not isinstance(debugging_level, str) or debugging_level not in DEBUGGING_LEVELS:

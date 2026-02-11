@@ -4,7 +4,6 @@ import glob
 import os
 import pathlib
 import platform
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -40,7 +39,6 @@ except Exception:
 
 @pytest.fixture
 def data():
-    os.makedirs("tmp", exist_ok=True)
     m = Container()
     canning_plants = ["seattle", "san-diego"]
     markets = ["new-york", "chicago", "topeka"]
@@ -57,7 +55,6 @@ def data():
 
     yield m, canning_plants, markets, capacities, demands, distances
     m.close()
-    shutil.rmtree("tmp")
     files = glob.glob("_*")
     for file in files:
         if os.path.isfile(file):
@@ -224,7 +221,7 @@ def test_engine(data):
         transport3.solve(None, None, None, None, None, "engine")
 
 
-def test_logoption(data):
+def test_logoption(data, tmp_path):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
@@ -260,7 +257,7 @@ def test_logoption(data):
     )
 
     # logoption=2
-    log_file_path = os.path.join("tmp", "bla.log")
+    log_file_path = str(tmp_path / "bla.log")
     transport.solve(
         backend="engine",
         client=client,
@@ -273,7 +270,7 @@ def test_logoption(data):
     assert not os.path.exists(os.path.join(m.working_directory, "log_stdout.txt"))
 
     # logoption=4
-    log_file_path = os.path.join("tmp", "bla2.log")
+    log_file_path = str(tmp_path / "bla2.log")
     transport.solve(
         backend="engine",
         client=client,
@@ -437,7 +434,7 @@ def test_summary(data):
     assert isinstance(summary, pd.DataFrame)
 
 
-def test_non_blocking(data):
+def test_non_blocking(data, tmp_path):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
@@ -485,18 +482,16 @@ def test_non_blocking(data):
 
         assert exit_code == 0
 
-        client.job.get_results(token, f"tmp{os.sep}out_dir{i}")
+        client.job.get_results(token, str(tmp_path / f"out_dir{i}"))
 
-    gdx_out_path = os.path.join(
-        f"tmp{os.sep}out_dir0", os.path.basename(m.gdxOutputPath())
-    )
+    gdx_out_path = str(tmp_path / "out_dir0" / os.path.basename(m.gdxOutputPath()))
     container = Container(load_from=gdx_out_path)
     assert "x" in container.data
     x.setRecords(container["x"].records)
     assert x.records.equals(container["x"].records)
 
 
-def test_api_job(data):
+def test_api_job(data, tmp_path):
     client = EngineClient(
         host=os.environ["ENGINE_URL"],
         username=os.environ["ENGINE_USER"],
@@ -505,11 +500,11 @@ def test_api_job(data):
         is_blocking=False,
     )
 
-    gms_path = os.path.join(os.getcwd(), "tmp", "dummy.gms")
+    gms_path = str(tmp_path / "dummy.gms")
     with open(gms_path, "w") as file:
         file.write("Set i / i1*i3 /;")
 
-    token = client.job.post(os.getcwd() + os.sep + "tmp", gms_path)
+    token = client.job.post(str(tmp_path), gms_path)
 
     status, _, _ = client.job.get(token)
     while status != 10:
@@ -519,7 +514,7 @@ def test_api_job(data):
     client.job.delete_results(token)
 
 
-def test_api_auth(data):
+def test_api_auth(data, tmp_path):
     # /api/auth -> post
     client = EngineClient(
         host=os.environ["ENGINE_URL"],
@@ -555,11 +550,11 @@ def test_api_auth(data):
         namespace=os.environ["ENGINE_NAMESPACE"],
         jwt=jwt_token,
     )
-    gms_path = os.path.join(os.getcwd(), "tmp", "dummy2.gms")
+    gms_path = str(tmp_path / "dummy2.gms")
     with open(gms_path, "w") as file:
         file.write("Set i / i1*i3 /;")
 
-    token = client.job.post(os.getcwd() + os.sep + "tmp", gms_path)
+    token = client.job.post(str(tmp_path), gms_path)
 
     status, _, _ = client.job.get(token)
     while status != 10:

@@ -3,7 +3,6 @@ from __future__ import annotations
 import glob
 import math
 import os
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -57,7 +56,6 @@ def fy(t):
 @pytest.fixture
 def data():
     # Arrange
-    os.makedirs("tmp", exist_ok=True)
     m = Container()
     canning_plants = ["seattle", "san-diego"]
     markets = ["new-york", "chicago", "topeka"]
@@ -81,8 +79,6 @@ def data():
     for file in files:
         if os.path.isfile(file):
             os.remove(file)
-
-    shutil.rmtree("tmp")
 
 
 @pytest.fixture
@@ -337,7 +333,7 @@ def test_neos_non_blocking(data):
     assert x.records.equals(container["x"].records)
 
 
-def test_solver_options(data):
+def test_solver_options(data, tmp_path):
     m, canning_plants, markets, capacities, demands, distances = data
     # Set
     i = Set(
@@ -421,7 +417,7 @@ def test_solver_options(data):
         email=os.environ["NEOS_EMAIL"],
     )
 
-    log_path = os.path.join("tmp", "neos.log")
+    log_path = str(tmp_path / "neos.log")
     transport.solve(
         solver="cplex",
         solver_options={"aggfill": "11"},
@@ -434,7 +430,7 @@ def test_solver_options(data):
         assert ">>  aggfill 11" in file.read()
 
     # Read solver options from an existing file
-    log_path2 = os.path.join("tmp", "neos2.log")
+    log_path2 = str(tmp_path / "neos2.log")
     gp.set_options({"SOLVER_OPTION_VALIDATION": 0})
     with tempfile.TemporaryDirectory() as tmpdir:
         options_path = os.path.join(tmpdir, "my_solver_options.opt")

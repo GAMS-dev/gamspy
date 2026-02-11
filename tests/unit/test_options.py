@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import re
-import shutil
 import sys
 import tempfile
 import time
@@ -33,7 +32,6 @@ from gamspy.exceptions import GamspyException
 @pytest.fixture
 def data():
     # Arrange
-    os.makedirs("tmp", exist_ok=True)
     m = Container()
     canning_plants = ["seattle", "san-diego"]
     markets = ["new-york", "chicago", "topeka"]
@@ -52,7 +50,6 @@ def data():
     yield m, canning_plants, markets, capacities, demands, distances
 
     # Cleanup
-    shutil.rmtree("tmp")
     m.close()
     savepoint_path = os.path.join(os.getcwd(), "transport_p.gdx")
     if os.path.exists(savepoint_path):
@@ -60,7 +57,7 @@ def data():
 
 
 @pytest.mark.unit
-def test_options(data):
+def test_options(data, tmp_path):
     with pytest.raises(exceptions.ValidationError):
         options = Options(generate_name_dict=True)
         _ = Container(options=options)
@@ -117,7 +114,7 @@ def test_options(data):
     options = Options(solve_link_type="disk")
     assert options._get_gams_compatible_options()["solvelink"] == 2
 
-    options_path = os.path.join("tmp", "options.pf")
+    options_path = str(tmp_path / "options.pf")
     options.export(options_path)
     with open(options_path) as file:
         content = file.read()
@@ -210,7 +207,7 @@ def test_gamspy_to_gams_options(data):
 
 
 @pytest.mark.unit
-def test_log_option(data):
+def test_log_option(data, tmp_path):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
@@ -241,7 +238,7 @@ def test_log_option(data):
     transport.solve()  # logoption=0
     transport.solve(output=sys.stdout)  # logoption = 3
 
-    logfile_name = os.path.join(os.getcwd(), "tmp", "log.txt")
+    logfile_name = str(tmp_path / "log.txt")
     transport.solve(
         output=sys.stdout,
         options=Options(log_file=logfile_name),
@@ -252,11 +249,11 @@ def test_log_option(data):
     assert os.path.exists(logfile_name)
 
     # test listing file
-    listing_file_name = os.path.join(os.getcwd(), "tmp", "listing.lst")
+    listing_file_name = str(tmp_path / "listing.lst")
     transport.solve(options=Options(listing_file=listing_file_name))
     assert os.path.exists(listing_file_name)
 
-    listing_file_name = os.path.join("tmp", "listing2.lst")
+    listing_file_name = str(tmp_path / "listing2.lst")
     transport.solve(options=Options(listing_file=listing_file_name))
     assert os.path.exists(listing_file_name)
 
@@ -273,8 +270,8 @@ def test_log_option(data):
 
 
 @pytest.mark.unit
-def test_from_file(data):
-    option_file = os.path.join("tmp", "option_file")
+def test_from_file(data, tmp_path):
+    option_file = str(tmp_path / "option_file")
     with open(option_file, "w") as file:
         file.write("lp = conopt\n\n")
 
@@ -286,7 +283,7 @@ def test_from_file(data):
 
 
 @pytest.mark.unit
-def test_profile(data):
+def test_profile(data, tmp_path):
     m, canning_plants, markets, capacities, demands, distances = data
     # Set
     i = Set(
@@ -367,7 +364,7 @@ def test_profile(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
 
-    profile_path = os.path.join("tmp", "bla.profile")
+    profile_path = str(tmp_path / "bla.profile")
     transport.solve(
         output=sys.stdout,
         options=Options(
@@ -475,7 +472,7 @@ def test_solprint(data):
 
 
 @pytest.mark.unit
-def test_exception_on_solve_with_listing_file(data):
+def test_exception_on_solve_with_listing_file(data, tmp_path):
     m, *_ = data
     x = Variable(m, name="x")
 
@@ -490,7 +487,7 @@ def test_exception_on_solve_with_listing_file(data):
     with pytest.raises(GamspyException):
         transport.solve(
             options=Options(
-                listing_file=os.path.join("tmp", "bla.lst"),
+                listing_file=str(tmp_path / "bla.lst"),
             ),
         )
 
@@ -584,7 +581,7 @@ def test_model_attribute_options(data):
 
 
 @pytest.mark.unit
-def test_scaling(data):
+def test_scaling(data, tmp_path):
     m, *_ = data
     m = Container()
 
@@ -603,7 +600,7 @@ def test_scaling(data):
     eq.scale = 1e-6
 
     model = Model(m, "my_model", equations=[eq], sense="MIN", objective=z)
-    listing_file_path = os.path.join("tmp", "scaling.lst")
+    listing_file_path = str(tmp_path / "scaling.lst")
     model.solve(
         options=Options(
             enable_scaling=True,
@@ -718,7 +715,7 @@ def test_loadpoint(data):
 
 
 @pytest.mark.unit
-def test_solver_options_twice(data):
+def test_solver_options_twice(data, tmp_path):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(
         m,
@@ -796,7 +793,7 @@ def test_solver_options_twice(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
 
-    log_file_path = os.path.join("tmp", "log.log")
+    log_file_path = str(tmp_path / "log.log")
     transport.solve(
         solver="cplex",
         solver_options={"lpmethod": 4},
@@ -839,7 +836,7 @@ def test_debug_options():
 
 
 @pytest.mark.unit
-def test_solver_options_highs(data):
+def test_solver_options_highs(data, tmp_path):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(
         m,
@@ -917,7 +914,7 @@ def test_solver_options_highs(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
 
-    log_path = os.path.join("tmp", "log.log")
+    log_path = str(tmp_path / "log.log")
     with open(log_path, "w") as file:
         transport.solve(
             output=file, solver="highs", solver_options={"random_seed": 999}

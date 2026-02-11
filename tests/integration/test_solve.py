@@ -6,7 +6,6 @@ import math
 import multiprocessing
 import os
 import platform
-import shutil
 import sys
 import tempfile
 import time
@@ -48,7 +47,6 @@ def ReSHOPAnnotation(m, s):
 @pytest.fixture
 def data():
     # Arrange
-    os.makedirs("tmp", exist_ok=True)
     m = Container()
     canning_plants = ["seattle", "san-diego"]
     markets = ["new-york", "chicago", "topeka"]
@@ -68,7 +66,6 @@ def data():
 
     # Cleanup
     m.close()
-    shutil.rmtree("tmp")
 
 
 def transport(f_value):
@@ -874,7 +871,7 @@ def test_after_first_solve(data):
     assert math.isclose(second_z2_value, 768.375, rel_tol=1e-3)
 
 
-def test_solve(data):
+def test_solve(data, tmp_path):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
@@ -935,7 +932,7 @@ def test_solve(data):
     )
 
     # Test output redirection
-    redirection_path = os.path.join(os.getcwd(), "tmp", "bla.gms")
+    redirection_path = str(tmp_path / "bla.gms")
     with open(redirection_path, "w") as file:
         _ = transport.solve(
             options=Options(time_limit=100),
@@ -1916,7 +1913,7 @@ def test_emp():
     gp.set_options({"USE_PY_VAR_NAME": "yes-or-autogenerate"})
 
 
-def test_subsolver_options(data):
+def test_subsolver_options(data, tmp_path):
     m, *_ = data
     t = Set(m, name="m", records=[0, 1])
     a = Set(m, name="a", records=["a0", "a1"])
@@ -1971,7 +1968,7 @@ def test_subsolver_options(data):
     with tempfile.NamedTemporaryFile("w", delete=False) as file:
         nash.solve(
             solver="reshop",
-            options=Options(log_file=os.path.join("tmp", "log.log")),
+            options=Options(log_file=str(tmp_path / "log.log")),
             output=file,
             solver_options={"subsolveropt": 1},
         )
@@ -1986,7 +1983,7 @@ def test_subsolver_options(data):
     with tempfile.NamedTemporaryFile("w", delete=False) as file:
         nash.solve(
             solver="reshop",
-            options=Options(log_file=os.path.join("tmp", "log.log"), mcp="nlpec"),
+            options=Options(log_file=str(tmp_path / "log.log"), mcp="nlpec"),
             output=file,
             solver_options={"subsolveropt": 1},
         )
