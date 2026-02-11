@@ -5,6 +5,7 @@ from typing import Literal
 import gamspy as gp
 import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
+from gamspy.formulations.result import FormulationResult
 from gamspy.math import dim
 
 
@@ -48,6 +49,7 @@ class _MPool2d:
         default_big_m: int,
         subset: gp.Set,
         out_var: gp.Variable,
+        result: FormulationResult,
     ) -> gp.Parameter:
         # Extract batch and channel dimensions from input domain
         N, C = input.domain[:2]
@@ -110,6 +112,15 @@ class _MPool2d:
         big_m_par[N, C, H_out, W_out] = ub - lb
         big_m_par[...].where[big_m_par[...] == "inf"] = default_big_m
 
+        # bim_m parameter is added later to the result instance
+        result.sets_created["in_out_matching_2"] = subset2
+        result.parameters_created.update(
+            {
+                "output_lb": lb,
+                "output_ub": ub,
+            }
+        )
+
         return big_m_par
 
     def __call__(
@@ -117,7 +128,7 @@ class _MPool2d:
         input: gp.Parameter | gp.Variable,
         big_m: int = 1000,
         propagate_bounds: bool = True,
-    ) -> tuple[gp.Variable, list[gp.Equation]]:
+    ) -> FormulationResult:
         # User input validation
         if not isinstance(input, (gp.Parameter, gp.Variable)):
             raise ValidationError("Expected a parameter or a variable input")
@@ -137,6 +148,8 @@ class _MPool2d:
         h_out, w_out = utils._calc_hw(
             self.padding, self.kernel_size, self.stride, h_in, w_in
         )
+
+        result = FormulationResult()
 
         # Create output variable
         out_var = gp.Variable(
@@ -197,13 +210,14 @@ class _MPool2d:
 
         # Set up Big-M parameter
         if propagate_bounds:
-            _big_m = self._set_bounds_and_big_M(input, big_m, subset, out_var)
+            _big_m = self._set_bounds_and_big_M(input, big_m, subset, out_var, result)
         else:
             _big_m = gp.Parameter(
                 self.container,
                 name=utils._generate_name("p", self._name_prefix, "bigM_2"),
                 records=big_m,
             )
+        result.parameters_created["bigM"] = _big_m
 
         big_m_expr = _big_m * (1 - bin_var[N, C, H_out, W_out, H_in, W_in])
 
@@ -242,4 +256,13 @@ class _MPool2d:
             == 1
         )
 
-        return out_var, [less_than, greater_than, pick_one]
+        result.result = out_var
+        result.variables_created = {"output": out_var, "aux_variable": bin_var}
+        result.sets_created = {"in_out_matching_1": subset}
+        result.equations_created = {
+            "lte": less_than,
+            "gte": greater_than,
+            "pick_one": pick_one,
+        }
+
+        return result

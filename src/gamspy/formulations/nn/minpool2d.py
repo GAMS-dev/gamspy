@@ -6,6 +6,7 @@ from gamspy.formulations.nn.mpool2d import _MPool2d
 
 if TYPE_CHECKING:
     import gamspy as gp
+    from gamspy.formulations.result import FormulationResult
 
 
 class MinPool2d(_MPool2d):
@@ -58,7 +59,7 @@ class MinPool2d(_MPool2d):
         input: gp.Parameter | gp.Variable,
         big_m: int = 1000,
         propagate_bounds: bool = True,
-    ) -> tuple[gp.Variable, list[gp.Equation]]:
+    ) -> FormulationResult:
         """
         Forward pass your input, generate output and equations required for
         calculating the min pooling. Returns the output variable and the list
@@ -66,6 +67,22 @@ class MinPool2d(_MPool2d):
         is True, it will also set the bounds for the output variable based on the input.
         It will also compute the big M value required for the pooling operation
         using the bounds.
+
+        Returns `FormulationResult` which can be unpacked as a output variable and list of equations.
+
+        FormulationResult:
+            - equations_created: ["lte", "gte", "pick_one"]
+            - variables_created: ["output", "aux_variable"]
+            - parameters_created: ["bigM", "output_lb", "output_ub"]
+            - sets_created: ["in_out_matching_1", "in_out_matching_2"]
+
+        Note:
+            - For backward compatibility, this result object can be unpacked as a tuple: `output, equations = minpool(input)`.
+            - `aux_variable` is the binary variable selecting the min element.
+            - `output_lb` and `output_ub` are available as parameters if `propagate_bounds=True`.
+            - `in_out_matching_1` is the subset used to map input indices to output indices based on stride and padding.
+            - `in_out_matching_2` is the subset used specifically for bound propagation.
+            It gets created only if `propogate_bounds=True`.
 
         Parameters
         ----------
@@ -82,7 +99,7 @@ class MinPool2d(_MPool2d):
 
         Returns
         -------
-        tuple[gp.Variable, list[gp.Equation]]
+        FormulationResult
 
         """
         return super().__call__(input, big_m, propagate_bounds)
