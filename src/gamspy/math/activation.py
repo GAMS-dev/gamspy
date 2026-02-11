@@ -419,19 +419,19 @@ def relu_with_equilibrium(
     matches dictionary and the equation list (empty).
 
     FormulationResult:
-        - variables_created: ["output"]
-        - equations_created: []
-        - matches: {(output - x) : output}
-        - extra_return: yes (matches)
+        variables_created: ["output"]
+        equations_created: []
+        matches: {(output - x) : output}
+        extra_return: yes (matches)
 
     or if the provided input was not a Variable, this formulation assigns it to a
     new variable and uses the new variable instead
 
     FormulationResult:
-        - variables_created: ["output", "new_input"]
-        - equations_created: ["set_new_input"]
-        - matches: {(output - new_input) : output}
-        - extra_return: yes (matches)
+        variables_created: ["output", "new_input"]
+        equations_created: ["set_new_input"]
+        matches: {(output - new_input) : output}
+        extra_return: yes (matches)
 
 
     Parameters
