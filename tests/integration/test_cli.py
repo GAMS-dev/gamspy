@@ -11,6 +11,8 @@ import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import ClassVar
 
+import gams.core.gdx as gdx
+import gamspy_base
 import pytest
 import requests
 
@@ -716,6 +718,7 @@ sos1_1"""
     with open(dec_path, "w") as f:
         f.write(dec_content)
 
+    # test /dev/null
     process = subprocess.run(
         [
             sys.executable,
@@ -723,6 +726,31 @@ sos1_1"""
             "gamspy",
             "mps2gms",
             lp_path,
+            "--gdx",
+            os.devnull,
+            "--py",
+            os.devnull,
+            "--dec",
+            dec_path,
+            "--convertsense",
+            "MAX",
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    assert process.returncode == 0, process.stderr
+    assert not os.path.exists(os.path.join("tmp", "sos1a.gdx"))
+    assert not os.path.exists(os.path.join("tmp", "sos1a.py"))
+
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "mps2gms",
+            lp_path,
+            "--gdx",
             out_gdx,
             "--py",
             out_py,
@@ -744,3 +772,34 @@ sos1_1"""
         [sys.executable, out_py], capture_output=True, text=True, encoding="utf-8"
     )
     assert process.returncode == 0, process.stderr
+
+    # Test compress
+    out_gdx2 = os.path.join("tmp", "sos2a.gdx")
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "mps2gms",
+            lp_path,
+            "--gdx",
+            out_gdx2,
+            "--py",
+            out_py,
+            "--dec",
+            dec_path,
+            "--convertsense",
+            "MAX",
+            "--compress-gdx",
+            "1",
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    assert process.returncode == 0, process.stderr
+    assert os.path.exists(out_gdx2)
+    from gamspy.utils import _open_gdx_file
+
+    handle = _open_gdx_file(gamspy_base.directory, out_gdx2)
+    assert gdx.gdxFileInfo(handle)[2] == 1

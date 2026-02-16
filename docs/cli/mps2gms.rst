@@ -11,7 +11,7 @@ Usage
 
 ::
 
-  gamspy mps2gms <input_file> [gdx_file] [gms_file] [OPTIONS]
+  gamspy mps2gms <input_file> [OPTIONS]
 
 .. note::
   If no output files are specified, the command automatically generates ``<input>.py`` and ``<input>.gdx``.
@@ -24,6 +24,14 @@ Usage
      - Short
      - Default
      - Description
+   * - --gdx
+     - 
+     - <input_file>.gdx
+     - Name of GDX output file.
+   * - --gms
+     - 
+     - None
+     - Name of GAMS program output file.
    * - --py
      - 
      - None
@@ -48,6 +56,10 @@ Usage
      - 
      - 2
      - Shift block numbers by this integer value for stage attributes.
+   * - --compress
+     - 
+     - None
+     - Whether to compress output gdx.
    * - --convertsense
      - 
      - 0

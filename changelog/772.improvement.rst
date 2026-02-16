@@ -1,0 +1,1 @@
+Allow specifying gdx and python files as an option in 'gamspy mps2gms' command. Add '--compress' option to 'gamspy mps2gms'.
