@@ -140,7 +140,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self.container._add_statement(statement)
         self.parent._assignment = statement
 
-        self.container._synch_with_gams(gams_to_gamspy=True)
+        self.container._synch_with_gams(gams_to_gamspy=True, load_symbols=[self.parent])
         self.parent._winner = "gams"
 
     def __eq__(self, other):

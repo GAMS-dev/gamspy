@@ -780,7 +780,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self.container._add_statement(statement)
         self._assignment = statement
 
-        self.container._synch_with_gams(gams_to_gamspy=True)
+        self.container._synch_with_gams(gams_to_gamspy=True, load_symbols=[self])
         self._winner = "gams"
 
     def __repr__(self) -> str:

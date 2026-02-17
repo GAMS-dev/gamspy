@@ -142,6 +142,7 @@ class Backend(ABC):
             self.load_symbols: list[str] = [
                 symbol.name  # type: ignore
                 for symbol in load_symbols
+                if symbol.synchronize
             ]
 
         self.job_name = self.get_job_name()
