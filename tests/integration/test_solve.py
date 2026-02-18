@@ -1407,7 +1407,7 @@ def test_summary(data):
     )
     summary = transport.solve()
 
-    assert summary.columns == [
+    assert summary.columns.to_list() == [
         "Solver Status",
         "Model Status",
         "Objective",
