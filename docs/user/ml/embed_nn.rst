@@ -21,6 +21,7 @@ Sample Problem
 
 .. tab-set::
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
 
       Let’s assume you have trained a simple feed-forward neural network for optical
       character recognition, and you want to test the robustness of this neural network.
@@ -29,6 +30,7 @@ Sample Problem
       <https://github.com/GAMS-dev/gamspy/blob/develop/docs/_static/ffn_data.pth?raw=true>`_.
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
 
       Let’s assume you have trained a simple convolutional neural network for optical
       character recognition, and you want to test the robustness of this neural network.
@@ -49,14 +51,16 @@ Importing the neural net
 
 .. tab-set::
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
 
-     We trained the neural network using PyTorch, with a single hidden layer
-     consisting of 20 neurons with ReLU activation function.
+      We trained the neural network using PyTorch, with a single hidden layer
+      consisting of 20 neurons with ReLU activation function.
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
 
-     We trained the convolutional neural network using PyTorch, with 2 hidden
-     layers with ReLU activation function.
+      We trained the convolutional neural network using PyTorch, with 2 hidden
+      layers with ReLU activation function.
 
 Let's start with the imports
 
@@ -75,6 +79,7 @@ And then import the Neural Network, so we can get its weights:
 
 .. tab-set::
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
 
       .. code-block:: python
 
@@ -98,6 +103,7 @@ And then import the Neural Network, so we can get its weights:
          network.load_state_dict(torch.load("ffn_data.pth", weights_only=True))
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
 
       .. code-block:: python
 
@@ -134,6 +140,7 @@ Testing with a sample
 
 .. tab-set::
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
 
       .. code-block:: python
       
@@ -157,6 +164,7 @@ Testing with a sample
              print("Pick some other data")
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
 
       .. code-block:: python
       
@@ -187,6 +195,7 @@ in GAMSPy for later use.
 
 .. tab-set::
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
 
       In the feed-forward neural net, we pass the flattened image.
 
@@ -200,6 +209,7 @@ in GAMSPy for later use.
          image = gp.Parameter(m, name="image", domain=dim(image_data.shape), records=image_data)
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
 
       In the CNN, we do not flatten the image. Expected shape is Batch x Channel x Height x Width
        
@@ -222,6 +232,7 @@ Then we start creating GAMSPy parameters contaning the weights from the neural n
 
 .. tab-set::
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
       
       .. tab-set::
          .. tab-item:: Linear Formulation
@@ -275,6 +286,7 @@ Then we start creating GAMSPy parameters contaning the weights from the neural n
       increasing function.
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
       
       Technically, you can write convolutions without formulations but it is kind of
       messy to write. And using formulations over explicitly writing is suggested.
@@ -313,6 +325,7 @@ The variable `a1` will serve as the input to the neural network.
 .. tab-set::
 
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
 
       .. code-block:: python
 
@@ -320,6 +333,7 @@ The variable `a1` will serve as the input to the neural network.
          a1 = gp.Variable(m, name="a1", domain=dim([784]))
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
 
       .. code-block:: python
 
@@ -348,6 +362,8 @@ This step is only required if you do not use formulations.
 
 .. tab-set::
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
+
       If you do not use formulations, you need to explicitly define the
       intermediate variables.
 
@@ -369,6 +385,7 @@ This step is only required if you do not use formulations.
                z3 = gp.Variable(m, name="a3", domain=dim([10]))
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
       
       Formulations that we use, will create intermediate variables
       automatically.
@@ -381,6 +398,8 @@ Let's mimic the forward pass.
 
 .. tab-set::
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
+
       .. tab-set::
          .. tab-item:: Linear Formulation
       
@@ -421,6 +440,7 @@ Let's mimic the forward pass.
 
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
       
       .. code-block:: python
 
@@ -460,6 +480,8 @@ In this example, the real digit is 7. We want the network to confuse it with 2.
 
 .. tab-set::
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
+
       `z3` is the output of the feed-forward neural net.
 
       .. code-block:: python
@@ -468,6 +490,8 @@ In this example, the real digit is 7. We want the network to confuse it with 2.
          favor_confused[...] = z3["2"] >= z3["7"] + 0.1
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
+
       `z5` is the output of the CNN.
 
       .. code-block:: python
@@ -517,6 +541,7 @@ This takes a couple of seconds to solve, after which we can investigate:
 
 .. tab-set::
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
 
       .. code-block:: python
       
@@ -528,6 +553,7 @@ This takes a couple of seconds to solve, after which we can investigate:
            -4.49846799 -22.13348944   0.67687953  -1.63533975  -8.07978064]
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
 
       .. code-block:: python
       
@@ -546,6 +572,7 @@ verify that the network indeed misclassifies it.
 
 .. tab-set::
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
 
       .. code-block:: python
       
@@ -561,6 +588,7 @@ verify that the network indeed misclassifies it.
 
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
 
       .. code-block:: python
       
@@ -595,6 +623,7 @@ But the question remains: would we also confuse the image?
 
 .. tab-set::
    .. tab-item:: Feed-forward Neural Network
+      :sync: ffn
       
       .. image:: ../images/noisy_image.png
         :align: center
@@ -603,6 +632,7 @@ But the question remains: would we also confuse the image?
       conclude that this network lacks robustness.
 
    .. tab-item:: Convolutional Neural Network
+      :sync: cnn
 
       .. image:: ../images/noisy_image_2.png
         :align: center
