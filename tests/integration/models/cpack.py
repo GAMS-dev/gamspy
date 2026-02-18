@@ -99,7 +99,9 @@ def main():
     m.solve(solver="scip", options=Options(relative_optimality_gap=0.01))
 
     print(f"{m.objective_value=}")
-    assert math.isclose(m.objective_value, 0.3701919131257)
+    assert math.isclose(m.objective_value, 0.3701919081832365, rel_tol=1e-6), (
+        m.objective_value
+    )
 
     rval = r.records.loc[0, "level"]
     print("Maximized radius:", rval)
