@@ -208,7 +208,9 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         self._assignment = statement
 
         if self.alias_with.synchronize:  # type: ignore
-            self.container._synch_with_gams(gams_to_gamspy=True)
+            self.container._synch_with_gams(
+                gams_to_gamspy=True, load_symbols=[self.alias_with]
+            )
 
     def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
         super().setRecords(records, uels_on_axes)

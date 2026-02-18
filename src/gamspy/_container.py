@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._options import Options
     from gamspy._symbols.implicits import ImplicitVariable
+    from gamspy._symbols.symbol import Symbol
     from gamspy.math.matrix import Dim
 
     SymbolType: TypeAlias = Set | Alias | Parameter | Variable | Equation
@@ -499,8 +500,11 @@ class Container(gt.Container):
         self,
         relaxed_domain_mapping: bool = False,
         gams_to_gamspy: bool = False,
+        load_symbols: list[Symbol] | None = None,
     ) -> DataFrame | None:
-        runner = backend_factory(self, self._options, output=self.output)
+        runner = backend_factory(
+            self, self._options, output=self.output, load_symbols=load_symbols
+        )
         summary = runner.run(relaxed_domain_mapping, gams_to_gamspy)
 
         if self._options and self._options.seed is not None:
