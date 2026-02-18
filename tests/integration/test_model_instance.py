@@ -995,3 +995,46 @@ def test_interrupt():
         "[FROZEN MODEL - WARNING] The solve was interrupted! Solve status: UserInterrupt"
         in output
     ), output
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(platform.system() != "Linux", reason="Test only for linux.")
+def test_model_attributes():
+    m = gp.Container()
+
+    i = gp.Set(m, "i", records=range(10))
+    p = gp.Parameter(m, "p", domain=i, records=[(i, i * 2) for i in range(10)])
+    X = gp.Variable(m, "X", domain=i, type=gp.VariableType.INTEGER)
+    z = gp.Variable(m, "z")
+    eq = gp.Equation(m, "eq", domain=i)
+    obj = gp.Equation(m, "obj")
+
+    eq[i] = X[i] <= p[i]
+    obj[...] = gp.Sum(i, X[i]) == z
+
+    test = gp.Model(
+        m,
+        "test",
+        equations=m.getEquations(),
+        problem="MIP",
+        sense=gp.Sense.MAX,
+        objective=z,
+    )
+    X.fx[i] = 0
+
+    test.freeze(modifiables=[X.lo, X.up, X.fx])
+    assert test.num_equations == 11.0
+    assert test.num_variables == 11.0
+    assert test.num_discrete_variables == 10.0
+    assert test.num_nonzeros == 21.0
+
+    X.fx[i] = X[i].l
+
+    X[i].lo.where[gp.Ord(i) < 5] = 0
+    X[i].up.where[gp.Ord(i) < 5] = 1
+
+    test.solve()
+    assert test.num_equations == 11.0
+    assert test.num_variables == 11.0
+    assert test.num_discrete_variables == 10.0
+    assert test.num_nonzeros == 21.0

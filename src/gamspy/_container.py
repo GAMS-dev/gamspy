@@ -242,11 +242,11 @@ class Container(gt.Container):
                 )
 
             if isinstance(load_from, str) and load_from.endswith(".g00"):
-                self._options._set_debug_options(
+                self._options._set_extra_options(
                     {"restart": load_from, "gdxSymbols": "all"}
                 )
                 self._synch_with_gams(gams_to_gamspy=True)
-                self._options._set_debug_options({})
+                self._options._set_extra_options({})
                 self._clean_modified_symbols()
                 self._unsaved_statements = []
                 self._is_restarted = True
