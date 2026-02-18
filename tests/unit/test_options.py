@@ -825,10 +825,10 @@ def test_solver_options_twice(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_debug_options():
+def test_extra_options():
     m = Container()
     save_path = os.path.join(m.working_directory, "save.g00")
-    m._options._set_debug_options({"save": save_path})
+    m._options._set_extra_options({"save": save_path})
     _ = Set(m, records=["i1", "i2"])
     assert os.path.exists(save_path)
     os.remove(save_path)

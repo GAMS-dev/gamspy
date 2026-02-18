@@ -416,7 +416,7 @@ class GamsConverter:
 
         # Write .g00 file
         if self.dump_gams_state:
-            self.container._options._set_debug_options({"save": self.g00_path})
+            self.container._options._set_extra_options({"save": self.g00_path})
             self.container._synch_with_gams()
 
         # Write .gdx file

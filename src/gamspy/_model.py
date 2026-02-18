@@ -123,6 +123,25 @@ class Problem(Enum):
         return self.value
 
 
+INT_TO_PROBLEM: dict[int, str] = {
+    1: str(Problem.LP),
+    2: str(Problem.MIP),
+    3: str(Problem.RMIP),
+    4: str(Problem.NLP),
+    5: str(Problem.MCP),
+    6: str(Problem.MPEC),
+    7: str(Problem.RMPEC),
+    8: str(Problem.CNS),
+    9: str(Problem.DNLP),
+    10: str(Problem.RMINLP),
+    11: str(Problem.MINLP),
+    12: str(Problem.QCP),
+    13: str(Problem.MIQCP),
+    14: str(Problem.RMIQCP),
+    15: str(Problem.EMP),
+}
+
+
 class Sense(Enum):
     """An enumeration for sense types"""
 
@@ -512,7 +531,7 @@ class Model:
         self._num_bound_projections: float | None = None
         self._objective_estimation: float | None = None
         self._objective_value: float | None = None
-        self._used_model_type: float | None = None
+        self._used_model_type: str | None = None
         self._model_generation_time: float | None = None
         self._solve_model_time: float | None = None
         self._sum_infeasibilities: float | None = None
@@ -853,13 +872,13 @@ class Model:
         return self._objective_value
 
     @property
-    def used_model_type(self) -> float | None:
+    def used_model_type(self) -> str | None:
         """
         Integer number that indicates the used model type.
 
         Returns
         -------
-        float | None
+        str | None
         """
         return self._used_model_type
 
@@ -1137,6 +1156,8 @@ class Model:
                         f"Solve status: {status.name}. {ERROR_STATUS[status]}",
                         status.value,
                     )
+            elif python_attr == "_used_model_type":
+                setattr(self, python_attr, INT_TO_PROBLEM[int(data)])
             else:
                 setattr(self, python_attr, data)
 

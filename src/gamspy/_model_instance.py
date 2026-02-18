@@ -59,18 +59,9 @@ from gams.core.gmo import (
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
-from gamspy._communication import send_job
-from gamspy._database import (
-    Database,
-    GamsEquation,
-    GamsParameter,
-    GamsVariable,
-)
-from gamspy.exceptions import (
-    GamspyException,
-    ValidationError,
-    _customize_exception,
-)
+from gamspy._backend.backend import backend_factory
+from gamspy._database import Database, GamsEquation, GamsParameter, GamsVariable
+from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
@@ -231,6 +222,9 @@ class ModelInstance:
             "Solver Status",
             "Model Status",
             "Objective",
+            "Num of Equations",
+            "Num of Variables",
+            "Model Type",
             "Solver",
             "Solver Time",
         ]
@@ -314,33 +308,17 @@ class ModelInstance:
 
         # Prepare the required lines to solve with model instance
         scenario_str = self._get_scenario(model)
-        with open(self.gms_file, "w", encoding="utf-8") as gams_file:
-            gams_file.write(scenario_str)
+        self.container._add_statement(scenario_str)
+        model._create_model_attributes()
 
         # Write pf file
-        hidden_options = self._prepare_hidden_options()
-        options._set_hidden_options(hidden_options)
+        options._set_extra_options({"solvercntr": self.solver_control_file})
         options.log_file = os.path.join(self.container.working_directory, "gamslog.dat")
-        options._export(self.pf_file, self.output)
 
-        # Run
-        try:
-            self.container._job = self.job_name
-            send_job(
-                self.container._comm_pair_id, self.job_name, self.pf_file, self.output
-            )
-        except GamspyException as exception:
-            self.container._workspace._errors.append(str(exception))
-            message = _customize_exception(
-                options,
-                self.job_name,
-                exception.return_code,
-            )
-
-            exception.args = (exception.message + message,)
-            raise exception
-        finally:
-            self.container._unsaved_statements = []
+        runner = backend_factory(
+            self.container, options, model=model, output=self.output
+        )
+        runner.run(gams_to_gamspy=True)
 
         # Init environments
         if gevInitEnvironmentLegacy(self._gev, self.solver_control_file) != 0:
@@ -523,6 +501,9 @@ class ModelInstance:
             str(self.model._solve_status),
             str(self.model._status),
             self.model._objective_value,
+            self.model.num_equations,
+            self.model.num_variables,
+            self.model.used_model_type,
             solver,
             self.model._solve_model_time,
         ]
@@ -531,6 +512,7 @@ class ModelInstance:
 
     def _get_scenario(self, model: Model) -> str:
         auto_id = "s" + utils._get_unique_name()[:5]
+        model_prefix = gp.Model._generate_prefix
         params = [
             modifier.gams_symbol
             for modifier in self.modifiers
@@ -538,9 +520,9 @@ class ModelInstance:
         ]
         lines = []
         if params:
-            lines.append(f"Set {auto_id}__(*) /'s0'/;")
+            lines.append(f"Set {model_prefix}{auto_id}__(*) /'s0'/;")
             for symbol in params:
-                declaration = f"Parameter {auto_id}__{symbol.name}({auto_id}__"
+                declaration = f"Parameter {model_prefix}{auto_id}__{symbol.name}({model_prefix}{auto_id}__"
                 domain = ""
                 if symbol.dimension:
                     domain = "," + ",".join("*" * symbol.dimension)
@@ -549,21 +531,25 @@ class ModelInstance:
                 declaration = f"{declaration}{domain};"
                 lines.append(declaration)
 
-                domain = f"({auto_id}__"
+                domain = f"({model_prefix}{auto_id}__"
 
                 if symbol.dimension:
                     domain += ","
 
-                assign_str = f"{auto_id}__{symbol.name}({auto_id}__"
+                assign_str = (
+                    f"{model_prefix}{auto_id}__{symbol.name}({model_prefix}{auto_id}__"
+                )
                 if symbol.dimension:
-                    assign_str += "," + ",".join([f"{auto_id}__"] * symbol.dimension)
+                    assign_str += "," + ",".join(
+                        [f"{model_prefix}{auto_id}__"] * symbol.dimension
+                    )
 
                 assign_str += ") = Eps;"
                 lines.append(assign_str)
 
-            scenario = f"Set {auto_id}_dict(*,*,*) / '{auto_id}__'.'scenario'.''"
+            scenario = f"Set {model_prefix}{auto_id}_dict(*,*,*) / '{model_prefix}{auto_id}__'.'scenario'.''"
             for symbol in params:
-                scenario += f",\n'{symbol.name}'.'param'.'{auto_id}__{symbol.name}'"
+                scenario += f",\n'{symbol.name}'.'param'.'{model_prefix}{auto_id}__{symbol.name}'"
             scenario += "/;"
             lines.append(scenario)
 
@@ -571,7 +557,7 @@ class ModelInstance:
         solve_string = model._generate_solve_string()
 
         if params:
-            solve_string += f" scenario {auto_id}_dict"
+            solve_string += f" scenario {model_prefix}{auto_id}_dict"
 
         solve_string += ";"
         lines.append(solve_string)
