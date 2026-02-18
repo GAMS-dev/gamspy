@@ -1,8 +1,6 @@
 import math
 import os
-import shutil
 import subprocess
-import tempfile
 
 import numpy as np
 import pandas as pd
@@ -36,7 +34,6 @@ pytestmark = pytest.mark.integration
 @pytest.fixture
 def data():
     # Arrange
-    os.makedirs("tmp", exist_ok=True)
     m = Container()
 
     # Act and assert
@@ -44,7 +41,6 @@ def data():
 
     # Cleanup
     m.close()
-    shutil.rmtree("tmp")
 
 
 def reformat_df(dataframe):
@@ -69,7 +65,7 @@ def data_records():
     return data_recs
 
 
-def test_lp_transport(data):
+def test_lp_transport(data, tmp_path):
     m = data
     i = Set(
         m,
@@ -156,25 +152,26 @@ def test_lp_transport(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
 
+    to_gams_path = str(tmp_path / "to_gams")
     transport.toGams(
-        os.path.join("tmp", "to_gams"),
+        to_gams_path,
         options=Options.fromGams({"lp": "cplex"}),
     )
     with pytest.raises(exceptions.ValidationError):
-        transport.toGams(os.path.join("tmp", "to_gams"), options={"lp": "cplex"})
+        transport.toGams(to_gams_path, options={"lp": "cplex"})
 
     transport.toGams(
-        os.path.join("tmp", "to_gams"),
+        to_gams_path,
         options=Options(generate_name_dict=False, lp="CPLEX"),
     )
 
     process = subprocess.run(
         [
             os.path.join(m.system_directory, "gams"),
-            os.path.join("tmp", "to_gams", "transport.gms"),
+            os.path.join(to_gams_path, "transport.gms"),
             "traceopt=2",
             "trace=trace.txt",
-            f"output={os.path.join('tmp', 'to_gams', 'transport.lst')}",
+            f"output={os.path.join(to_gams_path, 'transport.lst')}",
         ],
         capture_output=True,
         text=True,
@@ -190,7 +187,7 @@ def test_lp_transport(data):
     reference_path = os.path.join(
         "tests", "integration", "gms_references", "transport.gms"
     )
-    with open(os.path.join("tmp", "to_gams", "transport.gms")) as file1:
+    with open(os.path.join(to_gams_path, "transport.gms")) as file1:
         content1 = [
             line
             for line in file1.read().splitlines()
@@ -206,15 +203,16 @@ def test_lp_transport(data):
     assert content1 == content2
 
     folder_name = "folder with spaces"
-    transport.toGams(os.path.join("tmp", folder_name))
+    folder_path = str(tmp_path / folder_name)
+    transport.toGams(folder_path)
 
     process = subprocess.run(
         [
             os.path.join(m.system_directory, "gams"),
-            os.path.join("tmp", folder_name, "transport.gms"),
+            os.path.join(folder_path, "transport.gms"),
             "traceopt=2",
             "trace=trace.txt",
-            f"output={os.path.join('tmp', 'transport.lst')}",
+            f"output={os.path.join(str(tmp_path), 'transport.lst')}",
         ],
         capture_output=True,
         text=True,
@@ -222,7 +220,7 @@ def test_lp_transport(data):
     assert process.returncode == 0, process.stderr
 
 
-def test_mip_cutstock(data):
+def test_mip_cutstock(data, tmp_path):
     m = data
     i = Set(
         m,
@@ -325,15 +323,16 @@ def test_mip_cutstock(data):
 
     master.solve(options=Options(relative_optimality_gap=0))
 
-    master.toGams(os.path.join("tmp", "to_gams"))
+    to_gams_path = str(tmp_path / "to_gams")
+    master.toGams(to_gams_path)
 
     process = subprocess.run(
         [
             os.path.join(m.system_directory, "gams"),
-            os.path.join("tmp", "to_gams", "master.gms"),
+            os.path.join(to_gams_path, "master.gms"),
             "traceopt=2",
             "trace=trace.txt",
-            f"output={os.path.join('tmp', 'to_gams', 'master.lst')}",
+            f"output={os.path.join(to_gams_path, 'master.lst')}",
         ],
         capture_output=True,
         text=True,
@@ -348,7 +347,7 @@ def test_mip_cutstock(data):
     reference_path = os.path.join(
         "tests", "integration", "gms_references", "master.gms"
     )
-    with open(os.path.join("tmp", "to_gams", "master.gms")) as file1:
+    with open(os.path.join(to_gams_path, "master.gms")) as file1:
         content1 = [
             line
             for line in file1.read().splitlines()
@@ -364,7 +363,7 @@ def test_mip_cutstock(data):
     assert content1 == content2
 
 
-def test_nlp_weapons(data):
+def test_nlp_weapons(data, tmp_path):
     m = data
     td_data = pd.DataFrame(
         [
@@ -580,15 +579,16 @@ def test_nlp_weapons(data):
 
     war.solve()
 
-    war.toGams(os.path.join("tmp", "to_gams"))
+    to_gams_path = str(tmp_path / "to_gams")
+    war.toGams(to_gams_path)
 
     process = subprocess.run(
         [
             os.path.join(m.system_directory, "gams"),
-            os.path.join("tmp", "to_gams", "war.gms"),
+            os.path.join(to_gams_path, "war.gms"),
             "traceopt=2",
             "trace=trace.txt",
-            f"output={os.path.join('tmp', 'to_gams', 'war.lst')}",
+            f"output={os.path.join(to_gams_path, 'war.lst')}",
         ],
         capture_output=True,
         text=True,
@@ -601,7 +601,7 @@ def test_nlp_weapons(data):
         assert objective.startswith("1735.569579")
 
     reference_path = os.path.join("tests", "integration", "gms_references", "war.gms")
-    with open(os.path.join("tmp", "to_gams", "war.gms")) as file1:
+    with open(os.path.join(to_gams_path, "war.gms")) as file1:
         content1 = [
             line
             for line in file1.read().splitlines()
@@ -617,7 +617,7 @@ def test_nlp_weapons(data):
     assert content1 == content2
 
 
-def test_mcp_qp6(data):
+def test_mcp_qp6(data, tmp_path):
     m = data
     this = os.path.abspath(os.path.dirname(__file__))
     gdx_file = os.path.join(this, "models", "qp6.gdx")
@@ -713,15 +713,16 @@ def test_mcp_qp6(data):
 
     qp6.solve()
 
-    qp6.toGams(os.path.join("tmp", "to_gams"))
+    to_gams_path = str(tmp_path / "to_gams")
+    qp6.toGams(to_gams_path)
 
     process = subprocess.run(
         [
             os.path.join(m.system_directory, "gams"),
-            os.path.join("tmp", "to_gams", "qp6.gms"),
+            os.path.join(to_gams_path, "qp6.gms"),
             "traceopt=2",
             "trace=trace.txt",
-            f"output={os.path.join('tmp', 'to_gams', 'qp6.lst')}",
+            f"output={os.path.join(to_gams_path, 'qp6.lst')}",
         ],
         capture_output=True,
         text=True,
@@ -735,7 +736,7 @@ def test_mcp_qp6(data):
         assert objective.startswith("8.499300")
 
     reference_path = os.path.join("tests", "integration", "gms_references", "qp6.gms")
-    with open(os.path.join("tmp", "to_gams", "qp6.gms")) as file1:
+    with open(os.path.join(to_gams_path, "qp6.gms")) as file1:
         content1 = [
             line
             for line in file1.read().splitlines()
@@ -751,7 +752,7 @@ def test_mcp_qp6(data):
     assert content1 == content2
 
 
-def test_dnlp_inscribedsquare(data):
+def test_dnlp_inscribedsquare(data, tmp_path):
     m = data
 
     def fx(t):
@@ -874,15 +875,16 @@ def test_dnlp_inscribedsquare(data):
 
     square.solve()
 
-    square.toGams(os.path.join("tmp", "to_gams"))
+    to_gams_path = str(tmp_path / "to_gams")
+    square.toGams(to_gams_path)
 
     process = subprocess.run(
         [
             os.path.join(m.system_directory, "gams"),
-            os.path.join("tmp", "to_gams", "square.gms"),
+            os.path.join(to_gams_path, "square.gms"),
             "traceopt=2",
             "trace=trace.txt",
-            f"output={os.path.join('tmp', 'to_gams', 'square.lst')}",
+            f"output={os.path.join(to_gams_path, 'square.lst')}",
         ],
         capture_output=True,
         text=True,
@@ -898,7 +900,7 @@ def test_dnlp_inscribedsquare(data):
     reference_path = os.path.join(
         "tests", "integration", "gms_references", "square.gms"
     )
-    with open(os.path.join("tmp", "to_gams", "square.gms")) as file1:
+    with open(os.path.join(to_gams_path, "square.gms")) as file1:
         content1 = [
             line
             for line in file1.read().splitlines()
@@ -914,7 +916,7 @@ def test_dnlp_inscribedsquare(data):
     assert content1 == content2
 
 
-def test_minlp_minlphix(data):
+def test_minlp_minlphix(data, tmp_path):
     m = data
     # Set
     i = Set(
@@ -1582,16 +1584,17 @@ def test_minlp_minlphix(data):
 
     skip.solve(options=Options(domain_violation_limit=100))
 
-    skip.toGams(os.path.join("tmp", "to_gams"))
+    to_gams_path = str(tmp_path / "to_gams")
+    skip.toGams(to_gams_path)
 
     process = subprocess.run(
         [
             os.path.join(m.system_directory, "gams"),
-            os.path.join("tmp", "to_gams", "skip.gms"),
+            os.path.join(to_gams_path, "skip.gms"),
             "traceopt=2",
             "trace=trace.txt",
             "domlim=100",
-            f"output={os.path.join('tmp', 'to_gams', 'skip.lst')}",
+            f"output={os.path.join(to_gams_path, 'skip.lst')}",
         ],
         capture_output=True,
         text=True,
@@ -1605,7 +1608,7 @@ def test_minlp_minlphix(data):
         assert math.isclose(objective, 316.692694176485, rel_tol=1e-4)
 
     reference_path = os.path.join("tests", "integration", "gms_references", "skip.gms")
-    with open(os.path.join("tmp", "to_gams", "skip.gms")) as file1:
+    with open(os.path.join(to_gams_path, "skip.gms")) as file1:
         content1 = [
             line
             for line in file1.read().splitlines()
@@ -1621,7 +1624,7 @@ def test_minlp_minlphix(data):
     assert content1 == content2
 
 
-def test_qcp_EDsensitivity(data):
+def test_qcp_EDsensitivity(data, tmp_path):
     m = data
     gen = Set(m, name="gen", records=[f"g{i}" for i in range(1, 6)])
     counter = Set(m, name="counter", records=[f"c{i}" for i in range(1, 12)])
@@ -1662,15 +1665,16 @@ def test_qcp_EDsensitivity(data):
         report[cc, "OF"] = ECD.objective_value
         report[cc, "load"] = load
 
-    ECD.toGams(os.path.join("tmp", "to_gams"))
+    to_gams_path = str(tmp_path / "to_gams")
+    ECD.toGams(to_gams_path)
 
     process = subprocess.run(
         [
             os.path.join(m.system_directory, "gams"),
-            os.path.join("tmp", "to_gams", "ECD.gms"),
+            os.path.join(to_gams_path, "ECD.gms"),
             "traceopt=2",
             "trace=trace.txt",
-            f"output={os.path.join('tmp', 'to_gams', 'ECD.lst')}",
+            f"output={os.path.join(to_gams_path, 'ECD.lst')}",
         ],
         capture_output=True,
         text=True,
@@ -1685,7 +1689,7 @@ def test_qcp_EDsensitivity(data):
         assert objective.startswith("911044.09")
 
     reference_path = os.path.join("tests", "integration", "gms_references", "ECD.gms")
-    with open(os.path.join("tmp", "to_gams", "ECD.gms")) as file1:
+    with open(os.path.join(to_gams_path, "ECD.gms")) as file1:
         content1 = [
             line
             for line in file1.read().splitlines()
@@ -1701,7 +1705,7 @@ def test_qcp_EDsensitivity(data):
     assert content1 == content2
 
 
-def test_set_attributes(data):
+def test_set_attributes(data, tmp_path):
     m = data
     s = m.addSet("s", records=[1, 2])
     x = m.addVariable("x", type="positive", domain=s)
@@ -1716,15 +1720,16 @@ def test_set_attributes(data):
         objective=Sum(s, x[s]),
     )
 
-    model.toGams(os.path.join("tmp", "to_gams"))
+    to_gams_path = str(tmp_path / "to_gams")
+    model.toGams(to_gams_path)
 
     process = subprocess.run(
         [
             os.path.join(m.system_directory, "gams"),
-            os.path.join("tmp", "to_gams", "attr.gms"),
+            os.path.join(to_gams_path, "attr.gms"),
             "traceopt=2",
             "trace=trace.txt",
-            f"output={os.path.join('tmp', 'to_gams', 'attr.lst')}",
+            f"output={os.path.join(to_gams_path, 'attr.lst')}",
         ],
         capture_output=True,
         text=True,
@@ -1738,7 +1743,7 @@ def test_set_attributes(data):
         assert float(objective) == 1
 
     reference_path = os.path.join("tests", "integration", "gms_references", "attr.gms")
-    with open(os.path.join("tmp", "to_gams", "attr.gms")) as file1:
+    with open(os.path.join(to_gams_path, "attr.gms")) as file1:
         content1 = [
             line
             for line in file1.read().splitlines()
@@ -1754,7 +1759,7 @@ def test_set_attributes(data):
     assert content1 == content2
 
 
-def test_math_op(data):
+def test_math_op(data, tmp_path):
     ct = data
 
     S = ct.addSet("S", records=["a"])
@@ -1773,11 +1778,11 @@ def test_math_op(data):
         objective=Sum(S, x[S]),
     )
 
-    tmp_path = os.path.join("tmp", "to_gams")
-    m.toGams(tmp_path)
+    tmp_path_folder = str(tmp_path / "to_gams")
+    m.toGams(tmp_path_folder)
 
     reference_path = os.path.join("tests", "integration", "gms_references", "math.gms")
-    with open(os.path.join("tmp", "to_gams", "math.gms")) as file1:
+    with open(os.path.join(tmp_path_folder, "math.gms")) as file1:
         content1 = [
             line
             for line in file1.read().splitlines()
@@ -1793,7 +1798,7 @@ def test_math_op(data):
     assert content1 == content2
 
 
-def test_dump_gams_state(data):
+def test_dump_gams_state(data, tmp_path):
     m = data
 
     # Prepare data
@@ -1884,12 +1889,12 @@ def test_dump_gams_state(data):
         sense=Sense.MIN,
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
-    path = os.path.join("tmp", "transport")
+    path = str(tmp_path / "transport")
     transport.toGams(path, dump_gams_state=True)
     assert os.path.exists(os.path.join(path, "transport.g00"))
 
 
-def test_toGams_with_alias_as_domain():
+def test_toGams_with_alias_as_domain(tmp_path):
     import gamspy as gp
 
     m = gp.Container()
@@ -1907,10 +1912,8 @@ def test_toGams_with_alias_as_domain():
 
     test = gp.Model(m, name="test", problem="LP", equations=[eq_obj])
 
-    folder = tempfile.mkdtemp()
+    folder = str(tmp_path)
     test.toGams(folder)
     with open(os.path.join(folder, "test.gms")) as file:
         content = file.read()
         assert "Set i(*);" in content
-
-    shutil.rmtree(folder)

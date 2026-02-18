@@ -38,10 +38,10 @@ def mps2gms(
         Path, typer.Argument(help="MPS or LP file to translate.", exists=True)
     ],
     gdx_file: Annotated[
-        Path | None, typer.Argument(help="Name of GDX output file.")
+        str | None, typer.Option("--gdx", help="Name of GDX output file.")
     ] = None,
     gms_file: Annotated[
-        Path | None, typer.Argument(help="Name of GAMS program output file.")
+        str | None, typer.Option("--gms", help="Name of GAMS program output file.")
     ] = None,
     py_file: Annotated[
         str | None, typer.Option("--py", help="Name of GAMSPy program output file.")
@@ -74,6 +74,9 @@ def mps2gms(
     stageshift: Annotated[
         int | None, typer.Option(help="Shift block numbers by this integer.")
     ] = None,
+    compress_gdx: Annotated[
+        int | None, typer.Option(help="Whether to compress output gdx.")
+    ] = None,
     convertsense: Annotated[
         str | None,
         typer.Option(
@@ -101,6 +104,11 @@ def mps2gms(
     # mps2gms <input> <gdx>
     cmd = [MPS2GMS_PATH, str(input_file), str(actual_gdx)]
 
+    # Whether to compress output gdx
+    env = os.environ.copy()
+    if compress_gdx is not None:
+        env["GDXCOMPRESS"] = "1" if compress_gdx else "0"
+
     # If gms_file is provided, add it as the third positional;
     # otherwise, explicitly disable GMS output to prioritize py/gdx.
     if gms_file:
@@ -124,5 +132,5 @@ def mps2gms(
             cmd.append(f"{key}={value}")
 
     print(f"Running command: {' '.join(cmd)}")
-    result = subprocess.run(cmd, text=True)
+    result = subprocess.run(cmd, text=True, env=env)
     raise typer.Exit(code=result.returncode)

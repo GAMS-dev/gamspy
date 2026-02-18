@@ -3,6 +3,7 @@ from __future__ import annotations
 import gamspy as gp
 import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
+from gamspy.formulations.result import FormulationResult
 from gamspy.math import dim
 
 
@@ -70,6 +71,7 @@ class AvgPool2d:
         self,
         input: gp.Parameter | gp.Variable,
         subset: gp.Set,
+        result: FormulationResult,
     ) -> tuple[gp.Parameter, gp.Parameter]:
         # Extract batch and channel dimensions from input domain
         N, C = input.domain[:2]
@@ -85,6 +87,7 @@ class AvgPool2d:
         subset2[H_out, W_out, H_in, W_in] = gp.Sum(
             [Hf, Wf], subset[H_out, W_out, Hf, Wf, H_in, W_in]
         )
+        result.sets_created["in_out_matching_2"] = subset2
 
         # Initialize parameters for bounds
         lb = gp.Parameter(
@@ -128,13 +131,16 @@ class AvgPool2d:
         lb.where[lb > 0] = lb * scale
         ub.where[ub < 0] = ub * scale
 
+        result.parameters_created["output_lb"] = lb
+        result.parameters_created["output_ub"] = ub
+
         return lb, ub
 
     def __call__(
         self,
         input: gp.Parameter | gp.Variable,
         propagate_bounds: bool = True,
-    ) -> tuple[gp.Variable, list[gp.Equation]]:
+    ) -> FormulationResult:
         """
         Forward pass your input, generate output and equations required for
         calculating the average pooling. Unlike the min or max pooling avg
@@ -143,6 +149,21 @@ class AvgPool2d:
         output variable based on the input.
         Returns the output variable and the list of equations required for
         the avg pooling formulation.
+
+        Returns `FormulationResult` which can be unpacked as a output variable and list of equations.
+
+        FormulationResult:
+            - equations_created: ["set_output"]
+            - variables_created: ["output"]
+            - parameters_created: ["output_lb", "output_ub"]
+            - sets_creates: ["in_out_matching_1", "in_out_matching_2"]
+
+        Note:
+            - For backward compatibility, this result object can be unpacked as a tuple: `output, equations = conv2d(input)`.
+            - `output_lb` and `output_ub`are available as parameters if `propogate_bounds=True`.
+            - `in_out_matching_1` is the subset used to map input indices to output indices based on stride and padding.
+            - `in_out_matching_2` is the subset used specifically for bound propagation.
+            It gets created only if `propogate_bounds=True`.
 
         Parameters
         ----------
@@ -156,7 +177,7 @@ class AvgPool2d:
 
         Returns
         -------
-        tuple[gp.Variable, list[gp.Equation]]
+        FormulationResult
 
         """
         if not isinstance(input, (gp.Parameter, gp.Variable)):
@@ -223,10 +244,17 @@ class AvgPool2d:
 
         set_out[...] = out_var[N, C, H_out, W_out] == expr
 
+        result = FormulationResult(
+            result=out_var,
+            equations_created={"set_output": set_out},
+        )
+        result.variables_created["output"] = out_var
+        result.sets_created["in_out_matching_1"] = subset
+
         # Set variable bounds if propagate_bounds is True
         if propagate_bounds:
-            lb, ub = self._set_bounds(input, subset)
+            lb, ub = self._set_bounds(input, subset, result)
             out_var.lo[...] = lb
             out_var.up[...] = ub
 
-        return out_var, [set_out]
+        return result

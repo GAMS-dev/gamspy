@@ -329,3 +329,46 @@ If you have a network license, you should declare ``CURL_PROXY`` environment var
 communication via proxy with the license server: ::
 
     CURL_PROXY=<proxy_server> python <your_script>.py 
+
+How can I solve model instances in MPS or LP format with GAMSPy?
+----------------------------------------------------------------
+
+GAMSPy cannot directly read MPS or LP files. The CLI command `mps2gms <https://gamspy.readthedocs.io/en/latest/cli/mps2gms.html>`_ 
+can be used to convert a model instance in MPS or LP format into a GAMSPy script: ::
+
+    gamspy mps2gms model.mps
+
+This creates a GDX file model.gdx with all the instance data and a generic GAMSPy script to solve the 
+corresponding model instance. Once the GAMSPy script is generated, you can run: ::
+
+    python model.py
+
+to solve your model instance. You can easily customize the script model.py to select a solver or set solver options. 
+For example, the following changes to the solve method in the last line of the script model.py set the solver to HiGHS, 
+select the HiPO interior point method, set threads to 6, and instruct to do no crossover: ::
+
+    mps_model.solve(
+        solver="highs",
+        solver_options={
+            "solver": "hipo",
+            "threads": 6,
+            "run_crossover": "off",
+        },
+        output=sys.stdout,
+    )
+
+The `mps2gms <https://gamspy.readthedocs.io/en/latest/cli/mps2gms.html>`_ CLI tool has a couple of options 
+that can come in handy, e.g. with option --convertsense MIN you can turn the problem into a minimization 
+problem independent of the original objective sense. Moreover, mps2gms also converts compressed (gzip) 
+MPS and LP files. The GDX representation of the data can also be stored in compressed format, by setting 
+the environment variable GDXCOMPRESS to 1, e.g. (on Linux): ::
+
+    GDXCOMPRESS=1 gamspy mps2gms model.mps.gz
+
+The compressed GDX files are usually half the size of the compressed MPS files. Moreover, with the convert 
+method one can again create MPS files: ::
+
+    mps_model.convert('.', file_format=gp.FileFormat.CPLEXMPS)
+
+This creates cplex.mps in the current directory.
+

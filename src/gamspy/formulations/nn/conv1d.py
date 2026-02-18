@@ -9,6 +9,7 @@ from numpy.lib.stride_tricks import sliding_window_view
 import gamspy as gp
 import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
+from gamspy.formulations.result import FormulationResult
 from gamspy.math import dim
 
 if TYPE_CHECKING:
@@ -140,7 +141,9 @@ class Conv1d:
 
         self._name_prefix = name_prefix
 
-    def _propagate_bounds(self, input, output, weight, bias, stride, padding):
+    def _propagate_bounds(
+        self, input, output, weight, bias, stride, padding, result: FormulationResult
+    ):
         # Extract input bounds
         input_bounds = gp.Parameter(
             self.container,
@@ -152,12 +155,15 @@ class Conv1d:
         # upper bounds
         input_bounds[("1",) + tuple(input.domain)] = input.up[...]
 
+        result.parameters_created["input_bounds"] = input_bounds
+
         # If the bounds are all zeros (None in GAMSPy parameters);
         # we skip matrix multiplication as it will result in zero values
         if input_bounds.records is None:
             out_bounds_array = np.zeros(output.shape)
 
             if self.use_bias:
+                assert self.bias_array is not None, "bias cannot be None here"
                 b = self.bias_array[:, np.newaxis]
                 out_bounds_array = out_bounds_array + b
 
@@ -169,6 +175,8 @@ class Conv1d:
             )
             output.lo[...] = out_bounds
             output.up[...] = out_bounds
+
+            result.parameters_created["output_bounds"] = out_bounds
 
             return
 
@@ -285,6 +293,8 @@ class Conv1d:
 
         output.lo[...] = out_bounds[("0",) + tuple(output.domain)]
         output.up[...] = out_bounds[("1",) + tuple(output.domain)]
+
+        result.parameters_created["output_bounds"] = out_bounds
 
     def make_variable(self, *, init_weights=False) -> None:
         """
@@ -429,12 +439,27 @@ class Conv1d:
         input: gp.Parameter | gp.Variable,
         *,
         propagate_bounds: bool = True,
-    ) -> tuple[gp.Variable, list[gp.Equation]]:
+    ) -> FormulationResult:
         """
         Forward pass your input, generate output and equations required for
         calculating the convolution. If `propagate_bounds` is True,
         the `input` is of type variable, and `load_weights` was called, then
         the bounds of the input are propagated to the output.
+
+        Returns `FormulationResult` which can be unpacked as a output variable and list of equations.
+
+        FormulationResult:
+            - equations_created: ["set_output"]
+            - variables_created: ["output", "weight", "bias"]
+            - parameters_created: ["weight", "bias", "input_bounds", "output_bounds"]
+            - sets_creates: ["conv_subset"]
+
+        Note:
+            - For backward compatibility, this result object can be unpacked as a tuple: `output, equations = linear(input)`.
+            - `weight` and `bias` are available as variables if `make_variable` was called.
+            - `weight` and `bias` are available as parameters if `load_weights` was called.
+            - `input_bounds` and `output_bounds`are available as parameters if `propogate_bounds=True`.
+            - The subset used to map input indices to output indices based on stride and padding.
 
         Parameters
         ----------
@@ -445,6 +470,9 @@ class Conv1d:
                 If True, propagate bounds of the input to the output.
                 Otherwise, the output variable is unbounded.
 
+        Returns
+        -------
+        FormulationResult
         """
         if not isinstance(propagate_bounds, bool):
             raise ValidationError("Expected a boolean for propagate_bounds")
@@ -518,6 +546,24 @@ class Conv1d:
 
         set_out[N, C_out, W_out] = out[N, C_out, W_out] == expr
 
+        result = FormulationResult(
+            result=out,
+            equations_created={"set_output": set_out},
+        )
+        result.variables_created["output"] = out
+        result.sets_created["conv_subset"] = subset
+
+        if isinstance(self.weight, gp.Variable):
+            result.variables_created["weight"] = self.weight
+        else:
+            result.parameters_created["weight"] = self.weight
+
+        if self.use_bias:
+            if isinstance(self.bias, gp.Variable):
+                result.variables_created["bias"] = self.bias
+            elif isinstance(self.bias, gp.Parameter):
+                result.parameters_created["bias"] = self.bias
+
         # If propagate_bounds is True, weight is a parameter and input is a variable,
         # we will propagate the bounds of the input to the output
         if propagate_bounds and self._state == 1 and isinstance(input, gp.Variable):
@@ -528,6 +574,7 @@ class Conv1d:
                 self.bias_array,
                 self.stride,
                 padding,
+                result,
             )
 
-        return out, [set_out]
+        return result

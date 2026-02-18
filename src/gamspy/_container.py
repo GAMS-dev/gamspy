@@ -210,11 +210,6 @@ class Container(gt.Container):
         self._debugging_level = debugging_level
         self._workspace = Workspace(debugging_level, working_directory)
         self._working_directory = self._workspace.working_directory
-        if len(self._working_directory) > 204:
-            raise ValidationError(
-                f"Working directory path length cannot be greater than 204! Given working directory path `{self._working_directory}` has length of `{len(self._working_directory)}`"
-            )
-
         self._process_directory = tempfile.mkdtemp(dir=self.working_directory)
 
         self._job, self._gdx_in, self._gdx_out = self._setup_paths()
@@ -247,11 +242,11 @@ class Container(gt.Container):
                 )
 
             if isinstance(load_from, str) and load_from.endswith(".g00"):
-                self._options._set_debug_options(
+                self._options._set_extra_options(
                     {"restart": load_from, "gdxSymbols": "all"}
                 )
                 self._synch_with_gams(gams_to_gamspy=True)
-                self._options._set_debug_options({})
+                self._options._set_extra_options({})
                 self._clean_modified_symbols()
                 self._unsaved_statements = []
                 self._is_restarted = True

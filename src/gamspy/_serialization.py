@@ -47,9 +47,9 @@ def serialize(container: Container, path: str) -> None:
         json_path = os.path.join(tmpdir_name, "dict.json")
 
         # Dump the GAMS State to disc
-        container._options._set_debug_options({"save": g00_path})
+        container._options._set_extra_options({"save": g00_path})
         container._synch_with_gams()
-        container._options._set_debug_options({})
+        container._options._set_extra_options({})
 
         # Serialize symbols
         info = {}

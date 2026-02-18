@@ -47,6 +47,7 @@ class FormulationResult:
     FormulationResult has the following attributes that might be useful:
         - `result`
         - `equations_created`
+        - `variables_created`
         - `sets_created`
         - `parameters_created`
         - `matches`

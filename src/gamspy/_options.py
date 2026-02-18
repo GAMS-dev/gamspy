@@ -385,7 +385,7 @@ class Options(BaseModel):
     @override
     def model_post_init(self, context: Any) -> None:
         self._hidden_options: dict[str, Any] = {}
-        self._debug_options: dict[str, Any] = {}
+        self._extra_options: dict[str, Any] = {}
         self._solver: str | None = None
         self._problem: str | None = None
         self._solver_options_file: str = "0"
@@ -508,9 +508,9 @@ class Options(BaseModel):
         """Set extra options of the backend"""
         self._hidden_options = options
 
-    def _set_debug_options(self, options: dict) -> None:
-        """Set debugging options"""
-        self._debug_options = options
+    def _set_extra_options(self, options: dict) -> None:
+        """Set extra options"""
+        self._extra_options = options
 
     @staticmethod
     def fromFile(path: str) -> Options:
@@ -609,7 +609,7 @@ class Options(BaseModel):
 
         # Extra options
         all_options.update(**self._hidden_options)
-        all_options.update(**self._debug_options)
+        all_options.update(**self._extra_options)
 
         if self._frame is not None:
             filename = self._frame.f_code.co_filename

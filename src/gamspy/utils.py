@@ -236,13 +236,9 @@ def getAvailableSolvers() -> list[str]:
     return solvers
 
 
-def getInstallableSolvers(system_directory: str) -> list[str]:
+def getInstallableSolvers() -> list[str]:
     """
     Returns all installable solvers.
-
-    Parameters
-    ----------
-    system_directory : str
 
     Returns
     -------
@@ -257,7 +253,7 @@ def getInstallableSolvers(system_directory: str) -> list[str]:
     --------
     >>> import gamspy_base
     >>> import gamspy.utils as utils
-    >>> available_solvers = utils.getInstallableSolvers(gamspy_base.directory)
+    >>> available_solvers = utils.getInstallableSolvers()
 
     """
     try:

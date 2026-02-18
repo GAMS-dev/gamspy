@@ -17,6 +17,7 @@ from gamspy.formulations.nn import (
     TorchSequential,
     _MPool2d,
 )
+from gamspy.formulations.result import FormulationResult
 from gamspy.math import dim
 
 try:
@@ -1830,6 +1831,136 @@ def test_conv2d_propagate_bounds_with_same_padding_even_input(data):
 
 
 @pytest.mark.unit
+def test_conv1d_return_formulation_result(data):
+    m, _, _, _, _, _, par_input_2, *_ = data
+
+    w1 = np.array(
+        [
+            [[0.98727534, 0.94129724, 0.44578929]],
+            [[0.45728722, 0.15647212, 0.56943917]],
+        ]
+    )
+    b1 = np.array([2.2, -0.4])
+
+    conv1 = Conv1d(m, 1, 2, 3)
+    conv1.load_weights(w1, b1)
+    result = conv1(par_input_2)
+
+    assert isinstance(result, FormulationResult), "Expected a FormulationResult object"
+    assert isinstance(result.result, gp.Variable), "Expected the output variable"
+    assert isinstance(result.variables_created["output"], gp.Variable), (
+        "Expected the output variable"
+    )
+    assert all(isinstance(v, gp.Equation) for v in result.equations_created.values()), (
+        "Expected a list of Equations"
+    )
+
+    out = result.result
+    obj = gp.Sum(out.domain, out)
+    model = gp.Model(
+        m,
+        "convolve",
+        equations=result.equations_created.values(),
+        objective=obj,
+        sense="min",
+        problem="LP",
+    )
+    model.solve()
+
+    expected_out = np.array(
+        [
+            [
+                [3.56825381, 3.74108292, 3.90399443],
+                [0.40809439, 0.41946991, 0.20110516],
+            ],
+            [
+                [3.92287844, 3.98335548, 3.53671043],
+                [0.41505584, 0.34675258, 0.31888293],
+            ],
+            [
+                [3.57567320, 3.40667563, 3.13680175],
+                [0.33893762, -0.02290649, 0.19859786],
+            ],
+        ]
+    )
+
+    assert np.allclose(out.toDense(), expected_out)
+
+
+@pytest.mark.unit
+def test_conv2d_return_formulation_result(data):
+    m, w1, b1, _inp, par_input, *_ = data
+    conv1 = Conv2d(m, 1, 2, 3)
+    conv1.load_weights(w1, b1)
+    result = conv1(par_input)
+
+    assert isinstance(result, FormulationResult), "Expected a FormulationResult object"
+    assert isinstance(result.result, gp.Variable), "Expected the output variable"
+    assert isinstance(result.variables_created["output"], gp.Variable), (
+        "Expected the output variable"
+    )
+    assert all(isinstance(v, gp.Equation) for v in result.equations_created.values()), (
+        "Expected a list of Equations"
+    )
+
+    out = result.result
+    obj = gp.Sum(out.domain, out)
+
+    model = gp.Model(
+        m,
+        "convolve",
+        equations=result.equations_created.values(),
+        objective=obj,
+        sense="min",
+        problem="LP",
+    )
+    model.solve()
+
+    expected_out = np.array(
+        [
+            [
+                [
+                    [3.40817582, 3.3172471, 3.45373787],
+                    [3.56033042, 2.98572956, 3.78199492],
+                    [3.37529918, 3.47334837, 3.70609844],
+                ],
+                [
+                    [3.48893453, 3.78932057, 4.0210465],
+                    [3.47019698, 3.4842526, 4.21685095],
+                    [3.4510945, 3.5865001, 3.97044084],
+                ],
+            ],
+            [
+                [
+                    [4.11079177, 4.50948556, 3.71462732],
+                    [3.69309437, 4.21991099, 3.47390714],
+                    [3.55334825, 3.24612233, 2.60289597],
+                ],
+                [
+                    [4.19617192, 4.89775484, 4.12360071],
+                    [4.284388, 4.68931071, 3.95501428],
+                    [3.60870751, 4.34399436, 4.02012768],
+                ],
+            ],
+            [
+                [
+                    [3.86066434, 3.34271449, 3.5020279],
+                    [3.19546317, 3.14612869, 2.99550383],
+                    [2.30479297, 2.35869599, 1.8917482],
+                ],
+                [
+                    [3.84418946, 3.8675763, 3.50556872],
+                    [3.99821923, 3.56950653, 3.48662108],
+                    [2.81866521, 3.16280288, 2.24684035],
+                ],
+            ],
+        ]
+    )
+
+    assert np.allclose(out.toDense(), expected_out)
+
+
+@pytest.mark.unit
 def test_max_pooling(data):
     m, _w1, _b1, _inp, par_input, _ii, *_ = data
 
@@ -2033,6 +2164,58 @@ def test_pooling_with_bounds(data):
     for recs in [out4.records, out5.records, out6.records]:
         assert np.allclose(np.array(recs.upper).reshape(out4.shape), exp_ub)
         assert np.allclose(np.array(recs.lower).reshape(out4.shape), exp_lb)
+
+
+@pytest.mark.unit
+def test_pooling_return_formulation_result(data):
+    m, _, _, inp, _, _, *_ = data
+    mp1 = MinPool2d(m, 2)
+    mp2 = MaxPool2d(m, 2)
+    ap1 = AvgPool2d(m, 2)
+    var_input = gp.Variable(m, domain=dim(inp.shape))
+
+    # input bounds should be passed to the output as well
+    var_input.lo["0", "0", var_input.domain[2], var_input.domain[3]] = 10
+    var_input.up["0", "0", var_input.domain[2], var_input.domain[3]] = 20
+
+    var_input.lo["1", "0", var_input.domain[2], var_input.domain[3]] = 1
+    var_input.up["1", "0", var_input.domain[2], var_input.domain[3]] = 100
+
+    var_input.lo["2", "0", var_input.domain[2], var_input.domain[3]] = -50
+    var_input.up["2", "0", var_input.domain[2], var_input.domain[3]] = 50
+
+    result1 = mp1(var_input)
+    result2 = mp2(var_input)
+    result3 = ap1(var_input)
+
+    for i, res in enumerate([result1, result2, result3]):
+        assert isinstance(res, FormulationResult), "Expected a FormulationResult object"
+        assert isinstance(res.result, gp.Variable), "Expected the output variable"
+        assert isinstance(res.variables_created["output"], gp.Variable), (
+            "Expected the output variable"
+        )
+        assert all(
+            isinstance(v, gp.Equation) for v in res.equations_created.values()
+        ), "Expected a list of Equations"
+        assert all(isinstance(v, gp.Set) for v in res.sets_created.values()), (
+            "Expected a list of Sets"
+        )
+        assert "in_out_matching_1" in res.sets_created, "Expected this set"
+
+        if i != 2:  # skip for avgpool
+            assert "bigM" in res.parameters_created, "Expected this parameter"
+            assert "aux_variable" in res.variables_created, "Expected this variable"
+
+        out = res.result.records
+
+        assert (out[out["DenseDim3_1"] == "0"]["lower"] == 10).all()
+        assert (out[out["DenseDim3_1"] == "0"]["upper"] == 20).all()
+
+        assert (out[out["DenseDim3_1"] == "1"]["lower"] == 1).all()
+        assert (out[out["DenseDim3_1"] == "1"]["upper"] == 100).all()
+
+        assert (out[out["DenseDim3_1"] == "2"]["lower"] == -50).all()
+        assert (out[out["DenseDim3_1"] == "2"]["upper"] == 50).all()
 
 
 @pytest.mark.unit
@@ -3276,6 +3459,30 @@ def test_linear_propagate_zero_bounds(data):
     )
 
 
+@pytest.mark.unit
+def test_linear_return_formulation_result(data):
+    m, *_ = data
+    lin1 = gp.formulations.Linear(m, 4, 3, bias=False)
+    w1 = np.random.rand(3, 4)
+    lin1.load_weights(w1)
+
+    x = gp.Variable(m, "x", domain=dim([2, 4]))
+
+    x.up[...] = 0
+    x.lo[...] = 0
+
+    result = lin1(x)
+    expected_bounds = np.zeros((2, 3))
+
+    assert isinstance(result, FormulationResult), "Expected a FormulationResult object"
+    assert isinstance(result.result, gp.Variable), "Expected the output variable"
+    assert isinstance(result.variables_created["output"], gp.Variable), (
+        "Expected the output variable"
+    )
+    out1 = result.result
+    assert np.allclose(out1.toDense(), expected_bounds)
+
+
 @pytest.mark.skipif(TORCH_AVAILABLE is False, reason="Requires PyTorch installed")
 @pytest.mark.unit
 def test_sequential_layer(data):
@@ -3313,7 +3520,7 @@ def test_sequential_layer(data):
     assert "0.output" in output.variables_created
     assert "1.y_gte_x" in output.equations_created
     assert "1.binary" in output.variables_created
-    assert "2.eq_0" in output.equations_created
+    assert "2.set_output" in output.equations_created
     assert "3.y_lte_x_1" in output.equations_created
 
     y2, _eqs2 = output
