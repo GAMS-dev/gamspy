@@ -275,7 +275,7 @@ def solver(
             if solver_name.upper() in gamspy_base.default_solvers:
                 print(f"`{solver_name}` is a default solver, skipping...")
                 continue
-            installable_solvers = utils.getInstallableSolvers(gamspy_base.directory)
+            installable_solvers = utils.getInstallableSolvers()
             if solver_name.upper() not in installable_solvers:
                 raise ValidationError(
                     f'Given solver name ("{solver_name}") is not valid. Available'

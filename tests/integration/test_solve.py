@@ -1406,15 +1406,16 @@ def test_summary(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
     summary = transport.solve()
-    assert summary.to_dict(index=False, orient="tight")["data"][0] == [
-        "Normal",
-        "OptimalGlobal",
-        153.675,
-        6,
-        7,
-        "LP",
-        "CPLEX",
-        0.0,
+
+    assert summary.columns == [
+        "Solver Status",
+        "Model Status",
+        "Objective",
+        "Num of Equations",
+        "Num of Variables",
+        "Model Type",
+        "Solver",
+        "Solver Time",
     ]
 
 

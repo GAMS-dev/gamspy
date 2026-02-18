@@ -58,7 +58,7 @@ def solvers(
             "[bold]Full list can be found here[/bold]: https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES"
         )
     elif installables:
-        installable_solvers = utils.getInstallableSolvers(gamspy_base.directory)
+        installable_solvers = utils.getInstallableSolvers()
         console.print(", ".join(installable_solvers))
     elif defaults:
         default_solvers = utils.getDefaultSolvers(gamspy_base.directory)

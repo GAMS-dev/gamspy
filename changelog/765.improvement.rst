@@ -1,1 +1,0 @@
-Return FormulationResult instance for Neural Network formulations (pooling, convolution, and linear layers).
