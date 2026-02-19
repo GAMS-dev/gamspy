@@ -1326,3 +1326,35 @@ def test_mpsge_equation_definition():
         assert math.isclose(expected, found, rel_tol=1e-6, abs_tol=1e-8)
 
     mcph.solve()
+
+
+def test_length():
+    m = gp.Container()
+    i = gp.Set(m, records=["i1", "i2"])
+    assert len(i) == 2
+
+    j = gp.Alias(m, alias_with=i)
+    assert len(j) == 2
+
+    a = gp.Parameter(m, domain=i)
+    assert len(a) == 0
+    a.generateRecords()
+    assert len(a) == 2
+    assert len(a[i].where[gp.Ord(i) > 1]) == 1
+    assert len(gp.Sum(i, a[i]).records) == 1
+
+    b = gp.Variable(m, domain=i)
+    assert len(b) == 0
+    b.generateRecords()
+    assert len(b) == 2
+    assert len(b.l) == 2
+    assert len(b.l["i1"]) == 1
+    assert len(b["i1"].l) == 1
+
+    c = gp.Equation(m, domain=i)
+    assert len(c) == 0
+    c.generateRecords()
+    assert len(c) == 2
+    assert len(c.l) == 2
+    assert len(c.l["i1"]) == 1
+    assert len(c["i1"].l) == 1

@@ -53,6 +53,12 @@ class ImplicitSymbol(ABC):
     def __bool__(self):
         raise ValidationError("A symbol cannot be used as a truth value.")
 
+    def __len__(self):
+        if self.records is not None:
+            return len(self.records.index)
+
+        return 0
+
     def fix_domain_scalars(self, parent_scalar_domains):
         if len(self.domain) == 1 and self.domain[0] == "*":
             self._scalar_domains = []
