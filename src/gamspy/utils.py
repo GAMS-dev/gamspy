@@ -60,6 +60,8 @@ _defaults: dict[str, dict[str, str]] = {}
 _capabilities: dict[str, dict[str, list[str]]] = {}
 _installed_solvers: dict[str, list[str]] = {}
 
+_cached_system_directory = None
+
 
 def getDefaultSolvers(system_directory: str) -> dict[str, str]:
     """
@@ -512,7 +514,6 @@ def _close_gdx_handle(handle):
     """
     gdx.gdxClose(handle)
     gdx.gdxFree(handle)
-    gdx.gdxLibraryUnload()
 
 
 def _replace_equality_signs(string: str) -> str:
@@ -540,6 +541,13 @@ def _open_gdx_file(system_directory: str, load_from: str):
     Exception
         Exception while creating the handle or setting the special values
     """
+    global _cached_system_directory
+
+    # If the system_directory changed, then we should unload the gdx library
+    if system_directory != _cached_system_directory:
+        gdx.gdxLibraryUnload()
+        _cached_system_directory = system_directory
+
     try:
         gdx_handle = gdx.new_gdxHandle_tp()
         rc = gdx.gdxCreateD(gdx_handle, system_directory, gdx.GMS_SSSIZE)
