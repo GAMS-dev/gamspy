@@ -140,6 +140,12 @@ class Condition(operable.Operable):
     def __repr__(self) -> str:
         return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"
 
+    def __len__(self):
+        if self.records is not None:
+            return len(self.records.index)
+
+        return 0
+
     @property
     def dimension(self) -> int:
         """

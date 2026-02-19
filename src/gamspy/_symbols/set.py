@@ -745,12 +745,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         self.domain = new_domain
 
-    def __len__(self):
-        if self.records is not None:
-            return len(self.records.index)
-
-        return 0
-
     def __getitem__(
         self, indices: Sequence | str | int | EllipsisType | slice
     ) -> implicits.ImplicitSet:

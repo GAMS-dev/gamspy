@@ -113,6 +113,12 @@ class Operation(operable.Operable):
 
         return Operation(self.op_domain, self.rhs[domain], self._op_name)  # type: ignore
 
+    def __len__(self):
+        if self.records is not None:
+            return len(self.records.index)
+
+        return 0
+
     @property
     def records(self) -> pd.DataFrame | None:
         """

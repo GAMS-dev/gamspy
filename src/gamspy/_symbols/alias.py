@@ -170,12 +170,6 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
             setattr(self, key, value)
 
-    def __len__(self):
-        if self.records is not None:
-            return len(self.records.index)
-
-        return 0
-
     def __bool__(self):
         raise ValidationError(
             "Alias cannot be used as a truth value. Use len(<symbol>.records) instead."
