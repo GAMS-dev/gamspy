@@ -14,11 +14,13 @@ Model
    :members:
    :undoc-members:
    :show-inheritance:
+   :member-order: bysource
 
 .. autoclass:: gamspy.SolveStatus
    :members:
    :undoc-members:
    :show-inheritance:
+   :member-order: bysource
 
 .. autoclass:: gamspy.FileFormat
    :members:
