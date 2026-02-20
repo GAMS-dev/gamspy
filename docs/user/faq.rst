@@ -368,7 +368,7 @@ the environment variable GDXCOMPRESS to 1, e.g. (on Linux): ::
 The compressed GDX files are usually half the size of the compressed MPS files. Moreover, with the convert 
 method one can again create MPS files: ::
 
-    mps_model.convert('.', file_format=gp.FileFormat.CPLEXMPS)
+    mps_model.convert('.', file_format=gp.FileFormat.CPLEXMPS, options=gp.ConvertOptions(CPLEXMPS="model.mps"))
 
-This creates cplex.mps in the current directory.
+This creates model.mps in the current directory.
 

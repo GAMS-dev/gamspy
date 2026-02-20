@@ -8,7 +8,7 @@ leg-cli-3.14:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.14
+    - uv venv .venv -v --python 3.14
     - source .venv/bin/activate
     - uv build
     - uv sync --group test
@@ -28,7 +28,7 @@ leg-cli-3.10:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.10
+    - uv venv .venv -v --python 3.10
     - source .venv/bin/activate
     - uv sync --group test
     - python -m pytest -x -v -s -m 'cli' tests
@@ -43,7 +43,7 @@ lag-cli-3.14:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.14
+    - uv venv .venv -v --python 3.14
     - source .venv/bin/activate
     - uv build
     - uv sync --group test
@@ -64,7 +64,7 @@ lag-cli-3.10:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.10
+    - uv venv .venv -v --python 3.10
     - source .venv/bin/activate
     - uv sync --group test
     - uv pip install gamspy-arm-perf
@@ -79,7 +79,7 @@ dac-cli-3.14:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.14
+    - uv venv .venv -v --python 3.14
     - source .venv/bin/activate
     - uv build
     - uv sync --group test
@@ -97,7 +97,7 @@ dac-cli-3.10:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.10
+    - uv venv .venv -v --python 3.10
     - source .venv/bin/activate
     - uv sync --group test
     - python -m pytest -x -v -s -m 'cli' tests
@@ -110,7 +110,7 @@ deg-cli-3.14:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.14
+    - uv venv .venv -v --python 3.14
     - source .venv/bin/activate
     - uv build
     - uv sync --group test
@@ -129,7 +129,7 @@ deg-cli-3.10:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.10
+    - uv venv .venv -v --python 3.10
     - source .venv/bin/activate
     - uv sync --group test
     - python -m pytest -x -v -s -m 'cli' tests
@@ -144,7 +144,7 @@ wei-cli-3.14:
     - Expand-Archive -Path uv_toolchain.zip -DestinationPath . -Force
     - Expand-Archive -Path uv_bin.zip -DestinationPath . -Force
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
-    - uv venv .venv --python 3.14
+    - uv venv .venv -v --python 3.14
     - .venv\Scripts\Activate.ps1
     - uv build
     - uv sync --group test
@@ -164,7 +164,7 @@ wei-cli-3.10:
     - Expand-Archive -Path uv_toolchain.zip -DestinationPath . -Force
     - Expand-Archive -Path uv_bin.zip -DestinationPath . -Force
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
-    - uv venv .venv --python 3.10
+    - uv venv .venv -v --python 3.10
     - .venv\Scripts\Activate.ps1
     - uv sync --group test
     - python -m pytest -x -v -s -m 'cli' tests
