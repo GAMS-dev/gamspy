@@ -9,7 +9,7 @@
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python $PYTHON_VERSION
+    - uv venv .venv -v --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
     - uv pip install gamspy-arm-perf
@@ -25,7 +25,7 @@ lag-test-3.14:
   script:
     - apt-get update && apt-get install -y ca-certificates git
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.14
+    - uv venv .venv -v --python 3.14
     - source .venv/bin/activate
     - uv sync --group test
     - uv pip install gamspy-arm-perf
@@ -81,7 +81,7 @@ lag-test-3.10:
   script:
     - apt-get update && apt-get install -y ca-certificates
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python $PYTHON_VERSION && source .venv/bin/activate
+    - uv venv .venv -v --python $PYTHON_VERSION && source .venv/bin/activate
     - uv sync --group test
     - uv pip install gamspy-arm-perf
     - python -m pytest -x -v -s -m 'engine' tests
@@ -109,7 +109,7 @@ lag-engine-3.10:
   script:
     - apt-get update && apt-get install -y ca-certificates
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python $PYTHON_VERSION && source .venv/bin/activate
+    - uv venv .venv -v --python $PYTHON_VERSION && source .venv/bin/activate
     - uv sync --group test
     - uv pip install gamspy-arm-perf
     - python -m pytest -x -v -s -m 'neos' tests

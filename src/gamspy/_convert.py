@@ -316,6 +316,11 @@ def get_convert_solver_options(
     solver_options: dict[str, Any] = {}
     for format in file_format:
         name, value = format.name, format.value
+
+        file_format_name = getattr(options, name, None)
+        if options is not None and file_format_name:
+            value = file_format_name
+
         if name in FORMAT_RENAME_MAP:
             name = FORMAT_RENAME_MAP[name]
 
@@ -338,7 +343,9 @@ def get_convert_solver_options(
             solver_options[name] = str((path / value).resolve())
 
     if options is not None:
-        convert_options = options.model_dump(exclude_none=True)
+        convert_options = options.model_dump(
+            exclude_none=True, exclude=FileFormat._member_names_
+        )
         for key, value in convert_options.items():
             name = OPTION_RENAME_MAP.get(key, key)
             solver_options[name] = int(value) if isinstance(value, bool) else value

@@ -5,7 +5,7 @@ leg-upload-wheel:
   tags: [puma]
   image: python:3.12
   script:
-    - python -m pip install uv && uv venv .venv
+    - python -m pip install uv && uv venv .venv -v
     - source .venv/bin/activate && uv pip install pip
     - uv pip install wheel build twine licensecheck
     - if [ "$?" == "0" ]; then echo "Audit passed!"; else exit 1; fi

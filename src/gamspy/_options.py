@@ -745,6 +745,39 @@ class ConvertOptions(BaseModel):
     Width : Optional[int]
         Sets the width for certain output formats, such as tables or reports.
 
+    AMPL : str
+        AMPL input format filename. "ampl.mod" by default.
+    AMPLNL : str
+        AMPL nl format filename. "ampl.nl" by default.
+    CPLEXLP : str
+        CPLEX LP format filename. "cplex.lp" by default.
+    CPLEXMPS : str
+        CPLEX MPS format filename. "cplex.mps" by default.
+    GAMSDict : str
+        GAMS dictionary format filename. "dict.txt" by default.
+    GAMSDictMap : str
+        GAMS dictionary map format filename. "dictmap.gdx" by default.
+    GAMSJacobian : str
+        Jacobian in GAMS filename. "jacobian.gms" by default.
+    GAMSPyJacobian : str
+        Jacobian in GAMSPy filename. "jacobian.py" by default.
+    GDXJacobian : str
+        GDX filename with model data incl. Jacobian and Hessian evaluated at current point. "jacobian.gdx" by default.
+    FileList : str
+        Filename for the file that contains the list of file formats generated. "files.txt" by default.
+    FixedMPS : str
+        Fixed format mps filename. "fixed.mps" by default.
+    GAMS : str
+        GAMS scalar model filename. "gams.gms" by default.
+    JuMP : str
+        JuMP scalar model filename. "jump.jl" by default.
+    LINGO : str
+        Lingo format filename. "lingo.lng" by default.
+    OSiL : str
+        Optimization Services instance Language (OSiL) format filename. "osil.xml" by default.
+    Pyomo : str
+        Pyomo concrete scalar model filename. "pyomo.py" by default.
+
     Examples
     --------
     >>> import gamspy as gp
@@ -754,7 +787,7 @@ class ConvertOptions(BaseModel):
     >>> eq = gp.Equation(m, "eq", domain=i)
     >>> eq[i] = x[i] >= 1
     >>> model = gp.Model(m, "test_model", equations=[eq], problem="LP", sense="min", objective=gp.Sum(i, x[i]))
-    >>> options = gp.ConvertOptions(GDXNames=False)
+    >>> options = gp.ConvertOptions(GDXNames=False, GDXJacobian="my_jacobian.gdx")
     >>> model.convert("jacobian", file_format=gp.FileFormat.GDXJacobian, options=options) # doctest: +SKIP
 
     """
@@ -778,3 +811,19 @@ class ConvertOptions(BaseModel):
     Reform: int | None = None
     SkipNRows: int | None = None
     Width: int | None = None
+    AMPL: str = "ampl.mod"
+    AMPLNL: str = "ampl.nl"
+    CPLEXLP: str = "cplex.lp"
+    CPLEXMPS: str = "cplex.mps"
+    GAMSDict: str = "dict.txt"
+    GAMSDictMap: str = "dictmap.gdx"
+    GAMSJacobian: str = "jacobian.gms"
+    GAMSPyJacobian: str = "jacobian.py"
+    GDXJacobian: str = "jacobian.gdx"
+    FileList: str = "files.txt"
+    FixedMPS: str = "fixed.mps"
+    GAMS: str = "gams.gms"
+    JuMP: str = "jump.jl"
+    LINGO: str = "lingo.lng"
+    OSiL: str = "osil.xml"
+    Pyomo: str = "pyomo.py"

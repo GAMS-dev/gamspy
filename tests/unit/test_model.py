@@ -132,6 +132,15 @@ def test_model(data):
         with open(os.path.join(m.working_directory, "convert.opt")) as f:
             assert "GDXNames 0" in f.read()
 
+    # Test convert with rename
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_model.convert(
+            tmpdir,
+            file_format=FileFormat.GDXJacobian,
+            options=ConvertOptions(GDXNames=0, GDXJacobian="my_jacobian.gdx"),
+        )
+        assert os.path.exists(os.path.join(tmpdir, "my_jacobian.gdx"))
+
     # Test unknown file format
     with pytest.raises(ValidationError):
         test_model.convert(
@@ -180,6 +189,31 @@ def test_model(data):
 
         with open(tmpdir_path / "jacobian.gms") as file:
             assert "$if not set jacfile $set jacfile jacobian.gdx" in file.read()
+
+    # Test multiple rename
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir)
+        test_model.convert(
+            tmpdir_path,
+            file_format=[
+                FileFormat.GAMSJacobian,
+                FileFormat.GDXJacobian,
+                FileFormat.GAMSPyJacobian,
+                FileFormat.GAMSDict,
+                FileFormat.GAMSDictMap,
+            ],
+            options=ConvertOptions(
+                GDXNames=0,
+                GAMSDict="my_dict.txt",
+                GAMSPyJacobian="my_jacobian.py",
+                GAMSJacobian="my_jacobian.gms",
+            ),
+        )
+        assert os.path.exists(tmpdir_path / "my_jacobian.gms")
+        assert os.path.exists(tmpdir_path / "jacobian.gdx")
+        assert os.path.exists(tmpdir_path / "my_jacobian.py")
+        assert os.path.exists(tmpdir_path / "my_dict.txt")
+        assert os.path.exists(tmpdir_path / "dictmap.gdx")
 
     # Check if the name is reserved
     with pytest.raises(ValidationError):

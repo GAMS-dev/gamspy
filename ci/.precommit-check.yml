@@ -4,7 +4,7 @@ leg-precommit:
   tags: [linux]
   image: python:3.13.11
   script:
-    - python -m pip install uv && uv venv .venv && source .venv/bin/activate
+    - python -m pip install uv && uv venv .venv -v && source .venv/bin/activate
     - uv export --no-emit-project --format requirements-txt > requirements.txt && uvx pip-audit -v -r requirements.txt --disable-pip && rm requirements.txt
     - uv pip install prek
     - prek run --all-files

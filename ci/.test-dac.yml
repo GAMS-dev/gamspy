@@ -7,7 +7,7 @@
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python $PYTHON_VERSION
+    - uv venv .venv -v --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
@@ -21,7 +21,7 @@ dac-test-3.14:
     PYTHON_VERSION: "3.14"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python $PYTHON_VERSION
+    - uv venv .venv -v --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
@@ -74,7 +74,7 @@ dac-test-3.10:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python $PYTHON_VERSION
+    - uv venv .venv -v --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
     - python -B -m pytest -x -v -s -m 'engine' tests
@@ -100,7 +100,7 @@ dac-engine-3.10:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python $PYTHON_VERSION
+    - uv venv .venv -v --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
     - python -B -m pytest -x -v -s -m 'neos' tests
