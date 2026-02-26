@@ -77,6 +77,7 @@ symbols with the active container, reducing code verbosity.
 
 .. tab-set:: 
     .. tab-item:: With Context Manager (Recommended)
+        
         .. code-block:: python
 
             import gamspy as gp
@@ -87,6 +88,7 @@ symbols with the active container, reducing code verbosity.
                 p = gp.Parameter(domain=i, description="Parameters find 'm' automatically")
 
     .. tab-item:: Without Context Manager
+        
         .. code-block:: python
 
             import gamspy as gp
