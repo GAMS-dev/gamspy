@@ -1,0 +1,1 @@
+Get rid of all suffixes if the input file to 'gamspy mps2gms' is a zip file (e.g. indus89.mps.gz). The output python file will be named indus89.py instead of indus89.mps.py.
