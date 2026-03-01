@@ -1,0 +1,1 @@
+Use model attributes to return the summary of the solve instead of parsing the trace file.

@@ -316,7 +316,11 @@ class ModelInstance:
         options.log_file = os.path.join(self.container.working_directory, "gamslog.dat")
 
         runner = backend_factory(
-            self.container, options, model=model, output=self.output
+            self.container,
+            options,
+            self.model._default_solver,
+            model=model,
+            output=self.output,
         )
         runner.run(gams_to_gamspy=True)
 

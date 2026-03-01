@@ -42,7 +42,6 @@ class Local(backend.Backend):
         scrdir = self.container._process_directory
 
         hidden_options = {
-            "trace": self.trace_file,
             "input": self.gms_file,
             "output": self.lst_file,
             "optdir": self.container.working_directory,
@@ -119,6 +118,6 @@ class Local(backend.Backend):
 
         if self.model is not None:
             self.parse_listings()
-            return self.prepare_summary(self.trace_file)
+            return self.prepare_summary()
 
         return None
