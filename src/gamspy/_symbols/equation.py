@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from gamspy import Alias, Container, Set, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy.math.matrix import Dim
 
 
 EQ_TYPES = ["=e=", "=l=", "=g=", "=n=", "=x=", "=b="]
@@ -122,7 +123,7 @@ class Equation(gt.Equation, Symbol):
         container: Container,
         name: str,
         type: str | EquationType = "regular",
-        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
         records: Any | None = None,
         description: str = "",
     ):

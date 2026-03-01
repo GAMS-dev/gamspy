@@ -538,6 +538,10 @@ class Model:
         self._solve_status: SolveStatus | None = None
         self._solver_version: float | None = None
 
+        self._default_solver = utils.getDefaultSolvers(self.container.system_directory)[
+            str(self.problem).upper()
+        ].lower()
+
         self.container.models.update({self.name: self})
         self.container._synch_with_gams()
 
@@ -1569,9 +1573,7 @@ class Model:
             output = self.container.output
 
         if solver is None:
-            solver = utils.getDefaultSolvers(self.container.system_directory)[
-                str(self.problem).upper()
-            ].lower()
+            solver = self._default_solver
         else:
             if not isinstance(solver, str):
                 raise TypeError(
