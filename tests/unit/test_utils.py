@@ -61,6 +61,7 @@ def test_available_solvers(data):
         "CONVERT",
         "COPT",
         "CPLEX",
+        "DE",
         "DICOPT",
         "EXAMINER",
         "EXAMINER2",
