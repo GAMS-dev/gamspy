@@ -32,6 +32,7 @@ gamspy
    gamspy.Sor
    gamspy.Ord
    gamspy.Card
+   gamspy.Loop
    gamspy._engine
    gamspy._neos
    gamspy.math

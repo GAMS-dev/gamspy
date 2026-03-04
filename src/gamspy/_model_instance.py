@@ -309,7 +309,7 @@ class ModelInstance:
         # Prepare the required lines to solve with model instance
         scenario_str = self._get_scenario(model)
         self.container._add_statement(scenario_str)
-        model._create_model_attributes()
+        model._assign_model_attributes()
 
         # Write pf file
         options._set_extra_options({"solvercntr": self.solver_control_file})
