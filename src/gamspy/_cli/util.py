@@ -31,7 +31,6 @@ def add_solver_entry(system_directory: str, solver_name: str, verbatims: list[st
     capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
     installed_solvers = utils.getInstalledSolvers(system_directory)
     if solver_name.upper() in installed_solvers:
-        print(f"`{solver_name}` already exists in the capabilities file, skipping")
         return
 
     with open(capabilities_path, encoding="utf-8") as f:
@@ -79,7 +78,6 @@ def remove_solver_entry(system_directory: str, solver_name: str):
     installed_solvers = utils.getInstalledSolvers(system_directory)
 
     if solver_name.upper() not in installed_solvers:
-        print("Solver is not in the capabilities file, skipping")
         return
 
     line_num, line_count = find_bounds(system_directory, solver_name)
