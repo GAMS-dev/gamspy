@@ -189,6 +189,7 @@ class Container(gt.Container):
         self._comm_pair_id = utils._get_unique_name()
         self.output = output
         self._gams_string = ""
+        self._in_loop: int = 0
         self.models: dict[str, Model] = {}
         self._mpsge_models: list[str] = []
         if IS_MIRO_INIT:
@@ -502,6 +503,9 @@ class Container(gt.Container):
         gams_to_gamspy: bool = False,
         load_symbols: list[Symbol] | None = None,
     ) -> DataFrame | None:
+        if self._in_loop:
+            return None
+
         runner = backend_factory(
             self, self._options, output=self.output, load_symbols=load_symbols
         )

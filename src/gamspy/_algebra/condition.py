@@ -109,7 +109,11 @@ class Condition(operable.Operable):
         self.conditioning_on.container._add_statement(statement)
 
         if isinstance(self.conditioning_on, ImplicitSymbol):
-            statement._validate_definition(utils._unpack(self.conditioning_on.domain))
+            # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
+            if not self.container._in_loop:
+                statement._validate_definition(
+                    utils._unpack(self.conditioning_on.domain)
+                )
             self.conditioning_on.parent._assignment = statement
             self.conditioning_on.parent._winner = "gams"
         elif isinstance(self.conditioning_on, Symbol):

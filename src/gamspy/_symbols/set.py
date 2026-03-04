@@ -769,7 +769,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             rhs,
         )
 
-        statement._validate_definition(utils._unpack(domain))
+        # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
+        if not self.container._in_loop:
+            statement._validate_definition(utils._unpack(domain))
 
         self.container._add_statement(statement)
         self._assignment = statement

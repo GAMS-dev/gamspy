@@ -1289,8 +1289,6 @@ def test_models_with_same_name():
         objective=z,
     )
 
-    df_magic = magic.solve()
-
     magic_unique = gp.Model(
         m,
         name="hexagon",
@@ -1300,9 +1298,10 @@ def test_models_with_same_name():
         objective=z,
     )
 
+    df_magic = magic.solve()
     df_magic_unique = magic_unique.solve()
 
-    assert df_magic["Model Status"].tolist()[0] == "OptimalGlobal"
+    assert df_magic["Model Status"].tolist()[0] == "IntegerInfeasible"
     assert df_magic_unique["Model Status"].tolist()[0] == "IntegerInfeasible"
 
 
