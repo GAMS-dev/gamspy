@@ -212,16 +212,24 @@ def append_dist_info(files, gamspy_base_dir: str):
 
     gamspy_path: str = gp.__path__[0]
     dist_info_path = f"{gamspy_path}-{gp.__version__}.dist-info"
+    record_file_path = os.path.join(dist_info_path, "RECORD")
+
+    with open(record_file_path) as file:
+        content = file.read()
 
     with open(dist_info_path + os.sep + "RECORD", "a", encoding="utf-8") as record:
         gamspy_base_relative_path = os.sep.join(gamspy_base_dir.split(os.sep)[-3:])
 
         lines = []
         for file in files:
-            line = f"{gamspy_base_relative_path}{os.sep}{file},,"
-            lines.append(line)
+            file_path = os.path.join(gamspy_base_relative_path, file)
+            line = f"{file_path},,"
 
-        record.write("\n".join(lines) + "\n")
+            if file_path not in content:
+                lines.append(line)
+
+        if lines:
+            record.write("\n".join(lines) + "\n")
 
 
 @app.command(
@@ -281,11 +289,6 @@ def solver(
                     f'Given solver name ("{solver_name}") is not valid. Available'
                     f" solvers that can be installed: {installable_solvers}"
                 )
-
-            installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
-            if solver_name.upper() in installed_solvers:
-                print(f"`{solver_name}` is already installed, skipping...")
-                continue
 
             if not skip_pip_install:
                 solver_version = gamspy_base.__version__

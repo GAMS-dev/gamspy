@@ -694,7 +694,16 @@ def validate_solver_options(
     if optReadDefinition(option_handle, solver_def_file):
         msg_list = []
         for i in range(optMessageCount(option_handle)):
-            msg_list.append(optGetMessage(option_handle, i + 1))
+            msg = optGetMessage(option_handle, i + 1)
+
+            if msg[1] == 2:
+                raise ValidationError(
+                    f"Provided solver name `{solver}` is not installed on your"
+                    f" machine. Install `{solver}` with `gamspy install solver"
+                    f" {solver.lower()}`"
+                )
+
+            msg_list.append(msg)
 
         raise RuntimeError(
             f"Error while processing {solver_def_file}. Log messages: {msg_list}"
@@ -708,7 +717,8 @@ def validate_solver_options(
 
     msg_list = []
     for i in range(optMessageCount(option_handle)):
-        msg_list.append(optGetMessage(option_handle, i + 1))
+        msg = optGetMessage(option_handle, i + 1)
+        msg_list.append(msg)
 
     optClearMessages(option_handle)
     optFree(option_handle)
