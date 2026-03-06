@@ -1,1 +1,0 @@
-Only unload the GDX library when the GAMS system directory changes.

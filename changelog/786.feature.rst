@@ -1,1 +1,0 @@
-Support "loop" control structure of GAMS via gp.Loop context manager.

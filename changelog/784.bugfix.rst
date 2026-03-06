@@ -1,1 +1,0 @@
-Mitigate the issue of one environment affecting another on the same machine with package managers that keep a global cache (e.g. pixi).
