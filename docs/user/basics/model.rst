@@ -643,8 +643,9 @@ For example, you can convert your GAMSPy model into a scalar GAMS model as follo
     model = gp.Model(m, equations=m.getEquations(), problem="LP", sense="MAX", objective=z)
     model.convert(path="path_to_the_directory", file_format=gp.FileFormat.GAMS, options=gp.ConvertOptions(Width=50))
 
-The `path` parameter specifies the directory where the converted model will be saved. The `file_format` parameter specifies the 
-format of the converted model. The `options` parameter specifies the options for the conversion. See :meth:`gamspy.ConvertOptions` 
+The `path` parameter specifies the directory where the converted model will be saved. 
+The :meth:`file_format <gamspy.FileFormat>` parameter specifies the format of the converted model. 
+The `options` parameter specifies the options for the conversion. See :meth:`gamspy.ConvertOptions` 
 for all available conversion options.
 
 

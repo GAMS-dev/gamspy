@@ -105,20 +105,6 @@ def backend_factory(
     )
 
 
-def _cast_values(
-    objective_value: str,
-    num_equations: str,
-    num_variables: str,
-    solver_time: str,
-) -> tuple[float, int | float, int | float, float]:
-    objective = float("nan") if objective_value == "NA" else float(objective_value)
-    equations = float("nan") if num_equations == "NA" else int(num_equations)
-    variables = float("nan") if num_variables == "NA" else int(num_variables)
-    time = float("nan") if solver_time == "NA" else float(solver_time)
-
-    return objective, equations, variables, time
-
-
 class Backend(ABC):
     def __init__(
         self,
@@ -142,6 +128,7 @@ class Backend(ABC):
             self.load_symbols: list[str] = [
                 symbol.name  # type: ignore
                 for symbol in load_symbols
+                if symbol.synchronize
             ]
 
         self.job_name = self.get_job_name()
@@ -254,56 +241,26 @@ class Backend(ABC):
         if self.options.variable_listing_limit:
             utils._parse_generated_variables(self.model, listing_file)
 
-    def prepare_summary(self, trace_file: str) -> pd.DataFrame:
-        from gamspy._model import ModelStatus
+    def prepare_summary(self) -> pd.DataFrame:
+        assert self.model is not None
+        assert self.solver is not None
 
-        with open(trace_file, encoding="utf-8") as file:
-            line = file.readlines()[-1]
-            (
-                _,
-                model_type,
-                solver_name,
-                _,
-                _,
-                _,
-                _,
-                num_equations,
-                num_variables,
-                _,
-                _,
-                _,
-                _,
-                model_status,
-                solver_status,
-                objective_value,
-                _,
-                solver_time,
-                _,
-                _,
-                _,
-                _,
-            ) = line.split(",")
-
-        objective_value, num_equations, num_variables, solver_time = _cast_values(
-            objective_value, num_equations, num_variables, solver_time
-        )
-
-        dataframe = pd.DataFrame(
+        df = pd.DataFrame(
             [
                 [
-                    SOLVE_STATUS[int(solver_status)],
-                    ModelStatus(int(model_status)).name,
-                    objective_value,
-                    num_equations,
-                    num_variables,
-                    model_type,
-                    solver_name,
-                    solver_time,
+                    self.model.solve_status.name,  # type: ignore
+                    self.model.status.name,  # type: ignore
+                    self.model.objective_value,
+                    self.model.num_equations,
+                    self.model.num_variables,
+                    self.model.used_model_type,
+                    self.solver.upper(),
+                    self.model.total_solver_time,
                 ]
             ],
             columns=HEADER,
         )
-        return dataframe
+        return df
 
     def make_unmodified(self, modified_names: list[str]):
         for name in modified_names:

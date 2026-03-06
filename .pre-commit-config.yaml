@@ -19,7 +19,7 @@ repos:
     -   id: detect-secrets
         args: [ --baseline, .secrets.baseline, --exclude-files, ^docs/user/notebooks/]
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.1
+    rev: v0.15.5
     hooks:
     # Run the linter.
     -   id: ruff-check

@@ -538,7 +538,12 @@ class Model:
         self._solve_status: SolveStatus | None = None
         self._solver_version: float | None = None
 
+        self._default_solver = utils.getDefaultSolvers(self.container.system_directory)[
+            str(self.problem).upper()
+        ].lower()
+
         self.container.models.update({self.name: self})
+        self._attr_symbol_names = self._create_model_attributes()
         self.container._synch_with_gams()
 
     def _serialize(self) -> dict:
@@ -1119,23 +1124,35 @@ class Model:
 
                 self.container._add_statement(f"{EXECUTION_OPTIONS[key]} '{value}';\n")
 
-    def _create_model_attributes(self) -> None:
+    def _assign_model_attributes(self) -> None:
         self.container._add_statement("$offListing")
+        for symbol_name, attr_name in zip(
+            self._attr_symbol_names, ATTRIBUTE_MAP, strict=True
+        ):
+            self.container._add_statement(f"{symbol_name} = {self.name}.{attr_name};")
+
+        self.container._add_statement("$onListing")
+
+    def _create_model_attributes(self) -> list[str]:
+        self.container._add_statement("$offListing")
+        symbol_names = []
         for attr_name in ATTRIBUTE_MAP:
             symbol_name = f"{self._generate_prefix}{attr_name}_{self._auto_id}"
-            Symbol = gp.Parameter._constructor_bypass(self.container, symbol_name)
-            Symbol.modified = False
+            symbol_names.append(symbol_name)
+            self.container._add_statement(f"Parameter {symbol_name};")
 
-            self.container._add_statement(f"{symbol_name} = {self.name}.{attr_name};")
         self.container._add_statement("$onListing")
+
+        return symbol_names
 
     def _update_model_attributes(self) -> None:
         gdx_handle = utils._open_gdx_file(
             self.container.system_directory, self.container._gdx_out
         )
 
-        for gams_attr, python_attr in ATTRIBUTE_MAP.items():
-            symbol_name = f"{self._generate_prefix}{gams_attr}_{self._auto_id}"
+        for python_attr, symbol_name in zip(
+            ATTRIBUTE_MAP.values(), self._attr_symbol_names, strict=True
+        ):
             data = utils._get_scalar_data(
                 self.container._gams2np, gdx_handle, symbol_name
             )
@@ -1569,9 +1586,7 @@ class Model:
             output = self.container.output
 
         if solver is None:
-            solver = utils.getDefaultSolvers(self.container.system_directory)[
-                str(self.problem).upper()
-            ].lower()
+            solver = self._default_solver
         else:
             if not isinstance(solver, str):
                 raise TypeError(
@@ -1619,11 +1634,13 @@ class Model:
             )
             return summary
 
-        self.container._add_statement(self.getDeclaration())
         self._add_runtime_options(options, backend)
-        self.container._add_statement(self._generate_solve_string() + "\n")
-        self._create_model_attributes()
+        self.container._add_statement(self._generate_solve_string() + ";\n")
+        self._assign_model_attributes()
         options._set_model_info(solver, self.problem, solver_options)
+
+        if self.container._in_loop:
+            return None
 
         runner = backend_factory(
             self.container,

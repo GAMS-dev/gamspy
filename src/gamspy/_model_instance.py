@@ -309,14 +309,18 @@ class ModelInstance:
         # Prepare the required lines to solve with model instance
         scenario_str = self._get_scenario(model)
         self.container._add_statement(scenario_str)
-        model._create_model_attributes()
+        model._assign_model_attributes()
 
         # Write pf file
         options._set_extra_options({"solvercntr": self.solver_control_file})
         options.log_file = os.path.join(self.container.working_directory, "gamslog.dat")
 
         runner = backend_factory(
-            self.container, options, model=model, output=self.output
+            self.container,
+            options,
+            self.model._default_solver,
+            model=model,
+            output=self.output,
         )
         runner.run(gams_to_gamspy=True)
 

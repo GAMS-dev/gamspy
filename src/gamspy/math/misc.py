@@ -71,6 +71,12 @@ class MathOp(operable.Operable):
     def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
+    def __len__(self):
+        if self.records is not None:
+            return len(self.records.index)
+
+        return 0
+
     @property
     def records(self) -> pd.DataFrame | None:
         """
@@ -220,9 +226,6 @@ class MathOp(operable.Operable):
 
     def __str__(self):
         return self.gamsRepr()
-
-    def __len__(self):
-        return len(self.gamsRepr())
 
 
 def _stringify(x: str | int | float | Symbol | ImplicitSymbol, *, latex: bool = False):

@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from gamspy import Alias, Container, Set, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy.math.matrix import Dim
 
 
 EQ_TYPES = ["=e=", "=l=", "=g=", "=n=", "=x=", "=b="]
@@ -122,7 +123,7 @@ class Equation(gt.Equation, Symbol):
         container: Container,
         name: str,
         type: str | EquationType = "regular",
-        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
         records: Any | None = None,
         description: str = "",
     ):
@@ -433,7 +434,7 @@ class Equation(gt.Equation, Symbol):
 
         self._set_definition(domain, rhs)
 
-        self.container._synch_with_gams(gams_to_gamspy=True)
+        self.container._synch_with_gams(gams_to_gamspy=True, load_symbols=[self])
         self._winner = "gams"
 
     def __repr__(self) -> str:
@@ -568,7 +569,9 @@ class Equation(gt.Equation, Symbol):
             rhs,
         )
 
-        statement._validate_definition(utils._unpack(domain))
+        # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
+        if not self.container._in_loop:
+            statement._validate_definition(utils._unpack(domain))
 
         self.container._add_statement(statement)
         self._definition = statement

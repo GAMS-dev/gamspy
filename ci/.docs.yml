@@ -6,7 +6,7 @@ leg-build-docs:
   tags: [linux]
   image: python:3.13
   script:
-    - python -m pip install uv && uv venv .venv && source .venv/bin/activate
+    - python -m pip install uv && uv venv .venv -v && source .venv/bin/activate
     - uv sync --group test --group doc
     - python -m pytest --nbmake docs/user/notebooks/*.ipynb
     - ipython kernel install --name "python3" --user

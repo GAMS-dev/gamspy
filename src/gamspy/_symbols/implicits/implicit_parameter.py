@@ -135,12 +135,14 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             rhs,
         )
 
-        statement._validate_definition(utils._unpack(domain))
+        # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
+        if not self.container._in_loop:
+            statement._validate_definition(utils._unpack(domain))
 
         self.container._add_statement(statement)
         self.parent._assignment = statement
 
-        self.container._synch_with_gams(gams_to_gamspy=True)
+        self.container._synch_with_gams(gams_to_gamspy=True, load_symbols=[self.parent])
         self.parent._winner = "gams"
 
     def __eq__(self, other):

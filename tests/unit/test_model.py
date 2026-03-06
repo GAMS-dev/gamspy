@@ -132,6 +132,15 @@ def test_model(data):
         with open(os.path.join(m.working_directory, "convert.opt")) as f:
             assert "GDXNames 0" in f.read()
 
+    # Test convert with rename
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_model.convert(
+            tmpdir,
+            file_format=FileFormat.GDXJacobian,
+            options=ConvertOptions(GDXNames=0, GDXJacobian="my_jacobian.gdx"),
+        )
+        assert os.path.exists(os.path.join(tmpdir, "my_jacobian.gdx"))
+
     # Test unknown file format
     with pytest.raises(ValidationError):
         test_model.convert(
@@ -180,6 +189,31 @@ def test_model(data):
 
         with open(tmpdir_path / "jacobian.gms") as file:
             assert "$if not set jacfile $set jacfile jacobian.gdx" in file.read()
+
+    # Test multiple rename
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir)
+        test_model.convert(
+            tmpdir_path,
+            file_format=[
+                FileFormat.GAMSJacobian,
+                FileFormat.GDXJacobian,
+                FileFormat.GAMSPyJacobian,
+                FileFormat.GAMSDict,
+                FileFormat.GAMSDictMap,
+            ],
+            options=ConvertOptions(
+                GDXNames=0,
+                GAMSDict="my_dict.txt",
+                GAMSPyJacobian="my_jacobian.py",
+                GAMSJacobian="my_jacobian.gms",
+            ),
+        )
+        assert os.path.exists(tmpdir_path / "my_jacobian.gms")
+        assert os.path.exists(tmpdir_path / "jacobian.gdx")
+        assert os.path.exists(tmpdir_path / "my_jacobian.py")
+        assert os.path.exists(tmpdir_path / "my_dict.txt")
+        assert os.path.exists(tmpdir_path / "dictmap.gdx")
 
     # Check if the name is reserved
     with pytest.raises(ValidationError):
@@ -1255,8 +1289,6 @@ def test_models_with_same_name():
         objective=z,
     )
 
-    df_magic = magic.solve()
-
     magic_unique = gp.Model(
         m,
         name="hexagon",
@@ -1266,9 +1298,10 @@ def test_models_with_same_name():
         objective=z,
     )
 
+    df_magic = magic.solve()
     df_magic_unique = magic_unique.solve()
 
-    assert df_magic["Model Status"].tolist()[0] == "OptimalGlobal"
+    assert df_magic["Model Status"].tolist()[0] == "IntegerInfeasible"
     assert df_magic_unique["Model Status"].tolist()[0] == "IntegerInfeasible"
 
 
@@ -1326,3 +1359,35 @@ def test_mpsge_equation_definition():
         assert math.isclose(expected, found, rel_tol=1e-6, abs_tol=1e-8)
 
     mcph.solve()
+
+
+def test_length():
+    m = gp.Container()
+    i = gp.Set(m, records=["i1", "i2"])
+    assert len(i) == 2
+
+    j = gp.Alias(m, alias_with=i)
+    assert len(j) == 2
+
+    a = gp.Parameter(m, domain=i)
+    assert len(a) == 0
+    a.generateRecords()
+    assert len(a) == 2
+    assert len(a[i].where[gp.Ord(i) > 1]) == 1
+    assert len(gp.Sum(i, a[i]).records) == 1
+
+    b = gp.Variable(m, domain=i)
+    assert len(b) == 0
+    b.generateRecords()
+    assert len(b) == 2
+    assert len(b.l) == 2
+    assert len(b.l["i1"]) == 1
+    assert len(b["i1"].l) == 1
+
+    c = gp.Equation(m, domain=i)
+    assert len(c) == 0
+    c.generateRecords()
+    assert len(c) == 2
+    assert len(c.l) == 2
+    assert len(c.l["i1"]) == 1
+    assert len(c["i1"].l) == 1

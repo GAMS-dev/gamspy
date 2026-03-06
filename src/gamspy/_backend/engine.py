@@ -801,7 +801,6 @@ class GAMSEngine(backend.Backend):
         hidden_options = {
             "gdx": os.path.basename(self.container._gdx_out),
             "gdxSymbols": "newOrChanged",
-            "trace": os.path.basename(self.trace_file),
             "restart": os.path.basename(self.restart_file),
             "input": os.path.basename(self.gms_file),
         }
@@ -884,7 +883,7 @@ class GAMSEngine(backend.Backend):
 
         if not self.is_async():
             self.parse_listings()
-            return self.prepare_summary(self.trace_file)
+            return self.prepare_summary()
 
         return None
 
@@ -894,7 +893,6 @@ class GAMSEngine(backend.Backend):
         hidden_options = {
             "gdx": self.container._gdx_out,
             "gdxSymbols": "newOrChanged",
-            "trace": self.trace_file,
             "input": self.gms_file,
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,

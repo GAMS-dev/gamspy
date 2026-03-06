@@ -170,12 +170,6 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
             setattr(self, key, value)
 
-    def __len__(self):
-        if self.records is not None:
-            return len(self.records.index)
-
-        return 0
-
     def __bool__(self):
         raise ValidationError(
             "Alias cannot be used as a truth value. Use len(<symbol>.records) instead."
@@ -202,13 +196,17 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             rhs,
         )
 
-        statement._validate_definition(utils._unpack(domain))
+        # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
+        if not self.container._in_loop:
+            statement._validate_definition(utils._unpack(domain))
 
         self.container._add_statement(statement)
         self._assignment = statement
 
         if self.alias_with.synchronize:  # type: ignore
-            self.container._synch_with_gams(gams_to_gamspy=True)
+            self.container._synch_with_gams(
+                gams_to_gamspy=True, load_symbols=[self.alias_with]
+            )
 
     def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
         super().setRecords(records, uels_on_axes)

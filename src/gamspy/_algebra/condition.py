@@ -106,13 +106,14 @@ class Condition(operable.Operable):
 
         lhs = Condition(self.conditioning_on, condition)
         statement = expression.Expression(lhs, op_type, rhs)
-
-        if isinstance(self.conditioning_on, ImplicitSymbol):
-            statement._validate_definition(utils._unpack(self.conditioning_on.domain))
-
         self.conditioning_on.container._add_statement(statement)
 
         if isinstance(self.conditioning_on, ImplicitSymbol):
+            # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
+            if not self.container._in_loop:
+                statement._validate_definition(
+                    utils._unpack(self.conditioning_on.domain)
+                )
             self.conditioning_on.parent._assignment = statement
             self.conditioning_on.parent._winner = "gams"
         elif isinstance(self.conditioning_on, Symbol):
@@ -122,10 +123,32 @@ class Condition(operable.Operable):
         if isinstance(self.conditioning_on, implicits.ImplicitEquation):
             self.conditioning_on.parent._definition = statement
 
-        self.conditioning_on.container._synch_with_gams(gams_to_gamspy=True)
+        if isinstance(self.conditioning_on, ImplicitSymbol):
+            self.conditioning_on.container._synch_with_gams(
+                gams_to_gamspy=True, load_symbols=[self.conditioning_on.parent]
+            )
+        elif isinstance(self.conditioning_on, syms.Alias):
+            self.conditioning_on.container._synch_with_gams(
+                gams_to_gamspy=True, load_symbols=[self.conditioning_on.alias_with]
+            )
+        elif isinstance(
+            self.conditioning_on,
+            (syms.Set, syms.Parameter, syms.Variable, syms.Equation),
+        ):
+            self.conditioning_on.container._synch_with_gams(
+                gams_to_gamspy=True, load_symbols=[self.conditioning_on]
+            )
+        else:
+            self.conditioning_on.container._synch_with_gams(gams_to_gamspy=True)
 
     def __repr__(self) -> str:
         return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"
+
+    def __len__(self):
+        if self.records is not None:
+            return len(self.records.index)
+
+        return 0
 
     @property
     def dimension(self) -> int:

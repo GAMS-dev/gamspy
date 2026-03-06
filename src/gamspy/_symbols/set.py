@@ -745,12 +745,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         self.domain = new_domain
 
-    def __len__(self):
-        if self.records is not None:
-            return len(self.records.index)
-
-        return 0
-
     def __getitem__(
         self, indices: Sequence | str | int | EllipsisType | slice
     ) -> implicits.ImplicitSet:
@@ -775,12 +769,14 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             rhs,
         )
 
-        statement._validate_definition(utils._unpack(domain))
+        # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
+        if not self.container._in_loop:
+            statement._validate_definition(utils._unpack(domain))
 
         self.container._add_statement(statement)
         self._assignment = statement
 
-        self.container._synch_with_gams(gams_to_gamspy=True)
+        self.container._synch_with_gams(gams_to_gamspy=True, load_symbols=[self])
         self._winner = "gams"
 
     def __repr__(self) -> str:

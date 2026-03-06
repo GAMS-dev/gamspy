@@ -444,7 +444,6 @@ class NEOSServer(backend.Backend):
         hidden_options = {
             "gdx": "output.gdx",
             "gdxSymbols": "newOrChanged",
-            "trace": os.path.basename(self.trace_file),
             "forcework": "1",
         }
         self.options._set_hidden_options(hidden_options)
@@ -498,7 +497,7 @@ class NEOSServer(backend.Backend):
         super().load_records()
         if self.client.is_blocking:
             self.parse_listings()
-            return self.prepare_summary(self.trace_file)
+            return self.prepare_summary()
 
         return None
 
@@ -508,7 +507,6 @@ class NEOSServer(backend.Backend):
         hidden_options = {
             "gdx": self.container._gdx_out,
             "gdxSymbols": "newOrChanged",
-            "trace": self.trace_file,
             "input": self.gms_file,
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,

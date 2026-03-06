@@ -27,6 +27,12 @@ class ExtrinsicFunction(operable.Operable):
         self.domain: list = []
         self.dimension = 0
 
+    def __len__(self):
+        if self.records is not None:
+            return len(self.records.index)
+
+        return 0
+
     @property
     def records(self) -> pd.DataFrame | None:
         """
@@ -64,9 +70,6 @@ class ExtrinsicFunction(operable.Operable):
 
     def __ne__(self, other):
         return expression.Expression(self, "ne", other)
-
-    def __len__(self):
-        return len(self.__str__())
 
     def __call__(self, *args, **kwds) -> ExtrinsicFunction:
         if kwds:

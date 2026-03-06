@@ -113,6 +113,12 @@ class Operation(operable.Operable):
 
         return Operation(self.op_domain, self.rhs[domain], self._op_name)  # type: ignore
 
+    def __len__(self):
+        if self.records is not None:
+            return len(self.records.index)
+
+        return 0
+
     @property
     def records(self) -> pd.DataFrame | None:
         """
@@ -234,8 +240,10 @@ class Operation(operable.Operable):
 
         stack = control_stack + self.raw_domain
         if isinstance(self.rhs, expression.Expression):
-            self.rhs._validate_definition(utils._unpack(stack))
-        elif isinstance(self.rhs, Operation):
+            # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
+            if not self.container._in_loop:
+                self.rhs._validate_definition(utils._unpack(stack))
+        elif isinstance(self.rhs, Operation) and not self.container._in_loop:
             self.rhs._validate_operation(utils._unpack(stack))
 
     def _get_index_str(self) -> str:
