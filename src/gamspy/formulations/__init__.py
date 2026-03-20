@@ -8,6 +8,7 @@ from gamspy.formulations.ml import (
     RegressionTree,
 )
 from gamspy.formulations.nn import (
+    RNN,
     AvgPool2d,
     Conv1d,
     Conv2d,
@@ -43,4 +44,5 @@ __all__ = [
     "pwl_interval_formulation",
     "utils",
     "FormulationResult",
+    "RNN",
 ]
