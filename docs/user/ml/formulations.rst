@@ -302,6 +302,36 @@ we haven't included yet.
    [len(d) for d in out.domain]
    # [10, 4]
 
+:meth:`RNN <gamspy.formulations.RNN>`
+-------------------------------------------------------
+Formulation generator for Recurrent Neural Networks in GAMS. The update rule for the
+hidden state is controlled by 
+:math:`h_t = \sigma(W_{ih} x_t + b_{ih} + W_{hh} h_{(t-1)} + b_{hh})`, where
+:math:`\sigma` is the chosen activation function, `tanh` by default.
+
+.. code-block:: python
+
+   import gamspy as gp
+   import numpy as np
+   from gamspy.math import dim
+
+   batch_size, seq_length, input_size, hidden_size = (1, 3, 2, 2)
+
+   w_ih = np.random.rand(hidden_size, input_size)
+   w_hh = np.random.rand(hidden_size, hidden_size)
+
+   m = gp.Container()
+
+   # "tanh" is the default activation function
+   rnn = gp.formulations.RNN(m, input_size=input_size, hidden_size=hidden_size)
+
+   rnn.load_weights(w_ih, w_hh)
+   x = gp.Variable(m, "x", domain=dim([batch_size, seq_length, input_size]))
+
+   result = rnn(x)
+   [len(d) for d in result.result.domain]
+   # [1, 3, 2]
+
 .. _pooling-linearization:
 
 Max/Min Pooling Implementation
