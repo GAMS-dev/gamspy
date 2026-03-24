@@ -1,3 +1,6 @@
+import platform
+import time
+
 import numpy as np
 import pytest
 
@@ -211,11 +214,39 @@ def test_nested_loops():
     a.generateRecords()
     b = gp.Parameter(m, records=0)
 
-    with gp.Loop(i):  # noqa: SIM117
+    with gp.Loop(i):
         with gp.Loop(j):
             b[...] += a[i, j]
 
     assert np.isclose(a.records["value"].sum(), b.toValue())
+
+
+@pytest.mark.skipif(
+    platform.system() == "Windows",
+    reason="Windows build machines stall time to time which affects the perf tests in general.",
+)
+def test_loop_perf():
+    m = gp.Container()
+
+    i = gp.Set(m, records=range(20))
+    j = gp.Set(m, records=range(20))
+    c = gp.Parameter(m, domain=[i, j])
+    c.generateRecords()
+
+    start = time.time()
+    for ival in i.toList():
+        for jval in j.toList():
+            c[ival, jval] = c[ival, jval] * 2
+
+    python_loop_time = time.time() - start
+
+    start = time.time()
+    with gp.Loop((i, j)):
+        c[i, j] = c[i, j] * 2
+
+    gams_loop_time = time.time() - start
+
+    assert python_loop_time > gams_loop_time
 
 
 def test_invalid_indices():
@@ -224,10 +255,86 @@ def test_invalid_indices():
     a = gp.Parameter(m, domain=i)
     b = gp.Parameter(m)
 
-    with pytest.raises(ValidationError):  # noqa: SIM117
+    with pytest.raises(ValidationError):
         with gp.Loop(5):
             b[...] = a[i]
 
-    with pytest.raises(ValidationError):  # noqa: SIM117
+    with pytest.raises(ValidationError):
         with gp.Loop("5"):
             b[...] = a[i]
+
+
+def test_if():
+    m = gp.Container()
+    i = gp.Set(m, records=[f"i{idx}" for idx in range(1, 11)])
+    cnt = gp.Parameter(m, records=0)
+
+    with pytest.raises(ValidationError):
+        with gp.If(gp.Ord(i) == 2):
+            ...
+
+    with gp.Loop(i) as loop:
+        with gp.If(gp.Ord(i) == 2):
+            loop.Continue  # noqa: B018
+
+        with gp.If(i.sameAs("i6")):
+            loop.Break  # noqa: B018
+
+        cnt[...] += 1
+
+    assert cnt.toValue() == 4.0
+
+    with gp.Loop(i) as loop:
+        with gp.If(gp.math.mod(gp.Ord(i), 2) == 0):
+            loop.Continue  # noqa: B018
+
+        cnt[...] += 1
+
+    assert cnt.toValue() == 9.0
+
+
+def test_nested_if():
+    m = gp.Container()
+    i = gp.Set(m, records=[f"i{idx}" for idx in range(1, 11)])
+    j = gp.Set(m, records=[f"j{idx}" for idx in range(1, 11)])
+    cnt = gp.Parameter(m, records=0)
+
+    with gp.Loop(i):
+        with gp.Loop(j) as loop:
+            with gp.If(gp.Ord(i) == 2):
+                with gp.If(gp.Ord(j) == 2):
+                    loop.Continue  # noqa: B018
+
+            cnt[...] += 1
+
+    assert cnt.toValue() == 99.0
+
+
+def test_break():
+    m = gp.Container()
+    i = gp.Set(m, records=[f"i{idx}" for idx in range(1, 11)])
+    j = gp.Set(m, records=[f"j{idx}" for idx in range(1, 11)])
+    cnt = gp.Parameter(m, records=0)
+
+    with gp.Loop(i):
+        with gp.Loop(j) as loop2:
+            cnt[...] += 1
+            loop2.Break  # noqa: B018
+
+    assert cnt.toValue() == 10
+
+    cnt[...] = 0
+
+    with gp.Loop(i) as loop:
+        with gp.Loop(j) as loop2:
+            cnt[...] += 1
+            loop2.Break  # noqa: B018
+
+        loop.Break  # noqa: B018
+
+    assert cnt.toValue() == 1
+
+    with gp.Loop(i) as loop:
+        with pytest.raises(ValidationError):
+            with gp.Loop(j) as loop2:
+                loop.Break  # noqa: B018

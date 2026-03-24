@@ -11,6 +11,7 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Alias, Container, Set
+    from gamspy._algebra.expression import Expression
 
 
 class Loop:
@@ -69,11 +70,12 @@ class Loop:
         indices: Set | Alias | ImplicitSet | Condition | Domain | Sequence[Set | Alias],
     ):
         self.indices = indices
+        self._loop_number = -1
         self.container = self._find_container()
 
     def _find_container(self) -> Container:
         if isinstance(self.indices, (gp.Set, gp.Alias, Condition, Domain, ImplicitSet)):
-            return self.indices.container
+            return self.indices.container  # type: ignore
         elif isinstance(self.indices, Sequence):
             for elem in self.indices:
                 if hasattr(elem, "container"):
@@ -94,10 +96,71 @@ class Loop:
             f"`{type(self.indices)}` is not an allowed type for a loop index. "
         )
 
-    def __enter__(self):
+    @property
+    def Break(self) -> None:
+        """
+        Breaks the execution of the current loop prematurely.
+
+        This property maps to the GAMS `break` statement. Note that you can only
+        break out of the innermost loop currently executing. Attempting to break an
+        outer loop from within an inner loop will raise a ValidationError.
+
+        Raises
+        ------
+        ValidationError
+            If attempting to break an outer loop without breaking the inner loop first.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, records=["i1", "i2", "i3"])
+        >>> j = gp.Set(m, records=["j1", "j2", "j3"])
+        >>> cnt = gp.Parameter(m, records=0)
+        >>> with gp.Loop(i) as loop:
+        ...     with gp.Loop(j) as loop2:
+        ...         cnt[...] += 1
+        ...         loop2.Break  # Successfully breaks the inner loop
+        ...     loop.Break       # Successfully breaks the outer loop
+
+        """
+        if self._loop_number < self.container._in_loop:
+            raise ValidationError(
+                "You cannot break this loop. You should break the inner loop first."
+            )
+
+        self.container._add_statement("break;")
+
+    @property
+    def Continue(self) -> None:
+        """
+        Skips the remaining statements in the current iteration and proceeds to the next one.
+
+        This property maps to the GAMS `continue` statement. It gives additional
+        control over the execution of loop structures by allowing you to bypass
+        the rest of the loop block for the current domain element.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, records=["i1", "i2", "i3", "i4"])
+        >>> cnt = gp.Parameter(m, records=0)
+        >>> with gp.Loop(i) as loop:
+        ...     with gp.If(gp.Ord(i) == 2):
+        ...         loop.Continue  # Skips incrementing for "i2"
+        ...     cnt[...] += 1
+
+        """
+        self.container._add_statement("continue;")
+
+    def __enter__(self) -> Loop:
         self.container._in_loop += 1
+        self._loop_number = self.container._in_loop
 
         self.container._add_statement(f"loop({self._index_repr()},")
+
+        return self
 
     def __exit__(self, exc_type, exc, tb):
         self.container._in_loop -= 1
@@ -105,3 +168,57 @@ class Loop:
         self.container._add_statement(");")
         if self.container._in_loop == 0:  # Run only in the most outer loop
             self.container._synch_with_gams(gams_to_gamspy=True)
+
+
+class If:
+    """
+    A context manager to conditionally execute a group of statements.
+
+    The If class maps to the GAMS `if` statement. It allows you to branch
+    conditionally around a group of execution statements within a loop.
+
+    Parameters
+    ----------
+    condition : Expression
+        The logical condition that must be satisfied to execute the nested statements.
+
+    Examples
+    --------
+    **1. Skipping iterations conditionally:**
+
+
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, records=[f"i{idx}" for idx in range(1, 11)])
+    >>> cnt = gp.Parameter(m, records=0)
+    >>> with gp.Loop(i) as loop:
+    ...     with gp.If(gp.math.mod(gp.Ord(i), 2) == 0):
+    ...         loop.Continue
+    ...     cnt[...] += 1
+
+    **2. Breaking a loop based on a condition:**
+
+
+    >>> with gp.Loop(i) as loop:
+    ...     with gp.If(i.sameAs("i6")):
+    ...         loop.Break
+    ...     cnt[...] += 1
+
+    """
+
+    def __init__(self, condition: Expression | Condition):
+        self.condition = condition
+        self.container = condition.container
+
+    def __enter__(self):
+        if not self.container._in_loop:
+            raise ValidationError(
+                "`gp.If` context manager can only be used in `gp.Loop` context managers. Use regular Python if statements instead."
+            )
+
+        representation = self.condition.gamsRepr()
+        representation = gp.utils._replace_equality_signs(representation)
+        self.container._add_statement(f"if ({representation},")
+
+    def __exit__(self, exc_type, exc, tb):
+        self.container._add_statement(");")
