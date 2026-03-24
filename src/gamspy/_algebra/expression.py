@@ -343,9 +343,9 @@ class Expression(operable.Operable):
             {*left_control, *right_control}
         )
         self.container = None
-        if hasattr(left, "container"):
+        if hasattr(left, "container") and left.container is not None:  # type: ignore
             self.container = left.container  # type: ignore
-        elif hasattr(right, "container"):
+        elif hasattr(right, "container") and right.container is not None:  # type: ignore
             self.container = right.container  # type: ignore
 
     @property

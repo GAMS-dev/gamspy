@@ -33,6 +33,7 @@ gamspy
    gamspy.Ord
    gamspy.Card
    gamspy.Loop
+   gamspy.If
    gamspy._engine
    gamspy._neos
    gamspy.math

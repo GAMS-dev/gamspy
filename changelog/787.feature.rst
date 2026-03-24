@@ -1,0 +1,1 @@
+Support "if" control structure of GAMS via gp.If context manager. Support "Break" and "Continue" via functions in gp.Loop.

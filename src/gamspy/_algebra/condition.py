@@ -73,8 +73,10 @@ class Condition(operable.Operable):
         self.condition = condition
         self._where = None
         self.container = None
-        if hasattr(conditioning_on, "container"):
+        if hasattr(conditioning_on, "container") and conditioning_on.container:
             self.container = conditioning_on.container
+        elif hasattr(condition, "container") and condition.container:  # type: ignore
+            self.container = condition.container  # type: ignore
 
         self.domain = None
         if hasattr(conditioning_on, "domain"):

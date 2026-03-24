@@ -99,18 +99,28 @@ Set-based version:
 
 This avoids iteration in Python and lets GAMS handle the indexed operation.
 
-When Loops Are Still Necessary
-------------------------------
-Not all logic can or should be converted into set-based assignments. Python
-loops may still be appropriate when:
+When to Use Python Loops vs. GAMSPy Loops
+-----------------------------------------
+Not all logic can or should be converted into set-based assignments. However, 
+you must carefully choose between native Python loops and the 
+GAMSPy :meth:`Loop <gamspy.Loop>` context manager.
 
-- Building sets dynamically
-- Creating symbols conditionally
-- Executing model solves inside a loop
-- Performing logic that cannot be expressed algebraically
+**1. When to use the GAMSPy Loop:**
+If you need to iterate over a domain but cannot express the logic as a single 
+algebraic assignment, you should execute the loop inside the GAMS engine using 
+:meth:`gp.Loop <gamspy.Loop>`. This is critical for:
 
-However, **numerical assignments over large index sets should almost always be
-set-based**.
+- Iterative algorithmic calculations.
+- Modifying parameters and executing model solves repeatedly inside a loop.
+
+**2. When to use standard Python loops:**
+Standard Python ``for`` or ``while`` loops should not be used for numerical assignments 
+over large GAMSPy index sets. They are only appropriate for structural generation 
+before execution, such as:
+
+- Building sets or generating records dynamically before loading them into GAMSPy.
+- Creating GAMSPy symbols (Sets, Parameters, Variables) conditionally based on external configuration.
+- Performing pure Python control flow that does not interact continuously with the GAMSPy execution engine.
 
 External Numerical Computations with setRecords
 ===============================================

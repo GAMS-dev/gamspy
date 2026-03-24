@@ -237,7 +237,7 @@ select = [
     "TC",       # flake8-type-checking
     "C4",       # flake8-comprehensions
 ]
-ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "SIM115", "B028", "B006", "RUF005", "RUF022"]
+ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "SIM115", "SIM117", "B028", "B006", "RUF005", "RUF022"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
