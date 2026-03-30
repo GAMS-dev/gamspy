@@ -435,8 +435,11 @@ def _get_variables_of_model(container: Container):
     ]
 
 
-def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame:
+def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame | None:
     records = symbol.records
+    if records is None:
+        return None
+
     infeas_rows = records.where(
         (records["level"] < records["lower"]) | (records["level"] > records["upper"])
     ).dropna()

@@ -3,8 +3,6 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 import gamspy as gp
 import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
@@ -12,6 +10,8 @@ from gamspy.formulations.result import FormulationResult
 from gamspy.math import dim
 
 if TYPE_CHECKING:
+    import numpy as np
+
     from gamspy import Parameter, Variable
 
 
@@ -242,6 +242,8 @@ class Linear:
         -------
         FormulationResult
         """
+        import numpy as np
+
         if not isinstance(propagate_bounds, bool):
             raise ValidationError("propagate_bounds should be a boolean.")
 

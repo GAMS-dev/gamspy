@@ -6,11 +6,7 @@ import subprocess
 import certifi
 import typer
 
-import gamspy.utils as utils
-from gamspy.exceptions import ValidationError
-
 app = typer.Typer(
-    rich_markup_mode="rich",
     short_help="To retrieve a license with another node's information.",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy retrieve license <access_code> [--input <input_path>.json] [--output <output_path>.json]",
     context_settings={"help_option_names": ["-h", "--help"]},
@@ -39,21 +35,24 @@ def license(
         help="Specifies a duration in hours to checkout a session.",
     ),
 ) -> None:
+    import gamspy_base
+
     if input is None or not os.path.isfile(input):
-        raise ValidationError(
+        typer.echo(
             f"Given path `{input}` is not a json file. Please use `gamspy retrieve license <access_code> -i <json_file_path>`"
         )
+        raise typer.Exit(code=1)
 
     if access_code is None:
-        raise ValidationError(f"Given licence id `{access_code}` is not valid!")
+        typer.echo(f"Given licence id `{access_code}` is not valid!")
+        raise typer.Exit(code=1)
 
     environment_variables = os.environ.copy()
     if "CURL_CA_BUNDLE" not in environment_variables:
         environment_variables["CURL_CA_BUNDLE"] = certifi.where()
 
-    gamspy_base_dir = utils._get_gamspy_base_directory()
     command = [
-        os.path.join(gamspy_base_dir, "gamsgetkey"),
+        os.path.join(gamspy_base.directory, "gamsgetkey"),
         access_code,
         "-i",
         input,
@@ -67,7 +66,8 @@ def license(
     )
 
     if process.returncode:
-        raise ValidationError(process.stderr)
+        typer.echo(process.stderr)
+        raise typer.Exit(code=1)
 
     print(process.stdout)
     if output:

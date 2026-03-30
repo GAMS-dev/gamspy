@@ -3,13 +3,14 @@ from __future__ import annotations
 import math
 import typing
 
-import numpy as np
-
 import gamspy as gp
 from gamspy._symbols.implicits import (
     ImplicitVariable,
 )
 from gamspy.exceptions import ValidationError
+
+if typing.TYPE_CHECKING:
+    import numpy as np
 
 
 def _generate_gray_code(n: int, n_bits: int) -> np.ndarray:
@@ -18,6 +19,8 @@ def _generate_gray_code(n: int, n_bits: int) -> np.ndarray:
     The bit difference between two consecutive rows is exactly
     1 bits. Required for the log piecewise linear formulation.
     """
+    import numpy as np
+
     a = np.arange(n)
     b = a >> 1
     numbers = a ^ b
@@ -588,6 +591,8 @@ def pwl_convexity_formulation(
     >>> y, eqs = pwl_convexity_formulation(x, [-1, 4, 10, 10, 20], [-2, 8, 15, 17, 37])
 
     """
+    import numpy as np
+
     if using not in {"binary", "sos2"}:
         raise ValidationError(
             "Invalid value for the using argument."

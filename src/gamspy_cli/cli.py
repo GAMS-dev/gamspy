@@ -5,7 +5,6 @@ import typer
 from . import gdx, install, list, mps2gms, probe, retrieve, run, show, uninstall
 
 app = typer.Typer(
-    rich_markup_mode="rich",
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 app.add_typer(gdx.app, name="gdx")
@@ -61,4 +60,4 @@ def main():
     """
     Entry point for gamspy command line application.
     """
-    app()
+    app(prog_name="gamspy")

@@ -6,7 +6,6 @@ import threading
 from typing import TYPE_CHECKING, Any, Literal
 
 import gams.transfer as gt
-import pandas as pd
 from gams.core.gdx import GMS_DT_SET
 
 import gamspy as gp
@@ -22,6 +21,8 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import EllipsisType
+
+    import pandas as pd
 
     from gamspy import Alias, Container
     from gamspy._algebra.expression import Expression
@@ -798,13 +799,13 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 )
 
     @property
-    def records(self):
+    def records(self) -> pd.DataFrame | None:
         """
         Records of the Set
 
         Returns
         -------
-        DataFrame
+        DataFrame | None
 
         Examples
         --------
@@ -821,6 +822,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
     @records.setter
     def records(self, records):
+        import pandas as pd
+
         if (
             hasattr(self, "_is_miro_input")
             and self._is_miro_input

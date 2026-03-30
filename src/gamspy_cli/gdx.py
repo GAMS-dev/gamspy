@@ -10,11 +10,9 @@ import platform
 import subprocess
 from typing import Annotated
 
-import gamspy_base
 import typer
 
 app = typer.Typer(
-    rich_markup_mode="rich",
     short_help="To dump and compare GDX files.",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy gdx dump gdxfile.gdx | gamspy gdx diff gdxfile.gdx gdxfile2.gdx",
     context_settings={"help_option_names": ["-h", "--help"]},
@@ -145,6 +143,8 @@ def dump(
         None, "--header", help="New header for CSV output"
     ),
 ):
+    import gamspy_base
+
     GDXDUMP_PATH = os.path.join(gamspy_base.directory, "gdxdump")
     if platform.system() == "Windows":
         GDXDUMP_PATH = f"{GDXDUMP_PATH}.exe"
@@ -305,6 +305,8 @@ def diff(
         typer.Option("--skipid", "-s", help="One or more identifiers to skip"),
     ] = None,
 ):
+    import gamspy_base
+
     GDXDIFF_PATH = os.path.join(gamspy_base.directory, "gdxdiff")
     if platform.system() == "Windows":
         GDXDIFF_PATH = f"{GDXDIFF_PATH}.exe"

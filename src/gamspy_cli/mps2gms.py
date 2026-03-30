@@ -6,7 +6,6 @@ import subprocess
 from pathlib import Path  # noqa: TC003
 from typing import Annotated
 
-import gamspy_base
 import typer
 
 # Valid values for categorical parameters based on help string
@@ -89,6 +88,8 @@ def mps2gms(
     Translates an MPS or LP file into equivalent generic GAMS and GAMSPy programs.
     Defaults to writing .py and .gdx files if no outputs are specified.
     """
+    import gamspy_base
+
     binary_name = "mps2gms.exe" if platform.system() == "Windows" else "mps2gms"
     MPS2GMS_PATH = os.path.join(gamspy_base.directory, binary_name)
 

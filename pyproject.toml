@@ -105,7 +105,7 @@ test = [
 ]
 
 [project.scripts]
-gamspy = "gamspy._cli.cli:main"
+gamspy = "gamspy_cli.cli:main"
 
 [tool.mypy]
 warn_unused_configs = true

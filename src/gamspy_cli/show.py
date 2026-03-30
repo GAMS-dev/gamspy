@@ -3,18 +3,12 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-import rich
-import rich.table
 import typer
-
-import gamspy.utils as utils
-from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 app = typer.Typer(
-    rich_markup_mode="rich",
     short_help="To show your license and gamspy_base directory.",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy show license | gamspy show base",
     context_settings={"help_option_names": ["-h", "--help"]},
@@ -140,6 +134,8 @@ LICENSE_COMPONENTS = {
 
 
 def print_expiration_date(lines: list[str]) -> None:
+    import rich
+
     month = lines[3][0:2]
     m = month[1] if month[0] == "0" else month[0]
     mval = 0
@@ -165,6 +161,9 @@ def print_expiration_date(lines: list[str]) -> None:
 
 
 def print_licensed_solvers(lines: list[str], verbose: bool) -> None:
+    import rich
+    import rich.table
+
     component_map: dict[str, bool] = dict.fromkeys(LICENSE_COMPONENTS.keys(), False)
 
     is_academic = lines[0][59] == "A"
@@ -210,12 +209,10 @@ def license(
         help="Shows more information about the license.",
     ),
 ) -> None:
-    try:
-        import gamspy_base
-    except ModuleNotFoundError as e:
-        raise ValidationError(
-            "You must install gamspy_base to use this command!"
-        ) from e
+    import gamspy_base
+    import rich
+
+    import gamspy.utils as utils
 
     license_path = utils._get_license_path(gamspy_base.directory)
     rich.print(f"[bold]License found at[/bold]: {license_path}\n")
@@ -232,12 +229,7 @@ def license(
 
 @app.command(short_help="Shows the path of gamspy_base.")
 def base():
-    try:
-        import gamspy_base
-    except ModuleNotFoundError as e:
-        raise ValidationError(
-            "You must install gamspy_base to use this command!"
-        ) from e
+    import gamspy_base
 
     print(gamspy_base.directory)
 
