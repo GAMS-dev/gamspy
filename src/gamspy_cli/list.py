@@ -1,16 +1,8 @@
 from __future__ import annotations
 
 import typer
-from rich import print
-from rich.console import Console
-from rich.table import Table
 
-import gamspy.utils as utils
-from gamspy.exceptions import ValidationError
-
-console = Console()
 app = typer.Typer(
-    rich_markup_mode="rich",
     short_help="To list solvers.",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy list solvers --all | gamspy list solvers --defaults",
     context_settings={"help_option_names": ["-h", "--help"]},
@@ -30,12 +22,14 @@ def solvers(
         False, "--defaults", "-d", help="Shows default solvers."
     ),
 ) -> None:
-    try:
-        import gamspy_base
-    except ModuleNotFoundError as e:
-        raise ValidationError(
-            "You must install gamspy_base to use this command!"
-        ) from e
+    import gamspy_base
+    from rich import print
+    from rich.console import Console
+    from rich.table import Table
+
+    import gamspy.utils as utils
+
+    console = Console()
 
     capabilities = utils.getSolverCapabilities(gamspy_base.directory)
     if all:

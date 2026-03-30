@@ -10,10 +10,7 @@ from typing import Annotated, Optional
 
 import typer
 
-from gamspy.exceptions import ValidationError
-
 app = typer.Typer(
-    rich_markup_mode="rich",
     short_help="To run your model with GAMS MIRO.",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy run miro [--path <path_to_miro>] [--model <path_to_model>]",
     context_settings={"help_option_names": ["-h", "--help"]},
@@ -69,7 +66,8 @@ def miro(
         path = path if path is not None else discover_miro()
 
     if path is None:
-        raise ValidationError("--path must be provided to run MIRO")
+        typer.echo("--path must be provided to run MIRO")
+        raise typer.Exit(code=1)
 
     if platform.system() == "Darwin" and os.path.splitext(path)[1] == ".app":
         path = os.path.join(path, "Contents", "MacOS", "GAMS MIRO")

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-import numpy as np
+if TYPE_CHECKING:
+    import numpy as np
 
 
 @dataclass(frozen=True)
@@ -44,13 +46,27 @@ class DecisionTreeStruct:
         or expects as input. Defaults to 0.
     """
 
-    children_left: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
-    children_right: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
-    feature: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
-    threshold: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
-    value: np.ndarray = field(default_factory=lambda: np.array([]), repr=False)
+    children_left: np.ndarray | None = field(default=None, repr=False)
+    children_right: np.ndarray | None = field(default=None, repr=False)
+    feature: np.ndarray | None = field(default=None, repr=False)
+    threshold: np.ndarray | None = field(default=None, repr=False)
+    value: np.ndarray | None = field(default=None, repr=False)
     capacity: int = 0
     n_features: int = 0
+
+    def __post_init__(self):
+        import numpy as np
+
+        # Helper to set attributes while respecting frozen=True
+        def init_if_none(attr_name: str):
+            if getattr(self, attr_name) is None:
+                object.__setattr__(self, attr_name, np.array([]))
+
+        init_if_none("children_left")
+        init_if_none("children_right")
+        init_if_none("feature")
+        init_if_none("threshold")
+        init_if_none("value")
 
     def __repr__(self):
         def arr_info(arr):

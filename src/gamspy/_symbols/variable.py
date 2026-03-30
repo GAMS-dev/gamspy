@@ -8,7 +8,6 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
-import pandas as pd
 from gams.core.gdx import GMS_DT_VAR
 from gams.transfer._internals import (
     TRANSFER_TO_GAMS_VARIABLE_SUBTYPES,
@@ -27,6 +26,8 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import EllipsisType
+
+    import pandas as pd
 
     from gamspy import Alias, Container, Set
     from gamspy._algebra.expression import Expression
@@ -770,7 +771,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def stage(self, value: int | float | Expression):
         self._stage[...] = value
 
-    def computeInfeasibilities(self) -> pd.DataFrame:
+    def computeInfeasibilities(self) -> pd.DataFrame | None:
         """
         Computes infeasibilities of the variable.
 
@@ -779,7 +780,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         Returns
         -------
-        pd.DataFrame
+        pd.DataFrame | None
             DataFrame showing the infeasible records.
 
         Examples
@@ -879,7 +880,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         return "\n".join(listings[:n])
 
     @property
-    def records(self):
+    def records(self) -> pd.DataFrame | None:
         """
         Returns the records (data) of the Variable as a DataFrame.
 
@@ -888,7 +889,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         Returns
         -------
-        DataFrame
+        DataFrame | None
 
         Examples
         --------
@@ -907,6 +908,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
+        import pandas as pd
+
         if records is not None and not isinstance(records, pd.DataFrame):
             raise TypeError("Symbol 'records' must be type DataFrame")
 

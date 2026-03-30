@@ -3,9 +3,6 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, Literal
 
-import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view
-
 import gamspy as gp
 import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
@@ -13,6 +10,8 @@ from gamspy.formulations.result import FormulationResult
 from gamspy.math import dim
 
 if TYPE_CHECKING:
+    import numpy as np
+
     from gamspy import Parameter, Variable
 
 
@@ -144,6 +143,8 @@ class Conv1d:
     def _propagate_bounds(
         self, input, output, weight, bias, stride, padding, result: FormulationResult
     ):
+        import numpy as np
+
         # Extract input bounds
         input_bounds = gp.Parameter(
             self.container,
@@ -223,6 +224,7 @@ class Conv1d:
         # - The window content (channel and spatial dimensions) is brought forward.
         #
         # This ensures that the windows are processed in a left-to-right order.
+        from numpy.lib.stride_tricks import sliding_window_view
 
         windows_lower = sliding_window_view(input_lower, (batch, in_channels, w_k))
         windows_upper = sliding_window_view(input_upper, (batch, in_channels, w_k))

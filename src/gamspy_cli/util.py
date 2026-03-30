@@ -3,8 +3,6 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
-import gamspy.utils as utils
-
 __all__ = ["SolverInfo", "add_solver_entry", "remove_solver_entry"]
 
 
@@ -28,6 +26,8 @@ class SolverInfo:
 
 
 def add_solver_entry(system_directory: str, solver_name: str, verbatims: list[str]):
+    import gamspy.utils as utils
+
     capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
     installed_solvers = utils.getInstalledSolvers(system_directory)
     if solver_name.upper() in installed_solvers:
@@ -44,6 +44,8 @@ def add_solver_entry(system_directory: str, solver_name: str, verbatims: list[st
 
 
 def find_bounds(system_directory: str, solver_name: str) -> tuple[int, int]:
+    import gamspy.utils as utils
+
     capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
     with open(capabilities_path, encoding="utf-8") as file:
         lines = file.readlines()
@@ -74,6 +76,8 @@ def find_bounds(system_directory: str, solver_name: str) -> tuple[int, int]:
 
 
 def remove_solver_entry(system_directory: str, solver_name: str):
+    import gamspy.utils as utils
+
     capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
     installed_solvers = utils.getInstalledSolvers(system_directory)
 

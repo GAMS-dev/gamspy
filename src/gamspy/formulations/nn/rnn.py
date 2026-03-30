@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
-    from gamspy import Parameter
+    import numpy as np
 
-import numpy as np
+    from gamspy import Parameter
 
 import gamspy as gp
 import gamspy.formulations.utils as utils
@@ -111,6 +111,7 @@ class RNN:
                   The hidden-to-hidden layer bias.
                   Shape: (hidden_size, )
         """
+        import numpy as np
 
         if weight_ih.shape != (self.hidden_size, self.input_size):
             raise ValidationError(
@@ -184,6 +185,8 @@ class RNN:
         """
         Sequentially calculates the tight lower and upper bounds for the RNN hidden state.
         """
+        import numpy as np
+
         x_bounds = gp.Parameter(
             self.container,
             domain=dim([2, *input.shape]),

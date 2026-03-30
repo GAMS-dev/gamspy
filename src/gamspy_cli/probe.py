@@ -5,11 +5,7 @@ import subprocess
 
 import typer
 
-import gamspy.utils as utils
-from gamspy.exceptions import ValidationError
-
 app = typer.Typer(
-    rich_markup_mode="rich",
     short_help="To probe a node's information.",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy probe -j <output_path.json>",
     context_settings={"help_option_names": ["-h", "--help"]},
@@ -17,15 +13,17 @@ app = typer.Typer(
 
 
 def _probe(json_out: str | None) -> None:
-    gamspy_base_dir = utils._get_gamspy_base_directory()
+    import gamspy_base
+
     process = subprocess.run(
-        [os.path.join(gamspy_base_dir, "gamsprobe")],
+        [os.path.join(gamspy_base.directory, "gamsprobe")],
         text=True,
         capture_output=True,
     )
 
     if process.returncode:
-        raise ValidationError(process.stderr)
+        typer.echo(process.stderr)
+        raise typer.Exit(code=1)
 
     print(process.stdout)
 

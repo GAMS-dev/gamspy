@@ -4,8 +4,6 @@ import os
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Literal, no_type_check
 
-import pandas as pd
-
 import gamspy._symbols as syms
 import gamspy.utils as utils
 from gamspy.exceptions import GamspyException, ValidationError
@@ -13,6 +11,8 @@ from gamspy.exceptions import GamspyException, ValidationError
 if TYPE_CHECKING:
     import io
     from pathlib import Path
+
+    import pandas as pd
 
     from gamspy import Container, Model, Options
     from gamspy._backend.engine import EngineClient, GAMSEngine
@@ -244,6 +244,8 @@ class Backend(ABC):
     def prepare_summary(self) -> pd.DataFrame:
         assert self.model is not None
         assert self.solver is not None
+
+        import pandas as pd
 
         df = pd.DataFrame(
             [

@@ -9,7 +9,6 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
-import pandas as pd
 from gams.core.cfg import GMS_SSSIZE
 from gams.core.gev import (
     gevCreateD,
@@ -66,6 +65,8 @@ from gamspy.exceptions import GamspyException, ValidationError
 if TYPE_CHECKING:
     import io
     from pathlib import Path
+
+    import pandas as pd
 
     from gamspy import Container, Model, Parameter
     from gamspy._options import FreezeOptions, Options
@@ -182,6 +183,8 @@ class ModelInstance:
         freeze_options: Options,
         output: io.TextIOWrapper | None,
     ):
+        import pandas as pd
+
         self.container = container
         self.job_name = container._job
         self.gms_file = self.job_name + ".gms"
