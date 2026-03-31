@@ -32,7 +32,7 @@ Usage
    * - -\-server
      - -s
      - https://license.gams.com
-     - License server adress.
+     - License server address.
    * - -\-port 
      - -p
      - None
