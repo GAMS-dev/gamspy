@@ -54,6 +54,11 @@ In order to install your license, all you need to do is to run: ::
 
     gamspy install license <access code or path_to_ascii_file>
 
+If you want to use an **on-premise license server** instead of the default license server license.gams.com, you should 
+also specify the server address and port number: ::
+
+    gamspy install license <access_code> -s <your_license_server.com> -p <port_number>
+
 You can run: ::
 
     gamspy show license

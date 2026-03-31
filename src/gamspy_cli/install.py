@@ -42,7 +42,7 @@ def license(
         "https://license.gams.com",
         "--server",
         "-s",
-        help="License server adress.",
+        help="License server address.",
     ),
     port: int | None = typer.Option(
         None, "--port", "-p", help="Port for the license server connection."
@@ -77,7 +77,7 @@ def license(
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
     license_path = os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt")
-    certificate_path = os.path.join(utils.DEFAULT_DIR, "gamspy_cert.crt")
+    certificate_path = os.path.join(gamspy_base_dir, "gamslice.crt")
 
     if is_alp:
         alp_id = license

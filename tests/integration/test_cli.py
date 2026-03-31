@@ -204,6 +204,12 @@ def test_install_license(teardown):
             capture_output=True,
             text=True,
         )
+        assert process.returncode == 0, process.stderr
+
+        m = Container()
+        with open(m._license_path) as file:
+            license = file.read()
+            assert "alptest.gams.com" in license
 
     # Recover local license
     process = subprocess.run(
