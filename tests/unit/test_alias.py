@@ -162,13 +162,13 @@ def test_universe_alias(m, tmp_path):
     _ = Set(m, "i", records=["i1", "i2"])
     _ = Set(m, "j", records=["j1", "j2"])
 
-    assert h.records.values.tolist() == [["i1"], ["i2"], ["j1"], ["j2"]]
+    assert h.toList() == ["i1", "i2", "j1", "j2"]
 
     m.write(gdx_path)
 
     bla = Container()
     bla.read(gdx_path)
-    assert bla.data["h"].records.values.tolist() == h.records.values.tolist()
+    assert bla.data["h"].toList() == h.toList()
 
     m = Container()
 
@@ -346,3 +346,11 @@ def test_alternative_operation_syntax():
     expr = x.sor(i, j)
     expr2 = Sor((i, j), x[i, j])
     assert expr.gamsRepr() == expr2.gamsRepr()
+
+
+def test_universe_records():
+    m = Container()
+    i = Set(m, "i", domain="*")
+    uni = UniverseAlias(m, "uni")
+    i["2"].where[False] = False
+    assert uni.toList() == ["2"]
