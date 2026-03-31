@@ -562,7 +562,9 @@ def _open_gdx_file(system_directory: str, load_from: str):
         rc = gdx.gdxOpenRead(gdx_handle, load_from)
         assert rc[0]
     except AssertionError as e:
-        raise FatalError("GAMSPy could not open the gdx file to read from.") from e
+        raise FatalError(
+            f"GAMSPy could not open the gdx file `{load_from}` to read from."
+        ) from e
 
     specVals = gdx.doubleArray(gdx.GMS_SVIDX_MAX)
     specVals[gdx.GMS_SVIDX_UNDEF] = SpecialValues.UNDEF

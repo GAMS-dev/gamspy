@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from gamspy import Container
 
 TEMP_ALIAS_NAME = "a" + gp.utils._get_unique_name()
+TEMP_GDX_OUT_NAME = "_" + gp.utils._get_unique_name() + ".gdx"
 
 
 class UniverseAlias(gt.UniverseAlias):
@@ -153,15 +154,16 @@ class UniverseAlias(gt.UniverseAlias):
         import pandas as pd
 
         global TEMP_ALIAS_NAME
+        global TEMP_GDX_OUT_NAME
 
         self.container._add_statement(f"Alias (*, {TEMP_ALIAS_NAME})")
         self.container._add_statement(
-            f"execute_unload '{self.container._gdx_out}' {TEMP_ALIAS_NAME};"
+            f"execute_unload '{TEMP_GDX_OUT_NAME}' {TEMP_ALIAS_NAME};"
         )
         self.container._synch_with_gams()
 
         gdx_handle = gp.utils._open_gdx_file(
-            self.container.system_directory, self.container._gdx_out
+            self.container.system_directory, TEMP_GDX_OUT_NAME
         )
         uels: list[str] = self.container._gams2np.gdxGetUelList(gdx_handle)
         gp.utils._close_gdx_handle(gdx_handle)
