@@ -10,11 +10,7 @@ from importlib.metadata import distribution
 from typing import TYPE_CHECKING, Annotated
 
 import certifi
-import requests
 import typer
-
-import gamspy.utils as utils
-from gamspy.exceptions import GamspyException, ValidationError
 
 from .util import add_solver_entry
 
@@ -22,7 +18,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 app = typer.Typer(
-    rich_markup_mode="rich",
     short_help="To install licenses and solvers.",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy install license <access_code> or <path/to/license/file> | gamspy install solver <solver_name>",
     context_settings={"help_option_names": ["-h", "--help"]},
@@ -47,7 +42,7 @@ def license(
         "https://license.gams.com",
         "--server",
         "-s",
-        help="License server adress.",
+        help="License server address.",
     ),
     port: int | None = typer.Option(
         None, "--port", "-p", help="Port for the license server connection."
@@ -65,19 +60,24 @@ def license(
 ):
     import json
 
+    import requests
+
+    import gamspy.utils as utils
+
     os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
 
     is_alp = not os.path.isfile(license)
 
     if is_alp and len(license) != 36:
-        raise ValidationError(
+        typer.echo(
             f"Access code is a 36 character string or an absolute path to the "
             f"license file but {len(license)} character string ({license}) provided."
         )
+        raise typer.Exit(code=1)
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
     license_path = os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt")
-    certificate_path = os.path.join(utils.DEFAULT_DIR, "gamspy_cert.crt")
+    certificate_path = os.path.join(gamspy_base_dir, "gamslice.crt")
 
     if is_alp:
         alp_id = license
@@ -87,9 +87,10 @@ def license(
             params = {"access_token": alp_id}
             request = requests.get(f"{server}/license-type", params=params)
             if request.status_code != 200:
-                raise ValidationError(
+                typer.echo(
                     f"License server did not respond in an expected way. Request status: {request.status_code}. Reason: {request.content.decode('utf-8', errors='replace')}"
                 )
+                raise typer.Exit(code=1)
 
             data = request.content.decode("utf-8", errors="replace")
             cmex_type = json.loads(data)["cmex_type"]
@@ -100,10 +101,11 @@ def license(
                 "gamspy++",
                 "gamsall",
             ):
-                raise ValidationError(
+                typer.echo(
                     f"Given access code `{alp_id} ({cmex_type})` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
+                raise typer.Exit(code=1)
 
         command = [
             os.path.join(gamspy_base_dir, "gamsgetkey"),
@@ -147,7 +149,8 @@ def license(
             env=environment_variables,
         )
         if process.returncode:
-            raise ValidationError(process.stderr)
+            typer.echo(process.stderr)
+            raise typer.Exit(code=1)
 
         license_file_path = output if output else license_path
         with open(license_file_path) as file:
@@ -157,22 +160,25 @@ def license(
         try:
             license_type = lines[0][54]
         except (Exception, IndexError) as e:
-            raise ValidationError(
+            typer.echo(
                 f"Invalid license text. \nLicense text: {license_text}\nstdout: {process.stdout}\nstderr: {process.stderr}"
-            ) from e
+            )
+            raise typer.Exit(code=1) from e
 
         if license_type == "+":
             if lines[2][:2] not in ("00", "07", "08", "09"):
-                raise ValidationError(
+                typer.echo(
                     f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
+                raise typer.Exit(code=1)
         else:
             if lines[2][8:10] not in ("00", "07", "08", "09"):
-                raise ValidationError(
+                typer.echo(
                     f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
+                raise typer.Exit(code=1)
     else:
         with open(license) as file:
             lines = file.read().splitlines()
@@ -180,16 +186,18 @@ def license(
         license_type = lines[0][54]
         if license_type == "+":
             if lines[2][:2] not in ("00", "07", "08", "09"):
-                raise ValidationError(
+                typer.echo(
                     f"Given license file `{license}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
+                raise typer.Exit(code=1)
         else:
             if lines[2][8:10] not in ("00", "07", "08", "09"):
-                raise ValidationError(
+                typer.echo(
                     f"Given license file `{license}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
+                raise typer.Exit(code=1)
 
         shutil.copy(license, license_path)
 
@@ -232,6 +240,16 @@ def append_dist_info(files, gamspy_base_dir: str):
             record.write("\n".join(lines) + "\n")
 
 
+def complete_solver_names(ctx: typer.Context, incomplete: str):
+    import gamspy.utils as utils
+
+    return [
+        s.lower()
+        for s in utils.getInstallableSolvers()
+        if s.startswith(incomplete.upper())
+    ]
+
+
 @app.command(
     short_help="To install solvers",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy install solver <solver_name>",
@@ -240,7 +258,7 @@ def solver(
     solver: list[str] = typer.Argument(  # noqa: B008
         None,
         help="solver names to be installed",
-        autocompletion=lambda: [s.lower() for s in utils.getAvailableSolvers()],
+        autocompletion=complete_solver_names,
     ),
     install_all_solvers: bool = typer.Option(
         False,
@@ -264,11 +282,9 @@ def solver(
         False, "--use-uv", help="Use uv instead of pip to install solvers."
     ),
 ):
-    try:
-        import gamspy_base
-    except ModuleNotFoundError as e:
-        e.msg = "You must first install gamspy_base to use this functionality"
-        raise e
+    import gamspy_base
+
+    import gamspy.utils as utils
 
     addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
     os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
@@ -285,10 +301,11 @@ def solver(
                 continue
             installable_solvers = utils.getInstallableSolvers()
             if solver_name.upper() not in installable_solvers:
-                raise ValidationError(
+                typer.echo(
                     f'Given solver name ("{solver_name}") is not valid. Available'
                     f" solvers that can be installed: {installable_solvers}"
                 )
+                raise typer.Exit(code=1)
 
             if not skip_pip_install:
                 solver_version = gamspy_base.__version__
@@ -309,9 +326,10 @@ def solver(
                         env=environment_variables,
                     )
                 except subprocess.CalledProcessError as e:
-                    raise GamspyException(
+                    typer.echo(
                         f"Could not install gamspy-{solver_name}. Please check your internet connection. If it's not related to your internet connection, PyPI servers might be down. Please retry it later. Here is the error message of pip:\n\n{e.stderr}"
-                    ) from e
+                    )
+                    raise typer.Exit(code=1) from e
             else:
                 try:
                     solver_lib = importlib.import_module(f"gamspy_{solver_name}")
@@ -364,12 +382,12 @@ def solver(
                 install_addons(solvers)
                 return
         except FileNotFoundError as e:
-            raise ValidationError("No existing add-on solvers found!") from e
+            typer.echo("No existing add-on solvers found!")
+            raise typer.Exit(code=1) from e
 
     if solver is None:
-        raise ValidationError(
-            "Solver name is missing: `gamspy install solver <solver_name>`"
-        )
+        typer.echo("Solver name is missing: `gamspy install solver <solver_name>`")
+        raise typer.Exit(code=1)
 
     install_addons(solver)
 

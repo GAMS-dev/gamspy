@@ -257,16 +257,13 @@ def test_log_option(data, tmp_path):
     transport.solve(options=Options(listing_file=listing_file_name))
     assert os.path.exists(listing_file_name)
 
-    file = tempfile.NamedTemporaryFile("w", delete=False)
-    file.close()
-    transport.solve(options=Options(log_file=file.name, append_to_log_file=True))
-    transport.solve(options=Options(log_file=file.name, append_to_log_file=True))
-    with open(file.name) as log_file:
+    logfile_name = str(tmp_path / "log2.txt")
+    transport.solve(options=Options(log_file=logfile_name, append_to_log_file=True))
+    transport.solve(options=Options(log_file=logfile_name, append_to_log_file=True))
+    with open(logfile_name) as log_file:
         content = log_file.read()
         matches = re.findall("Status: Normal completion", content)
         assert len(matches) == 2
-
-    os.remove(file.name)
 
 
 @pytest.mark.unit

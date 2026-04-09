@@ -435,8 +435,11 @@ def _get_variables_of_model(container: Container):
     ]
 
 
-def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame:
+def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame | None:
     records = symbol.records
+    if records is None:
+        return None
+
     infeas_rows = records.where(
         (records["level"] < records["lower"]) | (records["level"] > records["upper"])
     ).dropna()
@@ -559,7 +562,9 @@ def _open_gdx_file(system_directory: str, load_from: str):
         rc = gdx.gdxOpenRead(gdx_handle, load_from)
         assert rc[0]
     except AssertionError as e:
-        raise FatalError("GAMSPy could not open the gdx file to read from.") from e
+        raise FatalError(
+            f"GAMSPy could not open the gdx file `{load_from}` to read from."
+        ) from e
 
     specVals = gdx.doubleArray(gdx.GMS_SVIDX_MAX)
     specVals[gdx.GMS_SVIDX_UNDEF] = SpecialValues.UNDEF

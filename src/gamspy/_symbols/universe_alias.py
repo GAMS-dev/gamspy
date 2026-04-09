@@ -13,7 +13,12 @@ import gamspy._validation as validation
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy import Container
+
+TEMP_ALIAS_NAME = "a" + gp.utils._get_unique_name()
+TEMP_GDX_OUT_NAME = "_" + gp.utils._get_unique_name() + ".gdx"
 
 
 class UniverseAlias(gt.UniverseAlias):
@@ -124,6 +129,47 @@ class UniverseAlias(gt.UniverseAlias):
     def __repr__(self) -> str:
         return f"UniverseAlias(name='{self.name}')"
 
+    @property
+    def records(self) -> pd.DataFrame:
+        """
+        Records of the UniverseAlias
+
+        Returns
+        -------
+        list[str]
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> uni = gp.UniverseAlias(m)
+        >>> uni.records
+                 uni
+        0    seattle
+        1  san-diego
+
+        """
+        import pandas as pd
+
+        global TEMP_ALIAS_NAME
+        global TEMP_GDX_OUT_NAME
+
+        self.container._add_statement(f"Alias (*, {TEMP_ALIAS_NAME})")
+        self.container._add_statement(
+            f"execute_unload '{TEMP_GDX_OUT_NAME}' {TEMP_ALIAS_NAME};"
+        )
+        self.container._synch_with_gams()
+
+        gdx_handle = gp.utils._open_gdx_file(
+            self.container.system_directory, TEMP_GDX_OUT_NAME
+        )
+        uels: list[str] = self.container._gams2np.gdxGetUelList(gdx_handle)
+        gp.utils._close_gdx_handle(gdx_handle)
+
+        return pd.DataFrame(uels[1:], columns=["uni"])
+
     def gamsRepr(self) -> str:
         """
         Representation of the UniverseAlias in GAMS language.
@@ -155,9 +201,9 @@ class UniverseAlias(gt.UniverseAlias):
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
-        >>> i = gp.UniverseAlias(m, name="universe_alias")
+        >>> i = gp.UniverseAlias(m, name="universe")
         >>> i.latexRepr()
-        'universe\\_alias'
+        'universe'
 
         """
         return self._latex_name

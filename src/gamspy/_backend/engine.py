@@ -13,8 +13,6 @@ import urllib.parse
 import zipfile
 from typing import TYPE_CHECKING
 
-import requests
-
 import gamspy._backend.backend as backend
 import gamspy.utils as utils
 from gamspy._communication import send_job
@@ -169,6 +167,8 @@ class Auth(Endpoint):
         GamspyException
             In case the status code is unrecognized
         """
+        import requests
+
         params = {"expires_in": str(expires_in)}
 
         if isinstance(scope, list):
@@ -220,6 +220,8 @@ class Auth(Endpoint):
         -------
         str
         """
+        import requests
+
         payload = {
             "username": self.client._engine_config.username,
             "password": self.client._engine_config.password,
@@ -266,6 +268,8 @@ class Auth(Endpoint):
         -------
         str
         """
+        import requests
+
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
             r = requests.post(
                 f"{self.client._engine_config.host}/auth/logout",
@@ -314,6 +318,8 @@ class Job(Endpoint):
         EngineClientException
             If get request has failed.
         """
+        import requests
+
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
             r = requests.get(
                 f"{self.client._engine_config.host}/jobs/{token}",
@@ -375,6 +381,8 @@ class Job(Endpoint):
         EngineClientException
             If post request has failed.
         """
+        import requests
+
         model_data_zip = self._create_zip_file(working_directory, gms_file, pf_file)
         gms_file = os.path.relpath(gms_file, working_directory)
         pf_file = (
@@ -433,6 +441,8 @@ class Job(Endpoint):
         EngineClientException
             If get request has failed.
         """
+        import requests
+
         if not os.path.exists(working_directory):
             os.makedirs(working_directory, exist_ok=True)
 
@@ -499,6 +509,8 @@ class Job(Endpoint):
         EngineClientException
             If delete request has failed.
         """
+        import requests
+
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
             r = requests.delete(
                 f"{self.client._engine_config.host}/jobs/{token}/result",
@@ -548,6 +560,8 @@ class Job(Endpoint):
         EngineClientException
             If get request has failed.
         """
+        import requests
+
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
             r = requests.delete(
                 f"{self.client._engine_config.host}/jobs/{token}/unread-logs",
@@ -702,7 +716,7 @@ class EngineClient:
         password: str = "",
         jwt: str = "",
         namespace: str = "global",
-        extra_model_files: list[str] = [],
+        extra_model_files: list[str] | None = None,
         engine_options: dict | None = None,
         remove_results: bool = False,
         is_blocking: bool = True,
@@ -712,6 +726,8 @@ class EngineClient:
         self.password = password
         self.jwt = jwt
         self.namespace = namespace
+        if extra_model_files is None:
+            extra_model_files = []
         self.extra_model_files = extra_model_files
         self.engine_options = engine_options
         self.remove_results = remove_results

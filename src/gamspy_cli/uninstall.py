@@ -8,20 +8,28 @@ from typing import TYPE_CHECKING, Annotated
 import certifi
 import typer
 
-import gamspy.utils as utils
-from gamspy.exceptions import GamspyException, ValidationError
-
 from .util import remove_solver_entry
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
 app = typer.Typer(
-    rich_markup_mode="rich",
     short_help="To uninstall licenses and solvers.",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy uninstall license | gamspy uninstall solver <solver_name>",
     context_settings={"help_option_names": ["-h", "--help"]},
 )
+
+
+def complete_solver_names(ctx: typer.Context, incomplete: str):
+    import gamspy_base
+
+    import gamspy.utils as utils
+
+    return [
+        s.lower()
+        for s in utils.getInstalledSolvers(gamspy_base.directory)
+        if s.startswith(incomplete.upper())
+    ]
 
 
 @app.command(
@@ -29,6 +37,8 @@ app = typer.Typer(
     short_help="To uninstall the current license",
 )
 def license():
+    import gamspy.utils as utils
+
     try:
         os.unlink(os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt"))
     except FileNotFoundError:
@@ -44,10 +54,7 @@ def solver(
         list[str] | None,
         typer.Argument(
             help="solver names to be uninstalled",
-            autocompletion=lambda: [
-                s.lower()
-                for s in utils.getInstalledSolvers(utils._get_gamspy_base_directory())
-            ],
+            autocompletion=complete_solver_names,
         ),
     ] = None,
     uninstall_all_solvers: bool = typer.Option(
@@ -67,12 +74,9 @@ def solver(
         False, "--use-uv", help="Use uv instead of pip to uninstall solvers."
     ),
 ):
-    try:
-        import gamspy_base
-    except ModuleNotFoundError as e:
-        raise ValidationError(
-            "You must install gamspy_base to use this command!"
-        ) from e
+    import gamspy_base
+
+    import gamspy.utils as utils
 
     addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
     environment_variables = os.environ.copy()
@@ -88,10 +92,11 @@ def solver(
                 gamspy_base.default_solvers
             )
             if solver_name.upper() not in removable_solvers:
-                raise ValidationError(
+                typer.echo(
                     f'Given solver name ("{solver_name}") is not valid. Installed'
                     f" solvers that can be uninstalled: {sorted(removable_solvers)}"
                 )
+                raise typer.Exit(code=1)
 
             if not skip_pip_uninstall:
                 # uninstall specified solver
@@ -119,13 +124,11 @@ def solver(
                         stderr=subprocess.PIPE,
                     )
                 except subprocess.CalledProcessError as e:
-                    raise GamspyException(
-                        f"Could not uninstall gamspy-{solver_name}: {e.output}"
-                    ) from e
+                    typer.echo(f"Could not uninstall gamspy-{solver_name}: {e.output}")
+                    raise typer.Exit(code=1) from e
 
             # do not delete files from gamspy_base as other solvers might depend on it
-            gamspy_base_dir = utils._get_gamspy_base_directory()
-            remove_solver_entry(gamspy_base_dir, solver_name)
+            remove_solver_entry(gamspy_base.directory, solver_name)
 
             try:
                 with open(addons_path) as file:
@@ -154,9 +157,8 @@ def solver(
         return
 
     if solver is None:
-        raise ValidationError(
-            "Solver name is missing: `gamspy uninstall solver <solver_name>`"
-        )
+        typer.echo("Solver name is missing: `gamspy uninstall solver <solver_name>`")
+        raise typer.Exit(code=1)
 
     remove_addons(solver)
 

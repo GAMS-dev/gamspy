@@ -421,8 +421,9 @@ class Options(BaseModel):
         """
         gamspy_options = {}
         for key, value in options.items():
-            if key.lower() in OPTION_MAP_REVERSE:
-                if key.lower() == "solvelink":
+            key = key.lower()
+            if key in OPTION_MAP_REVERSE:
+                if key == "solvelink":
                     try:
                         value = SOLVE_LINK_MAP_REVERSE[value]
                     except KeyError as e:

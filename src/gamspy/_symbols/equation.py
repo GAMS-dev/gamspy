@@ -8,7 +8,6 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
-import pandas as pd
 from gams.core.gdx import GMS_DT_EQU
 from gams.transfer._internals import (
     EQU_TYPE,
@@ -28,6 +27,8 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import EllipsisType
+
+    import pandas as pd
 
     from gamspy import Alias, Container, Set, Variable
     from gamspy._algebra.expression import Expression
@@ -948,7 +949,7 @@ class Equation(gt.Equation, Symbol):
         """
         return self._infeas
 
-    def computeInfeasibilities(self) -> pd.DataFrame:
+    def computeInfeasibilities(self) -> pd.DataFrame | None:
         """
         Computes infeasibilities of the equation.
 
@@ -957,7 +958,7 @@ class Equation(gt.Equation, Symbol):
 
         Returns
         -------
-        pd.DataFrame
+        pd.DataFrame | None
 
         Examples
         --------
@@ -1063,13 +1064,13 @@ class Equation(gt.Equation, Symbol):
         return "\n".join(list(filter(infeasibility_filter, listings))[:n])
 
     @property
-    def records(self):
+    def records(self) -> pd.DataFrame | None:
         """
         Returns the records (data) of the Equation as a DataFrame.
 
         Returns
         -------
-        DataFrame
+        DataFrame | None
 
         Examples
         --------
@@ -1089,6 +1090,8 @@ class Equation(gt.Equation, Symbol):
 
     @records.setter
     def records(self, records):
+        import pandas as pd
+
         if records is not None and not isinstance(records, pd.DataFrame):
             raise TypeError("Symbol 'records' must be type DataFrame")
 

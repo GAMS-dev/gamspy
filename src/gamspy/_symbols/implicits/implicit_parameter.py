@@ -72,7 +72,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self,
         parent: Set | Alias | Parameter | Variable | Equation,
         name: str,
-        domain: list[Set | str] = [],
+        domain: list[Set | str] | None = None,
         records: Any | None = None,
         permutation: list[int] | None = None,
         scalar_domains: list[tuple[int, Set]] | None = None,
@@ -86,6 +86,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         domain : list[Set | str], optional
         records : Any, optional
         """
+        if domain is None:
+            domain = []
+
         super().__init__(parent, name, domain, permutation, scalar_domains)
         self._records = records
         self._assignment = None

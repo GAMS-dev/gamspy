@@ -113,12 +113,10 @@ def close_connection(pair_id: str):
     _socket.sendall(b"stop")
     _socket.close()
 
-    if not process.stdout.closed:
-        process.stdout.close()
+    _, stderr_data = process.communicate()
 
-    # Wait until the GAMS process dies.
-    while process.poll() is None:
-        ...
+    if process.returncode != 0 and stderr_data:
+        print(stderr_data, end="")
 
     del _comm_pairs[pair_id]
 

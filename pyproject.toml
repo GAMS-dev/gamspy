@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.21.0"
+version = "1.22.0"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -16,7 +16,6 @@ keywords = ["Optimization", "GAMS"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
-  "Programming Language :: Python",
   "Topic :: Software Development",
   "Topic :: Scientific/Engineering",
   "Intended Audience :: Developers",
@@ -48,18 +47,18 @@ dependencies = [
 homepage = "https://gams.com/sales/gamspy_facts/"
 documentation = "https://gamspy.readthedocs.io/en/latest/user/index.html"
 repository = "https://github.com/GAMS-dev/gamspy"
-changelog = "https://github.com/GAMS-dev/gamspy/blob/develop/CHANGELOG.md"
+changelog = "https://github.com/GAMS-dev/gamspy/blob/develop/CHANGELOG.rst"
 
 
 [project.optional-dependencies]
-torch = [
-    "torch>=2.7.0"
-]
+torch = ["torch>=2.7.0"]
+
+[tool.uv]
+exclude-newer = "7 days"
+exclude-newer-package = { torch = false }
 
 [tool.uv.sources]
-torch = [
-    { index = "pytorch-cpu" },
-]
+torch = [{ index = "pytorch-cpu" }]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
@@ -105,7 +104,7 @@ test = [
 ]
 
 [project.scripts]
-gamspy = "gamspy._cli.cli:main"
+gamspy = "gamspy_cli.cli:main"
 
 [tool.mypy]
 warn_unused_configs = true
@@ -178,7 +177,7 @@ name = "Miscellaneous internal changes"
 showcontent = true
 
 [tool.coverage.run]
-omit = ["*/_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py"]
+omit = ["*/gamspy_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py"]
 
 [tool.coverage.report]
 exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "if typing.TYPE_CHECKING:", "def __repr__", "def __del__", "@property"]
@@ -236,8 +235,20 @@ select = [
     "RUF",      # Ruff-specific rules
     "TC",       # flake8-type-checking
     "C4",       # flake8-comprehensions
+    "PLC0206",  # dict-index-missing-items
+    "PLC0207",  # missing-maxsplit-arg
+    "PLC0208",  # iteration-over-set
+    "PLE",      # Pylint error rules
 ]
-ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "SIM115", "B028", "B006", "RUF005", "RUF022"]
+ignore = [
+    "E501",   # line-too-long
+    "E741",   # ambiguous-variable-name
+    "E743",   # ambiguous-function-name
+    "SIM105", # suppressible-exception
+    "SIM117", # multiple-with-statements
+    "RUF005", # collection-literal-concatenation
+    "RUF022"  # unsorted-dunder-all
+]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]

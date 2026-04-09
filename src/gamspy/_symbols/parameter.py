@@ -6,8 +6,6 @@ import threading
 from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
-import numpy as np
-import pandas as pd
 from gams.core.gdx import GMS_DT_PAR
 
 import gamspy as gp
@@ -24,6 +22,8 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import EllipsisType
+
+    import pandas as pd
 
     from gamspy import Alias, Container, Set
     from gamspy._algebra.expression import Expression
@@ -443,13 +443,13 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         return permute(self, dims)  # type: ignore
 
     @property
-    def records(self):
+    def records(self) -> pd.DataFrame | None:
         """
         Returns the records (data) of the Parameter as a DataFrame.
 
         Returns
         -------
-        pd.DataFrame
+        pd.DataFrame | None
             The dataframe containing the parameter's data.
 
         Examples
@@ -468,6 +468,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
+        import pandas as pd
+
         if (
             hasattr(self, "_is_miro_input")
             and self._is_miro_input
@@ -596,6 +598,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         'Parameter a(i);'
 
         """
+        import numpy as np
+
         output = f"Parameter {self.gamsRepr()}"
 
         if self.description:

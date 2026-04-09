@@ -29,6 +29,7 @@ GAMSPy supports following neural network related formulations:
 - :meth:`MaxPool2d <gamspy.formulations.MaxPool2d>`
 - :meth:`MinPool2d <gamspy.formulations.MinPool2d>`
 - :meth:`AvgPool2d <gamspy.formulations.AvgPool2d>`
+- :meth:`RNN <gamspy.formulations.RNN>`
 - :meth:`flatten_dims <gamspy.formulations.flatten_dims>`
 
 You can find more info at :ref:`nn-formulations`.

@@ -200,8 +200,8 @@ class TorchSequential:
     def _update_dict_layered(
         self, large: dict[str, typing.Any], small: dict[str, typing.Any], layer_num: int
     ):
-        for key in small:
-            large[f"{layer_num}.{key}"] = small[key]
+        for key, value in small.items():
+            large[f"{layer_num}.{key}"] = value
 
     def __call__(self, input: gp.Variable) -> gp.formulations.FormulationResult:
         """

@@ -35,10 +35,13 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         self,
         parent: Set | Alias,
         name: str,
-        domain: list[Set | str] = ["*"],
+        domain: list[Set | str] | None = None,
         scalar_domains: list[tuple[int, Set]] | None = None,
         extension: str | None = None,
     ) -> None:
+        if domain is None:
+            domain = ["*"]
+
         super().__init__(parent, name, domain, parent_scalar_domains=scalar_domains)
         self.extension = extension
 

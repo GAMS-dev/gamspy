@@ -21,3 +21,4 @@ fundamental GAMSPy ideas and philosophy.
    ./external_equations
    ./extrinsic_functions
    ./formulations
+   ./control_flow
