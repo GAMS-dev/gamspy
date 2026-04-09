@@ -1,1 +1,0 @@
-Restructured neural network tests.
