@@ -297,7 +297,7 @@ which acts like a regular command line script. This means that it cannot be sign
 sometimes thinks that it is probably a malware. Because of this issue, when you run commands such as ``gamspy install license <access code>``, 
 Windows Defender blocks the executable. A workaround is to run ``python -m gamspy install license <access code>``. Another way
 is to whitelist ``gamspy.exe`` executable on your machine. Since GAMSPy is open source, to make sure about the safety of the executable, 
-one can check the following script which GAMSPy uses: `script <https://github.com/GAMS-dev/gamspy/blob/develop/src/gamspy/_cli/cli.py>`_.
+one can check the following script which GAMSPy uses: `script <https://github.com/GAMS-dev/gamspy/blob/develop/src/gamspy_cli/cli.py>`_.
 
 Why can I not run GAMSPy with the Python interpreter from the Microsoft Store
 -----------------------------------------------------------------------------
