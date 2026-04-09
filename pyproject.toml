@@ -51,9 +51,7 @@ changelog = "https://github.com/GAMS-dev/gamspy/blob/develop/CHANGELOG.rst"
 
 
 [project.optional-dependencies]
-torch = [
-    "torch>=2.7.0"
-]
+torch = ["torch>=2.7.0"]
 
 [tool.uv]
 exclude-newer = "7 days"
@@ -63,9 +61,7 @@ exclude-newer-package = { torch = false }
 only-binary = [":all:"]
 
 [tool.uv.sources]
-torch = [
-    { index = "pytorch-cpu" },
-]
+torch = [{ index = "pytorch-cpu" }]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
@@ -242,6 +238,10 @@ select = [
     "RUF",      # Ruff-specific rules
     "TC",       # flake8-type-checking
     "C4",       # flake8-comprehensions
+    "PLC0206",  # dict-index-missing-items
+    "PLC0207",  # missing-maxsplit-arg
+    "PLC0208",  # iteration-over-set
+    "PLE",      # Pylint error rules
 ]
 ignore = [
     "E501",   # line-too-long
