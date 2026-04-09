@@ -105,7 +105,7 @@ def solve_facility_gamspy(G, F, time_limit=0):
         return model.objective_value
 
 
-def main(Ns=[25, 50, 75, 100]):
+def main(Ns):
     # sanity check with a small size
     model = ipopt.Model()
     poi_objective = solve_facility_poi(model, 10, 10, time_limit=1e-10)
@@ -140,4 +140,4 @@ def main(Ns=[25, 50, 75, 100]):
 
 
 if __name__ == "__main__":
-    main()
+    main([25, 50, 75, 100])
