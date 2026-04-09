@@ -57,9 +57,6 @@ torch = ["torch>=2.7.0"]
 exclude-newer = "7 days"
 exclude-newer-package = { torch = false }
 
-[tool.uv.pip]
-only-binary = [":all:"]
-
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu" }]
 
