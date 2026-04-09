@@ -926,49 +926,50 @@ def test_feasibility():
 
 
 @pytest.mark.integration
-def test_output_propagation(data):
+def test_output_propagation(data, tmp_path):
     _, canning_plants, markets, capacities, demands, distances = data
-    file = tempfile.NamedTemporaryFile("w", delete=False)
-    m = Container(output=file)
-    i = Set(m, name="i", records=canning_plants)
-    j = Set(m, name="j", records=markets)
+    file_path = tmp_path / "tmp_output.log"
+    with open(file_path, "w") as file:
+        m = Container(output=file)
+        i = Set(m, name="i", records=canning_plants)
+        j = Set(m, name="j", records=markets)
 
-    a = Parameter(m, name="a", domain=[i], records=capacities)
-    b = Parameter(m, name="b", domain=[j], records=demands)
-    d = Parameter(
-        m,
-        name="d",
-        domain=[i, j],
-        records=distances,
-        is_miro_input=True,
-    )
-    c = Parameter(m, name="c", domain=[i, j])
-    bmult = Parameter(m, name="bmult", records=1)
-    c[i, j] = 90 * d[i, j] / 1000
+        a = Parameter(m, name="a", domain=[i], records=capacities)
+        b = Parameter(m, name="b", domain=[j], records=demands)
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, j],
+            records=distances,
+            is_miro_input=True,
+        )
+        c = Parameter(m, name="c", domain=[i, j])
+        bmult = Parameter(m, name="bmult", records=1)
+        c[i, j] = 90 * d[i, j] / 1000
 
-    x = Variable(m, name="x", domain=[i, j], type="Positive")
-    z = Variable(m, name="z")
+        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        z = Variable(m, name="z")
 
-    cost = Equation(m, name="cost")
-    supply = Equation(m, name="supply", domain=[i])
-    demand = Equation(m, name="demand", domain=[j])
+        cost = Equation(m, name="cost")
+        supply = Equation(m, name="supply", domain=[i])
+        demand = Equation(m, name="demand", domain=[j])
 
-    cost[...] = z == Sum((i, j), c[i, j] * x[i, j])
-    supply[i] = Sum(j, x[i, j]) <= a[i]
-    demand[j] = Sum(i, x[i, j]) >= bmult * b[j]
+        cost[...] = z == Sum((i, j), c[i, j] * x[i, j])
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= bmult * b[j]
 
-    transport = Model(
-        m,
-        name="transport",
-        equations=m.getEquations(),
-        problem="LP",
-        sense=Sense.MIN,
-        objective=z,
-    )
+        transport = Model(
+            m,
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=z,
+        )
 
-    transport.freeze(modifiables=[bmult])
+        transport.freeze(modifiables=[bmult])
 
-    with open(file.name) as f:
+    with open(file_path) as f:
         assert "Generating LP model transport" in f.read()
 
     transport.unfreeze()

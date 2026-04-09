@@ -16,7 +16,6 @@ keywords = ["Optimization", "GAMS"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
-  "Programming Language :: Python",
   "Topic :: Software Development",
   "Topic :: Scientific/Engineering",
   "Intended Audience :: Developers",
@@ -48,7 +47,7 @@ dependencies = [
 homepage = "https://gams.com/sales/gamspy_facts/"
 documentation = "https://gamspy.readthedocs.io/en/latest/user/index.html"
 repository = "https://github.com/GAMS-dev/gamspy"
-changelog = "https://github.com/GAMS-dev/gamspy/blob/develop/CHANGELOG.md"
+changelog = "https://github.com/GAMS-dev/gamspy/blob/develop/CHANGELOG.rst"
 
 
 [project.optional-dependencies]
@@ -185,7 +184,7 @@ name = "Miscellaneous internal changes"
 showcontent = true
 
 [tool.coverage.run]
-omit = ["*/_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py"]
+omit = ["*/gamspy_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py"]
 
 [tool.coverage.report]
 exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "if typing.TYPE_CHECKING:", "def __repr__", "def __del__", "@property"]
@@ -244,7 +243,17 @@ select = [
     "TC",       # flake8-type-checking
     "C4",       # flake8-comprehensions
 ]
-ignore = ["E203", "E501", "E701", "E741", "E743", "W605", "SIM105", "SIM115", "SIM117", "B028", "B006", "RUF005", "RUF022"]
+ignore = [
+    "E501", # line-too-long
+    "E741", # ambiguous-variable-name
+    "E743", # ambiguous-function-name
+    "SIM105", # suppressible-exception
+    "SIM117", 
+    "B028", 
+    "B006", 
+    "RUF005", 
+    "RUF022"
+]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
