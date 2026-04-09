@@ -244,15 +244,13 @@ select = [
     "C4",       # flake8-comprehensions
 ]
 ignore = [
-    "E501", # line-too-long
-    "E741", # ambiguous-variable-name
-    "E743", # ambiguous-function-name
+    "E501",   # line-too-long
+    "E741",   # ambiguous-variable-name
+    "E743",   # ambiguous-function-name
     "SIM105", # suppressible-exception
-    "SIM117", 
-    "B028", 
-    "B006", 
-    "RUF005", 
-    "RUF022"
+    "SIM117", # multiple-with-statements
+    "RUF005", # collection-literal-concatenation
+    "RUF022"  # unsorted-dunder-all
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.

@@ -716,7 +716,7 @@ class EngineClient:
         password: str = "",
         jwt: str = "",
         namespace: str = "global",
-        extra_model_files: list[str] = [],
+        extra_model_files: list[str] | None = None,
         engine_options: dict | None = None,
         remove_results: bool = False,
         is_blocking: bool = True,
@@ -726,6 +726,8 @@ class EngineClient:
         self.password = password
         self.jwt = jwt
         self.namespace = namespace
+        if extra_model_files is None:
+            extra_model_files = []
         self.extra_model_files = extra_model_files
         self.engine_options = engine_options
         self.remove_results = remove_results
