@@ -83,6 +83,38 @@ space efficiently.
     with gp.Loop(gp.Domain(i, j).where[q[i, j] > 0]):
         x[...] = x[...] + q[i, j]
 
+The For Statement
+-----------------
+The :meth:`For <gamspy.For>` class maps to the GAMS ``for`` statement. While :meth:`Loop <gamspy.Loop>` 
+is used to iterate over members of a set, :meth:`For <gamspy.For>` allows you to iterate over a range 
+of numerical values, incrementing or decrementing a scalar parameter at each step. It is useful for 
+iterative algorithmic calculations that require a numerical counter.
+
+.. code-block:: python
+
+    import gamspy as gp
+
+    m = gp.Container()
+    i = gp.Parameter(m) # Scalar parameter acting as the loop counter
+    cnt = gp.Parameter(m, records=0)
+    
+    # Simple iteration over a numerical range (1 to 10)
+    with gp.For(i, 1, 10):
+        cnt[...] += i
+
+You can also specify a custom step size. The step must be positive. To step downwards, 
+one can specify the direction as follows: ::
+
+.. code-block:: python
+
+    x = gp.Parameter(m, records=10)
+    
+    # Iterating backwards from 10 down to 1 with a step size of -2
+    with gp.For(i, 10, 1, 2, direction="downto"):
+        x[...] = x[...] - 2
+
+You can also use other Parameters or Expressions to define the start, end, and step boundaries of the loop dynamically.
+
 The If Statement
 ----------------
 The :meth:`If <gamspy.If>` class maps directly to the GAMS ``if`` statement. It allows you to branch 
@@ -104,13 +136,12 @@ logical condition as its argument:
         with gp.If(gp.Ord(i) > 5):
             cnt[...] += 1
 
-
 Break and Continue
 ------------------
-When iterating using a :meth:`Loop <gamspy.Loop>`, you can capture the loop instance using the ``as`` 
-keyword (e.g., ``with gp.Loop(i) as loop:``). This instance provides access to the :meth:`Break <gamspy.Loop.Break>` 
-and :meth:`Continue <gamspy.Loop.Continue>` properties, which map to the GAMS ``break`` and 
-``continue`` statements.
+When iterating using a :meth:`Loop <gamspy.Loop>` or :meth:`For <gamspy.For>`, 
+you can capture the loop instance using the ``as`` keyword (e.g., ``with gp.Loop(i) as loop:`` 
+or ``with gp.For(i, 1, 10) as loop:``). This instance provides access to the ``Break`` 
+and ``Continue`` properties, which map to the GAMS ``break`` and ``continue`` statements.
 
 * **Continue:** Skips the remaining statements in the current iteration and proceeds to the next.
 * **Break:** Terminates the execution of the current loop prematurely.

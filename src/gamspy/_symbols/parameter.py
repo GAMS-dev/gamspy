@@ -336,7 +336,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.domain = new_domain
 
     def __getitem__(
-        self, indices: EllipsisType | slice | Sequence | str
+        self, indices: EllipsisType | slice | Set | Alias | Sequence | str
     ) -> implicits.ImplicitParameter:
         domain = validation.validate_domain(self, indices)
 
@@ -345,7 +345,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __setitem__(
         self,
         indices: EllipsisType | slice | Sequence | str | implicits.ImplicitSet,
-        rhs: Operation | Expression | ImplicitParameter | float | int,
+        rhs: Operation | Expression | Parameter | ImplicitParameter | float | int,
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)

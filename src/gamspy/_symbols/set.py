@@ -747,7 +747,15 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self.domain = new_domain
 
     def __getitem__(
-        self, indices: Sequence | str | int | EllipsisType | slice
+        self,
+        indices: Sequence
+        | str
+        | int
+        | EllipsisType
+        | slice
+        | Set
+        | Alias
+        | ImplicitSet,
     ) -> implicits.ImplicitSet:
         domain = validation.validate_domain(self, indices)
 
