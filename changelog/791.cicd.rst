@@ -1,0 +1,1 @@
+Replace pip-audit with uv audit.
