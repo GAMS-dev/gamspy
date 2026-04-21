@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import pytest
 
+import gamspy as gp
 import gamspy.math as gams_math
 from gamspy import Container, Equation, Model, Number, Parameter, Set, Sum, Variable
 from gamspy._symbols.implicits import ImplicitVariable
@@ -843,3 +844,176 @@ def test_tanh_activation(data):
 
     assert np.isclose(y.records["lower"].iloc[0], np.tanh(-5))
     assert np.isclose(y.records["upper"].iloc[0], 1)
+
+
+def test_set_to_set_projection():
+    m = gp.Container()
+
+    i = gp.Set(m, "i", records=["i1", "i2", "i3"])
+    j = gp.Set(m, "j", records=["j1", "j2"])
+    k = gp.Set(m, "k", records=["k1", "k2", "k3", "k4"])
+
+    # ijk(i,j,k) / #i.#j.#k /
+    ijk = gp.Set(m, "ijk", domain=[i, j, k])
+    ijk[i, j, k] = True  # Populates the set with all combinations
+
+    ij1b = gp.Set(m, "ij1b", domain=[i, j])
+
+    # Option ij1b < ijk;
+    gams_math.project(source=ijk, target=ij1b)
+
+    assert ij1b.toList() == [
+        ("i1", "j1"),
+        ("i1", "j2"),
+        ("i2", "j1"),
+        ("i2", "j2"),
+        ("i3", "j1"),
+        ("i3", "j2"),
+    ]
+
+
+def test_set_to_parameter_projection():
+    m = gp.Container()
+
+    i = gp.Set(m, "i", records=["i1", "i2", "i3"])
+    s = gp.Set(
+        m,
+        "s",
+        description="Set members",
+        domain=[i, i, i],
+        records=[("i1", "i2", "i3"), ("i3", "i3", "i1")],
+    )
+
+    pR1 = gp.Set(
+        m, "pR1", description="projection right to left with assignment", domain=[i, i]
+    )
+    pR2 = gp.Set(
+        m,
+        "pR2",
+        description="projection right to left with option statement",
+        domain=[i, i],
+    )
+    pL1 = gp.Set(
+        m, "pL1", description="projection left to right with assignment", domain=[i, i]
+    )
+    pL2 = gp.Set(
+        m,
+        "pL2",
+        description="projection left to right with option statement",
+        domain=[i, i],
+    )
+    pL3 = gp.Set(
+        m,
+        "pL3",
+        description="projection with implicit set",
+        domain=[i, i],
+    )
+
+    ii = gp.Alias(m, "ii", i)
+    iii = gp.Alias(m, "iii", i)
+
+    # * Right-to-left permutation, two ways
+    # pR1(i,ii) = sum(s(iii,ii,i),1);
+    pR1[i, ii] = gp.Sum(s[iii, ii, i], 1)
+
+    # option pR2 < s;
+    gams_math.project(source=s, target=pR2, direction="right")
+
+    # * Left-to-right permutation, two ways
+    # pL1(i,ii) = sum(s(i,ii,iii),1);
+    pL1[i, ii] = gp.Sum(s[i, ii, iii], 1)
+
+    # option pL2 <= s;
+    gams_math.project(source=s, target=pL2, direction="left")
+    with pytest.raises(ValidationError):
+        gams_math.project(source=s[i, ii, iii], target=pL3[i, i], direction="left")
+
+    gams_math.project(source=s[i, i, i], target=pL3[i, i], direction="left")
+
+    assert pR1.toList() == [("i1", "i3"), ("i3", "i2")]
+    assert pR2.toList() == [("i1", "i3"), ("i3", "i2")]
+    assert pL1.toList() == [("i1", "i2"), ("i3", "i3")]
+    assert pL2.toList() == [("i1", "i2"), ("i3", "i3")]
+    assert pL2.toList() == pL3.toList()
+
+
+def test_aggregation():
+    m = gp.Container()
+
+    i = gp.Set(m, "i", records=["i1", "i2", "i3"])
+    j = gp.Set(m, "j", records=["j1", "j2"])
+    k = gp.Set(m, "k", records=["k1", "k2", "k3", "k4"])
+
+    # ijk(i,j,k) / #i.#j.#k /
+    ijk = gp.Set(m, "ijk", domain=[i, j, k])
+    ijk[i, j, k] = True
+
+    ij1a = gp.Set(m, "ij1a", domain=[i, j])
+    ij1b = gp.Set(m, "ij1b", domain=[i, j])
+
+    # Scalars Count_1a, Count_1b, Count_2a, Count_2b;
+    Count_1a = gp.Parameter(m, "Count_1a")
+    Count_1b = gp.Parameter(m, "Count_1b")
+    Count_1c = gp.Parameter(m, "Count_1c")
+    Count_2a = gp.Parameter(m, "Count_2a")
+    Count_2b = gp.Parameter(m, "Count_2b")
+
+    # * Method 1: Using an assignment and the sum operator for a projection
+    # ij1a(i,j) = sum(k,ijk(i,j,k));
+    ij1a[i, j] = gp.Sum(k, ijk[i, j, k])
+
+    # * Method 1: Using an assignment and the sum operator for aggregations
+    # Count_2a  = sum(ijk(i,j,k),1);
+    # Count_1a  = sum(ij1a(i,j),1);
+    Count_2a[...] = gp.Sum(ijk[i, j, k], 1)
+    Count_1a[...] = gp.Sum(ij1a[i, j], 1)
+
+    # * Method 2: Option statement performs a projection
+    # Option ij1b < ijk;
+    gams_math.project(source=ijk, target=ij1b)
+
+    # * Method 2: Option statements performs aggregations (counting of elements)
+    # Option Count_2b < ijk;
+    # Option Count_1b < ij1b;
+    gams_math.aggregate(source=ijk, target=Count_2b)
+    gams_math.aggregate(source=ij1b, target=Count_1b)
+    gams_math.aggregate(source=ij1b[i, j], target=Count_1c)
+
+    assert Count_1a.toValue() == 6.0
+    assert Count_1b.toValue() == 6.0
+    assert Count_2a.toValue() == 24.0
+    assert Count_2b.toValue() == 24.0
+    assert Count_1b.toValue() == Count_1c.toValue()
+
+    with pytest.raises(TypeError):
+        gams_math.aggregate(source=ijk, target=i)
+
+    m = gp.Container()
+    i = gp.Set(m)
+    j = gp.Set(m)
+    ii = gp.Set(m, domain=i)
+    jj = gp.Set(m, domain=j)
+
+    ij = gp.Set(m, domain=[i, j])
+    p = gp.Parameter(m, domain=i)
+
+    with pytest.raises(ValidationError):
+        gp.math.aggregate(target=p[ii], source=ij[ii, jj])
+
+    with pytest.raises(ValidationError):
+        gp.math.aggregate(target=p[ii], source=ij)
+
+    m = gp.Container()
+    i = gp.Set(m)
+    j = gp.Set(m)
+    ii = gp.Alias(m, alias_with=i)
+    jj = gp.Alias(m, alias_with=j)
+
+    ij = gp.Set(m, domain=[i, j])
+    p = gp.Parameter(m, domain=i)
+
+    with pytest.raises(ValidationError):
+        gp.math.aggregate(target=p[ii], source=ij[ii, jj])
+
+    with pytest.raises(ValidationError):
+        gp.math.aggregate(target=p[ii], source=ij)
