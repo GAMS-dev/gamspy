@@ -115,6 +115,38 @@ def convert_pool2d(m: gp.Container, layer: torch.nn.MaxPool2d | torch.nn.AvgPool
         )
 
 
+def convert_rnn(m: gp.Container, layer: torch.nn.RNN) -> gp.formulations.RNN:
+    if layer.num_layers != 1:
+        raise ValidationError(
+            "RNN only supports num_layers=1. Chain multiple RNNs sequentially instead."
+        )
+
+    if layer.bidirectional:
+        raise ValidationError("RNN does not support bidirectional=True.")
+
+    if not layer.batch_first:
+        raise ValidationError(
+            "RNN requires batch_first=True to match (batch, time, features) input."
+        )
+    if layer.dropout > 0:
+        raise ValidationError("RNN does not support dropout > 0.")
+    has_bias = layer.bias
+    l = gp.formulations.RNN(
+        m,
+        input_size=layer.input_size,
+        hidden_size=layer.hidden_size,
+        activation=layer.nonlinearity,  # ["tanh", "relu"]
+    )
+
+    w_ih = layer.weight_ih_l0.detach().numpy()
+    w_hh = layer.weight_hh_l0.detach().numpy()
+    b_ih = layer.bias_ih_l0.detach().numpy() if has_bias else None
+    b_hh = layer.bias_hh_l0.detach().numpy() if has_bias else None
+
+    l.load_weights(w_ih, w_hh, b_ih, b_hh)
+    return l
+
+
 _DEFAULT_CONVERTERS = {
     "Linear": convert_linear,
     "Conv1d": convert_conv1d,
@@ -123,6 +155,7 @@ _DEFAULT_CONVERTERS = {
     "LeakyReLU": convert_leaky_relu,
     "MaxPool2d": convert_pool2d,
     "AvgPool2d": convert_pool2d,
+    "RNN": convert_rnn,
 }
 
 
@@ -233,10 +266,9 @@ class TorchSequential:
             * **Access Format:** `<layer_num>.eq_<eq_number>` (where `eq_number` starts at 0, 1, 2...)
             * **Example:** The first equation from the third layer is accessed as `2.eq_0` in `equations_created`.
 
-
-         Returns
-         -------
-         FormulationResult
+        Returns
+        -------
+        FormulationResult
 
         """
         result = gp.formulations.FormulationResult()
