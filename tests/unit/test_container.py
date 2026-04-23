@@ -1503,3 +1503,43 @@ def test_deepcopy():
 
     # add a new symbol to the copied container
     _ = gp.Parameter(m2)
+
+
+def test_setRecords_None():
+    m = gp.Container()
+
+    i = gp.Set(m, records=["i1", "i2"])
+    i.setRecords(None)
+    assert i.records is None
+
+    a = gp.Parameter(m, records=5)
+    a.setRecords(None)
+    assert a.toValue() == 0
+
+    i2 = gp.Set(m, records=["i1", "i2"])
+    a2 = gp.Parameter(m, domain=i2, records=[("i1", 1), ("i2", 2)])
+    a2.setRecords(None)
+    assert a2.records is None
+
+    v = gp.Variable(m)
+    v.setRecords(None)
+    assert v.records.values.tolist() == [[0.0, 0.0, float("-inf"), float("inf"), 1.0]]
+
+    vp = gp.Variable(m, type="positive")
+    vp.setRecords(None)
+    assert vp.records.values.tolist() == [[0.0, 0.0, 0.0, float("inf"), 1.0]]
+
+    e = gp.Equation(m)
+    e.setRecords(None)
+    assert e.records.values.tolist() == [[0.0, 0.0, float("-inf"), float("inf"), 1.0]]
+
+    el = gp.Equation(m)
+    el[...] = v <= vp
+    el.setRecords(None)
+    assert el.records.values.tolist() == [[0.0, 0.0, float("-inf"), 0.0, 1.0]]
+
+    i2 = gp.Set(m, records=["i1", "i2"])
+    a1 = gp.Alias(m, alias_with=i2)
+    a1.setRecords(None)
+    assert a1.records is None
+    assert i2.records is None

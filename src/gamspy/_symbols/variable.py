@@ -968,6 +968,11 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         [['seattle', 7.0, 0.0, -inf, inf, 1.0], ['san-diego', 18.0, 0.0, -inf, inf, 1.0]]
 
         """
+        if records is None:
+            self.container._add_statement(f"option clear={self.name};")
+            self.container._synch_with_gams(gams_to_gamspy=True)
+            return
+
         self._setRecords(records, uels_on_axes=uels_on_axes)
         self.container._synch_with_gams()
         self._winner = "python"
