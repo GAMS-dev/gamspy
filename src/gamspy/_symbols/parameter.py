@@ -546,6 +546,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         ['seattle', 'san-diego']
 
         """
+        if records is None:
+            self.container._add_statement(f"option clear={self.name};")
+            self.container._synch_with_gams(gams_to_gamspy=True)
+            return
+
         self._setRecords(records, uels_on_axes=uels_on_axes)
         self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
         self._winner = "python"
