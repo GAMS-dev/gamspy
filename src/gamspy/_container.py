@@ -12,7 +12,7 @@ import threading
 import traceback
 import weakref
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TextIO
 
 import gams.transfer as gt
 
@@ -30,7 +30,6 @@ from gamspy._workspace import Workspace
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    import io
     from collections.abc import Iterable, Sequence
     from typing import Any, Literal, TypeAlias
 
@@ -146,7 +145,7 @@ class Container(gt.Container):
         * ``"delete"``: Always clean up.
     options : Options, optional
         Global options for the overall execution
-    output : io.TextIOWrapper, optional
+    output : TextIO, optional
         Stream to which GAMS output is written.
 
     Examples
@@ -184,7 +183,7 @@ class Container(gt.Container):
         working_directory: str | os.PathLike | None = None,
         debugging_level: Literal["keep", "keep_on_error", "delete"] = "keep_on_error",
         options: Options | None = None,
-        output: io.TextIOWrapper | None = None,
+        output: TextIO | None = None,
     ):
         self._comm_pair_id = utils._get_unique_name()
         self.output = output

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TextIO
 
 from pydantic import BaseModel, ConfigDict
 from typing_extensions import override
@@ -10,7 +10,6 @@ from typing_extensions import override
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    import io
     from types import FrameType
 
     from gamspy._model import Problem
@@ -437,9 +436,7 @@ class Options(BaseModel):
 
         return Options(**gamspy_options)
 
-    def _get_gams_compatible_options(
-        self, output: io.TextIOWrapper | None = None
-    ) -> dict:
+    def _get_gams_compatible_options(self, output: TextIO | None = None) -> dict:
         gamspy_options = self.model_dump(exclude_none=True)
         if "allow_suffix_in_equation" in gamspy_options:
             allows_suffix = gamspy_options["allow_suffix_in_equation"]
@@ -590,14 +587,14 @@ class Options(BaseModel):
         """
         self._export(pf_file)
 
-    def _export(self, pf_file: str, output: io.TextIOWrapper | None = None) -> None:
+    def _export(self, pf_file: str, output: TextIO | None = None) -> None:
         """
         Exports options to the pf_file. Each line contains a key-value pair.
 
         Parameters
         ----------
         pf_file : str
-        output : io.TextIOWrapper | None, optional
+        output : TextIO | None, optional
         """
         all_options = {}
         # Solver options

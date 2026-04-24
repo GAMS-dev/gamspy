@@ -4,7 +4,7 @@ import os
 import re
 from collections.abc import Iterable, Sequence
 from types import EllipsisType
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TextIO
 
 from gams.core.opt import (
     GMS_SSSIZE,
@@ -29,8 +29,6 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    import io
-
     from gamspy import Alias, Equation, Model, Parameter, Set, Variable
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import (
@@ -500,7 +498,7 @@ def validate_solver_args(
     solver: str,
     problem: Problem | str,
     options: Options | None,
-    output: io.TextIOWrapper | None,
+    output: TextIO | None,
     load_symbols: list[Symbol] | None,
 ) -> None:
     if not get_option("VALIDATION"):
