@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Annotated
 import certifi
 import typer
 
-from .util import remove_solver_entry
+from .util import has_pip, has_uv, remove_solver_entry
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -77,6 +77,18 @@ def solver(
     import gamspy_base
 
     import gamspy.utils as utils
+
+    if not use_uv and not has_pip():
+        typer.echo(
+            "pip is not installed in your environment. Please install pip first or add --use-uv flag to uninstall solvers with uv."
+        )
+        raise typer.Exit(code=1)
+
+    if use_uv and not has_uv():
+        typer.echo(
+            "uv is not installed in your machine. Please install uv first to uninstall solvers with --use-uv flag."
+        )
+        raise typer.Exit(code=1)
 
     addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
     environment_variables = os.environ.copy()

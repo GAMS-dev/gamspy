@@ -4,12 +4,12 @@ leg-build-docs:
   needs: []
   allow_failure: true
   tags: [linux]
-  image: python:3.13
+  image: ghcr.io/astral-sh/uv:python3.13-trixie-slim
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends make pandoc
   script:
-    - python -m pip install uv && uv venv .venv -v && source .venv/bin/activate
-    - uv sync --group test --group doc
-    - python -m pytest --nbmake docs/user/notebooks/*.ipynb
+    - uv venv .venv && source .venv/bin/activate
+    - uv sync --group test --group doc && uv pip install pip
+    - pytest --nbmake docs/user/notebooks/*.ipynb
     - ipython kernel install --name "python3" --user
-    - wget https://github.com/jgm/pandoc/releases/download/3.1.8/pandoc-3.1.8-linux-amd64.tar.gz && tar xvzf pandoc-3.1.8-linux-amd64.tar.gz --strip-components 1
-    - PATH=$(pwd)/bin/:$PATH
     - cd docs && make linkcheck && make html

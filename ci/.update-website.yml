@@ -3,10 +3,9 @@ leg-update-website:
   needs: []
   allow_failure: true
   tags: [puma]
-  image:
-    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
-    entrypoint: [""]
+  image: debian:trixie-slim
   before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git ca-certificates
     - git config --global user.email "puma@noreply.gams.com"
     - git config --global user.name "Gitlab Runner (puma)"
   script:

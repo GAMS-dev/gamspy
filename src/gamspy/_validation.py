@@ -201,12 +201,12 @@ def validate_one_dimensional_sets(
 
     given_path = get_domain_path(given)
 
-    if (type(actual) is symbols.Set and actual.name not in given_path) or (
+    if (type(actual) is symbols.Set and actual.name not in given_path) or (  # type: ignore
         type(actual) is symbols.Alias and actual.alias_with.name not in given_path  # type: ignore
     ):
         raise ValidationError(
             f"`Given set `{given.name}` is not a valid domain for declared"
-            f" domain `{actual.name}`"
+            f" domain `{actual.name}`"  # type: ignore
         )
 
 
@@ -464,7 +464,7 @@ def validate_model(
                     "EMP models."
                 )
 
-    return problem, sense
+    return problem, sense  # type: ignore
 
 
 def validate_model_name(name: str) -> str:

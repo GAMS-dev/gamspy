@@ -1,9 +1,19 @@
 from __future__ import annotations
 
+import importlib.util
 import os
+import shutil
 from dataclasses import dataclass, field
 
-__all__ = ["SolverInfo", "add_solver_entry", "remove_solver_entry"]
+__all__ = ["SolverInfo", "add_solver_entry", "remove_solver_entry", "has_pip", "has_uv"]
+
+
+def has_pip() -> bool:
+    return importlib.util.find_spec("pip") is not None
+
+
+def has_uv() -> bool:
+    return shutil.which("uv") is not None
 
 
 @dataclass

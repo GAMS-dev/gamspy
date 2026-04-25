@@ -631,8 +631,8 @@ def pwl_convexity_formulation(
     lambda_var.lo[...] = 0
     lambda_var.up[...] = 1
 
-    x_term = 0
-    y_term = 0
+    x_term = 0.0
+    y_term = 0.0
 
     if bound_left is False or bound_right is False:
         m_neg, m_pos = _get_end_slopes(x_points, y_points)
