@@ -1,0 +1,1 @@
+Use uv trixie slim images to avoid pulling bigger images than necessary.

@@ -3,14 +3,10 @@ leg-upload-wheel:
   needs: []
   allow_failure: true
   tags: [puma]
-  image: python:3.12
+  image: ghcr.io/astral-sh/uv:python3.13-trixie-slim
   script:
-    - python -m pip install uv && uv venv .venv -v
-    - source .venv/bin/activate && uv pip install pip
-    - uv pip install wheel build twine licensecheck
-    - if [ "$?" == "0" ]; then echo "Audit passed!"; else exit 1; fi
-    - licensecheck --ignore-packages gamspy-base --zero --requirements-paths pyproject.toml
-    - python -m build && twine upload dist/* -u $PF_PYPI_USERNAME -p $PF_PYPI_PASSWORD
+    - uv venv .venv && source .venv/bin/activate
+    - uv build && uv publish --username $PF_PYPI_USERNAME --password $PF_PYPI_PASSWORD
   rules:
     - if: $CI_COMMIT_BRANCH != "master"
       when: never

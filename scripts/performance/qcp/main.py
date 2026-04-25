@@ -99,8 +99,10 @@ def solve_facility_gamspy(G, F, time_limit=0):
             sense=gp.Sense.MIN,
             objective=d,
         )
-        m.addGamsCode("facility.justscrdir = 0")
-        model.solve(solver="ipopt", options=gp.Options(time_limit=time_limit))
+        model.solve(
+            solver="ipopt",
+            options=gp.Options(time_limit=time_limit, bypass_solver=False),
+        )
 
         return model.objective_value
 
