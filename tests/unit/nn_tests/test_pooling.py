@@ -800,3 +800,20 @@ def test_pool_call_bad(data):
 
     with pytest.raises(ValidationError):
         _MPool2d("sup", m, (2, 2))
+
+
+@pytest.mark.unit
+def test_pool_check_str_method(data):
+    m, *_ = data
+    avgpool1 = AvgPool2d(m, (2, 2))
+    minpool1 = MinPool2d(m, (2, 2))
+    maxpool1 = MaxPool2d(m, (2, 2))
+
+    expected = "AvgPool2d(\n  kernel_size=(2, 2)\n  stride=(2, 2)\n  padding=(0, 0)\n)"
+    assert str(avgpool1) == expected
+
+    expected = "MinPool2d(\n  kernel_size=(2, 2)\n  stride=None\n  padding=0\n  name_prefix=None\n)"
+    assert str(minpool1) == expected
+
+    expected = "MaxPool2d(\n  kernel_size=(2, 2)\n  stride=None\n  padding=0\n  name_prefix=None\n)"
+    assert str(maxpool1) == expected

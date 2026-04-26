@@ -419,3 +419,14 @@ def test_linear_return_formulation_result(data):
     )
     out1 = result.result
     assert np.allclose(out1.toDense(), expected_bounds)
+
+
+@pytest.mark.unit
+def test_linear_check_str_method(data):
+    m, *_ = data
+    lin1 = gp.formulations.Linear(m, 4, 3, bias=False)
+    w1 = np.random.rand(3, 4)
+    lin1.load_weights(w1)
+
+    expected = "Linear(\n  in_features=4\n  out_features=3\n  bias=False\n  weights_loaded=True\n)"
+    assert str(lin1) == expected, "Unexpected string"

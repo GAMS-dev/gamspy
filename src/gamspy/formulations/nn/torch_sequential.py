@@ -147,6 +147,38 @@ def convert_rnn(m: gp.Container, layer: torch.nn.RNN) -> gp.formulations.RNN:
     return l
 
 
+def convert_gru(m: gp.Container, layer: torch.nn.GRU) -> gp.formulations.GRU:
+    if layer.num_layers != 1:
+        raise ValidationError(
+            "GRU only supports num_layers=1. Chain multiple GRUs sequentially instead."
+        )
+
+    if layer.bidirectional:
+        raise ValidationError("GRU does not support bidirectional=True.")
+
+    if not layer.batch_first:
+        raise ValidationError(
+            "GRU requires batch_first=True to match (batch, time, features) input."
+        )
+    if layer.dropout > 0:
+        raise ValidationError("GRU does not support dropout > 0.")
+    has_bias = layer.bias
+
+    l = gp.formulations.GRU(
+        m,
+        input_size=layer.input_size,
+        hidden_size=layer.hidden_size,
+    )
+
+    w_ih = layer.weight_ih_l0.detach().numpy()
+    w_hh = layer.weight_hh_l0.detach().numpy()
+    b_ih = layer.bias_ih_l0.detach().numpy() if has_bias else None
+    b_hh = layer.bias_hh_l0.detach().numpy() if has_bias else None
+
+    l.load_weights(w_ih, w_hh, b_ih, b_hh)
+    return l
+
+
 _DEFAULT_CONVERTERS = {
     "Linear": convert_linear,
     "Conv1d": convert_conv1d,
@@ -156,6 +188,7 @@ _DEFAULT_CONVERTERS = {
     "MaxPool2d": convert_pool2d,
     "AvgPool2d": convert_pool2d,
     "RNN": convert_rnn,
+    "GRU": convert_gru,
 }
 
 
@@ -220,7 +253,14 @@ class TorchSequential:
             self._layer_converters.update(layer_converters)
 
         with torch.no_grad():
-            self.layers = [self._convert_layer(container, layer) for layer in network]
+            if isinstance(network, torch.nn.Sequential):
+                self.layers = [
+                    self._convert_layer(container, layer) for layer in network
+                ]
+            else:
+                raise ValidationError(
+                    "network must be an instance of torch.nn.Sequential"
+                )
 
     def _convert_layer(self, container: gp.Container, layer):
         clz = layer.__class__.__name__
@@ -308,3 +348,7 @@ class TorchSequential:
             result.extra_return = result.matches
 
         return result
+
+    def __str__(self) -> str:
+        layers_str = "\n".join(str(layer) for layer in self.layers)
+        return f"TorchSequential(\n  Layers:\n{layers_str}\n)"
