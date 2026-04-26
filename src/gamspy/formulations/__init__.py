@@ -8,6 +8,7 @@ from gamspy.formulations.ml import (
     RegressionTree,
 )
 from gamspy.formulations.nn import (
+    GRU,
     RNN,
     AvgPool2d,
     Conv1d,
@@ -45,4 +46,5 @@ __all__ = [
     "utils",
     "FormulationResult",
     "RNN",
+    "GRU",
 ]

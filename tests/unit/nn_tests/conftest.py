@@ -164,3 +164,16 @@ def calculate_expected_rnn_bounds():
         return pre_act_bounds, output_bounds
 
     return _calculator
+
+
+@pytest.fixture
+def gru_data():
+    m = Container()
+
+    w_ih = np.random.rand(3 * 3, 4)
+    w_hh = np.random.rand(3 * 3, 3)
+    b_ih = np.random.rand(3 * 3)
+    b_hh = np.random.rand(3 * 3)
+
+    yield m, w_ih, w_hh, b_ih, b_hh
+    m.close()

@@ -525,3 +525,13 @@ def test_rnn_with_h0_time_step_k(rnn_data):
     assert h_out.l.records.loc[0, "level"] == 1 + h0.toDense()[0][0], (
         "Expected first hidden state to consider h0."
     )
+
+
+@pytest.mark.unit
+def test_rnn_check_str_method(rnn_data):
+    m, w_ih, w_hh, *_ = rnn_data
+    rnn1 = RNN(m, 4, 3)
+    rnn1.load_weights(w_ih, w_hh)
+
+    expected = "RNN(\n  input_size=4\n  hidden_size=3\n  activation=tanh\n  weights_loaded=True\n)"
+    assert str(rnn1) == expected, "Unexpected string"

@@ -1,6 +1,7 @@
 from gamspy.formulations.nn.avgpool2d import AvgPool2d
 from gamspy.formulations.nn.conv1d import Conv1d
 from gamspy.formulations.nn.conv2d import Conv2d
+from gamspy.formulations.nn.gru import GRU
 from gamspy.formulations.nn.linear import Linear
 from gamspy.formulations.nn.maxpool2d import MaxPool2d
 from gamspy.formulations.nn.minpool2d import MinPool2d
@@ -18,4 +19,5 @@ __all__ = [
     "TorchSequential",
     "_MPool2d",
     "RNN",
+    "GRU",
 ]

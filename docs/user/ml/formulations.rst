@@ -332,6 +332,36 @@ hidden state is controlled by
    [len(d) for d in result.result.domain]
    # [1, 3, 2]
 
+:meth:`GRU <gamspy.formulations.GRU>`
+-------------------------------------------------------
+Formulation generator for Gated Recurrent Units in GAMS. The update rule for the
+hidden state is controlled by :math:`h_t = (1 - z_t) \odot n_t + z_t \odot h_{(t-1)}`,
+where :math:`z_t` and :math:`n_t` are the `update` and `new` gates respectively.
+There's also the, `reset` (:math:`r_t`) gate that is used for calculating the
+`new` gate implicitly.
+
+.. code-block:: python
+
+   import gamspy as gp
+   import numpy as np
+   from gamspy.math import dim
+
+   batch_size, seq_length, input_size, hidden_size = (1, 3, 2, 2)
+
+   w_ih = np.random.rand(3 * hidden_size, input_size)
+   w_hh = np.random.rand(3 * hidden_size, hidden_size)
+
+   m = gp.Container()
+
+   gru = gp.formulations.GRU(m, input_size=input_size, hidden_size=hidden_size)
+
+   gru.load_weights(w_ih, w_hh)
+   x = gp.Variable(m, "x", domain=dim([batch_size, seq_length, input_size]))
+
+   result = gru(x)
+   [len(d) for d in result.result.domain]
+   # [1, 3, 2]
+
 .. _pooling-linearization:
 
 Max/Min Pooling Implementation

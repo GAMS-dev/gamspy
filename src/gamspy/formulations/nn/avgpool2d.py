@@ -258,3 +258,11 @@ class AvgPool2d:
             out_var.up[...] = ub
 
         return result
+
+    def __str__(self) -> str:
+        return (
+            "AvgPool2d(\n"
+            f"  kernel_size={self.kernel_size}\n"
+            f"  stride={self.stride}\n"
+            f"  padding={self.padding}\n)"
+        )
