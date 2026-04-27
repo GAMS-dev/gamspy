@@ -61,7 +61,8 @@ class Condition(operable.Operable):
         | Number
         | Card
         | Ord
-        | MathOp,
+        | MathOp
+        | Condition,
         condition: Operation
         | Expression
         | ImplicitParameter

@@ -27,14 +27,14 @@ if TYPE_CHECKING:
     from gamspy import (
         Alias,
         Container,
-        Domain,
         Equation,
-        Expression,
         Model,
         Parameter,
         Set,
         Variable,
     )
+    from gamspy._algebra.domain import Domain
+    from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import IndexType
 
@@ -579,7 +579,7 @@ def _open_gdx_file(system_directory: str, load_from: str):
     return gdx_handle
 
 
-def _to_list(obj: IndexType) -> list[IndexType]:
+def _to_list(obj: IndexType) -> list:
     """Converts the given object to a list"""
     if type(obj) is tuple:
         return list(obj)
