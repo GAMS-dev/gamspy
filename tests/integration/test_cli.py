@@ -246,6 +246,7 @@ def test_install_solver():
             "solver",
             "minos",
             "mosek",
+            "--use-uv",
         ],
         capture_output=True,
         encoding="utf-8",
@@ -269,6 +270,7 @@ def test_install_solver():
             "install",
             "solver",
             "--install-all-solvers",
+            "--use-uv",
         ],
         capture_output=True,
         encoding="utf-8",
@@ -285,6 +287,7 @@ def test_install_solver():
             "solver",
             "minos",
             "mosek",
+            "--use-uv",
         ],
         capture_output=True,
         encoding="utf-8",
@@ -300,6 +303,7 @@ def test_install_solver():
             "uninstall",
             "solver",
             "--uninstall-all-solvers",
+            "--use-uv",
         ],
         capture_output=True,
         encoding="utf-8",
@@ -318,6 +322,7 @@ def test_install_solver():
             "mpsge",
             "scip",
             "reshop",
+            "--use-uv",
         ],
         capture_output=True,
         text=True,
@@ -326,7 +331,6 @@ def test_install_solver():
     assert process.returncode == 0, process.stdout + process.stderr
 
     if platform.system() == "Linux":
-        # use uv
         process = subprocess.run(
             [
                 sys.executable,
@@ -343,7 +347,6 @@ def test_install_solver():
         )
         assert process.returncode == 0, process.stdout + process.stderr
 
-        # use uv
         process = subprocess.run(
             [
                 sys.executable,

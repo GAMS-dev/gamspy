@@ -79,9 +79,6 @@ class Operation(operable.Operable):
         self._op_name = op_name
         self.raw_domain = self._get_raw_domain()
 
-        # allow conditions
-        self.where = condition.Condition(self)
-
         self._bare_op_domain = utils._get_set(self.op_domain)
         self.container = self.raw_domain[0].container
         self.domain: list[Set | Alias] = []
@@ -102,6 +99,9 @@ class Operation(operable.Operable):
         controlled_domain = list(self._bare_op_domain)
         controlled_domain.extend(getattr(rhs, "controlled_domain", []))
         self.controlled_domain = list(set(controlled_domain))
+
+        # allow conditions
+        self.where = condition.Condition(self)
 
     def __getitem__(self, indices: Sequence | str):
         domain = validation.validate_domain(self, indices)

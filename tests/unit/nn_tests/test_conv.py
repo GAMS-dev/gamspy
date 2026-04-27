@@ -1880,3 +1880,32 @@ def test_conv2d_return_formulation_result(data):
     )
 
     assert np.allclose(out.toDense(), expected_out)
+
+
+@pytest.mark.unit
+def test_conv1d_check_str_method(data):
+    m, *_ = data
+
+    w1 = np.array(
+        [
+            [[0.98727534, 0.94129724, 0.44578929]],
+            [[0.45728722, 0.15647212, 0.56943917]],
+        ]
+    )
+    b1 = np.array([2.2, -0.4])
+
+    conv1 = Conv1d(m, 1, 2, 3)
+    conv1.load_weights(w1, b1)
+
+    expected = "Conv1D(\n  in_channels=1\n  out_channels=2\n  kernel_size=3\n  stride=1\n  padding=(0, 0)\n  bias=True\n  weights_loaded=True\n)"
+    assert str(conv1) == expected, "Unexpected string"
+
+
+@pytest.mark.unit
+def test_conv2d_check_str_method(data):
+    m, w1, b1, *_ = data
+    conv2 = Conv2d(m, 1, 2, 3)
+    conv2.load_weights(w1, b1)
+
+    expected = "Conv2D(\n  in_channels=1\n  out_channels=2\n  kernel_size=(3, 3)\n  stride=(1, 1)\n  padding=(0, 0, 0, 0)\n  bias=True\n  weights_loaded=True\n)"
+    assert str(conv2) == expected, "Unexpected string"

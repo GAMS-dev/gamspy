@@ -52,6 +52,11 @@ class MinPool2d(_MPool2d):
         padding: int = 0,
         name_prefix: str | None = None,
     ):
+        self._init_kwargs = {
+            k: v
+            for k, v in locals().items()
+            if k not in ("self", "__class__", "container")
+        }
         super().__init__("min", container, kernel_size, stride, padding, name_prefix)
 
     def __call__(
@@ -103,3 +108,7 @@ class MinPool2d(_MPool2d):
 
         """
         return super().__call__(input, big_m, propagate_bounds)
+
+    def __str__(self) -> str:
+        formatted_args = "\n  ".join(f"{k}={v!r}" for k, v in self._init_kwargs.items())
+        return f"MinPool2d(\n  {formatted_args}\n)"

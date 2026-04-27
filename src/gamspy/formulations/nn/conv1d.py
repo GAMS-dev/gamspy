@@ -580,3 +580,15 @@ class Conv1d:
             )
 
         return result
+
+    def __str__(self) -> str:
+        return (
+            "Conv1D(\n"
+            f"  in_channels={self.in_channels}\n"
+            f"  out_channels={self.out_channels}\n"
+            f"  kernel_size={self.kernel_size}\n"
+            f"  stride={self.stride}\n"
+            f"  padding={self.padding}\n"
+            f"  bias={self.use_bias}\n"
+            f"  weights_loaded={'True' if self._state == 1 else 'False'}\n)"
+        )

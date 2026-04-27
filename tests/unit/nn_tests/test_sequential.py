@@ -84,10 +84,6 @@ def test_sequential_layer_not_implemented(data):
         with pytest.raises(ValidationError):
             TorchSequential(m, model2)
 
-    model = torch.nn.Sequential(torch.nn.RNN(10, 20, 2))
-    with pytest.raises(ValidationError):
-        TorchSequential(m, model)
-
     model = torch.nn.Sequential(torch.nn.MaxPool2d((2, 2), dilation=2))
     with pytest.raises(ValidationError):
         TorchSequential(m, model)
@@ -168,5 +164,92 @@ def test_sequential_layer_with_matches(data):
     assert len(eqs) == 0
     assert len(matches) == 1
 
-    formulation_result = seq_form(x)
-    str(formulation_result)
+
+@pytest.mark.unit
+def test_sequential_layer_bad_model(data):
+    m, *_ = data
+
+    # must be torch.nn.Sequence
+    with pytest.raises(ValidationError):
+        TorchSequential(m, "model")
+
+
+@pytest.mark.skipif(TORCH_AVAILABLE is False, reason="Requires PyTorch installed")
+@pytest.mark.unit
+def test_sequential_layer_with_rnn(data):
+    m, *_ = data
+    model = torch.nn.Sequential(
+        torch.nn.RNN(
+            input_size=2, hidden_size=4, nonlinearity="relu", batch_first=True
+        ),
+        torch.nn.Linear(in_features=4, out_features=1),
+    )
+    seq_form = TorchSequential(m, model)
+
+    x = gp.Variable(m, name="x_in", domain=dim([1, 5, 2]))
+    output = seq_form(x)
+
+    assert "0.set_output" in output.equations_created
+    assert "0.set_pre_act" in output.equations_created
+    assert "0.y_lte_x_2" in output.equations_created
+    assert "0.output" in output.variables_created
+    assert "1.output" in output.variables_created
+
+    expected_shape = (1, 5, 1)
+    assert tuple(len(d) for d in output.result.domain) == expected_shape
+
+
+@pytest.mark.skipif(TORCH_AVAILABLE is False, reason="Requires PyTorch installed")
+@pytest.mark.unit
+def test_sequential_layer_with_gru(data):
+    m, *_ = data
+    model = torch.nn.Sequential(
+        torch.nn.GRU(input_size=2, hidden_size=4, batch_first=True),
+        torch.nn.Linear(in_features=4, out_features=1),
+    )
+    seq_form = TorchSequential(m, model)
+
+    x = gp.Variable(m, name="x_in", domain=dim([1, 5, 2]))
+    output = seq_form(x)
+
+    assert "0.set_output" in output.equations_created
+    assert "0.reset_gate" in output.equations_created
+    assert "0.update_gate" in output.equations_created
+    assert "0.r_gate" in output.variables_created
+    assert "0.z_gate" in output.variables_created
+    assert "0.n_gate" in output.variables_created
+    assert "1.output" in output.variables_created
+
+    expected_shape = (1, 5, 1)
+    assert tuple(len(d) for d in output.result.domain) == expected_shape
+
+
+@pytest.mark.skipif(TORCH_AVAILABLE is False, reason="Requires PyTorch installed")
+@pytest.mark.unit
+def test_sequential_check_str_method(data):
+    m, *_ = data
+    model = torch.nn.Sequential(
+        torch.nn.Conv1d(1, 1, 3, padding=1, bias=True),
+        torch.nn.Linear(in_features=4, out_features=1),
+    )
+    seq_form = TorchSequential(m, model)
+
+    expected = """TorchSequential(
+  Layers:
+Conv1D(
+  in_channels=1
+  out_channels=1
+  kernel_size=3
+  stride=1
+  padding=(1, 1)
+  bias=True
+  weights_loaded=True
+)
+Linear(
+  in_features=4
+  out_features=1
+  bias=True
+  weights_loaded=True
+)
+)"""
+    assert str(seq_form) == expected, "Unexpected string"

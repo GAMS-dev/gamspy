@@ -490,3 +490,48 @@ def test_rnn_check_bound_propagation_with_h0(rnn_data, calculate_expected_rnn_bo
                 expected_pre,
                 err_msg="Wrong bounds for `pre_act` variable in relu.",
             )
+
+
+@pytest.mark.unit
+def test_rnn_with_h0_time_step_k(rnn_data):
+    m, *_ = rnn_data
+
+    rnn1 = RNN(m, 1, 1, activation="relu")
+
+    w_ih = np.array([[1.0]])
+    w_hh = np.array([[1.0]])
+
+    rnn1.load_weights(w_ih, w_hh)
+
+    x = gp.Parameter(
+        m, "x", domain=dim([1, 4, 1]), records=np.array([[[1], [-2], [3], [-1]]])
+    )
+    h0 = gp.Parameter(
+        m, "h0", domain=dim([1, 1]), records=np.random.random(size=(1, 1))
+    )
+    h_out = rnn1(x, h0=h0).result
+
+    model = gp.Model(
+        m,
+        name="sample_rnn_relu",
+        equations=m.getEquations(),
+        problem="MIP",
+        sense="min",
+        objective=gp.Sum(h_out.domain, h_out),
+    )
+
+    model.solve()
+
+    assert h_out.l.records.loc[0, "level"] == 1 + h0.toDense()[0][0], (
+        "Expected first hidden state to consider h0."
+    )
+
+
+@pytest.mark.unit
+def test_rnn_check_str_method(rnn_data):
+    m, w_ih, w_hh, *_ = rnn_data
+    rnn1 = RNN(m, 4, 3)
+    rnn1.load_weights(w_ih, w_hh)
+
+    expected = "RNN(\n  input_size=4\n  hidden_size=3\n  activation=tanh\n  weights_loaded=True\n)"
+    assert str(rnn1) == expected, "Unexpected string"

@@ -10,8 +10,12 @@ variables:
       if [ -f /etc/debian_version ]; then
         apt-get update && apt-get install -y curl ca-certificates
       fi
-    - curl -LsSf https://astral.sh/uv/install.sh | INSTALLER_NO_MODIFY_PATH=1 sh
-    - export PATH="$UV_INSTALL_DIR:$PATH"
+    - mkdir -p "$UV_INSTALL_DIR"
+    - |
+      if ! command -v uv &> /dev/null; then
+        curl -LsSf https://astral.sh/uv/install.sh | INSTALLER_NO_MODIFY_PATH=1 sh
+        export PATH="$UV_INSTALL_DIR:$PATH"
+      fi
     - echo "Downloading Python toolchain..."
     - uv python install 3.10 3.11 3.12 3.13 3.14
   artifacts:
@@ -24,12 +28,12 @@ variables:
 setup-leg-toolchain:
   extends: .setup_template
   tags: [linux]
-  image: debian:bookworm-slim
+  image: ghcr.io/astral-sh/uv:trixie-slim
 
 setup-lag-toolchain:
   extends: .setup_template
   tags: [linux-arm64]
-  image: debian:bookworm-slim
+  image: ghcr.io/astral-sh/uv:trixie-slim
 
 setup-deg-toolchain:
   extends: .setup_template

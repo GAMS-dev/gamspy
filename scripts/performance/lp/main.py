@@ -55,10 +55,11 @@ def solve_gamspy_model(N, time_limit=None):
             problem=gp.Problem.LP,
             objective=obj,
         )
-        m.addGamsCode("bench.justscrdir = 0")
         model.solve(
             solver="HIGHS",
-            options=gp.Options(time_limit=time_limit, relative_optimality_gap=0),
+            options=gp.Options(
+                time_limit=time_limit, relative_optimality_gap=0, bypass_solver=False
+            ),
             solver_options={"presolve": "off", "random_seed": 999},
         )
 

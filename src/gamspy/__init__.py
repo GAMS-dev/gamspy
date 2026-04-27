@@ -22,7 +22,7 @@ from gamspy._backend.engine import EngineClient
 from gamspy._backend.neos import NeosClient
 from gamspy._config import _set_default_options, get_option, set_options
 from gamspy._container import Container
-from gamspy._control_flow import If, Loop
+from gamspy._control_flow import For, If, Loop
 from gamspy._model import FileFormat, Model, ModelStatus, Problem, Sense, SolveStatus
 from gamspy._options import ConvertOptions, FreezeOptions, Options
 from gamspy._serialization import deserialize, serialize
@@ -80,6 +80,7 @@ __all__ = [
     "utils",
     "SpecialValues",
     "Loop",
+    "For",
     "If",
     "__version__",
     "get_option",

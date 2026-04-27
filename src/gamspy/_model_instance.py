@@ -6,7 +6,7 @@ import sys
 import time
 import weakref
 from collections.abc import Iterable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TextIO
 
 import gams.transfer as gt
 from gams.core.cfg import GMS_SSSIZE
@@ -63,7 +63,6 @@ from gamspy._database import Database, GamsEquation, GamsParameter, GamsVariable
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    import io
     from pathlib import Path
 
     import pandas as pd
@@ -181,7 +180,7 @@ class ModelInstance:
         model: Model,
         modifiables: list[Parameter | ImplicitParameter],
         freeze_options: Options,
-        output: io.TextIOWrapper | None,
+        output: TextIO | None,
     ):
         import pandas as pd
 
@@ -344,7 +343,7 @@ class ModelInstance:
         solver: str,
         instance_options: FreezeOptions,
         solver_options: dict | Path | None,
-        output: io.TextIOWrapper | None,
+        output: TextIO | None,
     ) -> pd.DataFrame:
         # write solver options file
         option_file = 1 if solver_options else 0

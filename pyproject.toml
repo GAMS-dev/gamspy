@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.22.0"
+version = "1.23.0"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -20,7 +20,6 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
@@ -65,6 +64,12 @@ name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
+[tool.ty.src]
+exclude = ["src/gamspy/_backend/neos.py", "src/gamspy/_backend/engine.py"]
+
+[tool.ty.rules]
+unused-type-ignore-comment = "ignore"
+
 [dependency-groups]
 dev = [
     "griffe>=1.15.0",
@@ -96,7 +101,6 @@ test = [
     "coverage[toml]>=7.13.1",
     "networkx>=3.4.2",
     "openpyxl>=3.1.5",
-    "pip>=25.3",
     "pytest>=9.0.2",
     "python-dotenv>=1.2.1",
     "pyyaml>=6.0.3",

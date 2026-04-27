@@ -7,7 +7,7 @@ import socket
 import subprocess
 import threading
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TextIO
 
 import certifi
 
@@ -15,8 +15,6 @@ from gamspy import utils
 from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    import io
-
     from gamspy import Container
 
 
@@ -48,7 +46,6 @@ def open_connection(container: Container) -> None:
     if os.path.isfile(certificate_path):
         env["GAMSLICECRT"] = certificate_path
 
-    env = os.environ.copy()
     if "CURL_CA_BUNDLE" not in env:
         env["CURL_CA_BUNDLE"] = certifi.where()
 
@@ -121,7 +118,7 @@ def close_connection(pair_id: str):
     del _comm_pairs[pair_id]
 
 
-def _read_output(process: subprocess.Popen, output: io.TextIOWrapper | None) -> None:
+def _read_output(process: subprocess.Popen, output: TextIO | None) -> None:
     if output is not None:
         while True:
             data = process.stdout.readline()
@@ -191,10 +188,7 @@ def check_response(response: bytes, job_name: str) -> None:
 
 
 def send_job(
-    comm_pair_id: str,
-    job_name: str,
-    pf_file: str,
-    output: io.TextIOWrapper | None = None,
+    comm_pair_id: str, job_name: str, pf_file: str, output: TextIO | None = None
 ):
     _socket, process = get_connection(comm_pair_id)
     try:

@@ -3,12 +3,11 @@
   stage: test
   needs: [lag-cli-3.10, setup-lag-toolchain]
   tags: [linux-arm64]
-  image: debian:bookworm-slim
+  image: ghcr.io/astral-sh/uv:trixie-slim
   variables:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - apt-get update && apt-get install -y ca-certificates git
-    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv -v --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
@@ -24,7 +23,6 @@ lag-test-3.14:
     PYTHON_VERSION: "3.14"
   script:
     - apt-get update && apt-get install -y ca-certificates git
-    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv -v --python 3.14
     - source .venv/bin/activate
     - uv sync --group test
@@ -75,12 +73,11 @@ lag-test-3.10:
   needs: [setup-lag-toolchain]
   allow_failure: true
   tags: [linux-arm64]
-  image: debian:bookworm-slim
+  image: ghcr.io/astral-sh/uv:trixie-slim
   variables:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - apt-get update && apt-get install -y ca-certificates
-    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv -v --python $PYTHON_VERSION && source .venv/bin/activate
     - uv sync --group test
     - uv pip install gamspy-arm-perf
@@ -103,12 +100,11 @@ lag-engine-3.10:
   needs: [setup-lag-toolchain]
   allow_failure: true
   tags: [linux-arm64]
-  image: debian:bookworm-slim
+  image: ghcr.io/astral-sh/uv:trixie-slim
   variables:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - apt-get update && apt-get install -y ca-certificates
-    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv -v --python $PYTHON_VERSION && source .venv/bin/activate
     - uv sync --group test
     - uv pip install gamspy-arm-perf

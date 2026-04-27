@@ -3,8 +3,10 @@ leg-performance:
   needs: []
   allow_failure: true
   tags: [puma]
-  image: python:3.12
+  image: ghcr.io/astral-sh/uv:python3.12-trixie-slim
   when: manual
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends curl
   script:
     - curl --silent https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
     - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
@@ -12,16 +14,15 @@ leg-performance:
     - conda create -y -n performance python=3.12
     - conda activate performance
     - conda install -c conda-forge cyipopt
-    - python -m pip install . --group test --group doc --group dev
-    - python -m pip install highsbox llvmlite tccbox psutil pyoptinterface
-    - python -m gamspy install license $PERFORMANCE_LICENSE
+    - uv pip install . --group test --group doc --group dev
+    - uv pip install highsbox llvmlite tccbox psutil pyoptinterface
+    - gamspy install license $PERFORMANCE_LICENSE
     - echo $GAMS_LICENSE > $(python -m gamspy show base)/gamslice.txt
-    - python -m gamspy install solver -a
+    - gamspy install solver -a --use-uv
     - which python
-    - python -m gamspy show license
     - python scripts/performance/lp/main.py
     - python scripts/performance/qcp/main.py
-    - python -m gamspy install license $LOCAL_LICENSE
+    - gamspy install license $LOCAL_LICENSE
     - python scripts/performance/performance.py
     - python scripts/performance/read.py
     - python scripts/performance/main_IJKLM.py

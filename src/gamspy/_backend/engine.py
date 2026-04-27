@@ -11,7 +11,7 @@ import tempfile
 import time
 import urllib.parse
 import zipfile
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TextIO
 
 import gamspy._backend.backend as backend
 import gamspy.utils as utils
@@ -762,7 +762,7 @@ class GAMSEngine(backend.Backend):
         options: Options,
         solver: str,
         solver_options: dict | Path | None,
-        output: io.TextIOWrapper | None,
+        output: TextIO | None,
         model: Model,
         load_symbols: list[Symbol] | None,
     ) -> None:

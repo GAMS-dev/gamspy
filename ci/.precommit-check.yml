@@ -2,9 +2,9 @@ leg-precommit:
   stage: precommit
   when: on_success
   tags: [linux]
-  image: python:3.13.11
+  image: astral/uv:python3.13-alpine
   script:
-    - python -m pip install uv && uv venv .venv -v && source .venv/bin/activate
-    - uv export --no-emit-project --format requirements-txt > requirements.txt && uvx pip-audit -v -r requirements.txt --disable-pip && rm requirements.txt
-    - uv pip install prek
+    - uv audit --frozen
+    - apk add --no-cache ca-certificates git
+    - uv pip install --system prek
     - prek run --all-files

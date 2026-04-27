@@ -21,7 +21,6 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from types import EllipsisType
 
     import pandas as pd
 
@@ -29,6 +28,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter
+    from gamspy._types import IndexType
     from gamspy.math.matrix import Dim
 
 
@@ -335,17 +335,15 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         self.domain = new_domain
 
-    def __getitem__(
-        self, indices: EllipsisType | slice | Sequence | str
-    ) -> implicits.ImplicitParameter:
+    def __getitem__(self, indices: IndexType) -> ImplicitParameter:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
     def __setitem__(
         self,
-        indices: EllipsisType | slice | Sequence | str | implicits.ImplicitSet,
-        rhs: Operation | Expression | ImplicitParameter | float | int,
+        indices: IndexType,
+        rhs: Operation | Expression | Parameter | ImplicitParameter | float | int,
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
@@ -396,7 +394,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         return f"Parameter(name='{self.name}', domain={self.domain})"
 
     @property
-    def T(self) -> implicits.ImplicitParameter:
+    def T(self) -> ImplicitParameter:
         """
         Alias for the `.t()` method.
 
@@ -406,7 +404,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         """
         return self.t()
 
-    def t(self) -> implicits.ImplicitParameter:
+    def t(self) -> ImplicitParameter:
         """
         Returns an ImplicitParameter derived from this
         parameter by swapping its last two indices. This operation
@@ -546,6 +544,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         ['seattle', 'san-diego']
 
         """
+        if records is None:
+            self.container._add_statement(f"option clear={self.name};")
+            self.container._synch_with_gams(gams_to_gamspy=True)
+            return
+
         self._setRecords(records, uels_on_axes=uels_on_axes)
         self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
         self._winner = "python"

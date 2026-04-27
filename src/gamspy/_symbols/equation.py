@@ -9,10 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
 from gams.core.gdx import GMS_DT_EQU
-from gams.transfer._internals import (
-    EQU_TYPE,
-    TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
-)
+from gams.transfer._internals import EQU_TYPE, TRANSFER_TO_GAMS_EQUATION_SUBTYPES
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -26,23 +23,19 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from types import EllipsisType
 
     import pandas as pd
 
     from gamspy import Alias, Container, Set, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._symbols.implicits import ImplicitEquation
+    from gamspy._types import IndexType
     from gamspy.math.matrix import Dim
 
 
 EQ_TYPES = ["=e=", "=l=", "=g=", "=n=", "=x=", "=b="]
-
-IRREGULAR_EQ_MAP = {
-    "nonbinding": "=n=",
-    "external": "=x=",
-    "boolean": "=b=",
-}
+IRREGULAR_EQ_MAP = {"nonbinding": "=n=", "external": "=x=", "boolean": "=b="}
 
 
 class EquationType(Enum):
@@ -415,7 +408,7 @@ class Equation(gt.Equation, Symbol):
 
         self.domain = new_domain
 
-    def __getitem__(self, indices: EllipsisType | slice | tuple | str):
+    def __getitem__(self, indices: IndexType) -> ImplicitEquation:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitEquation(
@@ -425,11 +418,7 @@ class Equation(gt.Equation, Symbol):
             domain=domain,  # type: ignore
         )
 
-    def __setitem__(
-        self,
-        indices: EllipsisType | slice | tuple | str | implicits.ImplicitSet,
-        rhs: Expression,
-    ):
+    def __setitem__(self, indices: IndexType, rhs: Expression):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 
@@ -1150,6 +1139,11 @@ class Equation(gt.Equation, Symbol):
         np.float64(5.0)
 
         """
+        if records is None:
+            self.container._add_statement(f"option clear={self.name};")
+            self.container._synch_with_gams(gams_to_gamspy=True)
+            return
+
         self._setRecords(records, uels_on_axes=uels_on_axes)
         self.container._synch_with_gams()
         self._winner = "python"

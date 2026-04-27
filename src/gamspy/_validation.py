@@ -4,7 +4,7 @@ import os
 import re
 from collections.abc import Iterable, Sequence
 from types import EllipsisType
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TextIO
 
 from gams.core.opt import (
     GMS_SSSIZE,
@@ -29,8 +29,6 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    import io
-
     from gamspy import Alias, Equation, Model, Parameter, Set, Variable
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import (
@@ -38,6 +36,7 @@ if TYPE_CHECKING:
         ImplicitSet,
         ImplicitVariable,
     )
+    from gamspy._types import IndexType
 
 NAME_MATCH_REGEX = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]{0,62}$")
 
@@ -203,12 +202,12 @@ def validate_one_dimensional_sets(
 
     given_path = get_domain_path(given)
 
-    if (type(actual) is symbols.Set and actual.name not in given_path) or (
+    if (type(actual) is symbols.Set and actual.name not in given_path) or (  # type: ignore
         type(actual) is symbols.Alias and actual.alias_with.name not in given_path  # type: ignore
     ):
         raise ValidationError(
             f"`Given set `{given.name}` is not a valid domain for declared"
-            f" domain `{actual.name}`"
+            f" domain `{actual.name}`"  # type: ignore
         )
 
 
@@ -294,6 +293,7 @@ def _expand_ellipsis_slice(
 
 def validate_domain(
     symbol: Set
+    | Alias
     | Parameter
     | Variable
     | Equation
@@ -301,7 +301,7 @@ def validate_domain(
     | ImplicitParameter
     | ImplicitVariable
     | Operation,
-    indices: EllipsisType | slice | Set | Alias | str | int | Iterable | ImplicitSet,
+    indices: IndexType,
 ):
     domain = utils._to_list(indices)
     domain = [str(elem) if type(elem) is int else elem for elem in domain]
@@ -466,7 +466,7 @@ def validate_model(
                     "EMP models."
                 )
 
-    return problem, sense
+    return problem, sense  # type: ignore
 
 
 def validate_model_name(name: str) -> str:
@@ -500,7 +500,7 @@ def validate_solver_args(
     solver: str,
     problem: Problem | str,
     options: Options | None,
-    output: io.TextIOWrapper | None,
+    output: TextIO | None,
     load_symbols: list[Symbol] | None,
 ) -> None:
     if not get_option("VALIDATION"):

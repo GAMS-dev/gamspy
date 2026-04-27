@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import gamspy as gp
 from gamspy._algebra.condition import Condition
@@ -10,8 +10,11 @@ from gamspy._symbols.implicits import ImplicitSet
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Container, Set
+    from gamspy import Alias, Container, Parameter, Set
     from gamspy._algebra.expression import Expression
+    from gamspy._algebra.operation import Card, Operation
+    from gamspy._symbols.implicits import ImplicitParameter
+    from gamspy.math import MathOp
 
 
 class Loop:
@@ -67,7 +70,13 @@ class Loop:
 
     def __init__(
         self,
-        indices: Set | Alias | ImplicitSet | Condition | Domain | Sequence[Set | Alias],
+        indices: Set
+        | Alias
+        | ImplicitSet
+        | Condition
+        | Domain
+        | Sequence[Set | Alias]
+        | MathOp,
     ):
         self.indices = indices
         self._loop_number = -1
@@ -170,6 +179,191 @@ class Loop:
             self.container._synch_with_gams(gams_to_gamspy=True)
 
 
+class For:
+    """
+    A context manager to execute a group of statements iteratively over a numerical range.
+
+    The For class maps to the GAMS `for` statement. It allows you to iterate over a
+    range of numerical values, incrementing or decrementing a scalar parameter at each step.
+    It is useful for iterative algorithmic calculations that require a numerical counter,
+    rather than iterating over elements of a set.
+
+    Parameters
+    ----------
+    index : Parameter
+        A scalar Parameter used as the numerical loop counter.
+    start : int | float | Parameter | Expression | Card | Operation
+        The starting value of the loop counter.
+    end : int | float | Parameter | Expression | Card | Operation
+        The final value of the loop counter.
+    step : int | float | Parameter | Expression | Card | Operation, optional
+        The increment or decrement step size. Defaults to 1.
+    direction : Litera['to', 'downto']
+        The direction of the step. 'to' steps upwards, 'downto' steps downwards. Defaults to 'to'.
+
+    Examples
+    --------
+    **1. Simple iteration over a numerical range:**
+
+
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Parameter(m)
+    >>> cnt = gp.Parameter(m, records=0)
+    >>> with gp.For(i, 1, 10):
+    ...     cnt[...] += i
+
+    **2. Iterating backwards**
+    When a negative step is provided, the loop iterate downwards.
+
+
+    >>> x = gp.Parameter(m, records=10)
+    >>> with gp.For(i, 10, 1, 2, direction="downto"):
+    ...     x[...] = x[...] - 2
+
+    **3. Using Parameters as loop bounds:**
+    You can use other parameters or expressions to define the boundaries of the loop.
+
+
+    >>> start_val = gp.Parameter(m, records=5)
+    >>> end_val = gp.Parameter(m, records=15)
+    >>> with gp.For(i, start_val, end_val):
+    ...     cnt[...] += 1
+
+    """
+
+    def __init__(
+        self,
+        index: Parameter,
+        start: int
+        | float
+        | Parameter
+        | ImplicitParameter
+        | Expression
+        | Card
+        | Operation,
+        end: int
+        | float
+        | Parameter
+        | ImplicitParameter
+        | Expression
+        | Card
+        | Operation,
+        step: int
+        | float
+        | Parameter
+        | ImplicitParameter
+        | Expression
+        | Card
+        | Operation = 1,
+        direction: Literal["to", "downto"] = "to",
+    ):
+        if not isinstance(index, gp.Parameter):
+            raise TypeError(
+                f"`index` must be a scalar Parameter but given {type(index)}"
+            )
+
+        if index.dimension != 0:
+            raise ValidationError(
+                f"`index` parameter must be a scalar but given index dimension is {index.dimension}"
+            )
+
+        self.index = index
+        self.start = start
+        self.end = end
+        self.step = step
+        self.direction = direction
+        self._loop_number = -1
+        self.container = index.container
+
+    @property
+    def Break(self) -> None:
+        """
+        Breaks the execution of the current loop prematurely.
+
+        This property maps to the GAMS `break` statement. Note that you can only
+        break out of the innermost loop currently executing. Attempting to break an
+        outer loop from within an inner loop will raise a ValidationError.
+
+        Raises
+        ------
+        ValidationError
+            If attempting to break an outer loop without breaking the inner loop first.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Parameter(m)
+        >>> cnt = gp.Parameter(m, records=0)
+        >>> with gp.For(i, 1, 10) as my_for:
+        ...     cnt[...] += 1
+        ...     with gp.If(i == 5):
+        ...         my_for.Break  # Exits the loop when `i` reaches 5
+
+        """
+        if self._loop_number < self.container._in_loop:
+            raise ValidationError(
+                "You cannot break this for loop. You should break the inner loop first."
+            )
+
+        self.container._add_statement("break;")
+
+    @property
+    def Continue(self) -> None:
+        """
+        Skips the remaining statements in the current iteration and proceeds to the next one.
+
+        This property maps to the GAMS `continue` statement. It gives additional
+        control over the execution of loop structures by allowing you to bypass
+        the rest of the loop block for the current counter value.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Parameter(m)
+        >>> cnt = gp.Parameter(m, records=0)
+        >>> with gp.For(i, 1, 10) as my_for:
+        ...     with gp.If(i == 5):
+        ...         my_for.Continue  # Skips incrementing `cnt` when `i` is 5
+        ...     cnt[...] += 1
+
+        """
+        self.container._add_statement("continue;")
+
+    def __enter__(self) -> For:
+        self.container._in_loop += 1
+        self._loop_number = self.container._in_loop
+
+        index_str = self.index.gamsRepr()
+        start_str = (
+            str(self.start)
+            if isinstance(self.start, (int, float))
+            else self.start.gamsRepr()
+        )
+        end_str = (
+            str(self.end) if isinstance(self.end, (int, float)) else self.end.gamsRepr()
+        )
+        step_str = (
+            str(self.step)
+            if isinstance(self.step, (int, float))
+            else self.step.gamsRepr()
+        )
+        self.container._add_statement(
+            f"for({index_str} = {start_str} {self.direction} {end_str} by {step_str}, "
+        )
+
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.container._in_loop -= 1
+
+        self.container._add_statement(");")
+        if self.container._in_loop == 0:  # Run only in the most outer loop
+            self.container._synch_with_gams(gams_to_gamspy=True)
+
+
 class If:
     """
     A context manager to conditionally execute a group of statements.
@@ -206,7 +400,7 @@ class If:
 
     """
 
-    def __init__(self, condition: Expression | Condition):
+    def __init__(self, condition: Expression | Condition | Operation | MathOp):
         self.condition = condition
         self.container = condition.container
 

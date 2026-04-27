@@ -662,6 +662,9 @@ The generated `.tex` file can be automatically compiled into a PDF file by using
     model.toLatex(path=<latex_path>, generate_pdf=True)
 
 .. note::
+    CMU Serif font must be installed in your machine to see Greek letters in your pdf document.
+
+.. note::
     To generate a PDF file from a `.tex` file, you must install `xelatex` on your system and add it to your `PATH`. 
     The :meth:`toLatex <gamspy.Model.toLatex>` function uses the *names* of the GAMSPy symbols. If names are not
     supplied, GAMSPy invents (ugly) names which would show up in the LaTeX source. So for this feature to be useful

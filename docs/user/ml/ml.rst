@@ -76,6 +76,7 @@ NN Formulation                                                                  
 :meth:`sigmoid <gamspy.math.sigmoid>`                                                  |nlp-badge|
 :meth:`TorchSequential <gamspy.formulations.TorchSequential>`                          Depends\ [*]_
 :meth:`RNN <gamspy.formulations.RNN>`                                                  Depends on activation
+:meth:`GRU <gamspy.formulations.GRU>`                                                  |nlp-badge|
 =================================================================================      =========================
 
 .. [*]  The complexity of a TorchSequential model depends both on the underlying sequential structure and on how it is embedded.

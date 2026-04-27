@@ -381,3 +381,12 @@ class Linear:
             result.parameters_created["output_bounds"] = out_bounds
 
         return result
+
+    def __str__(self) -> str:
+        return (
+            "Linear(\n"
+            f"  in_features={self.in_features}\n"
+            f"  out_features={self.out_features}\n"
+            f"  bias={self.use_bias}\n"
+            f"  weights_loaded={'True' if self._state == 1 else 'False'}\n)"
+        )

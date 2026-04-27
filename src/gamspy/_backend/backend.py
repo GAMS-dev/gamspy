@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import os
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Literal, no_type_check
+from typing import TYPE_CHECKING, Literal, TextIO, no_type_check
 
 import gamspy._symbols as syms
 import gamspy.utils as utils
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    import io
     from pathlib import Path
 
     import pandas as pd
@@ -54,7 +53,7 @@ def backend_factory(
     options: Options | None = None,
     solver: str | None = None,
     solver_options: dict | Path | None = None,
-    output: io.TextIOWrapper | None = None,
+    output: TextIO | None = None,
     backend: Literal["local", "engine", "neos"] = "local",
     client: EngineClient | NeosClient | None = None,
     model: Model | None = None,
@@ -114,7 +113,7 @@ class Backend(ABC):
         options: Options,
         solver: str | None,
         solver_options: dict | Path | None,
-        output: io.TextIOWrapper | None,
+        output: TextIO | None,
         load_symbols: list[Symbol] | None,
     ):
         self.backend_type = backend_type

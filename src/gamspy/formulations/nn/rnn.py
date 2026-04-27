@@ -491,3 +491,12 @@ class RNN:
             result.variables_created["output"] = h_out
 
         return result
+
+    def __str__(self) -> str:
+        return (
+            "RNN(\n"
+            f"  input_size={self.input_size}\n"
+            f"  hidden_size={self.hidden_size}\n"
+            f"  activation={self.activation}\n"
+            f"  weights_loaded={'True' if self._state == 1 else 'False'}\n)"
+        )

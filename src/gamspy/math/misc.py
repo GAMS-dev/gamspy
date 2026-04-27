@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
+import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._container import Container
@@ -14,9 +15,13 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     import pandas as pd
 
-    from gamspy import Alias, Set
+    from gamspy import Alias, Parameter, Set
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+    from gamspy._symbols.implicits.implicit_symbol import (
+        ImplicitParameter,
+        ImplicitSet,
+        ImplicitSymbol,
+    )
     from gamspy._symbols.symbol import Symbol
     from gamspy._types import OperableType
 
@@ -58,12 +63,13 @@ class MathOp(operable.Operable):
         self.container = None
         self.domain: list[Set | Alias] = []
         self.dimension = 0
-        self.where = condition.Condition(self)
         if hasattr(elements[0], "container"):
             self.container = elements[0].container  # type: ignore
         if hasattr(elements[0], "domain"):
             self.domain: list[Set | Alias] = elements[0].domain  # type: ignore
             self.dimension = validation.get_dimension(self.domain)
+
+        self.where = condition.Condition(self)
 
     def __eq__(self, other):
         return expression.Expression(self, "=e=", other)
@@ -226,6 +232,117 @@ class MathOp(operable.Operable):
 
     def __str__(self):
         return self.gamsRepr()
+
+
+def _option_statement(
+    source: Set | Alias | ImplicitSet | Parameter | ImplicitParameter,
+    target: Set | Alias | Parameter | ImplicitSet | ImplicitParameter,
+    direction: Literal["right", "left"],
+) -> None:
+    if (
+        isinstance(source, (implicits.ImplicitSet, implicits.ImplicitParameter))
+        and source.domain != source.parent.domain
+    ):
+        raise ValidationError(
+            f"Given indices for {source.gamsRepr()} does not match its domain!"
+        )
+
+    if (
+        isinstance(target, (implicits.ImplicitSet, implicits.ImplicitParameter))
+        and target.domain != target.parent.domain
+    ):
+        raise ValidationError(
+            f"Given indices for {target.gamsRepr()} does not match its domain!"
+        )
+
+    if direction == "right":
+        operator = "<"
+    elif direction == "left":
+        operator = "<="
+    else:
+        raise ValidationError("Direction must be either 'right' or 'left'.")
+
+    source.container._add_statement(f"option {target.name} {operator} {source.name};")
+    source.container._synch_with_gams(gams_to_gamspy=True)
+
+
+def project(
+    source: Set | Alias | ImplicitSet | Parameter | ImplicitParameter,
+    target: Set | Alias | ImplicitSet,
+    direction: Literal["right", "left"] = "right",
+) -> None:
+    """
+    Projects the dimensions of a source set onto a target set.
+
+    Parameters
+    ----------
+    source : Set | Alias | ImplicitSet | Parameter | ImplicitParameter
+        The multi-dimensional source set.
+    target : Set | Alias | ImplicitSet
+        The target set to project into.
+    direction : Literal["right", "left"], optional
+        The direction of the permutation/projection if domains are ambiguous. Default is "right".
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> import gamspy.math as gmath
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=["i1", "i2"])
+    >>> j = gp.Set(m, "j", records=["j1", "j2"])
+    >>> k = gp.Set(m, "k", records=["k1", "k2"])
+    >>> ijk = gp.Set(m, "ijk", domain=[i, j, k])
+    >>> ijk[i, j, k] = True
+    >>> ij = gp.Set(m, "ij", domain=[i, j])
+    >>> gmath.project(source=ijk[i, j, k], target=ij[i, j])
+    >>> ij.toList()
+    [('i1', 'j1'), ('i1', 'j2'), ('i2', 'j1'), ('i2', 'j2')]
+
+    """
+    _option_statement(source, target, direction)
+
+
+def aggregate(
+    source: Set | Alias | ImplicitSet | Parameter | ImplicitParameter,
+    target: Parameter | ImplicitParameter,
+    direction: Literal["right", "left"] = "right",
+) -> None:
+    """
+    Aggregates the elements of a source set into a target parameter.
+
+    Parameters
+    ----------
+    source : Set | Alias | ImplicitSet
+        The multi-dimensional source set.
+    target : Parameter | ImplicitParameter
+        The target set to project into.
+    direction : Literal["right", "left"], optional
+        The direction of the permutation/projection if domains are ambiguous. Default is "right".
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> import gamspy.math as gmath
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=["i1", "i2"])
+    >>> j = gp.Set(m, "j", records=["j1", "j2"])
+    >>> k = gp.Set(m, "k", records=["k1", "k2", "k3"])
+    >>> ijk = gp.Set(m, "ijk", domain=[i, j, k])
+    >>> ijk[i, j, k] = True
+    >>> count_ij = gp.Parameter(m, "count_ij", domain=[i, j])
+    >>> gmath.aggregate(source=ijk[i, j, k], target=count_ij[i, j])
+    >>> count_ij.toList()
+    [('i1', 'j1', 3.0), ('i1', 'j2', 3.0), ('i2', 'j1', 3.0), ('i2', 'j2', 3.0)]
+
+    """
+    if not isinstance(target, (syms.Parameter, implicits.ImplicitParameter)):
+        raise TypeError(
+            f"`target` must be of type Parameter or ImplicitParameter but given {type(target)}!"
+        )
+    # Functionally identical to project, but separated for semantic clarity
+    # to the Python user since the GAMS backend behavior changes depending on
+    # the target symbol type.
+    _option_statement(source, target, direction)
 
 
 def _stringify(x: str | int | float | Symbol | ImplicitSymbol, *, latex: bool = False):
@@ -1159,13 +1276,14 @@ def rand_triangle(low: int | float, mid: int | float, high: int | float) -> Math
     return MathOp("randTriangle", (low, mid, high))
 
 
-def same_as(self: Set | Alias, other: Set | Alias | str) -> MathOp:
+def same_as(arg1: Set | Alias | str, arg2: Set | Alias | str) -> MathOp:
     """
     Evaluates to true if this set is identical to the given set or alias, false otherwise.
 
     Parameters
     ----------
-    other : Set | Alias
+    arg1 : Set | Alias | str
+    other : Set | Alias | str
 
     Returns
     -------
@@ -1184,7 +1302,7 @@ def same_as(self: Set | Alias, other: Set | Alias | str) -> MathOp:
     [['seattle', 'seattle', 1.0]]
 
     """
-    return MathOp("sameAs", (self, other))
+    return MathOp("sameAs", (arg1, arg2))
 
 
 def slrec(x: OperableType, S: int | float = 1e-10) -> MathOp:

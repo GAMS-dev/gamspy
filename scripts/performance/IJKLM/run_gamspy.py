@@ -77,8 +77,6 @@ def gamspy_model(c, IJK, JKL, KLM):
         sense="FEASIBILITY",
     )
 
-    c.addGamsCode("IJKLM_model.JustScrDir = 1;")
-
     model.solve(
         options=gp.Options(
             report_solution=0,
@@ -87,5 +85,6 @@ def gamspy_model(c, IJK, JKL, KLM):
             variable_listing_limit=0,
             write_listing_file=False,
             generate_name_dict=False,
+            bypass_solver=True,
         ),
     )

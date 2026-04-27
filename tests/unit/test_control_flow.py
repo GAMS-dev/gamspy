@@ -338,3 +338,105 @@ def test_break():
         with pytest.raises(ValidationError):
             with gp.Loop(j) as loop2:
                 loop.Break  # noqa: B018
+
+
+def test_for():
+    # example from GAMS docs
+    m = gp.Container()
+
+    s = gp.Parameter(m)
+    p = gp.Parameter(m)
+
+    with gp.For(s, -3.8, -0.1, 1.4):
+        p[...] = s
+
+    assert p.toValue() == -1.0
+
+    # example from TIMES coef_ext.cli
+    m_model = gp.Container()
+
+    t = gp.Set(m_model, name="T")
+    cm_var = gp.Set(m_model, name="CM_VAR")
+    cm_box = gp.Set(m_model, name="CM_BOX")
+    cm_buck = gp.Set(m_model, name="CM_BUCK")
+    cm_q = gp.Set(m_model, name="CM_Q")
+
+    altobj = gp.Parameter(m_model, name="ALTOBJ")
+    cm_calib = gp.Parameter(m_model, name="CM_CALIB")
+    m = gp.Parameter(m_model, name="M", domain=[t])
+    b = gp.Parameter(m_model, name="B", domain=[t])
+    lead = gp.Parameter(m_model, name="LEAD", domain=[t])
+
+    # Scalars for control flow
+    my_f = gp.Parameter(m_model, name="MY_F")
+    z = gp.Parameter(m_model, name="Z")
+    f = gp.Parameter(m_model, name="F")
+
+    # Multi-dimensional parameters (using "*" for varying alias/subset domains to avoid domain violations)
+    cm_bb = gp.Parameter(m_model, name="CM_BB", domain=[cm_var, t, "*", cm_box])
+    cm_cc = gp.Parameter(m_model, name="CM_CC", domain=[cm_var, t, "*", cm_box])
+    cm_aa = gp.Parameter(m_model, name="CM_AA", domain=[cm_var, t, "*", "*", "*"])
+    cm_phi = gp.Parameter(m_model, name="CM_PHI", domain=[cm_var, "*", "*"])
+
+    # Control Flow implementation
+    with gp.Loop(t.where[altobj != 3]):
+        # IF(ORD(T) GT 1) ... ELSE ...
+        with gp.If(gp.Ord(t) > 1):
+            my_f[...] = m[t] - b[t] + 1
+            z[...] = lead[t]
+
+        with gp.If(gp.Ord(t) <= 1):
+            my_f[...] = cm_calib
+            z[...] = my_f
+
+        # FOR(F = 1 TO Z)
+        with gp.For(f, 1, z):
+            # IF(F LE MY_F) ... ELSE ...
+            with gp.If(f <= my_f):
+                cm_bb[cm_var, t, "1", cm_box] = cm_bb[cm_var, t, "1", cm_box] + gp.Sum(
+                    cm_buck,
+                    cm_phi[cm_var, cm_buck, cm_var]
+                    * cm_aa[cm_var, t, "1", cm_box, cm_buck],
+                )
+
+            with gp.If(f > my_f):
+                cm_cc[cm_var, t, "1", cm_box] = cm_cc[cm_var, t, "1", cm_box] + gp.Sum(
+                    cm_buck,
+                    cm_phi[cm_var, cm_buck, cm_var]
+                    * cm_aa[cm_var, t, "1", cm_box, cm_buck],
+                )
+
+            # Statement outside the inner IF/ELSE but inside the FOR loop
+            cm_aa[cm_var, t, "1", cm_buck, cm_box] = gp.Sum(
+                cm_q.where[cm_box[cm_q]],
+                cm_aa[cm_var, t, "1", cm_buck, cm_q] * cm_phi[cm_var, cm_q, cm_box],
+            )
+
+    # Another example with expressions: https://git.gams.com/devel/gamspy/-/merge_requests/776#note_313522
+    m = gp.Container()
+
+    i = gp.Set(m, name="i", records=["1", "2"])
+    j = gp.Set(m, name="j", is_singleton=True, records=["a"])
+
+    p = gp.Parameter(
+        m, name="p", domain=[i, j], records=[("1", "a", 3), ("2", "a", -2)]
+    )
+    k = gp.Parameter(m, name="k")
+    cnt = gp.Parameter(m, name="cnt")
+
+    with gp.Loop(i):
+        cnt[...] = 0
+
+        # IF block (p(i,j) > 0)
+        with gp.If(p[i, j] > 0):
+            # direction defaults to "to", but specified for clarity
+            with gp.For(k, 1, 3 * p[i, "a"], p[i, j], direction="to"):
+                cnt[...] = cnt + 1
+
+        # ELSE block (translated using a mutually exclusive IF)
+        with gp.If(p[i, j] <= 0):
+            # Explicitly set direction="downto" and use dynamic GAMS expression for step
+            with gp.For(k, -3 * p[i, "a"], 1, -p[i, j], direction="downto"):
+                cnt[...] = cnt + 1
+
+    assert cnt.toValue() == 3.0

@@ -61,7 +61,8 @@ class Condition(operable.Operable):
         | Number
         | Card
         | Ord
-        | MathOp,
+        | MathOp
+        | Condition,
         condition: Operation
         | Expression
         | ImplicitParameter
@@ -83,7 +84,7 @@ class Condition(operable.Operable):
             self.domain = conditioning_on.domain
 
     @property
-    def where(self):
+    def where(self) -> Condition:
         return Condition(self)
 
     def __getitem__(

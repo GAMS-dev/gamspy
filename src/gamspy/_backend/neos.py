@@ -8,7 +8,7 @@ import ssl
 import xmlrpc.client
 import zipfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TextIO
 
 import certifi
 
@@ -31,8 +31,6 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 if TYPE_CHECKING:
-    import io
-
     from gamspy import Container, Model
     from gamspy._symbols.symbol import Symbol
 
@@ -387,7 +385,7 @@ class NEOSServer(backend.Backend):
         solver: str,
         solver_options: dict | Path | None,
         client: NeosClient | None,
-        output: io.TextIOWrapper | None,
+        output: TextIO | None,
         model: Model,
         load_symbols: list[Symbol] | None,
     ) -> None:

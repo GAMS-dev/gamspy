@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TextIO
 
 import gamspy._backend.backend as backend
 import gamspy._miro as miro
@@ -9,7 +9,6 @@ from gamspy._communication import send_job
 from gamspy.exceptions import GamspyException, _customize_exception
 
 if TYPE_CHECKING:
-    import io
     from pathlib import Path
 
     from gamspy import Container, Model, Options
@@ -23,7 +22,7 @@ class Local(backend.Backend):
         options: Options,
         solver: str | None,
         solver_options: dict | Path | None,
-        output: io.TextIOWrapper | None,
+        output: TextIO | None,
         model: Model | None,
         load_symbols: list[Symbol] | None,
     ) -> None:
