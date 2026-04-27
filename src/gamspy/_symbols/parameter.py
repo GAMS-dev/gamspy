@@ -21,7 +21,6 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from types import EllipsisType
 
     import pandas as pd
 
@@ -29,6 +28,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter
+    from gamspy._types import IndexType
     from gamspy.math.matrix import Dim
 
 
@@ -335,16 +335,14 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         self.domain = new_domain
 
-    def __getitem__(
-        self, indices: EllipsisType | slice | Set | Alias | Sequence | str
-    ) -> implicits.ImplicitParameter:
+    def __getitem__(self, indices: IndexType) -> ImplicitParameter:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
     def __setitem__(
         self,
-        indices: EllipsisType | slice | Sequence | str | implicits.ImplicitSet,
+        indices: IndexType,
         rhs: Operation | Expression | Parameter | ImplicitParameter | float | int,
     ):
         # self[domain] = rhs

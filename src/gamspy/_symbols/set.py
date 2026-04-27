@@ -20,7 +20,6 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from types import EllipsisType
 
     import pandas as pd
 
@@ -28,7 +27,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import OperableType
+    from gamspy._types import IndexType, OperableType
     from gamspy.math import Dim
     from gamspy.math.misc import MathOp
 
@@ -671,7 +670,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                     raise ValidationError("Set requires a container.") from e
             assert container is not None
 
-            self.where = condition.Condition(self)
             self._assignment: Expression | None = None
 
             if name is not None:
@@ -694,6 +692,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 description=description,
                 uels_on_axes=uels_on_axes,
             )
+            self.where = condition.Condition(self)
             self._latex_name = self.name.replace("_", r"\_")
 
             if is_miro_input:
@@ -747,26 +746,12 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         self.domain = new_domain
 
-    def __getitem__(
-        self,
-        indices: Sequence
-        | str
-        | int
-        | EllipsisType
-        | slice
-        | Set
-        | Alias
-        | ImplicitSet,
-    ) -> implicits.ImplicitSet:
+    def __getitem__(self, indices: IndexType) -> ImplicitSet:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
-    def __setitem__(
-        self,
-        indices: Sequence | str | int | implicits.ImplicitSet | EllipsisType | slice,
-        rhs: Expression | Operation | bool | str,
-    ):
+    def __setitem__(self, indices: IndexType, rhs: Expression | Operation | bool | str):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 

@@ -63,12 +63,13 @@ class MathOp(operable.Operable):
         self.container = None
         self.domain: list[Set | Alias] = []
         self.dimension = 0
-        self.where = condition.Condition(self)
         if hasattr(elements[0], "container"):
             self.container = elements[0].container  # type: ignore
         if hasattr(elements[0], "domain"):
             self.domain: list[Set | Alias] = elements[0].domain  # type: ignore
             self.dimension = validation.get_dimension(self.domain)
+
+        self.where = condition.Condition(self)
 
     def __eq__(self, other):
         return expression.Expression(self, "=e=", other)

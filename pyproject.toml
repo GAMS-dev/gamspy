@@ -64,6 +64,12 @@ name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
+[tool.ty.src]
+exclude = ["src/gamspy/_backend/neos.py", "src/gamspy/_backend/engine.py"]
+
+[tool.ty.rules]
+unused-type-ignore-comment = "ignore"
+
 [dependency-groups]
 dev = [
     "griffe>=1.15.0",

@@ -335,7 +335,6 @@ class Expression(operable.Operable):
             right._fix_equalities()
 
         self._representation: str | None = None
-        self.where = condition.Condition(self)
         self._create_domain()
         left_control = getattr(left, "controlled_domain", [])
         right_control = getattr(right, "controlled_domain", [])
@@ -347,6 +346,8 @@ class Expression(operable.Operable):
             self.container = left.container  # type: ignore
         elif hasattr(right, "container") and right.container is not None:  # type: ignore
             self.container = right.container  # type: ignore
+
+        self.where = condition.Condition(self)
 
     @property
     def representation(self) -> str:

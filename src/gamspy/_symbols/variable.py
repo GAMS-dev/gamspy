@@ -25,12 +25,13 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from types import EllipsisType
 
     import pandas as pd
 
     from gamspy import Alias, Container, Set
     from gamspy._algebra.expression import Expression
+    from gamspy._symbols.implicits import ImplicitVariable
+    from gamspy._types import IndexType
     from gamspy.math.matrix import Dim
 
 
@@ -391,9 +392,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         self.domain = new_domain
 
-    def __getitem__(
-        self, indices: Sequence | str | EllipsisType | slice
-    ) -> implicits.ImplicitVariable:
+    def __getitem__(self, indices: IndexType) -> ImplicitVariable:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)

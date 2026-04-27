@@ -292,6 +292,7 @@ def _expand_ellipsis_slice(
 
 def validate_domain(
     symbol: Set
+    | Alias
     | Parameter
     | Variable
     | Equation

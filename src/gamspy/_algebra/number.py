@@ -29,9 +29,9 @@ class Number(operable.Operable):
                 f"Number should be of type int or float but given value has type `{type(value)}`"
             )
 
-        self._value = value
-        self.where = condition.Condition(self)
+        self._value: int | float | str = value
         self.domain: list = []
+        self.where = condition.Condition(self)
 
     def __eq__(self, other):
         return expression.Expression(self, "=e=", other)

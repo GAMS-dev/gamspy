@@ -19,10 +19,11 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     from gamspy import Container, Set
     from gamspy._algebra.expression import Expression
+    from gamspy._algebra.operation import Operation
+    from gamspy._symbols.implicits import ImplicitSet
+    from gamspy._types import IndexType
 
 
 class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
@@ -178,17 +179,17 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
     def __repr__(self) -> str:
         return f"Alias(name='{self.name}', alias_with={self.alias_with})"
 
-    def __getitem__(self, indices: Sequence | str) -> implicits.ImplicitSet:
+    def __getitem__(self, indices: IndexType) -> ImplicitSet:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
-    def __setitem__(self, indices: tuple | str, rhs):
+    def __setitem__(self, indices: IndexType, rhs: Expression | Operation | bool | str):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 
         if isinstance(rhs, bool):
-            rhs = "yes" if rhs is True else "no"  # type: ignore
+            rhs = "yes" if rhs is True else "no"
 
         statement = expression.Expression(
             implicits.ImplicitSet(self, name=self.name, domain=domain),
@@ -255,7 +256,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         """
         return self.name
 
-    def getDeclaration(self):
+    def getDeclaration(self) -> str:
         """
         Returns the GAMS declaration statement for this Alias.
 
