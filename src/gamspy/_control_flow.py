@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Card, Operation
     from gamspy._symbols.implicits import ImplicitParameter
+    from gamspy.math import MathOp
 
 
 class Loop:
@@ -69,7 +70,13 @@ class Loop:
 
     def __init__(
         self,
-        indices: Set | Alias | ImplicitSet | Condition | Domain | Sequence[Set | Alias],
+        indices: Set
+        | Alias
+        | ImplicitSet
+        | Condition
+        | Domain
+        | Sequence[Set | Alias]
+        | MathOp,
     ):
         self.indices = indices
         self._loop_number = -1
@@ -393,7 +400,7 @@ class If:
 
     """
 
-    def __init__(self, condition: Expression | Condition):
+    def __init__(self, condition: Expression | Condition | Operation | MathOp):
         self.condition = condition
         self.container = condition.container
 

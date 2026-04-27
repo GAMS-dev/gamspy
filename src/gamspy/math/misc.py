@@ -1275,13 +1275,14 @@ def rand_triangle(low: int | float, mid: int | float, high: int | float) -> Math
     return MathOp("randTriangle", (low, mid, high))
 
 
-def same_as(self: Set | Alias, other: Set | Alias | str) -> MathOp:
+def same_as(arg1: Set | Alias | str, arg2: Set | Alias | str) -> MathOp:
     """
     Evaluates to true if this set is identical to the given set or alias, false otherwise.
 
     Parameters
     ----------
-    other : Set | Alias
+    arg1 : Set | Alias | str
+    other : Set | Alias | str
 
     Returns
     -------
@@ -1300,7 +1301,7 @@ def same_as(self: Set | Alias, other: Set | Alias | str) -> MathOp:
     [['seattle', 'seattle', 1.0]]
 
     """
-    return MathOp("sameAs", (self, other))
+    return MathOp("sameAs", (arg1, arg2))
 
 
 def slrec(x: OperableType, S: int | float = 1e-10) -> MathOp:

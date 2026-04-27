@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 
     from gamspy import Alias, Container
     from gamspy._algebra.expression import Expression
+    from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import OperableType
     from gamspy.math import Dim
@@ -764,13 +765,13 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     def __setitem__(
         self,
         indices: Sequence | str | int | implicits.ImplicitSet | EllipsisType | slice,
-        rhs,
+        rhs: Expression | Operation | bool | str,
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 
         if isinstance(rhs, bool):
-            rhs = "yes" if rhs is True else "no"  # type: ignore
+            rhs = "yes" if rhs is True else "no"
 
         statement = expression.Expression(
             implicits.ImplicitSet(self, name=self.name, domain=domain),
