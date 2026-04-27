@@ -36,6 +36,7 @@ if TYPE_CHECKING:
         ImplicitSet,
         ImplicitVariable,
     )
+    from gamspy._types import IndexType
 
 NAME_MATCH_REGEX = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]{0,62}$")
 
@@ -300,7 +301,7 @@ def validate_domain(
     | ImplicitParameter
     | ImplicitVariable
     | Operation,
-    indices: EllipsisType | slice | Set | Alias | str | int | Iterable | ImplicitSet,
+    indices: IndexType,
 ):
     domain = utils._to_list(indices)
     domain = [str(elem) if type(elem) is int else elem for elem in domain]

@@ -9,10 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
 from gams.core.gdx import GMS_DT_EQU
-from gams.transfer._internals import (
-    EQU_TYPE,
-    TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
-)
+from gams.transfer._internals import EQU_TYPE, TRANSFER_TO_GAMS_EQUATION_SUBTYPES
 
 import gamspy as gp
 import gamspy._algebra.condition as condition

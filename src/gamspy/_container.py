@@ -519,11 +519,7 @@ class Container(gt.Container):
 
         return summary
 
-    def _generate_gams_string(
-        self,
-        gdx_in: str,
-        modified_names: list[str],
-    ) -> str:
+    def _generate_gams_string(self, gdx_in: str, modified_names: list[str]) -> str:
         LOADABLE = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         MIRO_INPUT_TYPES = (gp.Set, gp.Parameter)
         assume_suffix = int(get_option("ASSUME_VARIABLE_SUFFIX"))
@@ -588,8 +584,7 @@ class Container(gt.Container):
         return gams_string
 
     def _filter_load_symbols(
-        self,
-        symbol_names: dict[str, str] | list[str],
+        self, symbol_names: dict[str, str] | list[str]
     ) -> dict[str, str] | list[str]:
         if isinstance(symbol_names, list):
             names = []
@@ -717,10 +712,7 @@ class Container(gt.Container):
         self._synch_with_gams()
 
     def setRecords(
-        self,
-        records: dict[SymbolType, Any],
-        *,
-        uels_on_axes: bool | list[bool] = False,
+        self, records: dict[SymbolType, Any], *, uels_on_axes: bool | list[bool] = False
     ) -> None:
         """
         Set records for multiple symbols in a single batch operation.

@@ -9,9 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
 from gams.core.gdx import GMS_DT_VAR
-from gams.transfer._internals import (
-    TRANSFER_TO_GAMS_VARIABLE_SUBTYPES,
-)
+from gams.transfer._internals import TRANSFER_TO_GAMS_VARIABLE_SUBTYPES
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -407,7 +405,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         return f"Variable(name='{self.name}', domain={self.domain}, type='{self.type}')"
 
     @property
-    def T(self) -> implicits.ImplicitVariable:
+    def T(self) -> ImplicitVariable:
         """
         Alias for the `.t()` method.
 
@@ -417,7 +415,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         return self.t()
 
-    def t(self) -> implicits.ImplicitVariable:
+    def t(self) -> ImplicitVariable:
         """
         Returns an ImplicitVariable derived from this
         variable by swapping its last two indices. This operation

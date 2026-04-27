@@ -394,7 +394,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         return f"Parameter(name='{self.name}', domain={self.domain})"
 
     @property
-    def T(self) -> implicits.ImplicitParameter:
+    def T(self) -> ImplicitParameter:
         """
         Alias for the `.t()` method.
 
@@ -404,7 +404,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         """
         return self.t()
 
-    def t(self) -> implicits.ImplicitParameter:
+    def t(self) -> ImplicitParameter:
         """
         Returns an ImplicitParameter derived from this
         parameter by swapping its last two indices. This operation

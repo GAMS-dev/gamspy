@@ -19,7 +19,6 @@ from gamspy.exceptions import FatalError, ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
-    from types import EllipsisType
     from typing import TypeAlias
 
     import pandas as pd
@@ -37,6 +36,7 @@ if TYPE_CHECKING:
         Variable,
     )
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
+    from gamspy._types import IndexType
 
     SymbolType: TypeAlias = Alias | Set | Parameter | Variable | Equation
 
@@ -579,17 +579,7 @@ def _open_gdx_file(system_directory: str, load_from: str):
     return gdx_handle
 
 
-def _to_list(
-    obj: EllipsisType
-    | slice
-    | Set
-    | Alias
-    | str
-    | int
-    | Iterable
-    | Sequence
-    | ImplicitSet,
-) -> list:
+def _to_list(obj: IndexType) -> list[IndexType]:
     """Converts the given object to a list"""
     if type(obj) is tuple:
         return list(obj)
