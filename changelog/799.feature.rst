@@ -1,1 +1,0 @@
-Implement projection and aggregation functions in gamspy.math module.

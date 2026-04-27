@@ -1,1 +1,0 @@
-Add a note in the documentation about the requirement of CMU serif font to generate a pdf file with model.toLatex function.

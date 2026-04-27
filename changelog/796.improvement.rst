@@ -1,1 +1,0 @@
-Add dunder str method for all Neural network formulations.

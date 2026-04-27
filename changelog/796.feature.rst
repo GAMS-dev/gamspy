@@ -1,2 +1,0 @@
-Add Gated Recurrent Units (GRU) formulation.
-Add support for GRU for TorchSequential.

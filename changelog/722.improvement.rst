@@ -1,1 +1,0 @@
-Reset symbol records to its default values in case symbol.setRecords(None) is called.
