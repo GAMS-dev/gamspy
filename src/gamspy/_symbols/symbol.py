@@ -93,9 +93,7 @@ class Symbol:
         return self._synchronize
 
     @synchronize.setter
-    def synchronize(
-        self: Set | Alias | Parameter | Variable | Equation, value: bool
-    ) -> None:
+    def synchronize(self: Set | Parameter | Variable | Equation, value: bool) -> None:
         """
         If set to True, the current state will be synchronized with GAMS.
         Else, the symbol will not be synchronized with GAMS.
