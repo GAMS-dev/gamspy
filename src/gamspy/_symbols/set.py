@@ -390,7 +390,7 @@ class SetMixin:
 
         raise ValueError("Lead type must be linear or circular")
 
-    def sameAs(self, other: Set | Alias | str) -> MathOp:
+    def sameAs(self: Set | Alias, other: Set | Alias | str) -> MathOp:
         """
         Evaluates to True if the current set element is identical to the given symbol or string.
 

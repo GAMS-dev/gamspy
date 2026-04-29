@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitParameter
     from gamspy._types import IndexType
     from gamspy.math.matrix import Dim
+    from gamspy.math.misc import MathOp
 
 
 class Parameter(gt.Parameter, operable.Operable, Symbol):
@@ -343,7 +344,13 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __setitem__(
         self,
         indices: IndexType,
-        rhs: Operation | Expression | Parameter | ImplicitParameter | float | int,
+        rhs: Operation
+        | Expression
+        | MathOp
+        | Parameter
+        | ImplicitParameter
+        | float
+        | int,
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)

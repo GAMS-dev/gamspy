@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     )
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy.math.misc import MathOp
 
 logger = logging.getLogger("GAMSPy")
 logger.setLevel(logging.WARNING)
@@ -110,7 +111,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __setitem__(
         self,
         indices: EllipsisType | slice | Sequence | str | implicits.ImplicitSet,
-        rhs: Expression | Operation | ImplicitParameter | int | float,
+        rhs: Expression | Operation | MathOp | ImplicitParameter | int | float,
     ) -> None:
         if (
             isinstance(self.parent, (syms.Variable, syms.Equation))
