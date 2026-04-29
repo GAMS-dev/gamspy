@@ -19,6 +19,7 @@ from gams.core.opt import (
 )
 from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 
+import gamspy._algebra.expression as expression
 import gamspy._symbols as symbols
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
@@ -173,6 +174,7 @@ def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
 
 def validate_dimension(
     symbol: Set
+    | Alias
     | Parameter
     | Variable
     | Equation
@@ -180,9 +182,9 @@ def validate_dimension(
     | ImplicitParameter
     | ImplicitVariable
     | Operation,
-    domain: Sequence[Set | Alias | ImplicitSet | str],
+    given_indices: Sequence[Set | Alias | ImplicitSet | str],
 ) -> None:
-    dimension = get_dimension(domain)
+    dimension = get_dimension(given_indices)
 
     if dimension != symbol.dimension:
         raise ValidationError(
@@ -197,7 +199,7 @@ def validate_one_dimensional_sets(
     given: Set | Alias | ImplicitSet,
     actual: str | Set | Alias,
 ):
-    if type(given) is implicits.ImplicitSet:
+    if type(given) in (implicits.ImplicitSet, expression.SetExpression):
         return
 
     given_path = get_domain_path(given)
@@ -222,6 +224,7 @@ def validate_type(domain):
             int,
             EllipsisType,
             slice,
+            expression.SetExpression,
         ):
             raise TypeError(
                 "Domain item must be type Set, Alias, ImplicitSet or str but"
@@ -303,18 +306,18 @@ def validate_domain(
     | Operation,
     indices: IndexType,
 ):
-    domain = utils._to_list(indices)
-    domain = [str(elem) if type(elem) is int else elem for elem in domain]
-    domain = _expand_ellipsis_slice(symbol.domain, domain)  # type: ignore
+    index_list = utils._to_list(indices)
+    index_list = [str(elem) if type(elem) is int else elem for elem in index_list]
+    index_list = _expand_ellipsis_slice(symbol.domain, index_list)  # type: ignore
     if not get_option("VALIDATION") or not get_option("DOMAIN_VALIDATION"):
-        return domain
+        return index_list
 
-    validate_type(domain)
-    validate_container(symbol, domain)
-    validate_dimension(symbol, domain)
+    validate_type(index_list)
+    validate_container(symbol, index_list)
+    validate_dimension(symbol, index_list)
 
     offset = 0
-    for given in domain:
+    for given in index_list:
         try:
             given_dim = given.dimension  # type: ignore
         except AttributeError:
@@ -346,11 +349,12 @@ def validate_domain(
 
         offset += given_dim
 
-    return domain
+    return index_list
 
 
 def validate_container(
     symbol: Set
+    | Alias
     | Parameter
     | Variable
     | Equation
@@ -358,9 +362,9 @@ def validate_container(
     | ImplicitParameter
     | ImplicitVariable
     | Operation,
-    domain: Sequence[str | Set | Alias],
+    given_indices: Sequence[str | Set | Alias],
 ):
-    for set in domain:
+    for set in given_indices:
         if (
             isinstance(set, (symbols.Set, symbols.Alias))
             and set.container != symbol.container
