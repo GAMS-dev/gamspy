@@ -1017,3 +1017,28 @@ def test_aggregation():
 
     with pytest.raises(ValidationError):
         gp.math.aggregate(target=p[ii], source=ij)
+
+
+def test_gelu():
+    m = gp.Container()
+
+    i = gp.Set(m, "i", records=range(1, 4))
+    p = gp.Parameter(m, "p", domain=i, records=[("1", 0), ("2", -2.5), ("3", 1)])
+
+    y, _ = gp.math.gelu(p)
+
+    model = gp.Model(
+        m,
+        problem="NLP",
+        sense="min",
+        equations=m.getEquations(),
+        objective=gp.Sum(y.domain, y),
+    )
+
+    model.solve(output=sys.stdout)
+
+    expected = [0, -0.01552416, 0.84134475]
+
+    assert np.allclose(y.toDense(), expected, rtol=1e-8), (
+        "Unexpected output for gelu activation."
+    )
