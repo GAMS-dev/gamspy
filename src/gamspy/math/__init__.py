@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from gamspy.math.activation import (
+    gelu,
     leaky_relu_with_binary_var,
     log_softmax,
     relu_with_binary_var,
@@ -151,6 +152,7 @@ __all__ = [
     "floor",
     "fractional",
     "gamma",
+    "gelu",
     "ifthen",
     "leaky_relu_with_binary_var",
     "log",

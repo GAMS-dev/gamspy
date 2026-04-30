@@ -781,3 +781,59 @@ def softmax(x: Variable, dim: int = -1):
     eq[...] = y[...] == gamspy.math.exp(x) / sum_expr
 
     return y, [eq]
+
+
+def gelu(
+    x: Parameter
+    | Variable
+    | implicits.ImplicitParameter
+    | implicits.ImplicitVariable
+    | Expression
+    | Operation,
+) -> tuple[Variable, list[Equation]]:
+    """
+    Implements the Gaussian Error Linear Unit (GELU) activation function.
+    The GELU function is defined as GELU(x) = x * CDF(x), where `CDF` is the
+    cumulative distribution function of the Gaussian distribution.
+    It uses the intrinsic `errorf` function to compute the `CDF`.
+    This implementation **generates** one variable, which serves
+    as the activation variable and an equation.
+    The activation variable shares the same domain as the input.
+
+    Returns the activation variable and the equation list.
+
+    Parameters
+    ----------
+    x : Parameter | Variable | implicits.ImplicitParameter | implicits.ImplicitVariable | Expression | Operation
+
+    Returns
+    -------
+    tuple[Variable, list[Equation]]
+
+    Examples
+    --------
+    >>> from gamspy import Container, Variable
+    >>> from gamspy.math import dim
+    >>> from gamspy.math.activation import gelu
+    >>> m = Container()
+    >>> x = Variable(m, "x", domain=dim([2,3,4]))
+    >>> y, eqs = gelu(x)
+    >>> y.domain
+    [Set(name='DenseDim2_1', domain=['*']), Set(name='DenseDim3_1', domain=['*']), Set(name='DenseDim4_1', domain=['*'])]
+
+    """
+    assert isinstance(x.container, Container)
+
+    y = x.container.addVariable(
+        _get_random_name("y"),
+        domain=x.domain,
+    )
+
+    eq = x.container.addEquation(
+        _get_random_name("eq"),
+        domain=x.domain,
+    )
+
+    eq[...] = y[...] == x * gamspy.math.errorf(x)
+
+    return y, [eq]
