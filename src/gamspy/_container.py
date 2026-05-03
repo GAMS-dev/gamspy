@@ -11,6 +11,7 @@ import tempfile
 import threading
 import traceback
 import weakref
+from difflib import get_close_matches
 from pathlib import Path
 from typing import TYPE_CHECKING, TextIO
 
@@ -31,8 +32,9 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
-    from typing import Any, Literal, TypeAlias
+    from typing import Any, Literal
 
+    from gams.transfer import CasePreservingDict
     from pandas import DataFrame
 
     from gamspy import (
@@ -50,9 +52,8 @@ if TYPE_CHECKING:
     from gamspy._options import Options
     from gamspy._symbols.implicits import ImplicitVariable
     from gamspy._symbols.symbol import Symbol
+    from gamspy._types import SymbolType
     from gamspy.math.matrix import Dim
-
-    SymbolType: TypeAlias = Set | Alias | Parameter | Variable | Equation
 
 LOOPBACK = "127.0.0.1"
 IS_MIRO_INIT = os.getenv("MIRO", False)
@@ -200,6 +201,7 @@ class Container(gt.Container):
         self._unsaved_statements: list = []
 
         super().__init__(system_directory=system_directory)
+        self._data: dict[str, SymbolType] | CasePreservingDict = {}
         self._options = validation.validate_global_options(options)
         if self._options.license is not None:
             self._license_path = self._options.license
@@ -234,7 +236,7 @@ class Container(gt.Container):
                     f"`load_from` must be of type str or Container but found {type(load_from)}"
                 )
 
-            if isinstance(load_from, str) and load_from[-4:] not in (
+            if isinstance(load_from, str) and load_from[-4:] not in (  # type: ignore[index]
                 ".gdx",
                 ".g00",
             ):
@@ -276,6 +278,18 @@ class Container(gt.Container):
         except KeyError:
             ...
 
+    def __getitem__(self, symbol_name: str) -> SymbolType:  # type: ignore
+        try:
+            return self.data[symbol_name]
+        except KeyError as e:
+            error_message = f"`{symbol_name}` does not exist in the Container."
+            matches = get_close_matches(
+                word=symbol_name, possibilities=self.data.keys(), n=1
+            )
+            if matches:
+                error_message += f" Did you mean `{matches[0]}`?"
+            raise KeyError(error_message) from e
+
     def __repr__(self) -> str:
         return f"Container(system_directory='{self.system_directory}', working_directory='{self.working_directory}', debugging_level='{self._debugging_level}')"
 
@@ -284,6 +298,31 @@ class Container(gt.Container):
             return f"<Container ({hex(id(self))}) with {len(self)} symbols: {self.data.keys()}>"
 
         return f"<Empty Container ({hex(id(self))})>"
+
+    @property
+    def data(self) -> dict[str, SymbolType] | CasePreservingDict:
+        """
+        The dictionary that contains all symbols in the Container. Keys are symbol names and values are the symbols themselves.
+
+        Returns
+        -------
+        dict[str, SymbolType]
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> j = gp.Set(m, "j")
+        >>> m.data
+        {'i': Set(name='i', domain=['*']), 'j': Set(name='j', domain=['*'])}
+
+        """
+        return self._data
+
+    @data.setter
+    def data(self, value: dict[str, SymbolType] | CasePreservingDict) -> None:
+        self._data = value
 
     @property
     def working_directory(self) -> str:

@@ -16,7 +16,6 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-import requests
 
 import gamspy as gp
 import gamspy.utils as utils
@@ -439,23 +438,26 @@ def test_arbitrary_gams_code():
 
 @pytest.mark.requires_license
 def test_add_gams_code_on_actual_models():
-    links = {
-        "LP": "https://gams.com/latest/gamslib_ml/trnsport.1",
-        "MIP": "https://gams.com/latest/gamslib_ml/prodsch.9",
-        "NLP": "https://gams.com/latest/gamslib_ml/weapons.18",
-        "MCP": "https://gams.com/latest/gamslib_ml/wallmcp.127",
-        "CNS": "https://gams.com/latest/gamslib_ml/camcns.209",
-        "DNLP": "https://gams.com/latest/gamslib_ml/linear.23",
-        "MINLP": "https://gams.com/latest/gamslib_ml/meanvarx.113",
-        "QCP": "https://gams.com/latest/gamslib_ml/himmel11.95",
-        "MIQCP": "https://gams.com/latest/gamslib_ml/qalan.282",
-        "MPSGE": "https://gams.com/latest/gamslib_ml/hansmge.147",
+    directory = Path(__file__).parent / "gams_models"
+    gams_models = {
+        "LP": directory / "trnsport.gms",
+        "MIP": directory / "prodsch.gms",
+        "NLP": directory / "weapons.gms",
+        "MCP": directory / "wallmcp.gms",
+        "CNS": directory / "camcns.gms",
+        "DNLP": directory / "linear.gms",
+        "MINLP": directory / "meanvarx.gms",
+        "QCP": directory / "himmel11.gms",
+        "MIQCP": directory / "qalan.gms",
+        "MPSGE": directory / "hansmge.gms",
     }
 
-    for link in links.values():
-        data = requests.get(link).content.decode("utf-8")
+    for model in gams_models.values():
+        with open(model) as file:
+            content = file.read()
+
         with Container() as m:
-            m.addGamsCode(data)
+            m.addGamsCode(content)
 
 
 @pytest.mark.unit
@@ -1505,6 +1507,7 @@ def test_deepcopy():
     _ = gp.Parameter(m2)
 
 
+@pytest.mark.unit
 def test_setRecords_None():
     m = gp.Container()
 
@@ -1543,3 +1546,15 @@ def test_setRecords_None():
     a1.setRecords(None)
     assert a1.records is None
     assert i2.records is None
+
+
+@pytest.mark.unit
+def test_getitem():
+    m = gp.Container()
+    with pytest.raises(KeyError, match="does not exist in the Container"):
+        m["i"]
+
+    gp.Set(m, "some_set")
+
+    with pytest.raises(KeyError, match="Did you mean"):
+        m["som_set"]

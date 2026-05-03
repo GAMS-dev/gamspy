@@ -48,7 +48,7 @@ $offText
 
 $sysInclude mpsgeset HANSEN
 """)
-    p, c = m["p"], m["c"]
+    p, c = m["P"], m["C"]
     hansen = Model(m, name="hansen", equations=m.getEquations(), problem="mcp")
     p.fx[c].where[c.ord == 1] = 1
     m.addGamsCode("$include HANSEN.GEN")
