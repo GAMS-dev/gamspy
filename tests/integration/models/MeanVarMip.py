@@ -37,7 +37,7 @@ def main():
     m.read(
         str(Path(__file__).parent.absolute()) + "/MeanVarMip.gdx",
         [
-            "assets",
+            "ASSETS",
             "SUBSET",
             "s1",
             "s2",
@@ -48,7 +48,7 @@ def main():
     )
 
     # SETS #
-    Assets = m.getSymbols(["subset"])[0]
+    Assets = m.getSymbols(["SUBSET"])[0]
 
     # ALIASES #
     i = Alias(m, name="i", alias_with=Assets)

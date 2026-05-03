@@ -14,6 +14,8 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from gamspy._types import SymbolType
+
 
 def serialize(container: Container, path: str) -> None:
     """
@@ -128,7 +130,9 @@ def deserialize(path: str) -> Container:
         deserialized_matches: dict[str, str | Sequence[str]] = model.get(
             "_matches", None
         )
-        matches = {}
+        matches: dict[
+            SymbolType | Sequence[SymbolType], SymbolType | Sequence[SymbolType]
+        ] = {}
         if deserialized_matches is not None:
             for key, value in deserialized_matches.items():
                 if isinstance(value, str):

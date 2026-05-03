@@ -366,7 +366,7 @@ class ModelInstance:
                 columns = self._get_columns_to_drop(attr)
 
                 self.instance_container[attr_name].setRecords(
-                    self.container[parent_name].records.drop(columns, axis=1)
+                    symbol.parent.records.drop(columns, axis=1)
                 )
                 names_to_write.append(attr_name)
 
