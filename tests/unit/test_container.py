@@ -14,6 +14,8 @@ import timeit
 import uuid
 from pathlib import Path
 
+import gams.transfer as gt
+import gamspy_base
 import pandas as pd
 import pytest
 
@@ -69,7 +71,6 @@ def data():
 @pytest.mark.unit
 def test_container(data, tmp_path):
     m, *_ = data
-    import gams.transfer as gt
 
     with pytest.raises(ValidationError):
         _ = Container(working_directory="")
@@ -1558,3 +1559,44 @@ def test_getitem():
 
     with pytest.raises(KeyError, match="Did you mean"):
         m["som_set"]
+
+
+@pytest.mark.unit
+def test_gtp_to_gp():
+    # Test GTP to GP with an empty GTP container
+    m = gt.Container(system_directory=gamspy_base.directory)
+    i = gt.Set(m, "i")
+    gt.Alias(m, "j", alias_with=i)
+    gt.Parameter(m, "p")
+    gt.Variable(m, "v")
+    gt.Equation(m, "e", type="eq")
+    gt.UniverseAlias(m, "universe")
+
+    m2 = gp.Container(m)
+    assert list(m2.data.keys()) == ["i", "j", "p", "v", "e", "universe"]
+
+    # Test GTP to GP with records
+    m = gt.Container(system_directory=gamspy_base.directory)
+    i = gt.Set(m, "i", records=["i1", "i2", "i3"])
+    gt.Alias(m, "j", alias_with=i)
+    gt.Parameter(m, "p", domain=i, records=[("i1", 1), ("i2", 2), ("i3", 3)])
+    v = gt.Variable(m, "v", domain=i)
+    v.generateRecords()
+    e = gt.Equation(m, "e", domain=i, type="eq")
+    e.generateRecords()
+    gt.UniverseAlias(m, "universe")
+
+    m2 = gp.Container(m)
+    assert list(m2.data.keys()) == ["i", "j", "p", "v", "e", "universe"]
+
+
+@pytest.mark.unit
+def test_gtp_to_gp_dirty():
+    # Test dirty GTP to GP (should fail)
+    m = gt.Container(system_directory=gamspy_base.directory)
+    i = gt.Set(m, "i", records=["i2", "i2", "i3"])
+    gt.Alias(m, "j", alias_with=i)
+    gt.Parameter(m, "p", domain=i, records=[("i2", 1), ("i2", 2), ("i3", 3)])
+
+    with pytest.raises(GamspyException):
+        _ = gp.Container(m)
