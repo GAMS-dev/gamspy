@@ -16,13 +16,15 @@ from gamspy._extrinsic import ExtrinsicFunction
 from gamspy._symbols.implicits import ImplicitSet
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy._symbols.symbol import Symbol
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import GamspyException, ValidationError
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     import pandas as pd
 
-    from gamspy import Alias, Set
+    from gamspy import Alias, Container, Set
     from gamspy._symbols.implicits import ImplicitEquation
     from gamspy._types import OperableType
 
@@ -341,7 +343,7 @@ class Expression(operable.Operable):
         self.controlled_domain: list[Set | Alias] = list(
             {*left_control, *right_control}
         )
-        self.container = None
+        self.container: Container | None = None
         if hasattr(left, "container") and left.container is not None:  # type: ignore
             self.container = left.container  # type: ignore
         elif hasattr(right, "container") and right.container is not None:  # type: ignore
@@ -442,7 +444,11 @@ class Expression(operable.Operable):
         0   11.0
 
         """
-        assert self.container is not None
+        if self.container is None:
+            raise GamspyException(
+                "Could not discover the container from the expression. Therefore, cannot call .records on this expression."
+            )
+
         temp_name = "a" + utils._get_unique_name()
         temp_param = gp_syms.Parameter._constructor_bypass(
             self.container, temp_name, self.domain
@@ -631,10 +637,10 @@ class Expression(operable.Operable):
             else:
                 root = None
 
-    def _find_all_symbols(self) -> list[str]:
-        # Finds all symbols in an expression with a stack based inorder
-        # traversal algorithm (O(N)).
-        symbols: list[str] = []
+    def _find_all_symbols(self) -> Iterator[str]:
+        # Finds all symbols in an expression with a stack-based in-order
+        # traversal algorithm (O(N)). Yields symbols lazily to save memory.
+        seen: set[str] = set()
         stack = []
 
         node = self
@@ -646,16 +652,22 @@ class Expression(operable.Operable):
                 node = stack.pop()
 
                 if isinstance(node, Symbol):
-                    if node.name not in symbols:
+                    if node.name not in seen:
                         if type(node) is gp_syms.Alias:
-                            symbols.append(node.alias_with.name)
+                            seen.add(node.alias_with.name)
+                            yield node.alias_with.name
 
-                        symbols.append(node.name)
+                        seen.add(node.name)
+                        yield node.name
+
                     stack.extend(node.domain)
                     node = None
                 elif isinstance(node, ImplicitSymbol):
-                    if node.parent.name not in symbols:
-                        symbols.append(node.parent.name)
+                    name = node.parent.name
+                    if name not in seen:
+                        seen.add(name)
+                        yield name
+
                     stack.extend(node.domain)
                     stack.extend(node.container[node.parent.name].domain)
                     node = None
@@ -685,12 +697,10 @@ class Expression(operable.Operable):
                 else:
                     node = getattr(node, "right", None)
             else:
-                break  # pragma: no cover
+                break
 
-        return symbols
-
-    def _find_symbols_in_conditions(self) -> list[str]:
-        symbols: list[str] = []
+    def _find_symbols_in_conditions(self) -> Iterator[str]:
+        seen: set[str] = set()
         stack = []
 
         node = self
@@ -705,9 +715,17 @@ class Expression(operable.Operable):
                     given_condition = node.condition
 
                     if isinstance(given_condition, Expression):
-                        symbols.extend(given_condition._find_all_symbols())
+                        # Consume the generator from the nested expression
+                        for name in given_condition._find_all_symbols():
+                            if name not in seen:
+                                seen.add(name)
+                                yield name
+
                     elif isinstance(given_condition, ImplicitSymbol):
-                        symbols.append(given_condition.parent.name)
+                        name = given_condition.parent.name
+                        if name not in seen:
+                            seen.add(name)
+                            yield name
 
                 if isinstance(node, operation.Operation):
                     stack.extend(node.op_domain)
@@ -715,9 +733,7 @@ class Expression(operable.Operable):
                 else:
                     node = getattr(node, "right", None)
             else:
-                break  # pragma: no cover
-
-        return symbols
+                break
 
     def _validate_definition(
         self, control_stack: list[Set | Alias | ImplicitSet]
@@ -769,7 +785,7 @@ class SetExpression(Expression):
 
     def __init__(
         self,
-        left: OperableType,
+        left: OperableType | None,
         data: Literal["+", "-", "*", "not"],
         right: OperableType,
     ):

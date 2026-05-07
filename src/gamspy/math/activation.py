@@ -82,6 +82,7 @@ def relu_with_sos1_var(
         | Expression
         | Operation
     ),
+    *,
     return_slack_var: bool = False,
 ):
     """
@@ -289,6 +290,7 @@ def relu_with_binary_var(
     ),
     default_lb: float = -(10**6),
     default_ub: float = 10**6,
+    *,
     return_binary_var: bool = False,
 ) -> FormulationResult:
     """
@@ -581,7 +583,7 @@ def relu_with_complementarity_var(
     return y, eq
 
 
-def log_softmax(x: Variable, dim: int = -1, skip_intrinsic: bool = False):
+def log_softmax(x: Variable, dim: int = -1, *, skip_intrinsic: bool = False):
     """
     Implements the log_softmax activation function. This function strictly
     requires a GAMSPy Variable, `y = log_softmax(x)`. The ``dim`` parameter

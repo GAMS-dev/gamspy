@@ -25,7 +25,7 @@ from gams.core.gmd import (
 )
 
 import gamspy.utils as utils
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     from gamspy._workspace import Workspace
@@ -256,9 +256,10 @@ class Database:
 
     def export(self, file_path: str) -> None:
         """Writes database into a GDX file"""
-        assert file_path.endswith(".gdx"), (
-            f"File path should point to a gdx file but got `{file_path}`"
-        )
+        if not file_path.endswith(".gdx"):
+            raise ValidationError(
+                f"File path should point to a gdx file but got `{file_path}`"
+            )
 
         if os.path.isabs(file_path):
             rc = gmdWriteGDX(self.gmd, file_path, False)

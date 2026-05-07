@@ -54,6 +54,7 @@ class MathOp(operable.Operable):
         self,
         op_name: str,
         elements: tuple,
+        *,
         safe_cancel: bool = False,
     ):
         self.op_name = op_name
@@ -756,7 +757,7 @@ def sqexp(x: OperableType, S: int | float = 150) -> MathOp:
     return MathOp("sqexp", (x, S))
 
 
-def sqrt(x: OperableType, safe_cancel: bool = False) -> MathOp:
+def sqrt(x: OperableType, *, safe_cancel: bool = False) -> MathOp:
     """
     Square root of ``x``
 

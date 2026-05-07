@@ -29,13 +29,13 @@ class Local(backend.Backend):
         super().__init__(
             "local",
             container,
-            model,
             options,
             solver,
             solver_options,
             output,
             load_symbols,
         )
+        self.model = model
 
     def _prepare_hidden_options(self, gams_to_gamspy: bool) -> dict:
         scrdir = self.container._process_directory
@@ -64,6 +64,7 @@ class Local(backend.Backend):
 
     def run(
         self,
+        *,
         relaxed_domain_mapping: bool = False,
         gams_to_gamspy: bool = False,
     ):
@@ -111,12 +112,12 @@ class Local(backend.Backend):
 
     def postprocess(self, relaxed_domain_mapping: bool, gams_to_gamspy: bool):
         if gams_to_gamspy:
-            super().load_records(relaxed_domain_mapping)
+            super().load_records(relaxed_domain_mapping=relaxed_domain_mapping)
 
         miro.load_miro_symbol_records(self.container)
 
         if self.model is not None:
-            self.parse_listings()
-            return self.prepare_summary()
+            self.parse_listings(self.model)
+            return self.prepare_summary(self.model)
 
         return None

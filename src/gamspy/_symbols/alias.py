@@ -139,7 +139,6 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
                     ]
                 except KeyError as e:
                     raise ValidationError("Alias requires a container.") from e
-            assert container is not None
 
             if name is not None:
                 name = validation.validate_name(name)
@@ -227,7 +226,6 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
     @synchronize.setter
     def synchronize(self, value: bool):
-        assert self.alias_with is not None
         raise ValidationError(
             f"Alias `{self.name}` object is tied to a Set `{self.alias_with.name}`."
             f"Change the synchronization setting of the Set `{self.alias_with.name}` instead."

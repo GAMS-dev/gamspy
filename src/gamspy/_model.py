@@ -459,8 +459,6 @@ class Model:
         else:
             self.container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
 
-        assert self.container is not None
-
         if name is not None:
             name = validation.validate_name(name)
             self.name = validation.validate_model_name(name)
@@ -471,7 +469,8 @@ class Model:
         self.problem, self.sense = validation.validate_model(
             equations, matches, problem, sense
         )
-        self.equations = list(equations)
+        self.equations: list[Equation] = list(equations)
+        self._variables: list[Variable] | None = None
         self._objective = objective
         self._objective_variable = self._set_objective_variable(objective)
         if (
@@ -1221,15 +1220,15 @@ class Model:
 
             if equation._definition is not None:
                 names = equation._definition._find_all_symbols()
-                names = [
+                var_names = [
                     name
                     for name in names
                     if name in self.container.data
                     and isinstance(self.container.data[name], gp.Variable)
                 ]
 
-                for name in names:
-                    variable = self.container.data[name]
+                for name in var_names:
+                    variable: Variable = self.container.data[name]  # ty: ignore[invalid-assignment]
                     infeas_rows = utils._calculate_infeasibilities(variable)
                     infeas_dict[variable.name] = infeas_rows
 
@@ -1367,7 +1366,7 @@ class Model:
         <BLANKLINE>
 
         """
-        if not hasattr(self, "_variables"):
+        if self._variables is None:
             raise ValidationError(
                 "The model must be solved with `variable_listing_limit` option for this functionality to work."
             )
@@ -1616,9 +1615,8 @@ class Model:
 
         # Only for local until GAMS Engine and NEOS Server backends adopt the new GP_SolveLine option.
         if backend == "local":
-            frame = inspect.currentframe().f_back
-            assert isinstance(options, gp.Options)
-            options._frame = frame
+            frame = inspect.currentframe()
+            options._frame = frame.f_back if frame is not None else None
 
         if solver_options is not None:
             self.container.writeSolverOptions(solver, solver_options)

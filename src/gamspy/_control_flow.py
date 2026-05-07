@@ -406,7 +406,9 @@ class If:
 
     """
 
-    def __init__(self, condition: Expression | Condition | Operation | MathOp):
+    def __init__(
+        self, condition: Expression | Condition | Operation | MathOp | Parameter
+    ):
         self.condition = condition
         self.container = condition.container
 

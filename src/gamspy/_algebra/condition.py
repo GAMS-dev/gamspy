@@ -64,10 +64,12 @@ class Condition(operable.Operable):
         condition: Expression
         | Operation
         | Condition
+        | MathOp
         | Parameter
         | ImplicitParameter
         | ImplicitSet
         | int
+        | Number
         | None = None,
     ):
         self.conditioning_on = conditioning_on
@@ -89,7 +91,14 @@ class Condition(operable.Operable):
 
     def __getitem__(
         self,
-        condition: Operation | Expression | ImplicitParameter | ImplicitSet,
+        condition: Expression
+        | Operation
+        | MathOp
+        | Condition
+        | ImplicitParameter
+        | ImplicitSet
+        | Parameter
+        | Number,
     ) -> Condition:
         if isinstance(condition, expression.Expression):
             condition._fix_equalities()
@@ -98,10 +107,16 @@ class Condition(operable.Operable):
 
     def __setitem__(
         self,
-        condition: Expression | Operation | Condition | Parameter | ImplicitParameter,
+        condition: Expression
+        | Operation
+        | MathOp
+        | Condition
+        | Parameter
+        | ImplicitParameter,
         rhs: Expression
         | Operation
         | Condition
+        | MathOp
         | int
         | float
         | Parameter
@@ -116,6 +131,7 @@ class Condition(operable.Operable):
             Expression
             | Operation
             | Condition
+            | MathOp
             | int
             | float
             | str

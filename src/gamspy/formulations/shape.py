@@ -85,7 +85,7 @@ def _propagate_bounds(x, out):
 
 
 def _flatten_dims_var(
-    x: gp.Variable, dims: list[int], propagate_bounds: bool = True
+    x: gp.Variable, dims: list[int], *, propagate_bounds: bool = True
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     m = x.container
     new_domain, flattened = _get_new_domain(x, dims)
@@ -124,6 +124,7 @@ def _flatten_dims_var(
 def flatten_dims(
     x: gp.Variable | gp.Parameter,
     dims: list[int],
+    *,
     propagate_bounds: bool = True,
 ) -> tuple[gp.Parameter | gp.Variable, list[gp.Equation]]:
     """
@@ -185,4 +186,4 @@ def flatten_dims(
     if isinstance(x, gp.Parameter):
         return _flatten_dims_par(x, dims)
 
-    return _flatten_dims_var(x, dims, propagate_bounds)
+    return _flatten_dims_var(x, dims, propagate_bounds=propagate_bounds)

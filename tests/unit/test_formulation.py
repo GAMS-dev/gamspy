@@ -286,7 +286,7 @@ def test_pwl_validation(data, fct):
 
     # incorrect using value
     with pytest.raises(ValidationError):
-        fct(x, x_points, y_points, "hello")
+        fct(x, x_points, y_points, bound_left="hello")
 
     # x not a variable
     with pytest.raises(ValidationError):

@@ -196,7 +196,6 @@ class ModelInstance:
 
         self.model = model
         self.output = output
-        assert self.model._is_frozen
 
         self.modifiables = self._init_modifiables(modifiables)
         self.instance_container = gt.Container(

@@ -7,6 +7,8 @@ import gamspy as gp
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     import numpy as np
 
 
@@ -45,7 +47,8 @@ def _generate_name(sym_type: str, prefix: str, name: str) -> str:
 def _check_tuple_int(
     value: int | tuple[int] | tuple[int, int],
     name: str,
-    allow_zero=False,
+    *,
+    allow_zero: bool = False,
 ) -> tuple[int, int]:
     if not isinstance(value, (int, tuple)):
         raise ValidationError(f"{name} must be an integer or a tuple of integer")
@@ -61,10 +64,10 @@ def _check_tuple_int(
     if not (isinstance(value[0], int) and cmp(value[0])):
         raise ValidationError(f"{name} must be greater than {text}0")
 
-    if not (isinstance(value[1], int) and cmp(value[1])):
+    if not (isinstance(value[1], int) and cmp(value[1])):  # type: ignore
         raise ValidationError(f"{name} must be a greater than {text}0")
 
-    return value
+    return value  # type: ignore
 
 
 def _check_padding(value: int | tuple[int, int]) -> tuple[int, int, int, int]:
@@ -141,7 +144,7 @@ def _calc_w(
 
 
 def _calc_hw(
-    padding: tuple[int, int, int, int] | tuple[int, int] | str,
+    padding: Sequence[int] | str,
     kernel_size: tuple[int, int],
     stride: tuple[int, int],
     h_in: int,

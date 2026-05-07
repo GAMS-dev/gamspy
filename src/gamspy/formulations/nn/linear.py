@@ -56,8 +56,9 @@ class Linear:
         container: gp.Container,
         in_features: int,
         out_features: int,
-        bias: bool = True,
         name_prefix: str | None = None,
+        *,
+        bias: bool = True,
     ):
         if not isinstance(in_features, int) or in_features <= 0:
             raise ValidationError("in_features must be a positive integer")
@@ -208,7 +209,7 @@ class Linear:
         self._state = 2
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable, propagate_bounds: bool = True
+        self, input: gp.Parameter | gp.Variable, *, propagate_bounds: bool = True
     ) -> FormulationResult:
         """
         Forward pass your input, generate output and equations required for

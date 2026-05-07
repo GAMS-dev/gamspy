@@ -19,22 +19,6 @@ if TYPE_CHECKING:
     from gamspy._backend.neos import NeosClient, NEOSServer
     from gamspy._symbols.symbol import Symbol
 
-SOLVE_STATUS = [
-    "",
-    "Normal",
-    "Iteration",
-    "Resource",
-    "Solver",
-    "EvalError",
-    "Capability",
-    "License",
-    "User",
-    "SetupErr",
-    "SolverErr",
-    "InternalErr",
-    "Skipped",
-    "SystemErr",
-]
 HEADER = [
     "Solver Status",
     "Model Status",
@@ -109,7 +93,6 @@ class Backend(ABC):
         self,
         backend_type: str,
         container: Container,
-        model: Model | None,
         options: Options,
         solver: str | None,
         solver_options: dict | Path | None,
@@ -118,7 +101,6 @@ class Backend(ABC):
     ):
         self.backend_type = backend_type
         self.container = container
-        self.model = model
         self.options = options
         self.solver = solver
         self.solver_options = solver_options
@@ -143,6 +125,7 @@ class Backend(ABC):
     @abstractmethod
     def run(
         self,
+        *,
         relaxed_domain_mapping: bool = False,
         gams_to_gamspy: bool = False,
     ): ...
@@ -183,7 +166,7 @@ class Backend(ABC):
 
         return gams_string
 
-    def load_records(self, relaxed_domain_mapping: bool = False):
+    def load_records(self, *, relaxed_domain_mapping: bool = False):
         if hasattr(self, "load_symbols"):
             symbols = self.load_symbols
         else:
@@ -225,38 +208,35 @@ class Backend(ABC):
 
                 symbol.domain = new_domain
                 symbol.dimension = len(new_domain)
-                if type(symbol) in (syms.Variable, syms.Equation):
+                if isinstance(symbol, (syms.Variable, syms.Equation)):
                     symbol._update_attr_domains()
 
-    def parse_listings(self):
+    def parse_listings(self, model: Model) -> None:
         listing_file = (
             self.options.listing_file
             if self.options.listing_file
             else self.job_name + ".lst"
         )
         if self.options.equation_listing_limit:
-            utils._parse_generated_equations(self.model, listing_file)
+            utils._parse_generated_equations(model, listing_file)
 
         if self.options.variable_listing_limit:
-            utils._parse_generated_variables(self.model, listing_file)
+            utils._parse_generated_variables(model, listing_file)
 
-    def prepare_summary(self) -> pd.DataFrame:
-        assert self.model is not None
-        assert self.solver is not None
-
+    def prepare_summary(self, model: Model) -> pd.DataFrame:
         import pandas as pd
 
         df = pd.DataFrame(
             [
                 [
-                    self.model.solve_status.name,  # type: ignore
-                    self.model.status.name,  # type: ignore
-                    self.model.objective_value,
-                    self.model.num_equations,
-                    self.model.num_variables,
-                    self.model.used_model_type,
-                    self.solver.upper(),
-                    self.model.total_solver_time,
+                    model.solve_status.name,  # type: ignore
+                    model.status.name,  # type: ignore
+                    model.objective_value,
+                    model.num_equations,
+                    model.num_variables,
+                    model.used_model_type,
+                    self.solver.upper(),  # type: ignore
+                    model.total_solver_time,
                 ]
             ],
             columns=HEADER,
