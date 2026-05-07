@@ -88,7 +88,7 @@ class UniverseAlias(gt.UniverseAlias):
             if not container:
                 container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
 
-            symbol = container[name]
+            symbol = container.data[name]
             if isinstance(symbol, cls):
                 return symbol
 
@@ -156,15 +156,14 @@ class UniverseAlias(gt.UniverseAlias):
         global TEMP_ALIAS_NAME
         global TEMP_GDX_OUT_NAME
 
-        self.container._add_statement(f"Alias (*, {TEMP_ALIAS_NAME})")
+        temp_path = os.path.join(self.container.working_directory, TEMP_GDX_OUT_NAME)
+        self.container._add_statement(f"Alias (*, {TEMP_ALIAS_NAME});")
         self.container._add_statement(
-            f"execute_unload '{TEMP_GDX_OUT_NAME}' {TEMP_ALIAS_NAME};"
+            f"execute_unload '{temp_path}' {TEMP_ALIAS_NAME};"
         )
         self.container._synch_with_gams()
 
-        gdx_handle = gp.utils._open_gdx_file(
-            self.container.system_directory, TEMP_GDX_OUT_NAME
-        )
+        gdx_handle = gp.utils._open_gdx_file(self.container.system_directory, temp_path)
         uels: list[str] = self.container._gams2np.gdxGetUelList(gdx_handle)
         gp.utils._close_gdx_handle(gdx_handle)
 

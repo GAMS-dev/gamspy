@@ -1,0 +1,2 @@
+Include UELs in the gdx file generated with container.write().
+Throw deprecation warning when 'mode' argument is provided in container.write for future deprecation.

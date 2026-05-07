@@ -639,10 +639,26 @@ def test_write(data, tmp_path):
     _ = Parameter(m, "a", records=SpecialValues.EPS)
     m.write(gdx_path, eps_to_zero=True)
 
-    m = Container(
-        load_from=gdx_path,
-    )
+    m = Container(load_from=gdx_path)
     assert int(m["a"].toValue()) == 0
+
+    m = gp.Container()
+    _ = gp.Parameter(m, "a", records=gp.SpecialValues.EPS)
+    m.write(gdx_path, eps_to_zero=False)
+
+    m = gp.Container(load_from=gdx_path)
+    assert str(m["a"].records.value.item()) != "0.0"
+
+    with pytest.warns(DeprecationWarning):
+        m.write(gdx_path, mode="string")
+
+    m = gp.Container()
+    _ = gp.Parameter(m, "a", records=5)
+    _ = gp.Parameter(m, "b", records=10)
+    m.write(gdx_path, symbol_names={"a": "c", "b": "d"})
+
+    m = gp.Container(load_from=gdx_path)
+    assert list(m.data.keys()) == ["c", "d"]
 
     m.close()
 
@@ -1506,6 +1522,63 @@ def test_deepcopy():
 
     # add a new symbol to the copied container
     _ = gp.Parameter(m2)
+
+
+@pytest.mark.unit
+def test_write_with_universe_alias(tmp_path):
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    uni = gp.UniverseAlias(m, "uni")
+    i["2"].where[False] = False
+
+    assert "2" in uni.toList()
+
+    gdx_file = str(tmp_path / "myGDX.gdx")
+    m.write(gdx_file)
+
+    mm = gp.Container(load_from=gdx_file)
+
+    assert "2" in mm["uni"].toList()
+
+
+@pytest.mark.unit
+def test_write_compress(tmp_path):
+    gdx_file_path = tmp_path / "temp.gdx"
+    gdx_file_path2 = tmp_path / "temp2.gdx"
+    gdx_file_path3 = tmp_path / "temp3.gdx"
+
+    m = gp.Container()
+    _ = gp.Set(m, "i", records=range(2000))
+    _ = gp.Set(m, "j", records=range(2000))
+    _ = gp.Set(m, "k", records=range(2000))
+    m.write(gdx_file_path, compress=True)
+    m.write(gdx_file_path2, compress=False)
+    m.write(gdx_file_path3)  # inherit from env
+
+    assert os.path.getsize(gdx_file_path) < os.path.getsize(gdx_file_path2)
+    assert os.path.getsize(gdx_file_path) < os.path.getsize(
+        gdx_file_path3  # do not compress by default
+    )
+
+    # should be equivalent to compress=True
+    os.environ["GDXCOMPRESS"] = "1"
+    gdx_file_path4 = tmp_path / "temp4.gdx"
+    m = gp.Container()
+    _ = gp.Set(m, "i", records=range(2000))
+    _ = gp.Set(m, "j", records=range(2000))
+    _ = gp.Set(m, "k", records=range(2000))
+    m.write(gdx_file_path4)
+    assert os.path.getsize(gdx_file_path4) == os.path.getsize(gdx_file_path)
+
+    # should be equivalent to compress=False
+    os.environ["GDXCOMPRESS"] = "0"
+    gdx_file_path5 = tmp_path / "temp5.gdx"
+    m = gp.Container()
+    _ = gp.Set(m, "i", records=range(2000))
+    _ = gp.Set(m, "j", records=range(2000))
+    _ = gp.Set(m, "k", records=range(2000))
+    m.write(gdx_file_path5)
+    assert os.path.getsize(gdx_file_path5) == os.path.getsize(gdx_file_path2)
 
 
 @pytest.mark.unit

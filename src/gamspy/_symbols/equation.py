@@ -214,7 +214,7 @@ class Equation(gt.Equation, Symbol):
                         (os.getpid(), threading.get_native_id())
                     ]
 
-                symbol = container[name]
+                symbol = container.data[name]
                 if isinstance(symbol, cls):
                     return symbol
 

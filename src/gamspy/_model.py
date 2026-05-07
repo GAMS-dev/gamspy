@@ -1225,11 +1225,11 @@ class Model:
                     name
                     for name in names
                     if name in self.container.data
-                    and isinstance(self.container[name], gp.Variable)
+                    and isinstance(self.container.data[name], gp.Variable)
                 ]
 
                 for name in names:
-                    variable = self.container[name]
+                    variable = self.container.data[name]
                     infeas_rows = utils._calculate_infeasibilities(variable)
                     infeas_dict[variable.name] = infeas_rows
 

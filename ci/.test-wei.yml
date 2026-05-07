@@ -13,7 +13,7 @@
     - .venv\Scripts\Activate.ps1
     - uv sync --group test
     - gamspy install license $env:LOCAL_LICENSE
-    - gamspy install solver -a --use-uv
+    - $env:UV_NO_CONFIG="1"; gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
     - python -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
 
@@ -29,7 +29,7 @@ wei-test-3.14:
     - .venv\Scripts\Activate.ps1
     - uv sync --group test
     - gamspy install license $env:LOCAL_LICENSE
-    - gamspy install solver -a --use-uv
+    - $env:UV_NO_CONFIG="1"; gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
     - $env:COVERAGE_CORE = 'sysmon'; coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
     - coverage report -m --data-file=".coverage"
