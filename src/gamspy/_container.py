@@ -12,9 +12,10 @@ import threading
 import traceback
 import warnings
 import weakref
+from collections.abc import Iterable
 from difflib import get_close_matches
 from pathlib import Path
-from typing import TYPE_CHECKING, TextIO
+from typing import TYPE_CHECKING, TextIO, cast
 
 import gams.transfer as gt
 
@@ -32,7 +33,7 @@ from gamspy._workspace import Workspace
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Sequence
     from typing import Any, Literal
 
     from gams.transfer import CasePreservingDict
@@ -52,7 +53,6 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._options import Options
     from gamspy._symbols.implicits import ImplicitVariable
-    from gamspy._symbols.symbol import Symbol
     from gamspy._types import DomainType, SymbolType
 
 LOOPBACK = "127.0.0.1"
@@ -278,7 +278,7 @@ class Container(gt.Container):
         except KeyError:
             ...
 
-    def __getitem__(self, symbol_name: str) -> SymbolType:  # type: ignore
+    def __getitem__(self, symbol_name: str) -> SymbolType:
         try:
             return self.data[symbol_name]
         except KeyError as e:
@@ -439,7 +439,7 @@ class Container(gt.Container):
             del self.data[symbol_name]
 
             if isinstance(gtp_symbol, gt.Alias):
-                alias_with = self.data[gtp_symbol.alias_with.name]
+                alias_with = cast("Set | Alias", self.data[gtp_symbol.alias_with.name])
                 _ = gp.Alias._constructor_bypass(self, gtp_symbol._name, alias_with)
             elif isinstance(gtp_symbol, gt.UniverseAlias):
                 _ = gp.UniverseAlias._constructor_bypass(
@@ -537,7 +537,7 @@ class Container(gt.Container):
 
     def _synch_with_gams(
         self,
-        load_symbols: list[Symbol] | None = None,
+        load_symbols: Sequence[SymbolType] | None = None,
         *,
         relaxed_domain_mapping: bool = False,
         gams_to_gamspy: bool = False,
@@ -626,9 +626,9 @@ class Container(gt.Container):
         return gams_string
 
     def _filter_load_symbols(
-        self, symbol_names: dict[str, str] | list[str]
+        self, symbol_names: dict[str, str] | Iterable[str]
     ) -> dict[str, str] | list[str]:
-        if isinstance(symbol_names, list):
+        if isinstance(symbol_names, Iterable):
             names = []
             for name in symbol_names:
                 if name in self.data:

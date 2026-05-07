@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import gamspy._algebra.domain as domain
 import gamspy._algebra.expression as expression
@@ -15,7 +15,7 @@ from gamspy.exceptions import FatalError
 if TYPE_CHECKING:
     import pandas as pd
 
-    from gamspy import Alias, Parameter, Set, Variable
+    from gamspy import Alias, Equation, Parameter, Set, Variable
     from gamspy._algebra.domain import Domain
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.number import Number
@@ -53,6 +53,7 @@ class Condition(operable.Operable):
         | Alias
         | Parameter
         | Variable
+        | Equation
         | Expression
         | Operation
         | Domain
@@ -77,9 +78,9 @@ class Condition(operable.Operable):
         self._where = None
         self.container: Container | None = None
         if hasattr(conditioning_on, "container") and conditioning_on.container:
-            self.container = conditioning_on.container
+            self.container = cast("Container", conditioning_on.container)
         elif hasattr(condition, "container") and condition.container:  # type: ignore
-            self.container = condition.container  # type: ignore
+            self.container = cast("Container", condition.container)  # type: ignore[union-attr]
 
         self.domain = None
         if hasattr(conditioning_on, "domain"):
@@ -163,17 +164,23 @@ class Condition(operable.Operable):
                 self.conditioning_on.parent._assignment = statement
 
             self.conditioning_on.parent._winner = "gams"
-            load_symbols = [self.conditioning_on.parent]
+            load_symbols = [
+                cast(
+                    "Set | Parameter | Variable | Equation", self.conditioning_on.parent
+                )
+            ]
         elif isinstance(self.conditioning_on, syms.Alias):
             self.conditioning_on._assignment = statement
-            load_symbols = [self.conditioning_on.alias_with]
+            load_symbols = [cast("Set", self.conditioning_on.alias_with)]
         elif isinstance(
             self.conditioning_on,
             (syms.Set, syms.Parameter, syms.Variable, syms.Equation),
         ):
             self.conditioning_on._assignment = statement
             self.conditioning_on._winner = "gams"
-            load_symbols = [self.conditioning_on]
+            load_symbols = [
+                cast("Set | Parameter | Variable | Equation", self.conditioning_on)
+            ]
         else:
             load_symbols = None
 

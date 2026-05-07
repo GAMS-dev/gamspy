@@ -31,8 +31,10 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from gamspy import Container, Model
-    from gamspy._symbols.symbol import Symbol
+    from gamspy._types import SymbolType
 
 
 class NeosClient:
@@ -388,7 +390,7 @@ class NEOSServer(backend.Backend):
         client: NeosClient,
         output: TextIO | None,
         model: Model,
-        load_symbols: list[Symbol] | None,
+        load_symbols: Sequence[SymbolType] | None,
     ) -> None:
         if client is None or not isinstance(client, NeosClient):
             raise ValidationError(

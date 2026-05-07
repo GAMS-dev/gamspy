@@ -25,10 +25,11 @@ from gamspy.exceptions import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from pathlib import Path
 
     from gamspy import Container, Model
-    from gamspy._symbols.symbol import Symbol
+    from gamspy._types import SymbolType
 
 
 logger = logging.getLogger("ENGINE")
@@ -765,7 +766,7 @@ class GAMSEngine(backend.Backend):
         solver_options: dict | Path | None,
         output: TextIO | None,
         model: Model,
-        load_symbols: list[Symbol] | None,
+        load_symbols: Sequence[SymbolType] | None,
     ) -> None:
         if client is None or not isinstance(client, EngineClient):
             raise ValidationError(
