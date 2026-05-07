@@ -30,7 +30,7 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Equation, Model, Parameter, Set, Variable
+    from gamspy import Alias, Equation, Expression, Model, Parameter, Set, Variable
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import (
         ImplicitParameter,
@@ -181,7 +181,8 @@ def validate_dimension(
     | ImplicitSet
     | ImplicitParameter
     | ImplicitVariable
-    | Operation,
+    | Operation
+    | Expression,
     given_indices: Sequence[Set | Alias | ImplicitSet | str],
 ) -> None:
     dimension = get_dimension(given_indices)
@@ -303,7 +304,8 @@ def validate_domain(
     | ImplicitSet
     | ImplicitParameter
     | ImplicitVariable
-    | Operation,
+    | Operation
+    | Expression,
     indices: IndexType,
 ):
     index_list = utils._to_list(indices)
@@ -361,7 +363,8 @@ def validate_container(
     | ImplicitSet
     | ImplicitParameter
     | ImplicitVariable
-    | Operation,
+    | Operation
+    | Expression,
     given_indices: Sequence[str | Set | Alias],
 ):
     for set in given_indices:

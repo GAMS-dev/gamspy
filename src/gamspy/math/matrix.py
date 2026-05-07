@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -215,13 +215,11 @@ def dim(dims: list[int] | tuple[int, ...]) -> Dim:
     return Dim(dims=dims)  # type: ignore
 
 
-def _generate_dims(
-    m: Container, dims: list[int] | tuple[int, ...]
-) -> list[Alias | Set]:
+def _generate_dims(m: Container, dims: Sequence[int]) -> list[Alias | Set]:
     sets_so_far = []
     for x in dims:
         expected_name = f"DenseDim{x}_1"
-        find_x = m.data.get(expected_name, None)
+        find_x: Set | Alias | None = m.data.get(expected_name, None)  # type: ignore
         if find_x is None:
             find_x = m.addSet(
                 name=expected_name, records=range(x), is_singleton=(x == 1)

@@ -256,7 +256,6 @@ class MiroJSONEncoder:
 
             domain_values.append({"type": column_type, "alias": alias})
 
-        assert len(domain_keys) == len(domain_values)
         return dict(zip(domain_keys, domain_values, strict=False))
 
     def prepare_symbols(self, symbols: list[str]) -> list[dict]:

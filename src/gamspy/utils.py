@@ -7,10 +7,10 @@ import platform
 import uuid
 from typing import TYPE_CHECKING
 
-import gams.transfer as gt
 from gams.core import gdx
 
 import gamspy._model as model
+import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 from gamspy import SpecialValues
@@ -41,10 +41,10 @@ if TYPE_CHECKING:
     SymbolType: TypeAlias = Alias | Set | Parameter | Variable | Equation
 
 SPECIAL_VALUE_MAP = {
-    gt.SpecialValues.NA: "NA",
-    gt.SpecialValues.UNDEF: "UNDF",
-    gt.SpecialValues.POSINF: "INF",
-    gt.SpecialValues.NEGINF: "-INF",
+    SpecialValues.NA: "NA",
+    SpecialValues.UNDEF: "UNDF",
+    SpecialValues.POSINF: "INF",
+    SpecialValues.NEGINF: "-INF",
 }
 
 CAPABILITIES_FILE = "gmscmpNT.txt" if platform.system() == "Windows" else "gmscmpun.txt"
@@ -390,26 +390,34 @@ def _get_unique_name() -> str:
 
 def _get_name_from_stack() -> str:
     try:
-        # Current frame is this function (_get_name_from_stack)
-        # The first f_back takes us to _get_symbol_name
-        # The second f_back takes us to the __init__ function of
-        # the symbol or addX function of Container. The third f_back
-        # takes us to the user code.
-        frame = inspect.currentframe().f_back.f_back.f_back
-        assert frame is not None
+        frame = inspect.currentframe()
+        if frame is None:
+            raise RuntimeError("Could not get current frame")
 
-        # We get the line that defines the symbol. e.g. i = Set(m)
-        line = inspect.getframeinfo(frame).code_context[0]
+        # Current frame is this function. The first f_back takes us to _get_symbol_name.
+        # The second f_back takes us to the __init__ function of the symbol or addX
+        # function of Container. The third f_back takes us to the user code.
+        for _ in range(3):
+            frame = frame.f_back
+            if frame is None:
+                raise RuntimeError("Call stack is not deep enough")
 
-        # Pretty naive but it's the best chance we've got with little overhead.
+        info = inspect.getframeinfo(frame)
+
+        if not info.code_context:
+            raise RuntimeError("No code context available")
+
+        line = info.code_context[0]
+
+        # Pretty naive but this is the best chance we've got with little overhead.
+        # e.g. "i = Set(m)" -> "i"
         name = line.split("=", maxsplit=1)[0].strip()
-        name = validation.validate_name(name)
+
+        return validation.validate_name(name)
     except Exception as e:
         raise ValidationError(
             f"It is not possible to get the Python variable name in this context: {e}"
         ) from e
-
-    return name
 
 
 def _get_symbol_names_from_gdx(system_directory: str, load_from: str) -> list[str]:
@@ -427,14 +435,15 @@ def _get_symbol_names_from_gdx(system_directory: str, load_from: str) -> list[st
     return symbol_names
 
 
-def _get_variables_of_model(container: Container):
+def _get_variables_of_model(container: Container) -> list[Variable]:
     names = _get_symbol_names_from_gdx(container.system_directory, container._gdx_out)
 
-    return [
-        container.data[name]
-        for name in names
-        if isinstance(container.data[name], gt.Variable)
-    ]
+    variables: list[Variable] = []
+    for name in names:
+        symbol = container._data[name]
+        if isinstance(symbol, syms.Variable):
+            variables.append(symbol)
+    return variables
 
 
 def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame | None:
@@ -596,7 +605,7 @@ def _map_special_values(value: float):
     if not get_option("MAP_SPECIAL_VALUES"):
         return value
 
-    if gt.SpecialValues.isEps(value):
+    if SpecialValues.isEps(value):
         return "EPS"
 
     if value in SPECIAL_VALUE_MAP:
@@ -627,7 +636,7 @@ def _get_domain_str(
     domain_strs = []
     for elem in domain:
         if isinstance(
-            elem, (gt.Set, gt.Alias, gt.UniverseAlias, implicits.ImplicitSet)
+            elem, (syms.Set, syms.Alias, syms.UniverseAlias, implicits.ImplicitSet)
         ):
             if latex:
                 domain_strs.append(elem.latexRepr())
@@ -750,7 +759,7 @@ def _parse_generated_equations(model: Model, listing_file: str) -> None:
             idx += 1
 
         idx += 1
-        equation_listing = []
+        equation_listing: list[str] = []
 
         while idx < len(lines) and lines[idx].startswith(equation.name):
             equation_listing.append(lines[idx])
@@ -761,7 +770,7 @@ def _parse_generated_equations(model: Model, listing_file: str) -> None:
 
 def _parse_generated_variables(model: Model, listing_file: str) -> None:
     variables = _get_variables_of_model(model.container)
-    model._variables = variables  # type: ignore
+    model._variables = variables
 
     with open(listing_file) as file:
         lines = file.readlines()

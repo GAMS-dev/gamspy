@@ -78,8 +78,9 @@ class Conv2d:
         kernel_size: int | tuple[int, int],
         stride: int | tuple[int, int] = 1,
         padding: int | tuple[int, int] | Literal["same", "valid"] = 0,
-        bias: bool = True,
         name_prefix: str | None = None,
+        *,
+        bias: bool = True,
     ):
         if not (isinstance(in_channels, int) and in_channels > 0):
             raise ValidationError("in_channels must be a positive integer")
@@ -425,7 +426,7 @@ class Conv2d:
         self._state = 1
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable, propagate_bounds: bool = True
+        self, input: gp.Parameter | gp.Variable, *, propagate_bounds: bool = True
     ) -> FormulationResult:
         """
         Forward pass your input, generate output and equations required for

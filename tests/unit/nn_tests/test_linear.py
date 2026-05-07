@@ -236,7 +236,7 @@ def test_linear_propagate_bounds_non_boolean(data):
 
     par_input = gp.Parameter(m, domain=dim([30, 20, 30, 20]))
     with pytest.raises(ValidationError):
-        lin1(par_input, "True")
+        lin1(par_input, propagate_bounds="True")
 
 
 @pytest.mark.unit

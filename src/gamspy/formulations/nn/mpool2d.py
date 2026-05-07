@@ -127,6 +127,7 @@ class _MPool2d:
         self,
         input: gp.Parameter | gp.Variable,
         big_m: int = 1000,
+        *,
         propagate_bounds: bool = True,
     ) -> FormulationResult:
         # User input validation

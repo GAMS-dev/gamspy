@@ -139,6 +139,7 @@ class AvgPool2d:
     def __call__(
         self,
         input: gp.Parameter | gp.Variable,
+        *,
         propagate_bounds: bool = True,
     ) -> FormulationResult:
         """

@@ -53,8 +53,7 @@ if TYPE_CHECKING:
     from gamspy._options import Options
     from gamspy._symbols.implicits import ImplicitVariable
     from gamspy._symbols.symbol import Symbol
-    from gamspy._types import SymbolType
-    from gamspy.math.matrix import Dim
+    from gamspy._types import DomainType, SymbolType
 
 LOOPBACK = "127.0.0.1"
 IS_MIRO_INIT = os.getenv("MIRO", False)
@@ -393,7 +392,7 @@ class Container(gt.Container):
                 name = utils._get_name_from_stack()
                 # if a symbol with the same name exists, autogenerate.
                 try:
-                    _ = self[name]
+                    _ = self._data[name]
                     name = prefix + utils._get_unique_name() + "gpauto"
                 except KeyError:
                     ...
@@ -452,9 +451,9 @@ class Container(gt.Container):
                     self,
                     gtp_symbol._name,
                     new_domain,
-                    gtp_symbol._is_singleton,
                     gtp_symbol._records,
                     gtp_symbol._description,
+                    is_singleton=gtp_symbol._is_singleton,
                 )
             elif isinstance(gtp_symbol, gt.Parameter):
                 _ = gp.Parameter._constructor_bypass(
@@ -538,9 +537,10 @@ class Container(gt.Container):
 
     def _synch_with_gams(
         self,
+        load_symbols: list[Symbol] | None = None,
+        *,
         relaxed_domain_mapping: bool = False,
         gams_to_gamspy: bool = False,
-        load_symbols: list[Symbol] | None = None,
     ) -> DataFrame | None:
         if self._in_loop:
             return None
@@ -548,7 +548,9 @@ class Container(gt.Container):
         runner = backend_factory(
             self, self._options, output=self.output, load_symbols=load_symbols
         )
-        summary = runner.run(relaxed_domain_mapping, gams_to_gamspy)
+        summary = runner.run(
+            relaxed_domain_mapping=relaxed_domain_mapping, gams_to_gamspy=gams_to_gamspy
+        )
 
         if self._options and self._options.seed is not None:
             # Required for correct seeding. Seed can only be set in the first run.
@@ -579,7 +581,7 @@ class Container(gt.Container):
         if modified_names:
             loadables = []
             for name in modified_names:
-                symbol = self[name]
+                symbol = self._data[name]
                 if (
                     type(symbol) in LOADABLE
                     and not name.startswith(gp.Model._generate_prefix)
@@ -630,7 +632,7 @@ class Container(gt.Container):
             names = []
             for name in symbol_names:
                 if name in self.data:
-                    symbol = self[name]
+                    symbol = self._data[name]
                     if not isinstance(symbol, gt.Alias) and symbol.synchronize:
                         names.append(name)
                 else:
@@ -641,7 +643,7 @@ class Container(gt.Container):
         mapping = {}
         for gdx_name, gamspy_name in symbol_names.items():
             if gamspy_name in self.data:
-                if self[gamspy_name].synchronize:
+                if self._data[gamspy_name].synchronize:
                     mapping[gdx_name] = gamspy_name
             else:
                 raise ValidationError(
@@ -657,9 +659,9 @@ class Container(gt.Container):
 
         for name in names:
             if name in self.data:
-                updated_records = self._temp_container.data[name].records
-                self[name].records = updated_records
-                self[name].domain_labels = self[name].domain_names
+                updated_records: DataFrame = self._temp_container.data[name].records
+                self._data[name].records = updated_records
+                self._data[name].domain_labels = self._data[name].domain_names
             else:
                 self._read(load_from, [name])
 
@@ -673,8 +675,8 @@ class Container(gt.Container):
 
         for gdx_name, gamspy_name in names.items():
             updated_records = self._temp_container[gdx_name].records
-            self[gamspy_name].records = updated_records
-            self[gamspy_name].domain_labels = self[gamspy_name].domain_names
+            self._data[gamspy_name].records = updated_records
+            self._data[gamspy_name].domain_labels = self._data[gamspy_name].domain_names
 
         self._options.miro_protect = original_state
         self._temp_container.data = {}
@@ -683,9 +685,10 @@ class Container(gt.Container):
         self,
         load_from: str | Container | gt.Container,
         symbol_names: list[str] | None = None,
-        load_records: bool = True,
         mode: str | None = None,
         encoding: str | None = None,
+        *,
+        load_records: bool = True,
     ) -> None:
         super().read(load_from, symbol_names, load_records, mode, encoding)
         self._cast_symbols(symbol_names)
@@ -694,9 +697,10 @@ class Container(gt.Container):
         self,
         load_from: str | os.PathLike | Container | gt.Container,
         symbol_names: list[str] | None = None,
-        load_records: bool = True,
         mode: str | None = None,
         encoding: str | None = None,
+        *,
+        load_records: bool = True,
     ) -> None:
         """
         Read symbols and records from a GDX file or another container.
@@ -712,16 +716,16 @@ class Container(gt.Container):
             Names of symbols to read. If omitted, all symbols are read.
 
 
-        load_records : bool, optional
-            Whether to load symbol records (default: True).
-
-
         mode : str, optional
             GDX read mode ("category", or "string", default: "category").
 
 
         encoding : str, optional
             Text encoding for symbol metadata.
+
+
+        load_records : bool, optional
+            Whether to load symbol records (default: True).
 
 
         Examples
@@ -748,7 +752,7 @@ class Container(gt.Container):
         if isinstance(load_from, os.PathLike):
             load_from = os.fspath(load_from)
 
-        self._read(load_from, symbol_names, load_records, mode, encoding)
+        self._read(load_from, symbol_names, mode, encoding, load_records=load_records)
         self._synch_with_gams()
 
     def setRecords(
@@ -806,9 +810,10 @@ class Container(gt.Container):
         self,
         write_to: str,
         symbol_names: list[str] | None = None,
-        compress: bool = False,
         uel_priority: str | list[str] | None = None,
         mode: str | None = None,
+        *,
+        compress: bool = False,
         eps_to_zero: bool = True,
     ):
         super().write(
@@ -824,8 +829,9 @@ class Container(gt.Container):
         self,
         write_to: Path | str,
         symbol_names: list[str] | None = None,
-        compress: bool | None = None,
         mode: str | None = None,
+        *,
+        compress: bool | None = None,
         eps_to_zero: bool = True,
     ) -> None:
         """
@@ -1209,7 +1215,7 @@ $endIf
     def addSet(
         self,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: DomainType | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
@@ -1295,7 +1301,7 @@ $endIf
     def addParameter(
         self,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
+        domain: DomainType | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
@@ -1367,7 +1373,7 @@ $endIf
         self,
         name: str | None = None,
         type: str = "free",
-        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
+        domain: DomainType | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
@@ -1432,7 +1438,7 @@ $endIf
         self,
         name: str | None = None,
         type: str | EquationType = "regular",
-        domain: Sequence[Set | Alias] | Set | Alias | None = None,
+        domain: DomainType | None = None,
         definition: Variable | Operation | Expression | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,

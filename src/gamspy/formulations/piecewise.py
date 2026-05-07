@@ -334,6 +334,7 @@ def pwl_interval_formulation(
     input_x: gp.Variable,
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
+    *,
     bound_left: bool = True,
     bound_right: bool = True,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
@@ -509,6 +510,7 @@ def pwl_convexity_formulation(
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
     using: typing.Literal["binary", "sos2"] = "binary",
+    *,
     bound_left: bool = True,
     bound_right: bool = True,
 ) -> tuple[gp.Variable, list[gp.Equation]]:

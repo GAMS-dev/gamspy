@@ -68,7 +68,9 @@ explicit = true
 exclude = ["src/gamspy/_backend/neos.py", "src/gamspy/_backend/engine.py"]
 
 [tool.ty.rules]
-unused-type-ignore-comment = "ignore"
+unused-type-ignore-comment = "ignore"  # To avoid clashing with mypy.
+invalid-method-override = "ignore"  # Some overrides do not match the signature of equivalent gtp functions.
+unresolved-import = "ignore"  # Needed for optional torch dependency
 
 [dependency-groups]
 dev = [
