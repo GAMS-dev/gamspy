@@ -9,11 +9,10 @@ from gamspy._communication import send_job
 from gamspy.exceptions import GamspyException, _customize_exception
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
     from pathlib import Path
 
     from gamspy import Container, Model, Options
-    from gamspy._types import SymbolType
+    from gamspy._symbols.symbol import Symbol
 
 
 class Local(backend.Backend):
@@ -25,7 +24,7 @@ class Local(backend.Backend):
         solver_options: dict | Path | None,
         output: TextIO | None,
         model: Model | None,
-        load_symbols: Sequence[SymbolType] | None,
+        load_symbols: list[Symbol] | None,
     ) -> None:
         super().__init__(
             "local",

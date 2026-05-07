@@ -12,10 +12,20 @@ from gamspy.exceptions import LatexException, ValidationError
 
 if TYPE_CHECKING:
     from pathlib import Path
+    from typing import TypeAlias
 
-    from gamspy import ConvertOptions, FileFormat, Model
-    from gamspy._types import SymbolType
+    from gamspy import (
+        Alias,
+        ConvertOptions,
+        Equation,
+        FileFormat,
+        Model,
+        Parameter,
+        Set,
+        Variable,
+    )
 
+    SymbolType: TypeAlias = Alias | Set | Parameter | Variable | Equation
 
 GAMS_JACOBIAN_TEMPLATE = """$onEmpty
 Set

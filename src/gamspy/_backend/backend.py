@@ -9,7 +9,6 @@ import gamspy.utils as utils
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
     from pathlib import Path
 
     import pandas as pd
@@ -18,7 +17,7 @@ if TYPE_CHECKING:
     from gamspy._backend.engine import EngineClient, GAMSEngine
     from gamspy._backend.local import Local
     from gamspy._backend.neos import NeosClient, NEOSServer
-    from gamspy._types import SymbolType
+    from gamspy._symbols.symbol import Symbol
 
 HEADER = [
     "Solver Status",
@@ -42,7 +41,7 @@ def backend_factory(
     backend: Literal["local", "engine", "neos"] = "local",
     client: EngineClient | NeosClient | None = None,
     model: Model | None = None,
-    load_symbols: Sequence[SymbolType] | None = None,
+    load_symbols: list[Symbol] | None = None,
 ) -> Local | GAMSEngine | NEOSServer:
     if backend == "neos":
         from gamspy._backend.neos import NEOSServer
@@ -98,7 +97,7 @@ class Backend(ABC):
         solver: str | None,
         solver_options: dict | Path | None,
         output: TextIO | None,
-        load_symbols: Sequence[SymbolType] | None,
+        load_symbols: list[Symbol] | None,
     ):
         self.backend_type = backend_type
         self.container = container
@@ -108,9 +107,9 @@ class Backend(ABC):
         self.output = output
         if load_symbols is not None:
             self.load_symbols: list[str] = [
-                symbol.name
+                symbol.name  # type: ignore
                 for symbol in load_symbols
-                if symbol.synchronize  # type: ignore
+                if symbol.synchronize
             ]
 
         self.job_name = self.get_job_name()
