@@ -1,1 +1,0 @@
-Adjusted cta.py for correct usage of GAMSPy with GAMS Connect.

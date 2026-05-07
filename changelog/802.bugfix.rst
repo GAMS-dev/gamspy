@@ -1,1 +1,0 @@
-Fixed equality sign bug in certain multi condition expressions.

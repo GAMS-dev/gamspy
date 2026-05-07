@@ -1,1 +1,0 @@
-Fix domain validation for SetExpression objects as domain elements.
