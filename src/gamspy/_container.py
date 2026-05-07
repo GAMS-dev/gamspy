@@ -10,6 +10,7 @@ import sys
 import tempfile
 import threading
 import traceback
+import warnings
 import weakref
 from difflib import get_close_matches
 from pathlib import Path
@@ -611,7 +612,7 @@ class Container(gt.Container):
 
         if not IS_MIRO_INIT and MIRO_GDX_OUT:
             if len(self._miro_output_symbols) == 0:
-                self.write(MIRO_GDX_OUT, symbol_names=[])
+                self._write(MIRO_GDX_OUT, symbol_names=[])
             else:
                 strings.append(miro.get_unload_output_str(self))
 
@@ -656,7 +657,7 @@ class Container(gt.Container):
 
         for name in names:
             if name in self.data:
-                updated_records = self._temp_container[name].records
+                updated_records = self._temp_container.data[name].records
                 self[name].records = updated_records
                 self[name].domain_labels = self[name].domain_names
             else:
@@ -801,39 +802,51 @@ class Container(gt.Container):
 
         self._synch_with_gams()
 
-    def write(
+    def _write(
         self,
         write_to: str,
         symbol_names: list[str] | None = None,
         compress: bool = False,
+        uel_priority: str | list[str] | None = None,
+        mode: str | None = None,
+        eps_to_zero: bool = True,
+    ):
+        super().write(
+            write_to,
+            symbol_names,
+            compress=compress,
+            uel_priority=uel_priority,
+            mode=mode,
+            eps_to_zero=eps_to_zero,
+        )
+
+    def write(
+        self,
+        write_to: Path | str,
+        symbol_names: list[str] | None = None,
+        compress: bool | None = None,
         mode: str | None = None,
         eps_to_zero: bool = True,
     ) -> None:
         """
         Write symbols and records to a GDX file.
 
-
         Parameters
         ----------
-        write_to : str
+        write_to : Path | str
             Target GDX file path.
-
 
         symbol_names : list[str], optional
             Symbols to write. If omitted, all symbols are written.
 
-
         compress : bool, optional
             Whether to compress the GDX file.
-
 
         mode : str, optional
             Write mode (passed to GAMS Transfer).
 
-
         eps_to_zero : bool, optional
             Convert EPS values to zero before writing.
-
 
         Examples
         --------
@@ -843,13 +856,55 @@ class Container(gt.Container):
         >>> m.write("out.gdx")
 
         """
-        super().write(
-            write_to,
-            symbol_names,
-            compress,
-            mode=mode,
-            eps_to_zero=eps_to_zero,
-        )
+        if isinstance(write_to, Path):
+            write_to = str(write_to.resolve())
+
+        if compress is not None:
+            # Store the old value of `compress` in OLDVALUE_GDXCOMPRESS
+            self._add_statement(rf"""
+$if setEnv GDXCOMPRESS $setLocal OLDVALUE_GDXCOMPRESS %sysEnv.GDXCOMPRESS%
+$setEnv GDXCOMPRESS {int(compress)}
+""")
+
+        if mode is not None:
+            warnings.warn(
+                "'mode' is deprecated and will be removed in a future version. ",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        if eps_to_zero:
+            self._add_statement("$onEpsToZero")
+
+        if symbol_names is None:
+            symbols_str = ""
+        elif isinstance(symbol_names, list):
+            symbols_str = " ".join(symbol_names)
+        elif isinstance(symbol_names, dict):
+            symbols_str = " ".join(
+                [f"{key}={value}" for key, value in symbol_names.items()]
+            )
+        else:
+            raise TypeError(
+                f"`symbol_names` must be of type list, dict, or None but given {type(symbol_names)}"
+            )
+
+        self._add_statement(rf"$gdxUnload {write_to} {symbols_str}")
+
+        if eps_to_zero:
+            self._add_statement("$offEpsToZero")
+
+        if compress is not None:
+            # Restore the `compress`` value if there was one set, otherwise we drop the variable.
+            self._add_statement(r"""
+$ifThen setLocal OLDVALUE_GDXCOMPRESS
+$  setEnv GDXCOMPRESS %OLDVALUE_GDXCOMPRESS%
+$else
+$  dropEnv GDXCOMPRESS
+$endIf
+""")
+
+        self._synch_with_gams()
 
     def writeSolverOptions(
         self, solver: str, solver_options: dict | str | Path, file_number: int = 1
@@ -1554,7 +1609,7 @@ class Container(gt.Container):
                 " with the original container."
             )
 
-        self.write(m._job + "in.gdx")
+        self._write(m._job + "in.gdx")
         m._read(m._job + "in.gdx")
 
         # if already defined equations exist, add them to .gms file

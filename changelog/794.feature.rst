@@ -1,0 +1,1 @@
+Allow providing symbol_names argument as a dict in container.write().

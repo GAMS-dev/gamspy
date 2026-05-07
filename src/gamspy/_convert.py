@@ -427,10 +427,10 @@ class GamsConverter:
             self.container._synch_with_gams()
 
         # Write .gdx file
-        self.container.write(self.gdx_path, symbols)
+        self.container._write(self.gdx_path, symbols)
 
         # 1. Declarations
-        declarations = [self.container[name].getDeclaration() for name in symbols]
+        declarations = [self.container.data[name].getDeclaration() for name in symbols]
 
         if self.model.external_module is not None:
             em_name = self.model._external_module
@@ -521,7 +521,7 @@ class LatexConverter:
         if rename is not None:
             for name, latex_name in rename.items():
                 try:
-                    symbol = self.container[name]
+                    symbol = self.container.data[name]
                     symbol._latex_name = latex_name
                 except KeyError as e:
                     raise KeyError(
@@ -616,7 +616,7 @@ class LatexConverter:
     def get_table(self, symbol_type) -> str:
         table = [TABLE_HEADER]
         for name in self.symbols:
-            symbol: SymbolType = self.container[name]
+            symbol: SymbolType = self.container.data[name]
 
             if isinstance(symbol, symbol_type):
                 summary = symbol.summary
@@ -656,7 +656,7 @@ class LatexConverter:
     def get_constraints(self) -> str:
         constraints = [r"\begin{flalign*}"]
         for name in self.symbols:
-            symbol = self.container[name]
+            symbol = self.container.data[name]
             if not isinstance(symbol, syms.Variable):
                 continue
 

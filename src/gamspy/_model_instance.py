@@ -668,8 +668,10 @@ class ModelInstance:
         for name in temp.data:
             if name in self.container.data:
                 self.container._options.miro_protect = False
-                self.container[name].records = temp[name].records
-                self.container[name].domain_labels = self.container[name].domain_names
+                self.container.data[name].records = temp[name].records
+                self.container.data[name].domain_labels = self.container.data[
+                    name
+                ].domain_names
 
             if name in (symbol.name for symbol in self.modifiables):
                 generated_var = name + "_var"
@@ -677,7 +679,7 @@ class ModelInstance:
                     _ = gp.Variable(
                         self.container,
                         generated_var,
-                        domain=self.container[name].domain,
+                        domain=self.container.data[name].domain,
                         records=temp[generated_var].records,
                     )
                 else:

@@ -431,7 +431,9 @@ def _get_variables_of_model(container: Container):
     names = _get_symbol_names_from_gdx(container.system_directory, container._gdx_out)
 
     return [
-        container[name] for name in names if isinstance(container[name], gt.Variable)
+        container.data[name]
+        for name in names
+        if isinstance(container.data[name], gt.Variable)
     ]
 
 
