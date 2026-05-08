@@ -7,7 +7,6 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
-import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
@@ -16,9 +15,6 @@ from gamspy.exceptions import ValidationError
 from gamspy.math.matrix import permute
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-    from types import EllipsisType
-
     import pandas as pd
 
     from gamspy import (
@@ -29,7 +25,9 @@ if TYPE_CHECKING:
         Variable,
     )
     from gamspy._algebra.expression import Expression
-    from gamspy._algebra.operation import Operation
+    from gamspy._algebra.operation import Card, Operation, Ord
+    from gamspy._types import IndexType
+    from gamspy.math.misc import MathOp
 
 logger = logging.getLogger("GAMSPy")
 logger.setLevel(logging.WARNING)
@@ -93,10 +91,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self._records = records
         self._assignment = None
 
-    def __getitem__(
-        self,
-        indices: EllipsisType | slice | Sequence | str | implicits.ImplicitSet,
-    ) -> ImplicitParameter:
+    def __getitem__(self, indices: IndexType) -> ImplicitParameter:
         domain = validation.validate_domain(self, indices)
 
         return ImplicitParameter(
@@ -109,8 +104,16 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
     def __setitem__(
         self,
-        indices: EllipsisType | slice | Sequence | str | implicits.ImplicitSet,
-        rhs: Expression | Operation | ImplicitParameter | int | float,
+        indices: IndexType,
+        rhs: Expression
+        | Operation
+        | MathOp
+        | ImplicitParameter
+        | int
+        | float
+        | Parameter
+        | Card
+        | Ord,
     ) -> None:
         if (
             isinstance(self.parent, (syms.Variable, syms.Equation))

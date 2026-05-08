@@ -440,3 +440,74 @@ def test_for():
                 cnt[...] = cnt + 1
 
     assert cnt.toValue() == 3.0
+
+
+def test_loop_with_math_op():
+    m = gp.Container()
+
+    base_R = gp.Set(m, name="base_R")
+    base_V = gp.Set(m, name="base_V")
+    base_P = gp.Set(m, name="base_P")
+    base_BD = gp.Set(m, name="base_BD")
+    base_LL = gp.Set(m, name="base_LL")
+    base_YEAR = gp.Set(m, name="base_YEAR")
+    base_JJ = gp.Set(m, name="base_JJ")
+    base_T = gp.Set(m, name="base_T")
+
+    AGE = gp.Set(m, name="AGE")
+    J = gp.Set(m, name="J")
+    EOHYEARS = gp.Set(m, name="EOHYEARS")
+
+    R = gp.Alias(m, name="R", alias_with=base_R)
+    V = gp.Alias(m, name="V", alias_with=base_V)
+    P = gp.Alias(m, name="P", alias_with=base_P)
+    BD = gp.Alias(m, name="BD", alias_with=base_BD)
+    LL = gp.Alias(m, name="LL", alias_with=base_LL)
+    YEAR = gp.Alias(m, name="YEAR", alias_with=base_YEAR)
+    JJ = gp.Alias(m, name="JJ", alias_with=base_JJ)
+    T = gp.Alias(m, name="T", alias_with=base_T)
+
+    RTP_ISHPR = gp.Set(m, name="RTP_ISHPR", domain=[R, V, P])
+    RTP_SHAPI = gp.Set(m, name="RTP_SHAPI", domain=[R, V, P, BD, J, JJ, LL, YEAR])
+    PERIODYR = gp.Set(m, name="PERIODYR", domain=[T, EOHYEARS])
+
+    arg2 = [R, V, P]
+
+    YEARVAL = gp.Parameter(m, name="YEARVAL", domain=["*"])
+    B = gp.Parameter(m, name="B", domain=[T])
+    E = gp.Parameter(m, name="E", domain=[T])
+    MULTI = gp.Parameter(m, name="MULTI", domain=[JJ, T])
+    SHAPE = gp.Parameter(m, name="SHAPE", domain=[J, "*"])
+
+    arg1 = gp.Parameter(m, name="arg1", domain=[R, V, P])
+    arg4 = gp.Parameter(m, name="arg4", domain=[R, V, P])
+    pass_var = gp.Parameter(m, name="pass_var", domain=[R, V, P])
+
+    with gp.Loop(gp.math.same_as(AGE, "1")):
+        arg4.where[pass_var.where[RTP_ISHPR[R, V, P]]] = arg1[arg2] * gp.Sum(
+            RTP_SHAPI[R, V, P, BD, J, JJ, LL, YEAR],
+            gp.SpecialValues.EPS
+            + gp.Sum(
+                # First argument: The domain controlling T and EOHYEARS
+                PERIODYR[T, EOHYEARS].where[
+                    YEARVAL[EOHYEARS] <= gp.math.Max(B[T], YEARVAL[YEAR])
+                ],
+                # Second argument: The entire expression evaluated within the sum
+                (
+                    MULTI[JJ, T]
+                    * SHAPE[
+                        J,
+                        AGE
+                        + (gp.math.Min(YEARVAL[EOHYEARS], YEARVAL[YEAR]))
+                        - YEARVAL[LL],
+                    ]
+                )
+                / (
+                    gp.math.Max(
+                        1,
+                        gp.math.Min(E[T], YEARVAL[YEAR])
+                        - gp.math.Max(B[T], YEARVAL[LL] + 1),
+                    )
+                ),
+            ),
+        )

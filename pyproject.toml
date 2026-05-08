@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.23.0"
+version = "1.23.1"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -34,8 +34,8 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi >= 53.1.0, < 54.0.0",
-  "gamspy_base >= 53.1.0, < 54.0.0",
+  "gamsapi >= 53.5.0, < 54.0.0",
+  "gamspy_base >= 53.5.0, < 54.0.0",
   "pandas >= 2.2.2, < 3.1",
   "pydantic >= 2.0",
   "requests >= 2.28.0",
@@ -54,7 +54,7 @@ torch = ["torch>=2.7.0"]
 
 [tool.uv]
 exclude-newer = "7 days"
-exclude-newer-package = { torch = false }
+exclude-newer-package = { torch = false, gamspy_base = false, gamsapi = false }
 
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu" }]
@@ -68,7 +68,9 @@ explicit = true
 exclude = ["src/gamspy/_backend/neos.py", "src/gamspy/_backend/engine.py"]
 
 [tool.ty.rules]
-unused-type-ignore-comment = "ignore"
+unused-type-ignore-comment = "ignore"  # To avoid clashing with mypy.
+invalid-method-override = "ignore"  # Some overrides do not match the signature of equivalent gtp functions.
+unresolved-import = "ignore"  # Needed for optional torch dependency
 
 [dependency-groups]
 dev = [

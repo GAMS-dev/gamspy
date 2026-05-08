@@ -718,6 +718,7 @@ class EngineClient:
         namespace: str = "global",
         extra_model_files: list[str] | None = None,
         engine_options: dict | None = None,
+        *,
         remove_results: bool = False,
         is_blocking: bool = True,
     ):
@@ -771,19 +772,19 @@ class GAMSEngine(backend.Backend):
                 "`engine_client` must be provided to solve on GAMS Engine"
             )
 
-        if solver.lower() == "mpsge":
+        if solver == "mpsge":
             raise ValidationError(f"`{solver}` is not a valid solver for GAMS Engine.")
 
         super().__init__(
             "engine",
             container,
-            model,
             options,
             solver,
             solver_options,
             output,
             load_symbols,
         )
+        self.model = model
         self.client = client
 
     def is_async(self):
@@ -791,6 +792,7 @@ class GAMSEngine(backend.Backend):
 
     def run(
         self,
+        *,
         relaxed_domain_mapping: bool = False,
         gams_to_gamspy: bool = False,
     ):
@@ -883,7 +885,6 @@ class GAMSEngine(backend.Backend):
                     except FileNotFoundError:
                         ...
 
-                assert self.model is not None
                 self.model._update_model_attributes()
 
                 if self.client.remove_results:
@@ -898,8 +899,8 @@ class GAMSEngine(backend.Backend):
             return None
 
         if not self.is_async():
-            self.parse_listings()
-            return self.prepare_summary()
+            self.parse_listings(self.model)
+            return self.prepare_summary(self.model)
 
         return None
 
@@ -967,7 +968,6 @@ class GAMSEngine(backend.Backend):
         if self.options.loadpoint is not None:
             extra_model_files.append(self.options.loadpoint)
 
-        assert self.model is not None
         if self.model.external_module is not None:
             extra_model_files.append(self.model.external_module)
 

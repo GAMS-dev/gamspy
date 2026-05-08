@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
+import gamspy as gp
 import gamspy.math as gamspy_math
 from gamspy import (
     Container,
@@ -438,4 +439,36 @@ def test_condition_on_condition():
     assert (
         a[i].where[a[i]].where[a[i]].where[a[i]].gamsRepr()
         == "a(i) $ (a(i)) $ (a(i)) $ (a(i))"
+    )
+
+
+def test_multiple_conditions():
+    m = gp.Container()
+
+    ALL_REG = gp.Set(m, name="ALL_REG")
+    ALLYEAR = gp.Set(m, name="ALLYEAR")
+    ALL_TS = gp.Set(m, name="ALL_TS")
+
+    REG = gp.Set(m, name="REG", domain=[ALL_REG])
+    MILESTONYR = gp.Set(m, name="MILESTONYR", domain=[ALLYEAR])
+    FIL = gp.Set(m, name="FIL", domain=[ALLYEAR])
+
+    PERIODYR = gp.Set(m, name="PERIODYR", domain=[ALLYEAR, ALLYEAR])
+
+    R = gp.Alias(m, name="R", alias_with=REG)
+    YEAR = gp.Alias(m, name="YEAR", alias_with=ALLYEAR)
+    S = gp.Alias(m, name="S", alias_with=ALL_TS)
+    T = gp.Alias(m, name="T", alias_with=MILESTONYR)
+
+    NORTS = gp.Parameter(m, name="NORTS", domain=[R, YEAR, S])
+    D = gp.Parameter(m, name="D", domain=[ALLYEAR])
+    G_OFFTHD = gp.Parameter(m, name="G_OFFTHD", domain=[ALLYEAR])
+
+    NORTS[R, T, S].where[
+        (gp.Sum(PERIODYR[T, FIL], 1) / D[T] >= G_OFFTHD[T]).where[FIL[T]]
+    ] = 1
+
+    assert (
+        NORTS.getAssignment()
+        == "NORTS(R,T,S) $ ((sum(PERIODYR(T,FIL),1) / D(T) >= G_OFFTHD(T)) $ (FIL(T))) = 1;"
     )

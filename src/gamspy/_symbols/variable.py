@@ -5,7 +5,7 @@ import itertools
 import os
 import threading
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import gams.transfer as gt
 from gams.core.gdx import GMS_DT_VAR
@@ -22,15 +22,12 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     import pandas as pd
 
-    from gamspy import Alias, Container, Set
+    from gamspy import Container
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols.implicits import ImplicitVariable
-    from gamspy._types import IndexType
-    from gamspy.math.matrix import Dim
+    from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
+    from gamspy._types import DomainType, IndexType
 
 
 class VariableType(Enum):
@@ -91,7 +88,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     type : str, optional
         Type of the variable. Options: "free", "positive", "negative", "binary",
         "integer", "sos1", "sos2", "semicont", "semiint". Default is "free".
-    domain : Sequence[Set | Alias | str] | Set | Alias | Dim | str, optional
+    domain : DomainType, optional
         The domain of the variable. Can be a list of Sets/Aliases, a single Set/Alias,
         or strings representing set names. Use "*" for the universe set. Default is [] (scalar).
     records : Any, optional
@@ -119,7 +116,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container,
         name: str,
         type: str = "free",
-        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
+        domain: DomainType | None = None,
         records: Any | None = None,
         description: str = "",
     ):
@@ -170,6 +167,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         obj._synchronize = True
         obj._metadata = {}
         obj._winner = "python"
+        obj._column_listing: list[str] | None = None
 
         # create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
@@ -187,7 +185,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container | None = None,
         name: str | None = None,
         type: str = "free",
-        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
+        domain: DomainType | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
@@ -213,7 +211,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                         (os.getpid(), threading.get_native_id())
                     ]
 
-                symbol = container[name]
+                symbol = container.data[name]
                 if isinstance(symbol, cls):
                     return symbol
 
@@ -229,7 +227,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container | None = None,
         name: str | None = None,
         type: str = "free",
-        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
+        domain: DomainType | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
@@ -247,6 +245,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         self._synchronize = True
         self._winner = "python"
+        self._column_listing: list[str] | None = None
 
         # domain handling
         if domain is None:
@@ -307,7 +306,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                     ]
                 except KeyError as e:
                     raise ValidationError("Variable requires a container.") from e
-            assert container is not None
 
             type = cast_type(type)
 
@@ -451,7 +449,15 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         dims[-2] = x
         return permute(self, dims)  # type: ignore
 
-    def _init_attributes(self):
+    def _init_attributes(
+        self,
+    ) -> tuple[
+        ImplicitParameter,
+        ImplicitParameter,
+        ImplicitParameter,
+        ImplicitParameter,
+        ImplicitParameter,
+    ]:
         level = self._create_attr("l")
         marginal = self._create_attr("m")
         lower = self._create_attr("lo")
@@ -459,16 +465,17 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         scale = self._create_attr("scale")
         return level, marginal, lower, upper, scale
 
-    def _create_attr(self, attr_name):
-        domain = self.domain
+    def _create_attr(
+        self, attr_name: Literal["l", "m", "lo", "up", "scale", "fx", "prior", "stage"]
+    ) -> ImplicitParameter:
         return implicits.ImplicitParameter(
             self,
             name=f"{self.name}.{attr_name}",
             records=self.records,
-            domain=domain,
+            domain=self.domain,
         )
 
-    def _update_attr_domains(self):
+    def _update_attr_domains(self) -> None:
         self._l.__init__(
             self,
             name=f"{self.name}.l",
@@ -519,7 +526,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         )
 
     @property
-    def l(self):
+    def l(self) -> ImplicitParameter:
         """
         The Level of the variable (its current value).
 
@@ -549,7 +556,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._l[...] = value
 
     @property
-    def m(self):
+    def m(self) -> ImplicitParameter:
         """
         The Marginal (dual value) of the variable.
 
@@ -579,7 +586,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._m[...] = value
 
     @property
-    def lo(self):
+    def lo(self) -> ImplicitParameter:
         """
         The Lower Bound of the variable.
 
@@ -609,7 +616,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._lo[...] = value
 
     @property
-    def up(self):
+    def up(self) -> ImplicitParameter:
         """
         The Upper Bound of the variable.
 
@@ -639,7 +646,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._up[...] = value
 
     @property
-    def scale(self):
+    def scale(self) -> ImplicitParameter:
         """
         The Scale factor of the variable.
 
@@ -673,7 +680,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._s[...] = value
 
     @property
-    def fx(self):
+    def fx(self) -> ImplicitParameter:
         """
         Fixed value of the variable.
 
@@ -704,7 +711,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._fx[...] = value
 
     @property
-    def prior(self):
+    def prior(self) -> ImplicitParameter:
         """
         Branching Priority.
 
@@ -738,7 +745,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._prior[...] = value
 
     @property
-    def stage(self):
+    def stage(self) -> ImplicitParameter:
         """
         Branching Stage.
 
@@ -846,7 +853,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         <BLANKLINE>
 
         """
-        if not hasattr(self, "_column_listing"):
+        if self._column_listing is None:
             raise ValidationError(
                 "The model must be solved with `variable_listing_limit` option for this functionality to work."
             )
@@ -904,7 +911,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         return self._records
 
     @records.setter
-    def records(self, records):
+    def records(self, records: pd.DataFrame | None):
         import pandas as pd
 
         if records is not None and not isinstance(records, pd.DataFrame):
@@ -975,7 +982,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._winner = "python"
 
     @property
-    def type(self):
+    def type(self) -> str:
         return self._type
 
     @type.setter

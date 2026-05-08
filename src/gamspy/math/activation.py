@@ -82,6 +82,7 @@ def relu_with_sos1_var(
         | Expression
         | Operation
     ),
+    *,
     return_slack_var: bool = False,
 ):
     """
@@ -289,6 +290,7 @@ def relu_with_binary_var(
     ),
     default_lb: float = -(10**6),
     default_ub: float = 10**6,
+    *,
     return_binary_var: bool = False,
 ) -> FormulationResult:
     """
@@ -581,7 +583,7 @@ def relu_with_complementarity_var(
     return y, eq
 
 
-def log_softmax(x: Variable, dim: int = -1, skip_intrinsic: bool = False):
+def log_softmax(x: Variable, dim: int = -1, *, skip_intrinsic: bool = False):
     """
     Implements the log_softmax activation function. This function strictly
     requires a GAMSPy Variable, `y = log_softmax(x)`. The ``dim`` parameter
@@ -779,5 +781,61 @@ def softmax(x: Variable, dim: int = -1):
 
     sum_expr = gamspy.Sum(sum_domain, gamspy.math.exp(x[expr_domain]))
     eq[...] = y[...] == gamspy.math.exp(x) / sum_expr
+
+    return y, [eq]
+
+
+def gelu(
+    x: Parameter
+    | Variable
+    | implicits.ImplicitParameter
+    | implicits.ImplicitVariable
+    | Expression
+    | Operation,
+) -> tuple[Variable, list[Equation]]:
+    """
+    Implements the Gaussian Error Linear Unit (GELU) activation function.
+    The GELU function is defined as GELU(x) = x * CDF(x), where `CDF` is the
+    cumulative distribution function of the Gaussian distribution.
+    It uses the intrinsic `errorf` function to compute the `CDF`.
+    This implementation **generates** one variable, which serves
+    as the activation variable and an equation.
+    The activation variable shares the same domain as the input.
+
+    Returns the activation variable and the equation list.
+
+    Parameters
+    ----------
+    x : Parameter | Variable | implicits.ImplicitParameter | implicits.ImplicitVariable | Expression | Operation
+
+    Returns
+    -------
+    tuple[Variable, list[Equation]]
+
+    Examples
+    --------
+    >>> from gamspy import Container, Variable
+    >>> from gamspy.math import dim
+    >>> from gamspy.math.activation import gelu
+    >>> m = Container()
+    >>> x = Variable(m, "x", domain=dim([2,3,4]))
+    >>> y, eqs = gelu(x)
+    >>> y.domain
+    [Set(name='DenseDim2_1', domain=['*']), Set(name='DenseDim3_1', domain=['*']), Set(name='DenseDim4_1', domain=['*'])]
+
+    """
+    assert isinstance(x.container, Container)
+
+    y = x.container.addVariable(
+        _get_random_name("y"),
+        domain=x.domain,
+    )
+
+    eq = x.container.addEquation(
+        _get_random_name("eq"),
+        domain=x.domain,
+    )
+
+    eq[...] = y[...] == x * gamspy.math.errorf(x)
 
     return y, [eq]

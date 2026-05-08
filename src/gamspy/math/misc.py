@@ -22,8 +22,7 @@ if TYPE_CHECKING:
         ImplicitSet,
         ImplicitSymbol,
     )
-    from gamspy._symbols.symbol import Symbol
-    from gamspy._types import OperableType
+    from gamspy._types import OperableType, SymbolType
 
 
 class MathOp(operable.Operable):
@@ -55,16 +54,15 @@ class MathOp(operable.Operable):
         self,
         op_name: str,
         elements: tuple,
+        *,
         safe_cancel: bool = False,
     ):
         self.op_name = op_name
         self.elements = list(elements)
         self.safe_cancel = safe_cancel
-        self.container = None
+        self.container: Container | None = self._find_container()
         self.domain: list[Set | Alias] = []
         self.dimension = 0
-        if hasattr(elements[0], "container"):
-            self.container = elements[0].container  # type: ignore
         if hasattr(elements[0], "domain"):
             self.domain: list[Set | Alias] = elements[0].domain  # type: ignore
             self.dimension = validation.get_dimension(self.domain)
@@ -82,6 +80,13 @@ class MathOp(operable.Operable):
             return len(self.records.index)
 
         return 0
+
+    def _find_container(self) -> Container | None:
+        for elem in self.elements:
+            if hasattr(elem, "container"):
+                return elem.container
+
+        return None
 
     @property
     def records(self) -> pd.DataFrame | None:
@@ -105,6 +110,7 @@ class MathOp(operable.Operable):
 
         """
         container = self.container
+
         if container is None:
             container = Container()
 
@@ -345,7 +351,9 @@ def aggregate(
     _option_statement(source, target, direction)
 
 
-def _stringify(x: str | int | float | Symbol | ImplicitSymbol, *, latex: bool = False):
+def _stringify(
+    x: str | int | float | SymbolType | ImplicitSymbol, *, latex: bool = False
+):
     if isinstance(x, (int, float)):
         x = utils._map_special_values(x)
 
@@ -359,7 +367,7 @@ def _stringify(x: str | int | float | Symbol | ImplicitSymbol, *, latex: bool = 
     if latex:
         return x.latexRepr()
 
-    return x.gamsRepr()  # type: ignore
+    return x.gamsRepr()
 
 
 def abs(x: OperableType) -> MathOp:
@@ -663,13 +671,13 @@ def Round(x: OperableType, num_decimals: int = 0) -> MathOp:
     return MathOp("round", (x, num_decimals))
 
 
-def sign(x: Symbol) -> MathOp:
+def sign(x: SymbolType) -> MathOp:
     """
     Sign of ``x`` returns ``1 if x > 0``, ``-1 if x < 0``, and ``0 if x = 0``
 
     Parameters
     ----------
-    x : Symbol
+    x : SymbolType
 
     Returns
     -------
@@ -749,7 +757,7 @@ def sqexp(x: OperableType, S: int | float = 150) -> MathOp:
     return MathOp("sqexp", (x, S))
 
 
-def sqrt(x: OperableType, safe_cancel: bool = False) -> MathOp:
+def sqrt(x: OperableType, *, safe_cancel: bool = False) -> MathOp:
     """
     Square root of ``x``
 
@@ -1008,14 +1016,14 @@ def lse_min_sc(t, *xs) -> MathOp:
     return MathOp("lseMinSc", (t,) + xs)
 
 
-def ncp_cm(x: Symbol, y: Symbol, z: float | int) -> MathOp:
+def ncp_cm(x: SymbolType, y: SymbolType, z: float | int) -> MathOp:
     """
     Chen-Mangasarian smoothing: ``x - z*ln(1 + exp((x-y)/z))``
 
     Parameters
     ----------
-    x : Symbol
-    y : Symbol
+    x : SymbolType
+    y : SymbolType
     z : int | float
 
     Returns
@@ -1038,14 +1046,14 @@ def ncp_cm(x: Symbol, y: Symbol, z: float | int) -> MathOp:
     return MathOp("ncpCM", (x, y, z))
 
 
-def ncp_f(x: Symbol, y: Symbol, z: int | float = 0) -> MathOp:
+def ncp_f(x: SymbolType, y: SymbolType, z: int | float = 0) -> MathOp:
     """
     Fisher-Burmeister smoothing: ``sqrt(x^2 + y^2 + 2z) - x - y`` where ``z >= 0`` (default ``z = 0``)
 
     Parameters
     ----------
-    x : Symbol
-    y : Symbol
+    x : SymbolType
+    y : SymbolType
     z : int | float, optional
 
     Returns
@@ -1069,8 +1077,8 @@ def ncp_f(x: Symbol, y: Symbol, z: int | float = 0) -> MathOp:
 
 
 def ncpVUpow(
-    r: Symbol,
-    s: Symbol,
+    r: SymbolType,
+    s: SymbolType,
     mu: int | float = 0,
 ) -> MathOp:
     """
@@ -1078,8 +1086,8 @@ def ncpVUpow(
 
     Parameters
     ----------
-    r : Symbol
-    s : Symbol
+    r : SymbolType
+    s : SymbolType
     mu : int | float, optional
 
     Returns
@@ -1101,14 +1109,14 @@ def ncpVUpow(
     return MathOp("ncpVUpow", (r, s, mu))
 
 
-def ncpVUsin(r: Symbol, s: Symbol, mu: int | float = 0) -> MathOp:
+def ncpVUsin(r: SymbolType, s: SymbolType, mu: int | float = 0) -> MathOp:
     """
     NCP Veelken-Ulbrich (smoothed min(r,s))
 
     Parameters
     ----------
-    r : Symbol
-    s : Symbol
+    r : SymbolType
+    s : SymbolType
     mu : int | float, optional
 
     Returns

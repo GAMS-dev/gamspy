@@ -12,23 +12,17 @@ import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     import pandas as pd
 
-    from gamspy._algebra import Domain
-    from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
     from gamspy._symbols import Alias, Parameter, Set
-    from gamspy._symbols.implicits import (
-        ImplicitParameter,
-        ImplicitSet,
-        ImplicitVariable,
-    )
-    from gamspy.math.misc import MathOp
+    from gamspy._symbols.implicits import ImplicitSet
+    from gamspy._types import OperationIndexType, OperationRhsType
 
 
 class Operation(operable.Operable):
@@ -41,12 +35,15 @@ class Operation(operable.Operable):
     rhs : Operation
             | Expression
             | MathOp
-            | ImplicitVariable
-            | ImplicitParameter
-            | int
-            | bool
             | Variable
             | Parameter
+            | ImplicitVariable
+            | ImplicitParameter
+            | ImplicitSet
+            | int
+            | Ord
+            | Card
+            | bool
 
     Examples
     --------
@@ -60,21 +57,11 @@ class Operation(operable.Operable):
 
     """
 
-    def __init__(
-        self,
-        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
-        rhs: Operation
-        | Expression
-        | MathOp
-        | ImplicitVariable
-        | ImplicitParameter
-        | ImplicitSet
-        | int
-        | bool,
-        op_name: str,
-    ):
+    def __init__(self, domain: OperationIndexType, rhs: OperationRhsType, op_name: str):
         self.op_domain = utils._to_list(domain)  # type: ignore
-        assert len(self.op_domain) > 0, "Operation requires at least one index"
+        if len(self.op_domain) < 1:
+            raise ValidationError("Operation requires at least one index.")
+
         self.rhs = rhs
         self._op_name = op_name
         self.raw_domain = self._get_raw_domain()
@@ -103,7 +90,7 @@ class Operation(operable.Operable):
         # allow conditions
         self.where = condition.Condition(self)
 
-    def __getitem__(self, indices: Sequence | str):
+    def __getitem__(self, indices: Sequence | str) -> Operation:
         domain = validation.validate_domain(self, indices)
         for index, sum_index in self._operation_indices:
             domain.insert(index, self._bare_op_domain[sum_index])
@@ -113,7 +100,7 @@ class Operation(operable.Operable):
 
         return Operation(self.op_domain, self.rhs[domain], self._op_name)  # type: ignore
 
-    def __len__(self):
+    def __len__(self) -> int:
         if self.records is not None:
             return len(self.records.index)
 
@@ -140,7 +127,11 @@ class Operation(operable.Operable):
         0    3.0
 
         """
-        assert self.container is not None
+        if self.container is None:
+            raise GamspyException(
+                "Could not discover the container from the operation. Therefore, cannot call .records on this operation."
+            )
+
         temp_name = "a" + utils._get_unique_name()
         domain: list[Set | Alias] = []
         for elem in self.domain:
@@ -373,7 +364,7 @@ class Sum(Operation):
     Parameters
     ----------
     domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
-    expression : Operation
+    rhs : Operation
             | Expression
             | MathOp
             | ImplicitVariable
@@ -395,18 +386,7 @@ class Sum(Operation):
 
     """
 
-    def __init__(
-        self,
-        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
-        expression: Operation
-        | Expression
-        | MathOp
-        | ImplicitSet
-        | ImplicitParameter
-        | ImplicitVariable
-        | int
-        | bool,
-    ):
+    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
         super().__init__(domain, expression, "sum")
 
     def __repr__(self) -> str:
@@ -443,7 +423,7 @@ class Product(Operation):
     Parameters
     ----------
     domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
-    expression : Operation
+    rhs : Operation
             | Expression
             | MathOp
             | ImplicitVariable
@@ -465,18 +445,7 @@ class Product(Operation):
 
     """
 
-    def __init__(
-        self,
-        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
-        expression: Operation
-        | Expression
-        | MathOp
-        | ImplicitSet
-        | ImplicitParameter
-        | ImplicitVariable
-        | int
-        | bool,
-    ):
+    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
         super().__init__(domain, expression, "prod")
 
     def __repr__(self) -> str:
@@ -513,7 +482,7 @@ class Smin(Operation):
     Parameters
     ----------
     domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
-    expression : Operation
+    rhs : Operation
             | Expression
             | MathOp
             | ImplicitVariable
@@ -535,18 +504,7 @@ class Smin(Operation):
 
     """
 
-    def __init__(
-        self,
-        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
-        expression: Operation
-        | Expression
-        | MathOp
-        | ImplicitSet
-        | ImplicitParameter
-        | ImplicitVariable
-        | int
-        | bool,
-    ):
+    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
         super().__init__(domain, expression, "smin")
 
     def __repr__(self) -> str:
@@ -583,7 +541,7 @@ class Smax(Operation):
     Parameters
     ----------
     domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
-    expression : Operation
+    rhs : Operation
             | Expression
             | MathOp
             | ImplicitVariable
@@ -605,18 +563,7 @@ class Smax(Operation):
 
     """
 
-    def __init__(
-        self,
-        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
-        expression: Operation
-        | Expression
-        | MathOp
-        | ImplicitSet
-        | ImplicitParameter
-        | ImplicitVariable
-        | int
-        | bool,
-    ):
+    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
         super().__init__(domain, expression, "smax")
 
     def __repr__(self) -> str:
@@ -653,7 +600,7 @@ class Sand(Operation):
     Parameters
     ----------
     domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
-    expression : Operation
+    rhs : Operation
             | Expression
             | MathOp
             | ImplicitVariable
@@ -675,18 +622,7 @@ class Sand(Operation):
 
     """
 
-    def __init__(
-        self,
-        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
-        expression: Operation
-        | Expression
-        | MathOp
-        | ImplicitSet
-        | ImplicitParameter
-        | ImplicitVariable
-        | int
-        | bool,
-    ):
+    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
         super().__init__(domain, expression, "sand")
 
     def __repr__(self) -> str:
@@ -722,7 +658,7 @@ class Sor(Operation):
     Parameters
     ----------
     domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
-    expression : Operation
+    rhs : Operation
             | Expression
             | MathOp
             | ImplicitVariable
@@ -744,25 +680,14 @@ class Sor(Operation):
 
     """
 
-    def __init__(
-        self,
-        domain: Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition,
-        expression: Operation
-        | Expression
-        | MathOp
-        | ImplicitSet
-        | ImplicitParameter
-        | ImplicitVariable
-        | int
-        | bool,
-    ):
+    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
         super().__init__(domain, expression, "sor")
 
     def __repr__(self) -> str:
         return f"Sor(domain={self.domain}, expression={self.rhs})"
 
     @override
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """
         Representation of the Sor operation in GAMS language.
 
@@ -886,10 +811,7 @@ class Card(operable.Operable):
 
     """
 
-    def __init__(
-        self,
-        symbol: Set | Alias | Parameter,
-    ) -> None:
+    def __init__(self, symbol: Set | Alias | Parameter) -> None:
         if not isinstance(symbol, (syms.Set, syms.Alias, syms.Parameter)):
             raise ValidationError(
                 "Card operation is only for Set, Alias and Parameter objects!"

@@ -20,16 +20,16 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     import pandas as pd
 
-    from gamspy import Alias, Container, Set
+    from gamspy import Container
+    from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
+    from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter
-    from gamspy._types import IndexType
-    from gamspy.math.matrix import Dim
+    from gamspy._types import DomainType, IndexType
+    from gamspy.math.misc import MathOp
 
 
 class Parameter(gt.Parameter, operable.Operable, Symbol):
@@ -45,7 +45,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         The Container object that this parameter belongs to.
     name : str, optional
         Name of the parameter. If not provided, a unique name is generated automatically.
-    domain : Sequence[Set | Alias | str] | Set | Alias | Dim | str, optional
+    domain : DomainType, optional
         The domain of the parameter. Can be a list of Sets/Aliases, a single Set/Alias,
         or strings representing set names. Use "*" for the universe set. Default is [] (scalar).
     records : int | float | pd.DataFrame | np.ndarray | list, optional
@@ -80,7 +80,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         cls,
         container: Container,
         name: str,
-        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
+        domain: DomainType | None = None,
         records: Any | None = None,
         description: str = "",
     ):
@@ -135,7 +135,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         cls,
         container: Container | None = None,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
+        domain: DomainType | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
@@ -161,7 +161,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                         (os.getpid(), threading.get_native_id())
                     ]
 
-                symbol = container[name]
+                symbol = container.data[name]
                 if isinstance(symbol, cls):
                     return symbol
 
@@ -176,7 +176,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self,
         container: Container | None = None,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
+        domain: DomainType | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
@@ -250,7 +250,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                     ]
                 except KeyError as e:
                     raise ValidationError("Parameter requires a container.") from e
-            assert container is not None
 
             if name is not None:
                 name = validation.validate_name(name)
@@ -343,7 +342,15 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __setitem__(
         self,
         indices: IndexType,
-        rhs: Operation | Expression | Parameter | ImplicitParameter | float | int,
+        rhs: Operation
+        | Expression
+        | MathOp
+        | Condition
+        | Parameter
+        | ImplicitParameter
+        | float
+        | int
+        | Number,
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
@@ -465,7 +472,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         return self._records
 
     @records.setter
-    def records(self, records):
+    def records(self, records: pd.DataFrame | None):
         import pandas as pd
 
         if (

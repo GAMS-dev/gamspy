@@ -196,7 +196,6 @@ class ModelInstance:
 
         self.model = model
         self.output = output
-        assert self.model._is_frozen
 
         self.modifiables = self._init_modifiables(modifiables)
         self.instance_container = gt.Container(
@@ -366,7 +365,7 @@ class ModelInstance:
                 columns = self._get_columns_to_drop(attr)
 
                 self.instance_container[attr_name].setRecords(
-                    self.container[parent_name].records.drop(columns, axis=1)
+                    symbol.parent.records.drop(columns, axis=1)
                 )
                 names_to_write.append(attr_name)
 
@@ -668,8 +667,10 @@ class ModelInstance:
         for name in temp.data:
             if name in self.container.data:
                 self.container._options.miro_protect = False
-                self.container[name].records = temp[name].records
-                self.container[name].domain_labels = self.container[name].domain_names
+                self.container.data[name].records = temp[name].records
+                self.container.data[name].domain_labels = self.container.data[
+                    name
+                ].domain_names
 
             if name in (symbol.name for symbol in self.modifiables):
                 generated_var = name + "_var"
@@ -677,7 +678,7 @@ class ModelInstance:
                     _ = gp.Variable(
                         self.container,
                         generated_var,
-                        domain=self.container[name].domain,
+                        domain=self.container.data[name].domain,
                         records=temp[generated_var].records,
                     )
                 else:

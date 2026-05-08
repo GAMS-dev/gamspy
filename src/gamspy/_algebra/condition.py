@@ -8,8 +8,9 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy._container import Container
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
-from gamspy._symbols.symbol import Symbol
+from gamspy.exceptions import FatalError
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -19,10 +20,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Card, Operation, Ord
-    from gamspy._symbols.implicits import (
-        ImplicitParameter,
-        ImplicitSet,
-    )
+    from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy.math import MathOp
 
 
@@ -63,17 +61,21 @@ class Condition(operable.Operable):
         | Ord
         | MathOp
         | Condition,
-        condition: Operation
-        | Expression
+        condition: Expression
+        | Operation
+        | Condition
+        | MathOp
+        | Parameter
         | ImplicitParameter
         | ImplicitSet
         | int
+        | Number
         | None = None,
     ):
         self.conditioning_on = conditioning_on
         self.condition = condition
         self._where = None
-        self.container = None
+        self.container: Container | None = None
         if hasattr(conditioning_on, "container") and conditioning_on.container:
             self.container = conditioning_on.container
         elif hasattr(condition, "container") and condition.container:  # type: ignore
@@ -89,27 +91,64 @@ class Condition(operable.Operable):
 
     def __getitem__(
         self,
-        condition: Operation | Expression | ImplicitParameter | ImplicitSet,
+        condition: Expression
+        | Operation
+        | MathOp
+        | Condition
+        | ImplicitParameter
+        | ImplicitSet
+        | Parameter
+        | Number,
     ) -> Condition:
         if isinstance(condition, expression.Expression):
             condition._fix_equalities()
 
         return Condition(self.conditioning_on, condition)
 
-    def __setitem__(self, condition, rhs):
+    def __setitem__(
+        self,
+        condition: Expression
+        | Operation
+        | MathOp
+        | Condition
+        | Parameter
+        | ImplicitParameter,
+        rhs: Expression
+        | Operation
+        | Condition
+        | MathOp
+        | int
+        | float
+        | Parameter
+        | ImplicitParameter,
+    ):
+        if not isinstance(self.container, Container):
+            raise FatalError("Cannot determine the container of the expression!")
+
         # conditioning_on.where[condition] = rhs
         eq_types = (syms.Equation, implicits.ImplicitEquation)
+        right_operand: (
+            Expression
+            | Operation
+            | Condition
+            | MathOp
+            | int
+            | float
+            | str
+            | Parameter
+            | ImplicitParameter
+        ) = rhs
         if isinstance(rhs, bool):
-            rhs = "yes" if rhs is True else "no"
+            right_operand = "yes" if rhs is True else "no"
 
         op_type = ".." if isinstance(self.conditioning_on, eq_types) else "="
 
-        if isinstance(condition, expression.Expression):
+        if isinstance(condition, (expression.Expression, Condition)):
             condition._fix_equalities()
 
         lhs = Condition(self.conditioning_on, condition)
-        statement = expression.Expression(lhs, op_type, rhs)
-        self.conditioning_on.container._add_statement(statement)
+        statement = expression.Expression(lhs, op_type, right_operand)
+        self.container._add_statement(statement)
 
         if isinstance(self.conditioning_on, ImplicitSymbol):
             # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
@@ -117,32 +156,28 @@ class Condition(operable.Operable):
                 statement._validate_definition(
                     utils._unpack(self.conditioning_on.domain)
                 )
-            self.conditioning_on.parent._assignment = statement
+
+            if isinstance(self.conditioning_on, implicits.ImplicitEquation):
+                self.conditioning_on.parent._definition = statement
+            else:
+                self.conditioning_on.parent._assignment = statement
+
             self.conditioning_on.parent._winner = "gams"
-        elif isinstance(self.conditioning_on, Symbol):
-            self.conditioning_on._assignment = statement
-            self.conditioning_on._winner = "gams"
-
-        if isinstance(self.conditioning_on, implicits.ImplicitEquation):
-            self.conditioning_on.parent._definition = statement
-
-        if isinstance(self.conditioning_on, ImplicitSymbol):
-            self.conditioning_on.container._synch_with_gams(
-                gams_to_gamspy=True, load_symbols=[self.conditioning_on.parent]
-            )
+            load_symbols = [self.conditioning_on.parent]
         elif isinstance(self.conditioning_on, syms.Alias):
-            self.conditioning_on.container._synch_with_gams(
-                gams_to_gamspy=True, load_symbols=[self.conditioning_on.alias_with]
-            )
+            self.conditioning_on._assignment = statement
+            load_symbols = [self.conditioning_on.alias_with]
         elif isinstance(
             self.conditioning_on,
             (syms.Set, syms.Parameter, syms.Variable, syms.Equation),
         ):
-            self.conditioning_on.container._synch_with_gams(
-                gams_to_gamspy=True, load_symbols=[self.conditioning_on]
-            )
+            self.conditioning_on._assignment = statement
+            self.conditioning_on._winner = "gams"
+            load_symbols = [self.conditioning_on]
         else:
-            self.conditioning_on.container._synch_with_gams(gams_to_gamspy=True)
+            load_symbols = None
+
+        self.container._synch_with_gams(gams_to_gamspy=True, load_symbols=load_symbols)
 
     def __repr__(self) -> str:
         return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"
@@ -152,6 +187,11 @@ class Condition(operable.Operable):
             return len(self.records.index)
 
         return 0
+
+    def _fix_equalities(self) -> None:
+        lhs = self.conditioning_on
+        if isinstance(lhs, (expression.Expression, Condition)):
+            lhs._fix_equalities()
 
     @property
     def dimension(self) -> int:
@@ -199,8 +239,12 @@ class Condition(operable.Operable):
         [['i1', 10.0], ['i2', 20.0]]
 
         """
-        assert self.container is not None
-        assert self.domain is not None
+        if not isinstance(self.container, Container):
+            raise FatalError("Cannot determine the container of the expression!")
+
+        if self.domain is None:
+            raise FatalError("Cannot determine the domain of the expression!")
+
         if isinstance(
             self.conditioning_on,
             (syms.Set, syms.Alias, implicits.ImplicitSet),

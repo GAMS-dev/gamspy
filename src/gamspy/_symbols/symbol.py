@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
         Variable,
     )
 
-    SymbolType = Alias | Set | Parameter | Variable | Equation
+    SymbolType: TypeAlias = Alias | Set | Parameter | Variable | Equation
 
 
 class Symbol:
@@ -39,7 +39,7 @@ class Symbol:
     def _deserialize(self, info: dict):
         """Deserializes given info into a symbol"""
 
-    def __len__(self):
+    def __len__(self: SymbolType):
         if self.records is not None:
             return len(self.records.index)
 
@@ -93,9 +93,7 @@ class Symbol:
         return self._synchronize
 
     @synchronize.setter
-    def synchronize(
-        self: Set | Alias | Parameter | Variable | Equation, value: bool
-    ) -> None:
+    def synchronize(self: Set | Parameter | Variable | Equation, value: bool) -> None:
         """
         If set to True, the current state will be synchronized with GAMS.
         Else, the symbol will not be synchronized with GAMS.

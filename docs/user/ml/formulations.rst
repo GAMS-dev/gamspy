@@ -488,6 +488,15 @@ requires a GAMSPy Variable, y = softplus(x).
 Implements the log_softmax activation function. This function strictly
 requires a GAMSPy Variable, y = log_softmax(x).
 
+:meth:`gelu <gamspy.math.gelu>`
+-------------------------------
+|nlp-badge|
+
+Implements the Gaussian Error Linear Unit (GELU) activation function.
+The GELU function is defined as GELU(x) = x * CDF(x), where `CDF` is the
+cumulative distribution function of the Gaussian distribution.
+It uses the intrinsic `errorf` function to compute the `CDF`.
+
 
 Activation Functions Explanation
 --------------------------------

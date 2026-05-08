@@ -27,8 +27,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import IndexType, OperableType
-    from gamspy.math import Dim
+    from gamspy._types import DomainType, IndexType, OperableType
     from gamspy.math.misc import MathOp
 
 
@@ -289,7 +288,7 @@ class SetMixin:
         return implicits.ImplicitParameter(self, f"{self.name}.last")
 
     def lag(
-        self,
+        self: Set | Alias,
         n: OperableType,
         type: Literal["linear", "circular"] = "linear",
     ) -> ImplicitSet:
@@ -328,7 +327,6 @@ class SetMixin:
         [['y-1988', 1987.0], ['y-1989', 1988.0], ['y-1990', 1989.0], ['y-1991', 1990.0]]
 
         """
-        assert isinstance(self, (gp.Set, gp.Alias))
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
         if type == "circular":
@@ -340,7 +338,7 @@ class SetMixin:
         raise ValueError("Lag type must be linear or circular")
 
     def lead(
-        self,
+        self: Set | Alias,
         n: OperableType,
         type: Literal["linear", "circular"] = "linear",
     ) -> ImplicitSet:
@@ -379,7 +377,6 @@ class SetMixin:
         [['y-1989', 1987.0], ['y-1990', 1988.0], ['y-1991', 1989.0]]
 
         """
-        assert isinstance(self, (gp.Set, gp.Alias))
         jump = n if isinstance(n, int) else f"({n.gamsRepr()})"  # type: ignore
 
         if type == "circular":
@@ -390,7 +387,7 @@ class SetMixin:
 
         raise ValueError("Lead type must be linear or circular")
 
-    def sameAs(self, other: Set | Alias | str) -> MathOp:
+    def sameAs(self: Set | Alias, other: Set | Alias | str) -> MathOp:
         """
         Evaluates to True if the current set element is identical to the given symbol or string.
 
@@ -484,10 +481,11 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         cls,
         container: Container,
         name: str,
-        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
-        is_singleton: bool = False,
+        domain: DomainType | None = None,
         records: Any | None = None,
         description: str = "",
+        *,
+        is_singleton: bool = False,
     ):
         if domain is None:
             domain = ["*"]
@@ -548,7 +546,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         cls,
         container: Container | None = None,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str] | Set | Alias | str | Dim | None = None,
+        domain: DomainType | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
@@ -573,7 +571,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                         (os.getpid(), threading.get_native_id())
                     ]
 
-                symbol = container[name]
+                symbol = container.data[name]
 
                 if isinstance(symbol, cls):
                     return symbol
@@ -589,7 +587,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self,
         container: Container | None = None,
         name: str | None = None,
-        domain: Sequence[Set | Alias | str] | Set | Alias | str | Dim | None = None,
+        domain: DomainType | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
@@ -668,7 +666,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                     ]
                 except KeyError as e:
                     raise ValidationError("Set requires a container.") from e
-            assert container is not None
 
             self._assignment: Expression | None = None
 
@@ -815,7 +812,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         return self._records
 
     @records.setter
-    def records(self, records):
+    def records(self, records: pd.DataFrame | None):
         import pandas as pd
 
         if (

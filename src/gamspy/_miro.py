@@ -39,11 +39,11 @@ def load_miro_symbol_records(container: Container):
         names = [
             name
             for name in container._miro_input_symbols
-            if not container[name]._already_loaded
+            if not container.data[name]._already_loaded
         ]
         container._load_records_from_gdx(MIRO_GDX_IN, names)
         for name in names:
-            symbol = container[name]
+            symbol = container.data[name]
             symbol._already_loaded = True
             if (
                 isinstance(symbol, gp.Parameter)
@@ -57,7 +57,7 @@ def load_miro_symbol_records(container: Container):
         container._load_records_from_gdx(MIRO_GDX_OUT, container._miro_output_symbols)
 
     for name in container._miro_input_symbols + container._miro_output_symbols:
-        container[name].modified = False
+        container.data[name].modified = False
 
 
 def _write_default_gdx_miro(container: Container) -> None:
@@ -72,7 +72,7 @@ def _write_default_gdx_miro(container: Container) -> None:
     except FileExistsError:
         pass
 
-    container.write(os.path.join(data_path, "default.gdx"), symbols)
+    container._write(os.path.join(data_path, "default.gdx"), symbols)
 
 
 class MiroJSONEncoder:
@@ -90,7 +90,7 @@ class MiroJSONEncoder:
     def _find_scalars(self, symbols: list[str]) -> list[str]:
         scalars = []
         for name in symbols:
-            symbol = self.container[name]
+            symbol = self.container.data[name]
 
             if len(symbol.domain) == 0:
                 scalars.append(name)
@@ -107,7 +107,7 @@ class MiroJSONEncoder:
         ve_names, ve_texts, ve_types = [], [], []
 
         for name in symbols:
-            symbol = self.container[name]
+            symbol = self.container.data[name]
 
             if isinstance(symbol, (gp.Set, gp.Parameter)):
                 sp_names.append(name)
@@ -256,7 +256,6 @@ class MiroJSONEncoder:
 
             domain_values.append({"type": column_type, "alias": alias})
 
-        assert len(domain_keys) == len(domain_values)
         return dict(zip(domain_keys, domain_values, strict=False))
 
     def prepare_symbols(self, symbols: list[str]) -> list[dict]:
@@ -269,7 +268,7 @@ class MiroJSONEncoder:
 
         info = []
         for name in symbols:
-            symbol = self.container[name]
+            symbol = self.container.data[name]
 
             headers_dict = self.prepare_headers_dict(symbol)
 

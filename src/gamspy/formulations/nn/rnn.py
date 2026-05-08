@@ -308,6 +308,7 @@ class RNN:
         self,
         input_seq: gp.Parameter | gp.Variable,
         h0: gp.Parameter | None = None,
+        *,
         propagate_bounds: bool = True,
     ) -> FormulationResult:
         """

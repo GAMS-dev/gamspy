@@ -83,7 +83,10 @@ class Loop:
         self.container = self._find_container()
 
     def _find_container(self) -> Container:
-        if isinstance(self.indices, (gp.Set, gp.Alias, Condition, Domain, ImplicitSet)):
+        if isinstance(
+            self.indices,
+            (gp.Set, gp.Alias, Condition, Domain, ImplicitSet, gp.math.MathOp),
+        ):
             return self.indices.container  # type: ignore
         elif isinstance(self.indices, Sequence):
             for elem in self.indices:
@@ -95,7 +98,10 @@ class Loop:
         )
 
     def _index_repr(self) -> str:
-        if isinstance(self.indices, (gp.Set, gp.Alias, Condition, Domain, ImplicitSet)):
+        if isinstance(
+            self.indices,
+            (gp.Set, gp.Alias, Condition, Domain, ImplicitSet, gp.math.MathOp),
+        ):
             return self.indices.gamsRepr()
         elif isinstance(self.indices, Sequence):
             representations = [index.gamsRepr() for index in self.indices]
@@ -400,7 +406,9 @@ class If:
 
     """
 
-    def __init__(self, condition: Expression | Condition | Operation | MathOp):
+    def __init__(
+        self, condition: Expression | Condition | Operation | MathOp | Parameter
+    ):
         self.condition = condition
         self.container = condition.container
 

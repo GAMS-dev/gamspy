@@ -43,6 +43,7 @@ class NeosClient:
         username: str | None = None,
         password: str | None = None,
         priority: str = "long",
+        *,
         is_blocking: bool = True,
     ) -> None:
         """
@@ -150,7 +151,7 @@ class NeosClient:
         return self.neos.killJob(job_number, job_password, killmsg)
 
     def get_final_results(
-        self, job_number: int, job_password: str, is_blocking: bool = True
+        self, job_number: int, job_password: str, *, is_blocking: bool = True
     ) -> xmlrpc.client.Binary:
         """
         Retrieve results from a submitted job on NEOS. If the job is still
@@ -384,7 +385,7 @@ class NEOSServer(backend.Backend):
         options: Options,
         solver: str,
         solver_options: dict | Path | None,
-        client: NeosClient | None,
+        client: NeosClient,
         output: TextIO | None,
         model: Model,
         load_symbols: list[Symbol] | None,
@@ -397,13 +398,13 @@ class NEOSServer(backend.Backend):
         super().__init__(
             "neos",
             container,
-            model,
             options,
             solver,
             solver_options,
             output,
             load_symbols,
         )
+        self.model = model
         self.client = client
 
     def is_async(self):
@@ -411,6 +412,7 @@ class NEOSServer(backend.Backend):
 
     def run(
         self,
+        *,
         relaxed_domain_mapping: bool = False,
         gams_to_gamspy: bool = False,
     ):
@@ -494,8 +496,8 @@ class NEOSServer(backend.Backend):
     def postprocess(self):
         super().load_records()
         if self.client.is_blocking:
-            self.parse_listings()
-            return self.prepare_summary()
+            self.parse_listings(self.model)
+            return self.prepare_summary(self.model)
 
         return None
 

@@ -63,6 +63,7 @@ class MaxPool2d(_MPool2d):
         self,
         input: gp.Parameter | gp.Variable,
         big_m: int = 1000,
+        *,
         propagate_bounds: bool = True,
     ) -> FormulationResult:
         """
@@ -106,7 +107,7 @@ class MaxPool2d(_MPool2d):
         -------
         FormulationResult
         """
-        return super().__call__(input, big_m, propagate_bounds)
+        return super().__call__(input, big_m, propagate_bounds=propagate_bounds)
 
     def __str__(self) -> str:
         formatted_args = "\n  ".join(f"{k}={v!r}" for k, v in self._init_kwargs.items())

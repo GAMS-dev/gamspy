@@ -5,7 +5,7 @@ import itertools
 import os
 import threading
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import gams.transfer as gt
 from gams.core.gdx import GMS_DT_EQU
@@ -22,16 +22,13 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     import pandas as pd
 
-    from gamspy import Alias, Container, Set, Variable
+    from gamspy import Container, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
-    from gamspy._symbols.implicits import ImplicitEquation
-    from gamspy._types import IndexType
-    from gamspy.math.matrix import Dim
+    from gamspy._symbols.implicits import ImplicitEquation, ImplicitParameter
+    from gamspy._types import DomainType, IndexType
 
 
 EQ_TYPES = ["=e=", "=l=", "=g=", "=n=", "=x=", "=b="]
@@ -117,7 +114,7 @@ class Equation(gt.Equation, Symbol):
         container: Container,
         name: str,
         type: str | EquationType = "regular",
-        domain: Sequence[Set | Alias | str] | Set | Alias | Dim | str | None = None,
+        domain: DomainType | None = None,
         records: Any | None = None,
         description: str = "",
     ):
@@ -169,6 +166,7 @@ class Equation(gt.Equation, Symbol):
         obj._synchronize = True
         obj._metadata = {}
         obj._winner = "python"
+        obj._equation_listing: list[str] | None = None
 
         # create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
@@ -189,7 +187,7 @@ class Equation(gt.Equation, Symbol):
         container: Container | None = None,
         name: str | None = None,
         type: str | EquationType = "regular",
-        domain: Sequence[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: DomainType | None = None,
         definition: Variable | Operation | Expression | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
@@ -214,7 +212,7 @@ class Equation(gt.Equation, Symbol):
                         (os.getpid(), threading.get_native_id())
                     ]
 
-                symbol = container[name]
+                symbol = container.data[name]
                 if isinstance(symbol, cls):
                     return symbol
 
@@ -230,7 +228,7 @@ class Equation(gt.Equation, Symbol):
         container: Container | None = None,
         name: str | None = None,
         type: str | EquationType = "regular",
-        domain: Sequence[Set | Alias] | Set | Alias | None = None,
+        domain: DomainType | None = None,
         definition: Variable | Operation | Expression | None = None,
         records: Any | None = None,
         domain_forwarding: bool | list[bool] = False,
@@ -250,6 +248,7 @@ class Equation(gt.Equation, Symbol):
 
         self._synchronize = True
         self._winner = "python"
+        self._equation_listing: list[str] | None = None
 
         # domain handling
         if domain is None:
@@ -312,7 +311,6 @@ class Equation(gt.Equation, Symbol):
                     ]
                 except KeyError as e:
                     raise ValidationError("Equation requires a container.") from e
-            assert container is not None
 
             type = cast_type(type)
 
@@ -430,7 +428,15 @@ class Equation(gt.Equation, Symbol):
     def __repr__(self) -> str:
         return f"Equation(name='{self.name}', type='{self.type}', domain={self.domain})"
 
-    def _init_attributes(self) -> tuple:
+    def _init_attributes(
+        self,
+    ) -> tuple[
+        ImplicitParameter,
+        ImplicitParameter,
+        ImplicitParameter,
+        ImplicitParameter,
+        ImplicitParameter,
+    ]:
         level = self._create_attr("l")
         marginal = self._create_attr("m")
         lower = self._create_attr("lo")
@@ -438,7 +444,22 @@ class Equation(gt.Equation, Symbol):
         scale = self._create_attr("scale")
         return level, marginal, lower, upper, scale
 
-    def _create_attr(self, attr_name):
+    def _create_attr(
+        self,
+        attr_name: Literal[
+            "l",
+            "m",
+            "lo",
+            "up",
+            "scale",
+            "stage",
+            "range",
+            "slacklo",
+            "slackup",
+            "slack",
+            "infeas",
+        ],
+    ) -> ImplicitParameter:
         return implicits.ImplicitParameter(
             self,
             name=f"{self.name}.{attr_name}",
@@ -446,7 +467,7 @@ class Equation(gt.Equation, Symbol):
             domain=self.domain,
         )
 
-    def _update_attr_domains(self):
+    def _update_attr_domains(self) -> None:
         self._l.__init__(
             self,
             name=f"{self.name}.l",
@@ -1011,7 +1032,7 @@ class Equation(gt.Equation, Symbol):
         e(item2)..  (0)*v(item2) + (0)*z =G= 5 ; (LHS = 0, INFES = 5 ****)
 
         """
-        if not hasattr(self, "_equation_listing"):
+        if self._equation_listing is None:
             raise ValidationError(
                 "The model must be solved with `equation_listing_limit` option for this functionality to work."
             )
@@ -1078,7 +1099,7 @@ class Equation(gt.Equation, Symbol):
         return self._records
 
     @records.setter
-    def records(self, records):
+    def records(self, records: pd.DataFrame | None):
         import pandas as pd
 
         if records is not None and not isinstance(records, pd.DataFrame):

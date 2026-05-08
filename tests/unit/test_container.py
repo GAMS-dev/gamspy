@@ -14,9 +14,10 @@ import timeit
 import uuid
 from pathlib import Path
 
+import gams.transfer as gt
+import gamspy_base
 import pandas as pd
 import pytest
-import requests
 
 import gamspy as gp
 import gamspy.utils as utils
@@ -70,7 +71,6 @@ def data():
 @pytest.mark.unit
 def test_container(data, tmp_path):
     m, *_ = data
-    import gams.transfer as gt
 
     with pytest.raises(ValidationError):
         _ = Container(working_directory="")
@@ -439,23 +439,26 @@ def test_arbitrary_gams_code():
 
 @pytest.mark.requires_license
 def test_add_gams_code_on_actual_models():
-    links = {
-        "LP": "https://gams.com/latest/gamslib_ml/trnsport.1",
-        "MIP": "https://gams.com/latest/gamslib_ml/prodsch.9",
-        "NLP": "https://gams.com/latest/gamslib_ml/weapons.18",
-        "MCP": "https://gams.com/latest/gamslib_ml/wallmcp.127",
-        "CNS": "https://gams.com/latest/gamslib_ml/camcns.209",
-        "DNLP": "https://gams.com/latest/gamslib_ml/linear.23",
-        "MINLP": "https://gams.com/latest/gamslib_ml/meanvarx.113",
-        "QCP": "https://gams.com/latest/gamslib_ml/himmel11.95",
-        "MIQCP": "https://gams.com/latest/gamslib_ml/qalan.282",
-        "MPSGE": "https://gams.com/latest/gamslib_ml/hansmge.147",
+    directory = Path(__file__).parent / "gams_models"
+    gams_models = {
+        "LP": directory / "trnsport.gms",
+        "MIP": directory / "prodsch.gms",
+        "NLP": directory / "weapons.gms",
+        "MCP": directory / "wallmcp.gms",
+        "CNS": directory / "camcns.gms",
+        "DNLP": directory / "linear.gms",
+        "MINLP": directory / "meanvarx.gms",
+        "QCP": directory / "himmel11.gms",
+        "MIQCP": directory / "qalan.gms",
+        "MPSGE": directory / "hansmge.gms",
     }
 
-    for link in links.values():
-        data = requests.get(link).content.decode("utf-8")
+    for model in gams_models.values():
+        with open(model) as file:
+            content = file.read()
+
         with Container() as m:
-            m.addGamsCode(data)
+            m.addGamsCode(content)
 
 
 @pytest.mark.unit
@@ -636,10 +639,26 @@ def test_write(data, tmp_path):
     _ = Parameter(m, "a", records=SpecialValues.EPS)
     m.write(gdx_path, eps_to_zero=True)
 
-    m = Container(
-        load_from=gdx_path,
-    )
+    m = Container(load_from=gdx_path)
     assert int(m["a"].toValue()) == 0
+
+    m = gp.Container()
+    _ = gp.Parameter(m, "a", records=gp.SpecialValues.EPS)
+    m.write(gdx_path, eps_to_zero=False)
+
+    m = gp.Container(load_from=gdx_path)
+    assert str(m["a"].records.value.item()) != "0.0"
+
+    with pytest.warns(DeprecationWarning):
+        m.write(gdx_path, mode="string")
+
+    m = gp.Container()
+    _ = gp.Parameter(m, "a", records=5)
+    _ = gp.Parameter(m, "b", records=10)
+    m.write(gdx_path, symbol_names={"a": "c", "b": "d"})
+
+    m = gp.Container(load_from=gdx_path)
+    assert list(m.data.keys()) == ["c", "d"]
 
     m.close()
 
@@ -1505,6 +1524,64 @@ def test_deepcopy():
     _ = gp.Parameter(m2)
 
 
+@pytest.mark.unit
+def test_write_with_universe_alias(tmp_path):
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    uni = gp.UniverseAlias(m, "uni")
+    i["2"].where[False] = False
+
+    assert "2" in uni.toList()
+
+    gdx_file = str(tmp_path / "myGDX.gdx")
+    m.write(gdx_file)
+
+    mm = gp.Container(load_from=gdx_file)
+
+    assert "2" in mm["uni"].toList()
+
+
+@pytest.mark.unit
+def test_write_compress(tmp_path):
+    gdx_file_path = tmp_path / "temp.gdx"
+    gdx_file_path2 = tmp_path / "temp2.gdx"
+    gdx_file_path3 = tmp_path / "temp3.gdx"
+
+    m = gp.Container()
+    _ = gp.Set(m, "i", records=range(2000))
+    _ = gp.Set(m, "j", records=range(2000))
+    _ = gp.Set(m, "k", records=range(2000))
+    m.write(gdx_file_path, compress=True)
+    m.write(gdx_file_path2, compress=False)
+    m.write(gdx_file_path3)  # inherit from env
+
+    assert os.path.getsize(gdx_file_path) < os.path.getsize(gdx_file_path2)
+    assert os.path.getsize(gdx_file_path) < os.path.getsize(
+        gdx_file_path3  # do not compress by default
+    )
+
+    # should be equivalent to compress=True
+    os.environ["GDXCOMPRESS"] = "1"
+    gdx_file_path4 = tmp_path / "temp4.gdx"
+    m = gp.Container()
+    _ = gp.Set(m, "i", records=range(2000))
+    _ = gp.Set(m, "j", records=range(2000))
+    _ = gp.Set(m, "k", records=range(2000))
+    m.write(gdx_file_path4)
+    assert os.path.getsize(gdx_file_path4) == os.path.getsize(gdx_file_path)
+
+    # should be equivalent to compress=False
+    os.environ["GDXCOMPRESS"] = "0"
+    gdx_file_path5 = tmp_path / "temp5.gdx"
+    m = gp.Container()
+    _ = gp.Set(m, "i", records=range(2000))
+    _ = gp.Set(m, "j", records=range(2000))
+    _ = gp.Set(m, "k", records=range(2000))
+    m.write(gdx_file_path5)
+    assert os.path.getsize(gdx_file_path5) == os.path.getsize(gdx_file_path2)
+
+
+@pytest.mark.unit
 def test_setRecords_None():
     m = gp.Container()
 
@@ -1543,3 +1620,56 @@ def test_setRecords_None():
     a1.setRecords(None)
     assert a1.records is None
     assert i2.records is None
+
+
+# @pytest.mark.unit
+# def test_getitem():
+#     m = gp.Container()
+#     with pytest.raises(KeyError, match="does not exist in the Container"):
+#         m["i"]
+
+#     gp.Set(m, "some_set")
+
+#     with pytest.raises(KeyError, match="Did you mean"):
+#         m["som_set"]
+
+
+@pytest.mark.unit
+def test_gtp_to_gp():
+    # Test GTP to GP with an empty GTP container
+    m = gt.Container(system_directory=gamspy_base.directory)
+    i = gt.Set(m, "i")
+    gt.Alias(m, "j", alias_with=i)
+    gt.Parameter(m, "p")
+    gt.Variable(m, "v")
+    gt.Equation(m, "e", type="eq")
+    gt.UniverseAlias(m, "universe")
+
+    m2 = gp.Container(m)
+    assert list(m2.data.keys()) == ["i", "j", "p", "v", "e", "universe"]
+
+    # Test GTP to GP with records
+    m = gt.Container(system_directory=gamspy_base.directory)
+    i = gt.Set(m, "i", records=["i1", "i2", "i3"])
+    gt.Alias(m, "j", alias_with=i)
+    gt.Parameter(m, "p", domain=i, records=[("i1", 1), ("i2", 2), ("i3", 3)])
+    v = gt.Variable(m, "v", domain=i)
+    v.generateRecords()
+    e = gt.Equation(m, "e", domain=i, type="eq")
+    e.generateRecords()
+    gt.UniverseAlias(m, "universe")
+
+    m2 = gp.Container(m)
+    assert list(m2.data.keys()) == ["i", "j", "p", "v", "e", "universe"]
+
+
+@pytest.mark.unit
+def test_gtp_to_gp_dirty():
+    # Test dirty GTP to GP (should fail)
+    m = gt.Container(system_directory=gamspy_base.directory)
+    i = gt.Set(m, "i", records=["i2", "i2", "i3"])
+    gt.Alias(m, "j", alias_with=i)
+    gt.Parameter(m, "p", domain=i, records=[("i2", 1), ("i2", 2), ("i3", 3)])
+
+    with pytest.raises(GamspyException):
+        _ = gp.Container(m)

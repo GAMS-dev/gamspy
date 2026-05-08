@@ -74,6 +74,7 @@ NN Formulation                                                                  
 :meth:`log_softmax <gamspy.math.log_softmax>`                                          |nlp-badge|
 :meth:`tanh <gamspy.math.tanh>`                                                        |nlp-badge|
 :meth:`sigmoid <gamspy.math.sigmoid>`                                                  |nlp-badge|
+:meth:`gelu <gamspy.math.gelu>`                                                        |nlp-badge|
 :meth:`TorchSequential <gamspy.formulations.TorchSequential>`                          Depends\ [*]_
 :meth:`RNN <gamspy.formulations.RNN>`                                                  Depends on activation
 :meth:`GRU <gamspy.formulations.GRU>`                                                  |nlp-badge|

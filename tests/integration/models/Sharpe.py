@@ -39,7 +39,7 @@ def main():
     )
 
     # SETS #
-    Assets = m.getSymbols(["subset"])[0]
+    Assets = m.getSymbols(["SUBSET"])[0]
     ii = Alias(m, name="ii", alias_with=Assets)
     j = Alias(m, name="j", alias_with=Assets)
 
