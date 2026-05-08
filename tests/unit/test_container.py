@@ -1622,16 +1622,16 @@ def test_setRecords_None():
     assert i2.records is None
 
 
-@pytest.mark.unit
-def test_getitem():
-    m = gp.Container()
-    with pytest.raises(KeyError, match="does not exist in the Container"):
-        m["i"]
+# @pytest.mark.unit
+# def test_getitem():
+#     m = gp.Container()
+#     with pytest.raises(KeyError, match="does not exist in the Container"):
+#         m["i"]
 
-    gp.Set(m, "some_set")
+#     gp.Set(m, "some_set")
 
-    with pytest.raises(KeyError, match="Did you mean"):
-        m["som_set"]
+#     with pytest.raises(KeyError, match="Did you mean"):
+#         m["som_set"]
 
 
 @pytest.mark.unit

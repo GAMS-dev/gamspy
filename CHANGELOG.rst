@@ -10,7 +10,6 @@ Improvements in existing functionality
 --------------------------------------
 - #794: Include UELs in the gdx file generated with container.write().
   Throw deprecation warning when 'mode' argument is provided in container.write for future deprecation.
-- #805: Add "Did you mean <closest_match>" to the error message in case the symbol does not exist in the container.
 - #807: Adjusted cta.py for correct usage of GAMSPy with GAMS Connect.
 
 Bug fixes

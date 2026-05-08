@@ -12,7 +12,6 @@ import threading
 import traceback
 import warnings
 import weakref
-from difflib import get_close_matches
 from pathlib import Path
 from typing import TYPE_CHECKING, TextIO
 
@@ -278,17 +277,17 @@ class Container(gt.Container):
         except KeyError:
             ...
 
-    def __getitem__(self, symbol_name: str) -> SymbolType:  # type: ignore
-        try:
-            return self.data[symbol_name]
-        except KeyError as e:
-            error_message = f"`{symbol_name}` does not exist in the Container."
-            matches = get_close_matches(
-                word=symbol_name, possibilities=self.data.keys(), n=1
-            )
-            if matches:
-                error_message += f" Did you mean `{matches[0]}`?"
-            raise KeyError(error_message) from e
+    # def __getitem__(self, symbol_name: str) -> SymbolType:  # type: ignore
+    #     try:
+    #         return self.data[symbol_name]
+    #     except KeyError as e:
+    #         error_message = f"`{symbol_name}` does not exist in the Container."
+    #         matches = get_close_matches(
+    #             word=symbol_name, possibilities=self.data.keys(), n=1
+    #         )
+    #         if matches:
+    #             error_message += f" Did you mean `{matches[0]}`?"
+    #         raise KeyError(error_message) from e
 
     def __repr__(self) -> str:
         return f"Container(system_directory='{self.system_directory}', working_directory='{self.working_directory}', debugging_level='{self._debugging_level}')"
