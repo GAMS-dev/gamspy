@@ -54,7 +54,7 @@ torch = ["torch>=2.7.0"]
 
 [tool.uv]
 exclude-newer = "7 days"
-exclude-newer-package = { torch = false, gamspy_base = false, gamsapi = false }
+exclude-newer-package = { torch = false, gamspy_base = false, gamsapi = false, urllib3 = false }
 
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu" }]
