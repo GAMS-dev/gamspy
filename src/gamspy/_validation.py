@@ -444,8 +444,20 @@ def validate_model(
                 f"`equations` must be an Iterable but found {type(equations)}"
             )
 
-        if any(not isinstance(equation, symbols.Equation) for equation in equations):
-            raise ValueError("`equations` must be an Iterable of Equation objects")
+        for equation in equations:
+            if isinstance(equation, expression.Expression):
+                raise TypeError(
+                    f"Each given equation in `equations` argument must be a type of Equation but found an expression: {equation.getDeclaration()}."
+                    f"Equation definitions must use either `[:]` or `[...]` after the python variable name for the definition to register. "
+                    f"For example: \n\n\teq_name = gp.Equation(..., name='eq_name', ...)\n\teq_name[...] = LHS == RHS\n\nFailure to add `[:]` or `[...]`, like in the following:\n\n\t"
+                    f"eq_name = LHS == RHS\n\njust redefines the Python variable `eq_name` as an expression, but does not define the equation `eq_name`. "
+                    "This issue stems from the lack of assignment operator overloading in Python.\n"
+                    f"You can verify that the equation `eq_name` has been defined by printing its definition:\n\n\t"
+                    f"print(eq_name.getDefinition())"
+                )
+
+            if not isinstance(equation, symbols.Equation):
+                raise ValueError("`equations` must be a list of Equation objects")
 
     if matches is not None:
         if not isinstance(matches, dict):
