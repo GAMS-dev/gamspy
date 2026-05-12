@@ -91,6 +91,16 @@ def test_model(data):
     demand = Equation(m, name="demand", domain=[j])
     demand[j] = Sum(i, x[i, j]) >= b[j]
 
+    with pytest.raises(
+        TypeError, match=r"Container must of type `Container` but found <class 'str'>"
+    ):
+        Model(container="invalidtype")
+
+    with pytest.raises(
+        ValidationError, match=r"Model is missing required argument `container`."
+    ):
+        Model(name="bla")
+
     with pytest.raises(ValidationError):
         _ = Model(m, sense="min")
 
@@ -1391,3 +1401,15 @@ def test_length():
     assert len(c.l) == 2
     assert len(c.l["i1"]) == 1
     assert len(c["i1"].l) == 1
+
+
+def test_reassigned_equation_exception():
+    m = gp.Container()
+    x = gp.Variable(m, "x")
+    e = gp.Equation(m, "e")
+    e = x == 25
+    with pytest.raises(
+        TypeError,
+        match=r"Each given equation in `equations` argument must be a type of Equation but found an expression:",
+    ):
+        gp.Model(m, equations=[e])

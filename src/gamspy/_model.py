@@ -447,6 +447,11 @@ class Model:
         limited_variables: Sequence[ImplicitVariable] | None = None,
         external_module: str | None = None,
     ):
+        if container is not None and not isinstance(container, gp.Container):
+            raise TypeError(
+                f"Container must of type `Container` but found {type(container)}"
+            )
+
         self._is_mpsge = False
         self._auto_id = "m" + utils._get_unique_name()
         if equations is None:
@@ -457,7 +462,14 @@ class Model:
         if container is not None:
             self.container = container
         else:
-            self.container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
+            try:
+                self.container = gp._ctx_managers[
+                    (os.getpid(), threading.get_native_id())
+                ]
+            except KeyError as e:
+                raise ValidationError(
+                    "Model is missing required argument `container`."
+                ) from e
 
         if name is not None:
             name = validation.validate_name(name)
