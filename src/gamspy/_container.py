@@ -52,7 +52,13 @@ if TYPE_CHECKING:
     from gamspy._options import Options
     from gamspy._symbols.implicits import ImplicitVariable
     from gamspy._symbols.symbol import Symbol
-    from gamspy._types import DomainType, SymbolType
+    from gamspy._types import (
+        DomainType,
+        ParameterRecordsType,
+        SetRecordsType,
+        SymbolType,
+        VarEquRecordsType,
+    )
 
 LOOPBACK = "127.0.0.1"
 IS_MIRO_INIT = os.getenv("MIRO", False)
@@ -1216,7 +1222,7 @@ $endIf
         name: str | None = None,
         domain: DomainType | None = None,
         is_singleton: bool = False,
-        records: Any | None = None,
+        records: SetRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -1301,7 +1307,7 @@ $endIf
         self,
         name: str | None = None,
         domain: DomainType | None = None,
-        records: Any | None = None,
+        records: ParameterRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -1373,7 +1379,7 @@ $endIf
         name: str | None = None,
         type: str = "free",
         domain: DomainType | None = None,
-        records: Any | None = None,
+        records: VarEquRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -1390,7 +1396,7 @@ $endIf
             Type of the variable. "free" by default.
         domain : Sequence[Set | Alias | str] | Set | Alias | Dim | str, optional
             Domain of the variable.
-        records : Any, optional
+        records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict, optional
             Records of the variable.
         domain_forwarding : bool | list[bool], optional
             Whether the variable forwards the domain.
@@ -1439,7 +1445,7 @@ $endIf
         type: str | EquationType = "regular",
         domain: DomainType | None = None,
         definition: Variable | Operation | Expression | None = None,
-        records: Any | None = None,
+        records: VarEquRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -1459,7 +1465,7 @@ $endIf
             Domain of the variable.
         definition: Expression, optional
             Definition of the equation.
-        records : Any, optional
+        records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict, optional
             Records of the equation.
         domain_forwarding : bool | list[bool], optional
             Whether the equation forwards the domain.

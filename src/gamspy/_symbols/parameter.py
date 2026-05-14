@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter
-    from gamspy._types import DomainType, IndexType
+    from gamspy._types import DomainType, IndexType, ParameterRecordsType
     from gamspy.math.misc import MathOp
 
 
@@ -48,7 +48,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     domain : DomainType, optional
         The domain of the parameter. Can be a list of Sets/Aliases, a single Set/Alias,
         or strings representing set names. Use "*" for the universe set. Default is [] (scalar).
-    records : int | float | pd.DataFrame | np.ndarray | list, optional
+    records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series, optional
         Initial values to populate the parameter. Can be a scalar, a list, a numpy array, or a pandas DataFrame.
     domain_forwarding : bool | list[bool], optional
         If True, adding records to this parameter will implicitly add new elements to the
@@ -81,7 +81,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         container: Container,
         name: str,
         domain: DomainType | None = None,
-        records: Any | None = None,
+        records: ParameterRecordsType | None = None,
         description: str = "",
     ):
         if domain is None:
@@ -136,7 +136,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         container: Container | None = None,
         name: str | None = None,
         domain: DomainType | None = None,
-        records: Any | None = None,
+        records: ParameterRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -177,7 +177,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         container: Container | None = None,
         name: str | None = None,
         domain: DomainType | None = None,
-        records: Any | None = None,
+        records: ParameterRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -508,7 +508,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __hash__(self):
         return id(self)
 
-    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+    def _setRecords(
+        self, records: ParameterRecordsType, *, uels_on_axes: bool = False
+    ) -> None:
         super().setRecords(records, uels_on_axes)
 
         if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
@@ -518,7 +520,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             else:
                 self._domain_violations = None
 
-    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+    def setRecords(
+        self, records: ParameterRecordsType, uels_on_axes: bool = False
+    ) -> None:
         """
         Sets the records (data) of the Parameter.
 
@@ -529,7 +533,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         Parameters
         ----------
-        records : Any
+        records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series
             The data to load. Common formats:
 
 

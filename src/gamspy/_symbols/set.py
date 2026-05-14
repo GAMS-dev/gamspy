@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import DomainType, IndexType, OperableType
+    from gamspy._types import DomainType, IndexType, OperableType, SetRecordsType
     from gamspy.math.misc import MathOp
 
 
@@ -482,7 +482,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         container: Container,
         name: str,
         domain: DomainType | None = None,
-        records: Any | None = None,
+        records: SetRecordsType | None = None,
         description: str = "",
         *,
         is_singleton: bool = False,
@@ -548,7 +548,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         name: str | None = None,
         domain: DomainType | None = None,
         is_singleton: bool = False,
-        records: Any | None = None,
+        records: SetRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -589,7 +589,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         name: str | None = None,
         domain: DomainType | None = None,
         is_singleton: bool = False,
-        records: Any | None = None,
+        records: SetRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -777,7 +777,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     def _singleton_check(
         self,
         is_singleton: bool,
-        records: Any | None,
+        records: SetRecordsType | None,
         domain: Sequence[Set | Alias | str],
     ):
         if is_singleton:
@@ -848,7 +848,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     def __hash__(self):
         return id(self)
 
-    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+    def _setRecords(
+        self, records: SetRecordsType, *, uels_on_axes: bool = False
+    ) -> None:
         super().setRecords(records, uels_on_axes)
 
         if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
@@ -858,7 +860,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             else:
                 self._domain_violations = None
 
-    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+    def setRecords(self, records: SetRecordsType, uels_on_axes: bool = False) -> None:
         """
         Sets the records (elements) of the Set.
 
@@ -867,7 +869,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         Parameters
         ----------
-        records : Any
+        records : pd.DataFrame | pd.Series | Sequence
             The data to load. Common formats:
 
 
