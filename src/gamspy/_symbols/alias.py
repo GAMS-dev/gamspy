@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitSet
-    from gamspy._types import IndexType
+    from gamspy._types import IndexType, SetRecordsType
 
 
 class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
@@ -208,7 +208,9 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
                 gams_to_gamspy=True, load_symbols=[self.alias_with]
             )
 
-    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+    def _setRecords(
+        self, records: SetRecordsType, *, uels_on_axes: bool = False
+    ) -> None:
         super().setRecords(records, uels_on_axes)
 
         if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
@@ -217,6 +219,40 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
                 self.dropDomainViolations()
             else:
                 self._domain_violations = None
+
+    def setRecords(self, records: SetRecordsType, uels_on_axes: bool = False) -> None:
+        """
+        Sets the records of the Set that is aliased.
+
+        This is a convenience method to load data into the set. It handles various
+        input formats like lists and pandas DataFrames.
+
+        Parameters
+        ----------
+        records : pd.DataFrame | pd.Series | Sequence
+            The data to load. Common formats:
+
+
+            - List of strings: `['i1', 'i2']`
+            - List of tuples (for multi-dimensional sets): `[('a', '1'), ('b', '2')]`
+            - pandas DataFrame.
+        uels_on_axes : bool, optional
+            If True, assumes that the domain information is located in the axes
+            (index/columns) of the `records` object rather than the data values.
+            Use this when passing a DataFrame where the indices represent the set elements.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i")
+        >>> j = gp.Alias(m, name="j", alias_with=i)
+        >>> j.setRecords(["seattle", "san-diego"])
+        >>> j.records.values.tolist()
+        [['seattle', ''], ['san-diego', '']]
+
+        """
+        self.alias_with.setRecords(records, uels_on_axes)
 
     @property
     def synchronize(self):

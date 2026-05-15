@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitEquation, ImplicitParameter
-    from gamspy._types import DomainType, IndexType
+    from gamspy._types import DomainType, IndexType, VarEquRecordsType
 
 
 EQ_TYPES = ["=e=", "=l=", "=g=", "=n=", "=x=", "=b="]
@@ -83,7 +83,7 @@ class Equation(gt.Equation, Symbol):
         or strings representing set names. Use "*" for the universe set. Default is [] (scalar).
     definition : Variable | Operation | Expression, optional
         The mathematical definition of the equation. Can be set later via assignment.
-    records : Any, optional
+    records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict, optional
         Initial records to populate the equation.
     domain_forwarding : bool | list[bool], optional
         If True, adding records to this equation will implicitly add new elements to the
@@ -115,7 +115,7 @@ class Equation(gt.Equation, Symbol):
         name: str,
         type: str | EquationType = "regular",
         domain: DomainType | None = None,
-        records: Any | None = None,
+        records: VarEquRecordsType | None = None,
         description: str = "",
     ):
         if domain is None:
@@ -189,7 +189,7 @@ class Equation(gt.Equation, Symbol):
         type: str | EquationType = "regular",
         domain: DomainType | None = None,
         definition: Variable | Operation | Expression | None = None,
-        records: Any | None = None,
+        records: VarEquRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -230,7 +230,7 @@ class Equation(gt.Equation, Symbol):
         type: str | EquationType = "regular",
         domain: DomainType | None = None,
         definition: Variable | Operation | Expression | None = None,
-        records: Any | None = None,
+        records: VarEquRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -1124,7 +1124,9 @@ class Equation(gt.Equation, Symbol):
     def __hash__(self):
         return id(self)
 
-    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+    def _setRecords(
+        self, records: VarEquRecordsType, *, uels_on_axes: bool = False
+    ) -> None:
         super().setRecords(records, uels_on_axes)
 
         if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
@@ -1134,7 +1136,9 @@ class Equation(gt.Equation, Symbol):
             else:
                 self._domain_violations = None
 
-    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+    def setRecords(
+        self, records: VarEquRecordsType, uels_on_axes: bool = False
+    ) -> None:
         """
         Sets the records (data) of the Equation.
 
@@ -1142,7 +1146,7 @@ class Equation(gt.Equation, Symbol):
 
         Parameters
         ----------
-        records : Any
+        records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict
             The data to load (e.g., list, numpy array, DataFrame).
         uels_on_axes : bool, optional
             If True, assumes domain elements are in the axes of the DataFrame. Default is False.

@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from gamspy import Container
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
-    from gamspy._types import DomainType, IndexType
+    from gamspy._types import DomainType, IndexType, VarEquRecordsType
 
 
 class VariableType(Enum):
@@ -91,7 +91,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     domain : DomainType, optional
         The domain of the variable. Can be a list of Sets/Aliases, a single Set/Alias,
         or strings representing set names. Use "*" for the universe set. Default is [] (scalar).
-    records : Any, optional
+    records : Sequence | pd.DataFrame | pd.Series | np.ndarray | int | float | dict, optional
         Initial records (level/marginal/bounds) to populate the variable.
     domain_forwarding : bool | list[bool], optional
         If True, adding records to this variable will implicitly add new elements to the
@@ -117,7 +117,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         name: str,
         type: str = "free",
         domain: DomainType | None = None,
-        records: Any | None = None,
+        records: VarEquRecordsType | None = None,
         description: str = "",
     ):
         if domain is None:
@@ -186,7 +186,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         name: str | None = None,
         type: str = "free",
         domain: DomainType | None = None,
-        records: Any | None = None,
+        records: VarEquRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -228,7 +228,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         name: str | None = None,
         type: str = "free",
         domain: DomainType | None = None,
-        records: Any | None = None,
+        records: VarEquRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -936,7 +936,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def __hash__(self):
         return id(self)
 
-    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+    def _setRecords(
+        self, records: VarEquRecordsType, *, uels_on_axes: bool = False
+    ) -> None:
         super().setRecords(records, uels_on_axes)
 
         if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
@@ -946,7 +948,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             else:
                 self._domain_violations = None
 
-    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+    def setRecords(
+        self, records: VarEquRecordsType, uels_on_axes: bool = False
+    ) -> None:
         """
         Sets the records (data) of the Variable.
 
@@ -955,7 +959,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         Parameters
         ----------
-        records : Any
+        records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict
             The data to load (e.g., list, numpy array, DataFrame).
         uels_on_axes : bool, optional
             If True, assumes domain elements are in the axes of the DataFrame. Default is False.

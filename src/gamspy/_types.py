@@ -10,6 +10,9 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import EllipsisType
 
+    import numpy as np
+    import pandas as pd
+
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.domain import Domain
     from gamspy._algebra.expression import Expression
@@ -46,3 +49,7 @@ if TYPE_CHECKING:
         | Card
         | bool
     )
+
+    SetRecordsType: TypeAlias = Sequence | pd.DataFrame | pd.Series
+    ParameterRecordsType: TypeAlias = SetRecordsType | np.ndarray | int | float
+    VarEquRecordsType: TypeAlias = ParameterRecordsType | dict
