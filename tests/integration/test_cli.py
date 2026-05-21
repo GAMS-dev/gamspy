@@ -476,7 +476,7 @@ def run_cli(args):
     "flag,value",
     [
         ("--output", "out.txt"),
-        ("--symb", "a"),
+        ("--symb", "i"),
         ("--ueltable", "uelVar"),
         ("--delim", "comma"),
         ("--decimalsep", "period"),
@@ -546,12 +546,28 @@ def test_gdx_diff_with_boolean_flags(flag):
 
 
 def test_gdx_diff_with_ids():
-    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--id", "a", "--id", "b"])
+    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--id", "i", "--id", "j"])
     assert result.returncode == 0
 
 
 def test_gdx_diff_with_skipids():
-    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--skipid", "a", "--skipid", "b"])
+    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--skipid", "i", "--skipid", "j"])
+    assert result.returncode == 0
+
+
+def test_gdx_diff_with_skip_regex():
+    # Test skipping everything using a catch-all regex
+    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--skip-regex", "^.*"])
+    assert result.returncode == 0
+
+    # Test skipping symbols with a specific prefix (e.g., starting with 'i')
+    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--skip-regex", "^i.*"])
+    assert result.returncode == 0
+
+    # Test combining manual skipid and skip-regex
+    result = run_cli(
+        ["diff", DUMMY_GDX, DUMMY_GDX2, "--skipid", "j", "--skip-regex", "^i.*"]
+    )
     assert result.returncode == 0
 
 
@@ -808,7 +824,8 @@ sos1_1"""
     )
     assert process.returncode == 0, process.stderr
     assert os.path.exists(out_gdx2)
-    from gamspy.utils import _open_gdx_file
+    from gamspy.utils import _close_gdx_handle, _open_gdx_file
 
     handle = _open_gdx_file(gamspy_base.directory, out_gdx2)
     assert gdx.gdxFileInfo(handle)[2] == 1
+    _close_gdx_handle(handle)
