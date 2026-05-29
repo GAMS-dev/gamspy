@@ -388,6 +388,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         self.domain = new_domain
 
+        # Refresh the implicit parameters' domains
+        self._update_attr_domains()
+
     def __getitem__(self, indices: IndexType) -> ImplicitVariable:
         domain = validation.validate_domain(self, indices)
 

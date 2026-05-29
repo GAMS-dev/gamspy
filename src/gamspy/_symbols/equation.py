@@ -406,6 +406,9 @@ class Equation(gt.Equation, Symbol):
 
         self.domain = new_domain
 
+        # Refresh the implicit parameters' domain
+        self._update_attr_domains()
+
     def __getitem__(self, indices: IndexType) -> ImplicitEquation:
         domain = validation.validate_domain(self, indices)
 
