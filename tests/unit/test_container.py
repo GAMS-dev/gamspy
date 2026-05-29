@@ -27,6 +27,7 @@ from gamspy import (
     Equation,
     Model,
     Options,
+    Ord,
     Parameter,
     Problem,
     Sense,
@@ -1049,6 +1050,141 @@ def test_mcp_serialization(data) -> None:
         assert isinstance(serialized_variable, Variable)
         assert orig_equation.name == serialized_equation.name
         assert orig_variable.name == serialized_variable.name
+
+
+@pytest.mark.unit
+def test_deserialize_variable_indexed_bound_write(data, tmp_path):
+    m, *_ = data
+    t = Set(m, "t", records=["a", "b"])
+    v = Variable(m, "v", type="positive", domain=t)
+    v.lo[t] = 0
+
+    serialization_path = os.path.join(tmp_path, "var_write.zip")
+    serialize(m, serialization_path)
+    m2 = deserialize(serialization_path)
+
+    assert m2["v"].lo.domain == [m2["t"]]
+
+    m2["v"].lo[m2["t"]] = -5
+    assert all(val == -5 for val in m2["v"].records["lower"])
+
+
+@pytest.mark.unit
+def test_deserialize_variable_level_read(data, tmp_path):
+    m, *_ = data
+    i = Set(m, "i", records=["i1", "i2"])
+    x = Variable(m, "x", type="positive", domain=i)
+    e = Equation(m, "e", domain=i)
+    e[i] = x[i] >= 2
+
+    model = Model(
+        m,
+        name="m_var_read",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum(i, x[i]),
+    )
+    model.solve()
+
+    serialization_path = os.path.join(tmp_path, "var_read.zip")
+    serialize(m, serialization_path)
+    m2 = deserialize(serialization_path)
+
+    assert m2["x"].l.domain == [m2["i"]]
+
+    out = Parameter(m2, "out", domain=m2["i"])
+    out[m2["i"]] = m2["x"].l[m2["i"]]  # used to raise ValidationError
+    assert all(abs(val - 2.0) < 1e-6 for val in out.records["value"])
+
+
+@pytest.mark.unit
+def test_deserialize_equation_indexed_bound_write(data, tmp_path):
+    m, *_ = data
+    t = Set(m, "t", records=["a", "b"])
+    v = Variable(m, "v", domain=t)
+    eq = Equation(m, "eq", domain=t)
+    eq[t] = v[t] == 1
+
+    serialization_path = os.path.join(tmp_path, "eq_write.zip")
+    serialize(m, serialization_path)
+    m2 = deserialize(serialization_path)
+
+    assert m2["eq"].lo.domain == [m2["t"]]
+
+    m2["eq"].lo[m2["t"]] = -1  # used to raise ValidationError
+    assert all(val == -1 for val in m2["eq"].records["lower"])
+
+
+@pytest.mark.unit
+def test_deserialize_equation_level_read(data, tmp_path):
+    m, *_ = data
+    i = Set(m, "i", records=["i1", "i2"])
+    x = Variable(m, "x", type="positive", domain=i)
+    e = Equation(m, "e", domain=i)
+    e[i] = x[i] >= 2
+
+    model = Model(
+        m,
+        name="m_eq_read",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum(i, x[i]),
+    )
+    model.solve()
+
+    serialization_path = os.path.join(tmp_path, "eq_read.zip")
+    serialize(m, serialization_path)
+    m2 = deserialize(serialization_path)
+
+    assert m2["e"].l.domain == [m2["i"]]
+
+    levels = Parameter(m2, "lvl", domain=m2["i"])
+    levels[m2["i"]] = m2["e"].l[m2["i"]]  # used to raise ValidationError
+    assert all(abs(val - 2.0) < 1e-6 for val in levels.records["value"])
+
+
+@pytest.mark.unit
+def test_deserialize_set_alias_subset_regression(data, tmp_path):
+    m, *_ = data
+    i = Set(m, "i", records=["i1", "i2", "i3"])
+    Set(m, "j", domain=i, records=["i1", "i3"])
+    Alias(m, "ii", i)
+
+    serialization_path = os.path.join(tmp_path, "set_alias.zip")
+    serialize(m, serialization_path)
+    m2 = deserialize(serialization_path)
+
+    i2, j2, ii2 = m2["i"], m2["j"], m2["ii"]
+
+    ordinals = Parameter(m2, "ordinals", domain=i2)
+    ordinals[i2] = Ord(i2)
+    assert list(ordinals.records["value"]) == [1, 2, 3]
+
+    filtered = Parameter(m2, "filtered", domain=i2)
+    filtered[i2].where[j2[i2]] = 1
+    assert sorted(filtered.records["i"].tolist()) == ["i1", "i3"]
+
+    total = Parameter(m2, "total")
+    total[...] = Sum(ii2, Ord(ii2))
+    assert total.records["value"][0] == 6
+
+
+@pytest.mark.unit
+def test_deserialize_parameter_indexed_regression(data, tmp_path):
+    m, *_ = data
+    i = Set(m, "i", records=["i1", "i2"])
+    Parameter(m, "a", domain=i, records=[["i1", 10], ["i2", 20]])
+
+    serialization_path = os.path.join(tmp_path, "param.zip")
+    serialize(m, serialization_path)
+    m2 = deserialize(serialization_path)
+
+    i2, a2 = m2["i"], m2["a"]
+    b = Parameter(m2, "b", domain=i2)
+    b[i2] = a2[i2]
+    assert sorted(b.records["value"].tolist()) == [10, 20]
 
 
 @pytest.mark.unit

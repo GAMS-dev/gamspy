@@ -1,0 +1,1 @@
+Fixed ``gp.deserialize`` leaving the implicit attributes of deserialized ``Variable`` and ``Equation`` symbols with an empty domain.
