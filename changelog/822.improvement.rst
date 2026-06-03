@@ -1,0 +1,2 @@
+Improve the error message in case the file does not exist in the provided path for the license file.
+ 
