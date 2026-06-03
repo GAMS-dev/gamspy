@@ -4,20 +4,18 @@ import os
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Literal, TextIO, no_type_check
 
-import gamspy._symbols as syms
+import pandas as pd
+
 import gamspy.utils as utils
-from gamspy.exceptions import GamspyException, ValidationError
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-    import pandas as pd
 
     from gamspy import Container, Model, Options
     from gamspy._backend.engine import EngineClient, GAMSEngine
     from gamspy._backend.local import Local
     from gamspy._backend.neos import NeosClient, NEOSServer
-    from gamspy._symbols.symbol import Symbol
 
 HEADER = [
     "Solver Status",
@@ -41,33 +39,40 @@ def backend_factory(
     backend: Literal["local", "engine", "neos"] = "local",
     client: EngineClient | NeosClient | None = None,
     model: Model | None = None,
-    load_symbols: list[Symbol] | None = None,
-) -> Local | GAMSEngine | NEOSServer:
+) -> Local | GAMSEngine | NEOSServer:  # pragma: no cover
     if backend == "neos":
-        from gamspy._backend.neos import NEOSServer
+        from gamspy._backend.neos import NeosClient, NEOSServer
+
+        if client is None or not isinstance(client, NeosClient):
+            raise ValidationError(
+                "`NeosClient` must be provided to solve on NEOS Server."
+            )
 
         return NEOSServer(
             container,
             options,
             solver,
             solver_options,
-            client,
             output,
             model,
-            load_symbols,
+            client,
         )
     elif backend == "engine":
-        from gamspy._backend.engine import GAMSEngine
+        from gamspy._backend.engine import EngineClient, GAMSEngine
+
+        if client is None or not isinstance(client, EngineClient):
+            raise ValidationError(
+                "`engine_client` must be provided to solve on GAMS Engine"
+            )
 
         return GAMSEngine(
             container,
-            client,
             options,
             solver,
             solver_options,
             output,
             model,
-            load_symbols,
+            client,
         )
     elif backend == "local":
         from gamspy._backend.local import Local
@@ -79,7 +84,6 @@ def backend_factory(
             solver_options,
             output,
             model,
-            load_symbols,
         )
 
     raise ValidationError(
@@ -97,7 +101,6 @@ class Backend(ABC):
         solver: str | None,
         solver_options: dict | Path | None,
         output: TextIO | None,
-        load_symbols: list[Symbol] | None,
     ):
         self.backend_type = backend_type
         self.container = container
@@ -105,12 +108,6 @@ class Backend(ABC):
         self.solver = solver
         self.solver_options = solver_options
         self.output = output
-        if load_symbols is not None:
-            self.load_symbols: list[str] = [
-                symbol.name  # type: ignore
-                for symbol in load_symbols
-                if symbol.synchronize
-            ]
 
         self.job_name = self.get_job_name()
         self.gms_file = self.job_name + ".gms"
@@ -123,12 +120,7 @@ class Backend(ABC):
     def is_async(self): ...
 
     @abstractmethod
-    def run(
-        self,
-        *,
-        relaxed_domain_mapping: bool = False,
-        gams_to_gamspy: bool = False,
-    ): ...
+    def run(self): ...
 
     def get_job_name(self):
         job_name = self.container._job
@@ -145,71 +137,21 @@ class Backend(ABC):
         return job_name
 
     def preprocess(self):
-        modified_names = self.container._get_modified_symbols()
+        symbol_names = self.container._symbols_to_unload()
 
-        if len(modified_names) != 0:
-            try:
-                self.container._write(
-                    self.container._gdx_in, modified_names, eps_to_zero=False
-                )
-            except Exception as e:
-                # Unfortunately, GTP raises a blind exception here. Turn it into a GamspyException.
-                raise GamspyException(str(e)) from e
+        if len(symbol_names) != 0:
+            self.container._write(
+                self.container._gdx_in, symbol_names, eps_to_zero=False
+            )
 
         gdx_in = self.container._gdx_in
         if self.backend_type == "engine":
             gdx_in = os.path.basename(gdx_in)
         elif self.backend_type == "neos":
             gdx_in = "in.gdx"
-        gams_string = self.container._generate_gams_string(gdx_in, modified_names)
-        self.make_unmodified(modified_names)
+        gams_string = self.container._generate_gams_string(gdx_in, symbol_names)
 
         return gams_string
-
-    def load_records(self, *, relaxed_domain_mapping: bool = False):
-        if hasattr(self, "load_symbols"):
-            symbols = self.load_symbols
-        else:
-            symbols = utils._get_symbol_names_from_gdx(
-                self.container.system_directory, self.container._gdx_out
-            )
-            filtered_names = []
-            for name in symbols:
-                # addGamsCode symbols
-                if name not in self.container:
-                    filtered_names.append(name)
-                    continue
-
-                symbol = self.container.data[name]
-                if type(symbol) is syms.Alias:
-                    filtered_names.append(name)
-                    continue
-
-                if symbol.synchronize:
-                    filtered_names.append(name)
-
-            symbols = filtered_names
-
-        if len(symbols) != 0:
-            self.container._load_records_from_gdx(self.container._gdx_out, symbols)
-            self.make_unmodified(symbols)
-
-        if relaxed_domain_mapping:
-            # Best attempt approach to map relaxed domain to actual symbols
-            for name in symbols:
-                symbol = self.container.data[name]
-
-                new_domain = []
-                for elem in symbol.domain:
-                    if type(elem) is str and elem != "*" and elem in self.container:
-                        new_domain.append(self.container[elem])
-                    else:
-                        new_domain.append(elem)
-
-                symbol.domain = new_domain
-                symbol.dimension = len(new_domain)
-                if isinstance(symbol, (syms.Variable, syms.Equation)):
-                    symbol._update_attr_domains()
 
     def parse_listings(self, model: Model) -> None:
         listing_file = (
@@ -224,8 +166,6 @@ class Backend(ABC):
             utils._parse_generated_variables(model, listing_file)
 
     def prepare_summary(self, model: Model) -> pd.DataFrame:
-        import pandas as pd
-
         df = pd.DataFrame(
             [
                 [
@@ -242,8 +182,3 @@ class Backend(ABC):
             columns=HEADER,
         )
         return df
-
-    def make_unmodified(self, modified_names: list[str]):
-        for name in modified_names:
-            if not name.startswith("autogenerated_"):
-                self.container.data[name].modified = False

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import gamspy._algebra.domain as domain
 import gamspy._algebra.expression as expression
@@ -15,23 +15,19 @@ from gamspy.exceptions import FatalError
 if TYPE_CHECKING:
     import pandas as pd
 
-    from gamspy import Alias, Parameter, Set, Variable
+    from gamspy import Parameter
     from gamspy._algebra.domain import Domain
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
+    from gamspy._types import ImplicitSymbolType, SymbolType
     from gamspy.math import MathOp
 
 
 class Condition(operable.Operable):
     """
-    Condition class allows conditioning on GAMSPy constructs such as Symbols and Expressions.
-
-    Parameters
-    ----------
-    symbol: ImplicitSymbol | Expression
-        Reference to the symbol to be conditioned.
+    Condition class allows conditioning on GAMSPy constructs such as symbols and expressions.
 
     Examples
     --------
@@ -48,19 +44,15 @@ class Condition(operable.Operable):
 
     def __init__(
         self,
-        conditioning_on: ImplicitSymbol
-        | Set
-        | Alias
-        | Parameter
-        | Variable
+        conditioning_on: SymbolType
+        | ImplicitSymbolType
         | Expression
         | Operation
         | Domain
         | Number
         | Card
         | Ord
-        | MathOp
-        | Condition,
+        | MathOp,
         condition: Expression
         | Operation
         | Condition
@@ -77,17 +69,13 @@ class Condition(operable.Operable):
         self._where = None
         self.container: Container | None = None
         if hasattr(conditioning_on, "container") and conditioning_on.container:
-            self.container = conditioning_on.container
-        elif hasattr(condition, "container") and condition.container:  # type: ignore
-            self.container = condition.container  # type: ignore
+            self.container = cast("Container | None", conditioning_on.container)
+        elif hasattr(condition, "container") and condition.container:
+            self.container = cast("Container | None", condition.container)
 
         self.domain = None
         if hasattr(conditioning_on, "domain"):
             self.domain = conditioning_on.domain
-
-    @property
-    def where(self) -> Condition:
-        return Condition(self)
 
     def __getitem__(
         self,
@@ -112,6 +100,7 @@ class Condition(operable.Operable):
         | MathOp
         | Condition
         | Parameter
+        | ImplicitSet
         | ImplicitParameter,
         rhs: Expression
         | Operation
@@ -162,22 +151,23 @@ class Condition(operable.Operable):
             else:
                 self.conditioning_on.parent._assignment = statement
 
-            self.conditioning_on.parent._winner = "gams"
-            load_symbols = [self.conditioning_on.parent]
+            self.conditioning_on.container._synch_with_gams()
+            self.conditioning_on.parent._should_load_from_gams = True
+
         elif isinstance(self.conditioning_on, syms.Alias):
             self.conditioning_on._assignment = statement
-            load_symbols = [self.conditioning_on.alias_with]
+            self.conditioning_on.container._synch_with_gams()
+            self.conditioning_on.alias_with._should_load_from_gams = True
         elif isinstance(
             self.conditioning_on,
             (syms.Set, syms.Parameter, syms.Variable, syms.Equation),
         ):
             self.conditioning_on._assignment = statement
-            self.conditioning_on._winner = "gams"
-            load_symbols = [self.conditioning_on]
-        else:
-            load_symbols = None
+            self.conditioning_on.container._synch_with_gams()
+            self.conditioning_on._should_load_from_gams = True
 
-        self.container._synch_with_gams(gams_to_gamspy=True, load_symbols=load_symbols)
+        else:
+            self.container._synch_with_gams()
 
     def __repr__(self) -> str:
         return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"
@@ -256,7 +246,7 @@ class Condition(operable.Operable):
                 self.domain,  # type: ignore
             )
             temp_sym[...] = self
-            del self.container.data[temp_name]
+            del self.container._data[temp_name]
         elif isinstance(self.conditioning_on, domain.Domain):
             temp_name = "c" + utils._get_unique_name()
             temp_sym = syms.Set._constructor_bypass(
@@ -265,7 +255,7 @@ class Condition(operable.Operable):
                 self.domain,  # type: ignore
             )
             temp_sym[...].where[self.condition] = True
-            del self.container.data[temp_name]
+            del self.container._data[temp_name]
         else:
             temp_name = "c" + utils._get_unique_name()
             temp_sym = syms.Parameter._constructor_bypass(
@@ -274,7 +264,7 @@ class Condition(operable.Operable):
                 self.domain,  # type: ignore
             )
             temp_sym[...] = self
-            del self.container.data[temp_name]
+            del self.container._data[temp_name]
 
         return temp_sym.records
 
@@ -310,7 +300,7 @@ class Condition(operable.Operable):
         if isinstance(self.conditioning_on, expression.Expression):
             conditioning_on_str = f"({conditioning_on_str})"
 
-        return f"{conditioning_on_str} $ ({condition_str})"  # type: ignore
+        return f"{conditioning_on_str} $ ({condition_str})"
 
     def getDeclaration(self) -> str:
         """
@@ -357,4 +347,4 @@ class Condition(operable.Operable):
             if hasattr(self.condition, "latexRepr")
             else str(self.condition)
         )
-        return f"{self.conditioning_on.latexRepr()} ~ | ~ {condition_str}"  # type: ignore
+        return f"{self.conditioning_on.latexRepr()} ~ | ~ {condition_str}"

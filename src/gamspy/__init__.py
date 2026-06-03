@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from gams.transfer import SpecialValues
-
 import gamspy.formulations as formulations
 import gamspy.math as math
 import gamspy.utils as utils
@@ -26,6 +24,7 @@ from gamspy._control_flow import For, If, Loop
 from gamspy._model import FileFormat, Model, ModelStatus, Problem, Sense, SolveStatus
 from gamspy._options import ConvertOptions, FreezeOptions, Options
 from gamspy._serialization import deserialize, serialize
+from gamspy._special_values import SpecialValues
 from gamspy._symbols import (
     Alias,
     Equation,

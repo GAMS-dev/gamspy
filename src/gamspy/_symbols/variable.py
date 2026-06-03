@@ -4,12 +4,12 @@ import builtins
 import itertools
 import os
 import threading
+import weakref
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
-import gams.transfer as gt
+import pandas as pd
 from gams.core.gdx import GMS_DT_VAR
-from gams.transfer._internals import TRANSFER_TO_GAMS_VARIABLE_SUBTYPES
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -18,16 +18,82 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
-from gamspy._symbols.symbol import Symbol
+from gamspy._internals import TRANSFER_TO_GAMS_VARIABLE_SUBTYPES
+from gamspy._special_values import SpecialValues
+from gamspy._symbols.base import VarEquSymbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    import pandas as pd
-
     from gamspy import Container
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
     from gamspy._types import DomainType, IndexType, VarEquRecordsType
+
+VAR_DEFAULT_VALUES = {
+    "binary": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": 0.0,
+        "upper": 1.0,
+        "scale": 1.0,
+    },
+    "integer": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": 0.0,
+        "upper": SpecialValues.POSINF,
+        "scale": 1.0,
+    },
+    "positive": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": 0.0,
+        "upper": SpecialValues.POSINF,
+        "scale": 1.0,
+    },
+    "negative": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": SpecialValues.NEGINF,
+        "upper": 0.0,
+        "scale": 1.0,
+    },
+    "free": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": SpecialValues.NEGINF,
+        "upper": SpecialValues.POSINF,
+        "scale": 1.0,
+    },
+    "sos1": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": 0.0,
+        "upper": SpecialValues.POSINF,
+        "scale": 1.0,
+    },
+    "sos2": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": 0.0,
+        "upper": SpecialValues.POSINF,
+        "scale": 1.0,
+    },
+    "semicont": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": 1.0,
+        "upper": SpecialValues.POSINF,
+        "scale": 1.0,
+    },
+    "semiint": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": 1.0,
+        "upper": SpecialValues.POSINF,
+        "scale": 1.0,
+    },
+}
 
 
 class VariableType(Enum):
@@ -71,7 +137,7 @@ class VariableType(Enum):
         return self.value
 
 
-class Variable(gt.Variable, operable.Operable, Symbol):
+class Variable(operable.Operable, VarEquSymbol):
     """
     Represents a Variable symbol in GAMS.
 
@@ -120,62 +186,46 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         records: VarEquRecordsType | None = None,
         description: str = "",
     ):
-        if domain is None:
-            domain = []
-
-        if isinstance(domain, (gp.Set, gp.Alias, str)):
-            domain = [domain]
-
-        if isinstance(domain, gp.math.Dim):
-            domain = gp.math._generate_dims(container, domain.dims)
-
         # create new symbol object
-        obj = Variable.__new__(
-            cls,
-            container,
-            name,
-            type,
-            domain,
-            records,
-            description=description,
-        )
+        obj = object.__new__(cls)
 
-        # set private properties directly
+        # legacy gtp attributes
+        ## set private properties directly
         obj._type = type
-        obj._assignment = None
-        obj._gams_type = GMS_DT_VAR
-        obj._gams_subtype = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[type]
+        obj._gams_type: int = GMS_DT_VAR
+        obj._gams_subtype: int = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[type]
 
-        obj._requires_state_check = False
-        obj._container = container
-        container._requires_state_check = True
-        obj._name = name
-        obj._domain = domain
+        obj._container = cast(
+            "Container",
+            weakref.proxy(container)
+            if not isinstance(container, weakref.ProxyType)
+            else container,
+        )
+        obj.name = name
+        obj._domain = obj._normalize_domain(obj._container, domain)
         obj._domain_forwarding = False
         obj._description = description
         obj._records = records
-        obj._modified = True
-        obj._domain_violations = None
-
-        # add to container
-        container.data.update({name: obj})
+        obj._container._data.update({name: obj})
 
         # gamspy attributes
+        obj._domain_violations = None
+        obj._assignment = None
         obj.where = condition.Condition(obj)
         obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
-        obj._synchronize = True
         obj._metadata = {}
-        obj._winner = "python"
+        obj._should_load_from_gams = False
+        obj._should_unload_to_gams = False
         obj._column_listing: list[str] | None = None
 
-        # create attributes
+        ## create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
         obj._fx = obj._create_attr("fx")
         obj._prior = obj._create_attr("prior")
         obj._stage = obj._create_attr("stage")
 
-        # miro support
+        ## miro support
         obj._is_miro_output = False
 
         return obj
@@ -211,16 +261,17 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                         (os.getpid(), threading.get_native_id())
                     ]
 
-                symbol = container.data[name]
-                if isinstance(symbol, cls):
-                    return symbol
-
-                raise TypeError(
-                    f"Cannot overwrite symbol `{symbol.name}` in container"
-                    " because it is not a Variable object)"
-                )
+                symbol = container._data[name]
             except KeyError:
                 return object.__new__(cls)
+
+        if isinstance(symbol, cls):
+            return symbol
+
+        raise TypeError(
+            f"Cannot overwrite symbol `{symbol.name}` in container"
+            " because it is not a Variable object)"
+        )
 
     def __init__(
         self,
@@ -243,19 +294,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._is_miro_output = is_miro_output
         self._domain_violations = None
 
-        self._synchronize = True
-        self._winner = "python"
         self._column_listing: list[str] | None = None
-
-        # domain handling
-        if domain is None:
-            domain = []
-
-        if isinstance(domain, (gp.Set, gp.Alias, str)):
-            domain = [domain]
-
-        if isinstance(domain, gp.math.Dim):
-            domain = gp.math._generate_dims(container, domain.dims)  # type: ignore
 
         # does symbol exist
         has_symbol = False
@@ -270,6 +309,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                     f" `{type.casefold()}`"
                 )
 
+            domain = self._normalize_domain(self.container, domain)
             if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
@@ -283,20 +323,17 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 )
 
             # reset some properties
-            self._requires_state_check = True
-            self.container._requires_state_check = True
             if description != "":
-                self.description = description
+                self._description = description
 
-            previous_state = self.container._options.miro_protect
-            self.container._options.miro_protect = False
-            self._records = None
-            self._modified = True
+            previous_state = self._container._options.miro_protect
+            self._container._options.miro_protect = False
+            self._records: pd.DataFrame | None = None
 
             # only set records if records are provided
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
-            self.container._options.miro_protect = previous_state
+            self._container._options.miro_protect = previous_state
 
         else:
             if container is None:
@@ -307,63 +344,64 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 except KeyError as e:
                     raise ValidationError("Variable requires a container.") from e
 
+            self._container = cast("Container", weakref.proxy(container))
+
             type = cast_type(type)
 
             if name is not None:
                 name = validation.validate_name(name)
 
                 if is_miro_output:
-                    name = name.lower()  # type: ignore
+                    name = name.lower()
             else:
-                name = container._get_symbol_name(prefix="v")
+                name = self._container._get_symbol_name(prefix="v")
 
-            previous_state = container._options.miro_protect
-            container._options.miro_protect = False
-            super().__init__(
-                container,
-                name,
-                type,
-                domain,
-                domain_forwarding=domain_forwarding,
-                description=description,
-                uels_on_axes=uels_on_axes,
-            )
+            self.name = name
+
+            domain = self._normalize_domain(self._container, domain)
+            self._domain = self._validate_domain(domain)
+            self._domain_forwarding = domain_forwarding
+            self.type = type
+            self._description = description
+            self._records = None
+            self._gams_type = GMS_DT_VAR
+            self._gams_subtype = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[self._type]
             self._latex_name = self.name.replace("_", r"\_")
+            self._should_load_from_gams = False
+            self._should_unload_to_gams = False
+            self._container._data.update({name: self})
 
             if is_miro_output:
-                container._miro_output_symbols.append(self.name)
+                self._container._miro_output_symbols.append(self.name)
 
             validation.validate_container(self, self._domain)
             self.where = condition.Condition(self)
-            self.container._add_statement(self)
+            self._container._add_statement(self)
 
             # create attributes
-            (
-                self._l,
-                self._m,
-                self._lo,
-                self._up,
-                self._s,
-            ) = self._init_attributes()
+            self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
             self._fx = self._create_attr("fx")
             self._prior = self._create_attr("prior")
             self._stage = self._create_attr("stage")
 
+            previous_state = self._container._options.miro_protect
+            self._container._options.miro_protect = False
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
-                if not self._is_miro_output:
-                    self._modified = False
-                self.container._synch_with_gams()
+                if self._is_miro_output:
+                    self._should_unload_to_gams = True
 
-            container._options.miro_protect = True
+                self._container._synch_with_gams()
+
+            self._container._options.miro_protect = True
+            self._container._options.miro_protect = previous_state
 
     def _serialize(self) -> dict:
-        info = {
+        info: dict[str, Any] = {
             "_domain_forwarding": self._domain_forwarding,
             "_is_miro_output": self._is_miro_output,
             "_metadata": self._metadata,
-            "_synchronize": self._synchronize,
         }
         if self._assignment is not None:
             info["_assignment"] = self._assignment.getDeclaration()
@@ -384,9 +422,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             if elem == "*":
                 new_domain.append(elem)
                 continue
-            new_domain.append(self.container[elem])
+            new_domain.append(self._container[elem.name])
 
-        self.domain = new_domain
+        self._domain = new_domain
 
         # Refresh the implicit parameters' domains
         self._update_attr_domains()
@@ -911,48 +949,25 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         [['seattle', 7.0, 0.0, 7.0, 7.0, 1.0], ['san-diego', 18.0, 0.0, 18.0, 18.0, 1.0]]
 
         """
+        if self._should_load_from_gams:
+            self._load_from_gams()
+
         return self._records
 
     @records.setter
     def records(self, records: pd.DataFrame | None):
-        import pandas as pd
-
         if records is not None and not isinstance(records, pd.DataFrame):
             raise TypeError("Symbol 'records' must be type DataFrame")
 
-        # set records
         self._records = records
-
-        self._requires_state_check = True
-        self._modified = True
-
-        self.container._requires_state_check = True
-        self.container.modified = True
-
-        if self._records is not None and self._domain_forwarding:
-            self._domainForwarding()
-
-            # reset state check flags for all symbols in the container
-            for _, symbol in self.container.data.items():
-                symbol._requires_state_check = True
+        self._should_unload_to_gams = True
+        self._handle_domain_forwarding()
 
     def __hash__(self):
         return id(self)
 
-    def _setRecords(
-        self, records: VarEquRecordsType, *, uels_on_axes: bool = False
-    ) -> None:
-        super().setRecords(records, uels_on_axes)
-
-        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
-            if self.hasDomainViolations():
-                self._domain_violations = self.getDomainViolations()
-                self.dropDomainViolations()
-            else:
-                self._domain_violations = None
-
     def setRecords(
-        self, records: VarEquRecordsType, uels_on_axes: bool = False
+        self, records: VarEquRecordsType | None, uels_on_axes: bool = False
     ) -> None:
         """
         Sets the records (data) of the Variable.
@@ -980,13 +995,18 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         """
         if records is None:
-            self.container._add_statement(f"option clear={self.name};")
-            self.container._synch_with_gams(gams_to_gamspy=True)
+            self._container._add_statement(f"option clear={self.name};")
+            self._container._synch_with_gams()
+            self._records = None
             return
 
         self._setRecords(records, uels_on_axes=uels_on_axes)
-        self.container._synch_with_gams()
-        self._winner = "python"
+        self._container._synch_with_gams()
+
+    @property
+    def _default_records(self):
+        """Default records of a variable"""
+        return VAR_DEFAULT_VALUES[self._type]
 
     @property
     def type(self) -> str:
@@ -1014,7 +1034,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         """
         given_type = cast_type(var_type)
-        gt.Variable.type.fset(self, given_type)
+        self._type = given_type
 
     def gamsRepr(self) -> str:
         """

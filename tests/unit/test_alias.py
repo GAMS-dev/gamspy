@@ -40,7 +40,7 @@ def test_alias_creation(m):
         _ = a.getAssignment()
 
     # no alias
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         _ = Alias(m)
 
     # non-str type name
@@ -72,12 +72,11 @@ def test_alias_creation(m):
     k2["i1"] = False
     assert k2.getAssignment() == 'k2("i1") = no;'
 
-    # synch
-    with pytest.raises(ValidationError):
-        k2.synchronize = True
+    with pytest.warns(DeprecationWarning):
+        i2.synchronize = True
 
-    with pytest.raises(ValidationError):
-        _ = k2.synchronize
+    with pytest.warns(DeprecationWarning):
+        k2.synchronize = True
 
 
 def test_alias_string(m):
@@ -103,7 +102,7 @@ def test_override(m):
     u = Set(m, "u")
     v = Alias(m, "v", alias_with=u)
     eq = Equation(m, "eq", domain=[u, v])
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         _ = m.addAlias("v", eq)
 
     # Try to add the same alias
@@ -186,21 +185,21 @@ def test_universe_alias(m, tmp_path):
 def test_alias_state(m):
     i = Set(m, name="i", records=["a", "b", "c"])
     j = Alias(m, name="j", alias_with=i)
-    i.modified = False
+    i._should_unload_to_gams = False
     j.setRecords(["a", "b"])
-    assert not i.modified
+    assert not i._should_unload_to_gams
 
-    i.modified = False
+    i._should_unload_to_gams = False
     j.records = pd.DataFrame([["a", "b"]])
-    assert i.modified
+    assert i._should_unload_to_gams
 
 
 def test_alias_modified_list(m):
     nodes = m.addSet("nodes", description="nodes", records=["s"])
     i = m.addAlias("i", nodes)
     _ = m.addSet("s", domain=[i], description="sources", records=["s"])
-    modified_names = m._get_modified_symbols()
-    assert modified_names == []
+    symbol_names = m._symbols_to_unload()
+    assert symbol_names == []
 
 
 def test_indexing(m):

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import atexit
+import copy
 import os
 import platform
 import re
-import shutil
 import signal
 import sys
 import tempfile
@@ -12,12 +12,16 @@ import threading
 import traceback
 import warnings
 import weakref
+from collections.abc import Iterable
+from difflib import get_close_matches
 from pathlib import Path
-from typing import TYPE_CHECKING, TextIO
+from typing import TYPE_CHECKING, TextIO, cast, no_type_check
 
 import gams.transfer as gt
+import pandas as pd
 
 import gamspy as gp
+import gamspy._gdx as gdxio
 import gamspy._miro as miro
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -25,16 +29,22 @@ from gamspy._backend.backend import backend_factory
 from gamspy._communication import close_connection, get_connection, open_connection
 from gamspy._config import get_option
 from gamspy._extrinsic import ExtrinsicLibrary
+from gamspy._internals import (
+    ATTR_PREFIX,
+    EQU_TYPE,
+    TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
+    TRANSFER_TO_GAMS_VARIABLE_SUBTYPES,
+)
 from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem, Sense
+from gamspy._options import write_solver_options
 from gamspy._workspace import Workspace
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Callable, Sequence
     from typing import Any, Literal
 
-    from gams.transfer import CasePreservingDict
     from pandas import DataFrame
 
     from gamspy import (
@@ -51,7 +61,6 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._options import Options
     from gamspy._symbols.implicits import ImplicitVariable
-    from gamspy._symbols.symbol import Symbol
     from gamspy._types import (
         DomainType,
         ParameterRecordsType,
@@ -61,7 +70,7 @@ if TYPE_CHECKING:
     )
 
 LOOPBACK = "127.0.0.1"
-IS_MIRO_INIT = os.getenv("MIRO", False)
+IS_MIRO_INIT = int(os.getenv("MIRO", 0))
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
 is_windows = platform.system() == "Windows"
@@ -81,33 +90,20 @@ def get_system_directory(system_directory: str | os.PathLike | None) -> str:
         system_directory = os.fspath(system_directory)
 
     if system_directory is not None:
+        gams_path = os.path.join(system_directory, "gams")
+        if is_windows:
+            gams_path = f"{gams_path}.exe"
+
+        if not os.path.exists(gams_path):
+            raise ValidationError(
+                f"`{system_directory}` is not a valid GAMS system directory."
+            )
         return system_directory
 
     return get_option("GAMS_SYSDIR")
 
 
-def get_options_file_name(solver: str, file_number: int) -> str:
-    """
-    Generates the option file name according to the `optfile` rules of GAMS.
-    Here are the rules:
-    1: solver.opt
-    2-9: solver.op<file_number>
-    10-99: solver.o<file_number>
-    >100: solver.<file_number>
-    """
-    if file_number == 1:
-        options_file_name = f"{solver}.opt"
-    elif file_number >= 2 and file_number <= 9:
-        options_file_name = f"{solver}.op{file_number}"
-    elif file_number >= 10 and file_number <= 99:
-        options_file_name = f"{solver}.o{file_number}"
-    else:
-        options_file_name = f"{solver}.{file_number}"
-
-    return options_file_name
-
-
-class Container(gt.Container):
+class Container:
     """
     Central workspace for building, modifying, executing, and exchanging data
     with GAMS models.
@@ -191,6 +187,8 @@ class Container(gt.Container):
         options: Options | None = None,
         output: TextIO | None = None,
     ):
+        import gams.core.numpy as gnp
+
         self._comm_pair_id = utils._get_unique_name()
         self.output = output
         self._gams_string = ""
@@ -202,11 +200,13 @@ class Container(gt.Container):
 
         system_directory = get_system_directory(system_directory)
         add_sysdir_to_path(system_directory)
+        self.system_directory = system_directory
+        self._gams2np = gnp.Gams2Numpy._bypass_workspace(system_directory)
 
         self._unsaved_statements: list = []
 
-        super().__init__(system_directory=system_directory)
-        self._data: dict[str, SymbolType] | CasePreservingDict = {}
+        self._data: dict[str, SymbolType] = {}
+
         self._options = validation.validate_global_options(options)
         if self._options.license is not None:
             self._license_path = self._options.license
@@ -222,8 +222,6 @@ class Container(gt.Container):
 
         self._job, self._gdx_in, self._gdx_out = self._setup_paths()
 
-        self._temp_container = gt.Container(system_directory=self.system_directory)
-
         # needed for miro
         self._miro_input_symbols: list[str] = []
         self._miro_output_symbols: list[str] = []
@@ -236,7 +234,7 @@ class Container(gt.Container):
             if isinstance(load_from, os.PathLike):
                 load_from = os.fspath(load_from)
 
-            if not isinstance(load_from, (str, gt.Container)):
+            if not isinstance(load_from, (str, gt.Container, Container)):
                 raise ValidationError(
                     f"`load_from` must be of type str or Container but found {type(load_from)}"
                 )
@@ -251,23 +249,27 @@ class Container(gt.Container):
 
             if isinstance(load_from, str) and load_from.endswith(".g00"):
                 self._options._set_extra_options(
-                    {"restart": load_from, "gdxSymbols": "all"}
+                    {"restart": load_from, "gdx": self._gdx_out, "gdxSymbols": "all"}
                 )
-                self._synch_with_gams(gams_to_gamspy=True)
+                self._synch_with_gams()
+                symbol_names = gdxio._get_symbol_names_from_gdx(
+                    self.system_directory, self._gdx_out
+                )
+                self._read(self._gdx_out, symbol_names=symbol_names)
                 self._options._set_extra_options({})
-                self._clean_modified_symbols()
+                self._should_unload_to_gams(value=False)
                 self._unsaved_statements = []
                 self._is_restarted = True
             else:
                 self._read(load_from)
-                if not isinstance(load_from, gt.Container):
+                if not isinstance(load_from, (gt.Container, Container)):
                     self._unsaved_statements = []
-                    self._clean_modified_symbols()
+                    self._should_unload_to_gams(value=False)
                     self._add_statement(f"$declareAndLoad {load_from}")
 
                 self._synch_with_gams()
 
-    def __enter__(self):
+    def __enter__(self) -> Container:
         pid = os.getpid()
         tid = threading.get_native_id()
         gp._ctx_managers[(pid, tid)] = self
@@ -283,29 +285,38 @@ class Container(gt.Container):
         except KeyError:
             ...
 
-    # def __getitem__(self, symbol_name: str) -> SymbolType:  # type: ignore
-    #     try:
-    #         return self.data[symbol_name]
-    #     except KeyError as e:
-    #         error_message = f"`{symbol_name}` does not exist in the Container."
-    #         matches = get_close_matches(
-    #             word=symbol_name, possibilities=self.data.keys(), n=1
-    #         )
-    #         if matches:
-    #             error_message += f" Did you mean `{matches[0]}`?"
-    #         raise KeyError(error_message) from e
+    def __getitem__(self, symbol_name: str) -> SymbolType:
+        try:
+            return self._data[symbol_name]
+        except KeyError as e:
+            error_message = f"`{symbol_name}` does not exist in the Container."
+            matches = get_close_matches(
+                word=symbol_name, possibilities=self._data.keys(), n=1
+            )
+            if matches:
+                error_message += f" Did you mean `{matches[0]}`?"
+            raise KeyError(error_message) from e
+
+    def __iter__(self):
+        return iter(self._data.items())
 
     def __repr__(self) -> str:
         return f"Container(system_directory='{self.system_directory}', working_directory='{self.working_directory}', debugging_level='{self._debugging_level}')"
 
     def __str__(self):
         if len(self):
-            return f"<Container ({hex(id(self))}) with {len(self)} symbols: {self.data.keys()}>"
+            return f"<Container ({hex(id(self))}) with {len(self)} symbols: {self._data.keys()}>"
 
         return f"<Empty Container ({hex(id(self))})>"
 
+    def __contains__(self, sym) -> bool:
+        return sym in self._data
+
+    def __len__(self) -> int:
+        return len(self._data)
+
     @property
-    def data(self) -> dict[str, SymbolType] | CasePreservingDict:
+    def data(self) -> dict[str, SymbolType]:
         """
         The dictionary that contains all symbols in the Container. Keys are symbol names and values are the symbols themselves.
 
@@ -325,24 +336,715 @@ class Container(gt.Container):
         """
         return self._data
 
-    @data.setter
-    def data(self, value: dict[str, SymbolType] | CasePreservingDict) -> None:
-        self._data = value
+    def _resolve_symbols(self, symbols: str | list[str] | None = None) -> list[str]:
+        """Validates and sanitizes the `symbols` argument to avoid repetitive logic."""
+        if not isinstance(symbols, (str, list, type(None))):
+            raise TypeError("Argument 'symbols' must be type list, str or NoneType")
+
+        if symbols is None:
+            return list(self._data.keys())
+
+        if isinstance(symbols, str):
+            return [symbols]
+
+        if any(not isinstance(i, str) for i in symbols):
+            raise TypeError("Argument 'symbols' must contain only type str")
+
+        return symbols
+
+    def _build_describe_dataframe(
+        self,
+        symbols: str | list[str] | None,
+        default_symbols: list[str],
+        row_extractor: Callable,
+    ) -> DataFrame | None:
+        """Helper to simplify DataFrame construction for describe() methods."""
+        # Override None behavior for describe functions (they default to specific typed symbol lists, not all container keys)
+        resolved_symbols = (
+            self._resolve_symbols(symbols) if symbols is not None else default_symbols
+        )
+
+        if not resolved_symbols:
+            return None
+
+        rows = []
+        for sym in self.getSymbols(resolved_symbols):
+            row = row_extractor(sym)
+            rows.append(row)
+
+        if not rows:
+            return None
+
+        df = pd.DataFrame(rows)
+        return df.round(3).sort_values(by="name", ignore_index=True)
+
+    def _getUELs(
+        self,
+        symbols: str | list[str] | None = None,
+        ignore_unused: bool = False,
+    ) -> list[str]:
+        AnyContainerAlias = (gp.Alias, gp.UniverseAlias)
+
+        # Use helper for validation, but respect the custom `None` default behavior of this function
+        symbols = (
+            self._resolve_symbols(symbols)
+            if symbols is not None
+            else self.listSymbols()
+        )
+
+        uni = {}
+        for symobj in self.getSymbols(symbols):
+            if not isinstance(symobj, AnyContainerAlias) and symobj.records is not None:
+                uni.update(dict.fromkeys(symobj._getUELs(ignore_unused=ignore_unused)))
+
+        return list(uni.keys())
+
+    def _assert_valid_records(self, symbols=None):
+        symbols = self._resolve_symbols(symbols)
+        for symobj in self.getSymbols(symbols):
+            if not isinstance(symobj, gp.UniverseAlias):
+                symobj._assert_valid_records()
+
+    def hasSymbols(self, symbols: list[str] | str) -> list[bool] | bool:
+        """
+        Checks if the specified symbol or symbols exist in the Container.
+
+        Parameters
+        ----------
+        symbols : str | list[str]
+            Name of the symbol or a list of symbol names to check for existence.
+
+        Returns
+        -------
+        bool | list[bool]
+            A boolean value if a single string is provided, or a list of boolean values
+            corresponding to the list of strings provided, indicating whether each symbol
+            is present in the Container.
+
+        Raises
+        ------
+        TypeError
+            If the 'symbols' argument is not of type str or list.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = m.addSet("i")
+        >>> m.hasSymbols("i")
+        True
+        >>> m.hasSymbols(["i", "j"])
+        [True, False]
+
+        """
+        if isinstance(symbols, str):
+            return symbols in self
+        elif isinstance(symbols, list):
+            return [sym in self for sym in symbols]
+
+        raise TypeError("Argument 'symbols' must be type str or list")
+
+    def listSymbols(self) -> list[str]:
+        """
+        Lists the names of all symbols present in the Container.
+
+        Returns
+        -------
+        list[str]
+            A list containing the names of all symbols.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = m.addSet("i")
+        >>> v = m.addVariable("v")
+        >>> m.listSymbols()
+        ['i', 'v']
+
+        """
+        return list(self._data.keys())
+
+    def listParameters(self) -> list[str]:
+        """
+        Lists the names of all Parameter symbols in the Container.
+
+        Returns
+        -------
+        list[str]
+            A list containing the names of all parameters.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> p = m.addParameter("p")
+        >>> m.listParameters()
+        ['p']
+
+        """
+        return [
+            s.name
+            for s in self.getSymbols(self.listSymbols())
+            if isinstance(s, gp.Parameter)
+        ]
+
+    def listSets(self) -> list[str]:
+        """
+        Lists the names of all Set symbols in the Container.
+
+        Returns
+        -------
+        list[str]
+            A list containing the names of all sets.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = m.addSet("i")
+        >>> m.listSets()
+        ['i']
+
+        """
+        return [
+            s.name for s in self.getSymbols(self.listSymbols()) if isinstance(s, gp.Set)
+        ]
+
+    def listAliases(self) -> list[str]:
+        """
+        Lists the names of all Alias and UniverseAlias symbols in the Container.
+
+        Returns
+        -------
+        list[str]
+            A list containing the names of all aliases.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = m.addSet("i")
+        >>> a = m.addAlias("a", i)
+        >>> m.listAliases()
+        ['a']
+
+        """
+        return [
+            s.name
+            for s in self.getSymbols(self.listSymbols())
+            if isinstance(s, (gp.Alias, gp.UniverseAlias))
+        ]
+
+    def listVariables(self, types: str | list[str] | None = None) -> list[str]:
+        """
+        Lists the names of all variables in the Container, optionally filtering by variable type.
+
+        Parameters
+        ----------
+        types : str | list[str] | None, optional
+            The variable type(s) to filter by (e.g., "free", "positive", "binary").
+            If None, all variables are listed.
+
+        Returns
+        -------
+        list[str]
+            A list containing the names of the filtered variables.
+
+        Raises
+        ------
+        TypeError
+            If the 'types' argument is not of type str, list, or None.
+        ValueError
+            If an unrecognized variable type is provided.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> v1 = m.addVariable("v1", type="free")
+        >>> v2 = m.addVariable("v2", type="binary")
+        >>> m.listVariables(types="binary")
+        ['v2']
+
+        """
+        if not isinstance(types, (str, list, type(None))):
+            raise TypeError("Argument 'types' must be type str, list, or NoneType")
+
+        syms = [
+            s for s in self.getSymbols(self.listSymbols()) if isinstance(s, gp.Variable)
+        ]
+        if types is None:
+            return [s.name for s in syms]
+
+        types = [types] if isinstance(types, str) else types
+        types = [i.casefold() for i in types]
+
+        if any(i not in TRANSFER_TO_GAMS_VARIABLE_SUBTYPES for i in types):
+            raise ValueError(
+                "User input unrecognized variable type, "
+                f"variable types can only take: {list(TRANSFER_TO_GAMS_VARIABLE_SUBTYPES.keys())}"
+            )
+
+        return [s.name for s in syms if s.type in types]
+
+    def listEquations(self, types: str | list[str] | None = None) -> list[str]:
+        """
+        Lists the names of all equations in the Container, optionally filtering by equation type.
+
+        Parameters
+        ----------
+        types : str | list[str] | None, optional
+            The equation type(s) to filter by (e.g., "regular").
+            If None, all equations are listed.
+
+        Returns
+        -------
+        list[str]
+            A list containing the names of the filtered equations.
+
+        Raises
+        ------
+        TypeError
+            If the 'types' argument is not of type str, list, or None.
+        ValueError
+            If an unrecognized equation type is provided.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> e = m.addEquation("e", type="regular")
+        >>> m.listEquations()
+        ['e']
+
+        """
+        if not isinstance(types, (str, list, type(None))):
+            raise TypeError("Argument 'types' must be type str, list, or NoneType")
+
+        syms = [
+            s for s in self.getSymbols(self.listSymbols()) if isinstance(s, gp.Equation)
+        ]
+        if types is None:
+            return [s.name for s in syms]
+
+        types = [types] if isinstance(types, str) else types
+        types = [EQU_TYPE[i.casefold()] for i in types]
+
+        if any(i not in TRANSFER_TO_GAMS_EQUATION_SUBTYPES for i in types):
+            raise ValueError(
+                "User input unrecognized variable type, "
+                f"variable types can only take: {list(TRANSFER_TO_GAMS_EQUATION_SUBTYPES.keys())}"
+            )
+
+        return [s.name for s in syms if s.type in types]
+
+    def describeSets(self, symbols: str | list[str] | None = None) -> DataFrame | None:
+        """
+        Provides a structural summary of the specified Set symbols as a pandas DataFrame.
+
+        Parameters
+        ----------
+        symbols : str | list[str] | None, optional
+            Name or list of names of the Set symbols to describe.
+            If None, describes all Sets in the Container.
+
+        Returns
+        -------
+        DataFrame | None
+            A pandas DataFrame describing the Sets (e.g., dimension, domain, sparsity, number of records),
+            or None if no matching Sets are found.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = m.addSet("i", records=["a", "b"])
+        >>> df = m.describeSets()
+
+        """
+
+        def extractor(sym):
+            is_alias = isinstance(sym, (gp.Alias, gp.UniverseAlias))
+            alias_with = None
+            if is_alias:
+                alias_with = (
+                    sym.alias_with.name
+                    if hasattr(sym.alias_with, "name")
+                    else sym.alias_with
+                )
+
+            return {
+                "name": sym.name,
+                "is_singleton": sym.is_singleton,
+                "is_alias": is_alias,
+                "alias_with": alias_with,
+                "domain": sym.domain_names,
+                "domain_type": sym.domain_type,
+                "dimension": sym.dimension,
+                "number_records": sym.number_records,
+                "sparsity": sym.getSparsity(),
+            }
+
+        df = self._build_describe_dataframe(symbols, self.listSets(), extractor)
+        if df is not None and not df["is_alias"].any():
+            df = df.drop(columns=["is_alias", "alias_with"])
+        return df
+
+    def describeAliases(
+        self, symbols: str | list[str] | None = None
+    ) -> DataFrame | None:
+        """
+        Provides a structural summary of the specified Alias symbols as a pandas DataFrame.
+
+        Parameters
+        ----------
+        symbols : str | list[str] | None, optional
+            Name or list of names of the Alias symbols to describe.
+            If None, describes all Aliases in the Container.
+
+        Returns
+        -------
+        DataFrame | None
+            A pandas DataFrame describing the Aliases (e.g., alias_with, domain, number of records),
+            or None if no matching Aliases are found.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = m.addSet("i", records=["a", "b"])
+        >>> a = m.addAlias("a", i)
+        >>> df = m.describeAliases()
+
+        """
+
+        def extractor(sym):
+            if isinstance(sym, gp.Alias):
+                alias_parent = sym.alias_with.name
+            elif isinstance(sym, gp.UniverseAlias):
+                alias_parent = sym.alias_with
+
+            return {
+                "name": sym.name,
+                "alias_with": alias_parent,
+                "is_singleton": sym.is_singleton,
+                "domain": sym.domain_names,
+                "domain_type": sym.domain_type,
+                "dimension": sym.dimension,
+                "number_records": sym.number_records,
+                "sparsity": sym.getSparsity(),
+            }
+
+        return self._build_describe_dataframe(symbols, self.listAliases(), extractor)
+
+    def describeParameters(
+        self, symbols: str | list[str] | None = None
+    ) -> DataFrame | None:
+        """
+        Provides a statistical summary of the specified Parameter symbols as a pandas DataFrame.
+
+        Parameters
+        ----------
+        symbols : str | list[str] | None, optional
+            Name or list of names of the Parameter symbols to describe.
+            If None, describes all Parameters in the Container.
+
+        Returns
+        -------
+        DataFrame | None
+            A pandas DataFrame describing the Parameters (e.g., domain, min/mean/max values, sparsity),
+            or None if no matching Parameters are found.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> p = m.addParameter("p", records=5)
+        >>> df = m.describeParameters()
+
+        """
+
+        def extractor(sym):
+            return {
+                "name": sym.name,
+                "domain": sym.domain_names,
+                "domain_type": sym.domain_type,
+                "dimension": sym.dimension,
+                "number_records": sym.number_records,
+                "min": sym.getMinValue(),
+                "mean": sym.getMeanValue(),
+                "max": sym.getMaxValue(),
+                "where_min": sym.whereMin(),
+                "where_max": sym.whereMax(),
+                "sparsity": sym.getSparsity(),
+            }
+
+        return self._build_describe_dataframe(symbols, self.listParameters(), extractor)
+
+    def describeVariables(
+        self, symbols: str | list[str] | None = None
+    ) -> DataFrame | None:
+        """
+        Provides a statistical and structural summary of the specified Variable symbols as a pandas DataFrame.
+
+        Parameters
+        ----------
+        symbols : str | list[str] | None, optional
+            Name or list of names of the Variable symbols to describe.
+            If None, describes all Variables in the Container.
+
+        Returns
+        -------
+        DataFrame | None
+            A pandas DataFrame describing the Variables (e.g., type, min/max level, sparsity, dimension),
+            or None if no matching Variables are found.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> v = m.addVariable("v")
+        >>> df = m.describeVariables()
+
+        """
+
+        def extractor(sym):
+            return {
+                "name": sym.name,
+                "type": sym.type,
+                "domain": sym.domain_names,
+                "domain_type": sym.domain_type,
+                "dimension": sym.dimension,
+                "number_records": sym.number_records,
+                "sparsity": sym.getSparsity(),
+                "min_level": sym.getMinValue("level"),
+                "mean_level": sym.getMeanValue("level"),
+                "max_level": sym.getMaxValue("level"),
+                "where_max_abs_level": sym.whereMaxAbs("level"),
+            }
+
+        return self._build_describe_dataframe(symbols, self.listVariables(), extractor)
+
+    def describeEquations(
+        self, symbols: str | list[str] | None = None
+    ) -> DataFrame | None:
+        """
+        Provides a statistical and structural summary of the specified Equation symbols as a pandas DataFrame.
+
+        Parameters
+        ----------
+        symbols : str | list[str] | None, optional
+            Name or list of names of the Equation symbols to describe.
+            If None, describes all Equations in the Container.
+
+        Returns
+        -------
+        DataFrame | None
+            A pandas DataFrame describing the Equations (e.g., type, min/max level, sparsity, dimension),
+            or None if no matching Equations are found.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> e = m.addEquation("e")
+        >>> df = m.describeEquations()
+
+        """
+
+        def extractor(sym):
+            return {
+                "name": sym.name,
+                "type": sym.type,
+                "domain": sym.domain_names,
+                "domain_type": sym.domain_type,
+                "dimension": sym.dimension,
+                "number_records": sym.number_records,
+                "sparsity": sym.getSparsity(),
+                "min_level": sym.getMinValue("level"),
+                "mean_level": sym.getMeanValue("level"),
+                "max_level": sym.getMaxValue("level"),
+                "where_max_abs_level": sym.whereMaxAbs("level"),
+            }
+
+        return self._build_describe_dataframe(symbols, self.listEquations(), extractor)
+
+    def getSets(self) -> list[Set]:
+        """
+        Retrieves all Set symbols present in the Container.
+
+        Returns
+        -------
+        list[Set]
+            A list containing all Set objects in the Container.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = m.addSet("i")
+        >>> sets = m.getSets()
+
+        """
+        return cast("list[Set]", self.getSymbols(self.listSets()))
+
+    def getAliases(self) -> list[Alias | UniverseAlias]:
+        """
+        Retrieves all Alias and UniverseAlias symbols present in the Container.
+
+        Returns
+        -------
+        list[Alias | UniverseAlias]
+            A list containing all Alias and UniverseAlias objects in the Container.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = m.addSet("i")
+        >>> a = m.addAlias("a", i)
+        >>> aliases = m.getAliases()
+
+        """
+        return cast("list[Alias | UniverseAlias]", self.getSymbols(self.listAliases()))
+
+    def getParameters(self) -> list[Parameter]:
+        """
+        Retrieves all Parameter symbols present in the Container.
+
+        Returns
+        -------
+        list[Parameter]
+            A list containing all Parameter objects in the Container.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> p = m.addParameter("p")
+        >>> parameters = m.getParameters()
+
+        """
+        return cast("list[Parameter]", self.getSymbols(self.listParameters()))
+
+    def getVariables(self, types: str | list[str] | None = None) -> list[Variable]:
+        """
+        Retrieves all Variable symbols in the Container, optionally filtering by variable type.
+
+        Parameters
+        ----------
+        types : str | list[str] | None, optional
+            The variable type(s) to filter by (e.g., "free", "positive", "binary").
+            If None, retrieves all variables.
+
+        Returns
+        -------
+        list[Variable]
+            A list containing the filtered Variable objects.
+
+        Raises
+        ------
+        TypeError
+            If the 'types' argument is not of type str, list, or None.
+        ValueError
+            If an unrecognized variable type is provided.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> v = m.addVariable("v", type="free")
+        >>> variables = m.getVariables()
+
+        """
+        return cast("list[Variable]", self.getSymbols(self.listVariables(types=types)))
+
+    def getEquations(self) -> list[Equation]:
+        """
+        Returns all equation symbols in the Container.
+
+        Returns
+        -------
+        list[Equation]
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> eq1 = gp.Equation(m, name="eq1")
+        >>> eq2 = gp.Equation(m, name="eq2")
+        >>> equation_objects = m.getEquations()
+
+        """
+        equations = [
+            equation
+            for equation in self.listEquations()
+            if not equation.startswith(ATTR_PREFIX)
+        ]
+        return cast("list[Equation]", self.getSymbols(equations))
+
+    def getSymbols(
+        self, symbols: str | Iterable[str] | None = None
+    ) -> list[SymbolType]:
+        """
+        Retrieves specific symbols from the Container by their names.
+
+        Parameters
+        ----------
+        symbols : str | Iterable[str] | None, optional
+            Name or iterable of names of the symbols to retrieve.
+            If None, retrieves all symbols in the Container.
+
+        Returns
+        -------
+        list[SymbolType]
+            A list containing the requested symbol objects.
+
+        Raises
+        ------
+        TypeError
+            If the 'symbols' argument is not a str, Iterable, or None.
+        KeyError
+            If a specified symbol name does not exist in the Container.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = m.addSet("i")
+        >>> p = m.addParameter("p")
+        >>> syms = m.getSymbols(["i", "p"])
+
+        """
+        if symbols is None:
+            return list(self._data.values())
+
+        if isinstance(symbols, str):
+            symbols = [symbols]
+        elif not isinstance(symbols, Iterable):
+            raise TypeError("Argument 'symbols' must be type str or other iterable")
+
+        obj: list[SymbolType] = []
+        for symname in symbols:
+            try:
+                obj.append(self._data[symname])
+            except KeyError as err:
+                raise KeyError(
+                    f"Symbol `{symname}` does not appear in the Container"
+                ) from err
+        return obj
 
     @property
     def working_directory(self) -> str:
         """
         Absolute path of the working directory used by this container.
-
-
         The directory contains generated GAMS input/output files such as
         ``.gms``, ``.lst``, ``.gdx`` and temporary scratch files.
-
 
         Returns
         -------
         str
-
 
         Examples
         --------
@@ -358,17 +1060,13 @@ class Container(gt.Container):
     def in_miro(self) -> bool:
         """
         Indicates whether the container is executed inside a GAMS MIRO context.
-
-
         When running under MIRO, input data is typically provided by MIRO itself.
         This flag can be used to skip expensive or redundant data-loading steps
         (e.g., reading Excel files).
 
-
         Returns
         -------
         bool
-
 
         Examples
         --------
@@ -410,6 +1108,7 @@ class Container(gt.Container):
 
         return name
 
+    @no_type_check
     def _interrupt(self) -> None:
         _, process = get_connection(self._comm_pair_id)
         if platform.system() == "Windows":
@@ -430,67 +1129,6 @@ class Container(gt.Container):
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
 
-    def _cast_symbols(self, symbol_names: list[str] | None = None) -> None:
-        """Casts GTP symbols to GAMSPy symbols"""
-        symbol_names = symbol_names if symbol_names else list(self.data.keys())
-
-        for symbol_name in symbol_names:
-            gtp_symbol = self.data[symbol_name]
-            new_domain = [
-                (self.data[member.name] if type(member) is not str else member)
-                for member in gtp_symbol.domain
-            ]
-
-            del self.data[symbol_name]
-
-            if isinstance(gtp_symbol, gt.Alias):
-                alias_with = self.data[gtp_symbol.alias_with.name]
-                _ = gp.Alias._constructor_bypass(self, gtp_symbol._name, alias_with)
-            elif isinstance(gtp_symbol, gt.UniverseAlias):
-                _ = gp.UniverseAlias._constructor_bypass(
-                    self,
-                    gtp_symbol._name,
-                )
-            elif isinstance(gtp_symbol, gt.Set):
-                _ = gp.Set._constructor_bypass(
-                    self,
-                    gtp_symbol._name,
-                    new_domain,
-                    gtp_symbol._records,
-                    gtp_symbol._description,
-                    is_singleton=gtp_symbol._is_singleton,
-                )
-            elif isinstance(gtp_symbol, gt.Parameter):
-                _ = gp.Parameter._constructor_bypass(
-                    self,
-                    gtp_symbol._name,
-                    new_domain,
-                    gtp_symbol._records,
-                    gtp_symbol._description,
-                )
-            elif isinstance(gtp_symbol, gt.Variable):
-                _ = gp.Variable._constructor_bypass(
-                    self,
-                    gtp_symbol._name,
-                    gtp_symbol._type,
-                    new_domain,
-                    gtp_symbol._records,
-                    gtp_symbol._description,
-                )
-            elif isinstance(gtp_symbol, gt.Equation):
-                symbol_type = gtp_symbol.type
-                if gtp_symbol.type in ("eq", "leq", "geq"):
-                    symbol_type = "regular"
-
-                _ = gp.Equation._constructor_bypass(
-                    self,
-                    gtp_symbol._name,
-                    symbol_type,
-                    new_domain,
-                    gtp_symbol._records,
-                    gtp_symbol._description,
-                )
-
     def _delete_autogenerated_symbols(self) -> None:
         """
         Removes autogenerated model attributes, objective variable and equation from
@@ -499,8 +1137,8 @@ class Container(gt.Container):
         autogenerated_symbol_names = self._get_autogenerated_symbol_names()
 
         for name in autogenerated_symbol_names:
-            if name in self.data:
-                del self.data[name]
+            if name in self._data:
+                del self._data[name]
 
     def _setup_paths(self) -> tuple[str, str, str]:
         suffix = "_" + utils._get_unique_name()
@@ -512,50 +1150,55 @@ class Container(gt.Container):
 
     def _get_autogenerated_symbol_names(self) -> list[str]:
         names = []
-        for name in self.data:
-            if name.startswith(gp.Model._generate_prefix):
+        for name in self._data:
+            if name.startswith(ATTR_PREFIX):
                 names.append(name)
 
         return names
 
-    def _get_modified_symbols(self) -> list[str]:
-        modified_names = []
+    def _symbols_to_unload(self) -> list[str]:
+        symbol_names: list[str] = []
+        seen: set[str] = set()
 
-        for name, symbol in self:
-            if symbol._modified:
-                if (
-                    type(symbol) is gp.Alias
-                    and symbol.alias_with.name not in modified_names  # type: ignore
-                ):
-                    modified_names.append(symbol.alias_with.name)  # type: ignore
+        # Needed to avoid attribute lookup.
+        append = symbol_names.append
+        seen_add = seen.add
 
-                modified_names.append(name)
+        for name, symbol in self._data.items():
+            if not symbol._should_unload_to_gams:
+                continue
 
-        return modified_names
-
-    def _clean_modified_symbols(self) -> None:
-        for symbol in self.data.values():
             if type(symbol) is gp.Alias:
-                symbol.alias_with.modified = False  # type: ignore
+                alias_name = symbol._alias_with.name
 
-            symbol.modified = False
+                if alias_name not in seen:
+                    append(alias_name)
+                    seen_add(alias_name)
 
-    def _synch_with_gams(
-        self,
-        load_symbols: list[Symbol] | None = None,
-        *,
-        relaxed_domain_mapping: bool = False,
-        gams_to_gamspy: bool = False,
-    ) -> DataFrame | None:
+            append(name)
+            seen_add(name)
+
+        return symbol_names
+
+    def _should_unload_to_gams(self, value: bool = False) -> None:
+        for symbol in self._data.values():
+            symbol._should_unload_to_gams = value
+
+    def _should_load_from_gams(
+        self, symbol_names: Iterable[str], value: bool = True
+    ) -> None:
+        for name in symbol_names:
+            symbol = self._data[name]
+            symbol._should_load_from_gams = value
+            if not isinstance(symbol, (gp.Alias, gp.UniverseAlias)):
+                symbol._handle_domain_forwarding()
+
+    def _synch_with_gams(self) -> DataFrame | None:
         if self._in_loop:
             return None
 
-        runner = backend_factory(
-            self, self._options, output=self.output, load_symbols=load_symbols
-        )
-        summary = runner.run(
-            relaxed_domain_mapping=relaxed_domain_mapping, gams_to_gamspy=gams_to_gamspy
-        )
+        runner = backend_factory(self, self._options, output=self.output)
+        summary = runner.run()
 
         if self._options and self._options.seed is not None:
             # Required for correct seeding. Seed can only be set in the first run.
@@ -566,7 +1209,7 @@ class Container(gt.Container):
 
         return summary
 
-    def _generate_gams_string(self, gdx_in: str, modified_names: list[str]) -> str:
+    def _generate_gams_string(self, gdx_in: str, symbol_names: list[str]) -> str:
         LOADABLE = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         MIRO_INPUT_TYPES = (gp.Set, gp.Parameter)
         assume_suffix = int(get_option("ASSUME_VARIABLE_SUFFIX"))
@@ -583,15 +1226,11 @@ class Container(gt.Container):
             else:
                 strings.append(statement.getDeclaration())
 
-        if modified_names:
+        if symbol_names:
             loadables = []
-            for name in modified_names:
+            for name in symbol_names:
                 symbol = self._data[name]
-                if (
-                    type(symbol) in LOADABLE
-                    and not name.startswith(gp.Model._generate_prefix)
-                    and symbol.synchronize
-                ):
+                if type(symbol) in LOADABLE and not name.startswith(ATTR_PREFIX):
                     loadables.append(symbol)
 
             if loadables:
@@ -630,79 +1269,179 @@ class Container(gt.Container):
 
         return gams_string
 
-    def _filter_load_symbols(
-        self, symbol_names: dict[str, str] | list[str]
-    ) -> dict[str, str] | list[str]:
-        if isinstance(symbol_names, list):
-            names = []
-            for name in symbol_names:
-                if name in self.data:
-                    symbol = self._data[name]
-                    if not isinstance(symbol, gt.Alias) and symbol.synchronize:
-                        names.append(name)
-                else:
-                    names.append(name)
-
-            return names
-
-        mapping = {}
-        for gdx_name, gamspy_name in symbol_names.items():
-            if gamspy_name in self.data:
-                if self._data[gamspy_name].synchronize:
-                    mapping[gdx_name] = gamspy_name
-            else:
+    def _validate_load_symbols(self, symbol_names: dict[str, str]) -> dict[str, str]:
+        for gamspy_name in symbol_names.values():
+            if gamspy_name not in self._data:
                 raise ValidationError(
                     f"Invalid renaming. `{gamspy_name}` does not exist in the container."
                 )
 
-        return mapping
+        return symbol_names
 
-    def _load_records_from_gdx(self, load_from: str, names: Iterable[str]) -> None:
-        self._temp_container.read(load_from, names)
+    def _load_records_from_gdx(self, load_from: str, names: list[str]) -> None:
+        records_dict = gdxio.get_records(self, load_from, names)
         original_state = self._options.miro_protect
         self._options.miro_protect = False
 
         for name in names:
-            if name in self.data:
-                updated_records: DataFrame = self._temp_container.data[name].records
+            if name in self._data:
+                updated_records = records_dict[name]
                 self._data[name].records = updated_records
                 self._data[name].domain_labels = self._data[name].domain_names
             else:
                 self._read(load_from, [name])
 
+            self._data[name]._should_unload_to_gams = False
+
         self._options.miro_protect = original_state
-        self._temp_container.data = {}
 
     def _load_records_with_rename(self, load_from: str, names: dict[str, str]) -> None:
-        self._temp_container.read(load_from, list(names.keys()))
+        records_dict = gdxio.get_records(self, load_from, names)
         original_state = self._options.miro_protect
         self._options.miro_protect = False
 
-        for gdx_name, gamspy_name in names.items():
-            updated_records = self._temp_container[gdx_name].records
-            self._data[gamspy_name].records = updated_records
-            self._data[gamspy_name].domain_labels = self._data[gamspy_name].domain_names
+        for gamspy_name in names.values():
+            updated_records = records_dict[gamspy_name]
+            symbol = self._data[gamspy_name]
+            symbol.records = updated_records
+            symbol.domain_labels = symbol.domain_names
+            symbol._should_unload_to_gams = False
 
         self._options.miro_protect = original_state
-        self._temp_container.data = {}
+
+    # TODO: Legacy function from GTP. Pay the technical debt.
+    @no_type_check
+    def _read_from_container(
+        self, load_from: gt.Container | Container, symbols: list[str] | None
+    ):
+        read_symbols = symbols if symbols is not None else list(load_from.data.keys())
+
+        for i in read_symbols:
+            if i not in load_from:
+                raise ValidationError(
+                    f"User specified to read symbol `{i}`, but it does not exist in source Container."
+                )
+
+        for symname in read_symbols:
+            if symname in self._data:
+                raise ValidationError(
+                    f"Attempting to create a new symbol (through a read operation) named `{symname}` "
+                    "but an object with this name already exists in the Container. "
+                )
+
+        AnyContainerDomainSymbol = (
+            gp.Set,
+            gp.Alias,
+            gp.UniverseAlias,
+            gt.Set,
+            gt.Alias,
+            gt.UniverseAlias,
+        )
+
+        cf_read_symbols = [s.casefold() for s in read_symbols]
+        link_domains = []
+
+        for symname, symobj in load_from.data.items():
+            if symname.casefold() not in cf_read_symbols:
+                continue
+
+            if any(
+                isinstance(domobj, AnyContainerDomainSymbol) for domobj in symobj.domain
+            ):
+                link_domains.append((symname, symobj.domain_names))
+
+            if isinstance(symobj, (gp.Set, gt.Set)):
+                gp.Set(
+                    self,
+                    symname,
+                    symobj.domain_names,
+                    symobj.is_singleton,
+                    records=copy.deepcopy(symobj.records),
+                    description=symobj.description,
+                )
+            elif isinstance(symobj, (gp.Parameter, gt.Parameter)):
+                gp.Parameter(
+                    self,
+                    symname,
+                    symobj.domain_names,
+                    records=copy.deepcopy(symobj.records),
+                    description=symobj.description,
+                )
+            elif isinstance(symobj, (gp.Variable, gt.Variable)):
+                gp.Variable(
+                    self,
+                    symname,
+                    symobj.type,
+                    symobj.domain_names,
+                    records=copy.deepcopy(symobj.records),
+                    description=symobj.description,
+                )
+            elif isinstance(symobj, (gp.Equation, gt.Equation)):
+                gp.Equation(
+                    self,
+                    symname,
+                    symobj.type,
+                    symobj.domain_names,
+                    records=copy.deepcopy(symobj.records),
+                    description=symobj.description,
+                )
+            elif isinstance(symobj, (gp.Alias, gt.Alias)):
+                alias_with = cast("Set | Alias", self._data[symobj.alias_with.name])
+                gp.Alias(self, symname, alias_with)
+            elif isinstance(symobj, (gp.UniverseAlias, gt.UniverseAlias)):
+                gp.UniverseAlias(self, symname)
+
+        for symname, domain in link_domains:
+            domain = [
+                self._data[i] if i in self and i in cf_read_symbols else i
+                for i in domain
+            ]
+            self._data[symname]._domain = domain
 
     def _read(
         self,
-        load_from: str | Container | gt.Container,
+        load_from: str | os.PathLike | Container | gt.Container,
         symbol_names: list[str] | None = None,
-        mode: str | None = None,
         encoding: str | None = None,
         *,
         load_records: bool = True,
     ) -> None:
-        super().read(load_from, symbol_names, load_records, mode, encoding)
-        self._cast_symbols(symbol_names)
+        symbols = (
+            self._resolve_symbols(symbol_names) if symbol_names is not None else None
+        )
+
+        if not isinstance(encoding, (str, type(None))):
+            raise TypeError("Argument 'encoding' must be type str or NoneType")
+
+        if isinstance(load_from, (os.PathLike, str)):
+            fpath = Path(load_from).expanduser().resolve()  # ty: ignore[invalid-argument-type]
+            if not fpath.exists():
+                raise ValueError(
+                    f"GDX file '{os.fspath(fpath)}' does not exist, "
+                    "check filename spelling or path specification"
+                )
+            if not os.fspath(fpath).casefold().endswith(".gdx"):
+                raise ValueError(
+                    "Unexpected file type passed to 'load_from' argument -- expected file extension '.gdx'"
+                )
+            load_from = os.fspath(fpath)
+            gdxio.read(self, load_from, symbols, load_records, encoding)
+        elif isinstance(load_from, (gt.Container, Container)):
+            self._read_from_container(load_from, symbols)
+        else:
+            raise ValueError(
+                "Argument 'load_from' expects "
+                "type str or PathLike (i.e., a path to a GDX file) "
+                ", a valid gmdHandle (or GamsDatabase instance) "
+                ", an instance of another Container "
+                ", User passed: "
+                f"'{type(load_from)}'."
+            )
 
     def read(
         self,
         load_from: str | os.PathLike | Container | gt.Container,
         symbol_names: list[str] | None = None,
-        mode: str | None = None,
         encoding: str | None = None,
         *,
         load_records: bool = True,
@@ -757,7 +1496,7 @@ class Container(gt.Container):
         if isinstance(load_from, os.PathLike):
             load_from = os.fspath(load_from)
 
-        self._read(load_from, symbol_names, mode, encoding, load_records=load_records)
+        self._read(load_from, symbol_names, encoding, load_records=load_records)
         self._synch_with_gams()
 
     def setRecords(
@@ -807,28 +1546,39 @@ class Container(gt.Container):
 
         for item, uels_on_axe in zip(records.items(), uels_on_axes, strict=False):
             symbol, record = item
+            if isinstance(symbol, gp.UniverseAlias):
+                continue
+
             symbol._setRecords(record, uels_on_axes=uels_on_axe)
 
         self._synch_with_gams()
 
     def _write(
         self,
-        write_to: str,
+        write_to: str | os.PathLike,
         symbol_names: list[str] | None = None,
-        uel_priority: str | list[str] | None = None,
-        mode: str | None = None,
         *,
         compress: bool = False,
         eps_to_zero: bool = True,
     ):
-        super().write(
-            write_to,
-            symbol_names,
-            compress=compress,
-            uel_priority=uel_priority,
-            mode=mode,
-            eps_to_zero=eps_to_zero,
+        symbols = (
+            self._resolve_symbols(symbol_names) if symbol_names is not None else None
         )
+
+        if isinstance(write_to, (os.PathLike, str)):
+            fpath = Path(write_to).expanduser().resolve()
+            if not os.fspath(fpath).casefold().endswith(".gdx"):
+                raise ValueError(
+                    "Unexpected file type passed to 'write_to' argument -- expected file extension '.gdx'"
+                )
+            write_to = os.fspath(fpath)
+            gdxio.write(
+                self, write_to, symbols, compress=compress, eps_to_zero=eps_to_zero
+            )
+        else:
+            raise TypeError(
+                "Argument 'write_to' expects type str/Pathlike (.gdx), a valid gmdHandle, or GamsDatabase."
+            )
 
     def write(
         self,
@@ -867,6 +1617,8 @@ class Container(gt.Container):
         >>> m.write("out.gdx")
 
         """
+        self._synch_with_gams()
+
         if isinstance(write_to, Path):
             write_to = str(write_to.resolve())
 
@@ -939,45 +1691,7 @@ $endIf
         >>> m.writeSolverOptions("conopt", solver_options={"rtmaxv": "1.e12"})
 
         """
-        if file_number < 1:
-            raise ValidationError(
-                f"The smallest number `file_number` can get is 1 but received {file_number}"
-            )
-
-        if solver.lower() == "conopt":
-            solver = "conopt4"
-
-        options_file_name = os.path.join(
-            self.working_directory, get_options_file_name(solver, file_number)
-        )
-
-        if isinstance(solver_options, (str, Path)):
-            path = Path(solver_options)
-            shutil.copy2(path, options_file_name)
-        else:
-            with open(options_file_name, "w", encoding="utf-8") as solver_file:
-                for key, value in solver_options.items():
-                    row = f"{key} {value}\n"
-                    if solver.upper() in ("SHOT", "SOPLEX", "SCIP", "HIGHS"):
-                        row = f"{key} = {value}\n"
-
-                    solver_file.write(row)
-
-        # The following solvers do not use the opt<solver>.def file
-        if solver.upper() in (
-            "HIGHS",
-            "SOPLEX",
-            "KESTREL",
-            "SCIP",
-            "SHOT",
-            "SOPLEX",
-        ):
-            return
-
-        if get_option("VALIDATION") and get_option("SOLVER_OPTION_VALIDATION"):
-            validation.validate_solver_options(
-                self.system_directory, options_file_name, solver
-            )
+        write_solver_options(self, solver, solver_options, file_number)
 
     def generateGamsString(
         self, path: str | None = None, *, show_raw: bool = False
@@ -1039,7 +1753,7 @@ $endIf
     def loadRecordsFromGdx(
         self,
         load_from: str | Path,
-        symbol_names: Iterable[str] | dict[str, str] | None = None,
+        symbol_names: list[str] | dict[str, str] | None = None,
     ) -> None:
         """
         Loads data of the given symbols from a GDX file. If no
@@ -1049,7 +1763,7 @@ $endIf
         ----------
         load_from : str
             Path to the GDX file
-        symbol_names : Iterable[str], dict[str, str], optional
+        symbol_names : list[str], dict[str, str], optional
             Symbol names whose data will be load from GDX, by default None.
             Default option loads records of all symbols in the GDX file.
             If given as a dict, keys are the symbol names in the GDX file, and
@@ -1071,28 +1785,38 @@ $endIf
         if isinstance(load_from, Path):
             load_from = str(load_from.resolve())
 
+        if not os.path.exists(load_from):
+            raise ValidationError(f"`{load_from}` does not exist.")
+
         if symbol_names is None:
             # If no symbol names are given, all records in the gdx should be loaded
-            symbol_names = utils._get_symbol_names_from_gdx(
+            symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.system_directory, load_from
             )
+            gdxio.load_missing_symbols(self, load_from, symbol_names)
             self._add_statement(f"$declareAndLoad {load_from}")
-            symbol_names = self._filter_load_symbols(symbol_names)  # type: ignore
-            self._load_records_from_gdx(load_from, symbol_names)
             self._synch_with_gams()
+            self._should_load_from_gams(symbol_names)
             return
 
-        if isinstance(symbol_names, (list, dict)):
-            symbol_names = self._filter_load_symbols(symbol_names)
-        else:
+        if not isinstance(symbol_names, (dict, list)):
             raise TypeError("`symbol_names` must be either a list or a dictionary.")
 
         if isinstance(symbol_names, dict):
-            self._load_records_with_rename(load_from, symbol_names)
+            symbol_names = self._validate_load_symbols(symbol_names)
+            gdxio.load_missing_symbols(self, load_from, symbol_names)
+            symbol_str = " ".join(
+                f"{value}={key}" for key, value in symbol_names.items()
+            )
+            self._add_statement(f"$gdxLoad {load_from} {symbol_str}")
+            self._synch_with_gams()
+            self._should_load_from_gams(symbol_names.values())
         else:
-            self._load_records_from_gdx(load_from, symbol_names)
-
-        self._synch_with_gams()
+            symbol_str = " ".join(symbol_names)
+            gdxio.load_missing_symbols(self, load_from, symbol_names)
+            self._add_statement(f"$gdxLoad {load_from} {symbol_str}")
+            self._synch_with_gams()
+            self._should_load_from_gams(symbol_names)
 
     def addGamsCode(self, gams_code: str) -> None:
         """
@@ -1114,10 +1838,32 @@ $endIf
 
         """
         self._add_statement(gams_code)
-        self._synch_with_gams(relaxed_domain_mapping=True, gams_to_gamspy=True)
+        self._options._set_extra_options(
+            {"gdx": self._gdx_out, "gdxSymbols": "newOrChanged"}
+        )
+        self._synch_with_gams()
+        symbol_names = gdxio._get_symbol_names_from_gdx(
+            self.system_directory, self._gdx_out
+        )
+        self._load_records_from_gdx(self._gdx_out, symbol_names)
+        for name in symbol_names:
+            symbol = self._data[name]
 
-        for _, symbol in self:
-            symbol.modified = False
+            new_domain = []
+            for elem in symbol.domain:
+                if isinstance(elem, str) and elem != "*" and elem in self._data:
+                    new_domain.append(self._data[elem])
+                else:
+                    new_domain.append(elem)
+
+            if isinstance(symbol, (gp.Set, gp.Parameter, gp.Variable, gp.Equation)):
+                symbol._domain = new_domain
+
+            if isinstance(symbol, (gp.Variable, gp.Equation)):
+                symbol._update_attr_domains()
+
+        self._options._set_extra_options({})
+        self._should_unload_to_gams(value=False)
 
         # Unfortunately MPSGE requires a dirty trick
         pattern = re.compile(r"^\$sysInclude\s+mpsgeset\s+(\w+)\s*$", re.MULTILINE)
@@ -1627,7 +2373,8 @@ $endIf
         for equation in self.getEquations():
             if equation._definition is not None:
                 m._add_statement(equation._definition)
-                m[equation.name]._definition = equation._definition
+                symbol = cast("Equation", m[equation.name])
+                symbol._definition = equation._definition
                 m._synch_with_gams()
 
         return m
@@ -1650,30 +2397,6 @@ $endIf
 
         """
         gp.serialize(self, path)
-
-    def getEquations(self) -> list[Equation]:
-        """
-        Returns all equation symbols in the Container.
-
-        Returns
-        -------
-        list[Equation]
-
-        Examples
-        --------
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> eq1 = gp.Equation(m, name="eq1")
-        >>> eq2 = gp.Equation(m, name="eq2")
-        >>> equation_objects = m.getEquations()
-
-        """
-        equations = [
-            equation
-            for equation in self.listEquations()
-            if not equation.startswith(gp.Model._generate_prefix)
-        ]
-        return self.getSymbols(equations)
 
     def importExtrinsicLibrary(
         self, lib_path: str, functions: dict[str, str]

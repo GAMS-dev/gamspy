@@ -8,16 +8,13 @@ repos:
         args: ['--maxkb=50000']
     -   id: check-ast
     -   id: check-case-conflict
--   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.20.2'
+-   repo: local
     hooks:
-    -   id: mypy
-        files: '^src\/gamspy\/(.*?)$'
--   repo: https://github.com/Yelp/detect-secrets
-    rev: v1.5.0
-    hooks:
-    -   id: detect-secrets
-        args: [ --baseline, .secrets.baseline, --exclude-files, ^docs/user/notebooks/]
+    -   id: local-ty
+        name: ty check
+        entry: uv run ty check src
+        language: python
+        pass_filenames: false
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.12
     hooks:
@@ -26,3 +23,8 @@ repos:
         args: [ --fix ]
     # Run the formatter.
     -   id: ruff-format
+-   repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+    -   id: detect-secrets
+        args: [ --baseline, .secrets.baseline, --exclude-files, ^docs/user/notebooks/]

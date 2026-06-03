@@ -44,7 +44,7 @@ def teardown():
     yield
 
     # Clean up
-    shutil.rmtree("tmp")
+    # shutil.rmtree("tmp")
 
 
 def test_install_license(teardown):
@@ -824,8 +824,7 @@ sos1_1"""
     )
     assert process.returncode == 0, process.stderr
     assert os.path.exists(out_gdx2)
-    from gamspy.utils import _close_gdx_handle, _open_gdx_file
+    from gamspy._gdx import open_gdx
 
-    handle = _open_gdx_file(gamspy_base.directory, out_gdx2)
-    assert gdx.gdxFileInfo(handle)[2] == 1
-    _close_gdx_handle(handle)
+    with open_gdx(gamspy_base.directory, out_gdx2) as handle:
+        assert gdx.gdxFileInfo(handle)[2] == 1

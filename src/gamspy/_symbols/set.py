@@ -3,9 +3,10 @@ from __future__ import annotations
 import itertools
 import os
 import threading
-from typing import TYPE_CHECKING, Any, Literal
+import weakref
+from typing import TYPE_CHECKING, Any, Literal, cast
 
-import gams.transfer as gt
+import pandas as pd
 from gams.core.gdx import GMS_DT_SET
 
 import gamspy as gp
@@ -15,15 +16,17 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
-from gamspy._symbols.symbol import Symbol
+from gamspy._records_ingestion import SetIngestor
+from gamspy._symbols.base import DomainSymbol
+from gamspy._symbols.equals import equals_set
+from gamspy._symbols.generate_records import generate_records_set
+from gamspy._symbols.pivot import pivot_set
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    import pandas as pd
-
-    from gamspy import Alias, Container
+    from gamspy import Alias, Container, UniverseAlias
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
@@ -415,12 +418,12 @@ class SetMixin:
         [['seattle', 'seattle', 1.0]]
 
         """
-        assert isinstance(self, (gt.Set, gt.Alias))
-        assert isinstance(other, (gt.Set, gt.Alias, str))
+        assert isinstance(self, (gp.Set, gp.Alias))
+        assert isinstance(other, (gp.Set, gp.Alias, str))
         return gp.math.same_as(self, other)
 
 
-class Set(gt.Set, operable.Operable, Symbol, SetMixin):
+class Set(operable.Operable, DomainSymbol, SetMixin):
     """
     Represents a Set symbol in GAMS.
 
@@ -487,54 +490,36 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         *,
         is_singleton: bool = False,
     ):
-        if domain is None:
-            domain = ["*"]
-
-        if isinstance(domain, (gp.Set, gp.Alias, str)):
-            domain = [domain]
-
-        if isinstance(domain, gp.math.Dim):
-            domain = gp.math._generate_dims(container, domain.dims)
-
         # create new symbol object
-        obj = Set.__new__(
-            cls,
-            container,
-            name,
-            domain,
-            is_singleton,
-            records,
-            description=description,
+        obj = object.__new__(cls)
+
+        # legacy gtp attributes
+        ## set private properties directly
+        obj._container = cast(
+            "Container",
+            weakref.proxy(container)
+            if not isinstance(container, weakref.ProxyType)
+            else container,
         )
 
-        # set private properties directly
-        obj._requires_state_check = False
-        obj._container = container
-        container._requires_state_check = True
-        obj._name = name
-        obj._domain = domain
+        obj.name = name
+        obj._domain = obj._normalize_domain(obj._container, domain, default="*")
         obj._domain_forwarding = False
         obj._description = description
-
         obj._records = records
-        obj._modified = True
         obj._is_singleton = is_singleton
-        obj._domain_violations = None
-
-        # typing
         obj._gams_type = GMS_DT_SET
         obj._gams_subtype = 1 if obj.is_singleton else 0
+        obj._container._data.update({name: obj})
 
-        # add to container
-        container.data.update({name: obj})
-
-        # gamspy attributes
+        ## gamspy attributes
+        obj._domain_violations = None
         obj.where = condition.Condition(obj)
         obj._latex_name = name.replace("_", r"\_")
-        obj.container._add_statement(obj)
-        obj._synchronize = True
+        obj._container._add_statement(obj)
         obj._metadata = {}
-        obj._winner = "python"
+        obj._should_load_from_gams = False
+        obj._should_unload_to_gams = False
 
         # miro support
         obj._is_miro_input = False
@@ -571,17 +556,17 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                         (os.getpid(), threading.get_native_id())
                     ]
 
-                symbol = container.data[name]
-
-                if isinstance(symbol, cls):
-                    return symbol
-
-                raise TypeError(
-                    f"Cannot overwrite symbol `{name}` in container"
-                    " because it is not a Set object)"
-                )
+                symbol = container._data[name]
             except KeyError:
                 return object.__new__(cls)
+
+        if isinstance(symbol, cls):
+            return symbol
+
+        raise TypeError(
+            f"Cannot overwrite symbol `{name}` in container"
+            " because it is not a Set object)"
+        )
 
     def __init__(
         self,
@@ -605,25 +590,13 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self._is_miro_symbol = is_miro_input or is_miro_output
         self._domain_violations = None
 
-        self._synchronize = True
-        self._winner = "python"
-
-        # domain handling
-        if domain is None:
-            domain = ["*"]
-
-        if isinstance(domain, (gp.Set, gp.Alias, str)):
-            domain = [domain]
-
-        if isinstance(domain, gp.math.Dim):
-            domain = gp.math._generate_dims(container, domain.dims)  # type: ignore
-
         # does symbol exist
         has_symbol = False
         if isinstance(getattr(self, "container", None), gp.Container):
             has_symbol = True
 
         if has_symbol:
+            domain = self._normalize_domain(self.container, domain, default="*")
             if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
@@ -643,20 +616,14 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 )
 
             # reset some properties
-            self._requires_state_check = True
-            self.container._requires_state_check = True
-            if description != "":
-                self.description = description
-
-            previous_state = self.container._options.miro_protect
-            self.container._options.miro_protect = False
-            self._records = None
-            self._modified = True
+            self._records: pd.DataFrame | None = None
 
             # only set records if records are provided
+            previous_state = self._container._options.miro_protect
+            self._container._options.miro_protect = False
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
-            self.container._options.miro_protect = previous_state
+            self._container._options.miro_protect = previous_state
 
         else:
             if container is None:
@@ -667,57 +634,61 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 except KeyError as e:
                     raise ValidationError("Set requires a container.") from e
 
+            self._container = cast("Container", weakref.proxy(container))
+
             self._assignment: Expression | None = None
 
             if name is not None:
                 name = validation.validate_name(name)
                 if is_miro_input or is_miro_output:
-                    name = name.lower()  # type: ignore
+                    name = name.lower()
             else:
                 name = container._get_symbol_name(prefix="s")
 
+            self.name = name
+            domain = self._normalize_domain(self.container, domain, default="*")
+            self._domain = self._validate_domain(domain)
             self._singleton_check(is_singleton, records, domain)
-            previous_state = container._options.miro_protect
-            container._options.miro_protect = False
-
-            super().__init__(
-                container,
-                name,
-                domain,
-                is_singleton,
-                domain_forwarding=domain_forwarding,
-                description=description,
-                uels_on_axes=uels_on_axes,
-            )
+            self._is_singleton = is_singleton
+            self._domain_forwarding = domain_forwarding
+            self._description = description
+            self._records = None
+            self._gams_type = GMS_DT_SET
+            self._gams_subtype = 1 if self._is_singleton else 0
             self.where = condition.Condition(self)
             self._latex_name = self.name.replace("_", r"\_")
+            self._should_load_from_gams = False
+            self._should_unload_to_gams = False
+            self._container._data.update({name: self})
 
             if is_miro_input:
                 self._already_loaded = False
-                container._miro_input_symbols.append(self.name)
+                self._container._miro_input_symbols.append(self.name)
 
             if is_miro_output:
-                container._miro_output_symbols.append(self.name)
+                self._container._miro_output_symbols.append(self.name)
 
             validation.validate_container(self, self._domain)
-            self.container._add_statement(self)
+            self._container._add_statement(self)
 
+            previous_state = self._container._options.miro_protect
+            self._container._options.miro_protect = False
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
-                if not self._is_miro_symbol:
-                    self._modified = False
-                self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
+                if self._is_miro_symbol:
+                    self._should_unload_to_gams = True
 
-            container._options.miro_protect = previous_state
+                self._container._synch_with_gams()
+
+            self._container._options.miro_protect = previous_state
 
     def _serialize(self) -> dict:
-        info = {
+        info: dict[str, Any] = {
             "_domain_forwarding": self._domain_forwarding,
             "_is_miro_input": self._is_miro_input,
             "_is_miro_output": self._is_miro_output,
             "_metadata": self._metadata,
-            "_synchronize": self._synchronize,
         }
         if self._assignment is not None:
             info["_assignment"] = self._assignment.getDeclaration()
@@ -739,9 +710,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             if elem == "*":
                 new_domain.append(elem)
                 continue
-            new_domain.append(self.container[elem])
+            new_domain.append(self._container[elem.name])
 
-        self.domain = new_domain
+        self._domain = new_domain
 
     def __getitem__(self, indices: IndexType) -> ImplicitSet:
         domain = validation.validate_domain(self, indices)
@@ -762,23 +733,26 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         )
 
         # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
-        if not self.container._in_loop:
+        if not self._container._in_loop:
             statement._validate_definition(utils._unpack(domain))
 
-        self.container._add_statement(statement)
+        self._container._add_statement(statement)
         self._assignment = statement
 
-        self.container._synch_with_gams(gams_to_gamspy=True, load_symbols=[self])
-        self._winner = "gams"
+        self._container._synch_with_gams()
+        self._should_load_from_gams = True
 
     def __repr__(self) -> str:
         return f"Set(name='{self.name}', domain={self.domain})"
+
+    def __hash__(self):
+        return id(self)
 
     def _singleton_check(
         self,
         is_singleton: bool,
         records: SetRecordsType | None,
-        domain: Sequence[Set | Alias | str],
+        domain: Sequence[Set | Alias | UniverseAlias | Literal["*"]],
     ):
         if is_singleton:
             if records is not None and len(records) != 1:
@@ -788,6 +762,155 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 raise ValidationError(
                     f"Length of the domain of the singleton set must be 1 but found {len(domain)}"
                 )
+
+    @property
+    def _attributes(self):
+        return ["element_text"]
+
+    @property
+    def summary(self) -> dict:
+        return {
+            "name": self.name,
+            "description": self.description,
+            "is_singleton": self.is_singleton,
+            "domain": self.domain_names,
+            "domain_type": self.domain_type,
+            "dimension": self.dimension,
+            "number_records": self.number_records,
+        }
+
+    def toList(self, *, include_element_text: bool = False) -> list:
+        """
+        Converts the records of the Set to a Python list.
+
+        Parameters
+        ----------
+        include_element_text : bool, optional
+            If True, includes the element explanatory text in the output. Defaults to False.
+
+        Returns
+        -------
+        list
+            A list of the set elements. If the set has dimension > 1, the elements are returned as tuples.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> i.toList()
+        ['seattle', 'san-diego']
+
+        """
+        from gamspy._symbols.utils import toListSet
+
+        return toListSet(self, include_element_text=include_element_text)
+
+    @property
+    def is_singleton(self) -> bool:
+        return self._is_singleton
+
+    def pivot(
+        self,
+        index: str | list | None = None,
+        columns: str | list | None = None,
+        fill_value: int | float | str | None = None,
+    ) -> pd.DataFrame | None:
+        """
+        Convenience function to pivot records into a new shape (only symbols with >1D can be pivoted).
+        If index is None then it is set to dimensions [0..dimension-1]. If columns is None then it is
+        set to the last dimension. Missing values in the pivot will take the value provided by fill_value.
+
+        Parameters
+        ----------
+        index : str | list | None, optional
+            Column(s) to use to make new frame's index.
+        columns : str | list | None, optional
+            Column(s) to use to make new frame's columns.
+        fill_value : int | float | str | None, optional
+            Value to use for missing values.
+
+        Returns
+        -------
+        pd.DataFrame | None
+            The pivoted DataFrame representing the set records, or None if there are no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> j = gp.Set(m, name="j", records=["new-york", "chicago"])
+        >>> # Pivot requires a symbol with dimension > 1
+        >>> ij = gp.Set(m, name="ij", domain=[i, j], records=[("seattle", "new-york")])
+        >>> df = ij.pivot()
+
+        """
+        return pivot_set(self, index, columns, fill_value)
+
+    def generateRecords(
+        self,
+        density: int | float | list | None = None,
+        seed: int | None = None,
+    ) -> None:
+        """
+        Automatically generates records for the Set based on a specified density.
+
+        Parameters
+        ----------
+        density : int | float | list | None, optional
+            The target density for the generated records. Can be a single numeric value or a list. Provinig a list
+            allows users to specify a density per symbol dimension.
+        seed : int | None, optional
+            A random seed to ensure reproducibility of the generated records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=range(10))
+        >>> a = gp.Parameter(m, name="a", domain=i)
+        >>> # Generate records with 50% density
+        >>> a.generateRecords(density=0.5, seed=42)
+
+        """
+        generate_records_set(self, density, seed)
+
+    def equals(
+        self,
+        other: Set | Alias,
+        *,
+        check_element_text: bool = True,
+        check_meta_data: bool = True,
+    ) -> bool:
+        """
+        Compares this Set with another Set or Alias for equality.
+
+        Parameters
+        ----------
+        other : Set | Alias
+            The other Set or Alias object to compare against.
+        check_element_text : bool, optional
+            If True, includes the element explanatory text in the equality check. Defaults to True.
+        check_meta_data : bool, optional
+            If True, includes symbol metadata in the equality check. Defaults to True.
+
+        Returns
+        -------
+        bool
+            True if the sets are considered equal based on the given parameters, False otherwise.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> j = gp.Set(m, name="j", records=["seattle", "san-diego"])
+        >>> i.equals(j, check_meta_data=False)
+        True
+
+        """
+        return equals_set(self, other, check_element_text, check_meta_data)
 
     @property
     def records(self) -> pd.DataFrame | None:
@@ -809,16 +932,17 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         [['seattle', ''], ['san-diego', '']]
 
         """
+        if self._should_load_from_gams:
+            self._load_from_gams()
+
         return self._records
 
     @records.setter
     def records(self, records: pd.DataFrame | None):
-        import pandas as pd
-
         if (
             hasattr(self, "_is_miro_input")
             and self._is_miro_input
-            and self.container._options.miro_protect
+            and self._container._options.miro_protect
         ):
             raise ValidationError(
                 "Cannot assign to protected miro input symbols. `miro_protect`"
@@ -829,38 +953,17 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         if records is not None and not isinstance(records, pd.DataFrame):
             raise TypeError("Symbol 'records' must be type DataFrame")
 
-        # set records
         self._records = records
+        self._should_unload_to_gams = True
+        self._handle_domain_forwarding()
 
-        self._requires_state_check = True
-        self._modified = True
+    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+        SetIngestor(self).ingest(records, uels_on_axes=uels_on_axes)
+        self._handle_domain_violations()
 
-        self.container._requires_state_check = True
-        self.container.modified = True
-
-        if self._records is not None and self._domain_forwarding:
-            self._domainForwarding()
-
-            # reset state check flags for all symbols in the container
-            for symbol in self.container.data.values():
-                symbol._requires_state_check = True
-
-    def __hash__(self):
-        return id(self)
-
-    def _setRecords(
-        self, records: SetRecordsType, *, uels_on_axes: bool = False
+    def setRecords(
+        self, records: SetRecordsType | None, uels_on_axes: bool = False
     ) -> None:
-        super().setRecords(records, uels_on_axes)
-
-        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
-            if self.hasDomainViolations():
-                self._domain_violations = self.getDomainViolations()
-                self.dropDomainViolations()
-            else:
-                self._domain_violations = None
-
-    def setRecords(self, records: SetRecordsType, uels_on_axes: bool = False) -> None:
         """
         Sets the records (elements) of the Set.
 
@@ -892,13 +995,13 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         """
         if records is None:
-            self.container._add_statement(f"option clear={self.name};")
-            self.container._synch_with_gams(gams_to_gamspy=True)
+            self._container._add_statement(f"option clear={self.name};")
+            self._container._synch_with_gams()
+            self._records = None
             return
 
         self._setRecords(records, uels_on_axes=uels_on_axes)
-        self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
-        self._winner = "python"
+        self._container._synch_with_gams()
 
     def gamsRepr(self) -> str:
         """

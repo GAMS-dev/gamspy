@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
+import gamspy as gp
 import gamspy.math as gp_math
 from gamspy import (
     Alias,
@@ -510,17 +511,6 @@ def test_uels_on_axes(data):
     assert i.records["uni"].tolist() == ["a", "b"]
 
 
-def test_expert_sync(data):
-    m, *_ = data
-    m = Container()
-    i = Set(m, "i", records=["i1"])
-    i.synchronize = False
-    i["i2"] = True
-    assert i.records.uni.tolist() == ["i1"]
-    i.synchronize = True
-    assert i.records.uni.tolist() == ["i1", "i2"]
-
-
 def test_singleton():
     m = Container()
     s = Set(m, "s", is_singleton=True)
@@ -689,3 +679,113 @@ def test_alternative_operation_syntax():
     expr = x.sor(i, j)
     expr2 = Sor((i, j), x[i, j])
     assert expr.gamsRepr() == expr2.gamsRepr()
+
+
+def test_set_tolist():
+    m = gp.Container()
+
+    # 1D Set
+    i = gp.Set(m, "i", records=[("seattle", "City in WA"), ("san-diego", "City in CA")])
+    assert i.toList() == ["seattle", "san-diego"]
+    assert i.toList(include_element_text=True) == [
+        ("seattle", "City in WA"),
+        ("san-diego", "City in CA"),
+    ]
+
+    # 2D Set
+    j = gp.Set(m, "j", records=["A", "B"])
+    ij = gp.Set(m, "ij", domain=[i, j], records=[("seattle", "A"), ("san-diego", "B")])
+    assert ij.toList() == [("seattle", "A"), ("san-diego", "B")]
+
+    # Empty Set
+    empty_set = gp.Set(m, "empty_set")
+    assert empty_set.toList() == []
+
+
+def test_set_setrecords_list():
+    m = gp.Container()
+
+    # 1D Set from list
+    i = gp.Set(m, "i")
+    i.setRecords(["A", "B", "C"])
+    assert i.toList() == ["A", "B", "C"]
+
+    # 1D Set with explanatory text from list of tuples
+    j = gp.Set(m, "j")
+    j.setRecords([("A", "Text A"), ("B", "Text B")])
+    assert j.toList(include_element_text=True) == [("A", "Text A"), ("B", "Text B")]
+
+    # 2D Set from list of tuples
+    ij = gp.Set(m, "ij", domain=[i, j])
+    ij.setRecords([("A", "A"), ("B", "B")])
+    assert ij.toList() == [("A", "A"), ("B", "B")]
+
+
+def test_set_setrecords_dataframe():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+    j = gp.Set(m, "j", records=["X", "Y"])
+
+    # Set from DataFrame
+    df = pd.DataFrame([["A", "X"], ["B", "Y"]])
+    ij = gp.Set(m, "ij", domain=[i, j])
+    ij.setRecords(df)
+    assert ij.toList() == [("A", "X"), ("B", "Y")]
+
+
+def test_set_setrecords_clear():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+    assert len(i) == 2
+
+    # Clearing records with None
+    i.setRecords(None)
+    assert i.records is None
+    assert len(i) == 0
+
+
+class UnconvertibleType:
+    """A mock object designed to fail pandas DataFrame conversion."""
+
+    @property
+    def __dict__(self):
+        raise ValueError("Cannot convert me")
+
+
+def test_set_setrecords_edge_cases():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+    j = gp.Set(m, "j", records=["X", "Y"])
+    ij = gp.Set(m, "ij", domain=[i, j])
+
+    # Sets cannot be initialized with integers/floats
+    with pytest.raises(
+        TypeError, match="Sets cannot be initialized with integers/floats"
+    ):
+        i.setRecords(10)
+
+    # uels_on_axes=True requires boolean columns
+    df_not_bool = pd.DataFrame({"A": [1, 2], "B": [3, 4]}, index=["X", "Y"])
+    with pytest.raises(
+        TypeError, match="All columns must be type bool when `uels_on_axes=True`"
+    ):
+        ij.setRecords(df_not_bool, uels_on_axes=True)
+
+    # Series for non-1D set without uels on axes
+    with pytest.raises(
+        ValueError,
+        match="Dimensionality of data \\(1\\) is inconsistent with domain specification",
+    ):
+        ij.setRecords(pd.Series(["A", "B"]))
+
+    # Series with uels_on_axes dimensionality check
+    s = pd.Series([True, True], index=["A", "B"])
+    with pytest.raises(
+        ValueError,
+        match="Dimensionality of data is inconsistent with domain specification",
+    ):
+        ij.setRecords(s, uels_on_axes=True)
+
+    # Unconvertible type
+    with pytest.raises(TypeError, match="Could not convert to pandas DataFrame"):
+        i.setRecords(UnconvertibleType())

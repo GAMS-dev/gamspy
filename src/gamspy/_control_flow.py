@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Literal
 
 import gamspy as gp
+import gamspy._gdx as gdxio
 from gamspy._algebra.condition import Condition
 from gamspy._algebra.domain import Domain
 from gamspy._symbols.implicits import ImplicitSet
@@ -182,7 +183,12 @@ class Loop:
 
         self.container._add_statement(");")
         if self.container._in_loop == 0:  # Run only in the most outer loop
-            self.container._synch_with_gams(gams_to_gamspy=True)
+            self.container._synch_with_gams()
+            symbol_names = gdxio._get_symbol_names_from_gdx(
+                self.container.system_directory, self.container._gdx_out
+            )
+            for name in symbol_names:
+                self.container._data[name]._should_load_from_gams = True
 
 
 class For:
@@ -367,7 +373,12 @@ class For:
 
         self.container._add_statement(");")
         if self.container._in_loop == 0:  # Run only in the most outer loop
-            self.container._synch_with_gams(gams_to_gamspy=True)
+            self.container._synch_with_gams()
+            symbol_names = gdxio._get_symbol_names_from_gdx(
+                self.container.system_directory, self.container._gdx_out
+            )
+            for name in symbol_names:
+                self.container._data[name]._should_load_from_gams = True
 
 
 class If:
@@ -410,6 +421,12 @@ class If:
         self, condition: Expression | Condition | Operation | MathOp | Parameter
     ):
         self.condition = condition
+
+        if not isinstance(condition.container, gp.Container):
+            raise ValidationError(
+                f"Could not find the container in the given condition `{condition}`. Hence, gp.If operation is not possible."
+            )
+
         self.container = condition.container
 
     def __enter__(self):

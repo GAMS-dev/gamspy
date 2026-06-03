@@ -820,6 +820,7 @@ def test_non_init():
         capture_output=True,
         text=True,
     )
+    print(process.stdout)
     assert process.returncode == 0, process.stderr
 
 

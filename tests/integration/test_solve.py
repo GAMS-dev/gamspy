@@ -975,9 +975,9 @@ def test_solve(data, tmp_path):
     with pytest.raises(ValidationError):
         transport.solve(None, None, None, None, None, "bla")
 
-    from gamspy._model import ATTRIBUTE_MAP
+    from gamspy._internals import MODEL_ATTRIBUTE_MAP
 
-    for attr_name in ATTRIBUTE_MAP.values():
+    for attr_name in MODEL_ATTRIBUTE_MAP.values():
         assert hasattr(transport, attr_name)
 
         # Make sure model attributes are not in the container
@@ -1232,7 +1232,7 @@ def test_solver_options(data):
 
         transport.solve(
             solver="conopt",
-            options=Options(log_file=log_path),
+            options=Options(log_file=log_path, solve_link_type="disk"),
             solver_options=options_path,
         )
 
@@ -1811,54 +1811,6 @@ def test_threading_with_ctx():
             assert math.isclose(expected, objective)
 
     assert gp._ctx_managers == {}
-
-
-def test_selective_loading(data):
-    m, canning_plants, markets, capacities, demands, distances = data
-    i = Set(m, name="i", records=canning_plants)
-    j = Set(m, name="j", records=markets)
-    a = Parameter(m, name="a", domain=[i], records=capacities)
-    b = Parameter(m, name="b", domain=[j], records=demands)
-    d = Parameter(m, name="d", domain=[i, j], records=distances)
-    c = Parameter(m, name="c", domain=[i, j])
-    c[i, j] = 90 * d[i, j] / 1000
-
-    x = Variable(m, name="x", domain=[i, j], type="Positive")
-    z = Variable(m, name="z")
-
-    cost = Equation(m, name="cost")
-    supply = Equation(m, name="supply", domain=[i])
-    demand = Equation(m, name="demand", domain=[j])
-
-    cost[...] = Sum((i, j), c[i, j] * x[i, j]) == z
-    supply[i] = Sum(j, x[i, j]) <= a[i]
-    demand[j] = Sum(i, x[i, j]) >= b[j]
-
-    transport = Model(
-        m,
-        name="transport",
-        equations=[cost, supply, demand],
-        problem="LP",
-        sense="min",
-        objective=z,
-    )
-    with pytest.raises(ValidationError):
-        transport.solve(load_symbols=["x"])
-
-    with pytest.raises(ValidationError):
-        transport.solve(load_symbols=x)
-
-    transport.solve(load_symbols=[])
-
-    assert x.records is None
-    assert supply.records is None
-    assert transport.objective_value == 153.675
-
-    transport.solve(load_symbols=[x])
-
-    assert x.records is not None
-    assert supply.records is None
-    assert transport.objective_value == 153.675
 
 
 def test_execution_error(data):

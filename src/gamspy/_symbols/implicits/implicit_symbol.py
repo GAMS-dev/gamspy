@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, no_type_check
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -15,11 +15,12 @@ if TYPE_CHECKING:
         ImplicitSet,
         ImplicitVariable,
     )
+    from gamspy._types import ImplicitSymbolType
 
 
 class ImplicitSymbol(ABC):
     def __init__(
-        self,
+        self: ImplicitSymbolType,
         parent,
         name,
         domain,
@@ -53,7 +54,7 @@ class ImplicitSymbol(ABC):
     def __bool__(self):
         raise ValidationError("A symbol cannot be used as a truth value.")
 
-    def __len__(self):
+    def __len__(self: ImplicitSymbolType) -> int:
         if self.records is not None:
             return len(self.records.index)
 
@@ -89,6 +90,7 @@ class ImplicitSymbol(ABC):
         scalars = sorted(scalars, key=lambda k: k[0])
         self._scalar_domains = scalars
 
+    @no_type_check
     def fix_permutation(self):
         numbers_pos = list(
             zip(self.permutation, range(len(self.permutation)), strict=False)

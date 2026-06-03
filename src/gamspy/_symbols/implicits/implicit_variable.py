@@ -224,7 +224,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             domain.insert(i, d)
 
         temp_param[domain] = self.l
-        del self.container.data[temp_name]
+        del self.container._data[temp_name]
 
         recs = temp_param.records
         if recs is not None:

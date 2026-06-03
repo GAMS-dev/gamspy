@@ -3,13 +3,13 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 import gamspy as gp
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-
-    import numpy as np
 
 
 def _encode_infinity(x: np.ndarray) -> np.ndarray:
@@ -18,8 +18,6 @@ def _encode_infinity(x: np.ndarray) -> np.ndarray:
     - Replace -np.inf with 0 - 1j.
     - Replace np.inf with 0 + 1j.
     """
-    import numpy as np
-
     x = np.where(x == -np.inf, 0 - 1j, x)
     x = np.where(x == np.inf, 0 + 1j, x)
     return x
@@ -31,8 +29,6 @@ def _decode_complex_array(z: np.ndarray) -> np.ndarray:
     - Replace 0 - 1j -> -np.inf
     - Replace 0 + 1j -> np.inf
     """
-    import numpy as np
-
     real = z.real.copy()
     real[z.imag > 0] = np.inf
     real[z.imag < 0] = -np.inf

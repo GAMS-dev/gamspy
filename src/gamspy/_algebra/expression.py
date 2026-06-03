@@ -13,9 +13,9 @@ import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._config import get_option
 from gamspy._extrinsic import ExtrinsicFunction
+from gamspy._symbols.base import BaseSymbol
 from gamspy._symbols.implicits import ImplicitSet
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
-from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import GamspyException, ValidationError
 from gamspy.math.misc import MathOp
 
@@ -337,6 +337,8 @@ class Expression(operable.Operable):
             right._fix_equalities()
 
         self._representation: str | None = None
+        self._left_domain: list = []
+        self._right_domain: list = []
         self._create_domain()
         left_control = getattr(left, "controlled_domain", [])
         right_control = getattr(right, "controlled_domain", [])
@@ -344,9 +346,9 @@ class Expression(operable.Operable):
             {*left_control, *right_control}
         )
         self.container: Container | None = None
-        if hasattr(left, "container") and left.container is not None:  # type: ignore
+        if hasattr(left, "container") and left.container is not None:
             self.container = left.container  # type: ignore
-        elif hasattr(right, "container") and right.container is not None:  # type: ignore
+        elif hasattr(right, "container") and right.container is not None:
             self.container = right.container  # type: ignore
 
         self.where = condition.Condition(self)
@@ -371,7 +373,7 @@ class Expression(operable.Operable):
             elif isinstance(loc, domain.Domain):
                 result_domain = loc.sets
             else:
-                result_domain = loc.domain
+                result_domain = loc.domain  # ty: ignore[unresolved-attribute]
 
             setattr(self, result, result_domain)
 
@@ -419,8 +421,8 @@ class Expression(operable.Operable):
                 else:
                     right_domain[pos] = s
 
-        left = self.left[left_domain] if left_domain else self.left
-        right = self.right[right_domain] if right_domain else self.right
+        left = self.left[left_domain] if left_domain else self.left  # ty: ignore[not-subscriptable]
+        right = self.right[right_domain] if right_domain else self.right  # ty: ignore
 
         return Expression(left, self.operator, right)
 
@@ -454,7 +456,7 @@ class Expression(operable.Operable):
             self.container, temp_name, self.domain
         )
         temp_param[...] = self
-        del self.container.data[temp_name]
+        del self.container._data[temp_name]
         return temp_param.records
 
     def toValue(self) -> float | None:
@@ -615,7 +617,7 @@ class Expression(operable.Operable):
                     stack.append(root.right)
 
                 stack.append(root)
-                root = root.left if hasattr(root, "left") else None  # type: ignore
+                root = root.left if hasattr(root, "left") else None
 
             if len(stack) == 0:
                 break
@@ -647,11 +649,11 @@ class Expression(operable.Operable):
         while True:
             if node is not None:
                 stack.append(node)
-                node = getattr(node, "left", None)  # type: ignore
+                node = getattr(node, "left", None)
             elif stack:
                 node = stack.pop()
 
-                if isinstance(node, Symbol):
+                if isinstance(node, BaseSymbol):
                     if node.name not in seen:
                         if type(node) is gp_syms.Alias:
                             seen.add(node.alias_with.name)
@@ -707,7 +709,7 @@ class Expression(operable.Operable):
         while True:
             if node is not None:
                 stack.append(node)
-                node = getattr(node, "left", None)  # type: ignore
+                node = getattr(node, "left", None)
             elif stack:
                 node = stack.pop()
 
@@ -747,7 +749,7 @@ class Expression(operable.Operable):
         while True:
             if node is not None:
                 stack.append(node)
-                node = getattr(node, "left", None)  # type: ignore
+                node = getattr(node, "left", None)
             elif stack:
                 node = stack.pop()
 
@@ -758,7 +760,7 @@ class Expression(operable.Operable):
                         if hasattr(elem, "is_singleton") and elem.is_singleton:
                             continue
 
-                        if isinstance(elem, Symbol) and elem not in control_stack:
+                        if isinstance(elem, BaseSymbol) and elem not in control_stack:
                             raise ValidationError(
                                 f"Uncontrolled set `{elem}` entered as constant!"
                             )

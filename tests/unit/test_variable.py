@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import platform
+import sys
+
+import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy as gp
 import gamspy._symbols.implicits as implicits
 from gamspy import (
     Container,
@@ -17,6 +22,7 @@ from gamspy import (
     Smax,
     Smin,
     Sor,
+    SpecialValues,
     Sum,
     Variable,
     VariableType,
@@ -291,7 +297,6 @@ def test_implicit_variable(data):
     i = Set(m, "i", records=[f"i{i}" for i in range(10)])
     a = Variable(m, "a", "free", [i])
     a.generateRecords()
-    assert a.isValid()
 
     expression = -a[i] * 5
     assert expression.gamsRepr() == "(-a(i)) * 5"
@@ -357,19 +362,6 @@ def test_uels_on_axes(data):
     s = pd.Series(index=["a", "b", "c"], data=[i + 1 for i in range(3)])
     v = Variable(m, "v", domain=["*"], records=s, uels_on_axes=True)
     assert v.records.level.tolist() == [1, 2, 3]
-
-
-def test_expert_sync(data):
-    m, *_ = data
-    m = Container()
-    i = Set(m, "i", records=["i1", "i2"])
-    v = Variable(m, "v", domain=i)
-    v.l = 5
-    v.synchronize = False
-    v.l = v.l * 5
-    assert v.records.level.tolist() == [5.0, 5.0]
-    v.synchronize = True
-    assert v.records.level.tolist() == [25.0, 25.0]
 
 
 def test_variable_listing(data):
@@ -788,3 +780,398 @@ def test_alternative_operation_syntax():
     expr = x.l[i, j].sor(i, j)
     expr2 = Sor((i, j), x.l[i, j])
     assert expr.gamsRepr() == expr2.gamsRepr()
+
+
+def test_variable_tolist():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["seattle", "san-diego"])
+    v = gp.Variable(m, "v", domain=[i])
+
+    # Setting records using np.array updates the 'level' by default
+    v.setRecords(np.array([1.0, 2.0]))
+
+    # Default columns="level"
+    assert v.toList() == [("seattle", 1.0), ("san-diego", 2.0)]
+
+    # Multiple columns (level and marginal)
+    # Default marginal values for variables are 0.0 unless specified otherwise
+    assert v.toList(columns=["level", "marginal"]) == [
+        ("seattle", 1.0, 0.0),
+        ("san-diego", 2.0, 0.0),
+    ]
+
+    # Empty Variable
+    v_empty = gp.Variable(m, "v_empty", domain=[i])
+    assert v_empty.toList() == []
+
+
+def test_variable_equation_tovalue():
+    m = gp.Container()
+
+    # Valid scalar Variable
+    v = gp.Variable(m, "v")
+    v.l[...] = 100.0
+    v.m[...] = 5.0
+    assert v.toValue() == 100.0  # Defaults to "level"
+    assert v.toValue(column="level") == 100.0
+    assert v.toValue(column="marginal") == 5.0
+
+    # Valid scalar Equation
+    eq = gp.Equation(m, "eq")
+    eq.l[...] = -50.0
+    assert eq.toValue() == -50.0
+
+    # Invalid: Non-scalar Variable
+    i = gp.Set(m, "i", records=["A", "B"])
+    v_1d = gp.Variable(m, "v_1d", domain=[i])
+    with pytest.raises(TypeError):
+        v_1d.toValue()
+
+    # Invalid: Bad column
+    with pytest.raises(TypeError):
+        v.toValue(column="invalid_column")
+
+
+def test_tolist_invalid_columns():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A"])
+    v = gp.Variable(m, "v", domain=[i])
+    v.setRecords(np.array([1.0]))
+
+    with pytest.raises(TypeError):
+        # Using an invalid attribute string
+        v.toList(columns="invalid_attr")
+
+    with pytest.raises(TypeError):
+        # Passing incorrect type to columns
+        v.toList(columns=123)
+
+
+def test_variable_equation_todict():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+    j = gp.Set(m, "j", records=["X", "Y"])
+
+    # 1D Variable
+    v = gp.Variable(m, "v", domain=[i])
+    v.setRecords(np.array([1.5, 2.5]))
+
+    # Natural Orient, Single Column
+    assert v.toDict() == {"A": 1.5, "B": 2.5}
+    assert v.toDict(columns="level") == {"A": 1.5, "B": 2.5}
+
+    # Natural Orient, Multiple Columns
+    dict_multi = v.toDict(columns=["level", "marginal"])
+    assert dict_multi == {
+        "A": {"level": 1.5, "marginal": 0.0},
+        "B": {"level": 2.5, "marginal": 0.0},
+    }
+
+    # Columns Orient
+    dict_cols = v.toDict(columns="level", orient="columns")
+    assert "i" in dict_cols and "level" in dict_cols
+    assert list(dict_cols["level"].values()) == [1.5, 2.5]
+
+    # 2D Equation
+    eq = gp.Equation(m, "eq", domain=[i, j])
+    # Setting level value for specific records
+    eq.l["A", "X"] = 10.0
+    eq.l["B", "Y"] = 20.0
+
+    eq_dict = eq.toDict()
+    assert ("A", "X") in eq_dict and ("B", "Y") in eq_dict
+    assert eq_dict[("A", "X")] == 10.0
+    assert eq_dict[("B", "Y")] == 20.0
+
+    # Invalid: Scalar
+    v_scalar = gp.Variable(m, "v_scalar")
+    with pytest.raises(TypeError):
+        v_scalar.toDict()
+
+    # Invalid: Bad column
+    with pytest.raises(TypeError):
+        v.toDict(columns="invalid_column")
+
+
+def test_variable_setrecords_scalar():
+    m = gp.Container()
+    v = gp.Variable(m, "v")
+
+    # Set scalar Variable using float/int
+    v.setRecords(100.0)
+    assert v.toValue() == 100.0
+
+    v.setRecords(np.array(50.0))
+    assert v.toValue() == 50.0
+
+
+def test_variable_setrecords_array():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+    v = gp.Variable(m, "v", domain=[i])
+
+    # 1D array updates level
+    v.setRecords(np.array([10.0, 20.0]))
+    assert v.toList() == [("A", 10.0), ("B", 20.0)]
+
+
+def test_variable_setrecords_dataframe():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+    v = gp.Variable(m, "v", domain=[i])
+
+    # DataFrame format for Variables requires explicit column names for attributes
+    # so the ingestor knows which attribute (e.g., 'level') is being populated.
+    df = pd.DataFrame({"i": ["A", "B"], "level": [5.0, 10.0]})
+
+    v.setRecords(df)
+    assert v.toList() == [("A", 5.0), ("B", 10.0)]
+
+
+def test_variable_setrecords_clear():
+    m = gp.Container()
+    v = gp.Variable(m, "v")
+    v.setRecords(10.0)
+    assert v.records is not None
+
+    # Clear
+    v.setRecords(None)
+    assert v.records is None
+
+
+class UnconvertibleType:
+    """A mock object designed to fail pandas DataFrame conversion."""
+
+    @property
+    def __dict__(self):
+        raise ValueError("Cannot convert me")
+
+
+def test_variable_setrecords_edge_cases():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+    v_scalar = gp.Variable(m, "v_scalar")
+    v_1d = gp.Variable(m, "v_1d", domain=[i])
+
+    # Pass scalar to non-scalar variable
+    with pytest.raises(
+        ValueError, match="Attempting to set a scalar value, but symbol is not scalar"
+    ):
+        v_1d.setRecords(10.0)
+
+    # Set scalar Variable with dataframe containing multiple rows
+    df_multi = pd.DataFrame({"level": [1.0, 2.0]})
+    with pytest.raises(
+        ValueError, match="Attempting to set multiple records for a scalar symbol"
+    ):
+        v_scalar.setRecords(df_multi)
+
+    # Dict with dimension mismatch
+    with pytest.raises(
+        ValueError, match="Dimensionality mismatch between arrays and symbol"
+    ):
+        v_1d.setRecords({"level": np.array([[1.0, 2.0]])})
+
+    # Dict with shape mismatch between attributes
+    with pytest.raises(ValueError, match="Arrays passed do not have the same shape"):
+        v_1d.setRecords({"level": np.array([1.0, 2.0]), "marginal": np.array([1.0])})
+
+    # Dict with shape mismatch against domains
+    with pytest.raises(
+        ValueError, match="Shape mismatch between numpy arrays and domains"
+    ):
+        v_1d.setRecords({"level": np.array([1.0, 2.0, 3.0])})
+
+    # Series size > 1 for scalar variable
+    with pytest.raises(
+        ValueError,
+        match=r"pandas.Series must have size exactly = 1 for a scalar symbol",
+    ):
+        v_scalar.setRecords(pd.Series([1.0, 2.0]))
+
+    # Series for non-scalar with dimensionality mismatch
+    with pytest.raises(
+        ValueError,
+        match="Dimensionality of table is inconsistent with domain specification",
+    ):
+        # Single index series going to a 2D symbol
+        v_2d = gp.Variable(m, "v_2d", domain=[i, i])
+        v_2d.setRecords(pd.Series([1.0, 2.0], index=["A", "B"]), uels_on_axes=True)
+
+    # DataFrame dimensionality mismatch
+    df_wrong = pd.DataFrame({"i": ["A", "B"], "j": ["X", "Y"], "level": [1.0, 2.0]})
+    with pytest.raises(
+        ValueError,
+        match="Dimensionality of records is inconsistent with domain specification",
+    ):
+        v_1d.setRecords(df_wrong)
+
+    # DataFrame table with MultiIndex containing attributes in multiple indexes
+    mi = pd.MultiIndex.from_tuples([("level", "marginal"), ("lower", "upper")])
+    df_bad_mi = pd.DataFrame(index=mi, columns=["A", "B"])
+    with pytest.raises(ValueError, match="Attributes detected in more than one index"):
+        v_1d.setRecords(df_bad_mi, uels_on_axes=True)
+
+    # Unconvertible type
+    with pytest.raises(TypeError, match="Could not convert to pandas DataFrame"):
+        v_1d.setRecords(UnconvertibleType())
+
+
+def test_variable_drop_methods():
+    m = Container()
+    i = Set(m, "i", records=["1", "2", "3", "4", "5"])
+    v = Variable(m, "v", domain=[i])
+
+    # A free variable defaults are: level=0.0, marginal=0.0, lower=-inf, upper=inf, scale=1.0
+    def get_test_records():
+        return pd.DataFrame(
+            [
+                ["1", SpecialValues.NA, 0.0, -float("inf"), float("inf"), 1.0],
+                ["2", SpecialValues.UNDEF, 0.0, -float("inf"), float("inf"), 1.0],
+                ["3", SpecialValues.EPS, 0.0, -float("inf"), float("inf"), 1.0],
+                ["4", float("nan"), 0.0, -float("inf"), float("inf"), 1.0],
+                ["5", 0.0, 0.0, -float("inf"), float("inf"), 1.0],  # Default values
+            ],
+            columns=["i", "level", "marginal", "lower", "upper", "scale"],
+        )
+
+    # Test dropNA
+    v.setRecords(get_test_records())
+    v.dropNA()
+    assert "1" not in v.records["i"].values
+
+    # Test dropUndef
+    v.setRecords(get_test_records())
+    v.dropUndef()
+    assert "2" not in v.records["i"].values
+    # Note: UNDEF also evaluates as NaN natively, so it drops "4" as well
+    assert "4" not in v.records["i"].values
+
+    # Test dropEps
+    v.setRecords(get_test_records())
+    v.dropEps()
+    assert "3" not in v.records["i"].values
+
+    # Test dropMissing (pandas isna catches NA, UNDEF, and NaN)
+    v.setRecords(get_test_records())
+    v.dropMissing()
+    assert "4" not in v.records["i"].values
+
+    # Test dropDefaults
+    v.setRecords(get_test_records())
+    v.dropDefaults()
+    assert "5" not in v.records["i"].values
+
+    # Ensure no errors occur when calling drop methods on a variable with None records
+    v2 = Variable(m, "v2")
+    v2.dropNA()
+    v2.dropUndef()
+    v2.dropEps()
+    v2.dropMissing()
+    v2.dropDefaults()
+    assert v2.records is None
+
+
+@pytest.mark.skipif(
+    not (platform.system() == "Linux" and sys.version_info.minor == 14),
+    reason="Test only for linux.",
+)
+def test_toSparseCoo():
+    from scipy.sparse import coo_matrix
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+    j = gp.Set(m, "j", records=["X", "Y"])
+
+    # 2D Variable
+    v = gp.Variable(m, "v", domain=[i, j])
+
+    arr_2d = np.array([[1.5, 0.0], [0.0, 2.5]])
+    v.setRecords(arr_2d)
+
+    # Test column="level" (default)
+    mat_level = v.toSparseCoo(column="level")
+    assert isinstance(mat_level, coo_matrix)
+    assert mat_level.shape == (2, 2)
+    assert np.array_equal(mat_level.toarray(), arr_2d)
+
+    # Test column="marginal" (should be default 0.0)
+    mat_marginal = v.toSparseCoo(column="marginal")
+    assert np.array_equal(mat_marginal.toarray(), np.zeros((2, 2)))
+
+    # 1D Equation
+    eq = gp.Equation(m, "eq", domain=[i])
+    eq.setRecords(np.array([10.0, -5.0]))
+    mat_eq = eq.toSparseCoo()
+    assert mat_eq.shape == (1, 2)
+    assert np.array_equal(mat_eq.toarray(), np.array([[10.0, -5.0]]))
+
+    # Scalar Equation
+    eq_scalar = gp.Equation(m, "eq_scalar")
+    eq_scalar.setRecords(-10.0)
+    assert eq_scalar.toSparseCoo().toarray()[0, 0] == -10.0
+
+    # Invalid: Type Check
+    with pytest.raises(TypeError, match="Argument 'column' must be type str"):
+        v.toSparseCoo(column=123)
+
+    # Invalid: Bad column string
+    with pytest.raises(TypeError, match="must be one of the following"):
+        v.toSparseCoo(column="invalid_col")
+
+    # Invalid: >2D Variable/Equation
+    k = gp.Set(m, "k", records=["1"])
+    v_3d = gp.Variable(m, "v_3d", domain=[i, j, k])
+    v_3d.setRecords(np.zeros((2, 2, 1)))
+
+    with pytest.raises(
+        ValidationError, match="only available for data that has dimension <= 2"
+    ):
+        v_3d.toSparseCoo()
+
+
+def test_toDense():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+    j = gp.Set(m, "j", records=["X", "Y"])
+
+    # 0D Variable (Scalar)
+    v_scalar = gp.Variable(m, "v_scalar")
+    v_scalar.setRecords(100.0)
+    arr_v_scalar = v_scalar.toDense()
+    assert isinstance(arr_v_scalar, (float, np.floating))
+    assert arr_v_scalar.item() == 100.0
+
+    # 2D Variable
+    v = gp.Variable(m, "v", domain=[i, j])
+    arr_2d = np.array([[1.5, 0.0], [0.0, 2.5]])
+    v.setRecords(arr_2d)
+
+    # Test column="level" (default)
+    arr_level = v.toDense(column="level")
+    assert isinstance(arr_level, np.ndarray)
+    assert arr_level.shape == (2, 2)
+    assert np.array_equal(arr_level, arr_2d)
+
+    # Test column="marginal" (should be default 0.0)
+    arr_marginal = v.toDense(column="marginal")
+    assert np.array_equal(arr_marginal, np.zeros((2, 2)))
+
+    # 1D Equation
+    eq = gp.Equation(m, "eq", domain=[i])
+    eq.setRecords(np.array([10.0, -5.0]))
+    arr_eq = eq.toDense()
+    assert arr_eq.shape == (2,)
+    assert np.array_equal(arr_eq, np.array([10.0, -5.0]))
+
+    # Empty Equation
+    eq_empty = gp.Equation(m, "eq_empty", domain=[i])
+    assert eq_empty.toDense() is None
+
+    # Invalid: Type Check
+    with pytest.raises(TypeError, match="Argument 'column' must be type str"):
+        v.toDense(column=123)
+
+    # Invalid: Bad column string
+    with pytest.raises(TypeError, match="must be one of the following"):
+        v.toDense(column="invalid_col")

@@ -15,13 +15,7 @@ if TYPE_CHECKING:
     from sklearn.ensemble import RandomForestRegressor
     from sklearn.tree import DecisionTreeRegressor
 
-    from gamspy import (
-        Alias,
-        Equation,
-        Parameter,
-        Set,
-        Variable,
-    )
+    from gamspy._types import SymbolType
 
 
 class RandomForest:
@@ -139,11 +133,10 @@ class RandomForest:
         M: float | None = None,
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         rf_out_list: list[gp.Variable] = []
-        rf_eqn_list: list[gp.Equation] = []
         previous_value = gp.get_option("DOMAIN_VALIDATION")
         gp.set_options({"DOMAIN_VALIDATION": 0})
 
-        set_records_total: dict[Set | Alias | Parameter | Variable | Equation, Any] = {}
+        set_records_total: dict[SymbolType, Any] = {}
 
         results = (
             regression_tree._yield_call(input, M)
@@ -179,7 +172,7 @@ class RandomForest:
             description="predicted out times number of estimators should be equal to the random forest out",
         )
 
-        self.container._synch_with_gams(gams_to_gamspy=True)
+        self.container._synch_with_gams()
         rf_eqn[...] = len(self._list_of_trees) * out == sum(rf_out_list)
         rf_eqn_list.append(rf_eqn)
         gp.set_options({"DOMAIN_VALIDATION": previous_value})

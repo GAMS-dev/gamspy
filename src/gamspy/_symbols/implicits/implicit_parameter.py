@@ -17,13 +17,7 @@ from gamspy.math.matrix import permute
 if TYPE_CHECKING:
     import pandas as pd
 
-    from gamspy import (
-        Alias,
-        Equation,
-        Parameter,
-        Set,
-        Variable,
-    )
+    from gamspy import Alias, Equation, Parameter, Set, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._types import IndexType
@@ -70,7 +64,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self,
         parent: Set | Alias | Parameter | Variable | Equation,
         name: str,
-        domain: list[Set | str] | None = None,
+        domain: IndexType | None = None,
         records: Any | None = None,
         permutation: list[int] | None = None,
         scalar_domains: list[tuple[int, Set]] | None = None,
@@ -127,7 +121,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         domain = validation.validate_domain(self, indices)
 
         if isinstance(rhs, float):
-            rhs = utils._map_special_values(rhs)  # type: ignore
+            rhs = utils._map_special_values(rhs)
 
         statement = expression.Expression(
             ImplicitParameter(
@@ -148,8 +142,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self.container._add_statement(statement)
         self.parent._assignment = statement
 
-        self.container._synch_with_gams(gams_to_gamspy=True, load_symbols=[self.parent])
-        self.parent._winner = "gams"
+        self.container._synch_with_gams()
+        self.parent._should_load_from_gams = True
 
     def __eq__(self, other):
         op = "eq"
@@ -178,7 +172,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             )
             column_name = SET_ATTR_MAPPING[self.name.split(".")[1]]
             temp_param[self.parent, column_name] = self
-            del self.container.data[temp_name]
+            del self.container._data[temp_name]
             return temp_param.records
         elif isinstance(self.parent, syms.Parameter):
             temp_name = "p" + utils._get_unique_name()
@@ -193,7 +187,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
                 domain = [...]
 
             temp_param[domain] = self[...]
-            del self.container.data[temp_name]
+            del self.container._data[temp_name]
 
             recs = temp_param.records
             return recs
@@ -211,7 +205,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
                 domain = [...]
 
             temp_param[domain] = self
-            del self.container.data[temp_name]
+            del self.container._data[temp_name]
 
             recs = temp_param.records
             if recs is None:

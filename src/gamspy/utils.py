@@ -5,40 +5,26 @@ import inspect
 import os
 import platform
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
-from gams.core import gdx
-
-import gamspy._model as model
+import gamspy._gdx as gdxio
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
-from gamspy import SpecialValues
 from gamspy._config import get_option
-from gamspy.exceptions import FatalError, ValidationError
+from gamspy._special_values import SpecialValues
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
-    from typing import TypeAlias
 
     import pandas as pd
-    from gams.core.numpy import Gams2Numpy
 
-    from gamspy import (
-        Alias,
-        Container,
-        Equation,
-        Model,
-        Parameter,
-        Set,
-        Variable,
-    )
+    from gamspy import Alias, Equation, Model, Set, UniverseAlias, Variable
     from gamspy._algebra.domain import Domain
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import IndexType
-
-    SymbolType: TypeAlias = Alias | Set | Parameter | Variable | Equation
+    from gamspy._types import IndexType, SymbolType
 
 SPECIAL_VALUE_MAP = {
     SpecialValues.NA: "NA",
@@ -303,7 +289,7 @@ def checkAllSame(
         return False
 
     all_same = True
-    for elem1, elem2 in zip(iterable1, iterable2, strict=False):
+    for elem1, elem2 in zip(iterable1, iterable2, strict=True):
         if elem1 is not elem2:
             return False
     return all_same
@@ -374,11 +360,6 @@ def setBaseEqual(set_a: Set | Alias, set_b: Set | Alias) -> bool:
     return a == b
 
 
-def _get_scalar_data(gams2np: Gams2Numpy, gdx_handle, symbol_id: str) -> float:
-    _, arrvals = gams2np.gdxReadSymbolRaw(gdx_handle, symbol_id)
-    return float(arrvals[0][0])
-
-
 def _get_unique_name() -> str:
     """
     N= 2^122 and the collision probability is: 1 - e^(-(n^2 / 2*N))
@@ -418,32 +399,6 @@ def _get_name_from_stack() -> str:
         raise ValidationError(
             f"It is not possible to get the Python variable name in this context: {e}"
         ) from e
-
-
-def _get_symbol_names_from_gdx(system_directory: str, load_from: str) -> list[str]:
-    gdx_handle = _open_gdx_file(system_directory, load_from)
-    _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
-
-    symbol_names = []
-    for i in range(1, symbol_count + 1):
-        _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
-        if not symbol_name.startswith(model.Model._generate_prefix):
-            symbol_names.append(symbol_name)
-
-    _close_gdx_handle(gdx_handle)
-
-    return symbol_names
-
-
-def _get_variables_of_model(container: Container) -> list[Variable]:
-    names = _get_symbol_names_from_gdx(container.system_directory, container._gdx_out)
-
-    variables: list[Variable] = []
-    for name in names:
-        symbol = container._data[name]
-        if isinstance(symbol, syms.Variable):
-            variables.append(symbol)
-    return variables
 
 
 def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame | None:
@@ -518,76 +473,11 @@ def _get_license_path(system_directory: str) -> str:
     return os.path.join(system_directory, "gamslice.txt")
 
 
-def _close_gdx_handle(handle):
-    """
-    Closes the handle and unloads the gdx library.
-
-    Parameters
-    ----------
-    handle : gdx_handle
-    """
-    gdx.gdxClose(handle)
-    gdx.gdxFree(handle)
-
-
 def _replace_equality_signs(string: str) -> str:
     string = string.replace("=l=", "<=")
     string = string.replace("=e=", "eq")
     string = string.replace("=g=", ">=")
     return string
-
-
-def _open_gdx_file(system_directory: str, load_from: str):
-    """
-    Opens the gdx file with given path
-
-    Parameters
-    ----------
-    system_directory : str
-    load_from : str
-
-    Returns
-    -------
-    gdx_handle
-
-    Raises
-    ------
-    Exception
-        Exception while creating the handle or setting the special values
-    """
-    global _cached_system_directory
-
-    # If the system_directory changed, then we should unload the gdx library
-    if system_directory != _cached_system_directory:
-        gdx.gdxLibraryUnload()
-        _cached_system_directory = system_directory
-
-    try:
-        gdx_handle = gdx.new_gdxHandle_tp()
-        rc = gdx.gdxCreateD(gdx_handle, system_directory, gdx.GMS_SSSIZE)
-        assert rc[0], rc[1]
-    except AssertionError as e:
-        raise FatalError("GAMSPy could not create the gdx handle.") from e
-
-    try:
-        rc = gdx.gdxOpenRead(gdx_handle, load_from)
-        assert rc[0]
-    except AssertionError as e:
-        raise FatalError(
-            f"GAMSPy could not open the gdx file `{load_from}` to read from."
-        ) from e
-
-    specVals = gdx.doubleArray(gdx.GMS_SVIDX_MAX)
-    specVals[gdx.GMS_SVIDX_UNDEF] = SpecialValues.UNDEF
-    specVals[gdx.GMS_SVIDX_NA] = SpecialValues.NA
-    specVals[gdx.GMS_SVIDX_EPS] = SpecialValues.EPS
-    specVals[gdx.GMS_SVIDX_PINF] = SpecialValues.POSINF
-    specVals[gdx.GMS_SVIDX_MINF] = SpecialValues.NEGINF
-
-    rc = gdx.gdxSetSpecialValues(gdx_handle, specVals)
-    assert rc
-
-    return gdx_handle
 
 
 def _to_list(obj: IndexType) -> list:
@@ -615,7 +505,9 @@ def _map_special_values(value: float):
 
 
 def _get_domain_str(
-    domain: Iterable[Set | Alias | ImplicitSet | str], *, latex: bool = False
+    domain: Iterable[Set | Alias | UniverseAlias | ImplicitSet | str],
+    *,
+    latex: bool = False,
 ) -> str:
     """
     Creates the string format of a given domain
@@ -692,8 +584,9 @@ def _permute_domain(domain, dims):
     return new_domain
 
 
-# TODO either add description or make private
 def _get_set(domain: list[Set | Alias | Domain | Expression]):
+    from gamspy import Domain
+
     res = []
     for el in domain:
         if hasattr(el, "left"):
@@ -701,7 +594,7 @@ def _get_set(domain: list[Set | Alias | Domain | Expression]):
                 res.extend(el.left.sets)  # type: ignore
             else:
                 res.append(el.left)
-        elif hasattr(el, "sets"):
+        elif isinstance(el, Domain):
             res.extend(el.sets)
         else:
             res.append(el)
@@ -769,8 +662,14 @@ def _parse_generated_equations(model: Model, listing_file: str) -> None:
 
 
 def _parse_generated_variables(model: Model, listing_file: str) -> None:
-    variables = _get_variables_of_model(model.container)
-    model._variables = variables
+    from gams.core.gdx import GMS_DT_VAR
+
+    variable_names = gdxio._get_symbol_names_from_gdx(
+        model.container.system_directory,
+        model.container._gdx_out,
+        symbol_type=GMS_DT_VAR,
+    )
+    model._variable_names = variable_names
 
     with open(listing_file) as file:
         lines = file.readlines()
@@ -795,10 +694,10 @@ def _parse_generated_variables(model: Model, listing_file: str) -> None:
 
     lines = lines[: variable_listing_end_idx - 1]
 
-    for variable in variables:
+    for name in variable_names:
         listings: list[str] = []
         idx = 0
-        while idx < len(lines) and not lines[idx].startswith(f"---- {variable.name}"):
+        while idx < len(lines) and not lines[idx].startswith(f"---- {name}"):
             idx += 1
 
         idx += 2
@@ -815,6 +714,7 @@ def _parse_generated_variables(model: Model, listing_file: str) -> None:
 
             idx += 1
 
+        variable = cast("Variable", model.container._data[name])
         variable._column_listing = listings
 
     return None

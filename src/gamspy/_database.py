@@ -58,6 +58,8 @@ class GamsSymbol:
         database: Database,
         name: str,
         dimension: int,
+        symbol_type: int,
+        user_info: int,
         explanatory_text: str,
     ):
         self.database = database
@@ -65,6 +67,21 @@ class GamsSymbol:
         self.dimension = dimension
         self.text = explanatory_text
         self.database.symbols[self.name] = self
+
+        # Centralized C-API call and error checking
+        rc = new_intp()
+        self.sym_ptr = gmdAddSymbolPy(
+            self.database.gmd,
+            self.name,
+            self.dimension,
+            symbol_type,
+            user_info,
+            self.text,
+            rc,
+        )
+        self.database._check_for_gmd_error(
+            _int_value_and_free(rc), self.database.workspace
+        )
 
     def __len__(self):
         return self.get_number_records()
@@ -86,22 +103,8 @@ class GamsSet(GamsSymbol):
         explanatory_text: str = "",
         settype: int = 0,
     ):
-        super().__init__(database, name, dimension, explanatory_text)
-
         self.settype = settype
-        rc = new_intp()
-        self.sym_ptr = gmdAddSymbolPy(
-            self.database.gmd,
-            self.name,
-            self.dimension,
-            dt_set,
-            self.settype,
-            self.text,
-            rc,
-        )
-        self.database._check_for_gmd_error(
-            _int_value_and_free(rc), self.database.workspace
-        )
+        super().__init__(database, name, dimension, dt_set, settype, explanatory_text)
 
 
 class GamsParameter(GamsSymbol):
@@ -114,21 +117,7 @@ class GamsParameter(GamsSymbol):
         dimension: int,
         explanatory_text: str = "",
     ):
-        super().__init__(database, name, dimension, explanatory_text)
-
-        rc = new_intp()
-        self.sym_ptr = gmdAddSymbolPy(
-            self.database.gmd,
-            self.name,
-            self.dimension,
-            dt_par,
-            0,
-            self.text,
-            rc,
-        )
-        self.database._check_for_gmd_error(
-            _int_value_and_free(rc), self.database.workspace
-        )
+        super().__init__(database, name, dimension, dt_par, 0, explanatory_text)
 
 
 class GamsVariable(GamsSymbol):
@@ -142,22 +131,7 @@ class GamsVariable(GamsSymbol):
         vartype: int,
         explanatory_text: str = "",
     ):
-        super().__init__(database, name, dimension, explanatory_text)
-
-        self.vartype = vartype
-        rc = new_intp()
-        self.sym_ptr = gmdAddSymbolPy(
-            self.database.gmd,
-            self.name,
-            self.dimension,
-            dt_var,
-            self.vartype,
-            self.text,
-            rc,
-        )
-        self.database._check_for_gmd_error(
-            _int_value_and_free(rc), self.database.workspace
-        )
+        super().__init__(database, name, dimension, dt_var, vartype, explanatory_text)
 
 
 class GamsEquation(GamsSymbol):
@@ -171,22 +145,7 @@ class GamsEquation(GamsSymbol):
         equtype: int,
         explanatory_text: str = "",
     ):
-        super().__init__(database, name, dimension, explanatory_text)
-
-        self.equtype = equtype
-        rc = new_intp()
-        self.sym_ptr = gmdAddSymbolPy(
-            self.database.gmd,
-            self.name,
-            self.dimension,
-            dt_equ,
-            self.equtype,
-            self.text,
-            rc,
-        )
-        self.database._check_for_gmd_error(
-            _int_value_and_free(rc), self.database.workspace
-        )
+        super().__init__(database, name, dimension, dt_equ, equtype, explanatory_text)
 
 
 class Database:

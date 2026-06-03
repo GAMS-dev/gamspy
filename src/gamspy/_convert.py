@@ -12,20 +12,9 @@ from gamspy.exceptions import LatexException, ValidationError
 
 if TYPE_CHECKING:
     from pathlib import Path
-    from typing import TypeAlias
 
-    from gamspy import (
-        Alias,
-        ConvertOptions,
-        Equation,
-        FileFormat,
-        Model,
-        Parameter,
-        Set,
-        Variable,
-    )
-
-    SymbolType: TypeAlias = Alias | Set | Parameter | Variable | Equation
+    from gamspy import ConvertOptions, FileFormat, Model
+    from gamspy._types import SymbolType
 
 GAMS_JACOBIAN_TEMPLATE = """$onEmpty
 Set
@@ -327,7 +316,7 @@ def get_convert_solver_options(
         if format == FileFormat.GAMSJacobian:
             if FileFormat.GDXJacobian in file_format:
                 jacobian_gms = GAMS_JACOBIAN_TEMPLATE.format(
-                    f"$if not set jacfile $set jacfile {FileFormat.GDXJacobian.value}"  # type: ignore
+                    f"$if not set jacfile $set jacfile {FileFormat.GDXJacobian.value}"
                 )
             else:
                 jacobian_gms = GAMS_JACOBIAN_TEMPLATE.format(
@@ -344,7 +333,7 @@ def get_convert_solver_options(
 
     if options is not None:
         convert_options = options.model_dump(
-            exclude_none=True, exclude=FileFormat._member_names_
+            exclude_none=True, exclude={elem.name for elem in FileFormat}
         )
         for key, value in convert_options.items():
             name = OPTION_RENAME_MAP.get(key, key)
@@ -412,7 +401,7 @@ class GamsConverter:
         all_symbols = get_symbols(self.model)
 
         all_needed_symbols = sorted(
-            all_symbols, key=list(self.container.data.keys()).index
+            all_symbols, key=list(self.container._data.keys()).index
         )
 
         return all_needed_symbols
@@ -430,7 +419,7 @@ class GamsConverter:
         self.container._write(self.gdx_path, symbols)
 
         # 1. Declarations
-        declarations = [self.container.data[name].getDeclaration() for name in symbols]
+        declarations = [self.container._data[name].getDeclaration() for name in symbols]
 
         if self.model.external_module is not None:
             em_name = self.model._external_module
@@ -516,12 +505,12 @@ class LatexConverter:
             if name in symbols:
                 symbols.remove(name)
 
-        self.symbols = sorted(symbols, key=list(self.container.data.keys()).index)
+        self.symbols = sorted(symbols, key=list(self.container._data.keys()).index)
 
         if rename is not None:
             for name, latex_name in rename.items():
                 try:
-                    symbol = self.container.data[name]
+                    symbol = self.container._data[name]
                     symbol._latex_name = latex_name
                 except KeyError as e:
                     raise KeyError(
@@ -616,7 +605,7 @@ class LatexConverter:
     def get_table(self, symbol_type) -> str:
         table = [TABLE_HEADER]
         for name in self.symbols:
-            symbol: SymbolType = self.container.data[name]
+            symbol: SymbolType = self.container._data[name]
 
             if isinstance(symbol, symbol_type):
                 summary = symbol.summary
@@ -641,7 +630,7 @@ class LatexConverter:
             if equation.name in self.model._autogen_symbols:
                 continue
 
-            domain_str = ",".join([elem.latexRepr() for elem in equation.domain])
+            domain_str = utils._get_domain_str(equation.domain, latex=True)[1:-1]
             header = "\\subsubsection*{" + equation._latex_name
             if domain_str:
                 header += f"$_{{{domain_str}}}$"
@@ -656,7 +645,7 @@ class LatexConverter:
     def get_constraints(self) -> str:
         constraints = [r"\begin{flalign*}"]
         for name in self.symbols:
-            symbol = self.container.data[name]
+            symbol = self.container._data[name]
             if not isinstance(symbol, syms.Variable):
                 continue
 

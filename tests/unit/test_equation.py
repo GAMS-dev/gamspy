@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy as gp
 import gamspy._symbols.implicits as implicits
 from gamspy import (
     Alias,
@@ -449,18 +450,6 @@ def test_mcp_equation(data):
     model.solve()
 
 
-def test_changed_domain(data):
-    m, *_ = data
-    cont = Container()
-
-    s = Set(cont, "s")
-    m = Set(cont, "m")
-    A = Equation(cont, "A", domain=[s, m])
-
-    A.domain = ["s", "m"]
-    assert A.getDeclaration() == "Equation A(*,*) / /;"
-
-
 def test_equation_assignment(data):
     m, *_ = data
     m = Container()
@@ -538,19 +527,6 @@ def test_uels_on_axes(data):
     s = pd.Series(index=["a", "b", "c"], data=[i + 1 for i in range(3)])
     e = Equation(m, "e", "eq", domain=["*"], records=s, uels_on_axes=True)
     assert e.records.level.tolist() == [1, 2, 3]
-
-
-def test_expert_sync(data):
-    m, *_ = data
-    m = Container()
-    i = Set(m, "i", records=["i1", "i2"])
-    e = Equation(m, "e", domain=i)
-    e.l = 5
-    e.synchronize = False
-    e.l = e.l * 5
-    assert e.records.level.tolist() == [5.0, 5.0]
-    e.synchronize = True
-    assert e.records.level.tolist() == [25.0, 25.0]
 
 
 def test_equation_listing(data):
@@ -1130,3 +1106,61 @@ def test_alternative_syntax():
     assert e.getAssignment() == "e.scale(i) = 5;"
     e[i].stage = 5
     assert e.getAssignment() == "e.stage(i) = 5;"
+
+
+def test_equation_tolist():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["seattle", "san-diego"])
+    eq = gp.Equation(m, "eq", domain=[i])
+
+    # Setting records using np.array updates the 'level' by default
+    eq.setRecords(np.array([5.0, 10.0]))
+
+    assert eq.toList() == [("seattle", 5.0), ("san-diego", 10.0)]
+
+    # Empty Equation
+    eq_empty = gp.Equation(m, "eq_empty", domain=[i])
+    assert eq_empty.toList() == []
+
+
+def test_equation_setrecords_scalar():
+    m = gp.Container()
+    eq = gp.Equation(m, "eq")
+
+    # Set scalar Equation using float
+    eq.setRecords(-15.0)
+    assert eq.toValue() == -15.0
+
+
+def test_equation_setrecords_array():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["X", "Y", "Z"])
+    eq = gp.Equation(m, "eq", domain=[i])
+
+    # 1D array updates level
+    eq.setRecords(np.array([1.0, 2.0, 3.0]))
+    assert eq.toList() == [("X", 1.0), ("Y", 2.0), ("Z", 3.0)]
+
+
+def test_equation_setrecords_dataframe():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["X", "Y"])
+    j = gp.Set(m, "j", records=["A", "B"])
+    eq = gp.Equation(m, "eq", domain=[i, j])
+
+    # 2D Equation using DataFrame
+    df = pd.DataFrame({"i": ["X", "Y"], "j": ["A", "B"], "level": [100.0, 200.0]})
+
+    eq.setRecords(df)
+    assert eq.toList() == [("X", "A", 100.0), ("Y", "B", 200.0)]
+
+
+def test_equation_setrecords_clear():
+    m = gp.Container()
+    eq = gp.Equation(m, "eq")
+    eq.setRecords(50.0)
+    assert eq.records is not None
+
+    # Clear
+    eq.setRecords(None)
+    assert eq.records is None

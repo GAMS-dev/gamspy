@@ -14,7 +14,7 @@ def ReSHOPAnnotation(m, s):
 
 
 def main():
-    m = Container(debugging_level="keep")
+    m = Container()
     t = Set(m, name="m", records=[0, 1])
     a = Set(m, name="a", records=["a0", "a1"])
     beta = 7

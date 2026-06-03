@@ -17,20 +17,28 @@ from gams.core.opt import (
     optReadDefinition,
     optReadParameterFile,
 )
-from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 
 import gamspy._algebra.expression as expression
 import gamspy._symbols as symbols
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._config import get_option
+from gamspy._internals import GAMS_SYMBOL_MAX_LENGTH
 from gamspy._model import Problem, Sense
 from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
-from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Equation, Expression, Model, Parameter, Set, Variable
+    from gamspy import (
+        Alias,
+        Equation,
+        Expression,
+        Model,
+        Parameter,
+        Set,
+        UniverseAlias,
+        Variable,
+    )
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import (
         ImplicitParameter,
@@ -159,15 +167,15 @@ def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
     domain = symbol
 
     while domain != "*":
-        if type(domain) is str:
+        if isinstance(domain, str):
             path.insert(0, domain)
         else:
             path.insert(0, domain.name)
 
         if type(domain) is symbols.Alias:
-            path.insert(0, domain.alias_with.name)  # type: ignore
+            path.insert(0, domain.alias_with.name)
 
-        domain = "*" if type(domain) is str else domain.domain[0]  # type: ignore
+        domain = "*" if type(domain) is str else domain.domain[0]
 
     return path
 
@@ -205,12 +213,12 @@ def validate_one_dimensional_sets(
 
     given_path = get_domain_path(given)
 
-    if (type(actual) is symbols.Set and actual.name not in given_path) or (  # type: ignore
-        type(actual) is symbols.Alias and actual.alias_with.name not in given_path  # type: ignore
+    if (type(actual) is symbols.Set and actual.name not in given_path) or (
+        type(actual) is symbols.Alias and actual.alias_with.name not in given_path
     ):
         raise ValidationError(
             f"`Given set `{given.name}` is not a valid domain for declared"
-            f" domain `{actual.name}`"  # type: ignore
+            f" domain `{actual.name}`"
         )
 
 
@@ -253,9 +261,9 @@ def _get_ellipsis_range(domain, given_domain):
 
 
 def _expand_ellipsis_slice(
-    domain: Sequence[Set | Alias | str],
+    domain: Sequence[Set | Alias | UniverseAlias | str],
     indices: Sequence[Set | Alias | str | EllipsisType | slice],
-) -> Sequence[Set | Alias | str]:
+) -> list:
     if len(domain) == 0:
         # If scalar, only correct indexing is [:] or [...]
         if len(indices) != 1:
@@ -276,10 +284,7 @@ def _expand_ellipsis_slice(
     new_domain: list = []
     index = 0
     for item in indices:
-        try:
-            dimension = item.dimension  # type: ignore
-        except AttributeError:
-            dimension = 1
+        dimension = getattr(item, "dimension", 1)
 
         if type(item) is EllipsisType:
             start, end = _get_ellipsis_range(domain, indices)
@@ -310,7 +315,7 @@ def validate_domain(
 ):
     index_list = utils._to_list(indices)
     index_list = [str(elem) if type(elem) is int else elem for elem in index_list]
-    index_list = _expand_ellipsis_slice(symbol.domain, index_list)  # type: ignore
+    index_list = _expand_ellipsis_slice(symbol.domain, index_list)
     if not get_option("VALIDATION") or not get_option("DOMAIN_VALIDATION"):
         return index_list
 
@@ -320,16 +325,13 @@ def validate_domain(
 
     offset = 0
     for given in index_list:
-        try:
-            given_dim = given.dimension  # type: ignore
-        except AttributeError:
-            given_dim = 1
         actual = symbol.domain[offset]
+        # skip validation if the actual domain element is universe.
+        if actual == "*" or isinstance(actual, symbols.UniverseAlias):
+            continue
 
-        try:
-            actual_dim = actual.dimension
-        except AttributeError:
-            actual_dim = 1
+        given_dim = getattr(given, "dimension", 1)
+        actual_dim = getattr(actual, "dimension", 1)
 
         if actual_dim == 1 and given_dim == 1:
             if type(given) is str:
@@ -365,11 +367,11 @@ def validate_container(
     | ImplicitVariable
     | Operation
     | Expression,
-    given_indices: Sequence[str | Set | Alias],
+    given_indices: Sequence[str | Set | Alias | UniverseAlias],
 ):
     for set in given_indices:
         if (
-            isinstance(set, (symbols.Set, symbols.Alias))
+            isinstance(set, (symbols.Set, symbols.Alias, symbols.UniverseAlias))
             and set.container != symbol.container
         ):
             raise ValidationError(
@@ -485,7 +487,7 @@ def validate_model(
                     "EMP models."
                 )
 
-    return problem, sense  # type: ignore
+    return problem, sense
 
 
 def validate_model_name(name: str) -> str:
@@ -520,7 +522,6 @@ def validate_solver_args(
     problem: Problem | str,
     options: Options | None,
     output: TextIO | None,
-    load_symbols: list[Symbol] | None,
 ) -> None:
     if not get_option("VALIDATION"):
         return
@@ -537,19 +538,6 @@ def validate_solver_args(
             "`output` must write and flush operations but found"
             f" {type(output)} which does not support them."
         )
-
-    # Check validity of load_symbols
-    if load_symbols is not None:
-        if not isinstance(load_symbols, list):
-            raise ValidationError(
-                f"`load_symbols` must be list of Symbol objects. Given type: {type(load_symbols)}"
-            )
-
-        for elem in load_symbols:
-            if not isinstance(elem, Symbol):
-                raise ValidationError(
-                    f"Elements of `load_symbols` must be of type Symbol but found {elem}"
-                )
 
     # Check validity of solver
     if not isinstance(solver, str):
@@ -710,7 +698,7 @@ def validate_solver_options(
 
     # Check the validity of the .def file.
     solver_def_file = _get_def_file(system_directory, solver)
-    if optReadDefinition(option_handle, solver_def_file):
+    if optReadDefinition(option_handle, solver_def_file):  # pragma: no cover
         msg_list = []
         for i in range(optMessageCount(option_handle)):
             msg = optGetMessage(option_handle, i + 1)
