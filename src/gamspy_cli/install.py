@@ -71,8 +71,8 @@ def license(
 
     if is_alp and len(license) != 36:
         typer.echo(
-            f"Access code is a 36 character string or an absolute path to the "
-            f"license file but {len(license)} character string ({license}) provided."
+            f"Invalid access code or license file ({license}). Please enter a 36-character "
+            f"access code, or ensure the absolute path to your license file is correct and the file exists."
         )
         raise typer.Exit(code=1)
 
