@@ -65,17 +65,22 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [tool.ty.src]
-exclude = ["src/gamspy/_backend/neos.py", "src/gamspy/_backend/engine.py"]
+exclude = [
+    "src/gamspy/_backend/neos.py", 
+    "src/gamspy/_backend/engine.py", 
+    "src/gamspy/_gmd.py",
+    "src/gamspy/_records_ingestion.py", 
+    "src/gamspy/formulations",
+]
 
 [tool.ty.rules]
-unused-type-ignore-comment = "ignore"  # To avoid clashing with mypy.
 invalid-method-override = "ignore"  # Some overrides do not match the signature of equivalent gtp functions.
 unresolved-import = "ignore"  # Needed for optional torch dependency
 
 [dependency-groups]
 dev = [
     "griffe>=1.15.0",
-    "mypy>=1.19.1",
+    "ty>=0.0.35",
     "prek>=0.2.28",
     "ruff>=0.14.11",
 ]
@@ -111,12 +116,6 @@ test = [
 
 [project.scripts]
 gamspy = "gamspy_cli.cli:main"
-
-[tool.mypy]
-warn_unused_configs = true
-follow_imports = "skip"
-follow_imports_for_stubs = true
-disable_error_code = ["misc", "import-untyped"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -183,7 +182,7 @@ name = "Miscellaneous internal changes"
 showcontent = true
 
 [tool.coverage.run]
-omit = ["*/gamspy_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py"]
+omit = ["*/gamspy_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py", "*_gmd.py"]
 
 [tool.coverage.report]
 exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "if typing.TYPE_CHECKING:", "def __repr__", "def __del__", "@property"]
@@ -241,7 +240,6 @@ select = [
     "RUF",      # Ruff-specific rules
     "TC",       # flake8-type-checking
     "C4",       # flake8-comprehensions
-    "PLC0206",  # dict-index-missing-items
     "PLC0207",  # missing-maxsplit-arg
     "PLC0208",  # iteration-over-set
     "PLE",      # Pylint error rules
@@ -253,7 +251,8 @@ ignore = [
     "SIM105", # suppressible-exception
     "SIM117", # multiple-with-statements
     "RUF005", # collection-literal-concatenation
-    "RUF022"  # unsorted-dunder-all
+    "RUF022", # unsorted-dunder-all
+    "B905"    # zip-without-explicit-strict
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.

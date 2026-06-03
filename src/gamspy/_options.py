@@ -1,22 +1,26 @@
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TextIO
 
 from pydantic import BaseModel, ConfigDict
 from typing_extensions import override
 
+import gamspy._validation as validation
+from gamspy._config import get_option
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from types import FrameType
 
+    from gamspy._container import Container
     from gamspy._model import Problem
 
 SOLVE_LINK_MAP = {"disk": 2, "memory": 5}
 SOLVE_LINK_MAP_REVERSE = dict(
-    zip(SOLVE_LINK_MAP.values(), SOLVE_LINK_MAP.keys(), strict=False)
+    zip(SOLVE_LINK_MAP.values(), SOLVE_LINK_MAP.keys(), strict=True)
 )
 
 # GAMSPy to GAMS option mapping
@@ -604,8 +608,8 @@ class Options(BaseModel):
         all_options["optfile"] = self._solver_options_file
 
         # Extra options
-        all_options.update(**self._hidden_options)
-        all_options.update(**self._extra_options)
+        all_options.update(self._hidden_options)
+        all_options.update(self._extra_options)
 
         if self._frame is not None:
             filename = self._frame.f_code.co_filename
@@ -614,7 +618,7 @@ class Options(BaseModel):
 
         # User options
         user_options = self._get_gams_compatible_options(output)
-        all_options.update(**user_options)
+        all_options.update(user_options)
 
         # Generate pf file
         with open(pf_file, "w", encoding="utf-8") as file:
@@ -823,3 +827,69 @@ class ConvertOptions(BaseModel):
     LINGO: str = "lingo.lng"
     OSiL: str = "osil.xml"
     Pyomo: str = "pyomo.py"
+
+
+def get_options_file_name(solver: str, file_number: int) -> str:
+    """
+    Generates the option file name according to the `optfile` rules of GAMS.
+    Here are the rules:
+    1: solver.opt
+    2-9: solver.op<file_number>
+    10-99: solver.o<file_number>
+    >100: solver.<file_number>
+    """
+    if file_number == 1:
+        return f"{solver}.opt"
+    elif 2 <= file_number <= 9:
+        return f"{solver}.op{file_number}"
+    elif 10 <= file_number <= 99:
+        return f"{solver}.o{file_number}"
+
+    return f"{solver}.{file_number}"
+
+
+def write_solver_options(
+    container: Container,
+    solver: str,
+    solver_options: dict | str | Path,
+    file_number: int = 1,
+) -> None:
+    if file_number < 1:
+        raise ValidationError(
+            f"The smallest number `file_number` can get is 1 but received {file_number}"
+        )
+
+    if solver.lower() == "conopt":
+        solver = "conopt4"
+
+    options_file_name = os.path.join(
+        container._working_directory, get_options_file_name(solver, file_number)
+    )
+
+    if isinstance(solver_options, (str, Path)):
+        path = Path(solver_options)
+        shutil.copy2(path, options_file_name)
+    else:
+        with open(options_file_name, "w", encoding="utf-8") as solver_file:
+            for key, value in solver_options.items():
+                row = f"{key} {value}\n"
+                if solver.upper() in ("SHOT", "SOPLEX", "SCIP", "HIGHS"):
+                    row = f"{key} = {value}\n"
+
+                solver_file.write(row)
+
+    # The following solvers do not use the opt<solver>.def file
+    if solver.upper() in (
+        "HIGHS",
+        "SOPLEX",
+        "KESTREL",
+        "SCIP",
+        "SHOT",
+        "SOPLEX",
+    ):
+        return
+
+    if get_option("VALIDATION") and get_option("SOLVER_OPTION_VALIDATION"):
+        validation.validate_solver_options(
+            container.system_directory, options_file_name, solver
+        )

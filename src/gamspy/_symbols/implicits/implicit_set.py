@@ -82,7 +82,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
             domain.insert(i, d)
 
         temp_param[domain] = self
-        del self.container.data[temp_name]
+        del self.container._data[temp_name]
         return temp_param.records
 
     def latexRepr(self):

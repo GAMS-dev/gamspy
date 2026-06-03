@@ -32,18 +32,16 @@ def _get_gdx_symbol_names(filename: str) -> set[str]:
     import gams.core.gdx as gdx
     import gamspy_base
 
-    import gamspy.utils as utils
-
-    gdx_handle = utils._open_gdx_file(gamspy_base.directory, filename)
-    _, number_of_symbols, _ = gdx.gdxSystemInfo(gdx_handle)
+    import gamspy._gdx as gdxio
 
     symbol_names = set()
-    for symbol_number in range(number_of_symbols):
-        _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, symbol_number)
-        if symbol_name != "*":
-            symbol_names.add(symbol_name)
+    with gdxio.open_gdx(gamspy_base.directory, filename) as handle:
+        _, number_of_symbols, _ = gdx.gdxSystemInfo(handle)
 
-    utils._close_gdx_handle(gdx_handle)
+        for symbol_number in range(number_of_symbols):
+            _, symbol_name, _, _ = gdx.gdxSymbolInfo(handle, symbol_number)
+            if symbol_name != "*":
+                symbol_names.add(symbol_name)
 
     return symbol_names
 

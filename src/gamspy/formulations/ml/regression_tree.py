@@ -4,6 +4,8 @@ import importlib
 import uuid
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy.formulations.utils as utils
@@ -149,8 +151,6 @@ class RegressionTree:
 
     def _node_bounds(self):
         """Traverse the tree using DFS and extract bound information for each node."""
-        import numpy as np
-
         node_lb = np.empty((self.n_features, self.capacity))
         node_lb.fill(-np.inf)
         node_ub = np.empty((self.n_features, self.capacity))
@@ -182,8 +182,6 @@ class RegressionTree:
         input: gp.Parameter | gp.Variable,
         M: float | None = None,
     ):
-        import numpy as np
-
         leafs = self.children_left < 0
         leafs = leafs.nonzero()[0]
         nleafs = len(leafs)

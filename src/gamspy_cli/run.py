@@ -31,7 +31,7 @@ def miro(
     mode: Annotated[
         ModeEnum,
         typer.Option("--mode", "-m", help="Execution mode of MIRO"),
-    ] = ModeEnum.base,  # type: ignore
+    ] = ModeEnum.base,
     path: Annotated[
         Optional[Path],  # noqa: UP045
         typer.Option(
@@ -58,25 +58,25 @@ def miro(
         typer.echo("--model must be provided to run MIRO", file=sys.stderr)
         sys.exit(1)
 
-    model = os.path.abspath(model)
+    model_path = os.path.abspath(model)
     execution_mode = mode.value
-    path = os.getenv("MIRO_PATH", path)
+    miro_path = os.getenv("MIRO_PATH", path)
 
-    if path is None:
-        path = path if path is not None else discover_miro()
+    if miro_path is None:
+        miro_path = miro_path if miro_path is not None else discover_miro()
 
-    if path is None:
+    if miro_path is None:
         typer.echo("--path must be provided to run MIRO")
         raise typer.Exit(code=1)
 
-    if platform.system() == "Darwin" and os.path.splitext(path)[1] == ".app":
-        path = os.path.join(path, "Contents", "MacOS", "GAMS MIRO")
+    if platform.system() == "Darwin" and os.path.splitext(miro_path)[1] == ".app":
+        miro_path = os.path.join(miro_path, "Contents", "MacOS", "GAMS MIRO")
 
     # Initialize MIRO
     if not skip_execution:
         subprocess_env = os.environ.copy()
         subprocess_env["MIRO"] = "1"
-        command = [sys.executable, model]
+        command = [sys.executable, model_path]
         if args is not None:
             command += args
 
@@ -97,13 +97,13 @@ def miro(
         subprocess_env["MIRO_BUILD"] = "true"
         execution_mode = "base"
 
-    subprocess_env["MIRO_MODEL_PATH"] = model
+    subprocess_env["MIRO_MODEL_PATH"] = model_path
     subprocess_env["MIRO_MODE"] = execution_mode
     subprocess_env["MIRO_DEV_MODE"] = "true"
     subprocess_env["MIRO_USE_TMP"] = "false"
     subprocess_env["PYTHON_EXEC_PATH"] = sys.executable
 
-    subprocess.run([path], env=subprocess_env, check=True)
+    subprocess.run([miro_path], env=subprocess_env, check=True)
 
 
 def discover_miro():

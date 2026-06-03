@@ -38,7 +38,7 @@ class Domain:
     def __init__(self, *sets: Set | Alias | ImplicitSet) -> None:
         self._sanity_check(sets)
         self.sets = sets
-        self.container = self._find_container()  # type: ignore
+        self.container = self._find_container()
         self.domain = sets
         self.where = condition.Condition(self)
 

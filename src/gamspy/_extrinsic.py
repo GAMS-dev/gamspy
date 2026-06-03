@@ -47,7 +47,7 @@ class ExtrinsicFunction(operable.Operable):
             self.container, temp_name, self.domain
         )
         temp_param[...] = self
-        del self.container.data[temp_name]
+        del self.container._data[temp_name]
         return temp_param.records
 
     def toValue(self) -> float | None:

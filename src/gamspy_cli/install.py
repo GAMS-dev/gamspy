@@ -39,7 +39,7 @@ def license(
         "-c",
         help="Specify a duration in hours to checkout a session.",
     ),
-    server: str | None = typer.Option(
+    server: str = typer.Option(
         "https://license.gams.com",
         "--server",
         "-s",

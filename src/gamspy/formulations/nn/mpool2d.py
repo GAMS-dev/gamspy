@@ -62,7 +62,8 @@ class _MPool2d:
             domain=[H_out, W_out, H_in, W_in],
         )
         subset2[H_out, W_out, H_in, W_in] = gp.Sum(
-            [Hf, Wf], subset[H_out, W_out, Hf, Wf, H_in, W_in]
+            [Hf, Wf],  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
+            subset[H_out, W_out, Hf, Wf, H_in, W_in],
         )
 
         # Initialize parameters for bounds and Big-M
@@ -86,21 +87,21 @@ class _MPool2d:
         if isinstance(input, gp.Variable):
             # Use variable bounds if input is a variable
             ub[...] = gp.Smax(
-                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
                 input.up[N, C, H_in, W_in],
             )
             lb[...] = gp.Smin(
-                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
                 input.lo[N, C, H_in, W_in],
             )
         else:
             # Use parameter values directly if input is a parameter
             ub[...] = gp.Smax(
-                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
                 input[N, C, H_in, W_in],
             )
             lb[...] = gp.Smin(
-                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
                 input[N, C, H_in, W_in],
             )
 

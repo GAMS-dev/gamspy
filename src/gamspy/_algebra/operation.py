@@ -75,12 +75,12 @@ class Operation(operable.Operable):
             rhs = rhs.conditioning_on  # type: ignore
 
         if not isinstance(rhs, (bool, float, int)):
-            for i, x in enumerate(rhs.domain):  # type: ignore
+            for i, x in enumerate(rhs.domain):
                 try:
                     sum_index = self._bare_op_domain.index(x)
                     self._operation_indices.append((i, sum_index))
                 except ValueError:
-                    self.domain.append(x)
+                    self.domain.append(x)  # ty: ignore[invalid-argument-type]
 
         self.dimension: int = validation.get_dimension(self.domain)
         controlled_domain = list(self._bare_op_domain)
@@ -133,7 +133,7 @@ class Operation(operable.Operable):
             )
 
         temp_name = "a" + utils._get_unique_name()
-        domain: list[Set | Alias] = []
+        domain = []
         for elem in self.domain:
             if hasattr(elem, "dimension") and elem.dimension > 1:
                 domain.extend(elem.domain)
@@ -144,7 +144,7 @@ class Operation(operable.Operable):
             self.container, temp_name, domain
         )
         temp_param[...] = self
-        del self.container.data[temp_name]
+        del self.container._data[temp_name]
         return temp_param.records
 
     def toValue(self) -> float | None:
@@ -201,6 +201,11 @@ class Operation(operable.Operable):
     def _get_raw_domain(self) -> list[Set | Alias | ImplicitSet]:
         raw_domain = []
         for elem in self.op_domain:
+            if isinstance(elem, (str, syms.UniverseAlias)):
+                raise ValidationError(
+                    f"`{elem}` is not a valid index for an operation."
+                )
+
             if isinstance(elem, condition.Condition):
                 if isinstance(elem.conditioning_on, implicits.ImplicitSet):
                     raw_domain.append(elem.conditioning_on.parent)
@@ -287,9 +292,7 @@ class Operation(operable.Operable):
             self.rhs = utils._map_special_values(self.rhs)
 
         if isinstance(self.rhs, bool):
-            self.rhs = (
-                "yes" if self.rhs is True else "no"  # type: ignore
-            )
+            self.rhs = "yes" if self.rhs is True else "no"
 
         expression_str = (
             str(self.rhs)
@@ -822,7 +825,7 @@ class Card(operable.Operable):
         self.domain: list[Set | Alias] = []
         self.where = condition.Condition(self)
 
-    def __eq__(self, other) -> Expression:  # type: ignore
+    def __eq__(self, other) -> Expression:
         return expression.Expression(self, "eq", other)
 
     def __ge__(self, other):
@@ -831,7 +834,7 @@ class Card(operable.Operable):
     def __le__(self, other):
         return expression.Expression(self, "<=", other)
 
-    def __ne__(self, other):  # type: ignore
+    def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
     def __bool__(self):

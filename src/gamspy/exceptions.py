@@ -33,8 +33,16 @@ class ValidationError(Exception):
     """An error while validating data."""
 
 
+class GdxException(Exception):
+    """GDX exception"""
+
+
+class GmdException(Exception):
+    """GMD exception"""
+
+
 class NeosClientException(Exception):
-    """NeosClient exception."""
+    """NeosClient exception"""
 
 
 class EngineClientException(Exception):

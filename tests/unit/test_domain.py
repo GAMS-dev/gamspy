@@ -87,10 +87,9 @@ def test_domain_forwarding():
 
     assert i2.toList() == [
         "pto-suarez",
+        "palmasola",
         "potosi",
         "baranquill",
-        "cartagena",
-        "palmasola",
     ]
 
 

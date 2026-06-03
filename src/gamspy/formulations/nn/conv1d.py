@@ -3,6 +3,8 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, Literal
 
+import numpy as np
+
 import gamspy as gp
 import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
@@ -10,8 +12,6 @@ from gamspy.formulations.result import FormulationResult
 from gamspy.math import dim
 
 if TYPE_CHECKING:
-    import numpy as np
-
     from gamspy import Parameter, Variable
 
 
@@ -143,8 +143,6 @@ class Conv1d:
     def _propagate_bounds(
         self, input, output, weight, bias, stride, padding, result: FormulationResult
     ):
-        import numpy as np
-
         # Extract input bounds
         input_bounds = gp.Parameter(
             self.container,
@@ -430,7 +428,7 @@ class Conv1d:
                     name=utils._generate_name("p", self._name_prefix, "bias"),
                 )
             else:
-                self.bias.setRecords(bias)
+                self.bias.setRecords(bias)  # ty: ignore[invalid-argument-type] ty cannot narrow bias down here.
 
             self.bias_array = bias
 

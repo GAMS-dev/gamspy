@@ -16,6 +16,7 @@ from pathlib import Path
 
 import gams.transfer as gt
 import gamspy_base
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -39,7 +40,7 @@ from gamspy import (
     deserialize,
     serialize,
 )
-from gamspy.exceptions import GamspyException, ValidationError
+from gamspy.exceptions import GamspyException, GdxException, ValidationError
 
 
 @pytest.fixture
@@ -74,6 +75,11 @@ def test_container(data, tmp_path):
     m, *_ = data
 
     with pytest.raises(ValidationError):
+        _ = Container(system_directory="invaliddir")
+
+    _ = Container(system_directory=Path(gamspy_base.directory))
+
+    with pytest.raises(ValidationError):
         _ = Container(working_directory="")
 
     long_dir = tmp_path / ("a" * 205)
@@ -87,26 +93,7 @@ def test_container(data, tmp_path):
         m = Container(options={"bla": "bla"})
 
     m = Container(options=Options.fromGams({"reslim": 5}))
-
-    i = gt.Set(m, "i")
-    m._cast_symbols()
-    assert isinstance(m["i"], Set)
-
-    j = gt.Alias(m, "j", i)
-    m._cast_symbols()
-    assert isinstance(m["j"], Alias)
-
-    a = gt.Parameter(m, "a")
-    m._cast_symbols()
-    assert isinstance(m["a"], Parameter)
-
-    v = gt.Variable(m, "v")
-    m._cast_symbols()
-    assert isinstance(m["v"], Variable)
-
-    e = gt.Equation(m, "e", type="eq")
-    m._cast_symbols()
-    assert isinstance(m["e"], Equation)
+    Parameter(m, "a")
 
     # Test load_from
     with pytest.raises(ValidationError):
@@ -172,8 +159,9 @@ def test_container(data, tmp_path):
     assert isinstance(j1, Alias)
     j2 = m.addAlias("j", i1)
     assert id(j1) == id(j2)
-    j3 = m.addAlias("j", j2)
-    assert id(j3) == id(j2)
+
+    with pytest.raises(ValueError):
+        m.addAlias("j", j2)
 
     a1 = m.addParameter("a")
     with pytest.raises(ValueError):
@@ -209,6 +197,19 @@ def test_container(data, tmp_path):
         m.addEquation("e", "leq")
     e3 = m.addEquation("e", records=pd.DataFrame())
     assert id(e3) == id(e1)
+
+    # Test __iter__
+    m = Container()
+    i = Set(m, "i")
+    a = Alias(m, "a", i)
+    names = []
+    symbols = []
+    for name, symbol in m:
+        names.append(name)
+        symbols.append(symbol)
+
+    assert names == ["i", "a"]
+    assert symbols == [i, a]
 
 
 @pytest.mark.unit
@@ -325,53 +326,25 @@ def test_loadRecordsFromGdx(data, tmp_path):
         m.loadRecordsFromGdx(gdx_path, symbol_names={"i": "k"})
 
 
-def test_loadRecordsFromGdxSync(tmp_path):
-    tmp_file = str(tmp_path / "temp.gdx")
+def test_loadRecordsFromGdx_with_missing_symbols(tmp_path):
     m = gp.Container()
-    i = gp.Set(m, "i", records=range(5))
-    j = gp.Set(m, "j", records=range(3))
-    m.write(tmp_file)
+    i = gp.Set(m, "i", records=range(3))
+    a = gp.Parameter(m, "a", domain=i, records=np.array([1, 2, 3]))
+    m.write(tmp_path / "test.gdx")
 
-    m = gp.Container()
-    i = gp.Set(m, "i")
-    j = gp.Set(m, "j")
-    i.synchronize = False
-    with pytest.raises(TypeError):
-        m.loadRecordsFromGdx(tmp_file, symbol_names=5)
+    m2 = gp.Container()
+    i = gp.Set(m2, "i")
+    m2.loadRecordsFromGdx(tmp_path / "test.gdx")
+    a = m2["a"]
+    assert a.domain == [i]
+    assert a.toList() == [("0", 1.0), ("1", 2.0), ("2", 3.0)], a.toList()
 
-    m.loadRecordsFromGdx(tmp_file)
-    assert i.records is None, i.records
-    assert j.toList() == ["0", "1", "2"], j.toList()
-
-    # load a symbol that does not exist in the container
-    m = gp.Container()
-    i = gp.Set(m, "i")
-    i.synchronize = False
-    m.loadRecordsFromGdx(tmp_file, symbol_names=["i", "j"])
-    assert list(m.data.keys()) == ["i", "j"]
-    assert m["j"].toList() == ["0", "1", "2"]
-
-    j = gp.Set(m, "j")
-    m.loadRecordsFromGdx(tmp_file, symbol_names=["i", "j"])
-    assert i.records is None, i.records
-    assert j.toList() == ["0", "1", "2"], j.toList()
-
-    m = gp.Container()
-    j = gp.Set(m, "j")
-    j.synchronize = False
-    m.loadRecordsFromGdx(tmp_file, symbol_names={"i": "j"})
-    assert j.records is None, j.records
-
-    m = gp.Container()
-    j = gp.Set(m, "j")
-    j.synchronize = False
-    m.loadRecordsFromGdx(tmp_file, symbol_names={"i": "j"})
-    assert j.records is None, j.records
-
-    m = gp.Container()
-    i = gp.Set(m, "i")
-    m.loadRecordsFromGdx(tmp_file)
-    assert "j" in m.data
+    m3 = gp.Container()
+    i = gp.Set(m3, "i")
+    m3.loadRecordsFromGdx(tmp_path / "test.gdx", symbol_names=["i", "a"])
+    a = m3["a"]
+    assert a.domain == [i]
+    assert a.toList() == [("0", 1.0), ("1", 2.0), ("2", 3.0)], a.toList()
 
 
 @pytest.mark.unit
@@ -1522,21 +1495,6 @@ def test_domain_violations():
     gp.set_options({"DROP_DOMAIN_VIOLATIONS": 0})
 
 
-@pytest.mark.unit
-def test_expert_sync():
-    import gamspy as gp
-
-    m = gp.Container()
-    i = gp.Set(m, "i", records=["i1", "i2", "i3"])
-    a = gp.Parameter(m, "a", domain=[i, i])
-    a.synchronize = False
-    for s in range(5):
-        a[i, i].where[gp.Ord(i) == 1] = 0.1 * s
-        assert a.records is None
-    a.synchronize = True
-    assert a.toList() == [("i1", "i1", 0.4)]
-
-
 def one_by_one(n: int, m: Container):
     sets = [Set(m) for _ in range(10)]
     for set in sets:
@@ -1727,7 +1685,7 @@ def test_setRecords_None():
 
     a = gp.Parameter(m, records=5)
     a.setRecords(None)
-    assert a.toValue() == 0
+    assert a.records is None
 
     i2 = gp.Set(m, records=["i1", "i2"])
     a2 = gp.Parameter(m, domain=i2, records=[("i1", 1), ("i2", 2)])
@@ -1736,20 +1694,20 @@ def test_setRecords_None():
 
     v = gp.Variable(m)
     v.setRecords(None)
-    assert v.records.values.tolist() == [[0.0, 0.0, float("-inf"), float("inf"), 1.0]]
+    assert v.records is None
 
     vp = gp.Variable(m, type="positive")
     vp.setRecords(None)
-    assert vp.records.values.tolist() == [[0.0, 0.0, 0.0, float("inf"), 1.0]]
+    assert vp.records is None
 
     e = gp.Equation(m)
     e.setRecords(None)
-    assert e.records.values.tolist() == [[0.0, 0.0, float("-inf"), float("inf"), 1.0]]
+    assert e.records is None
 
     el = gp.Equation(m)
     el[...] = v <= vp
     el.setRecords(None)
-    assert el.records.values.tolist() == [[0.0, 0.0, float("-inf"), 0.0, 1.0]]
+    assert el.records is None
 
     i2 = gp.Set(m, records=["i1", "i2"])
     a1 = gp.Alias(m, alias_with=i2)
@@ -1758,16 +1716,16 @@ def test_setRecords_None():
     assert i2.records is None
 
 
-# @pytest.mark.unit
-# def test_getitem():
-#     m = gp.Container()
-#     with pytest.raises(KeyError, match="does not exist in the Container"):
-#         m["i"]
+@pytest.mark.unit
+def test_getitem():
+    m = gp.Container()
+    with pytest.raises(KeyError, match="does not exist in the Container"):
+        m["i"]
 
-#     gp.Set(m, "some_set")
+    gp.Set(m, "some_set")
 
-#     with pytest.raises(KeyError, match="Did you mean"):
-#         m["som_set"]
+    with pytest.raises(KeyError, match="Did you mean"):
+        m["som_set"]
 
 
 @pytest.mark.unit
@@ -1807,5 +1765,436 @@ def test_gtp_to_gp_dirty():
     gt.Alias(m, "j", alias_with=i)
     gt.Parameter(m, "p", domain=i, records=[("i2", 1), ("i2", 2), ("i3", 3)])
 
-    with pytest.raises(GamspyException):
+    with pytest.raises(GdxException):
         _ = gp.Container(m)
+
+
+@pytest.mark.unit
+def test_describe_symbols():
+    m = gp.Container()
+    assert m.describeAliases() is None
+
+    i = gp.Set(m, "i")
+    i2 = gp.Set(m, "i2")
+    _ = gp.Alias(m, "a", i)
+    _ = gp.Alias(m, "a2", i2)
+    _ = gp.Parameter(m, "p")
+    _ = gp.Parameter(m, "p2")
+    _ = gp.Variable(m, "v")
+    _ = gp.Variable(m, "v2")
+    _ = gp.Equation(m, "e")
+    _ = gp.Equation(m, "e2")
+    _ = gp.UniverseAlias(m, "u")
+    _ = gp.UniverseAlias(m, "u2")
+
+    df = pd.DataFrame(
+        {
+            "name": ["i", "i2"],
+            "is_singleton": [False, False],
+            "domain": [["*"], ["*"]],
+            "domain_type": ["none", "none"],
+            "dimension": [1, 1],
+            "number_records": [0, 0],
+            "sparsity": [np.nan, np.nan],
+        }
+    )
+
+    pd.testing.assert_frame_equal(m.describeSets(), df)
+
+    df_aliases = pd.DataFrame(
+        {
+            "name": ["a", "a2", "u", "u2"],
+            "alias_with": ["i", "i2", "*", "*"],
+            "is_singleton": [False, False, False, False],
+            "domain": [["*"], ["*"], ["*"], ["*"]],
+            "domain_type": ["none", "none", "none", "none"],
+            "dimension": [1, 1, 1, 1],
+            "number_records": [0, 0, 0, 0],
+            "sparsity": [np.nan, np.nan, 0.0, 0.0],
+        }
+    )
+    pd.testing.assert_frame_equal(m.describeAliases(), df_aliases)
+
+    df_parameters = pd.DataFrame(
+        {
+            "name": ["p", "p2"],
+            "domain": [[], []],
+            "domain_type": ["none", "none"],
+            "dimension": [0, 0],
+            "number_records": [0, 0],
+            "min": [None, None],
+            "mean": [None, None],
+            "max": [None, None],
+            "where_min": [None, None],
+            "where_max": [None, None],
+            "sparsity": [np.nan, np.nan],
+        }
+    )
+    pd.testing.assert_frame_equal(m.describeParameters(), df_parameters)
+
+    df_variables = pd.DataFrame(
+        {
+            "name": ["v", "v2"],
+            "type": ["free", "free"],
+            "domain": [[], []],
+            "domain_type": ["none", "none"],
+            "dimension": [0, 0],
+            "number_records": [0, 0],
+            "sparsity": [np.nan, np.nan],
+            "min_level": [None, None],
+            "mean_level": [None, None],
+            "max_level": [None, None],
+            "where_max_abs_level": [None, None],
+        }
+    )
+    pd.testing.assert_frame_equal(m.describeVariables(), df_variables)
+
+    df_equations = pd.DataFrame(
+        {
+            "name": ["e", "e2"],
+            "type": ["eq", "eq"],
+            "domain": [[], []],
+            "domain_type": ["none", "none"],
+            "dimension": [0, 0],
+            "number_records": [0, 0],
+            "sparsity": [np.nan, np.nan],
+            "min_level": [None, None],
+            "mean_level": [None, None],
+            "max_level": [None, None],
+            "where_max_abs_level": [None, None],
+        }
+    )
+    pd.testing.assert_frame_equal(m.describeEquations(), df_equations)
+
+
+@pytest.mark.unit
+def test_generateRecords():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=range(10))
+    j = gp.Set(m, "j", records=range(10))
+    k = gp.Set(m, "k", domain=i)
+    k.generateRecords(density=0.1, seed=42)
+    k2 = gp.Set(m, "k2", domain=[i, j])
+    k2.generateRecords(density=[0.01, 0.2])
+    p = gp.Parameter(m, "p", domain=i)
+    p.generateRecords(density=0.1, seed=42)
+    p2 = gp.Parameter(m, "p2", domain=[i, j])
+    p2.generateRecords(density=[0.1, 0.2])
+    v = gp.Variable(m, "v", domain=i)
+    v.generateRecords(density=0.15, seed=42)
+    v2 = gp.Variable(m, "v2", domain=[i, j])
+
+    with pytest.raises(TypeError, match="must be callable"):
+        v2.generateRecords(func={"level": "bla"})
+
+    def marginal_values(seed, size):
+        rng = np.random.default_rng(seed)
+        return rng.normal(5, 1.2, size=size)
+
+    v2.generateRecords(density=[0.1, 0.2], func={"marginal": marginal_values})
+
+    i2 = gp.Set(m, "i2", records=range(5))
+    p3 = gp.Parameter(m, "p3", domain=i2)
+    p3.generateRecords(density=0)
+
+
+@pytest.mark.unit
+def test_symbol_equals():
+    import gamspy as gp
+
+    m = gp.Container()
+
+    i1 = gp.Set(m, "i1", records=["a", "b"], description="Set A")
+    i2 = gp.Set(m, "i2", records=["a", "b"], description="Set B")
+    i3 = gp.Set(m, "i3", records=["a", "c"])
+
+    i4 = gp.Set(m, "i4", records=[("a", "text a"), ("b", "text b")])
+    i5 = gp.Set(m, "i5", records=[("a", "text a"), ("b", "text c")])
+
+    # Metadata check (names/descriptions differ)
+    assert not i1.equals(i2)
+    assert i1.equals(i2, check_meta_data=False)
+
+    # Records check
+    assert not i1.equals(i3, check_meta_data=False)
+
+    # Element text check
+    assert not i4.equals(i5, check_meta_data=False)
+    assert i4.equals(i5, check_element_text=False, check_meta_data=False)
+
+    p1 = gp.Parameter(m, "p1", domain=[i1], records=[("a", 1.0001), ("b", 2.0)])
+    p2 = gp.Parameter(m, "p2", domain=[i1], records=[("a", 1.0002), ("b", 2.0)])
+    p3 = gp.Parameter(m, "p3", domain=[i1], records=[("a", 1.0001), ("b", 2.0)])
+
+    # Exact records check
+    assert p1.equals(p3, check_meta_data=False)
+    assert not p1.equals(p2, check_meta_data=False)
+
+    # Tolerance check
+    assert p1.equals(p2, check_meta_data=False, atol=1e-3)
+
+    v1 = gp.Variable(m, "v1", domain=[i1], type="positive")
+    v2 = gp.Variable(m, "v2", domain=[i1], type="positive")
+    v3 = gp.Variable(m, "v3", domain=[i1], type="free")
+
+    v1.l[...] = 5
+    v2.l[...] = 5
+
+    # Exact equivalence
+    assert v1.equals(v2, check_meta_data=False)
+
+    # Type mismatch check
+    assert not v1.equals(v3, check_meta_data=False)
+
+    # Specific attribute change
+    v2.l["a"] = 10
+    assert not v1.equals(v2, check_meta_data=False)
+
+    # Selective column check (marginal is still default 0.0 for both)
+    assert v1.equals(v2, columns=["marginal"], check_meta_data=False)
+
+    e1 = gp.Equation(m, "e1", domain=[i1], type="regular")
+    e2 = gp.Equation(m, "e2", domain=[i1], type="regular")
+
+    e1.m[...] = 2
+    e2.m[...] = 2
+
+    # Exact equivalence
+    assert e1.equals(e2, check_meta_data=False)
+
+    # Tolerance on specific attribute change
+    e2.m["a"] = 2.0001
+    assert not e1.equals(e2, check_meta_data=False)
+    assert e1.equals(e2, check_meta_data=False, atol=1e-3)
+
+    # Selective column check (level is still default 0.0 for both)
+    assert e1.equals(e2, columns=["level"], check_meta_data=False)
+
+    s1 = gp.Parameter(m, "s1", records=5.0)
+    s2 = gp.Parameter(m, "s2", records=5.0)
+    s3 = gp.Parameter(m, "s3", records=10.0)
+    s4 = gp.Parameter(m, "s4", records=5.0001)
+
+    # Exact match
+    assert s1.equals(s2, check_meta_data=False)
+
+    # Mismatch
+    assert not s1.equals(s3, check_meta_data=False)
+
+    # Tolerance match
+    assert not s1.equals(s4, check_meta_data=False)  # Fails without tolerance
+    assert s1.equals(s4, check_meta_data=False, atol=1e-3)  # Passes with tolerance
+
+    # Special values check
+    s_eps1 = gp.Parameter(m, "s_eps1", records=gp.SpecialValues.EPS)
+    s_eps2 = gp.Parameter(m, "s_eps2", records=gp.SpecialValues.EPS)
+    s_na = gp.Parameter(m, "s_na", records=gp.SpecialValues.NA)
+
+    # Exact special value equivalence
+    assert s_eps1.equals(s_eps2, check_meta_data=False)
+
+    # Special value mismatch
+    assert not s_eps1.equals(s_na, check_meta_data=False)
+    assert not s1.equals(s_eps1, check_meta_data=False)
+
+
+@pytest.mark.unit
+def test_symbol_pivot():
+    m = gp.Container()
+
+    i = gp.Set(m, "i", records=["seattle", "san-diego"])
+    j = gp.Set(m, "j", records=["new-york", "chicago", "topeka"])
+
+    with pytest.raises(
+        ValidationError,
+        match="Pivoting operations only possible on symbols with dimension > 1",
+    ):
+        i.pivot()
+
+    p_empty = gp.Parameter(m, "p_empty", domain=[i, j])
+    assert p_empty.pivot() is None
+
+    ij = gp.Set(
+        m,
+        "ij",
+        domain=[i, j],
+        records=[("seattle", "new-york"), ("san-diego", "chicago")],
+    )
+    df_set = ij.pivot()
+
+    assert df_set.shape == (2, 2)
+    # Default fill_value for Set is False
+    assert df_set.loc["seattle", "new-york"]
+    assert not df_set.loc["seattle", "chicago"]
+    assert df_set.loc["san-diego", "chicago"]
+
+    p = gp.Parameter(
+        m,
+        "p",
+        domain=[i, j],
+        records=[("seattle", "new-york", 10), ("san-diego", "chicago", 20)],
+    )
+    df_p = p.pivot(fill_value=0.0)
+
+    assert df_p.shape == (2, 2)
+    assert df_p.loc["seattle", "new-york"] == 10.0
+    assert df_p.loc["san-diego", "new-york"] == 0.0
+
+    v = gp.Variable(m, "v", domain=[i, j])
+    v.l[i, j] = 5
+    v.m["seattle", "new-york"] = 15
+
+    # Variable pivot defaults to 'level'
+    df_v_level = v.pivot()
+    assert df_v_level.loc["seattle", "new-york"] == 5.0
+    assert df_v_level.loc["seattle", "topeka"] == 5.0
+
+    # Variable pivot overriding value to 'marginal'
+    df_v_marginal = v.pivot(value="marginal", fill_value=0.0)
+    assert df_v_marginal.loc["seattle", "new-york"] == 15.0
+    assert df_v_marginal.loc["san-diego", "chicago"] == 0.0
+
+    e = gp.Equation(m, "e", domain=[i, j])
+    e.m[i, j] = 2.5
+    e.l["san-diego", "topeka"] = -10
+
+    df_e_level = e.pivot(value="level", fill_value=0.0)
+    assert df_e_level.loc["san-diego", "topeka"] == -10.0
+    assert df_e_level.loc["seattle", "new-york"] == 0.0
+
+    df_e_marginal = e.pivot(value="marginal")
+    assert df_e_marginal.loc["seattle", "new-york"] == 2.5
+
+    k = gp.Set(m, "k", records=["k1", "k2"])
+    p3 = gp.Parameter(
+        m,
+        "p3",
+        domain=[i, j, k],
+        records=[
+            ("seattle", "new-york", "k1", 100),
+            ("san-diego", "chicago", "k2", 50),
+        ],
+    )
+    df_p3 = p3.pivot(index=["i", "j"], columns="k", fill_value=0.0)
+
+    assert isinstance(df_p3.index, pd.MultiIndex)
+    assert df_p3.loc[("seattle", "new-york"), "k1"] == 100.0
+    assert df_p3.loc[("seattle", "new-york"), "k2"] == 0.0  # filled with 0.0
+    assert df_p3.loc[("san-diego", "chicago"), "k1"] == 0.0  # filled with 0.0
+    assert df_p3.loc[("san-diego", "chicago"), "k2"] == 50.0
+
+
+@pytest.mark.unit
+def test_pivot_restore_special_values():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i1", "i2"])
+    j = gp.Set(m, "j", records=["j1", "j2"])
+
+    p = gp.Parameter(
+        m,
+        "p",
+        domain=[i, j],
+        records=[
+            ("i1", "j1", 5.0),
+            ("i1", "j2", gp.SpecialValues.NA),
+            ("i2", "j1", gp.SpecialValues.UNDEF),
+            ("i2", "j2", 10.0),
+        ],
+    )
+    df_p = p.pivot(fill_value=0.0)
+    # Check that the special values were correctly restored in the pivoted DataFrame
+    assert df_p.shape == (2, 2)
+    assert df_p.loc["i1", "j1"] == 5.0
+    assert df_p.loc["i2", "j2"] == 10.0
+    assert gp.SpecialValues.isNA(df_p.loc["i1", "j2"])
+    assert gp.SpecialValues.isUndef(df_p.loc["i2", "j1"])
+
+    v = gp.Variable(m, "v", domain=[i, j])
+    v.l["i1", "j1"] = 1.0
+    v.l["i2", "j2"] = gp.SpecialValues.NA
+
+    # Variable pivot defaults to value="level"
+    df_v = v.pivot(fill_value=0.0)
+
+    assert df_v.shape == (2, 2)
+    assert df_v.loc["i1", "j1"] == 1.0
+    assert df_v.loc["i1", "j2"] == 0.0  # standard fill value
+    assert gp.SpecialValues.isNA(df_v.loc["i2", "j2"])  # NA was restored
+
+
+@pytest.mark.unit
+def test_symbol_toDict():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i1", "i2"])
+    j = gp.Set(m, "j", records=["j1", "j2"])
+
+    # Scalar Parameter
+    p_scalar = gp.Parameter(m, "p_scalar", records=5)
+    with pytest.raises(
+        TypeError, match="is a scalar and cannot be converted into a dict"
+    ):
+        p_scalar.toDict()
+
+    # 1D Parameter
+    p1 = gp.Parameter(m, "p1", domain=[i], records=[("i1", 10), ("i2", 20)])
+    assert p1.toDict() == {"i1": 10.0, "i2": 20.0}
+
+    # 2D Parameter
+    p2 = gp.Parameter(
+        m, "p2", domain=[i, j], records=[("i1", "j1", 100), ("i2", "j2", 200)]
+    )
+    assert p2.toDict() == {("i1", "j1"): 100.0, ("i2", "j2"): 200.0}
+    assert p2.toDict(orient="columns") == {
+        "i": {0: "i1", 1: "i2"},
+        "j": {0: "j1", 1: "j2"},
+        "value": {0: 100.0, 1: 200.0},
+    }
+
+    # Invalid orient
+    with pytest.raises(
+        ValueError, match="Argument 'orient' expects one of the following"
+    ):
+        p1.toDict(orient="invalid_orient")
+
+    # Scalar Variable
+    v_scalar = gp.Variable(m, "v_scalar")
+    with pytest.raises(
+        TypeError, match="is a scalar and cannot be converted into a dict"
+    ):
+        v_scalar.toDict()
+
+    # 1D Variable
+    v1 = gp.Variable(m, "v1", domain=[i])
+    v1.l["i1"] = 5
+    v1.m["i2"] = 10
+
+    # Variable toDict defaults to 'level'
+    assert v1.toDict() == {"i1": 5.0, "i2": 0.0}
+
+    # Multiple attributes requested -> transforms nested dicts
+    assert v1.toDict(columns=["level", "marginal"]) == {
+        "i1": {"level": 5.0, "marginal": 0.0},
+        "i2": {"level": 0.0, "marginal": 10.0},
+    }
+
+    # 2D Variable
+    v2 = gp.Variable(m, "v2", domain=[i, j])
+    v2.l["i1", "j2"] = 15
+    assert v2.toDict() == {("i1", "j2"): 15.0}
+    assert v2.toDict(orient="columns") == {
+        "i": {0: "i1"},
+        "j": {0: "j2"},
+        "level": {0: 15.0},
+    }
+
+    # Invalid columns
+    with pytest.raises(
+        TypeError, match="Argument 'columns' must be a subset of the following"
+    ):
+        v1.toDict(columns=["level", "invalid_col"])
+
+    e1 = gp.Equation(m, "e1", domain=[i])
+    e1.m["i2"] = 2.5
+
+    # Check explicitly requesting 'marginal' instead of 'level'
+    assert e1.toDict(columns="marginal") == {"i2": 2.5}

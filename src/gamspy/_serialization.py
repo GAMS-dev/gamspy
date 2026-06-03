@@ -5,16 +5,16 @@ import os
 import shutil
 import tempfile
 import zipfile
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from gamspy import Container
-from gamspy._model import ATTRIBUTE_MAP
+from gamspy._internals import MODEL_ATTRIBUTE_MAP
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from gamspy._types import SymbolType
+    from gamspy._symbols import Equation, Variable
 
 
 def serialize(container: Container, path: str) -> None:
@@ -55,7 +55,7 @@ def serialize(container: Container, path: str) -> None:
 
         # Serialize symbols
         info = {}
-        for name, symbol in container.data.items():
+        for name, symbol in container._data.items():
             info[name] = symbol._serialize()
 
         # Serialize models
@@ -116,7 +116,7 @@ def deserialize(path: str) -> Container:
     container = Container(load_from=g00_path)
 
     # Deserialize symbols
-    for name, symbol in container.data.items():
+    for name, symbol in container._data.items():
         symbol._deserialize(info[name])
 
     # Deserialize models
@@ -130,21 +130,19 @@ def deserialize(path: str) -> Container:
         deserialized_matches: dict[str, str | Sequence[str]] = model.get(
             "_matches", None
         )
-        matches: dict[
-            SymbolType | Sequence[SymbolType], SymbolType | Sequence[SymbolType]
-        ] = {}
+        matches: dict[Equation | Sequence[Equation], Variable | Sequence[Variable]] = {}
         if deserialized_matches is not None:
             for key, value in deserialized_matches.items():
                 if isinstance(value, str):
-                    matches[container[key]] = container[value]
+                    matches[container[key]] = container[value]  # ty: ignore[invalid-assignment]
                 else:
-                    matches[container[key]] = [
+                    matches[container[key]] = [  # ty: ignore[invalid-assignment]
                         container[var_name] for var_name in value
                     ]
 
-        objective_variable = model.get("_objective_variable", None)
+        objective_variable = cast("str | None", model.get("_objective_variable", None))
         if objective_variable is not None:
-            objective_variable = container[objective_variable]
+            objective_variable = cast("Variable", container[objective_variable])
 
         deserialized_model = container.addModel(
             name=name,
@@ -154,7 +152,7 @@ def deserialize(path: str) -> Container:
             matches=matches,
             objective=objective_variable,
         )
-        for attribute in ATTRIBUTE_MAP.values():
+        for attribute in MODEL_ATTRIBUTE_MAP.values():
             setattr(deserialized_model, attribute, model[attribute])
 
     return container

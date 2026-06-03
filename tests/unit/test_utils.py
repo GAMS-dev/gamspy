@@ -7,7 +7,7 @@ import pytest
 
 import gamspy.utils as utils
 from gamspy import Container, Set
-from gamspy.exceptions import FatalError, ValidationError
+from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
 
@@ -26,17 +26,9 @@ def test_utils(data):
     with pytest.raises(ValidationError):
         utils._get_domain_str([5])
 
-    # invalid system directory
-    with pytest.raises(FatalError):
-        utils._open_gdx_file("bla", "bla")
-
     assert not utils.checkAllSame([1, 2], [2])
     assert not utils.checkAllSame([1, 2], [2, 3])
     assert utils.checkAllSame([1, 2], [1, 2])
-
-    # invalid load from path
-    with pytest.raises(FatalError):
-        utils._open_gdx_file(m.system_directory, "bla.gdx")
 
 
 def test_isin(data):
