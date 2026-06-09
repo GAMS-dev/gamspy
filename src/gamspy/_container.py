@@ -193,6 +193,7 @@ class Container:
         self.output = output
         self._gams_string = ""
         self._in_loop: int = 0
+        self._arbitrary_code_executed: bool = False
         self.models: dict[str, Model] = {}
         self._mpsge_models: list[str] = []
         if IS_MIRO_INIT:
@@ -1873,6 +1874,7 @@ $endIf
             self._mpsge_models.append(model_name.lower())
 
         self._unsaved_statements = []
+        self._arbitrary_code_executed = True
 
     def close(self) -> None:
         """

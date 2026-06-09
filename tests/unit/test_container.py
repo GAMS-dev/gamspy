@@ -1770,6 +1770,26 @@ def test_gtp_to_gp_dirty():
 
 
 @pytest.mark.unit
+def test_addGamsCode_with_equations():
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=range(1, 10))
+    Z = gp.Variable(m, name="Z")
+    gp.Variable(m, name="X", domain=i, type="binary")
+
+    m.addGamsCode(r"""
+    Equation eq;
+    eq.. Z =E= Sum(i, X(i));
+    """)
+
+    assert m._arbitrary_code_executed
+
+    model = gp.Model(
+        m, name="test", equations=m.getEquations(), objective=Z, sense="min"
+    )
+
+    model.solve()
+
+
 def test_describe_symbols():
     m = gp.Container()
     assert m.describeAliases() is None
