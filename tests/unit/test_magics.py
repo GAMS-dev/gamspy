@@ -186,9 +186,9 @@ def test_magics(data):
     # not
     # not Parameter/Variable
     op1 = ~b[i]
-    assert op1.gamsRepr() == "not b(i)"
+    assert op1.gamsRepr() == "(not b(i))"
     op2 = ~x[i]
-    assert op2.gamsRepr() == "not x(i)"
+    assert op2.gamsRepr() == "(not x(i))"
 
     # unary
     op1 = -(b[i] + x[i])
