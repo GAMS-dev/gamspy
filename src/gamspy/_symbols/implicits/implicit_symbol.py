@@ -127,7 +127,7 @@ class ImplicitSymbol(ABC):
                     set_strs.append(elem.latexRepr())
                 elif isinstance(elem, str):
                     elem = elem.replace("_", r"\_")
-                    set_strs.append(f"\\textquotesingle {elem} \\textquotesingle")
+                    set_strs.append(f"\\text{{`{elem}'}}")
 
             domain_str = "{" + ",".join(set_strs) + "}"
             representation = f"{representation}_{domain_str}"
