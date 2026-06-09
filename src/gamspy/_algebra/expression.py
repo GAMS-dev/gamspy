@@ -173,7 +173,7 @@ def create_gams_expression(root_node: Expression) -> str:
                 # A parenthesized expression has the highest precedence
                 eval_stack.append((new_str, LEAF_PRECEDENCE))
             else:  # Standard handling for 'not'
-                new_str = f"not {operand_str}"
+                new_str = f"(not {operand_str})"
                 eval_stack.append((new_str, op_prec))
 
         # Handle binary ops

@@ -158,7 +158,7 @@ def test_implicit_sets(data):
 
     k[j] = ~k[j]
 
-    assert k.getAssignment() == "k(j) = not k(j);"
+    assert k.getAssignment() == "k(j) = (not k(j));"
 
 
 def test_set_operations(data):
@@ -172,7 +172,7 @@ def test_set_operations(data):
     assert intersection.gamsRepr() == "i * k"
 
     complement = ~i
-    assert complement.gamsRepr() == "not i"
+    assert complement.gamsRepr() == "(not i)"
 
     difference = i - k
     assert difference.gamsRepr() == "i - k"

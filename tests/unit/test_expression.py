@@ -215,3 +215,13 @@ def test_empty_indices():
 
     e[i].where[gp.Ord(i) > 1] = v <= 5
     assert e.getDefinition() == "e(i) $ (ord(i) > 1) .. v(i) =l= 5;"
+
+
+def test_not_operator_paranthesis():
+    m = gp.Container()
+    _ = gp.Set(m, "i")
+    a = gp.Parameter(m, "a")
+    b = gp.Parameter(m, "b")
+    c = gp.Parameter(m, "c")
+    c[...] = a * ~b
+    assert c.getAssignment() == "c = a * (not b);"
