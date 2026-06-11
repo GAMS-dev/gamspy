@@ -287,9 +287,11 @@ def test_loadRecordsFromGdx(data, tmp_path):
     a = Parameter(new_container, name="a", domain=[i])
     new_container.loadRecordsFromGdx(gdx_path)
 
-    assert i.records.values.tolist() == [["i1", ""], ["i2", ""]]
+    assert i._records is None  # records are not loaded yet.
+    assert i.toList() == ["i1", "i2"]  # lazy load
 
-    assert a.records.values.tolist() == [["i1", 1.0], ["i2", 2.0]]
+    assert a._records is None  # records are not loaded yet.
+    assert a.toList() == [("i1", 1.0), ("i2", 2.0)]  # lazy load
 
     # Load specific symbols
     new_container2 = Container()
@@ -324,6 +326,19 @@ def test_loadRecordsFromGdx(data, tmp_path):
 
     with pytest.raises(ValidationError):
         m.loadRecordsFromGdx(gdx_path, symbol_names={"i": "k"})
+
+    # Test variable attribute domain after loadRecordsFromGdx
+    m = Container()
+    i = Set(m, "i", records=range(5))
+    j = Set(m, "j", records=range(5))
+    _ = Variable(m, "v", domain=[i, j])
+    m.write(gdx_path)
+
+    m = Container()
+    m.loadRecordsFromGdx(gdx_path)
+    i, j, v = m["i"], m["j"], m["v"]
+    assert v.domain == [i, j]
+    v.fx[i, j] = 5
 
 
 def test_loadRecordsFromGdx_with_missing_symbols(tmp_path):
@@ -820,11 +835,16 @@ def test_read_from_gdx(data, tmp_path):
     m.close()
 
     m = Container(load_from=gdx_path)
-    assert m["supply"].toList() == [
+    i, k, c, x, supply = m["i"], m["k"], m["c"], m["x"], m["supply"]
+    assert supply._records is None
+    assert x._records is None
+    assert c._records is None
+    assert i._records is None
+    assert supply.toList() == [
         ("seattle", 350.0),
         ("san-diego", 550.0),
     ]
-    assert m["x"].toList() == [
+    assert x.toList() == [
         ("seattle", "new-york", 50.0),
         ("seattle", "chicago", 300.0),
         ("seattle", "topeka", 0.0),
@@ -832,7 +852,7 @@ def test_read_from_gdx(data, tmp_path):
         ("san-diego", "chicago", 0.0),
         ("san-diego", "topeka", 275.0),
     ]
-    assert m["c"].toList() == [
+    assert c.toList() == [
         ("seattle", "new-york", 0.225),
         ("seattle", "chicago", 0.153),
         ("seattle", "topeka", 0.162),
@@ -841,8 +861,8 @@ def test_read_from_gdx(data, tmp_path):
         ("san-diego", "topeka", 0.126),
     ]
 
-    assert m["i"].toList() == ["seattle", "san-diego"]
-    assert m["k"].toList() == ["seattle", "san-diego"]
+    assert i.toList() == ["seattle", "san-diego"]
+    assert k.toList() == ["seattle", "san-diego"]
     m.close()
 
 

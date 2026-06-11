@@ -3,6 +3,7 @@ from __future__ import annotations
 import gamspy._algebra.condition as condition
 import gamspy._algebra.operable as operable
 from gamspy._algebra import expression
+from gamspy._special_values import SpecialValues
 
 
 class Number(operable.Operable):
@@ -57,6 +58,18 @@ class Number(operable.Operable):
         '2.0'
 
         """
+        if isinstance(self._value, (int, float)):
+            if SpecialValues.isEps(self._value):
+                return "EPS"
+            elif SpecialValues.isNA(self._value):
+                return "NA"
+            elif SpecialValues.isPosInf(self._value):
+                return "INF"
+            elif SpecialValues.isNegInf(self._value):
+                return "-INF"
+            elif SpecialValues.isUndef(self._value):
+                return "UNDF"
+
         return f"{self._value}"
 
     def latexRepr(self) -> str:

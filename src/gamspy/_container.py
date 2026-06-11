@@ -240,34 +240,32 @@ class Container:
                     f"`load_from` must be of type str or Container but found {type(load_from)}"
                 )
 
-            if isinstance(load_from, str) and load_from[-4:] not in (  # type: ignore[index]
-                ".gdx",
-                ".g00",
-            ):
-                raise ValidationError(
-                    f"`load_from` must end with .gdx or .g00 but found {load_from}"
-                )
-
-            if isinstance(load_from, str) and load_from.endswith(".g00"):
-                self._options._set_extra_options(
-                    {"restart": load_from, "gdx": self._gdx_out, "gdxSymbols": "all"}
-                )
-                self._synch_with_gams()
-                symbol_names = gdxio._get_symbol_names_from_gdx(
-                    self.system_directory, self._gdx_out
-                )
-                self._read(self._gdx_out, symbol_names=symbol_names)
-                self._options._set_extra_options({})
-                self._should_unload_to_gams(value=False)
-                self._unsaved_statements = []
-                self._is_restarted = True
+            if isinstance(load_from, str):
+                if load_from.endswith(".gdx"):
+                    self.loadRecordsFromGdx(load_from)
+                elif load_from.endswith(".g00"):
+                    self._options._set_extra_options(
+                        {
+                            "restart": load_from,
+                            "gdx": self._gdx_out,
+                            "gdxSymbols": "all",
+                        }
+                    )
+                    self._synch_with_gams()
+                    symbol_names = gdxio._get_symbol_names_from_gdx(
+                        self.system_directory, self._gdx_out
+                    )
+                    self._read(self._gdx_out, symbol_names=symbol_names)
+                    self._options._set_extra_options({})
+                    self._should_unload_to_gams(value=False)
+                    self._unsaved_statements = []
+                    self._is_restarted = True
+                else:
+                    raise ValidationError(
+                        f"`load_from` must end with .gdx or .g00 but found {load_from}"
+                    )
             else:
                 self._read(load_from)
-                if not isinstance(load_from, (gt.Container, Container)):
-                    self._unsaved_statements = []
-                    self._should_unload_to_gams(value=False)
-                    self._add_statement(f"$declareAndLoad {load_from}")
-
                 self._synch_with_gams()
 
     def __enter__(self) -> Container:
@@ -1794,7 +1792,9 @@ $endIf
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.system_directory, load_from
             )
-            gdxio.load_missing_symbols(self, load_from, symbol_names)
+            gdxio.load_missing_symbols(
+                self, load_from, symbol_names, declare_in_gams=False
+            )
             self._add_statement(f"$declareAndLoad {load_from}")
             self._synch_with_gams()
             self._should_load_from_gams(symbol_names)

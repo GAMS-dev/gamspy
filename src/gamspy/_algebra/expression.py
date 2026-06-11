@@ -662,7 +662,12 @@ class Expression(operable.Operable):
                         seen.add(node.name)
                         yield node.name
 
-                    stack.extend(node.domain)
+                    domain = [
+                        elem
+                        for elem in node.domain
+                        if not isinstance(elem, str) and elem.name != node.name
+                    ]
+                    stack.extend(domain)
                     node = None
                 elif isinstance(node, ImplicitSymbol):
                     name = node.parent.name
