@@ -96,3 +96,17 @@ def test_eps(data):
     )
 
     assert f.toList() == [("i0", -0.0), ("i1", 1.0)]
+
+
+def test_special_values_in_number():
+    assert gp.Number(gp.SpecialValues.EPS).gamsRepr() == "EPS"
+    assert gp.Number(gp.SpecialValues.NA).gamsRepr() == "NA"
+    assert gp.Number(gp.SpecialValues.UNDEF).gamsRepr() == "UNDF"
+    assert gp.Number(gp.SpecialValues.POSINF).gamsRepr() == "INF"
+    assert gp.Number(gp.SpecialValues.NEGINF).gamsRepr() == "-INF"
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i1", "i2"])
+    a = gp.Parameter(m, "a", domain=i)
+    a[...] = gp.Number(gp.SpecialValues.EPS).where[gp.Ord(i) > 1]
+    assert a.toList() == [("i2", -0.0)]

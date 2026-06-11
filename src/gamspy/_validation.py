@@ -154,10 +154,15 @@ def get_dimension(
     dimension = 0
 
     for elem in domain:
-        if hasattr(elem, "dimension"):
-            dimension += elem.dimension  # type: ignore
+        if isinstance(elem, (symbols.Set, symbols.Alias)):
+            dimension += elem.dimension
+        elif isinstance(elem, implicits.ImplicitSet):
+            dimension += elem.parent.dimension
         else:
-            dimension += 1
+            if hasattr(elem, "dimension"):
+                dimension += elem.dimension  # type: ignore
+            else:
+                dimension += 1
 
     return dimension
 
@@ -175,7 +180,14 @@ def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
         if type(domain) is symbols.Alias:
             path.insert(0, domain.alias_with.name)
 
-        domain = "*" if type(domain) is str else domain.domain[0]
+        if type(domain) is str:
+            domain = "*"
+        else:
+            parent = domain.domain[0]
+            if not isinstance(parent, str) and parent.name == domain.name:
+                break
+
+            domain = parent
 
     return path
 

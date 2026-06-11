@@ -164,3 +164,14 @@ def test_domain_validation():
 
     with pytest.raises(GamspyException):
         M[...] = gp.Sum(job2, data2["rbla", job2] + data2["bla", job2])
+
+
+def test_domain_validation_with_implicit_set():
+    m = gp.Container()
+    R = gp.Set(m, "R")
+    LL = gp.Set(m, "LL")
+    P = gp.Set(m, "P")
+    L = gp.Set(m, "L", records=["bla"])
+    Rvp = gp.Set(m, "Rvp", domain=[R, LL, P])
+    ncap_bnd = gp.Parameter(m, "ncap_bnd", domain=[R, LL, P, L])
+    ncap_bnd[Rvp[R, LL, P], L["bla"]]

@@ -162,7 +162,11 @@ def load_missing_symbols(
     container: Container,
     load_from: str | os.PathLike,
     symbol_names: list[str] | dict[str, str],
+    *,
+    declare_in_gams: bool = True,
 ) -> None:
+    from gamspy._symbols import Equation, Variable
+
     with open_gdx(container.system_directory, load_from, mode="r") as handle:
         _set_special_values(handle)
         metadata = gdx_get_metadata_by_names(container._gams2np, handle, symbol_names)
@@ -175,13 +179,17 @@ def load_missing_symbols(
     metadata = sorted(metadata, key=lambda x: x.gdx_symbol_number)
     for md in metadata:
         if md.name not in container._data:
-            create_symbol_from_metadata(container, md)
+            create_symbol_from_metadata(container, md, declare_in_gams=declare_in_gams)
             domain = md.domain
             for n, elem in enumerate(domain):
                 if elem != "*" and elem in container._data:
                     domain[n] = container._data[elem]  # ty: ignore[invalid-assignment]
 
             container._data[md.name]._domain = domain  # ty: ignore[invalid-assignment]
+
+        symbol = container._data[md.name]
+        if isinstance(symbol, (Variable, Equation)):
+            symbol._update_attr_domains()
 
 
 def get_records(
@@ -363,7 +371,7 @@ def read(
 # TODO: fix typing here.
 @no_type_check
 def create_symbol_from_metadata(
-    container: Container, metadata: GDXSymbolMetadata
+    container: Container, metadata: GDXSymbolMetadata, *, declare_in_gams: bool = True
 ) -> None:
     from gamspy._symbols import (
         Alias,
@@ -431,6 +439,9 @@ def create_symbol_from_metadata(
             f"GAMS Subtype= {metadata.userinfo}). ",
             f"Cannot load symbol `{metadata.name}`",
         )
+
+    if not declare_in_gams:
+        container._unsaved_statements.pop()
 
 
 def gdx_get_metadata_by_number(

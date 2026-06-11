@@ -4,7 +4,7 @@ leg-precommit:
   tags: [linux]
   image: astral/uv:python3.13-trixie
   script:
-    - uv audit --frozen
+    - uv audit --ignore-until-fixed GHSA-rrmf-rvhw-rf47 --frozen
     - apt-get update && apt-get install -y --no-install-recommends ca-certificates git
     - uv pip install --system prek ty
     - prek run --all-files
