@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import threading
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Literal
 
@@ -16,6 +18,9 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Card, Operation
     from gamspy._symbols.implicits import ImplicitParameter
     from gamspy.math import MathOp
+
+# Dictionary to track the container used in the most recent If/ElseIf block
+_last_containers: dict[tuple[int, int], Container] = {}
 
 
 class Loop:
@@ -182,6 +187,7 @@ class Loop:
         self.container._in_loop -= 1
 
         self.container._add_statement(");")
+        self.container._last_control_flow = "loop"
         if self.container._in_loop == 0:  # Run only in the most outer loop
             self.container._synch_with_gams()
             symbol_names = gdxio._get_symbol_names_from_gdx(
@@ -372,6 +378,7 @@ class For:
         self.container._in_loop -= 1
 
         self.container._add_statement(");")
+        self.container._last_control_flow = "for"
         if self.container._in_loop == 0:  # Run only in the most outer loop
             self.container._synch_with_gams()
             symbol_names = gdxio._get_symbol_names_from_gdx(
@@ -429,6 +436,11 @@ class If:
 
         self.container = condition.container
 
+        # Track the container for potential succeeding ElseIf/Else statements
+        pid = os.getpid()
+        tid = threading.get_native_id()
+        _last_containers[(pid, tid)] = self.container
+
     def __enter__(self):
         if not self.container._in_loop:
             raise ValidationError(
@@ -441,3 +453,117 @@ class If:
 
     def __exit__(self, exc_type, exc, tb):
         self.container._add_statement(");")
+        self.container._last_control_flow = "if"
+
+
+class ElseIf:
+    """
+    A context manager to conditionally execute a group of statements if the preceding
+    `If` or `ElseIf` condition was False and the current condition is True.
+
+    Parameters
+    ----------
+    condition : Expression
+        The logical condition that must be satisfied to execute the nested statements.
+    """
+
+    def __init__(
+        self, condition: Expression | Condition | Operation | MathOp | Parameter
+    ):
+        self.condition = condition
+
+        if not isinstance(condition.container, gp.Container):
+            raise ValidationError(
+                f"Could not find the container in the given condition `{condition}`. Hence, gp.ElseIf operation is not possible."
+            )
+
+        self.container = condition.container
+
+        # Track the container for potential succeeding ElseIf/Else statements
+        pid = os.getpid()
+        tid = threading.get_native_id()
+        _last_containers[(pid, tid)] = self.container
+
+    def __enter__(self):
+        if not self.container._in_loop:
+            raise ValidationError(
+                "`gp.ElseIf` context manager can only be used in `gp.Loop` context managers."
+            )
+
+        if getattr(self.container, "_last_control_flow", None) not in ("if", "elseif"):
+            raise ValidationError(
+                "`gp.ElseIf` must follow a `gp.If` or `gp.ElseIf` block."
+            )
+
+        last_statement = self.container._unsaved_statements[-1]
+        if (
+            not self.container._unsaved_statements
+            or not isinstance(last_statement, str)
+            or self.container._unsaved_statements[-1] != ");"
+        ):
+            raise ValidationError(
+                "`gp.ElseIf` must immediately follow a `gp.If` or `gp.ElseIf` block without any intervening statements."
+            )
+
+        # Remove the closing parenthesis of the previous block to continue the chain
+        self.container._unsaved_statements.pop()
+
+        representation = self.condition.gamsRepr()
+        representation = gp.utils._replace_equality_signs(representation)
+        self.container._add_statement(f"elseif {representation},")
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.container._add_statement(");")
+        self.container._last_control_flow = "elseif"
+
+
+class Else:
+    """
+    A context manager to execute a group of statements if all preceding `If` and `ElseIf`
+    conditions were False.
+    """
+
+    def __init__(self):
+        pid = os.getpid()
+        tid = threading.get_native_id()
+        container = _last_containers.get((pid, tid))
+
+        if not isinstance(container, gp.Container):
+            raise ValidationError(
+                "Could not find the container. Hence, gp.Else operation is not possible. "
+                "Ensure gp.Else follows a gp.If or gp.ElseIf statement."
+            )
+
+        self.container = container
+
+    def __enter__(self):
+        if not getattr(self.container, "_in_loop", 0):
+            raise ValidationError(
+                "`gp.Else` context manager can only be used in `gp.Loop` context managers."
+            )
+
+        if getattr(self.container, "_last_control_flow", None) not in ("if", "elseif"):
+            raise ValidationError(
+                "`gp.Else` must follow a `gp.If` or `gp.ElseIf` block."
+            )
+
+        last_statement = self.container._unsaved_statements[-1]
+        if (
+            not self.container._unsaved_statements
+            or not isinstance(last_statement, str)
+            or self.container._unsaved_statements[-1] != ");"
+        ):
+            raise ValidationError(
+                "`gp.Else` must immediately follow a `gp.If` or `gp.ElseIf` block without any intervening statements."
+            )
+
+        # Remove the closing parenthesis of the previous block to continue the chain
+        self.container._unsaved_statements.pop()
+
+        self.container._add_statement("else")
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.container._add_statement(");")
+        self.container._last_control_flow = "else"
