@@ -111,6 +111,7 @@ leg-engine-3.10:
     - apt-get update && apt-get install -y ca-certificates
     - uv venv .venv -v --python $PYTHON_VERSION && source .venv/bin/activate
     - uv sync --group test
+    - gamspy install solver -a --use-uv
     - python -m pytest -x -v -s -m 'neos' tests
 
 leg-neos-3.14:

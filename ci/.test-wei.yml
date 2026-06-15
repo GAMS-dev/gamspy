@@ -115,6 +115,7 @@ wei-engine-3.10:
     - uv venv .venv -v --python $env:PYTHON_VERSION
     - .venv\Scripts\Activate.ps1
     - uv sync --group test
+    - gamspy install solver -a --use-uv
     - python -m pytest -x -v -s -m 'neos' tests
 
 wei-neos-3.14:

@@ -198,6 +198,15 @@ def test_engine(data):
     assert isinstance(client._engine_config, EngineConfiguration)
 
     transport.solve(backend="engine", client=client, output=sys.stdout)
+    assert x._records is None  # not yet loaded
+    assert x.toList() == [
+        ("seattle", "new-york", 50.0),
+        ("seattle", "chicago", 300.0),
+        ("seattle", "topeka", 0.0),
+        ("san-diego", "new-york", 275.0),
+        ("san-diego", "chicago", 0.0),
+        ("san-diego", "topeka", 275.0),
+    ]
 
     assert transport.objective_value == 153.675
 
@@ -567,7 +576,7 @@ def test_api_auth(data, tmp_path):
         assert message is not None and isinstance(message, str)
 
 
-def test_solver_options(data):
+def test_solver_options(data, tmp_path):
     m, canning_plants, markets, capacities, demands, distances = data
     # Set
     i = Set(
@@ -653,16 +662,20 @@ def test_solver_options(data):
         password=os.environ["ENGINE_PASSWORD"],
         namespace=os.environ["ENGINE_NAMESPACE"],
     )
+
+    log_file_path = str(tmp_path / "log.log")
     transport.solve(
         output=sys.stdout,
         solver="conopt",
         solver_options={"rtmaxv": "1.e12"},
         backend="engine",
         client=client,
+        options=Options(log_file=log_file_path),
     )
 
-    with open(m.gamsJobName() + ".lst") as file:
-        assert ">>  rtmaxv 1.e12" in file.read()
+    with open(log_file_path) as file:
+        content = file.read()
+        assert ">>  rtmaxv 1.e12" in content
 
 
 def test_savepoint(data):

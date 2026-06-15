@@ -108,6 +108,7 @@ lag-engine-3.10:
     - uv venv .venv -v --python $PYTHON_VERSION && source .venv/bin/activate
     - uv sync --group test
     - uv pip install gamspy-arm-perf
+    - gamspy install solver -a --use-uv
     - python -m pytest -x -v -s -m 'neos' tests
 
 lag-neos-3.14:
