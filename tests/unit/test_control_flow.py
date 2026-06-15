@@ -511,3 +511,63 @@ def test_loop_with_math_op():
                 ),
             ),
         )
+
+
+def test_elseif_else():
+    m = gp.Container()
+    i = gp.Set(m, records=[f"i{idx}" for idx in range(1, 5)])
+    cnt_if = gp.Parameter(m, records=0)
+    cnt_elseif = gp.Parameter(m, records=0)
+    cnt_else = gp.Parameter(m, records=0)
+
+    # Test valid execution flow chaining If -> ElseIf -> Else
+    with gp.Loop(i):
+        with gp.If(gp.Ord(i) == 1):
+            cnt_if[...] += 1
+        with gp.ElseIf(gp.Ord(i) == 2):
+            cnt_elseif[...] += 1
+        with gp.Else():
+            cnt_else[...] += 1
+
+    assert cnt_if.toValue() == 1.0
+    assert cnt_elseif.toValue() == 1.0
+    assert cnt_else.toValue() == 2.0  # triggered for i3 and i4
+
+    # Test ValidationErrors for orphaned control structures
+    with pytest.raises(
+        ValidationError,
+        match=r"`gp.ElseIf` context manager can only be used in `gp.Loop` context managers.",
+    ):
+        with gp.ElseIf(gp.Ord(i) == 1):
+            pass
+
+    with pytest.raises(
+        ValidationError,
+        match=r"`gp.Else` context manager can only be used in `gp.Loop` context managers.",
+    ):
+        with gp.Else():
+            pass
+
+    # Test ValidationError when statements intervene between If and ElseIf
+    with gp.Loop(i):
+        with gp.If(gp.Ord(i) == 1):
+            pass
+        cnt_if[...] += 1
+        with pytest.raises(
+            ValidationError,
+            match=r"`gp.ElseIf` must immediately follow a `gp.If` or `gp.ElseIf` block without any intervening statements.",
+        ):
+            with gp.ElseIf(gp.Ord(i) == 2):
+                pass
+
+    # Test ValidationError when statements intervene between If and Else
+    with gp.Loop(i):
+        with gp.If(gp.Ord(i) == 1):
+            pass
+        cnt_if[...] += 1
+        with pytest.raises(
+            ValidationError,
+            match=r"`gp.Else` must immediately follow a `gp.If` or `gp.ElseIf` block without any intervening statements.",
+        ):
+            with gp.Else():
+                pass

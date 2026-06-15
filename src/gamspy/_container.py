@@ -193,6 +193,9 @@ class Container:
         self.output = output
         self._gams_string = ""
         self._in_loop: int = 0
+        self._last_control_flow: (
+            Literal["loop", "for", "if", "elseif", "else"] | None
+        ) = None
         self._arbitrary_code_executed: bool = False
         self.models: dict[str, Model] = {}
         self._mpsge_models: list[str] = []
