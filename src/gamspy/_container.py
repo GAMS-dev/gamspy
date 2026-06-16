@@ -194,7 +194,7 @@ class Container:
         self._gams_string = ""
         self._in_loop: int = 0
         self._last_control_flow: (
-            Literal["loop", "for", "if", "elseif", "else"] | None
+            Literal["loop", "for", "while", "if", "elseif", "else"] | None
         ) = None
         self._arbitrary_code_executed: bool = False
         self.models: dict[str, Model] = {}
