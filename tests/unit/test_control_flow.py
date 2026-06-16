@@ -513,6 +513,43 @@ def test_loop_with_math_op():
         )
 
 
+def test_while():
+    m = gp.Container()
+    x = gp.Parameter(m, records=100)
+    cnt = gp.Parameter(m, records=0)
+
+    # Basic While loop test
+    with gp.While(x > 1):
+        x[...] = x / 2
+        cnt[...] += 1
+
+    assert (
+        cnt.toValue() == 7.0
+    )  # 100 -> 50 -> 25 -> 12.5 -> 6.25 -> 3.125 -> 1.5625 -> 0.78125
+
+    # Reset parameters for break/continue test
+    x[...] = 10
+    cnt[...] = 0
+
+    with gp.While(x > 0) as w:
+        x[...] = x - 1
+
+        with gp.If(x == 5):
+            w.Continue  # noqa: B018
+
+        with gp.If(x == 2):
+            w.Break  # noqa: B018
+
+        cnt[...] += 1
+
+    # Tracing execution:
+    # x=9 (cnt=1), x=8 (cnt=2), x=7 (cnt=3), x=6 (cnt=4)
+    # x=5 (Continue skips cnt)
+    # x=4 (cnt=5), x=3 (cnt=6)
+    # x=2 (Break immediately exits the loop)
+    assert cnt.toValue() == 6.0
+
+
 def test_elseif_else():
     m = gp.Container()
     i = gp.Set(m, records=[f"i{idx}" for idx in range(1, 5)])

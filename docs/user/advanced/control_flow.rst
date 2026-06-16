@@ -115,6 +115,30 @@ one can specify the direction as follows: ::
 
 You can also use other Parameters or Expressions to define the start, end, and step boundaries of the loop dynamically.
 
+The While Statement
+-------------------
+The :meth:`While <gamspy.While>` class maps to the GAMS ``while`` statement. It allows you to repeat a block of execution 
+statements as long as a specific logical condition evaluates to ``True``.
+
+Unlike :meth:`Loop <gamspy.Loop>` and :meth:`For <gamspy.For>`, a ``while`` loop continues for an unknown number of 
+iterations until its condition is broken.
+
+.. code-block:: python
+
+    import gamspy as gp
+
+    m = gp.Container()
+    x = gp.Parameter(m, records=100)
+    cnt = gp.Parameter(m, records=0)
+    
+    # Iteratively halve x until it is less than or equal to 1
+    with gp.While(x > 1):
+        x[...] = x / 2
+        cnt[...] += 1
+
+Just like loops, you can also capture the while instance using the ``as`` keyword to utilize :meth:`Break <gamspy.While.Break>` 
+and :meth:`Continue <gamspy.While.Continue>` statements.
+
 If, ElseIf, and Else Statements
 -------------------------------
 The :meth:`If <gamspy.If>`, :meth:`ElseIf <gamspy.ElseIf>`, and :meth:`Else <gamspy.Else>` classes map directly to the 

@@ -388,6 +388,98 @@ class For:
                 self.container._data[name]._should_load_from_gams = True
 
 
+class While:
+    """
+    A context manager to execute a group of statements repeatedly as long as a
+    condition evaluates to True.
+
+    The While class maps to the GAMS `while` statement. It is useful for
+    processes that must repeat an unknown number of times until a specific
+    logical condition is met.
+
+    Parameters
+    ----------
+    condition : Expression | Condition | Operation | MathOp | Parameter
+        The logical condition that must remain true to continue executing the nested statements.
+
+    Examples
+    --------
+    **1. Iteratively dividing a number:**
+
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> x = gp.Parameter(m, records=100)
+    >>> cnt = gp.Parameter(m, records=0)
+    >>> with gp.While(x > 1):
+    ...     x[...] = x / 2
+    ...     cnt[...] += 1
+
+    """
+
+    def __init__(
+        self, condition: Expression | Condition | Operation | MathOp | Parameter
+    ):
+        self.condition = condition
+
+        if not isinstance(condition.container, gp.Container):
+            raise ValidationError(
+                f"Could not find the container in the given condition `{condition}`. Hence, gp.While operation is not possible."
+            )
+
+        self.container = condition.container
+        self._loop_number = -1
+
+    @property
+    def Break(self) -> None:
+        """
+        Breaks the execution of the current while loop prematurely.
+
+        This property maps to the GAMS `break` statement. Note that you can only
+        break out of the innermost loop currently executing.
+
+        Raises
+        ------
+        ValidationError
+            If attempting to break an outer loop without breaking the inner loop first.
+        """
+        if self._loop_number < self.container._in_loop:
+            raise ValidationError(
+                "You cannot break this while loop. You should break the inner loop first."
+            )
+
+        self.container._add_statement("break;")
+
+    @property
+    def Continue(self) -> None:
+        """
+        Skips the remaining statements in the current iteration and proceeds to the next one.
+        """
+        self.container._add_statement("continue;")
+
+    def __enter__(self) -> While:
+        self.container._in_loop += 1
+        self._loop_number = self.container._in_loop
+
+        representation = self.condition.gamsRepr()
+        representation = gp.utils._replace_equality_signs(representation)
+        self.container._add_statement(f"while({representation},")
+
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.container._in_loop -= 1
+
+        self.container._add_statement(");")
+        self.container._last_control_flow = "while"
+        if self.container._in_loop == 0:  # Run only in the most outer loop
+            self.container._synch_with_gams()
+            symbol_names = gdxio._get_symbol_names_from_gdx(
+                self.container.system_directory, self.container._gdx_out
+            )
+            for name in symbol_names:
+                self.container._data[name]._should_load_from_gams = True
+
+
 class If:
     """
     A context manager to conditionally execute a group of statements.
