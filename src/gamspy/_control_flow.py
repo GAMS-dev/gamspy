@@ -210,11 +210,11 @@ class For:
     ----------
     index : Parameter
         A scalar Parameter used as the numerical loop counter.
-    start : int | float | Parameter | Expression | Card | Operation
+    start : int | float | Parameter | Expression | Card | Operation | MathOp
         The starting value of the loop counter.
-    end : int | float | Parameter | Expression | Card | Operation
+    end : int | float | Parameter | Expression | Card | Operation | MathOp
         The final value of the loop counter.
-    step : int | float | Parameter | Expression | Card | Operation, optional
+    step : int | float | Parameter | Expression | Card | Operation | MathOp, optional
         The increment or decrement step size. Defaults to 1.
     direction : Litera['to', 'downto']
         The direction of the step. 'to' steps upwards, 'downto' steps downwards. Defaults to 'to'.
@@ -259,21 +259,24 @@ class For:
         | ImplicitParameter
         | Expression
         | Card
-        | Operation,
+        | Operation
+        | MathOp,
         end: int
         | float
         | Parameter
         | ImplicitParameter
         | Expression
         | Card
-        | Operation,
+        | Operation
+        | MathOp,
         step: int
         | float
         | Parameter
         | ImplicitParameter
         | Expression
         | Card
-        | Operation = 1,
+        | Operation
+        | MathOp = 1,
         direction: Literal["to", "downto"] = "to",
     ):
         if not isinstance(index, gp.Parameter):
