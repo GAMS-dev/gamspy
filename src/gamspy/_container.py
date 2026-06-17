@@ -1845,31 +1845,17 @@ $endIf
         """
         self._add_statement(gams_code)
         self._options._set_extra_options(
-            {"gdx": self._gdx_out, "gdxSymbols": "newOrChanged"}
+            {"gdx": self._gdx_out, "gdxSymbols": "newOrChangedNoData"}
         )
         self._synch_with_gams()
         symbol_names = gdxio._get_symbol_names_from_gdx(
             self.system_directory, self._gdx_out
         )
-        self._load_records_from_gdx(self._gdx_out, symbol_names)
-        for name in symbol_names:
-            symbol = self._data[name]
-
-            new_domain = []
-            for elem in symbol.domain:
-                if isinstance(elem, str) and elem != "*" and elem in self._data:
-                    new_domain.append(self._data[elem])
-                else:
-                    new_domain.append(elem)
-
-            if isinstance(symbol, (gp.Set, gp.Parameter, gp.Variable, gp.Equation)):
-                symbol._domain = new_domain
-
-            if isinstance(symbol, (gp.Variable, gp.Equation)):
-                symbol._update_attr_domains()
-
+        gdxio.load_missing_symbols(
+            self, self._gdx_out, symbol_names, declare_in_gams=False
+        )
         self._options._set_extra_options({})
-        self._should_unload_to_gams(value=False)
+        self._should_load_from_gams(symbol_names, value=True)
 
         # Unfortunately MPSGE requires a dirty trick
         pattern = re.compile(r"^\$sysInclude\s+mpsgeset\s+(\w+)\s*$", re.MULTILINE)
