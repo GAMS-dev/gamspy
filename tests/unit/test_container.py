@@ -885,15 +885,19 @@ def test_restart():
     m = Container()
     save_path = os.path.join(m.working_directory, "save.g00")
     m._options._set_extra_options({"save": save_path})
-    _ = Set(m, "i", records=["i1", "i2"])
+    i = Set(m, "i", records=["i1", "i2"])
+    _ = Parameter(m, "a", domain=i, records=[("i1", 1), ("i2", 2)])
     assert os.path.exists(save_path)
     m.close()
 
     m = Container(load_from=save_path)
     assert "i" in m.data
+    assert "a" in m.data
     assert m["i"].toList() == ["i1", "i2"]
+    assert m["a"].toList() == [("i1", 1), ("i2", 2)]
+    assert m["a"].domain == [m["i"]]
     _ = Set(m, "j", records=range(6))
-    assert list(m.data.keys()) == ["i", "j"]
+    assert list(m.data.keys()) == ["i", "a", "j"]
     m.close()
 
 

@@ -895,8 +895,6 @@ class GAMSEngine(backend.Backend):
         scrdir = self.container._process_directory
 
         hidden_options = {
-            "gdx": self.container._gdx_out,
-            "gdxSymbols": "newOrChanged",
             "input": self.gms_file,
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,
@@ -904,6 +902,7 @@ class GAMSEngine(backend.Backend):
             "logoption": 0,
             "previouswork": 1,
             "license": self.container._license_path,
+            "save": self.restart_file,
         }
 
         if self.container._network_license:
@@ -918,7 +917,6 @@ class GAMSEngine(backend.Backend):
         options = Options()
         hidden_options = self._prepare_dummy_options()
         options._set_hidden_options(hidden_options)
-        options._hidden_options["save"] = self.restart_file
         options._export(self.pf_file)
 
         send_job(self.container._comm_pair_id, self.job_name, self.pf_file)

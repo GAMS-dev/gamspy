@@ -49,7 +49,7 @@ class Local(backend.Backend):
 
         if self.model is not None:
             hidden_options["gdx"] = self.container._gdx_out
-            hidden_options["gdxSymbols"] = "newOrChanged"
+            hidden_options["gdxSymbols"] = "newOrChangedNoData"
 
         if self.container._network_license:
             hidden_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")

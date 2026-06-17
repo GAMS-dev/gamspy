@@ -490,7 +490,7 @@ def gdx_get_metadata_by_names(
     metadata = []
     for sym in symbol_names:
         _, symnr = gdx.gdxFindSymbol(gdx_handle, sym)
-        if symnr == -1:
+        if symnr < 1:
             raise ValueError(
                 f"User specified to read symbol `{sym}`, "
                 "but it does not exist in the GDX file."

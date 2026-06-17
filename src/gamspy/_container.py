@@ -252,17 +252,18 @@ class Container:
                         {
                             "restart": load_from,
                             "gdx": self._gdx_out,
-                            "gdxSymbols": "all",
+                            "gdxSymbols": "allNoData",
                         }
                     )
                     self._synch_with_gams()
+                    self._options._set_extra_options({})
                     symbol_names = gdxio._get_symbol_names_from_gdx(
                         self.system_directory, self._gdx_out
                     )
-                    self._read(self._gdx_out, symbol_names=symbol_names)
-                    self._options._set_extra_options({})
-                    self._should_unload_to_gams(value=False)
-                    self._unsaved_statements = []
+                    gdxio.load_missing_symbols(
+                        self, self._gdx_out, symbol_names, declare_in_gams=False
+                    )
+                    self._should_load_from_gams(symbol_names, value=True)
                     self._is_restarted = True
                 else:
                     raise ValidationError(
