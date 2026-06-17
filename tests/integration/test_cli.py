@@ -16,6 +16,7 @@ import gamspy_base
 import pytest
 import requests
 
+import gamspy as gp
 from gamspy import Container, Set
 
 pytestmark = pytest.mark.cli
@@ -44,7 +45,7 @@ def teardown():
     yield
 
     # Clean up
-    # shutil.rmtree("tmp")
+    shutil.rmtree("tmp")
 
 
 def test_install_license(teardown):
@@ -210,6 +211,31 @@ def test_install_license(teardown):
         with open(m._license_path) as file:
             license = file.read()
             assert "alptest.gams.com" in license
+
+    # Install free personal license
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "install",
+            "license",
+            os.environ["FREE_PERSONAL_LICENSE"],
+            "--use-uv",
+        ],
+        text=True,
+        capture_output=True,
+    )
+
+    assert process.returncode == 0, process.stderr
+    with open(os.path.join(gamspy_base.directory, gp.utils.CAPABILITIES_FILE)) as file:
+        content = file.read()
+
+    assert "HIGHS" in content
+    assert "IPOPT" in content
+    assert "MILES" in content
+    assert "SHOT" in content
+    assert "RESHOP" in content
 
     # Recover local license
     process = subprocess.run(

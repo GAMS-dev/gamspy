@@ -41,6 +41,18 @@ Usage
      - -c
      - None
      - Specify a duration in hours to checkout a session.
+   * - -\-output 
+     - -o
+     - None
+     - Specify a file path to write the license file.
+   * - -\-uses-port
+     - 
+     - None
+     - Interprocess communication starting port.
+   * - -\-use-uv 
+     - 
+     - False
+     - Use uv instead of pip to install solvers.
 
 Examples
 ~~~~~~~~
