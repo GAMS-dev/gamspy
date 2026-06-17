@@ -305,7 +305,7 @@ def test_regression_tree_put_M(data):
         problem="mip",
     )
 
-    m1.solve()
+    m1.solve(solver_options={"solveFinal": 1})
 
     m2 = gp.Model(
         m,
@@ -313,7 +313,7 @@ def test_regression_tree_put_M(data):
         equations=eqns,
         problem="mip",
     )
-    m2.solve()
+    m2.solve(solver_options={"solveFinal": 1})
 
     le_cons = next(
         ele
@@ -788,7 +788,7 @@ def test_random_forest_valid_variable_no_lb(data_rf):
         sense=gp.Sense.MIN,
     )
 
-    model.solve(solver="CPLEX")
+    model.solve(solver="CPLEX", solver_options={"solveFinal": 1})
 
     expected_out = [10] * 5
 
@@ -1072,7 +1072,7 @@ def test_gradient_boosting_valid_variable_no_lb(data_gbt):
         sense=gp.Sense.MIN,
     )
 
-    model.solve(solver="CPLEX")
+    model.solve(solver="CPLEX", solver_options={"solveFinal": 1})
 
     expected_out = np.array([14.536, 14.536, 14.536, 15.486, 14.536])
 

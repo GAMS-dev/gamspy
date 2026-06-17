@@ -86,7 +86,7 @@ def pwl_suite(fct, name):
                         sense=sense,
                         problem="mip",
                     )
-                    model.solve()
+                    model.solve(solver_options={"solveFinal": 1})
                     assert y.toDense() == expected_y, f"Case {case_i} failed !"
                     assert x.toDense() == expected_x, f"Case {case_i} failed !"
             else:
@@ -98,7 +98,7 @@ def pwl_suite(fct, name):
                 model = gp.Model(
                     m, equations=eqs, objective=y, sense=sense, problem="mip"
                 )
-                model.solve()
+                model.solve(solver_options={"solveFinal": 1})
                 assert y.toDense() == expected_y, f"Case {case_i} failed !"
                 assert x.toDense() == expected_x, f"Case {case_i} failed !"
 
@@ -249,7 +249,7 @@ def pwl_suite(fct, name):
     x.lo = gp.SpecialValues.NEGINF
     x.up = gp.SpecialValues.POSINF
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
-    res = model.solve()
+    res = model.solve(solver_options={"solveFinal": 1})
     assert x.toDense() == 4, "Case 14 failed !"
     assert y.toDense() == 45, "Case 14 failed !"
     print("Case 14 passed !")
@@ -291,7 +291,7 @@ def pwl_suite(fct, name):
             )
             x.fx = -5
             model = gp.Model(m, equations=eqs, objective=y, sense="min", problem="mip")
-            model.solve()
+            model.solve(solver_options={"solveFinal": 1})
             assert y.toDense() == 20, "Case 15 failed !"
 
         print("Case 15 passed !")
@@ -317,13 +317,13 @@ def pwl_suite(fct, name):
     )
     x.fx = -5
     model = gp.Model(m, equations=eqs, objective=y, sense="min", problem="mip")
-    model.solve()
+    model.solve(solver_options={"solveFinal": 1})
 
     assert y.toDense() == -3, "Case 16 failed !"
     print("Case 16 passed !")
 
     x.fx = 5  # bounded from right
-    res = model.solve()
+    res = model.solve(solver_options={"solveFinal": 1})
     assert res["Model Status"].item() == "IntegerInfeasible", "Case 17 failed !"
     print("Case 17 passed !")
 
@@ -341,7 +341,7 @@ def pwl_suite(fct, name):
     print("Case 18 passed !")
 
     x.fx = 5
-    model.solve()
+    model.solve(solver_options={"solveFinal": 1})
 
     assert y.toDense() == 4, "Case 19 failed !"
     print("Case 19 passed !")
