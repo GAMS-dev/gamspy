@@ -58,6 +58,9 @@ def license(
         int | None,
         typer.Option("--uses-port", help="Interprocess communication starting port."),
     ] = None,
+    use_uv: bool = typer.Option(
+        False, "--use-uv", help="Use uv instead of pip to install solvers."
+    ),
 ):
     import json
 
@@ -201,6 +204,25 @@ def license(
                 raise typer.Exit(code=1)
 
         shutil.copy(license, license_path)
+
+    # Free personal license has different default solvers. Install them.
+    if "FREEPERSONAL" in lines[4]:
+        command = [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "solver",
+            "HIGHS",
+            "IPOPT",
+            "MILES",
+            "SHOT",
+            "RESHOP",
+        ]
+        if use_uv:
+            command.append("--use-uv")
+
+        subprocess.run(command)
 
 
 def is_editable(package_name: str) -> bool:
