@@ -34,6 +34,7 @@ from gamspy._internals import (
     EQU_TYPE,
     TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
     TRANSFER_TO_GAMS_VARIABLE_SUBTYPES,
+    CasePreservingDict,
 )
 from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem, Sense
@@ -209,7 +210,7 @@ class Container:
 
         self._unsaved_statements: list = []
 
-        self._data: dict[str, SymbolType] = {}
+        self._data: CasePreservingDict[str, SymbolType] = CasePreservingDict()
 
         self._options = validation.validate_global_options(options)
         if self._options.license is not None:

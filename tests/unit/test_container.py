@@ -2238,3 +2238,28 @@ def test_symbol_toDict():
 
     # Check explicitly requesting 'marginal' instead of 'level'
     assert e1.toDict(columns="marginal") == {"i2": 2.5}
+
+
+def test_case_insensitivity(tmp_path):
+    gdx_path = tmp_path / "test.gdx"
+    m = gp.Container()
+    gp.Set(m, "i", records=range(3))
+    gp.Set(m, "J", records=range(3))
+    m.write(gdx_path)
+
+    m = gp.Container(load_from=gdx_path)
+    m["j"]  # should work even though the casing is wrong
+
+    m = gp.Container()
+    m.read(gdx_path)
+    m["j"]  # should work even though the casing is wrong
+
+    m = gp.Container()
+    m.loadRecordsFromGdx(gdx_path)
+    m["j"]  # should work even though the casing is wrong
+
+    m = gp.Container()
+    gp.Set(m, "j")
+    m.loadRecordsFromGdx(gdx_path)
+    m["j"]  # should work even though the casing is wrong
+    assert m["j"].toList() == ["0", "1", "2"]
