@@ -1,1 +1,0 @@
-If the installed license is a free personal license, automatically install highs, ipopt, miles, shot and reshop.

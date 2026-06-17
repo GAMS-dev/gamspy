@@ -1,1 +1,0 @@
-Allow providing a regex to exclude symbol comparisons in gamspy gdx diff command.

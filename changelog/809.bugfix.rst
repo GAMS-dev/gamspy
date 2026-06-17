@@ -1,1 +1,0 @@
-Show PATHNLP in the licensed solvers list in **gamspy show license** command if the license allows using PATHNLP solver.

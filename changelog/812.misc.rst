@@ -1,1 +1,0 @@
-Improve the typing of the 'records' argument of symbols.

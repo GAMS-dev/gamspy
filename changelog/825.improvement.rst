@@ -1,1 +1,0 @@
-Load records lazily after assignments and solve statements.

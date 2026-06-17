@@ -1,1 +1,0 @@
-Skip equation definition checks in case container.addGamsCode is used.
