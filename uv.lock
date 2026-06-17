@@ -24,13 +24,36 @@ resolution-markers = [
 
 [options]
 exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
-exclude-newer-span = "P7D"
+exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
-urllib3 = false
-gamsapi = false
+gamspy-ipopth = false
+gamspy-mosek = false
 gamspy-base = false
-torch = false
+gamspy-xpress = false
+gamspy-shot = false
+gamspy-minos = false
+gamspy-miles = false
+gamspy-ipopt = false
+gamspy-baron = false
+gamspy-cbc = false
+gamspy-examiner = false
+gamspy-examiner2 = false
+gamspy-conopt3 = false
+gamspy-gurobi = false
+gamspy-knitro = false
+gamspy-highs = false
+gamspy-reshop = false
+gamspy-pathnlp = false
+gamspy-arm-perf = false
+gamspy-copt = false
+gamspy-scip = false
+gamspy-mpsge = false
+gamsapi = false
+gamspy-snopt = false
+gamspy-soplex = false
+gamspy-de = false
+gamspy-dicopt = false
 
 [[package]]
 name = "accessible-pygments"
