@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import itertools
+from collections import UserDict
 from enum import Enum
+from typing import Any
 
 from gams.core.gdx import (
     GMS_EQUTYPE_B,
@@ -28,6 +30,73 @@ GAMS_SYMBOL_MAX_LENGTH = GMS_UEL_IDENT_SIZE - 1
 GAMS_UEL_MAX_LENGTH = GMS_UEL_IDENT_SIZE - 1
 GAMS_DESCRIPTION_MAX_LENGTH = GMS_SSSIZE - 1
 GAMS_MAX_INDEX_DIM = GMS_MAX_INDEX_DIM
+
+
+class CasePreservingDict(UserDict):
+    def __init__(self, *args, **kwargs):
+        self._casefolded_key_map = {}
+        super().__init__(*args, **kwargs)
+
+    def __contains__(self, key):
+        return key.casefold() in self._casefolded_key_map
+
+    def __delitem__(self, key):
+        del self.data[self._casefolded_key_map[key.casefold()]]
+        del self._casefolded_key_map[key.casefold()]
+
+    def __setitem__(self, key, item):
+        key_cf = key.casefold()
+
+        if key_cf not in self._casefolded_key_map:
+            self.data[key] = item
+            self._casefolded_key_map[key_cf] = key
+        else:
+            self.data[self._casefolded_key_map[key_cf]] = item
+
+    def _repr_pretty_(self, p, cycle):
+        if cycle:
+            p.pretty(self.data)
+        else:
+            p.pretty(self.data)
+
+    def __getitem__(self, key):
+        return self.data[self._casefolded_key_map[key.casefold()]]
+
+    def pop(self, key: str) -> Any:
+        a = self.data.pop(self._casefolded_key_map[key.casefold()])
+        del self._casefolded_key_map[key.casefold()]
+        return a
+
+    def get(self, key: str, default: Any | None = None) -> Any:
+        try:
+            return self.data.get(self._casefolded_key_map[key.casefold()])
+        except KeyError:
+            return default
+
+    def copy(self) -> CasePreservingDict:
+        import copy
+
+        return copy.deepcopy(self)
+
+    def setdefault(self, key: str, default: Any) -> Any:
+        key_cf = key.casefold()
+        if key_cf not in self._casefolded_key_map:
+            self.__setitem__(key, default)
+            return default
+        else:
+            return self.data[self._casefolded_key_map[key_cf]]
+
+    def popitem(self) -> tuple:
+        return self.data.popitem()
+
+    def items(self):
+        return self.data.items()
+
+    def keys(self):
+        return self.data.keys()
+
+    def values(self):
+        return self.data.values()
 
 
 class DomainStatus(Enum):
