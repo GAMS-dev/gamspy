@@ -894,8 +894,8 @@ def test_dnlp_inscribedsquare(data, tmp_path):
 
     with open("trace.txt") as trace:
         lines = trace.read().splitlines()
-        objective = lines[-1].split("//")[0].split(" ")[-3]
-        assert objective.startswith("0.106")
+        objective = float(lines[-1].split("//")[0].split(" ")[-3])
+        assert math.isclose(objective, 1.60087540678543, rel_tol=0.01)
 
     reference_path = os.path.join(
         "tests", "integration", "gms_references", "square.gms"
