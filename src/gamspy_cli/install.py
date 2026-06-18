@@ -432,7 +432,7 @@ def solver(
         and "SCIP" in solvers
         and "GUROBI" not in solvers
     ):
-        solvers.append("GUROBI")
+        solvers.insert(0, "GUROBI")
 
     install_addons(solvers)
 
