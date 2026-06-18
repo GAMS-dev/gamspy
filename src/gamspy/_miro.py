@@ -42,20 +42,24 @@ def load_miro_symbol_records(container: Container):
             if not symbol._already_loaded:
                 names.append(name)
 
-        container._load_records_from_gdx(MIRO_GDX_IN, names)
+        symbol_str = " ".join(names)
+        container._add_statement(f"$gdxLoad {MIRO_GDX_IN} {symbol_str}")
+        container._should_load_from_gams(names)
         for name in names:
             symbol = cast("Set | Parameter", container._data[name])
             symbol._already_loaded = True
             if (
                 isinstance(symbol, gp.Parameter)
                 and symbol._is_miro_table
-                and symbol._records is not None
+                and symbol.records is not None
             ):
-                symbol._records.columns = symbol.domain_names + ["value"]
+                symbol.records.columns = symbol.domain_names + ["value"]
 
     # Load records of miro output symbols
     if MIRO_GDX_OUT and container._miro_output_symbols:
-        container._load_records_from_gdx(MIRO_GDX_OUT, container._miro_output_symbols)
+        symbol_str = " ".join(container._miro_output_symbols)
+        container._add_statement(f"$gdxLoad {MIRO_GDX_OUT} {symbol_str}")
+        container._should_load_from_gams(container._miro_output_symbols)
 
     for name in container._miro_input_symbols + container._miro_output_symbols:
         container._data[name]._should_unload_to_gams = False

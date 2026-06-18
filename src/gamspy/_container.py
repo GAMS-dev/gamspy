@@ -1282,23 +1282,6 @@ class Container:
 
         return symbol_names
 
-    def _load_records_from_gdx(self, load_from: str, names: list[str]) -> None:
-        records_dict = gdxio.get_records(self, load_from, names)
-        original_state = self._options.miro_protect
-        self._options.miro_protect = False
-
-        for name in names:
-            if name in self._data:
-                updated_records = records_dict[name]
-                self._data[name].records = updated_records
-                self._data[name].domain_labels = self._data[name].domain_names
-            else:
-                self._read(load_from, [name])
-
-            self._data[name]._should_unload_to_gams = False
-
-        self._options.miro_protect = original_state
-
     def _load_records_with_rename(self, load_from: str, names: dict[str, str]) -> None:
         records_dict = gdxio.get_records(self, load_from, names)
         original_state = self._options.miro_protect
