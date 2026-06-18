@@ -185,7 +185,7 @@ class Variable(operable.Operable, VarEquSymbol):
         domain: DomainType | None = None,
         records: VarEquRecordsType | None = None,
         description: str = "",
-    ):
+    ) -> Variable:
         # create new symbol object
         obj = object.__new__(cls)
 

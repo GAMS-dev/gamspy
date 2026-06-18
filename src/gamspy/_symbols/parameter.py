@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Operation
+    from gamspy._extrinsic import ExtrinsicFunction
     from gamspy._symbols.implicits import ImplicitParameter
     from gamspy._types import DomainType, IndexType, ParameterRecordsType
     from gamspy.math.misc import MathOp
@@ -91,7 +92,7 @@ class Parameter(operable.Operable, RecordSymbol):
         domain: DomainType | None = None,
         records: ParameterRecordsType | None = None,
         description: str = "",
-    ):
+    ) -> Parameter:
         obj = object.__new__(cls)
 
         # legacy gtp attributes
@@ -328,7 +329,8 @@ class Parameter(operable.Operable, RecordSymbol):
         | ImplicitParameter
         | float
         | int
-        | Number,
+        | Number
+        | ExtrinsicFunction,
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)

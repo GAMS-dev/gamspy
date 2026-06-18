@@ -54,7 +54,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
     @classmethod
     def _constructor_bypass(
         cls, container: Container, name: str, alias_with: Set | Alias
-    ):
+    ) -> Alias:
         # create new symbol object
         obj = object.__new__(cls)
 

@@ -108,6 +108,7 @@ class Condition(operable.Operable):
         | MathOp
         | int
         | float
+        | bool
         | Parameter
         | ImplicitParameter,
     ):
@@ -123,6 +124,7 @@ class Condition(operable.Operable):
             | MathOp
             | int
             | float
+            | bool
             | str
             | Parameter
             | ImplicitParameter
@@ -254,7 +256,7 @@ class Condition(operable.Operable):
                 temp_name,
                 self.domain,  # type: ignore
             )
-            temp_sym[...].where[self.condition] = True
+            temp_sym[...].where[self.condition] = True  # ty: ignore[invalid-assignment]
             del self.container._data[temp_name]
         else:
             temp_name = "c" + utils._get_unique_name()

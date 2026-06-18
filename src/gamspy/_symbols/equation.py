@@ -161,7 +161,7 @@ class Equation(VarEquSymbol):
         domain: DomainType | None = None,
         records: VarEquRecordsType | None = None,
         description: str = "",
-    ):
+    ) -> Equation:
         # create new symbol object
         obj = object.__new__(cls)
 

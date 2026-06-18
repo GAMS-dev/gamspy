@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from gamspy import Alias, Container, UniverseAlias
+    from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
@@ -489,7 +490,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         description: str = "",
         *,
         is_singleton: bool = False,
-    ):
+    ) -> Set:
         # create new symbol object
         obj = object.__new__(cls)
 
@@ -719,7 +720,11 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
 
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
-    def __setitem__(self, indices: IndexType, rhs: Expression | Operation | bool | str):
+    def __setitem__(
+        self,
+        indices: IndexType,
+        rhs: Expression | Operation | Condition | ImplicitSet | bool | str,
+    ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 
