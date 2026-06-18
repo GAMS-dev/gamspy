@@ -13,12 +13,12 @@ leg-performance:
     - source anaconda3/bin/activate
     - conda create -y -n performance python=3.12
     - conda activate performance
-    - conda install -c conda-forge cyipopt
-    - UV_PYTHON=anaconda3/envs/performance uv pip install . --group test --group doc --group dev
-    - UV_PYTHON=anaconda3/envs/performance uv pip install highsbox llvmlite tccbox psutil pyoptinterface
+    - conda install -y -c conda-forge cyipopt
+    - uv pip install --python "$CONDA_PREFIX/bin/python" . --group test --group doc --group dev
+    - uv pip install --python "$CONDA_PREFIX/bin/python" highsbox llvmlite tccbox psutil pyoptinterface
     - gamspy install license $PERFORMANCE_LICENSE
     - echo $GAMS_LICENSE > $(python -m gamspy show base)/gamslice.txt
-    - UV_PYTHON=anaconda3/envs/performance gamspy install solver -a --use-uv
+    - gamspy install solver -a --use-uv
     - which python
     - python scripts/performance/lp/main.py
     - python scripts/performance/qcp/main.py
