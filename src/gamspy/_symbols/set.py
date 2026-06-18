@@ -820,7 +820,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         index: str | list | None = None,
         columns: str | list | None = None,
         fill_value: int | float | str | None = None,
-    ) -> pd.DataFrame | None:
+    ) -> pd.DataFrame:
         """
         Convenience function to pivot records into a new shape (only symbols with >1D can be pivoted).
         If index is None then it is set to dimensions [0..dimension-1]. If columns is None then it is
@@ -837,8 +837,8 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
 
         Returns
         -------
-        pd.DataFrame | None
-            The pivoted DataFrame representing the set records, or None if there are no records.
+        pd.DataFrame
+            The pivoted DataFrame representing the set records.
 
         Examples
         --------

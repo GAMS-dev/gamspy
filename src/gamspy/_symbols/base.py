@@ -1330,7 +1330,7 @@ class VarEquSymbol(RecordSymbol):
         columns: str | list | None = None,
         value: str | None = None,
         fill_value: int | float | str | None = None,
-    ) -> pd.DataFrame | None:
+    ) -> pd.DataFrame:
         """
         Pivots the specified attribute of the symbol records into a two-dimensional pandas DataFrame.
         This isolates a specific attribute column (e.g., "level" or "marginal") and pivots the data across the
@@ -1349,8 +1349,8 @@ class VarEquSymbol(RecordSymbol):
 
         Returns
         -------
-        pd.DataFrame | None
-            The pivoted DataFrame representing the specified attribute, or None if the symbol has no records.
+        pd.DataFrame
+            The pivoted DataFrame representing the specified attribute.
 
         Examples
         --------

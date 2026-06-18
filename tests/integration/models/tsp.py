@@ -68,7 +68,7 @@ def mtz_formulation(m: gp.Container) -> gp.Equation:
     return [eq_mtz]
 
 
-def explicit_dfj_formulation(m: gp.Container) -> gp.Equation:
+def explicit_dfj_formulation(m: gp.Container) -> list[gp.Equation]:
     n1, i, j, ij, X = m.getSymbols(["n1", "i", "j", "allowed_arcs", "X"])
 
     s = gp.Set(

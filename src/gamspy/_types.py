@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.domain import Domain
     from gamspy._algebra.expression import Expression
+    from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._symbols import Alias, Equation, Parameter, Set, UniverseAlias, Variable
     from gamspy._symbols.implicits import (
@@ -77,6 +78,7 @@ if TYPE_CHECKING:
         | Ord
         | Card
         | bool
+        | Number
     )
 
     SetRecordsType: TypeAlias = Sequence | pd.DataFrame | pd.Series

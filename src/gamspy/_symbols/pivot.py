@@ -98,9 +98,11 @@ def pivot_set(
     index: str | list | None = None,
     columns: str | list | None = None,
     fill_value: int | float | str | None = None,
-) -> pd.DataFrame | None:
+) -> pd.DataFrame:
     if symbol.records is None:
-        return None
+        raise ValidationError(
+            f"Cannot pivot `{symbol.name}` because it has no records."
+        )
 
     index, columns = _validate_axes(symbol, index, columns)
     value = "value"
@@ -127,9 +129,11 @@ def pivot_parameter(
     index: str | list | None = None,
     columns: str | list | None = None,
     fill_value: int | float | str | None = None,
-) -> pd.DataFrame | None:
+) -> pd.DataFrame:
     if symbol.records is None:
-        return None
+        raise ValidationError(
+            f"Cannot pivot `{symbol.name}` because it has no records."
+        )
 
     index, columns = _validate_axes(symbol, index, columns)
     value = "value"
@@ -160,9 +164,11 @@ def pivot_variable(
     columns: str | list | None = None,
     value: str | None = None,
     fill_value: int | float | str | None = None,
-) -> pd.DataFrame | None:
+) -> pd.DataFrame:
     if symbol.records is None:
-        return None
+        raise ValidationError(
+            f"Cannot pivot `{symbol.name}` because it has no records."
+        )
 
     index, columns = _validate_axes(symbol, index, columns)
 

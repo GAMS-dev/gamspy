@@ -694,7 +694,7 @@ class Parameter(operable.Operable, RecordSymbol):
         index: str | list | None = None,
         columns: str | list | None = None,
         fill_value: int | float | str | None = None,
-    ) -> pd.DataFrame | None:
+    ) -> pd.DataFrame:
         """
         Convenience function to pivot records into a new shape (only symbols with >1D can be pivoted).
 
@@ -709,8 +709,8 @@ class Parameter(operable.Operable, RecordSymbol):
 
         Returns
         -------
-        pd.DataFrame | None
-            The pivoted DataFrame representing the parameter records, or None if the symbol has no records.
+        pd.DataFrame
+            The pivoted DataFrame representing the parameter records.
 
         Examples
         --------
