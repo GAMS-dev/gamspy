@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    import numpy as np
+import numpy as np
 
 
 @dataclass(frozen=True)
@@ -55,8 +53,6 @@ class DecisionTreeStruct:
     n_features: int = 0
 
     def __post_init__(self):
-        import numpy as np
-
         # Helper to set attributes while respecting frozen=True
         def init_if_none(attr_name: str):
             if getattr(self, attr_name) is None:

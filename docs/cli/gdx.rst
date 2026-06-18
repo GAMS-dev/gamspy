@@ -183,6 +183,10 @@ Usage
      - -S
      - None
      - One or more identifiers to skip
+   * - --skip-regex
+     - 
+     - None
+     - Regular expression pattern to skip identifiers
 
 Examples
 --------

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.23.1"
+version = "1.24.0"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -34,8 +34,8 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi >= 53.5.0, < 54.0.0",
-  "gamspy_base >= 53.5.0, < 54.0.0",
+  "gamsapi >= 54.1.0, < 55.0.0",
+  "gamspy_base >= 54.1.0, < 55.0.0",
   "pandas >= 2.2.2, < 3.1",
   "pydantic >= 2.0",
   "requests >= 2.28.0",
@@ -53,8 +53,8 @@ changelog = "https://github.com/GAMS-dev/gamspy/blob/develop/CHANGELOG.rst"
 torch = ["torch>=2.7.0"]
 
 [tool.uv]
-exclude-newer = "7 days"
-exclude-newer-package = { torch = false, gamspy_base = false, gamsapi = false }
+exclude-newer = "3 days"
+exclude-newer-package = {gamspy_base = false, gamsapi = false, gamspy-highs = false, gamspy-ipopt = false, gamspy-ipopth = false, gamspy-knitro = false, gamspy-miles = false, gamspy-minos = false, gamspy-mosek = false, gamspy-mpsge = false, gamspy-pathnlp = false, gamspy-reshop = false, gamspy-scip = false, gamspy-shot = false, gamspy-snopt = false, gamspy-soplex = false, gamspy-xpress = false, gamspy-baron = false, gamspy-cbc = false, gamspy-conopt3 = false, gamspy-copt = false, gamspy-de = false, gamspy-dicopt = false, gamspy-examiner = false, gamspy-examiner2 = false, gamspy-gurobi = false, gamspy-arm-perf = false}
 
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu" }]
@@ -65,17 +65,22 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [tool.ty.src]
-exclude = ["src/gamspy/_backend/neos.py", "src/gamspy/_backend/engine.py"]
+exclude = [
+    "src/gamspy/_backend/neos.py", 
+    "src/gamspy/_backend/engine.py", 
+    "src/gamspy/_gmd.py",
+    "src/gamspy/_records_ingestion.py", 
+    "src/gamspy/formulations",
+]
 
 [tool.ty.rules]
-unused-type-ignore-comment = "ignore"  # To avoid clashing with mypy.
 invalid-method-override = "ignore"  # Some overrides do not match the signature of equivalent gtp functions.
 unresolved-import = "ignore"  # Needed for optional torch dependency
 
 [dependency-groups]
 dev = [
     "griffe>=1.15.0",
-    "mypy>=1.19.1",
+    "ty>=0.0.35",
     "prek>=0.2.28",
     "ruff>=0.14.11",
 ]
@@ -111,12 +116,6 @@ test = [
 
 [project.scripts]
 gamspy = "gamspy_cli.cli:main"
-
-[tool.mypy]
-warn_unused_configs = true
-follow_imports = "skip"
-follow_imports_for_stubs = true
-disable_error_code = ["misc", "import-untyped"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -183,7 +182,7 @@ name = "Miscellaneous internal changes"
 showcontent = true
 
 [tool.coverage.run]
-omit = ["*/gamspy_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py"]
+omit = ["*/gamspy_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py", "*_gmd.py"]
 
 [tool.coverage.report]
 exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "if typing.TYPE_CHECKING:", "def __repr__", "def __del__", "@property"]
@@ -241,7 +240,6 @@ select = [
     "RUF",      # Ruff-specific rules
     "TC",       # flake8-type-checking
     "C4",       # flake8-comprehensions
-    "PLC0206",  # dict-index-missing-items
     "PLC0207",  # missing-maxsplit-arg
     "PLC0208",  # iteration-over-set
     "PLE",      # Pylint error rules
@@ -253,7 +251,8 @@ ignore = [
     "SIM105", # suppressible-exception
     "SIM117", # multiple-with-statements
     "RUF005", # collection-literal-concatenation
-    "RUF022"  # unsorted-dunder-all
+    "RUF022", # unsorted-dunder-all
+    "B905"    # zip-without-explicit-strict
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.

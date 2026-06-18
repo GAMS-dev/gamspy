@@ -167,7 +167,7 @@ def main():
 
     for ccc_loop in ccc.toList():
         G = nx.DiGraph()
-        G.add_nodes_from(i.getUELs())
+        G.add_nodes_from(i.records["ii"].unique())
         x_filtered = x.records[x.records["level"] > 0.5].loc[:, :"level"]
         edges = list(zip(x_filtered["ii"], x_filtered["jj"], strict=False))
         G.add_edges_from(edges)

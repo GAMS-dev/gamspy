@@ -6,9 +6,10 @@ import sys
 import time
 import weakref
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, TextIO
+from typing import TYPE_CHECKING, TextIO, cast
 
 import gams.transfer as gt
+import pandas as pd
 from gams.core.cfg import GMS_SSSIZE
 from gams.core.gev import (
     gevCreateD,
@@ -60,14 +61,13 @@ import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._database import Database, GamsEquation, GamsParameter, GamsVariable
+from gamspy._internals import ATTR_PREFIX
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    import pandas as pd
-
-    from gamspy import Container, Model, Parameter
+    from gamspy import Container, Model, Parameter, Variable
     from gamspy._options import FreezeOptions, Options
     from gamspy._symbols.implicits import ImplicitParameter
 
@@ -182,8 +182,6 @@ class ModelInstance:
         freeze_options: Options,
         output: TextIO | None,
     ):
-        import pandas as pd
-
         self.container = container
         self.job_name = container._job
         self.gms_file = self.job_name + ".gms"
@@ -323,7 +321,7 @@ class ModelInstance:
             model=model,
             output=self.output,
         )
-        runner.run(gams_to_gamspy=True)
+        runner.run()
 
         # Init environments
         if gevInitEnvironmentLegacy(self._gev, self.solver_control_file) != 0:
@@ -517,7 +515,6 @@ class ModelInstance:
 
     def _get_scenario(self, model: Model) -> str:
         auto_id = "s" + utils._get_unique_name()[:5]
-        model_prefix = gp.Model._generate_prefix
         params = [
             modifier.gams_symbol
             for modifier in self.modifiers
@@ -525,9 +522,9 @@ class ModelInstance:
         ]
         lines = []
         if params:
-            lines.append(f"Set {model_prefix}{auto_id}__(*) /'s0'/;")
+            lines.append(f"Set {ATTR_PREFIX}{auto_id}__(*) /'s0'/;")
             for symbol in params:
-                declaration = f"Parameter {model_prefix}{auto_id}__{symbol.name}({model_prefix}{auto_id}__"
+                declaration = f"Parameter {ATTR_PREFIX}{auto_id}__{symbol.name}({ATTR_PREFIX}{auto_id}__"
                 domain = ""
                 if symbol.dimension:
                     domain = "," + ",".join("*" * symbol.dimension)
@@ -536,25 +533,25 @@ class ModelInstance:
                 declaration = f"{declaration}{domain};"
                 lines.append(declaration)
 
-                domain = f"({model_prefix}{auto_id}__"
+                domain = f"({ATTR_PREFIX}{auto_id}__"
 
                 if symbol.dimension:
                     domain += ","
 
                 assign_str = (
-                    f"{model_prefix}{auto_id}__{symbol.name}({model_prefix}{auto_id}__"
+                    f"{ATTR_PREFIX}{auto_id}__{symbol.name}({ATTR_PREFIX}{auto_id}__"
                 )
                 if symbol.dimension:
                     assign_str += "," + ",".join(
-                        [f"{model_prefix}{auto_id}__"] * symbol.dimension
+                        [f"{ATTR_PREFIX}{auto_id}__"] * symbol.dimension
                     )
 
                 assign_str += ") = Eps;"
                 lines.append(assign_str)
 
-            scenario = f"Set {model_prefix}{auto_id}_dict(*,*,*) / '{model_prefix}{auto_id}__'.'scenario'.''"
+            scenario = f"Set {ATTR_PREFIX}{auto_id}_dict(*,*,*) / '{ATTR_PREFIX}{auto_id}__'.'scenario'.''"
             for symbol in params:
-                scenario += f",\n'{symbol.name}'.'param'.'{model_prefix}{auto_id}__{symbol.name}'"
+                scenario += f",\n'{symbol.name}'.'param'.'{ATTR_PREFIX}{auto_id}__{symbol.name}'"
             scenario += "/;"
             lines.append(scenario)
 
@@ -562,7 +559,7 @@ class ModelInstance:
         solve_string = model._generate_solve_string()
 
         if params:
-            solve_string += f" scenario {model_prefix}{auto_id}_dict"
+            solve_string += f" scenario {ATTR_PREFIX}{auto_id}_dict"
 
         solve_string += ";"
         lines.append(solve_string)
@@ -660,35 +657,41 @@ class ModelInstance:
         return columns
 
     def _update_main_container(self) -> None:
-        temp = self.container._temp_container
-        temp.read(self.sync_db.gmd)
+        from gamspy._gmd import get_records
+
+        records_dict = get_records(self.container._gams2np, self.sync_db.gmd)
 
         prev_state = self.container._options.miro_protect
-        for name in temp.data:
-            if name in self.container.data:
-                self.container._options.miro_protect = False
-                self.container.data[name].records = temp[name].records
-                self.container.data[name].domain_labels = self.container.data[
-                    name
-                ].domain_names
+        modifiable_names = {symbol.name for symbol in self.modifiables}
 
-            if name in (symbol.name for symbol in self.modifiables):
+        for name, records in records_dict.items():
+            if name in self.container._data:
+                self.container._options.miro_protect = False
+                symbol = self.container._data[name]
+                symbol.records = records
+                symbol.domain_labels = symbol.domain_names
+                symbol._should_unload_to_gams = False
+
+            if name in modifiable_names:
                 generated_var = name + "_var"
-                if generated_var not in self.container.data:
+                generated_records = records_dict.get(generated_var)
+
+                if generated_var not in self.container._data:
                     _ = gp.Variable(
                         self.container,
                         generated_var,
-                        domain=self.container.data[name].domain,
-                        records=temp[generated_var].records,
+                        domain=self.container._data[name].domain,
+                        records=generated_records,
                     )
                 else:
-                    self.container[generated_var]._records = temp[generated_var].records
+                    symbol = cast("Variable", self.container[generated_var])
+                    symbol._records = generated_records
 
         self.container._options.miro_protect = prev_state
 
         if self.model._objective_variable is not None:
-            self.model._objective_value = temp[
-                self.model._objective_variable.name
-            ].toValue()
-
-        temp.data = {}
+            obj_name = self.model._objective_variable.name
+            if obj_name in records_dict:
+                obj_records = records_dict[obj_name]
+                if not obj_records.empty and "level" in obj_records.columns:
+                    self.model._objective_value = float(obj_records["level"].iloc[0])

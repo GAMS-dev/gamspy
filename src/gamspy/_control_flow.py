@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import os
+import threading
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Literal
 
 import gamspy as gp
+import gamspy._gdx as gdxio
 from gamspy._algebra.condition import Condition
 from gamspy._algebra.domain import Domain
 from gamspy._symbols.implicits import ImplicitSet
@@ -15,6 +18,9 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Card, Operation
     from gamspy._symbols.implicits import ImplicitParameter
     from gamspy.math import MathOp
+
+# Dictionary to track the container used in the most recent If/ElseIf block
+_last_containers: dict[tuple[int, int], Container] = {}
 
 
 class Loop:
@@ -181,8 +187,14 @@ class Loop:
         self.container._in_loop -= 1
 
         self.container._add_statement(");")
+        self.container._last_control_flow = "loop"
         if self.container._in_loop == 0:  # Run only in the most outer loop
-            self.container._synch_with_gams(gams_to_gamspy=True)
+            self.container._synch_with_gams()
+            symbol_names = gdxio._get_symbol_names_from_gdx(
+                self.container.system_directory, self.container._gdx_out
+            )
+            for name in symbol_names:
+                self.container._data[name]._should_load_from_gams = True
 
 
 class For:
@@ -198,11 +210,11 @@ class For:
     ----------
     index : Parameter
         A scalar Parameter used as the numerical loop counter.
-    start : int | float | Parameter | Expression | Card | Operation
+    start : int | float | Parameter | Expression | Card | Operation | MathOp
         The starting value of the loop counter.
-    end : int | float | Parameter | Expression | Card | Operation
+    end : int | float | Parameter | Expression | Card | Operation | MathOp
         The final value of the loop counter.
-    step : int | float | Parameter | Expression | Card | Operation, optional
+    step : int | float | Parameter | Expression | Card | Operation | MathOp, optional
         The increment or decrement step size. Defaults to 1.
     direction : Litera['to', 'downto']
         The direction of the step. 'to' steps upwards, 'downto' steps downwards. Defaults to 'to'.
@@ -247,21 +259,24 @@ class For:
         | ImplicitParameter
         | Expression
         | Card
-        | Operation,
+        | Operation
+        | MathOp,
         end: int
         | float
         | Parameter
         | ImplicitParameter
         | Expression
         | Card
-        | Operation,
+        | Operation
+        | MathOp,
         step: int
         | float
         | Parameter
         | ImplicitParameter
         | Expression
         | Card
-        | Operation = 1,
+        | Operation
+        | MathOp = 1,
         direction: Literal["to", "downto"] = "to",
     ):
         if not isinstance(index, gp.Parameter):
@@ -366,8 +381,106 @@ class For:
         self.container._in_loop -= 1
 
         self.container._add_statement(");")
+        self.container._last_control_flow = "for"
         if self.container._in_loop == 0:  # Run only in the most outer loop
-            self.container._synch_with_gams(gams_to_gamspy=True)
+            self.container._synch_with_gams()
+            symbol_names = gdxio._get_symbol_names_from_gdx(
+                self.container.system_directory, self.container._gdx_out
+            )
+            for name in symbol_names:
+                self.container._data[name]._should_load_from_gams = True
+
+
+class While:
+    """
+    A context manager to execute a group of statements repeatedly as long as a
+    condition evaluates to True.
+
+    The While class maps to the GAMS `while` statement. It is useful for
+    processes that must repeat an unknown number of times until a specific
+    logical condition is met.
+
+    Parameters
+    ----------
+    condition : Expression | Condition | Operation | MathOp | Parameter
+        The logical condition that must remain true to continue executing the nested statements.
+
+    Examples
+    --------
+    **1. Iteratively dividing a number:**
+
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> x = gp.Parameter(m, records=100)
+    >>> cnt = gp.Parameter(m, records=0)
+    >>> with gp.While(x > 1):
+    ...     x[...] = x / 2
+    ...     cnt[...] += 1
+
+    """
+
+    def __init__(
+        self, condition: Expression | Condition | Operation | MathOp | Parameter
+    ):
+        self.condition = condition
+
+        if not isinstance(condition.container, gp.Container):
+            raise ValidationError(
+                f"Could not find the container in the given condition `{condition}`. Hence, gp.While operation is not possible."
+            )
+
+        self.container = condition.container
+        self._loop_number = -1
+
+    @property
+    def Break(self) -> None:
+        """
+        Breaks the execution of the current while loop prematurely.
+
+        This property maps to the GAMS `break` statement. Note that you can only
+        break out of the innermost loop currently executing.
+
+        Raises
+        ------
+        ValidationError
+            If attempting to break an outer loop without breaking the inner loop first.
+        """
+        if self._loop_number < self.container._in_loop:
+            raise ValidationError(
+                "You cannot break this while loop. You should break the inner loop first."
+            )
+
+        self.container._add_statement("break;")
+
+    @property
+    def Continue(self) -> None:
+        """
+        Skips the remaining statements in the current iteration and proceeds to the next one.
+        """
+        self.container._add_statement("continue;")
+
+    def __enter__(self) -> While:
+        self.container._in_loop += 1
+        self._loop_number = self.container._in_loop
+
+        representation = self.condition.gamsRepr()
+        representation = gp.utils._replace_equality_signs(representation)
+        self.container._add_statement(f"while({representation},")
+
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.container._in_loop -= 1
+
+        self.container._add_statement(");")
+        self.container._last_control_flow = "while"
+        if self.container._in_loop == 0:  # Run only in the most outer loop
+            self.container._synch_with_gams()
+            symbol_names = gdxio._get_symbol_names_from_gdx(
+                self.container.system_directory, self.container._gdx_out
+            )
+            for name in symbol_names:
+                self.container._data[name]._should_load_from_gams = True
 
 
 class If:
@@ -410,7 +523,18 @@ class If:
         self, condition: Expression | Condition | Operation | MathOp | Parameter
     ):
         self.condition = condition
+
+        if not isinstance(condition.container, gp.Container):
+            raise ValidationError(
+                f"Could not find the container in the given condition `{condition}`. Hence, gp.If operation is not possible."
+            )
+
         self.container = condition.container
+
+        # Track the container for potential succeeding ElseIf/Else statements
+        pid = os.getpid()
+        tid = threading.get_native_id()
+        _last_containers[(pid, tid)] = self.container
 
     def __enter__(self):
         if not self.container._in_loop:
@@ -424,3 +548,117 @@ class If:
 
     def __exit__(self, exc_type, exc, tb):
         self.container._add_statement(");")
+        self.container._last_control_flow = "if"
+
+
+class ElseIf:
+    """
+    A context manager to conditionally execute a group of statements if the preceding
+    `If` or `ElseIf` condition was False and the current condition is True.
+
+    Parameters
+    ----------
+    condition : Expression
+        The logical condition that must be satisfied to execute the nested statements.
+    """
+
+    def __init__(
+        self, condition: Expression | Condition | Operation | MathOp | Parameter
+    ):
+        self.condition = condition
+
+        if not isinstance(condition.container, gp.Container):
+            raise ValidationError(
+                f"Could not find the container in the given condition `{condition}`. Hence, gp.ElseIf operation is not possible."
+            )
+
+        self.container = condition.container
+
+        # Track the container for potential succeeding ElseIf/Else statements
+        pid = os.getpid()
+        tid = threading.get_native_id()
+        _last_containers[(pid, tid)] = self.container
+
+    def __enter__(self):
+        if not self.container._in_loop:
+            raise ValidationError(
+                "`gp.ElseIf` context manager can only be used in `gp.Loop` context managers."
+            )
+
+        if getattr(self.container, "_last_control_flow", None) not in ("if", "elseif"):
+            raise ValidationError(
+                "`gp.ElseIf` must follow a `gp.If` or `gp.ElseIf` block."
+            )
+
+        last_statement = self.container._unsaved_statements[-1]
+        if (
+            not self.container._unsaved_statements
+            or not isinstance(last_statement, str)
+            or self.container._unsaved_statements[-1] != ");"
+        ):
+            raise ValidationError(
+                "`gp.ElseIf` must immediately follow a `gp.If` or `gp.ElseIf` block without any intervening statements."
+            )
+
+        # Remove the closing parenthesis of the previous block to continue the chain
+        self.container._unsaved_statements.pop()
+
+        representation = self.condition.gamsRepr()
+        representation = gp.utils._replace_equality_signs(representation)
+        self.container._add_statement(f"elseif {representation},")
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.container._add_statement(");")
+        self.container._last_control_flow = "elseif"
+
+
+class Else:
+    """
+    A context manager to execute a group of statements if all preceding `If` and `ElseIf`
+    conditions were False.
+    """
+
+    def __init__(self):
+        pid = os.getpid()
+        tid = threading.get_native_id()
+        container = _last_containers.get((pid, tid))
+
+        if not isinstance(container, gp.Container):
+            raise ValidationError(
+                "Could not find the container. Hence, gp.Else operation is not possible. "
+                "Ensure gp.Else follows a gp.If or gp.ElseIf statement."
+            )
+
+        self.container = container
+
+    def __enter__(self):
+        if not getattr(self.container, "_in_loop", 0):
+            raise ValidationError(
+                "`gp.Else` context manager can only be used in `gp.Loop` context managers."
+            )
+
+        if getattr(self.container, "_last_control_flow", None) not in ("if", "elseif"):
+            raise ValidationError(
+                "`gp.Else` must follow a `gp.If` or `gp.ElseIf` block."
+            )
+
+        last_statement = self.container._unsaved_statements[-1]
+        if (
+            not self.container._unsaved_statements
+            or not isinstance(last_statement, str)
+            or self.container._unsaved_statements[-1] != ");"
+        ):
+            raise ValidationError(
+                "`gp.Else` must immediately follow a `gp.If` or `gp.ElseIf` block without any intervening statements."
+            )
+
+        # Remove the closing parenthesis of the previous block to continue the chain
+        self.container._unsaved_statements.pop()
+
+        self.container._add_statement("else")
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.container._add_statement(");")
+        self.container._last_control_flow = "else"

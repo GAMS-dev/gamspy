@@ -115,13 +115,41 @@ one can specify the direction as follows: ::
 
 You can also use other Parameters or Expressions to define the start, end, and step boundaries of the loop dynamically.
 
-The If Statement
-----------------
-The :meth:`If <gamspy.If>` class maps directly to the GAMS ``if`` statement. It allows you to branch 
-conditionally around a group of execution statements within control flow constructs like loops.
-Currently, its use is restricted within a :meth:`Loop <gamspy.Loop>` statement.
-Like :meth:`Loop <gamspy.Loop>`, it is implemented as a Python context manager and takes a GAMSPy 
-logical condition as its argument:
+The While Statement
+-------------------
+The :meth:`While <gamspy.While>` class maps to the GAMS ``while`` statement. It allows you to repeat a block of execution 
+statements as long as a specific logical condition evaluates to ``True``.
+
+Unlike :meth:`Loop <gamspy.Loop>` and :meth:`For <gamspy.For>`, a ``while`` loop continues for an unknown number of 
+iterations until its condition is broken.
+
+.. code-block:: python
+
+    import gamspy as gp
+
+    m = gp.Container()
+    x = gp.Parameter(m, records=100)
+    cnt = gp.Parameter(m, records=0)
+    
+    # Iteratively halve x until it is less than or equal to 1
+    with gp.While(x > 1):
+        x[...] = x / 2
+        cnt[...] += 1
+
+Just like loops, you can also capture the while instance using the ``as`` keyword to utilize :meth:`Break <gamspy.While.Break>` 
+and :meth:`Continue <gamspy.While.Continue>` statements.
+
+If, ElseIf, and Else Statements
+-------------------------------
+The :meth:`If <gamspy.If>`, :meth:`ElseIf <gamspy.ElseIf>`, and :meth:`Else <gamspy.Else>` classes map directly to the 
+GAMS ``if``, ``elseif``, and ``else`` statements. They allow you to branch conditionally around a group of execution 
+statements within control flow constructs like loops.
+
+Currently, their use is restricted within a :meth:`Loop <gamspy.Loop>` or :meth:`For <gamspy.For>` statement. Like loops, 
+they are implemented as Python context managers.
+
+Note that an ``ElseIf`` or ``Else`` block must **immediately** follow a preceding ``If`` or ``ElseIf`` block without 
+any intervening statements.
 
 .. code-block:: python
 
@@ -129,12 +157,18 @@ logical condition as its argument:
     
     m = gp.Container()
     i = gp.Set(m, records=[f"i{idx}" for idx in range(1, 11)])
-    cnt = gp.Parameter(m, records=0)
+    cnt_small = gp.Parameter(m, records=0)
+    cnt_medium = gp.Parameter(m, records=0)
+    cnt_large = gp.Parameter(m, records=0)
     
     with gp.Loop(i):
-        # Only execute the following block if the condition is met
-        with gp.If(gp.Ord(i) > 5):
-            cnt[...] += 1
+        # Chain conditions together to branch execution
+        with gp.If(gp.Ord(i) <= 3):
+            cnt_small[...] += 1
+        with gp.ElseIf(gp.Ord(i) <= 7):
+            cnt_medium[...] += 1
+        with gp.Else():
+            cnt_large[...] += 1
 
 Break and Continue
 ------------------

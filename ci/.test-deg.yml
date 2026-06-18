@@ -111,6 +111,7 @@ deg-engine-3.10:
     - uv venv .venv -v --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
+    - gamspy install solver -a --use-uv
     - python -B -m pytest -x -v -s -m 'neos' tests
 
 deg-neos-3.14:

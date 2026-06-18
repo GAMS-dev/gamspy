@@ -2,21 +2,19 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
+import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.math
 import gamspy.utils as utils
-from gamspy._symbols.parameter import Parameter
-from gamspy._symbols.set import Set
-from gamspy._symbols.variable import Variable
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Container
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
-    from gamspy._symbols.alias import Alias
+    from gamspy._symbols import Alias, Parameter, Set, Variable
     from gamspy.math.misc import MathOp
 
 
@@ -60,7 +58,6 @@ def vector_norm(
 
     """
     import gamspy._algebra.operation as operation
-    from gamspy._symbols.alias import Alias
 
     if isinstance(ord, float):
         if ord.is_integer():
@@ -95,10 +92,10 @@ def vector_norm(
 
             sum_domain = []
             for d in dim:
-                sum_domain.append(domain[d])
+                sum_domain.append(domain[d])  # ty: ignore[invalid-argument-type]
         else:
             for item in dim:
-                if not isinstance(item, (Set, Alias)):
+                if not isinstance(item, (syms.Set, syms.Alias)):
                     raise ValidationError(
                         "If dim is provided, either all items must be integers"
                         " or all items must be Sets"
@@ -108,18 +105,19 @@ def vector_norm(
 
     if ord == 2:
         return gamspy.math.sqrt(
-            operation.Sum(sum_domain, gamspy.math.sqr(x[domain])),
+            operation.Sum(sum_domain, gamspy.math.sqr(x[domain])),  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
             safe_cancel=True,
         )
     elif even:
         return gamspy.math.rpower(
-            operation.Sum(sum_domain, x[domain] ** ord), (1 / ord)
+            operation.Sum(sum_domain, x[domain] ** ord),  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
+            (1 / ord),
         )
     elif ord == 1:
-        return operation.Sum(sum_domain, gamspy.math.abs(x[domain]))
+        return operation.Sum(sum_domain, gamspy.math.abs(x[domain]))  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
 
     return gamspy.math.rpower(
-        operation.Sum(sum_domain, gamspy.math.abs(x[domain]) ** ord),
+        operation.Sum(sum_domain, gamspy.math.abs(x[domain]) ** ord),  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
         (1 / ord),
     )
 
@@ -164,7 +162,7 @@ def next_alias(symbol: Alias | Set) -> Alias:
 
     num = int(num) + 1
     expected_name = f"{prefix}_{num}"
-    find_x = symbol.container.data.get(expected_name, None)
+    find_x = cast("Alias | None", symbol.container._data.get(expected_name, None))
     if find_x is None:
         find_x = symbol.container.addAlias(expected_name, alias_with=current)
 
@@ -219,7 +217,7 @@ def _generate_dims(m: Container, dims: Sequence[int]) -> list[Alias | Set]:
     sets_so_far = []
     for x in dims:
         expected_name = f"DenseDim{x}_1"
-        find_x: Set | Alias | None = m.data.get(expected_name, None)  # type: ignore
+        find_x: Set | Alias | None = m._data.get(expected_name, None)
         if find_x is None:
             find_x = m.addSet(
                 name=expected_name, records=range(x), is_singleton=(x == 1)
@@ -279,10 +277,15 @@ def trace(
     if len(x.domain) < 2:
         raise ValidationError("Trace requires at least 2 dimensions")
 
-    if not utils.setBaseEqual(x.domain[axis1], x.domain[axis2]):
+    if not all(isinstance(elem, (syms.Set, syms.Alias)) for elem in x.domain):
+        raise ValidationError(
+            f"All elements of the domain of `{x}` must be either a set or an alias to perform this operation."
+        )
+
+    domain = cast("list[Set | Alias]", x.domain)
+    if not utils.setBaseEqual(domain[axis1], domain[axis2]):
         raise ValidationError("Matrix dimensions are not equal")
 
-    domain = list(x.domain)
     domain[axis1] = domain[axis2]
 
     return operation.Sum(domain[axis2], x[domain])
@@ -338,7 +341,7 @@ def permute(
         raise ValidationError("Permute dimensions must be unique")
 
     permuted_domain = utils._permute_domain(x.domain, dims)
-    if isinstance(x, Parameter):
+    if isinstance(x, syms.Parameter):
         return implicits.ImplicitParameter(
             x,
             name=x.name,
@@ -358,7 +361,7 @@ def permute(
             permutation=dims,
             scalar_domains=x._scalar_domains,
         )
-    elif isinstance(x, Variable):
+    elif isinstance(x, syms.Variable):
         return implicits.ImplicitVariable(
             x, name=x.name, domain=permuted_domain, permutation=dims
         )
@@ -377,7 +380,9 @@ def permute(
     raise GamspyException(f"permute not implemented for {type(x)}")
 
 
-def _validate_matrix_mult_dims(left, right):
+def _validate_matrix_mult_dims(
+    left, right
+) -> tuple[Sequence[Set | Alias], Sequence[Set | Alias], Set | Alias]:
     """Validates the dimensions for the matrix multiplication"""
     left_len = len(left.domain)
     right_len = len(right.domain)

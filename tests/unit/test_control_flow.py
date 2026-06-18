@@ -511,3 +511,100 @@ def test_loop_with_math_op():
                 ),
             ),
         )
+
+
+def test_while():
+    m = gp.Container()
+    x = gp.Parameter(m, records=100)
+    cnt = gp.Parameter(m, records=0)
+
+    # Basic While loop test
+    with gp.While(x > 1):
+        x[...] = x / 2
+        cnt[...] += 1
+
+    assert (
+        cnt.toValue() == 7.0
+    )  # 100 -> 50 -> 25 -> 12.5 -> 6.25 -> 3.125 -> 1.5625 -> 0.78125
+
+    # Reset parameters for break/continue test
+    x[...] = 10
+    cnt[...] = 0
+
+    with gp.While(x > 0) as w:
+        x[...] = x - 1
+
+        with gp.If(x == 5):
+            w.Continue  # noqa: B018
+
+        with gp.If(x == 2):
+            w.Break  # noqa: B018
+
+        cnt[...] += 1
+
+    # Tracing execution:
+    # x=9 (cnt=1), x=8 (cnt=2), x=7 (cnt=3), x=6 (cnt=4)
+    # x=5 (Continue skips cnt)
+    # x=4 (cnt=5), x=3 (cnt=6)
+    # x=2 (Break immediately exits the loop)
+    assert cnt.toValue() == 6.0
+
+
+def test_elseif_else():
+    m = gp.Container()
+    i = gp.Set(m, records=[f"i{idx}" for idx in range(1, 5)])
+    cnt_if = gp.Parameter(m, records=0)
+    cnt_elseif = gp.Parameter(m, records=0)
+    cnt_else = gp.Parameter(m, records=0)
+
+    # Test valid execution flow chaining If -> ElseIf -> Else
+    with gp.Loop(i):
+        with gp.If(gp.Ord(i) == 1):
+            cnt_if[...] += 1
+        with gp.ElseIf(gp.Ord(i) == 2):
+            cnt_elseif[...] += 1
+        with gp.Else():
+            cnt_else[...] += 1
+
+    assert cnt_if.toValue() == 1.0
+    assert cnt_elseif.toValue() == 1.0
+    assert cnt_else.toValue() == 2.0  # triggered for i3 and i4
+
+    # Test ValidationErrors for orphaned control structures
+    with pytest.raises(
+        ValidationError,
+        match=r"`gp.ElseIf` context manager can only be used in `gp.Loop` context managers.",
+    ):
+        with gp.ElseIf(gp.Ord(i) == 1):
+            pass
+
+    with pytest.raises(
+        ValidationError,
+        match=r"`gp.Else` context manager can only be used in `gp.Loop` context managers.",
+    ):
+        with gp.Else():
+            pass
+
+    # Test ValidationError when statements intervene between If and ElseIf
+    with gp.Loop(i):
+        with gp.If(gp.Ord(i) == 1):
+            pass
+        cnt_if[...] += 1
+        with pytest.raises(
+            ValidationError,
+            match=r"`gp.ElseIf` must immediately follow a `gp.If` or `gp.ElseIf` block without any intervening statements.",
+        ):
+            with gp.ElseIf(gp.Ord(i) == 2):
+                pass
+
+    # Test ValidationError when statements intervene between If and Else
+    with gp.Loop(i):
+        with gp.If(gp.Ord(i) == 1):
+            pass
+        cnt_if[...] += 1
+        with pytest.raises(
+            ValidationError,
+            match=r"`gp.Else` must immediately follow a `gp.If` or `gp.ElseIf` block without any intervening statements.",
+        ):
+            with gp.Else():
+                pass

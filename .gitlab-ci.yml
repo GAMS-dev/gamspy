@@ -3,9 +3,9 @@ default:
     - linux
 
 stages:
+  - precommit
   - setup
   - update
-  - precommit
   - cli
   - test
   - engine

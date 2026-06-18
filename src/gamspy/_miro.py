@@ -4,7 +4,7 @@ import json
 import os
 import sys
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import gamspy as gp
 from gamspy.exceptions import ValidationError
@@ -36,28 +36,33 @@ def get_unload_output_str(container: Container) -> str:
 def load_miro_symbol_records(container: Container):
     # Load records of miro input symbols
     if MIRO_GDX_IN and container._miro_input_symbols:
-        names = [
-            name
-            for name in container._miro_input_symbols
-            if not container.data[name]._already_loaded
-        ]
-        container._load_records_from_gdx(MIRO_GDX_IN, names)
+        names: list[str] = []
+        for name in container._miro_input_symbols:
+            symbol = cast("Set | Parameter", container._data[name])
+            if not symbol._already_loaded:
+                names.append(name)
+
+        symbol_str = " ".join(names)
+        container._add_statement(f"$gdxLoad {MIRO_GDX_IN} {symbol_str}")
+        container._should_load_from_gams(names)
         for name in names:
-            symbol = container.data[name]
+            symbol = cast("Set | Parameter", container._data[name])
             symbol._already_loaded = True
             if (
                 isinstance(symbol, gp.Parameter)
                 and symbol._is_miro_table
-                and symbol._records is not None
+                and symbol.records is not None
             ):
-                symbol._records.columns = symbol.domain_names + ["value"]
+                symbol.records.columns = symbol.domain_names + ["value"]
 
     # Load records of miro output symbols
     if MIRO_GDX_OUT and container._miro_output_symbols:
-        container._load_records_from_gdx(MIRO_GDX_OUT, container._miro_output_symbols)
+        symbol_str = " ".join(container._miro_output_symbols)
+        container._add_statement(f"$gdxLoad {MIRO_GDX_OUT} {symbol_str}")
+        container._should_load_from_gams(container._miro_output_symbols)
 
     for name in container._miro_input_symbols + container._miro_output_symbols:
-        container.data[name].modified = False
+        container._data[name]._should_unload_to_gams = False
 
 
 def _write_default_gdx_miro(container: Container) -> None:
@@ -90,7 +95,7 @@ class MiroJSONEncoder:
     def _find_scalars(self, symbols: list[str]) -> list[str]:
         scalars = []
         for name in symbols:
-            symbol = self.container.data[name]
+            symbol = self.container._data[name]
 
             if len(symbol.domain) == 0:
                 scalars.append(name)
@@ -107,7 +112,7 @@ class MiroJSONEncoder:
         ve_names, ve_texts, ve_types = [], [], []
 
         for name in symbols:
-            symbol = self.container.data[name]
+            symbol = self.container._data[name]
 
             if isinstance(symbol, (gp.Set, gp.Parameter)):
                 sp_names.append(name)
@@ -118,7 +123,7 @@ class MiroJSONEncoder:
             elif isinstance(symbol, (gp.Variable, gp.Equation)):
                 ve_names.append(name)
                 ve_texts.append(
-                    symbol.description if symbol.description else symbol.name  # type: ignore
+                    symbol.description if symbol.description else symbol.name
                 )
                 ve_types.append(type(symbol).__name__.lower())
 
@@ -186,8 +191,11 @@ class MiroJSONEncoder:
             )
 
         if (
-            isinstance(symbol.domain_forwarding, list) and symbol.domain_forwarding[-1]
-        ) or (isinstance(symbol.domain_forwarding, bool) and symbol.domain_forwarding):
+            isinstance(symbol._domain_forwarding, list)
+            and symbol._domain_forwarding[-1]
+        ) or (
+            isinstance(symbol._domain_forwarding, bool) and symbol._domain_forwarding
+        ):
             raise ValidationError(
                 "Cannot use domain forwarding feature for miro tables."
             )
@@ -224,7 +232,7 @@ class MiroJSONEncoder:
                 last_item = symbol.domain[-1]
                 self.validate_table(symbol, last_item)
 
-                set_values = last_item.records["uni"].values.tolist()
+                set_values = last_item.records["uni"].values.tolist()  # ty: ignore
 
                 domain_keys = domain_keys[:-2]
                 types = ["string"] * len(domain_keys) + ["numeric"] * len(set_values)
@@ -249,7 +257,7 @@ class MiroJSONEncoder:
         domain_keys = rename_duplicates(domain_keys)
         for column, column_type in zip(domain_keys, types, strict=False):
             try:
-                elem = self.container[column]
+                elem = self.container._data[column]
                 alias = elem.description if elem.description else column
             except KeyError:
                 alias = symbol.name if column == "value" else column
@@ -268,7 +276,9 @@ class MiroJSONEncoder:
 
         info = []
         for name in symbols:
-            symbol = self.container.data[name]
+            symbol = cast(
+                "Set | Parameter | Variable | Equation", self.container._data[name]
+            )
 
             headers_dict = self.prepare_headers_dict(symbol)
 

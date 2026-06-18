@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from gams.transfer import SpecialValues
-
 import gamspy.formulations as formulations
 import gamspy.math as math
 import gamspy.utils as utils
@@ -22,10 +20,11 @@ from gamspy._backend.engine import EngineClient
 from gamspy._backend.neos import NeosClient
 from gamspy._config import _set_default_options, get_option, set_options
 from gamspy._container import Container
-from gamspy._control_flow import For, If, Loop
+from gamspy._control_flow import Else, ElseIf, For, If, Loop, While
 from gamspy._model import FileFormat, Model, ModelStatus, Problem, Sense, SolveStatus
 from gamspy._options import ConvertOptions, FreezeOptions, Options
 from gamspy._serialization import deserialize, serialize
+from gamspy._special_values import SpecialValues
 from gamspy._symbols import (
     Alias,
     Equation,
@@ -81,7 +80,10 @@ __all__ = [
     "SpecialValues",
     "Loop",
     "For",
+    "While",
     "If",
+    "ElseIf",
+    "Else",
     "__version__",
     "get_option",
     "set_options",

@@ -206,6 +206,15 @@ def test_neos_blocking(data):
     )
     summary = transport.solve(backend="neos", client=client)
     assert isinstance(summary, pd.DataFrame)
+    assert x._records is None  # not yet loaded
+    assert x.toList() == [
+        ("seattle", "new-york", 50.0),
+        ("seattle", "chicago", 300.0),
+        ("seattle", "topeka", 0.0),
+        ("san-diego", "new-york", 275.0),
+        ("san-diego", "chicago", 0.0),
+        ("san-diego", "topeka", 275.0),
+    ]
 
     import math
 
@@ -1932,7 +1941,7 @@ def test_minlp(data):
 
     client = NeosClient(email=os.environ["NEOS_EMAIL"])
     summary = model.solve(
-        solver="baron", output=sys.stdout, backend="neos", client=client
+        solver="sbb", output=sys.stdout, backend="neos", client=client
     )
     assert isinstance(summary, pd.DataFrame)
 

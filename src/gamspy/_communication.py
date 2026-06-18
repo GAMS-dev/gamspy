@@ -21,6 +21,45 @@ if TYPE_CHECKING:
 _comm_pairs: dict[str, tuple[socket.socket, subprocess.Popen]] = {}
 
 
+GAMS_STATUS = {
+    1: "Solver is to be called, the system should never return this number.",
+    2: "There was a compilation error.",
+    3: "There was an execution error.",
+    4: "System limits were reached.",
+    5: "There was a file error.",
+    6: "There was a parameter error.",
+    7: "The solve has failed due to a license error. The license you are using may impose model size limits (demo/community license) or you are using a GAMSPy incompatible professional license. Please contact sales@gams.com to find out about license options.",
+    8: "There was a GAMS system error.",
+    9: "GAMS could not be started.",
+    10: "Out of memory.",
+    11: "Out of disk.",
+    109: "Could not create process/scratch directory.",
+    110: "Too many process/scratch directories.",
+    112: "Could not delete the process/scratch directory.",
+    113: "Could not write the script gamsnext.",
+    114: "Could not write the parameter file.",
+    115: "Could not read environment variable.",
+    400: "Could not spawn the GAMS language compiler (gamscmex).",
+    401: "Current directory (curdir) does not exist.",
+    402: "Cannot set current directory (curdir).",
+    404: "Blank in system directory (UNIX only).",
+    405: "Blank in current directory (UNIX only).",
+    406: "Blank in scratch extension (scrext)",
+    407: "Unexpected cmexRC.",
+    408: "Could not find the process directory (procdir).",
+    409: "CMEX library not be found (experimental).",
+    410: "Entry point in CMEX library could not be found (experimental).",
+    411: "Blank in process directory (UNIX only).",
+    412: "Blank in scratch directory (UNIX only).",
+    909: "Cannot add path / unknown UNIX environment / cannot set environment variable.",
+    1000: "Driver error: incorrect command line parameters for gams.",
+    2000: "Driver error: internal error: cannot install interrupt handler.",
+    3000: "Driver error: problems getting current directory.",
+    4000: "Driver error: internal error: GAMS compile and execute module not found.",
+    5000: "Driver error: internal error: cannot load option handling library.",
+}
+
+
 def open_connection(container: Container) -> None:
     LOOPBACK = "127.0.0.1"
     TIMEOUT = 30
@@ -59,13 +98,13 @@ def open_connection(container: Container) -> None:
         env=env,
     )
 
-    port_info = process.stdout.readline().strip()
+    port_info = process.stdout.readline().strip()  # ty: ignore[unresolved-attribute]
 
     try:
         port = int(port_info.removeprefix("port: "))
     except ValueError as e:
         raise ValidationError(
-            f"Error while reading the port! {port_info + process.stdout.read()}"
+            f"Error while reading the port! {port_info + process.stdout.read()}"  # ty: ignore[unresolved-attribute]
         ) from e
 
     def handler(signum, frame):
@@ -121,7 +160,7 @@ def close_connection(pair_id: str):
 def _read_output(process: subprocess.Popen, output: TextIO | None) -> None:
     if output is not None:
         while True:
-            data = process.stdout.readline()
+            data = process.stdout.readline()  # ty: ignore[unresolved-attribute]
             output.write(data)
             output.flush()
             if data.startswith("--- Job ") and "elapsed" in data:
@@ -129,44 +168,6 @@ def _read_output(process: subprocess.Popen, output: TextIO | None) -> None:
 
 
 def check_response(response: bytes, job_name: str) -> None:
-    GAMS_STATUS = {
-        1: "Solver is to be called, the system should never return this number.",
-        2: "There was a compilation error.",
-        3: "There was an execution error.",
-        4: "System limits were reached.",
-        5: "There was a file error.",
-        6: "There was a parameter error.",
-        7: "The solve has failed due to a license error. The license you are using may impose model size limits (demo/community license) or you are using a GAMSPy incompatible professional license. Please contact sales@gams.com to find out about license options.",
-        8: "There was a GAMS system error.",
-        9: "GAMS could not be started.",
-        10: "Out of memory.",
-        11: "Out of disk.",
-        109: "Could not create process/scratch directory.",
-        110: "Too many process/scratch directories.",
-        112: "Could not delete the process/scratch directory.",
-        113: "Could not write the script gamsnext.",
-        114: "Could not write the parameter file.",
-        115: "Could not read environment variable.",
-        400: "Could not spawn the GAMS language compiler (gamscmex).",
-        401: "Current directory (curdir) does not exist.",
-        402: "Cannot set current directory (curdir).",
-        404: "Blank in system directory (UNIX only).",
-        405: "Blank in current directory (UNIX only).",
-        406: "Blank in scratch extension (scrext)",
-        407: "Unexpected cmexRC.",
-        408: "Could not find the process directory (procdir).",
-        409: "CMEX library not be found (experimental).",
-        410: "Entry point in CMEX library could not be found (experimental).",
-        411: "Blank in process directory (UNIX only).",
-        412: "Blank in scratch directory (UNIX only).",
-        909: "Cannot add path / unknown UNIX environment / cannot set environment variable.",
-        1000: "Driver error: incorrect command line parameters for gams.",
-        2000: "Driver error: internal error: cannot install interrupt handler.",
-        3000: "Driver error: problems getting current directory.",
-        4000: "Driver error: internal error: GAMS compile and execute module not found.",
-        5000: "Driver error: internal error: cannot load option handling library.",
-    }
-
     value = response[: response.find(b"#")].decode("ascii")
     if not value:
         raise FatalError(

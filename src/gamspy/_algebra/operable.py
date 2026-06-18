@@ -8,6 +8,8 @@ import gamspy.math as gamspy_math
 from gamspy.exceptions import ValidationError
 
 if typing.TYPE_CHECKING:
+    from gamspy._algebra.operation import Sum
+    from gamspy._symbols import Parameter, Variable
     from gamspy._types import OperableType
 
 
@@ -174,7 +176,7 @@ class Operable:
         return expression.Expression(None, "not", self)
 
     # a @ b
-    def __matmul__(self, other):
+    def __matmul__(self: Parameter | Variable, other: Parameter | Variable) -> Sum:
         import gamspy._algebra.operation as operation
         from gamspy.math.matrix import _validate_matrix_mult_dims
 

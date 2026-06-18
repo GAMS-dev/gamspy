@@ -64,7 +64,7 @@ class MathOp(operable.Operable):
         self.domain: list[Set | Alias] = []
         self.dimension = 0
         if hasattr(elements[0], "domain"):
-            self.domain: list[Set | Alias] = elements[0].domain  # type: ignore
+            self.domain: list[Set | Alias] = elements[0].domain
             self.dimension = validation.get_dimension(self.domain)
 
         self.where = condition.Condition(self)
@@ -119,16 +119,17 @@ class MathOp(operable.Operable):
             container, temp_name, self.domain
         )
         temp_param[...] = self
-        del container.data[temp_name]
+        del container._data[temp_name]
         return temp_param.records
 
-    def toValue(self) -> float | None:
+    def toValue(self) -> float:
         """
-        Convenience method to return expression records as a Python float. Only possible if there is a single record as a result of the expression evaluation.
+        Convenience method to return expression records as a Python float.
+        Only possible if there is a single record as a result of the expression evaluation.
 
         Returns
         -------
-        float | None
+        float
 
         Raises
         ------
@@ -152,10 +153,12 @@ class MathOp(operable.Operable):
             )
 
         records = self.records
-        if records is not None:
-            return records["value"][0]
+        if records is None:
+            raise ValidationError(
+                "Could not get the value of the operation. Please report to support@gams.com."
+            )
 
-        return records
+        return records["value"][0]
 
     def toList(self) -> list | None:
         """
@@ -241,7 +244,7 @@ class MathOp(operable.Operable):
 
 
 def _option_statement(
-    source: Set | Alias | ImplicitSet | Parameter | ImplicitParameter,
+    source: Set | Alias | Parameter | ImplicitSet | ImplicitParameter,
     target: Set | Alias | Parameter | ImplicitSet | ImplicitParameter,
     direction: Literal["right", "left"],
 ) -> None:
@@ -269,7 +272,17 @@ def _option_statement(
         raise ValidationError("Direction must be either 'right' or 'left'.")
 
     source.container._add_statement(f"option {target.name} {operator} {source.name};")
-    source.container._synch_with_gams(gams_to_gamspy=True)
+    source.container._synch_with_gams()
+
+    if isinstance(source, (implicits.ImplicitSet, implicits.ImplicitParameter)):
+        source.parent._should_load_from_gams = True
+    else:
+        source._should_load_from_gams = True
+
+    if isinstance(target, (implicits.ImplicitSet, implicits.ImplicitParameter)):
+        target.parent._should_load_from_gams = True
+    else:
+        target._should_load_from_gams = True
 
 
 def project(

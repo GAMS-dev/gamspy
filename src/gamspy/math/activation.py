@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
+import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.math
 import gamspy.utils as utils
 from gamspy._algebra.number import Number
 from gamspy._container import Container
-from gamspy._symbols.equation import Equation
-from gamspy._symbols.variable import Variable
 from gamspy.exceptions import ValidationError
 from gamspy.formulations.result import FormulationResult
 from gamspy.math.matrix import next_alias
@@ -16,7 +15,7 @@ from gamspy.math.matrix import next_alias
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
-    from gamspy._symbols.parameter import Parameter
+    from gamspy._symbols import Alias, Equation, Parameter, Set, Variable
 
 
 def _get_random_name(prefix: str) -> str:
@@ -234,14 +233,14 @@ def leaky_relu_with_binary_var(
         raise ValidationError("negative_slope must be in the range (0, 1).")
 
     domain = x.domain
-    sigma = Variable._constructor_bypass(
+    sigma = syms.Variable._constructor_bypass(
         x.container,
         _get_random_name("bin"),
         type="binary",
         domain=domain,
     )
 
-    y = Variable._constructor_bypass(
+    y = syms.Variable._constructor_bypass(
         x.container,
         _get_random_name("y"),
         domain=domain,
@@ -249,7 +248,7 @@ def leaky_relu_with_binary_var(
     )
 
     eq = [
-        Equation._constructor_bypass(
+        syms.Equation._constructor_bypass(
             x.container,
             _get_random_name("eq"),
             domain=domain,
@@ -260,7 +259,7 @@ def leaky_relu_with_binary_var(
     eq[0][...] = y >= x
     eq[1][...] = y >= negative_slope * x
 
-    if isinstance(x, Variable):
+    if isinstance(x, syms.Variable):
         eq[2][...] = y <= x - (1 - sigma) * (1 - negative_slope) * _get_lb(
             x, default_lb
         )
@@ -376,7 +375,7 @@ def relu_with_binary_var(
     # y >= 0 implied by positive variable
     eq[0][...] = y >= x
 
-    if isinstance(x, Variable):
+    if isinstance(x, syms.Variable):
         eq[1][...] = y <= x - (1 - sigma) * _get_lb(x, default_lb)
         eq[2][...] = y <= sigma * _get_ub(x, default_ub)
         y.lo[...] = gamspy.math.Max(0, x.lo[...])
@@ -475,13 +474,13 @@ def relu_with_equilibrium(
 
     new_input = None
     set_new_input = None
-    if not isinstance(x, Variable):
-        new_input = Variable._constructor_bypass(
+    if not isinstance(x, syms.Variable):
+        new_input = syms.Variable._constructor_bypass(
             x.container,
             _get_random_name("new_input"),
             domain=domain,
         )
-        set_new_input = Equation._constructor_bypass(
+        set_new_input = syms.Equation._constructor_bypass(
             x.container,
             _get_random_name("set_new_input"),
             domain=domain,
@@ -490,7 +489,7 @@ def relu_with_equilibrium(
     else:
         new_input = x
 
-    eq = Equation._constructor_bypass(
+    eq = syms.Equation._constructor_bypass(
         x.container,
         _get_random_name("matches_eq"),
         domain=domain,
@@ -574,7 +573,7 @@ def relu_with_complementarity_var(
     eq[0][...] = y * (y - x) == 0
     eq[1][...] = y - x >= 0
 
-    if isinstance(x, Variable):
+    if isinstance(x, syms.Variable):
         y.lo[...] = gamspy.math.Max(0, x.lo[...])
         y.up[...] = gamspy.math.Max(0, x.up[...])
     else:
@@ -628,13 +627,20 @@ def log_softmax(x: Variable, dim: int = -1, *, skip_intrinsic: bool = False):
     >>> y3, eqs3 = log_softmax(x, skip_intrinsic=True) # don't use LSE because of skip_intrinsic
 
     """
-    if not isinstance(x, Variable):
+    if not isinstance(x, syms.Variable):
         raise ValidationError("log_softmax expects a variable")
 
-    if dim < 0:
-        dim = len(x.domain) + dim
+    if not all(isinstance(elem, (syms.Set, syms.Alias)) for elem in x.domain):
+        raise ValidationError(
+            f"All elements of the domain of `{x}` must be either a set or an alias to perform this operation."
+        )
 
-    sum_domain = next_alias(x.domain[dim])
+    domain = cast("list[Set | Alias]", x.domain)
+
+    if dim < 0:
+        dim = len(domain) + dim
+
+    sum_domain = next_alias(domain[dim])
 
     y = x.container.addVariable(
         _get_random_name("y"),
@@ -648,7 +654,7 @@ def log_softmax(x: Variable, dim: int = -1, *, skip_intrinsic: bool = False):
 
     if not skip_intrinsic and len(sum_domain) != 0 and len(sum_domain) <= 20:
         # Use built-in LSE if possible
-        scalars = list(sum_domain.records["uni"])
+        scalars = list(sum_domain.records["uni"])  # ty: ignore[not-subscriptable]
         variables = []
         for scalar in scalars:
             expr_domain = [*x.domain[:dim], scalar, *x.domain[dim + 1 :]]
@@ -706,12 +712,12 @@ def softplus(
     >>> y2, eqs2 = softplus(x, skip_intrinsic=True) # don't use LSE because of skip_intrinsic
 
     """
-    y = Variable._constructor_bypass(
+    y = syms.Variable._constructor_bypass(
         x.container,
         _get_random_name("y"),
         domain=x.domain,
     )
-    eq = Equation._constructor_bypass(
+    eq = syms.Equation._constructor_bypass(
         x.container,
         _get_random_name("eq"),
         domain=x.domain,
@@ -760,23 +766,30 @@ def softmax(x: Variable, dim: int = -1):
     [Set(name='DenseDim500_1', domain=['*']), Set(name='DenseDim10_1', domain=['*'])]
 
     """
-    if not isinstance(x, Variable):
+    if not isinstance(x, syms.Variable):
         raise ValidationError("softmax expects a variable")
 
-    if dim < 0:
-        dim = len(x.domain) + dim
+    if not all(isinstance(elem, (syms.Set, syms.Alias)) for elem in x.domain):
+        raise ValidationError(
+            f"All elements of the domain of `{x}` must be either a set or an alias to perform this operation."
+        )
 
-    sum_domain = next_alias(x.domain[dim])
-    expr_domain = [d if i != dim else sum_domain for (i, d) in enumerate(x.domain)]
+    domain = cast("list[Set | Alias]", x.domain)
+
+    if dim < 0:
+        dim = len(domain) + dim
+
+    sum_domain = next_alias(domain[dim])
+    expr_domain = [d if i != dim else sum_domain for (i, d) in enumerate(domain)]
 
     y = x.container.addVariable(
         _get_random_name("y"),
-        domain=x.domain,
+        domain=domain,
     )
 
     eq = x.container.addEquation(
         _get_random_name("eq"),
-        domain=x.domain,
+        domain=domain,
     )
 
     sum_expr = gamspy.Sum(sum_domain, gamspy.math.exp(x[expr_domain]))

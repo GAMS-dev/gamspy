@@ -4,6 +4,7 @@ import importlib
 import importlib.util
 import json
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -39,7 +40,7 @@ def license(
         "-c",
         help="Specify a duration in hours to checkout a session.",
     ),
-    server: str | None = typer.Option(
+    server: str = typer.Option(
         "https://license.gams.com",
         "--server",
         "-s",
@@ -58,6 +59,9 @@ def license(
         int | None,
         typer.Option("--uses-port", help="Interprocess communication starting port."),
     ] = None,
+    use_uv: bool = typer.Option(
+        False, "--use-uv", help="Use uv instead of pip to install solvers."
+    ),
 ):
     import json
 
@@ -71,8 +75,8 @@ def license(
 
     if is_alp and len(license) != 36:
         typer.echo(
-            f"Access code is a 36 character string or an absolute path to the "
-            f"license file but {len(license)} character string ({license}) provided."
+            f"Invalid access code or license file ({license}). Please enter a 36-character "
+            f"access code, or ensure the absolute path to your license file is correct and the file exists."
         )
         raise typer.Exit(code=1)
 
@@ -201,6 +205,26 @@ def license(
                 raise typer.Exit(code=1)
 
         shutil.copy(license, license_path)
+
+    # Free personal license has different default solvers. Install them.
+    if "FREEPERSONAL" in lines[4]:
+        command = [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "solver",
+            "HIGHS",
+            "IPOPT",
+            "MILES",
+            "SHOT",
+            "RESHOP",
+            "SCIP",
+        ]
+        if use_uv:
+            command.append("--use-uv")
+
+        subprocess.run(command)
 
 
 def is_editable(package_name: str) -> bool:
@@ -402,7 +426,15 @@ def solver(
         typer.echo("Solver name is missing: `gamspy install solver <solver_name>`")
         raise typer.Exit(code=1)
 
-    install_addons(solver)
+    solvers = [elem.upper() for elem in solver]
+    if (
+        platform.system() + "_" + platform.machine() == "Linux_aarch64"
+        and "SCIP" in solvers
+        and "GUROBI" not in solvers
+    ):
+        solvers.insert(0, "GUROBI")
+
+    install_addons(solvers)
 
 
 if __name__ == "__main__":

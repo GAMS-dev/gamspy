@@ -1,5 +1,5 @@
-Set days(*) "100 days from 95-11-27 to 96-04-29";
-Set stocks(*) "170 selected stocks";
+Set days(days) "100 days from 95-11-27 to 96-04-29";
+Set stocks(stocks) "170 selected stocks";
 Set d(days) "selected days";
 Set s(stocks) "selected stocks";
 Parameter mean(stocks) "mean of daily return";

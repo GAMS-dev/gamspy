@@ -41,7 +41,11 @@ def run_gtp2(m: gt.Container):  # read from a Container
     _ = gt.Container(system_directory=gamspy_base.directory, load_from=m)
 
 
-def run_gp2(m: gt.Container):  # read from a Container
+def run_gp2(m: gt.Container):  # read from a gt.Container
+    _ = gp.Container(load_from=m)
+
+
+def run_gp2gp(m: gp.Container):  # read from a gp.Container
     _ = gp.Container(load_from=m)
 
 
@@ -53,6 +57,7 @@ def main():
 
     m = gt.Container(system_directory=gamspy_base.directory)
     write_gdx(N, m)
+    m2 = gp.Container(load_from="in.gdx")
 
     setup = {"func": run_gtp}
     r = timeit.repeat("func()", repeat=R, number=NUM, globals=setup)
@@ -73,6 +78,11 @@ def main():
     gp_time = sum(r) / len(r)
 
     print(f"{gt_time=}, {gp_time=}, ratio: {gp_time / gt_time: .2f}")
+
+    setup = {"m": m2, "func": run_gp2gp}
+    r = timeit.repeat("func(m)", repeat=R, number=NUM, globals=setup)
+    gp2gp_time = sum(r) / len(r)
+    print(f"{gp2gp_time=}")
 
     os.remove("in.gdx")
 

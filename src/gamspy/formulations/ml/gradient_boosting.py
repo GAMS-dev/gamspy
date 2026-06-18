@@ -15,13 +15,7 @@ if TYPE_CHECKING:
     from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.tree import DecisionTreeRegressor
 
-    from gamspy import (
-        Alias,
-        Equation,
-        Parameter,
-        Set,
-        Variable,
-    )
+    from gamspy._types import SymbolType
 
 
 class GradientBoosting:
@@ -158,9 +152,8 @@ class GradientBoosting:
         M: float | None = None,
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         gb_out_list: list[gp.Variable] = []
-        gb_eqn_list: list[gp.Equation] = []
 
-        set_records_total: dict[Set | Alias | Parameter | Variable | Equation, Any] = {}
+        set_records_total: dict[SymbolType, Any] = {}
 
         results = (
             regression_tree._yield_call(input, M)
@@ -196,7 +189,7 @@ class GradientBoosting:
             description="predicted out should be equal to the sum of gradient descent out times the learning rate.",
         )
 
-        self.container._synch_with_gams(gams_to_gamspy=True)
+        self.container._synch_with_gams()
         gb_eqn[...] = self._bias + self._learning_rate * sum(gb_out_list) == out
         gb_eqn_list.append(gb_eqn)
 

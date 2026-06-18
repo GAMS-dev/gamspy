@@ -47,22 +47,25 @@ class ExtrinsicFunction(operable.Operable):
             self.container, temp_name, self.domain
         )
         temp_param[...] = self
-        del self.container.data[temp_name]
+        del self.container._data[temp_name]
         return temp_param.records
 
-    def toValue(self) -> float | None:
+    def toValue(self) -> float:
         """
-        Convenience method to return expression records as a Python float. Only possible if there is a single record as a result of the expression evaluation.
+        Convenience method to return expression records as a Python float.
+        Only possible if there is a single record as a result of the expression evaluation.
 
         Returns
         -------
-        float | None
+        float
         """
         records = self.records
-        if records is not None:
-            return records["value"][0]
+        if records is None:
+            raise ValidationError(
+                "Could not get the value of the extrinsic function. Please report to support@gams.com."
+            )
 
-        return records
+        return records["value"][0]
 
     def __eq__(self, other):
         return expression.Expression(self, "=e=", other)

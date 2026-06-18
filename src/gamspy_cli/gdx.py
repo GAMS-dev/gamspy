@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import platform
+import re
 import subprocess
 from typing import Annotated
 
@@ -25,6 +26,24 @@ VALID_DFORMATS = {"normal", "hexponential", "hexBytes"}
 VALID_YN = {"Y", "N"}
 VALID_FIELDS = {"L", "M", "Up", "Lo", "Prior", "Scale", "All"}
 VALID_SETDESC = {"Y", "N"}
+
+
+def _get_gdx_symbol_names(filename: str) -> set[str]:
+    import gams.core.gdx as gdx
+    import gamspy_base
+
+    import gamspy._gdx as gdxio
+
+    symbol_names = set()
+    with gdxio.open_gdx(gamspy_base.directory, filename) as handle:
+        _, number_of_symbols, _ = gdx.gdxSystemInfo(handle)
+
+        for symbol_number in range(number_of_symbols):
+            _, symbol_name, _, _ = gdx.gdxSymbolInfo(handle, symbol_number)
+            if symbol_name != "*":
+                symbol_names.add(symbol_name)
+
+    return symbol_names
 
 
 def complete_delim(ctx: typer.Context, incomplete: str):
@@ -304,6 +323,12 @@ def diff(
         list[str] | None,
         typer.Option("--skipid", "-s", help="One or more identifiers to skip"),
     ] = None,
+    skip_regex: Annotated[
+        str | None,
+        typer.Option(
+            "--skip-regex", help="Regular expression pattern to skip identifiers"
+        ),
+    ] = None,
 ):
     import gamspy_base
 
@@ -340,6 +365,17 @@ def diff(
         typer.echo(f"Invalid SetDesc value: '{setdesc}'. Must be Y or N", err=True)
         raise typer.Exit(code=1)
 
+    skipid_list = list(skipid) if skipid else []
+
+    if skip_regex:
+        pattern = re.compile(skip_regex)
+
+        file1_symbol_names = _get_gdx_symbol_names(file1)
+        file2_symbol_names = _get_gdx_symbol_names(file2)
+        union = file1_symbol_names.union(file2_symbol_names)
+        matched_symbol_names = [sym for sym in union if pattern.search(sym)]
+        skipid_list.extend(matched_symbol_names)
+
     # Build the command
     cmd = [GDXDIFF_PATH, file1, file2]
     if diffile:
@@ -367,8 +403,8 @@ def diff(
     if id:
         for i in id:
             cmd.append(f"ID={i}")
-    if skipid:
-        for s in skipid:
+    if skipid_list:
+        for s in set(skipid_list):
             cmd.append(f"SkipID={s}")
 
     result = subprocess.run(cmd, text=True)

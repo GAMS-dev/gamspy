@@ -4,12 +4,12 @@ import builtins
 import itertools
 import os
 import threading
+import weakref
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
-import gams.transfer as gt
+import pandas as pd
 from gams.core.gdx import GMS_DT_EQU
-from gams.transfer._internals import EQU_TYPE, TRANSFER_TO_GAMS_EQUATION_SUBTYPES
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -18,21 +18,65 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
-from gamspy._symbols.symbol import Symbol
+from gamspy._internals import EQU_TYPE, TRANSFER_TO_GAMS_EQUATION_SUBTYPES
+from gamspy._special_values import SpecialValues
+from gamspy._symbols.base import VarEquSymbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    import pandas as pd
-
     from gamspy import Container, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitEquation, ImplicitParameter
-    from gamspy._types import DomainType, IndexType
+    from gamspy._types import DomainType, IndexType, VarEquRecordsType
 
 
 EQ_TYPES = ["=e=", "=l=", "=g=", "=n=", "=x=", "=b="]
 IRREGULAR_EQ_MAP = {"nonbinding": "=n=", "external": "=x=", "boolean": "=b="}
+EQU_DEFAULT_VALUES = {
+    "eq": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": 0.0,
+        "upper": 0.0,
+        "scale": 1.0,
+    },
+    "geq": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": 0.0,
+        "upper": SpecialValues.POSINF,
+        "scale": 1.0,
+    },
+    "leq": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": SpecialValues.NEGINF,
+        "upper": 0.0,
+        "scale": 1.0,
+    },
+    "nonbinding": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": SpecialValues.NEGINF,
+        "upper": SpecialValues.POSINF,
+        "scale": 1.0,
+    },
+    "external": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": 0.0,
+        "upper": 0.0,
+        "scale": 1.0,
+    },
+    "boolean": {
+        "level": 0.0,
+        "marginal": 0.0,
+        "lower": 0.0,
+        "upper": 0.0,
+        "scale": 1.0,
+    },
+}
 
 
 class EquationType(Enum):
@@ -61,7 +105,7 @@ class EquationType(Enum):
         return self.value
 
 
-class Equation(gt.Equation, Symbol):
+class Equation(VarEquSymbol):
     """
     Represents an Equation symbol in GAMS.
 
@@ -83,7 +127,7 @@ class Equation(gt.Equation, Symbol):
         or strings representing set names. Use "*" for the universe set. Default is [] (scalar).
     definition : Variable | Operation | Expression, optional
         The mathematical definition of the equation. Can be set later via assignment.
-    records : Any, optional
+    records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict, optional
         Initial records to populate the equation.
     domain_forwarding : bool | list[bool], optional
         If True, adding records to this equation will implicitly add new elements to the
@@ -115,57 +159,41 @@ class Equation(gt.Equation, Symbol):
         name: str,
         type: str | EquationType = "regular",
         domain: DomainType | None = None,
-        records: Any | None = None,
+        records: VarEquRecordsType | None = None,
         description: str = "",
-    ):
-        if domain is None:
-            domain = []
-
-        if isinstance(domain, (gp.Set, gp.Alias, str)):
-            domain = [domain]
-
-        if isinstance(domain, gp.math.Dim):
-            domain = gp.math._generate_dims(container, domain.dims)
-
+    ) -> Equation:
         # create new symbol object
-        obj = Equation.__new__(
-            cls,
-            container,
-            name,
-            type,
-            domain,
-            records=records,
-            description=description,
-        )
+        obj = object.__new__(cls)
 
         # set private properties directly
         type = cast_type(type)
         obj.type = EQU_TYPE[type]
         obj._assignment = None
-        obj._gams_type = GMS_DT_EQU
-        obj._gams_subtype = TRANSFER_TO_GAMS_EQUATION_SUBTYPES[type]
-        obj._requires_state_check = False
-        obj._container = container
-        container._requires_state_check = True
-        obj._name = name
-        obj._domain = domain
+        obj._gams_type: int = GMS_DT_EQU
+        obj._gams_subtype: int = TRANSFER_TO_GAMS_EQUATION_SUBTYPES[type]
+
+        obj._container = cast(
+            "Container",
+            weakref.proxy(container)
+            if not isinstance(container, weakref.ProxyType)
+            else container,
+        )
+        obj.name = name
+        obj._domain = obj._normalize_domain(obj._container, domain)
         obj._domain_forwarding = False
         obj._description = description
         obj._records = records
-        obj._modified = True
-        obj._domain_violations = None
-
-        # add to container
-        container.data.update({name: obj})
+        obj._container._data.update({name: obj})
 
         # gamspy attributes
+        obj._domain_violations = None
         obj._definition = None
         obj.where = condition.Condition(obj)
         obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
-        obj._synchronize = True
         obj._metadata = {}
-        obj._winner = "python"
+        obj._should_load_from_gams = False
+        obj._should_unload_to_gams = False
         obj._equation_listing: list[str] | None = None
 
         # create attributes
@@ -189,7 +217,7 @@ class Equation(gt.Equation, Symbol):
         type: str | EquationType = "regular",
         domain: DomainType | None = None,
         definition: Variable | Operation | Expression | None = None,
-        records: Any | None = None,
+        records: VarEquRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -212,16 +240,17 @@ class Equation(gt.Equation, Symbol):
                         (os.getpid(), threading.get_native_id())
                     ]
 
-                symbol = container.data[name]
-                if isinstance(symbol, cls):
-                    return symbol
-
-                raise TypeError(
-                    f"Cannot overwrite symbol `{name}` in container"
-                    " because it is not an Equation object)"
-                )
+                symbol = container._data[name]
             except KeyError:
                 return object.__new__(cls)
+
+        if isinstance(symbol, cls):
+            return symbol
+
+        raise TypeError(
+            f"Cannot overwrite symbol `{name}` in container"
+            " because it is not an Equation object)"
+        )
 
     def __init__(
         self,
@@ -230,7 +259,7 @@ class Equation(gt.Equation, Symbol):
         type: str | EquationType = "regular",
         domain: DomainType | None = None,
         definition: Variable | Operation | Expression | None = None,
-        records: Any | None = None,
+        records: VarEquRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -246,19 +275,7 @@ class Equation(gt.Equation, Symbol):
         self._is_miro_output = is_miro_output
         self._domain_violations = None
 
-        self._synchronize = True
-        self._winner = "python"
         self._equation_listing: list[str] | None = None
-
-        # domain handling
-        if domain is None:
-            domain = []
-
-        if isinstance(domain, (gp.Set, gp.Alias)):
-            domain = [domain]
-
-        if isinstance(domain, gp.math.Dim):
-            domain = gp.math._generate_dims(container, domain.dims)  # type: ignore
 
         # does symbol exist
         has_symbol = False
@@ -274,6 +291,7 @@ class Equation(gt.Equation, Symbol):
                     f" `{type.casefold()}`"
                 )
 
+            domain = self._normalize_domain(self.container, domain)
             if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
@@ -287,21 +305,19 @@ class Equation(gt.Equation, Symbol):
                 )
 
             # reset some properties
-            self._requires_state_check = True
-            self.container._requires_state_check = True
-            if description != "":
-                self.description = description
 
-            previous_state = self.container._options.miro_protect
-            self.container._options.miro_protect = False
-            self._records = None
-            self._modified = True
+            if description != "":
+                self._description = description
+
+            previous_state = self._container._options.miro_protect
+            self._container._options.miro_protect = False
+            self._records: pd.DataFrame | None = None
             self._init_definition(definition)
 
             # only set records if records are provided
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
-            self.container._options.miro_protect = previous_state
+            self._container._options.miro_protect = previous_state
 
         else:
             if container is None:
@@ -312,28 +328,32 @@ class Equation(gt.Equation, Symbol):
                 except KeyError as e:
                     raise ValidationError("Equation requires a container.") from e
 
+            self._container = cast("Container", weakref.proxy(container))
+
             type = cast_type(type)
 
             if name is not None:
                 name = validation.validate_name(name)
 
                 if is_miro_output:
-                    name = name.lower()  # type: ignore
+                    name = name.lower()
             else:
                 name = container._get_symbol_name(prefix="e")
 
-            previous_state = container._options.miro_protect
-            container._options.miro_protect = False
-            super().__init__(
-                container,
-                name,
-                type,
-                domain,
-                domain_forwarding=domain_forwarding,
-                description=description,
-                uels_on_axes=uels_on_axes,
-            )
+            self.name = name
+
+            domain = self._normalize_domain(self._container, domain)
+            self._domain = self._validate_domain(domain)
+            self._domain_forwarding = domain_forwarding
+            self._type = type
+            self._description = description
+            self._records = None
+            self._gams_type: int = GMS_DT_EQU
+            self._gams_subtype: int = TRANSFER_TO_GAMS_EQUATION_SUBTYPES[self.type]
             self._latex_name = self.name.replace("_", r"\_")
+            self._should_load_from_gams = False
+            self._should_unload_to_gams = False
+            self._container._data.update({name: self})
 
             if is_miro_output:
                 container._miro_output_symbols.append(self.name)
@@ -341,19 +361,13 @@ class Equation(gt.Equation, Symbol):
             validation.validate_container(self, self._domain)
 
             self.where = condition.Condition(self)
-            self.container._add_statement(self)
+            self._container._add_statement(self)
             self._definition: Expression | None = None
             self._definition_domain = definition_domain
             self._init_definition(definition)
 
             # create attributes
-            (
-                self._l,
-                self._m,
-                self._lo,
-                self._up,
-                self._s,
-            ) = self._init_attributes()
+            self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
             self._stage = self._create_attr("stage")
             self._range = self._create_attr("range")
             self._slacklo = self._create_attr("slacklo")
@@ -361,21 +375,23 @@ class Equation(gt.Equation, Symbol):
             self._slack = self._create_attr("slack")
             self._infeas = self._create_attr("infeas")
 
+            previous_state = self._container._options.miro_protect
+            self._container._options.miro_protect = False
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
-                if not self._is_miro_output:
-                    self._modified = False
-                self.container._synch_with_gams()
+                if self._is_miro_output:
+                    self._should_unload_to_gams = True
 
-            container._options.miro_protect = previous_state
+                self._container._synch_with_gams()
+
+            self._container._options.miro_protect = previous_state
 
     def _serialize(self) -> dict:
-        info = {
+        info: dict[str, Any] = {
             "_domain_forwarding": self._domain_forwarding,
             "_is_miro_output": self._is_miro_output,
             "_metadata": self._metadata,
-            "_synchronize": self._synchronize,
         }
         if self._assignment is not None:
             info["_assignment"] = self._assignment.getDeclaration()
@@ -402,9 +418,12 @@ class Equation(gt.Equation, Symbol):
             if elem == "*":
                 new_domain.append(elem)
                 continue
-            new_domain.append(self.container[elem])
+            new_domain.append(self._container[elem.name])
 
-        self.domain = new_domain
+        self._domain = new_domain
+
+        # Refresh the implicit parameters' domain
+        self._update_attr_domains()
 
     def __getitem__(self, indices: IndexType) -> ImplicitEquation:
         domain = validation.validate_domain(self, indices)
@@ -413,7 +432,7 @@ class Equation(gt.Equation, Symbol):
             self,
             name=self.name,
             type=self.type,
-            domain=domain,  # type: ignore
+            domain=domain,
         )
 
     def __setitem__(self, indices: IndexType, rhs: Expression):
@@ -422,8 +441,7 @@ class Equation(gt.Equation, Symbol):
 
         self._set_definition(domain, rhs)
 
-        self.container._synch_with_gams(gams_to_gamspy=True, load_symbols=[self])
-        self._winner = "gams"
+        self._container._synch_with_gams()
 
     def __repr__(self) -> str:
         return f"Equation(name='{self.name}', type='{self.type}', domain={self.domain})"
@@ -581,10 +599,10 @@ class Equation(gt.Equation, Symbol):
         )
 
         # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
-        if not self.container._in_loop:
+        if not self._container._in_loop:
             statement._validate_definition(utils._unpack(domain))
 
-        self.container._add_statement(statement)
+        self._container._add_statement(statement)
         self._definition = statement
 
     def _check_ambiguity(self) -> None:
@@ -598,7 +616,7 @@ class Equation(gt.Equation, Symbol):
         while True:
             if node is not None:
                 stack.append(node)
-                node = getattr(node, "left", None)  # type: ignore
+                node = getattr(node, "left", None)
             elif stack:
                 node = stack.pop()
                 if (
@@ -1096,45 +1114,26 @@ class Equation(gt.Equation, Symbol):
         np.float64(10.0)
 
         """
+        if self._should_load_from_gams:
+            self._load_from_gams()
+
         return self._records
 
     @records.setter
     def records(self, records: pd.DataFrame | None):
-        import pandas as pd
-
         if records is not None and not isinstance(records, pd.DataFrame):
             raise TypeError("Symbol 'records' must be type DataFrame")
 
-        # set records
         self._records = records
-
-        self._requires_state_check = True
-        self._modified = True
-
-        self.container._requires_state_check = True
-        self.container.modified = True
-
-        if self._records is not None and self._domain_forwarding:
-            self._domainForwarding()
-
-            # reset state check flags for all symbols in the container
-            for symbol in self.container.data.values():
-                symbol._requires_state_check = True
+        self._should_unload_to_gams = True
+        self._handle_domain_forwarding()
 
     def __hash__(self):
         return id(self)
 
-    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
-        super().setRecords(records, uels_on_axes)
-
-        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
-            if self.hasDomainViolations():
-                self._domain_violations = self.getDomainViolations()
-                self.dropDomainViolations()
-            else:
-                self._domain_violations = None
-
-    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+    def setRecords(
+        self, records: VarEquRecordsType | None, uels_on_axes: bool = False
+    ) -> None:
         """
         Sets the records (data) of the Equation.
 
@@ -1142,7 +1141,7 @@ class Equation(gt.Equation, Symbol):
 
         Parameters
         ----------
-        records : Any
+        records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict
             The data to load (e.g., list, numpy array, DataFrame).
         uels_on_axes : bool, optional
             If True, assumes domain elements are in the axes of the DataFrame. Default is False.
@@ -1161,13 +1160,18 @@ class Equation(gt.Equation, Symbol):
 
         """
         if records is None:
-            self.container._add_statement(f"option clear={self.name};")
-            self.container._synch_with_gams(gams_to_gamspy=True)
+            self._container._add_statement(f"option clear={self.name};")
+            self._container._synch_with_gams()
+            self._records = None
             return
 
         self._setRecords(records, uels_on_axes=uels_on_axes)
-        self.container._synch_with_gams()
-        self._winner = "python"
+        self._container._synch_with_gams()
+
+    @property
+    def _default_records(self):
+        """Default records of an equation"""
+        return EQU_DEFAULT_VALUES[self._type]
 
     @property
     def type(self):
@@ -1201,7 +1205,7 @@ class Equation(gt.Equation, Symbol):
     @type.setter
     def type(self, eq_type: str | EquationType):
         given_type = cast_type(eq_type)
-        gt.Equation.type.fset(self, given_type)
+        self._type = given_type
 
     def gamsRepr(self) -> str:
         """
@@ -1278,17 +1282,15 @@ class Equation(gt.Equation, Symbol):
         else:
             domain_str = ",".join(
                 [
-                    symbol.latexRepr()
-                    for symbol in self._definition.left.conditioning_on.domain  # type: ignore
+                    symbol.latexRepr()  # ty: ignore[unresolved-attribute]
+                    for symbol in self._definition.left.conditioning_on.domain
                 ]
             )
             domain_str = f"\\forall {domain_str}"
 
-            assert self._definition.left.condition is not None
             if hasattr(self._definition.left.condition, "latexRepr"):
-                constraint_str = self._definition.left.condition.latexRepr()
+                constraint_str = self._definition.left.condition.latexRepr()  # ty: ignore
             else:
-                assert isinstance(self._definition.left.condition, (int, float))
                 constraint_str = str(self._definition.left.condition)
 
             right_side = f"\\hfill {domain_str} ~ | ~ {constraint_str}"
@@ -1332,7 +1334,7 @@ class Equation(gt.Equation, Symbol):
         if self.description:
             output += ' "' + self.description + '"'
 
-        if self.records is None:
+        if self._records is None:
             output += " / /"
 
         output += ";"

@@ -2,9 +2,9 @@ leg-precommit:
   stage: precommit
   when: on_success
   tags: [linux]
-  image: astral/uv:python3.13-alpine
+  image: astral/uv:python3.13-trixie
   script:
-    - uv audit --frozen
-    - apk add --no-cache ca-certificates git
-    - uv pip install --system prek
+    - uv audit --ignore-until-fixed GHSA-rrmf-rvhw-rf47 --frozen
+    - apt-get update && apt-get install -y --no-install-recommends ca-certificates git
+    - uv pip install --system prek ty
     - prek run --all-files

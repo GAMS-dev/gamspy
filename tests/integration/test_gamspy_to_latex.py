@@ -1637,21 +1637,21 @@ def test_latex_repr(data):
     j = Set(m, "j", domain=i, records=["i1"])
     assert j.latexRepr() == "j"
     assert j[i].latexRepr() == r"j_{i}"
-    assert j["i1"].latexRepr() == r"j_{\textquotesingle i1 \textquotesingle}"
+    assert j["i1"].latexRepr() == r"j_{\text{`i1'}}"
 
     a = Parameter(m, "a")
     assert a.latexRepr() == "a"
     b = Parameter(m, "b", domain=[i, j])
     assert b.latexRepr() == "b"
     assert b[i, j].latexRepr() == r"b_{i,j}"
-    assert b[i, "i1"].latexRepr() == r"b_{i,\textquotesingle i1 \textquotesingle}"
+    assert b[i, "i1"].latexRepr() == r"b_{i,\text{`i1'}}"
 
     c = Variable(m, "c")
     assert c.latexRepr() == "c"
     d = Variable(m, "d", domain=[i, j])
     assert d.latexRepr() == "d"
     assert d[i, j].latexRepr() == r"d_{i,j}"
-    assert d[i, "i1"].latexRepr() == r"d_{i,\textquotesingle i1 \textquotesingle}"
+    assert d[i, "i1"].latexRepr() == r"d_{i,\text{`i1'}}"
 
     e = Equation(m, "e")
 
