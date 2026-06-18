@@ -548,7 +548,8 @@ def test_parameter_tovalue():
 
     # Empty scalar
     p_empty = gp.Parameter(m, "p_empty")
-    assert p_empty.toValue() is None
+    with pytest.raises(ValidationError):
+        p_empty.toValue()
 
     # Invalid: Non-scalar
     i = gp.Set(m, "i", records=["A", "B"])

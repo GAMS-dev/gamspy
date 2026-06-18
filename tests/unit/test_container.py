@@ -662,7 +662,7 @@ def test_read(data, tmp_path):
 
     m = Container()
     m.read(gdx_path, load_records=False)
-    assert m["a"].records is None
+    assert m["a"]._records is None
 
     m.close()
 
@@ -2097,7 +2097,9 @@ def test_symbol_pivot():
         i.pivot()
 
     p_empty = gp.Parameter(m, "p_empty", domain=[i, j])
-    assert p_empty.pivot() is None
+
+    with pytest.raises(ValidationError):
+        p_empty.pivot()
 
     ij = gp.Set(
         m,

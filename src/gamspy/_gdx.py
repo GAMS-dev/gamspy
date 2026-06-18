@@ -310,62 +310,27 @@ def read(
 
             create_symbol_from_metadata(container, md)
 
-        # Link Domain Objects
-        for md in link_domains:
-            symbol = container._data[md.name]
-            if not isinstance(symbol, (Set, Parameter, Variable, Equation)):
-                continue
+    # Link Domain Objects
+    for md in link_domains:
+        symbol = container._data[md.name]
+        if not isinstance(symbol, (Set, Parameter, Variable, Equation)):
+            continue
 
-            domain = md.domain
-            for n, dom_name in enumerate(domain):
-                if dom_name != "*" and dom_name in read_symbols:
-                    domain[n] = container._data[dom_name]
+        domain = md.domain
+        for n, dom_name in enumerate(domain):
+            if dom_name != "*" and dom_name in read_symbols:
+                domain[n] = container._data[dom_name]
 
-            symbol._domain = domain
+        symbol._domain = domain
 
-            if isinstance(symbol, (Variable, Equation)):
-                symbol._update_attr_domains()
+        if isinstance(symbol, (Variable, Equation)):
+            symbol._update_attr_domains()
 
-        # Main Records Read
-        if not records:
-            return
-
-        gdx_uels = container._gams2np.gdxGetUelList(gdx_handle, encoding=encoding)
-        gdx_uels[0] = "*"
-
-        for md in symbols_with_records:
-            symobj = cast("SymbolWithRecordsType", container._data[md.name])
-
-            # Fastpath for scalar symbols
-            if md.dimension == 0 and md.number_records == 1:
-                gdx.gdxDataReadRawStart(gdx_handle, md.gdx_symbol_number)
-                _, _, vals, _ = gdx.gdxDataReadRaw(gdx_handle)
-                gdx.gdxDataReadDone(gdx_handle)
-
-                symobj._records = pd.DataFrame(
-                    [vals[: len(symobj._attributes)]],
-                    columns=symobj._attributes,
-                    dtype=float,
-                )
-            else:
-                try:
-                    arrkeys, arrvals, unique_uels = container._gams2np.gdxReadSymbolCat(
-                        gdx_handle, md.name, gdx_uels, encoding=encoding
-                    )
-                except Exception as err:
-                    raise GdxException(
-                        f"Could not properly read symbol `{md.name}` from GDX file: {err}"
-                    ) from err
-
-                df = convert_to_categoricals_cat(arrkeys, arrvals, unique_uels)
-                symobj._records = df
-                if symobj._records is not None:
-                    symobj._records.columns = (
-                        generate_unique_labels(symobj.domain_names) + symobj._attributes
-                    )
-
-            symobj._should_unload_to_gams = True
-            symobj._should_load_from_gams = False
+    symbols = [metadata.name for metadata in symbols_with_records]
+    symbol_str = " ".join(symbols)
+    container._add_statement(f"$gdxLoad {load_from} {symbol_str}")
+    container._synch_with_gams()
+    container._should_load_from_gams(symbols)
 
 
 # TODO: fix typing here.
