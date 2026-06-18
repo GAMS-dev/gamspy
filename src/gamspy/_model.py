@@ -170,6 +170,9 @@ class Sense(Enum):
 class ModelStatus(Enum):
     """An enumeration for model status types"""
 
+    NotSolved = 0
+    """In case the model is not solved yet."""
+
     OptimalGlobal = 1
     """The solution is optimal, that is, it is feasible (within tolerances) and it has been proven that no other feasible solution with better objective value exists."""
 
@@ -494,7 +497,7 @@ class Model:
         self._marginals: float | None = None
         self._max_infeasibility: float | None = None
         self._mean_infeasibility: float | None = None
-        self._status: ModelStatus | None = None
+        self._status: ModelStatus = ModelStatus.NotSolved
         self._num_nodes_used: float | None = None
         self._solve_number: float | None = None
         self._num_dependencies: float | None = None
@@ -582,18 +585,23 @@ class Model:
         )
 
     @property
-    def num_domain_violations(self) -> float | None:
+    def num_domain_violations(self) -> float:
         """
         Number of domain violations in the solution.
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._num_domain_violations is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the number of domain violations in the solution."
+            )
+
         return self._num_domain_violations
 
     @property
-    def algorithm_time(self) -> float | None:
+    def algorithm_time(self) -> float:
         """
         Solver dependent timing information. This attribute was intended to allow
         solvers to return the elapsed time used by the solve algorithm without
@@ -605,12 +613,17 @@ class Model:
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._algorithm_time is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the algorithm time."
+            )
+
         return self._algorithm_time
 
     @property
-    def total_solve_time(self) -> float | None:
+    def total_solve_time(self) -> float:
         """
         Elapsed time it took to execute a solve statement in total. This model
         attribute returns the elapsed time it took to execute a solve statement in total.
@@ -620,12 +633,17 @@ class Model:
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._total_solve_time is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the total solve time."
+            )
+
         return self._total_solve_time
 
     @property
-    def total_solver_time(self) -> float | None:
+    def total_solver_time(self) -> float:
         """
         Elapsed time taken by the solver only. This model attribute returns the elapsed
         time taken by the solver only. This does not include the GAMS model generation time
@@ -634,62 +652,86 @@ class Model:
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._total_solver_time is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the total solver time."
+            )
         return self._total_solver_time
 
     @property
-    def num_iterations(self) -> float | None:
+    def num_iterations(self) -> float:
         """
         Number of iterations used.
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._num_iterations is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the number of iterations."
+            )
+
         return self._num_iterations
 
     @property
-    def marginals(self) -> float | None:
+    def marginals(self) -> float:
         """
         Indicates whether there are marginals.
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._marginals is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the marginals."
+            )
+
         return self._marginals
 
     @property
-    def max_infeasibility(self) -> float | None:
+    def max_infeasibility(self) -> float:
         """
         Maximum of infeasibilities
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._max_infeasibility is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the maximum of infeasibilities."
+            )
+
         return self._max_infeasibility
 
     @property
-    def mean_infeasibility(self) -> float | None:
+    def mean_infeasibility(self) -> float:
         """
         Mean of infeasibilities
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._mean_infeasibility is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the mean of infeasibilities."
+            )
+
         return self._mean_infeasibility
 
     @property
-    def status(self) -> ModelStatus | None:
+    def status(self) -> ModelStatus:
         """
         Model status after solve.
 
         Returns
         -------
-        ModelStatus | None
+        ModelStatus
         """
         return self._status
 
@@ -738,14 +780,19 @@ class Model:
         return self._num_discrete_variables
 
     @property
-    def num_equations(self) -> float | None:
+    def num_equations(self) -> float:
         """
         Number of equations.
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._num_equations is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the number of equations in the model instance."
+            )
+
         return self._num_equations
 
     @property
@@ -793,14 +840,19 @@ class Model:
         return self._num_nonoptimalities
 
     @property
-    def num_nonzeros(self) -> float | None:
+    def num_nonzeros(self) -> float:
         """
         Number of nonzero entries in the model coefficient matrix.
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._num_nonzeros is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the number of nonzeros."
+            )
+
         return self._num_nonzeros
 
     @property
@@ -815,14 +867,19 @@ class Model:
         return self._num_mcp_redefinitions
 
     @property
-    def num_variables(self) -> float | None:
+    def num_variables(self) -> float:
         """
-        Number of variables.
+        Number of variables in the model instance.
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._num_variables is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the number of variables in the model instance."
+            )
+
         return self._num_variables
 
     @property
@@ -848,14 +905,19 @@ class Model:
         return self._objective_estimation
 
     @property
-    def objective_value(self) -> float | None:
+    def objective_value(self) -> float:
         """
         Objective function value
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._objective_value is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first before getting the objective value."
+            )
+
         return self._objective_value
 
     @property
@@ -870,36 +932,51 @@ class Model:
         return self._used_model_type
 
     @property
-    def model_generation_time(self) -> float | None:
+    def model_generation_time(self) -> float:
         """
         Time GAMS took to generate the model in wall-clock seconds.
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._model_generation_time is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the model generation time."
+            )
+
         return self._model_generation_time
 
     @property
-    def solve_model_time(self) -> float | None:
+    def solve_model_time(self) -> float:
         """
         Time the solver used to solve the model in seconds
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._solve_model_time is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the solve time."
+            )
+
         return self._solve_model_time
 
     @property
-    def solve_status(self) -> SolveStatus | None:
+    def solve_status(self) -> SolveStatus:
         """
         Indicates the solver termination condition.
 
         Returns
         -------
-        SolveStatus | None
+        SolveStatus
         """
+        if self._solve_status is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the solve status."
+            )
+
         return self._solve_status
 
     @property
@@ -914,14 +991,18 @@ class Model:
         return self._sum_infeasibilities
 
     @property
-    def solver_version(self) -> float | None:
+    def solver_version(self) -> float:
         """
         Solver version.
 
         Returns
         -------
-        float | None
+        float
         """
+        if self._solver_version is None:
+            raise ValidationError(
+                "The model is not solved yet. Please solve the model first to get the solver version."
+            )
         return self._solver_version
 
     @property

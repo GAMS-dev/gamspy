@@ -1413,3 +1413,57 @@ def test_reassigned_equation_exception():
         match=r"Each given equation in `equations` argument must be a type of Equation but found an expression:",
     ):
         gp.Model(m, equations=[e])
+
+
+def test_model_attributes():
+    m = gp.Container()
+    x = gp.Variable(m, "x")
+    e = gp.Equation(m, "e", definition=x == 25)
+    model = gp.Model(m, "dummy", equations=[e])
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.num_domain_violations
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.algorithm_time
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.total_solve_time
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.total_solver_time
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.num_iterations
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.marginals
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.max_infeasibility
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.mean_infeasibility
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.num_equations
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.num_nonzeros
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.num_variables
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.objective_value
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.model_generation_time
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.solve_model_time
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.solve_status
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.solver_version
