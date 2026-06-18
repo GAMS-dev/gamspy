@@ -4,6 +4,7 @@ import importlib
 import importlib.util
 import json
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -425,7 +426,15 @@ def solver(
         typer.echo("Solver name is missing: `gamspy install solver <solver_name>`")
         raise typer.Exit(code=1)
 
-    install_addons(solver)
+    solvers = [elem.upper() for elem in solver]
+    if (
+        platform.system() + "_" + platform.machine() == "Linux_aarch64"
+        and "SCIP" in solvers
+        and "GUROBI" not in solvers
+    ):
+        solvers.append("GUROBI")
+
+    install_addons(solvers)
 
 
 if __name__ == "__main__":
