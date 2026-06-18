@@ -2323,7 +2323,7 @@ $endIf
             external_module=external_module,
         )
 
-    def copy(self, working_directory: str) -> Container:
+    def copy(self, working_directory: str | None = None) -> Container:
         """
         Creates a copy of the Container. Should not be invoked after
         creating the model.
@@ -2351,16 +2351,22 @@ $endIf
         True
 
         """
+        if working_directory is None:
+            working_directory = tempfile.mkdtemp()
+
         os.makedirs(working_directory, exist_ok=True)
-        m = Container(working_directory=working_directory)
-        if m.working_directory == self.working_directory:
+        if working_directory == self.working_directory:
             raise ValidationError(
                 "Copy of a container cannot have the same working directory"
                 " with the original container."
             )
 
-        self._write(m._job + "in.gdx")
-        m._read(m._job + "in.gdx")
+        save_file_path = os.path.join(working_directory, "save.g00")
+        self._options._set_extra_options({"save": save_file_path})
+        self._synch_with_gams()
+        self._options._set_extra_options({})
+
+        m = Container(load_from=save_file_path, working_directory=working_directory)
 
         # if already defined equations exist, add them to .gms file
         for equation in self.getEquations():
@@ -2368,7 +2374,8 @@ $endIf
                 m._add_statement(equation._definition)
                 symbol = cast("Equation", m[equation.name])
                 symbol._definition = equation._definition
-                m._synch_with_gams()
+
+        m._synch_with_gams()
 
         return m
 
