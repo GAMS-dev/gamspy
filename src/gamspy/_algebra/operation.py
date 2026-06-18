@@ -147,7 +147,7 @@ class Operation(operable.Operable):
         del self.container._data[temp_name]
         return temp_param.records
 
-    def toValue(self) -> float | None:
+    def toValue(self) -> float:
         """
         Convenience method to return the records of the operation as a Python float. Only possible if there is a single record as a result of the operation.
 
@@ -167,10 +167,11 @@ class Operation(operable.Operable):
 
         """
         records = self.records
-        if records is not None:
-            return records["value"][0]
-
-        return records
+        if records is None:
+            raise ValidationError(
+                "Could not get the value of the operation. Please report to support@gams.com."
+            )
+        return records["value"][0]
 
     def toList(self) -> list | None:
         """

@@ -122,13 +122,14 @@ class MathOp(operable.Operable):
         del container._data[temp_name]
         return temp_param.records
 
-    def toValue(self) -> float | None:
+    def toValue(self) -> float:
         """
-        Convenience method to return expression records as a Python float. Only possible if there is a single record as a result of the expression evaluation.
+        Convenience method to return expression records as a Python float.
+        Only possible if there is a single record as a result of the expression evaluation.
 
         Returns
         -------
-        float | None
+        float
 
         Raises
         ------
@@ -152,10 +153,12 @@ class MathOp(operable.Operable):
             )
 
         records = self.records
-        if records is not None:
-            return records["value"][0]
+        if records is None:
+            raise ValidationError(
+                "Could not get the value of the operation. Please report to support@gams.com."
+            )
 
-        return records
+        return records["value"][0]
 
     def toList(self) -> list | None:
         """

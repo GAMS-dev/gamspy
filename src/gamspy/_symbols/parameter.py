@@ -442,14 +442,14 @@ class Parameter(operable.Operable, RecordSymbol):
             "number_records": self.number_records,
         }
 
-    def toValue(self) -> float | None:
+    def toValue(self) -> float:
         """
         Returns the numerical value of a scalar Parameter.
 
         Returns
         -------
         float | None
-            The floating-point value of the scalar parameter. Returns None if there are no records.
+            The floating-point value of the scalar parameter.
 
         Raises
         ------

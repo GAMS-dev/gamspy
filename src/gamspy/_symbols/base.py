@@ -1206,7 +1206,7 @@ class VarEquSymbol(RecordSymbol):
         mask = pd.isna(self.records[self._attributes]).any(axis=1)
         self.records = self.records[~mask].reset_index(drop=True)
 
-    def toValue(self: Variable | Equation, column: str | None = None) -> float | None:
+    def toValue(self: Variable | Equation, column: str | None = None) -> float:
         """
         Returns the numerical value of a specified attribute for a scalar symbol.
 
@@ -1218,8 +1218,8 @@ class VarEquSymbol(RecordSymbol):
 
         Returns
         -------
-        float | None
-            The floating-point value of the requested attribute. Returns None if there are no records.
+        float
+            The floating-point value of the requested attribute.
 
         Raises
         ------

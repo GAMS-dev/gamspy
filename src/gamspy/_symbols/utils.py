@@ -122,7 +122,7 @@ def _flatten_and_convert(records):
     return records
 
 
-def toValueParameter(symbol: Parameter) -> float | None:
+def toValueParameter(symbol: Parameter) -> float:
     if not symbol.is_scalar:
         raise TypeError(
             "Cannot extract value data for non-scalar symbols "
@@ -130,14 +130,14 @@ def toValueParameter(symbol: Parameter) -> float | None:
         )
 
     if symbol.records is None:
-        return None
+        raise ValidationError(
+            f"Cannot call toValue on `{symbol.name}` because it has no records."
+        )
 
     return symbol.records["value"][0]
 
 
-def toValueVariableEquation(
-    symbol: Variable | Equation, column: str | None
-) -> float | None:
+def toValueVariableEquation(symbol: Variable | Equation, column: str | None) -> float:
     if not symbol.is_scalar:
         raise TypeError(
             "Cannot extract value data for non-scalar symbols "
@@ -158,7 +158,9 @@ def toValueVariableEquation(
         )
 
     if symbol.records is None:
-        return None
+        raise ValidationError(
+            f"Cannot call toValue on `{symbol.name}` because it has no records."
+        )
 
     return symbol.records[column][0]
 
