@@ -11,7 +11,7 @@ leg-performance:
     - curl --silent https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
     - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
     - source anaconda3/bin/activate
-    - conda create -y performance python=3.12
+    - conda create -y -n performance python=3.12
     - conda activate performance
     - conda install -y -c conda-forge cyipopt
     - uv pip install . --group test --group doc --group dev
