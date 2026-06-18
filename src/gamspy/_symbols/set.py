@@ -1049,7 +1049,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         if self.description:
             output += f' "{self.description}"'
 
-        if self.records is None:
+        if self._records is None:
             output += " / /"
 
         output += ";"

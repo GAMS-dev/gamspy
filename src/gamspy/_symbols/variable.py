@@ -1090,7 +1090,7 @@ class Variable(operable.Operable, VarEquSymbol):
         if self.description:
             output += ' "' + self.description + '"'
 
-        if self.records is None:
+        if self._records is None:
             output += " / /"
 
         output += ";"

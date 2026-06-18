@@ -954,11 +954,11 @@ class Parameter(operable.Operable, RecordSymbol):
         if self.description:
             output += ' "' + self.description + '"'
 
-        if self.records is None:
+        if self._records is None:
             output += " / /"
 
-        if self.dimension == 0 and self.records is not None:
-            value = self.records["value"][0]
+        if self.dimension == 0 and self._records is not None:
+            value = self._records["value"][0]
             value = utils._map_special_values(value)
             if isinstance(value, float) and np.isnan(value):
                 value = "Undf"

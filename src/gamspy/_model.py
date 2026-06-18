@@ -1217,7 +1217,7 @@ class Model:
                 ]
 
                 for name in var_names:
-                    variable: Variable = self.container._data[name]  # ty: ignore[invalid-assignment]
+                    variable: Variable = self.container._data[name]
                     infeas_rows = utils._calculate_infeasibilities(variable)
                     infeas_dict[variable.name] = infeas_rows
 

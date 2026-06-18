@@ -183,9 +183,9 @@ def load_missing_symbols(
             domain = md.domain
             for n, elem in enumerate(domain):
                 if elem != "*" and elem in container._data:
-                    domain[n] = container._data[elem]  # ty: ignore[invalid-assignment]
+                    domain[n] = container._data[elem]
 
-            container._data[md.name]._domain = domain  # ty: ignore[invalid-assignment]
+            container._data[md.name]._domain = domain
 
         symbol = container._data[md.name]
         if isinstance(symbol, (Variable, Equation)):
@@ -319,7 +319,7 @@ def read(
             domain = md.domain
             for n, dom_name in enumerate(domain):
                 if dom_name != "*" and dom_name in read_symbols:
-                    domain[n] = container._data[dom_name]  # ty: ignore[invalid-assignment]
+                    domain[n] = container._data[dom_name]
 
             symbol._domain = domain
 
