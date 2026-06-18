@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import atexit
-import copy
 import os
 import platform
 import re
@@ -1316,80 +1315,88 @@ class Container:
                     "but an object with this name already exists in the Container. "
                 )
 
-        AnyContainerDomainSymbol = (
-            gp.Set,
-            gp.Alias,
-            gp.UniverseAlias,
-            gt.Set,
-            gt.Alias,
-            gt.UniverseAlias,
-        )
+        if isinstance(load_from, Container):
+            gdx_name = "_" + utils._get_unique_name() + ".gdx"
+            gdx_path = os.path.join(self.working_directory, gdx_name)
+            load_from.write(gdx_path)
+            self.loadRecordsFromGdx(gdx_path)
+        else:
+            AnyContainerDomainSymbol = (gt.Set, gt.Alias, gt.UniverseAlias)
 
-        cf_read_symbols = [s.casefold() for s in read_symbols]
-        link_domains = []
+            cf_read_symbols = [s.casefold() for s in read_symbols]
+            link_domains = []
 
-        for symname, symobj in load_from.data.items():
-            if symname.casefold() not in cf_read_symbols:
-                continue
+            for symname, symobj in load_from.data.items():
+                if symname.casefold() not in cf_read_symbols:
+                    continue
 
-            if any(
-                isinstance(domobj, AnyContainerDomainSymbol) for domobj in symobj.domain
-            ):
-                link_domains.append((symname, symobj.domain_names))
+                if any(
+                    isinstance(domobj, AnyContainerDomainSymbol)
+                    for domobj in symobj.domain
+                ):
+                    link_domains.append((symname, symobj.domain_names))
 
-            if isinstance(symobj, (gp.Set, gt.Set)):
-                symbol = gp.Set._constructor_bypass(
-                    self,
-                    symname,
-                    symobj.domain_names,
-                    is_singleton=symobj.is_singleton,
-                    records=copy.deepcopy(symobj.records),
-                    description=symobj.description,
-                )
-                symbol._should_unload_to_gams = True
-            elif isinstance(symobj, (gp.Parameter, gt.Parameter)):
-                symbol = gp.Parameter._constructor_bypass(
-                    self,
-                    symname,
-                    symobj.domain_names,
-                    records=copy.deepcopy(symobj.records),
-                    description=symobj.description,
-                )
-                symbol._should_unload_to_gams = True
-            elif isinstance(symobj, (gp.Variable, gt.Variable)):
-                symbol = gp.Variable._constructor_bypass(
-                    self,
-                    symname,
-                    symobj.type,
-                    symobj.domain_names,
-                    records=copy.deepcopy(symobj.records),
-                    description=symobj.description,
-                )
-                symbol._should_unload_to_gams = True
-            elif isinstance(symobj, (gp.Equation, gt.Equation)):
-                symbol = gp.Equation._constructor_bypass(
-                    self,
-                    symname,
-                    symobj.type,
-                    symobj.domain_names,
-                    records=copy.deepcopy(symobj.records),
-                    description=symobj.description,
-                )
-                symbol._should_unload_to_gams = True
-            elif isinstance(symobj, (gp.Alias, gt.Alias)):
-                alias_with = cast("Set | Alias", self._data[symobj.alias_with.name])
-                gp.Alias._constructor_bypass(self, symname, alias_with)
-            elif isinstance(symobj, (gp.UniverseAlias, gt.UniverseAlias)):
-                gp.UniverseAlias._constructor_bypass(self, symname)
+                if isinstance(symobj, gt.Set):
+                    symbol = gp.Set._constructor_bypass(
+                        self,
+                        symname,
+                        symobj.domain_names,
+                        is_singleton=symobj.is_singleton,
+                        records=symobj.records.copy()
+                        if symobj.records is not None
+                        else None,
+                        description=symobj.description,
+                    )
+                    symbol._should_unload_to_gams = True
+                elif isinstance(symobj, gt.Parameter):
+                    symbol = gp.Parameter._constructor_bypass(
+                        self,
+                        symname,
+                        symobj.domain_names,
+                        records=symobj.records.copy()
+                        if symobj.records is not None
+                        else None,
+                        description=symobj.description,
+                    )
+                    symbol._should_unload_to_gams = True
+                elif isinstance(symobj, gt.Variable):
+                    symbol = gp.Variable._constructor_bypass(
+                        self,
+                        symname,
+                        symobj.type,
+                        symobj.domain_names,
+                        records=symobj.records.copy()
+                        if symobj.records is not None
+                        else None,
+                        description=symobj.description,
+                    )
+                    symbol._should_unload_to_gams = True
+                elif isinstance(symobj, gt.Equation):
+                    symbol = gp.Equation._constructor_bypass(
+                        self,
+                        symname,
+                        symobj.type,
+                        symobj.domain_names,
+                        records=symobj.records.copy()
+                        if symobj.records is not None
+                        else None,
+                        description=symobj.description,
+                    )
+                    symbol._should_unload_to_gams = True
+                elif isinstance(symobj, gt.Alias):
+                    alias_with = cast("Set | Alias", self._data[symobj.alias_with.name])
+                    gp.Alias._constructor_bypass(self, symname, alias_with)
+                elif isinstance(symobj, gt.UniverseAlias):
+                    gp.UniverseAlias._constructor_bypass(self, symname)
 
-        for symname, domain in link_domains:
-            domain = [
-                self._data[i] if i in self and i in cf_read_symbols else i
-                for i in domain
-            ]
-            self._data[symname]._domain = domain
+            for symname, domain in link_domains:
+                domain = [
+                    self._data[i] if i in self and i in cf_read_symbols else i
+                    for i in domain
+                ]
+                self._data[symname]._domain = domain
 
-        self._synch_with_gams()
+            self._synch_with_gams()
 
     def _read(
         self,

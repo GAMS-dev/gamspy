@@ -1753,6 +1753,41 @@ def test_getitem():
 
 
 @pytest.mark.unit
+def test_gp_to_gp():
+    # Test GP to GP with an empty GP container
+    m = gp.Container(system_directory=gamspy_base.directory)
+    i = gp.Set(m, "i")
+    gp.Alias(m, "j", alias_with=i)
+    gp.Parameter(m, "p")
+    gp.Variable(m, "v")
+    gp.Equation(m, "e", type="eq")
+    gp.UniverseAlias(m, "universe")
+
+    m2 = gp.Container(m)
+    assert list(m2.data.keys()) == ["i", "j", "p", "v", "e", "universe"]
+
+    # Test GP to GP with records
+    m = gp.Container(system_directory=gamspy_base.directory)
+    i = gp.Set(m, "i", records=["i1", "i2", "i3"])
+    j = gp.Alias(m, "j", alias_with=i)
+    p = gp.Parameter(m, "p", domain=i, records=[("i1", 1), ("i2", 2), ("i3", 3)])
+    v = gp.Variable(m, "v", domain=i)
+    v.generateRecords()
+    e = gp.Equation(m, "e", domain=i, type="eq")
+    e.generateRecords()
+    universe = gp.UniverseAlias(m, "universe")
+
+    m2 = gp.Container(m)
+    assert list(m2.data.keys()) == ["i", "j", "p", "v", "e", "universe"]
+    assert i.records.equals(m2["i"].records)
+    assert j.records.equals(m2["j"].records)
+    assert p.records.equals(m2["p"].records)
+    assert v.records.equals(m2["v"].records)
+    assert e.records.equals(m2["e"].records)
+    assert universe.records.equals(m2["universe"].records)
+
+
+@pytest.mark.unit
 def test_gtp_to_gp():
     # Test GTP to GP with an empty GTP container
     m = gt.Container(system_directory=gamspy_base.directory)
@@ -1769,16 +1804,22 @@ def test_gtp_to_gp():
     # Test GTP to GP with records
     m = gt.Container(system_directory=gamspy_base.directory)
     i = gt.Set(m, "i", records=["i1", "i2", "i3"])
-    gt.Alias(m, "j", alias_with=i)
-    gt.Parameter(m, "p", domain=i, records=[("i1", 1), ("i2", 2), ("i3", 3)])
+    j = gt.Alias(m, "j", alias_with=i)
+    p = gt.Parameter(m, "p", domain=i, records=[("i1", 1), ("i2", 2), ("i3", 3)])
     v = gt.Variable(m, "v", domain=i)
     v.generateRecords()
     e = gt.Equation(m, "e", domain=i, type="eq")
     e.generateRecords()
-    gt.UniverseAlias(m, "universe")
+    universe = gt.UniverseAlias(m, "universe")
 
     m2 = gp.Container(m)
     assert list(m2.data.keys()) == ["i", "j", "p", "v", "e", "universe"]
+    assert i.records.equals(m2["i"].records)
+    assert j.records.equals(m2["j"].records)
+    assert p.records.equals(m2["p"].records)
+    assert v.records.equals(m2["v"].records)
+    assert e.records.equals(m2["e"].records)
+    assert universe.records.equals(m2["universe"].records)
 
 
 @pytest.mark.unit
