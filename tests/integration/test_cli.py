@@ -236,6 +236,7 @@ def test_install_license(teardown):
     assert "MILES" in content
     assert "SHOT" in content
     assert "RESHOP" in content
+    assert "SCIP" in content
 
     # Recover local license
     process = subprocess.run(

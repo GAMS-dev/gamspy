@@ -218,6 +218,7 @@ def license(
             "MILES",
             "SHOT",
             "RESHOP",
+            "SCIP",
         ]
         if use_uv:
             command.append("--use-uv")
