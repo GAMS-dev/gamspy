@@ -192,8 +192,8 @@ class Variable(operable.Operable, VarEquSymbol):
         # legacy gtp attributes
         ## set private properties directly
         obj._type = type
-        obj._gams_type: int = GMS_DT_VAR
-        obj._gams_subtype: int = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[type]
+        obj._gams_type = cast("int", GMS_DT_VAR)
+        obj._gams_subtype = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[type]
 
         obj._container = cast(
             "Container",
@@ -217,7 +217,7 @@ class Variable(operable.Operable, VarEquSymbol):
         obj._metadata = {}
         obj._should_load_from_gams = False
         obj._should_unload_to_gams = False
-        obj._column_listing: list[str] | None = None
+        obj._column_listing = None
 
         ## create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()

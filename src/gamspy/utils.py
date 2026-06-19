@@ -401,10 +401,12 @@ def _get_name_from_stack() -> str:
         ) from e
 
 
-def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame | None:
+def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame:
     records = symbol.records
     if records is None:
-        return None
+        raise ValidationError(
+            "The model is not solved yet. Please solve the model first to compute the infeasibilities."
+        )
 
     infeas_rows = records.where(
         (records["level"] < records["lower"]) | (records["level"] > records["upper"])

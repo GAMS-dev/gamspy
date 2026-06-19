@@ -374,7 +374,7 @@ def permute(
             name=x.name,
             domain=permuted_domain,
             permutation=dims,
-            scalar_domains=x._scalar_domains,
+            scalar_domains=x._scalar_domains,  # ty: ignore[invalid-argument-type]
         )
 
     raise GamspyException(f"permute not implemented for {type(x)}")

@@ -197,7 +197,7 @@ def get_records(
     load_from: str | os.PathLike,
     symbols: list[str] | dict[str, str],
     encoding: str | None = None,
-) -> dict[str, DataFrame]:
+) -> dict[str, DataFrame | None]:
     records_dict = {}
     mapping = {s: s for s in symbols} if isinstance(symbols, list) else symbols
     gdx_symbol_names = list(mapping.keys())
