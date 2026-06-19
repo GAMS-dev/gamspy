@@ -169,8 +169,8 @@ class Backend(ABC):
         df = pd.DataFrame(
             [
                 [
-                    model.solve_status.name,  # type: ignore
-                    model.status.name,  # type: ignore
+                    model.solve_status.name,
+                    model.status.name,
                     model.objective_value,
                     model.num_equations,
                     model.num_variables,

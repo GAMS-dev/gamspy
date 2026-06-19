@@ -1281,20 +1281,6 @@ class Container:
 
         return symbol_names
 
-    def _load_records_with_rename(self, load_from: str, names: dict[str, str]) -> None:
-        records_dict = gdxio.get_records(self, load_from, names)
-        original_state = self._options.miro_protect
-        self._options.miro_protect = False
-
-        for gamspy_name in names.values():
-            updated_records = records_dict[gamspy_name]
-            symbol = self._data[gamspy_name]
-            symbol.records = updated_records
-            symbol.domain_labels = symbol.domain_names
-            symbol._should_unload_to_gams = False
-
-        self._options.miro_protect = original_state
-
     # TODO: Legacy function from GTP. Pay the technical debt.
     @no_type_check
     def _read_from_container(

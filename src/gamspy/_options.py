@@ -395,6 +395,30 @@ class Options(BaseModel):
         self._frame: FrameType | None = None
 
     @staticmethod
+    def _cast_value(value: Any) -> Any:
+        """Casts raw string values from GAMS into appropriate Python types."""
+        if isinstance(value, str):
+            val_lower = value.lower()
+            if val_lower in {"on", "yes", "true"}:
+                return True
+
+            if val_lower in {"off", "no", "false"}:
+                return False
+
+            # Try numeric casting
+            try:
+                return int(value)
+            except ValueError:
+                pass
+
+            try:
+                return float(value)
+            except ValueError:
+                pass
+
+        return value
+
+    @staticmethod
     def fromGams(options: dict) -> Options:
         """
         Generates a gp.Options object from a dictionary of GAMS options
@@ -426,19 +450,74 @@ class Options(BaseModel):
         for key, value in options.items():
             key = key.lower()
             if key in OPTION_MAP_REVERSE:
+                gamspy_key = OPTION_MAP_REVERSE[key]
+
                 if key == "solvelink":
                     try:
-                        value = SOLVE_LINK_MAP_REVERSE[value]
-                    except KeyError as e:
+                        value = SOLVE_LINK_MAP_REVERSE[int(value)]
+                    except (KeyError, ValueError) as e:
                         raise ValidationError(
                             f"`{value}` is not a valid value for `{key}`. Possible values are 2 and 5."
                         ) from e
+                else:
+                    value = Options._cast_value(value)
 
-                gamspy_options[OPTION_MAP_REVERSE[key.lower()]] = value
+                gamspy_options[gamspy_key] = value
             else:
                 raise ValidationError(f"`{key}` is not a supported option in GAMSPy.")
 
-        return Options(**gamspy_options)
+        return Options.model_validate(gamspy_options)
+
+    @staticmethod
+    def fromFile(path: str) -> Options:
+        """
+        Generates an Options object with the key-value pairs in a file.
+        The file in given path must consist of one key-value pair in each line.
+
+        Parameters
+        ----------
+        path : str
+            Path to the option file.
+
+        Returns
+        -------
+        Options
+
+        Raises
+        ------
+        ValidationError
+            In case the given path is not a file.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import os
+        >>> # Create a dummy option file
+        >>> with open("options.txt", "w") as file:
+        ...     _ = file.write("lp = conopt")
+        >>> options = gp.Options.fromFile("options.txt")
+        >>> options.lp
+        'conopt'
+        >>> # Clean up
+        >>> os.remove("options.txt")
+
+        """
+        if not os.path.isfile(path):
+            raise ValidationError(f"No such file in the given path: {path}")
+
+        attributes = {}
+        with open(path, encoding="utf-8") as file:
+            lines = file.readlines()
+
+            for line in lines:
+                if line in {"\n", ""}:
+                    continue  # pragma: no cover
+
+                key, value = line.split("=")
+                key = key.strip()
+                attributes[key] = Options._cast_value(value.strip())
+
+        return Options.model_validate(attributes)
 
     def _get_gams_compatible_options(self, output: TextIO | None = None) -> dict:
         gamspy_options = self.model_dump(exclude_none=True)
@@ -512,56 +591,6 @@ class Options(BaseModel):
     def _set_extra_options(self, options: dict) -> None:
         """Set extra options"""
         self._extra_options = options
-
-    @staticmethod
-    def fromFile(path: str) -> Options:
-        """
-        Generates an Options object with the key-value pairs in a file.
-        The file in given path must consist of one key-value pair in each line.
-
-        Parameters
-        ----------
-        path : str
-            Path to the option file.
-
-        Returns
-        -------
-        Options
-
-        Raises
-        ------
-        ValidationError
-            In case the given path is not a file.
-
-        Examples
-        --------
-        >>> import gamspy as gp
-        >>> import os
-        >>> # Create a dummy option file
-        >>> with open("options.txt", "w") as file:
-        ...     _ = file.write("lp = conopt")
-        >>> options = gp.Options.fromFile("options.txt")
-        >>> options.lp
-        'conopt'
-        >>> # Clean up
-        >>> os.remove("options.txt")
-
-        """
-        if not os.path.isfile(path):
-            raise ValidationError(f"No such file in the given path: {path}")
-
-        attributes = {}
-        with open(path, encoding="utf-8") as file:
-            lines = file.readlines()
-
-            for line in lines:
-                if line in {"\n", ""}:
-                    continue  # pragma: no cover
-
-                key, value = line.split("=")
-                attributes[key.strip()] = value.strip()
-
-        return Options(**attributes)
 
     def export(self, pf_file: str) -> None:
         """

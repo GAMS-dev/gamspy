@@ -169,8 +169,8 @@ class Equation(VarEquSymbol):
         type = cast_type(type)
         obj.type = EQU_TYPE[type]
         obj._assignment = None
-        obj._gams_type: int = GMS_DT_EQU
-        obj._gams_subtype: int = TRANSFER_TO_GAMS_EQUATION_SUBTYPES[type]
+        obj._gams_type = cast("int", GMS_DT_EQU)
+        obj._gams_subtype = cast("int", TRANSFER_TO_GAMS_EQUATION_SUBTYPES[type])
 
         obj._container = cast(
             "Container",
@@ -194,7 +194,7 @@ class Equation(VarEquSymbol):
         obj._metadata = {}
         obj._should_load_from_gams = False
         obj._should_unload_to_gams = False
-        obj._equation_listing: list[str] | None = None
+        obj._equation_listing = None
 
         # create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
