@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import subprocess
 import sys
 import tempfile
 import time
@@ -367,7 +368,6 @@ def test_profile(data, tmp_path):
         options=Options(
             profile=1,
             profile_file=profile_path,
-            monitor_process_tree_memory=True,
         ),
     )
     assert os.path.exists(profile_path)
@@ -375,6 +375,11 @@ def test_profile(data, tmp_path):
     # solprint should be 0 by default
     with open(m.gamsJobName() + ".lst") as file:
         assert "---- EQU supply" not in file.read()
+
+    with pytest.raises(exceptions.ValidationError):
+        transport.solve(
+            output=sys.stdout, options=Options(monitor_process_tree_memory=True)
+        )
 
 
 @pytest.mark.unit
@@ -1018,3 +1023,18 @@ def test_options_from_gams():
 
     with pytest.raises(exceptions.ValidationError):
         _ = Options.fromGams({"bla": 4})
+
+
+def test_monitor_process_tree_memory(tmp_path):
+    gamspy_script_path = tmp_path / "test.py"
+    with open(gamspy_script_path, "w") as file:
+        file.write(
+            "import gamspy as gp; m = gp.Container(options=gp.Options(monitor_process_tree_memory=True))"
+        )
+
+    process = subprocess.run(
+        [sys.executable, gamspy_script_path], capture_output=True, text=True
+    )
+    assert process.returncode == 0, process.stderr
+
+    assert "Process-tree memory monitor is finished" in process.stdout
