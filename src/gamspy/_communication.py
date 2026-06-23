@@ -80,6 +80,9 @@ def open_connection(container: Container) -> None:
         initial_pf_file,
     ]
 
+    if container._options.monitor_process_tree_memory:
+        command.append("ProcTreeMemMonitor=1")
+
     certificate_path = os.path.join(utils.DEFAULT_DIR, "gamspy_cert.crt")
     env = os.environ.copy()
     if os.path.isfile(certificate_path):
@@ -143,16 +146,18 @@ def close_connection(pair_id: str):
     try:
         _socket, process = get_connection(pair_id)
     except KeyError:
-        # This means that the connection is already closed.
         return
 
     _socket.sendall(b"stop")
     _socket.close()
 
-    _, stderr_data = process.communicate()
+    stdout_data, stderr_data = process.communicate()
 
     if process.returncode != 0 and stderr_data:
         print(stderr_data, end="")
+
+    if process.returncode == 0 and stdout_data:
+        print(stdout_data, end="")
 
     del _comm_pairs[pair_id]
 
