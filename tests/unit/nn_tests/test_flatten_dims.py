@@ -80,7 +80,9 @@ def test_flatten_par_with_no_records(data):
     # 10x5 -> 50
     par_flattened, eqs = flatten_dims(par, [0, 1])
 
-    assert par_flattened.toDense() is None
+    assert np.allclose(
+        par_flattened.toDense(), np.zeros(par_flattened.shape, dtype=float)
+    )
     assert par_flattened.shape == (50,)
     assert eqs == []  # for parameters no equation needed
 

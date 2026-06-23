@@ -1,0 +1,1 @@
+Add paranthesis to the representation of negative gp.Number objects since GAMS does not support expression like 3 + -7. It must be like 3 + (-7).

@@ -66,9 +66,12 @@ class Number(operable.Operable):
             elif SpecialValues.isPosInf(self._value):
                 return "INF"
             elif SpecialValues.isNegInf(self._value):
-                return "-INF"
+                return "(-INF)"
             elif SpecialValues.isUndef(self._value):
                 return "UNDF"
+
+            if self._value < 0:
+                return f"({self._value})"
 
         return f"{self._value}"
 

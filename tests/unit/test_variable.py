@@ -1166,7 +1166,36 @@ def test_toDense():
 
     # Empty Equation
     eq_empty = gp.Equation(m, "eq_empty", domain=[i])
-    assert eq_empty.toDense() is None
+    assert np.allclose(
+        eq_empty.toDense(), np.full(eq_empty.shape, eq_empty._default_records["level"])
+    )
+    assert np.allclose(
+        eq_empty.toDense(column="marginal"),
+        np.full(eq_empty.shape, eq_empty._default_records["marginal"]),
+    )
+    assert np.allclose(
+        eq_empty.toDense(column="lower"),
+        np.full(eq_empty.shape, eq_empty._default_records["lower"]),
+    )
+    assert np.allclose(
+        eq_empty.toDense(column="upper"),
+        np.full(eq_empty.shape, eq_empty._default_records["upper"]),
+    )
+    assert np.allclose(
+        eq_empty.toDense(column="scale"),
+        np.full(eq_empty.shape, eq_empty._default_records["scale"]),
+    )
+
+    # Domain has no records
+    m = gp.Container()
+    i = gp.Set(m, "i", records=range(5))
+    v = gp.Variable(m, "v", domain=i)
+    v.generateRecords()
+    i.records = None
+    with pytest.raises(
+        ValidationError, match=r"The domain element `i` of `v` has no records."
+    ):
+        v.toDense()
 
     # Invalid: Type Check
     with pytest.raises(TypeError, match="Argument 'column' must be type str"):
