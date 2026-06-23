@@ -837,4 +837,15 @@ def test_toDense():
 
     # Empty Parameter
     p_empty = gp.Parameter(m, "p_empty", domain=[i])
-    assert p_empty.toDense() is None
+    assert np.allclose(p_empty.toDense(), np.zeros(p_empty.shape, dtype=float))
+
+    # Domain has no records
+    m = gp.Container()
+    i = gp.Set(m, "i", records=range(5))
+    p = gp.Parameter(m, "p", domain=i)
+    p.generateRecords()
+    i.records = None
+    with pytest.raises(
+        ValidationError, match=r"The domain element `i` of `p` has no records."
+    ):
+        p.toDense()

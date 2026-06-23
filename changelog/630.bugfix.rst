@@ -1,0 +1,1 @@
+Fix symbol.toDense bug when the records of the symbol is None.

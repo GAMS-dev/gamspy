@@ -1004,7 +1004,7 @@ class Variable(operable.Operable, VarEquSymbol):
         self._container._synch_with_gams()
 
     @property
-    def _default_records(self):
+    def _default_records(self) -> dict[str, float]:
         """Default records of a variable"""
         return VAR_DEFAULT_VALUES[self._type]
 

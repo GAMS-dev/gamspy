@@ -1169,7 +1169,7 @@ class Equation(VarEquSymbol):
         self._container._synch_with_gams()
 
     @property
-    def _default_records(self):
+    def _default_records(self) -> dict[str, float]:
         """Default records of an equation"""
         return EQU_DEFAULT_VALUES[self._type]
 

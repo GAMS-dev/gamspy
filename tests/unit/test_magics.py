@@ -198,6 +198,9 @@ def test_magics(data):
     assert isinstance(-sqr(k), expression.Expression)
     assert -sqr(k).toValue() == -4
 
+    # Negative numbers need paranthesis: e.g. 3 + -7 does not work in GAMS
+    assert (3 + gp.Number(-7)).gamsRepr()
+
     with pytest.raises(TypeError):
         gp.Number("bla")
 
