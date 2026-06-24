@@ -377,6 +377,11 @@ class DomainSymbol(BaseSymbol):
     """Base class for Set, Parameter, Variable, and Equation."""
 
     def _load_from_gams(self: Set | Parameter | Variable | Equation) -> None:
+        if self._container._in_loop:
+            raise ValidationError(
+                "Cannot load symbol records while a loop context manager (e.g. with gp.For, gp.While, gp.Loop) is active."
+            )
+
         from gamspy._gdx import get_records
 
         self._should_load_from_gams = False

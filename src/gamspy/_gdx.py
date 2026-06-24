@@ -74,15 +74,19 @@ def open_gdx(
 
     try:
         if mode == "r":
-            if not gdx.gdxOpenRead(gdx_handle, file_path):
-                raise GdxException(f"Error opening GDX file `{file_path}` for reading.")
+            is_successful, error_code = gdx.gdxOpenRead(gdx_handle, file_path)
+            if is_successful != 1:
+                error_str: str = gdx.gdxErrorStr(gdx_handle, error_code)
+                raise GdxException(
+                    f"Could not open GDX file `{file_path}` for reading: {error_str}"
+                )
             yield gdx_handle
         elif mode == "w":
             if not compress:
-                if not gdx.gdxOpenWrite(gdx_handle, file_path, "GAMS Transfer")[0]:
+                if not gdx.gdxOpenWrite(gdx_handle, file_path, "GAMSPy")[0]:
                     raise GdxException(f"Error opening GDX `{file_path}` for writing.")
             else:
-                if not gdx.gdxOpenWriteEx(gdx_handle, file_path, "GAMS Transfer", 1)[0]:
+                if not gdx.gdxOpenWriteEx(gdx_handle, file_path, "GAMSPy", 1)[0]:
                     raise GdxException(
                         f"Error opening GDX (w/compression) `{file_path}` for writing."
                     )
