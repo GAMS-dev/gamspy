@@ -53,7 +53,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             name=self.name,
             domain=domain,
             permutation=self.permutation,
-            scalar_domains=self._scalar_domains,
+            scalar_domains=self._scalar_domains,  # ty: ignore[invalid-argument-type]
         )
 
     @property

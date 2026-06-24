@@ -1282,9 +1282,6 @@ class Model:
         infeas_dict = {}
 
         for equation in self.equations:
-            if equation.records is None:
-                continue
-
             infeas_rows = utils._calculate_infeasibilities(equation)
             infeas_dict[equation.name] = infeas_rows
 

@@ -661,7 +661,9 @@ def test_read(data, tmp_path):
     m.write(gdx_path)
 
     m = Container()
-    m.read(gdx_path, load_records=False)
+    with pytest.warns(DeprecationWarning):
+        m.read(gdx_path, load_records=False)
+
     assert m["a"]._records is None
 
     m.close()

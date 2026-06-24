@@ -103,7 +103,7 @@ def test_special_values_in_number():
     assert gp.Number(gp.SpecialValues.NA).gamsRepr() == "NA"
     assert gp.Number(gp.SpecialValues.UNDEF).gamsRepr() == "UNDF"
     assert gp.Number(gp.SpecialValues.POSINF).gamsRepr() == "INF"
-    assert gp.Number(gp.SpecialValues.NEGINF).gamsRepr() == "-INF"
+    assert gp.Number(gp.SpecialValues.NEGINF).gamsRepr() == "(-INF)"
 
     m = gp.Container()
     i = gp.Set(m, "i", records=["i1", "i2"])

@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
     from scipy.sparse import coo_matrix
 
-    from gamspy import Container
+    from gamspy import Alias, Container, Set
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.number import Number
@@ -613,16 +613,14 @@ class Parameter(operable.Operable, RecordSymbol):
             dtype=float,
         )
 
-    # TODO: Legacy function from GTP. Pay the technical debt.
-    @no_type_check
-    def toDense(self) -> np.ndarray | None:
+    def toDense(self) -> np.ndarray:
         """
         Convert symbol records to a dense numpy.array format
 
         Returns
         -------
-        ndarray | None
-            A numpy array with symbol records, None if no records were assigned
+        ndarray
+            A numpy array with symbol records. Array of zeros if the symbol has no records.
 
         Examples
         --------
@@ -636,13 +634,18 @@ class Parameter(operable.Operable, RecordSymbol):
 
         """
         if self.records is None:
-            return None
+            return np.zeros(self.shape, dtype=float)
 
         if self.is_scalar:
             return self.records.to_numpy(dtype=float).reshape(self.shape)
 
         if self.domain_type == "regular":
-            for symobj in self.domain:
+            for symobj in cast("list[Set | Alias]", self.domain):
+                if symobj.records is None:
+                    raise ValidationError(
+                        f"The domain element `{symobj.name}` of `{self.name}` has no records. The domain symbols need to have records to get the dense representation."
+                    )
+
                 data_cats = symobj.records.iloc[:, 0].unique().tolist()
                 cats = symobj.records.iloc[:, 0].cat.categories.tolist()
 
@@ -675,7 +678,7 @@ class Parameter(operable.Operable, RecordSymbol):
                 self.records.iloc[:, n]
                 .map(domainobj._getUELCodes(0, ignore_unused=True))
                 .to_numpy(dtype=int)
-                for n, domainobj in enumerate(self.domain)
+                for n, domainobj in enumerate(cast("list[Set | Alias]", self.domain))
             ]
         else:
             idx = [

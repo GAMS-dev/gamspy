@@ -377,6 +377,11 @@ class DomainSymbol(BaseSymbol):
     """Base class for Set, Parameter, Variable, and Equation."""
 
     def _load_from_gams(self: Set | Parameter | Variable | Equation) -> None:
+        if self._container._in_loop:
+            raise ValidationError(
+                "Cannot load symbol records while a loop context manager (e.g. with gp.For, gp.While, gp.Loop) is active."
+            )
+
         from gamspy._gdx import get_records
 
         self._should_load_from_gams = False
@@ -1561,7 +1566,7 @@ class VarEquSymbol(RecordSymbol):
             dtype=float,
         )
 
-    def toDense(self, column: str = "level") -> np.ndarray | None:
+    def toDense(self: Variable | Equation, column: str = "level") -> np.ndarray:
         """
         Convert column to a dense numpy.array format
 
@@ -1572,7 +1577,7 @@ class VarEquSymbol(RecordSymbol):
 
         Returns
         -------
-        np.ndarray, optional
+        np.ndarray
             A column to a dense numpy.array format
         """
         if not isinstance(column, str):
@@ -1584,14 +1589,19 @@ class VarEquSymbol(RecordSymbol):
             )
 
         if self.records is None:
-            return None
+            return np.full(self.shape, self._default_records[column])
 
         if self.is_scalar:
             return self.records.loc[:, column].to_numpy(dtype=float)[0]
 
         if self.domain_type == "regular":
             # check order of domain UELs in categorical and order of domain UELs in data
-            for symobj in self.domain:
+            for symobj in cast("list[Set | Alias]", self.domain):
+                if symobj.records is None:
+                    raise ValidationError(
+                        f"The domain element `{symobj.name}` of `{self.name}` has no records. The domain symbols need to have records to get the dense representation."
+                    )
+
                 data_cats = symobj.records.iloc[:, 0].unique().tolist()
                 cats = symobj.records.iloc[:, 0].cat.categories.tolist()
 
@@ -1627,7 +1637,7 @@ class VarEquSymbol(RecordSymbol):
                 self.records.iloc[:, n]
                 .map(domainobj._getUELCodes(0, ignore_unused=True))
                 .to_numpy(dtype=int)
-                for n, domainobj in enumerate(self.domain)
+                for n, domainobj in enumerate(cast("list[Set | Alias]", self.domain))
             ]
 
         else:

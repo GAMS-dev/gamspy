@@ -1281,20 +1281,6 @@ class Container:
 
         return symbol_names
 
-    def _load_records_with_rename(self, load_from: str, names: dict[str, str]) -> None:
-        records_dict = gdxio.get_records(self, load_from, names)
-        original_state = self._options.miro_protect
-        self._options.miro_protect = False
-
-        for gamspy_name in names.values():
-            updated_records = records_dict[gamspy_name]
-            symbol = self._data[gamspy_name]
-            symbol.records = updated_records
-            symbol.domain_labels = symbol.domain_names
-            symbol._should_unload_to_gams = False
-
-        self._options.miro_protect = original_state
-
     # TODO: Legacy function from GTP. Pay the technical debt.
     @no_type_check
     def _read_from_container(
@@ -1403,8 +1389,6 @@ class Container:
         load_from: str | os.PathLike | Container | gt.Container,
         symbol_names: list[str] | None = None,
         encoding: str | None = None,
-        *,
-        load_records: bool = True,
     ) -> None:
         symbols = (
             self._resolve_symbols(symbol_names) if symbol_names is not None else None
@@ -1425,7 +1409,7 @@ class Container:
                     "Unexpected file type passed to 'load_from' argument -- expected file extension '.gdx'"
                 )
             load_from = os.fspath(fpath)
-            gdxio.read(self, load_from, symbols, load_records, encoding)
+            gdxio.read(self, load_from, symbols, encoding)
         elif isinstance(load_from, (gt.Container, Container)):
             self._read_from_container(load_from, symbols)
         else:
@@ -1468,10 +1452,6 @@ class Container:
             Text encoding for symbol metadata.
 
 
-        load_records : bool, optional
-            Whether to load symbol records (default: True).
-
-
         Examples
         --------
         >>> import gamspy as gp
@@ -1493,10 +1473,17 @@ class Container:
         >>> m2.read("example.gdx", symbol_names=["i"])
 
         """
+        if load_records is not True:
+            warnings.warn(
+                "`load_records` argument has no effect and will be deprecated in a future release.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
+
         if isinstance(load_from, os.PathLike):
             load_from = os.fspath(load_from)
 
-        self._read(load_from, symbol_names, encoding, load_records=load_records)
+        self._read(load_from, symbol_names, encoding)
         self._synch_with_gams()
 
     def setRecords(

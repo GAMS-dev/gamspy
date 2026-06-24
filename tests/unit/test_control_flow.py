@@ -608,3 +608,45 @@ def test_elseif_else():
         ):
             with gp.Else():
                 pass
+
+
+def test_loading_records_in_a_loop():
+    m = gp.Container()
+
+    t = gp.Set(m, records=["1985", "1986", "1987", "1988", "1989", "1990"])
+    pop = gp.Parameter(m, domain=t, records=[("1985", "3456")])
+    growth = gp.Parameter(
+        m, domain=t, records=np.array([25.3, 27.3, 26.2, 27.1, 26.6, 26.6])
+    )
+
+    with pytest.raises(
+        ValidationError,
+        match=r"Cannot load symbol records while a loop context manager",
+    ):
+        with gp.Loop(t):
+            pop[t + 1] = pop[t] + growth[t]
+            _ = pop.records
+
+    m = gp.Container()
+    x = gp.Parameter(m, records=100)
+
+    with pytest.raises(
+        ValidationError,
+        match=r"Cannot load symbol records while a loop context manager",
+    ):
+        with gp.While(x > 1):
+            x[...] = x / 2
+            _ = x.records
+
+    m = gp.Container()
+
+    s = gp.Parameter(m)
+    p = gp.Parameter(m)
+
+    with pytest.raises(
+        ValidationError,
+        match=r"Cannot load symbol records while a loop context manager",
+    ):
+        with gp.For(s, -3.8, -0.1, 1.4):
+            p[...] = s
+            _ = p.records
