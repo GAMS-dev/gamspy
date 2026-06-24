@@ -282,7 +282,6 @@ def read(
     container: Container,
     load_from: str | os.PathLike,
     symbols: list[str] | None,
-    records: bool,
     encoding: str | None,
 ) -> None:
     from gamspy._symbols import Equation, Parameter, Set, Variable

@@ -1,2 +1,0 @@
-Fix the behavior of monitor_process_tree_memory option. Setting this option True will cause GAMSPy to record the 
-high-memory mark for the GAMS process tree and print that information at the end of the script.
