@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
+import gamspy as gp
 from gamspy import (
     Alias,
     Container,
@@ -353,3 +354,13 @@ def test_universe_records():
     uni = UniverseAlias(m, "uni")
     i["2"].where[False] = False
     assert uni.toList() == ["2"]
+
+
+def test_universe_alias_addElements():
+    m = gp.Container()
+    _ = gp.Set(m, "i", records=[f"i{idx}" for idx in range(1, 5)])
+    uni = gp.UniverseAlias(m, "uni")
+    assert uni.toList() == ["i1", "i2", "i3", "i4"]
+    uni.addElements(["i5", "i6"])
+    assert uni.toList() == ["i1", "i2", "i3", "i4", "i5", "i6"]
+    assert list(m.data.keys()) == ["i", "uni"]
