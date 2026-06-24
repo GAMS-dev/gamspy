@@ -17,10 +17,14 @@ from gamspy._symbols.base import BaseSymbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from gamspy import Container
 
-TEMP_ALIAS_NAME = "a" + gp.utils._get_unique_name()
-TEMP_GDX_OUT_NAME = "_" + gp.utils._get_unique_name() + ".gdx"
+unique_name = gp.utils._get_unique_name()
+TEMP_ALIAS_NAME = "a" + unique_name + "gpauto"
+TEMP_SET_NAME = "s" + unique_name + "gpauto"
+TEMP_GDX_OUT_NAME = "_" + unique_name + ".gdx"
 
 
 class UniverseAlias(BaseSymbol):
@@ -330,6 +334,27 @@ class UniverseAlias(BaseSymbol):
             Always 0
         """
         return 0.0
+
+    def addElements(self, elements: Iterable[str]) -> None:
+        """
+        This function enables adding elements to the universe set (*).
+
+        Parameters
+        ----------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> _ = gp.Set(m, "i", records=[f"i{idx}" for idx in range(1, 5)])
+        >>> uni = gp.UniverseAlias(m, "uni")
+        >>> print(uni.toList())
+        ['i1', 'i2', 'i3', 'i4']
+        >>> uni.addElements(["i5", "i6"])
+        >>> print(uni.toList())
+        ['i1', 'i2', 'i3', 'i4', 'i5', 'i6']
+
+        """
+        element_str = ", ".join(elements)
+        self._container._add_statement(f"Set {TEMP_SET_NAME} / {element_str} /;")
+        self._container._synch_with_gams()
 
     @property
     def records(self) -> pd.DataFrame:
