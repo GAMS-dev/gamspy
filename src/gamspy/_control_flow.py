@@ -187,7 +187,7 @@ class Loop:
         self.container._in_loop -= 1
 
         self.container._add_statement(");")
-        self.container._add_statement(f"execute_unload '{self.container._gdx_out}'")
+        self.container._add_statement(f"execute_unload '{self.container._gdx_out}';")
         self.container._last_control_flow = "loop"
 
         # An exception occurred inside the with block.
@@ -389,7 +389,7 @@ class For:
         self.container._in_loop -= 1
 
         self.container._add_statement(");")
-        self.container._add_statement(f"execute_unload '{self.container._gdx_out}'")
+        self.container._add_statement(f"execute_unload '{self.container._gdx_out}';")
         self.container._last_control_flow = "for"
 
         # An exception occurred inside the with block.
@@ -488,7 +488,7 @@ class While:
         self.container._in_loop -= 1
 
         self.container._add_statement(");")
-        self.container._add_statement(f"execute_unload '{self.container._gdx_out}'")
+        self.container._add_statement(f"execute_unload '{self.container._gdx_out}';")
         self.container._last_control_flow = "while"
 
         # An exception occurred inside the with block.

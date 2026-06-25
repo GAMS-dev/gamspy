@@ -345,23 +345,8 @@ def validate_domain(
         given_dim = getattr(given, "dimension", 1)
         actual_dim = getattr(actual, "dimension", 1)
 
-        if actual_dim == 1 and given_dim == 1:
-            if type(given) is str:
-                try:
-                    if (
-                        given != "*"
-                        and actual.records is not None
-                        and len(actual.records) < 100
-                        and not actual.records.isin([given]).sum().any()
-                    ):
-                        raise ValidationError(
-                            f"Literal index `{given}` was not found in set"
-                            f" `{actual.name}`"
-                        )
-                except AttributeError:
-                    ...
-            else:
-                validate_one_dimensional_sets(given, actual)
+        if actual_dim == 1 and given_dim == 1 and not isinstance(given, str):
+            validate_one_dimensional_sets(given, actual)
 
         offset += given_dim
 

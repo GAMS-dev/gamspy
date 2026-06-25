@@ -153,8 +153,6 @@ def test_domain_validation():
 
     M = m.addParameter("M")
     M[...] = gp.Sum(job, data["release", job] + data["duration", job])
-    with pytest.raises(ValidationError):
-        M[...] = gp.Sum(job, data["rbla", job] + data["bla", job])
 
     job2 = gp.Set(m, "job2", records=["job1", "job2"])
     data2 = gp.Parameter(m, "data2", domain=["times", "job"])
