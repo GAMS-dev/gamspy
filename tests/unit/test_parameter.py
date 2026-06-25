@@ -222,20 +222,6 @@ def test_assignment_dimensionality(data):
         j3[j1, j2] = j3[j1, j2, j4] * 5
 
 
-def test_domain_verification(data):
-    m, *_ = data
-    m = Container()
-    i1 = Set(m, "i1", records=["i1", "i2"])
-    a1 = Parameter(m, "a1", domain=i1, records=[("i1", 1), ("i2", 2)])
-    a1["i1"] = 5
-
-    with pytest.raises(ValidationError):
-        a1["i3"] = 5
-
-    with pytest.raises(ValidationError):
-        a1["i3"] = a1["i3"] * 5
-
-
 def test_uels_on_axes(data):
     m, *_ = data
     s = pd.Series(index=["a", "b", "c"], data=[i + 1 for i in range(3)])

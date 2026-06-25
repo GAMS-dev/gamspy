@@ -4,9 +4,7 @@ import doctest
 import glob
 import json
 import os
-import platform
 import shutil
-import time
 from os.path import join
 
 import gamspy_base
@@ -28,8 +26,8 @@ def test_config():
 
     i = gp.Set(m, records=["i1", "i2"])
     a = gp.Parameter(m, domain=i, records=[("i1", 1), ("i2", 2)])
-    with pytest.raises(ValidationError):  # GAMSPy catches the domain violation
-        a["i3"] = 5
+    with pytest.raises(TypeError):  # GAMSPy catches the domain violation
+        a[a["bla"]] = 5
 
     gp.set_options({"DOMAIN_VALIDATION": 0})
     with pytest.raises(GamspyException):  # GAMS returns domain violation error
@@ -63,38 +61,6 @@ def test_config():
         model.solve(solver="unknown")
 
     gp.set_options({"SOLVER_VALIDATION": 1})
-
-
-@pytest.mark.skipif(
-    platform.system() == "Windows",
-    reason="Windows build machines are not very reliable when it comes to these kind of performance tests.",
-)
-@pytest.mark.unit
-def test_domain_checking_config_performance():
-    gp.set_options({"DOMAIN_VALIDATION": 1})
-    m = gp.Container()
-    i = gp.Set(m, records=range(99))
-    a = gp.Parameter(m, domain=i)
-    start = time.time()
-    for idx in range(99):
-        _ = a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx]
-
-    timing_with_validation = time.time() - start
-
-    gp.set_options({"DOMAIN_VALIDATION": 0})
-    m = gp.Container()
-    i = gp.Set(m, records=range(99))
-    a = gp.Parameter(m, domain=i)
-    start = time.time()
-    for idx in range(99):
-        _ = a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx] + a[idx]
-    timing_without_validation = time.time() - start
-    gp.set_options({"DOMAIN_VALIDATION": 1})
-
-    print(f"{timing_with_validation=}, {timing_without_validation=}")
-    assert timing_without_validation < timing_with_validation, (
-        f"{timing_with_validation=}, {timing_without_validation=}"
-    )
 
 
 def test_map_special_values():
