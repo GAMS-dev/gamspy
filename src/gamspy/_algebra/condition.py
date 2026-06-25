@@ -77,6 +77,15 @@ class Condition(operable.Operable):
         if hasattr(conditioning_on, "domain"):
             self.domain = conditioning_on.domain
 
+    def __eq__(self, other):
+        return expression.Expression(self, "=e=", other)
+
+    def __ne__(self, other):
+        return expression.Expression(self, "ne", other)
+
+    def __hash__(self):
+        return id(self)
+
     def __getitem__(
         self,
         condition: Expression

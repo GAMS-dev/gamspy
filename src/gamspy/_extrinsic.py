@@ -70,6 +70,9 @@ class ExtrinsicFunction(operable.Operable):
     def __eq__(self, other):
         return expression.Expression(self, "=e=", other)
 
+    def __hash__(self):
+        return id(self)
+
     def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
