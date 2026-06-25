@@ -225,3 +225,13 @@ def test_not_operator_paranthesis():
     c = gp.Parameter(m, "c")
     c[...] = a * ~b
     assert c.getAssignment() == "c = a * (not b);"
+
+
+def test_expression_order():
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    a = gp.Parameter(m, "a", domain=i)
+    v = gp.Variable(m, "v", domain=i)
+    e = gp.Equation(m, "e", domain=i)
+    e[...] = v[i].where[gp.Ord(i) > 3] == a[i]
+    assert e.getDefinition() == "e(i) .. v(i) $ (ord(i) > 3) =e= a(i);"

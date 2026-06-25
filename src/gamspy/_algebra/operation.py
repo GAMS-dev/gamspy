@@ -76,11 +76,15 @@ class Operation(operable.Operable):
 
         if not isinstance(rhs, (bool, float, int)):
             for i, x in enumerate(rhs.domain):
-                try:
-                    sum_index = self._bare_op_domain.index(x)
-                    self._operation_indices.append((i, sum_index))
-                except ValueError:
+                sum_index = -1
+                for idx, elem in enumerate(self._bare_op_domain):
+                    if elem is x:
+                        sum_index = idx
+
+                if sum_index == -1:
                     self.domain.append(x)  # ty: ignore[invalid-argument-type]
+                else:
+                    self._operation_indices.append((i, sum_index))
 
         self.dimension: int = validation.get_dimension(self.domain)
         controlled_domain = list(self._bare_op_domain)
@@ -254,6 +258,9 @@ class Operation(operable.Operable):
 
     def __ne__(self, other):
         return expression.Expression(self, "ne", other)
+
+    def __hash__(self):
+        return id(self)
 
     def _replace_operations(self, output: str) -> str:
         output = output.replace("=l=", "<=")
@@ -758,6 +765,9 @@ class Ord(operable.Operable):
     def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
+    def __hash__(self):
+        return id(self)
+
     def gamsRepr(self) -> str:
         """
         Representation of the Ord operation in GAMS language.
@@ -837,6 +847,9 @@ class Card(operable.Operable):
 
     def __ne__(self, other):
         return expression.Expression(self, "ne", other)
+
+    def __hash__(self):
+        return id(self)
 
     def __bool__(self):
         raise ValidationError(
