@@ -48,6 +48,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._backend.engine import EngineClient
     from gamspy._backend.neos import NeosClient
+    from gamspy._guss import GUSSScenarioDict
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
     from gamspy._types import SymbolType
     from gamspy.math import MathOp
@@ -1151,7 +1152,31 @@ class Model:
 
         return assignment
 
-    def _generate_solve_string(self) -> str:
+    def _validate_scenario(
+        self,
+        scenario: GUSSScenarioDict | None,
+        freeze_options: FreezeOptions | None = None,
+    ) -> None:
+        if scenario is None:
+            return
+
+        from gamspy._guss import GUSSScenarioDict
+
+        if not isinstance(scenario, GUSSScenarioDict):
+            raise ValidationError("`scenario` must be a GUSSScenarioDict.")
+
+        if scenario.container != self.container:
+            raise ValidationError(
+                "`scenario` must belong to the same container as the model."
+            )
+
+        if freeze_options is not None or self._is_frozen:
+            raise ValidationError(
+                "`scenario` cannot be used with frozen solves or freeze_options."
+            )
+
+    def _generate_solve_string(self, scenario: GUSSScenarioDict | None = None) -> str:
+        self._validate_scenario(scenario)
         solve_statement = [f"solve {self.name} using {self.problem}"]
 
         if self.sense == gp.Sense.FEASIBILITY:
@@ -1163,6 +1188,9 @@ class Model:
 
         if self._objective_variable is not None:
             solve_statement.append(self._objective_variable.gamsRepr())
+
+        if scenario is not None:
+            solve_statement.append(f"scenario {scenario.name}")
 
         return " ".join(solve_statement)
 
@@ -1530,6 +1558,7 @@ class Model:
         backend: Literal["local", "engine", "neos"] = "local",
         client: EngineClient | NeosClient | None = None,
         load_symbols: list[SymbolType] | None = None,
+        scenario: GUSSScenarioDict | None = None,
     ) -> pd.DataFrame | None:
         """
         Solves the model with given options.
@@ -1553,6 +1582,8 @@ class Model:
             EngineClient to communicate with GAMS Engine or NEOS Client to communicate with NEOS Server
         load_symbols : list[Symbol], optional
             Specifies the symbols that need to be loaded. If not given, all symbols are loaded after solve.
+        scenario : GUSSScenarioDict, optional
+            GUSS scenario dictionary to use for this solve.
 
         Returns
         -------
@@ -1671,6 +1702,8 @@ class Model:
         if solver == "conopt":
             solver = "conopt4"
 
+        self._validate_scenario(scenario, freeze_options)
+
         validation.validate_solver_args(
             self.container.system_directory,
             backend,
@@ -1707,7 +1740,11 @@ class Model:
             return summary
 
         self._add_runtime_options(options, backend)
-        self.container._add_statement(self._generate_solve_string() + ";\n")
+        self.container._add_statement(
+            self._generate_solve_string(scenario=scenario) + ";\n"
+        )
+        if self.container._in_loop:
+            self._assign_model_attributes()
         options._set_model_info(solver, self.problem, solver_options)
 
         if self.container._in_loop:
