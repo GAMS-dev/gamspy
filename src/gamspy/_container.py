@@ -1281,23 +1281,68 @@ class Container:
 
         return symbol_names
 
-    # TODO: Legacy function from GTP. Pay the technical debt.
-    @no_type_check
-    def _read_from_container(
-        self, load_from: gt.Container | Container, symbols: list[str] | None
-    ):
-        read_symbols = symbols if symbols is not None else list(load_from.data.keys())
+    def _map_symbol_names(
+        self, symbol_names: list[str] | dict[str, str] | None
+    ) -> tuple[list[str] | None, dict[str, str] | None]:
+        """
+        Maps GDX names to the target GAMSPy names.
+        """
+        if not isinstance(symbol_names, (list, dict, type(None))):
+            raise TypeError(
+                "Argument 'symbol_names' must be type list, dict or NoneType"
+            )
 
-        for i in read_symbols:
+        if symbol_names is None:
+            return None, None
+
+        if isinstance(symbol_names, list):
+            return self._resolve_symbols(symbol_names), None
+
+        if any(
+            not isinstance(key, str) or not isinstance(value, str)
+            for key, value in symbol_names.items()
+        ):
+            raise TypeError("Argument 'symbol_names' must contain only type str")
+
+        targets = list(symbol_names.values())
+        if len(set(targets)) != len(targets):
+            raise ValidationError(
+                "Invalid renaming. Two or more symbols are mapped to the same name."
+            )
+
+        for gamspy_name in targets:
+            if gamspy_name in self._data:
+                raise ValidationError(
+                    f"Attempting to create a new symbol (through a read operation) named `{gamspy_name}` "
+                    "but an object with this name already exists in the Container."
+                )
+
+        return list(symbol_names.keys()), symbol_names
+
+    def _read_from_container(
+        self,
+        load_from: gt.Container | Container,
+        symbol_names: list[str] | None,
+        mapping: dict[str, str] | None = None,
+    ):
+        read_symbol_names = (
+            symbol_names if symbol_names is not None else list(load_from.data.keys())
+        )
+
+        def to_gamspy_name(source_name: str) -> str:
+            return mapping.get(source_name, source_name) if mapping else source_name
+
+        for i in read_symbol_names:
             if i not in load_from:
                 raise ValidationError(
                     f"User specified to read symbol `{i}`, but it does not exist in source Container."
                 )
 
-        for symname in read_symbols:
-            if symname in self._data:
+        for symname in read_symbol_names:
+            gamspy_name = to_gamspy_name(symname)
+            if gamspy_name in self._data:
                 raise ValidationError(
-                    f"Attempting to create a new symbol (through a read operation) named `{symname}` "
+                    f"Attempting to create a new symbol (through a read operation) named `{gamspy_name}` "
                     "but an object with this name already exists in the Container. "
                 )
 
@@ -1305,27 +1350,29 @@ class Container:
             gdx_name = "_" + utils._get_unique_name() + ".gdx"
             gdx_path = os.path.join(self.working_directory, gdx_name)
             load_from.write(gdx_path)
-            self.loadRecordsFromGdx(gdx_path)
+            gdxio.read(self, gdx_path, symbol_names, None, mapping)
         else:
             AnyContainerDomainSymbol = (gt.Set, gt.Alias, gt.UniverseAlias)
 
-            cf_read_symbols = [s.casefold() for s in read_symbols]
+            cf_read_symbol_names = [s.casefold() for s in read_symbol_names]
             link_domains = []
 
             for symname, symobj in load_from.data.items():
-                if symname.casefold() not in cf_read_symbols:
+                if symname.casefold() not in cf_read_symbol_names:
                     continue
+
+                gamspy_name = to_gamspy_name(symname)
 
                 if any(
                     isinstance(domobj, AnyContainerDomainSymbol)
-                    for domobj in symobj.domain
+                    for domobj in symobj.domain  # ty: ignore[unresolved-attribute]
                 ):
-                    link_domains.append((symname, symobj.domain_names))
+                    link_domains.append((gamspy_name, symobj.domain_names))  # ty: ignore[unresolved-attribute]
 
                 if isinstance(symobj, gt.Set):
                     symbol = gp.Set._constructor_bypass(
                         self,
-                        symname,
+                        gamspy_name,
                         symobj.domain_names,
                         is_singleton=symobj.is_singleton,
                         records=symobj.records.copy()
@@ -1337,7 +1384,7 @@ class Container:
                 elif isinstance(symobj, gt.Parameter):
                     symbol = gp.Parameter._constructor_bypass(
                         self,
-                        symname,
+                        gamspy_name,
                         symobj.domain_names,
                         records=symobj.records.copy()
                         if symobj.records is not None
@@ -1348,7 +1395,7 @@ class Container:
                 elif isinstance(symobj, gt.Variable):
                     symbol = gp.Variable._constructor_bypass(
                         self,
-                        symname,
+                        gamspy_name,
                         symobj.type,
                         symobj.domain_names,
                         records=symobj.records.copy()
@@ -1360,7 +1407,7 @@ class Container:
                 elif isinstance(symobj, gt.Equation):
                     symbol = gp.Equation._constructor_bypass(
                         self,
-                        symname,
+                        gamspy_name,
                         symobj.type,
                         symobj.domain_names,
                         records=symobj.records.copy()
@@ -1371,13 +1418,15 @@ class Container:
                     symbol._should_unload_to_gams = True
                 elif isinstance(symobj, gt.Alias):
                     alias_with = cast("Set | Alias", self._data[symobj.alias_with.name])
-                    gp.Alias._constructor_bypass(self, symname, alias_with)
+                    gp.Alias._constructor_bypass(self, gamspy_name, alias_with)
                 elif isinstance(symobj, gt.UniverseAlias):
-                    gp.UniverseAlias._constructor_bypass(self, symname)
+                    gp.UniverseAlias._constructor_bypass(self, gamspy_name)
 
             for symname, domain in link_domains:
                 domain = [
-                    self._data[i] if i in self and i in cf_read_symbols else i
+                    self._data[to_gamspy_name(i)]
+                    if i in cf_read_symbol_names and to_gamspy_name(i) in self
+                    else i
                     for i in domain
                 ]
                 self._data[symname]._domain = domain
@@ -1387,15 +1436,15 @@ class Container:
     def _read(
         self,
         load_from: str | os.PathLike | Container | gt.Container,
-        symbol_names: list[str] | None = None,
+        symbol_names: list[str] | dict[str, str] | None = None,
         encoding: str | None = None,
     ) -> None:
-        symbols = (
-            self._resolve_symbols(symbol_names) if symbol_names is not None else None
-        )
+        symbol_names, mapping = self._map_symbol_names(symbol_names)
 
-        if not isinstance(encoding, (str, type(None))):
-            raise TypeError("Argument 'encoding' must be type str or NoneType")
+        if encoding is not None and not isinstance(encoding, str):
+            raise TypeError(
+                f"Argument 'encoding' must be type str but found {type(encoding)}"
+            )
 
         if isinstance(load_from, (os.PathLike, str)):
             fpath = Path(load_from).expanduser().resolve()  # ty: ignore[invalid-argument-type]
@@ -1404,14 +1453,16 @@ class Container:
                     f"GDX file '{os.fspath(fpath)}' does not exist, "
                     "check filename spelling or path specification"
                 )
+
             if not os.fspath(fpath).casefold().endswith(".gdx"):
                 raise ValueError(
                     "Unexpected file type passed to 'load_from' argument -- expected file extension '.gdx'"
                 )
+
             load_from = os.fspath(fpath)
-            gdxio.read(self, load_from, symbols, encoding)
+            gdxio.read(self, load_from, symbol_names, encoding, mapping)
         elif isinstance(load_from, (gt.Container, Container)):
-            self._read_from_container(load_from, symbols)
+            self._read_from_container(load_from, symbol_names, mapping)
         else:
             raise ValueError(
                 "Argument 'load_from' expects "
@@ -1425,7 +1476,7 @@ class Container:
     def read(
         self,
         load_from: str | os.PathLike | Container | gt.Container,
-        symbol_names: list[str] | None = None,
+        symbol_names: list[str] | dict[str, str] | None = None,
         encoding: str | None = None,
         *,
         load_records: bool = True,
@@ -1440,8 +1491,11 @@ class Container:
             Source to read from.
 
 
-        symbol_names : list[str], optional
+        symbol_names : list[str], dict[str, str], optional
             Names of symbols to read. If omitted, all symbols are read.
+            If given as a dict, keys are the symbol names in the source, and
+            values are the names of the symbols to create in this container
+            (i.e. the symbols are renamed on read).
 
 
         mode : str, optional
@@ -1471,6 +1525,15 @@ class Container:
 
         >>> m2 = gp.Container()
         >>> m2.read("example.gdx", symbol_names=["i"])
+
+
+        Reading and renaming symbols
+
+
+        >>> m2 = gp.Container()
+        >>> m2.read("example.gdx", symbol_names={"i": "j"})
+        >>> "j" in m2.data
+        True
 
         """
         if load_records is not True:

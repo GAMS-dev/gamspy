@@ -869,6 +869,99 @@ def test_read_from_gdx(data, tmp_path):
 
 
 @pytest.mark.unit
+def test_read_rename(data, tmp_path):
+    m, *_ = data
+    gdx_path = str(tmp_path / "rename.gdx")
+
+    _ = Parameter(m, "X", records=5)
+    m.write(gdx_path)
+    m.close()
+
+    # Rename a scalar parameter from a GDX file.
+    m2 = Container()
+    m2.read(gdx_path, symbol_names={"X": "A"})
+    assert "A" in m2.data
+    assert "X" not in m2.data
+    assert m2["A"].toValue() == 5
+    m2.close()
+
+
+@pytest.mark.unit
+def test_read_rename_domain(data, tmp_path):
+    m, *_ = data
+    gdx_path = str(tmp_path / "rename_domain.gdx")
+
+    i = Set(m, "i", records=["i1", "i2"])
+    _ = Parameter(m, "p", domain=i, records=[("i1", 1), ("i2", 2)])
+    m.write(gdx_path)
+    m.close()
+
+    # Rename a domain set and the parameter indexed over it in one read.
+    m2 = Container()
+    m2.read(gdx_path, symbol_names={"i": "j", "p": "q"})
+    assert list(m2.data.keys()) == ["j", "q"]
+    # The renamed parameter's domain should point at the renamed set object.
+    assert m2["q"].domain == [m2["j"]]
+    assert m2["j"].toList() == ["i1", "i2"]
+    assert m2["q"].toList() == [("i1", 1.0), ("i2", 2.0)]
+    m2.close()
+
+
+@pytest.mark.unit
+def test_read_rename_from_gamspy_container(data):
+    m, *_ = data
+    i = Set(m, "i", records=["i1", "i2"])
+    _ = Parameter(m, "p", domain=i, records=[("i1", 1), ("i2", 2)])
+
+    m2 = Container()
+    m2.read(m, symbol_names={"i": "j", "p": "q"})
+    assert list(m2.data.keys()) == ["j", "q"]
+    assert m2["q"].domain == [m2["j"]]
+    assert m2["j"].toList() == ["i1", "i2"]
+    assert m2["q"].toList() == [("i1", 1.0), ("i2", 2.0)]
+    m2.close()
+
+
+@pytest.mark.unit
+def test_read_rename_from_transfer_container():
+    gt_container = gt.Container(system_directory=gamspy_base.directory)
+    gt_i = gt.Set(gt_container, "i", records=["i1", "i2"])
+    _ = gt.Parameter(gt_container, "p", domain=gt_i, records=[("i1", 1), ("i2", 2)])
+
+    m2 = Container()
+    m2.read(gt_container, symbol_names={"i": "j", "p": "q"})
+    assert list(m2.data.keys()) == ["j", "q"]
+    assert m2["q"].domain == [m2["j"]]
+    assert m2["j"].toList() == ["i1", "i2"]
+    assert m2["q"].toList() == [("i1", 1.0), ("i2", 2.0)]
+    m2.close()
+
+
+@pytest.mark.unit
+def test_read_rename_errors(data, tmp_path):
+    m, *_ = data
+    gdx_path = str(tmp_path / "rename_err.gdx")
+
+    _ = Parameter(m, "X", records=5)
+    _ = Parameter(m, "Y", records=10)
+    m.write(gdx_path)
+    m.close()
+
+    # Target name already exists in the container.
+    m2 = Container()
+    _ = Parameter(m2, "A", records=1)
+    with pytest.raises(ValidationError):
+        m2.read(gdx_path, symbol_names={"X": "A"})
+    m2.close()
+
+    # Two source symbols mapped to the same target name.
+    m3 = Container()
+    with pytest.raises(ValidationError):
+        m3.read(gdx_path, symbol_names={"X": "A", "Y": "A"})
+    m3.close()
+
+
+@pytest.mark.unit
 def test_output(tmp_path):
     path = str(tmp_path / (str(uuid.uuid4()) + ".py"))
     with open(path, "w") as file:

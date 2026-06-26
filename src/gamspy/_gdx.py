@@ -281,8 +281,9 @@ def get_records(
 def read(
     container: Container,
     load_from: str | os.PathLike,
-    symbols: list[str] | None,
+    symbol_names: list[str] | None,
     encoding: str | None,
+    mapping: dict[str, str] | None = None,
 ) -> None:
     from gamspy._symbols import Equation, Parameter, Set, Variable
 
@@ -290,18 +291,25 @@ def read(
         _set_special_values(gdx_handle)
 
         symbol_metadata = _fetch_metadata(
-            container._gams2np, gdx_handle, symbols, encoding
+            container._gams2np, gdx_handle, symbol_names, encoding
         )
 
+        # Gdx names, captured before any renaming is applied.
+        read_source_names = {md.name for md in symbol_metadata}
+
+        def to_gamspy_name(source_name: str) -> str:
+            return mapping.get(source_name, source_name) if mapping else source_name
+
         link_domains: list[GDXSymbolMetadata] = []
-        symbols_with_records = []
-        read_symbols = {md.name for md in symbol_metadata}
+        symbols_with_records: list[tuple[str, GDXSymbolMetadata]] = []
 
         # Validate and Create Symbols
         for md in symbol_metadata:
-            if md.name in container._data:
+            source_name = md.name
+            gamspy_name = to_gamspy_name(source_name)
+            if gamspy_name in container._data:
                 raise ValidationError(
-                    f"Attempting to create a new symbol (through a read operation) named `{md.name}` "
+                    f"Attempting to create a new symbol (through a read operation) named `{gamspy_name}` "
                     "but an object with this name already exists in the Container."
                 )
 
@@ -309,8 +317,9 @@ def read(
                 link_domains.append(md)
 
             if md.number_records > 0 and md.type != gdx.GMS_DT_ALIAS:
-                symbols_with_records.append(md)
+                symbols_with_records.append((source_name, md))
 
+            md.name = gamspy_name
             create_symbol_from_metadata(container, md)
 
     # Link Domain Objects
@@ -321,19 +330,22 @@ def read(
 
         domain = md.domain
         for n, dom_name in enumerate(domain):
-            if dom_name != "*" and dom_name in read_symbols:
-                domain[n] = container._data[dom_name]
+            if dom_name != "*" and dom_name in read_source_names:
+                domain[n] = container._data[to_gamspy_name(dom_name)]
 
         symbol._domain = domain
 
         if isinstance(symbol, (Variable, Equation)):
             symbol._update_attr_domains()
 
-    symbols = [metadata.name for metadata in symbols_with_records]
-    symbol_str = " ".join(symbols)
+    load_symbols = [md.name for _, md in symbols_with_records]
+    symbol_str = " ".join(
+        f"{md.name}={source_name}" if md.name != source_name else md.name
+        for source_name, md in symbols_with_records
+    )
     container._add_statement(f"$gdxLoad {load_from} {symbol_str}")
     container._synch_with_gams()
-    container._should_load_from_gams(symbols)
+    container._should_load_from_gams(load_symbols)
 
 
 # TODO: fix typing here.

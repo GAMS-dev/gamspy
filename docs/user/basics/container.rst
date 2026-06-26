@@ -229,6 +229,13 @@ There are multiple ways to read data, depending on whether you want to import sy
     # Reads symbols 'i' and 'j' from the file into container 'm'
     m.read("input.gdx", symbol_names=["i", "j"])
 
+You can rename symbols during loading by providing a dictionary:
+
+.. code-block:: python
+
+    # Reads symbol 'i_remote' in GDX andd creates 'i_local' in Container
+    m.read("input.gdx", symbol_names={"i_remote": "i_local"})
+
 **Load Data Only:** :meth:`container.loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>` loads data into symbols that *already exist* in your container. 
 This is useful when the model structure is defined in Python, but data comes from an external source.
 
