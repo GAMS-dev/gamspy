@@ -34,6 +34,13 @@ details are found in :ref:`reference`.
    ml/examples
 
 .. toctree::
+   :caption: Stochastic Programming
+   :maxdepth: 2
+
+   sddp/sddp
+   sddp/examples
+
+.. toctree::
    :caption: Extras
    :maxdepth: 1
 

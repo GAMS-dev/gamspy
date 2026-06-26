@@ -1,0 +1,1 @@
+Added the new ``gamspy.formulations.sddp`` module implementing Stochastic Dual Dynamic Programming for multi-stage stochastic LPs.

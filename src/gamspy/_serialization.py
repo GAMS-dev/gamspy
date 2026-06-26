@@ -117,7 +117,8 @@ def deserialize(path: str) -> Container:
 
     # Deserialize symbols
     for name, symbol in container._data.items():
-        symbol._deserialize(info[name])
+        if name in info:
+            symbol._deserialize(info[name])
 
     # Deserialize models
     models = info["models"]

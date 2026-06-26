@@ -16,6 +16,7 @@ gamspy
    gamspy._symbols.variable
    gamspy._symbols.equation
    gamspy._model
+   gamspy.GUSSScenarioDict
    gamspy.Problem
    gamspy.Sense
    gamspy.Options
