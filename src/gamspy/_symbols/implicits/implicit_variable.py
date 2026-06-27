@@ -240,6 +240,9 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
+    def __hash__(self):
+        return id(self)
+
     def gamsRepr(self) -> str:
         representation = self.name
         domain = list(self.domain)

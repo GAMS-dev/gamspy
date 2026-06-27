@@ -75,6 +75,9 @@ class MathOp(operable.Operable):
     def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
+    def __hash__(self):
+        return id(self)
+
     def __len__(self):
         if self.records is not None:
             return len(self.records.index)

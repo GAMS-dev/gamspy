@@ -40,6 +40,9 @@ class Number(operable.Operable):
     def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
+    def __hash__(self):
+        return id(self)
+
     def __repr__(self) -> str:
         return f"Number(value={self._value})"
 

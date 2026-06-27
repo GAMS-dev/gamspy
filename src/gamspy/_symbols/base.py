@@ -462,7 +462,7 @@ class DomainSymbol(BaseSymbol):
 
         # set the domain_labels
         if (
-            getattr(self, "domain_labels", None) is not None
+            self.domain_labels is not None
             and self.records is not None
             and self.records.columns.tolist() != labels + self._attributes
         ):

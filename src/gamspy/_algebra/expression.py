@@ -528,6 +528,9 @@ class Expression(operable.Operable):
     def __ne__(self, other):
         return Expression(self, "ne", other)
 
+    def __hash__(self):
+        return id(self)
+
     def __bool__(self):
         raise ValidationError(
             "An expression cannot be used as a truth value. If you are "

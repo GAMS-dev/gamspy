@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.24.2"
+version = "1.25.0"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -70,7 +70,11 @@ exclude = [
     "src/gamspy/_backend/engine.py", 
     "src/gamspy/_gmd.py",
     "src/gamspy/_records_ingestion.py", 
-    "src/gamspy/formulations",
+    "src/gamspy/formulations/nn",
+    "src/gamspy/formulations/ml",
+    "src/gamspy/formulations/shape.py",
+    "src/gamspy/formulations/piecewise.py",
+    "src/gamspy/formulations/utils.py",
 ]
 
 [tool.ty.rules]

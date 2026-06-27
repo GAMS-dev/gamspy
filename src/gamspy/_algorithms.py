@@ -72,8 +72,15 @@ def convert_to_categoricals_cat(
     # Build categorical columns directly from raw numpy slices
     if has_domains:
         for i in range(arrkeys.shape[1]):
-            dtype = pd.CategoricalDtype(categories=unique_uels[i], ordered=True)
-            data[col_idx] = pd.Categorical.from_codes(codes=arrkeys[:, i], dtype=dtype)
+            # `unique_uels` come straight from GMD and are unique by
+            # construction, so skip pandas' redundant uniqueness/bounds checks
+            # (`is_unique` on large UEL lists dominates the read-back otherwise).
+            dtype = pd.CategoricalDtype._from_fastpath(
+                categories=unique_uels[i], ordered=True
+            )
+            data[col_idx] = pd.Categorical.from_codes(
+                codes=arrkeys[:, i], dtype=dtype, validate=False
+            )
             col_idx += 1
 
     # Insert value columns
