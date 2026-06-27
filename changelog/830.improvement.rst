@@ -1,1 +1,0 @@
-Speed up frozen solves. Modifiable records are now written directly into the in-memory GAMS database (GMD), removing the intermediate GAMS Transfer container. This cuts frozen solve time by roughly 20-35% on large models.
