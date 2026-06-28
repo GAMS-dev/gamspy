@@ -1,5 +1,9 @@
 .. _whatisgamspy:
 
+.. meta::
+   :description: GAMSPy combines the high-performance GAMS execution system with Python to build and solve linear, nonlinear, and mixed-integer optimization models within end-to-end Python pipelines.
+   :keywords: GAMSPy, gamspy, GAMS, gams, what is gamspy, mathematical optimization, algebraic modeling, Python, solvers
+
 ===============
 What is GAMSPy?
 ===============

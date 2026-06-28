@@ -57,6 +57,7 @@ Gaussian distributions from which class 0 and class 1 are sampled.
 
 
 .. image:: ../images/logistic_regression.png
+  :alt: Logistic regression samples before fitting
   :align: center
 
 Our goal is to fit the parameters of a function (specifically, the logistic 
@@ -186,6 +187,7 @@ If we plot the logistic function on top of the samples:
 
 
 .. image:: ../images/logistic_regression_2.png
+  :alt: Fitted logistic regression function over the samples
   :align: center
 
 You can see how nicely the function fits the samples. In this example, we only

@@ -1,0 +1,1 @@
+Improve documentation SEO: add canonical URLs, Open Graph/Twitter card tags, an auto-generated ``sitemap.xml``, curated meta descriptions on key pages, and alt text for all images.

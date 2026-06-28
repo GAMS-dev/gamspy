@@ -1,5 +1,9 @@
 .. _gamspy_docs_mainpage:
 
+.. meta::
+   :description: GAMSPy is a Python algebraic modeling interface that pairs the high-performance GAMS execution system with Python to build and solve large-scale linear, nonlinear, and mixed-integer optimization models.
+   :keywords: GAMSPy, gamspy, GAMS, gams, mathematical optimization, algebraic modeling, Python optimization, linear programming, mixed-integer programming, nonlinear programming, solver
+
 ####################
 GAMSPy documentation
 ####################
@@ -14,6 +18,12 @@ GAMSPy documentation
    Release Notes <release/index>
 
 
+GAMSPy is a mathematical optimization library that combines the high-performance
+GAMS execution system with the flexible Python language. It acts as a bridge
+between the expressive Python language and the robust GAMS system with its extensive
+collection of integrated solvers, allowing you to create and solve complex mathematical
+models with minimal effort.
+
 **Version**: |version|
 
 **Documentation**: `Older versions of documentation <https://readthedocs.org/projects/gamspy/>`_
@@ -24,12 +34,6 @@ GAMSPy documentation
 `Examples <https://github.com/GAMS-dev/gamspy-examples>`_ |
 `Issue Tracker <https://github.com/GAMS-dev/gamspy/issues>`_ |
 `Discourse <https://forum.gams.com>`_
-
-GAMSPy is a mathematical optimization library that combines the high-performance 
-GAMS execution system with the flexible Python language. It acts as a bridge 
-between the expressive Python language and the robust GAMS system with its extensive
-collection of integrated solvers, allowing you to create and solve complex mathematical
-models with minimal effort.
 
 .. grid:: 1 1 2 2
     :gutter: 2 3 4 4
