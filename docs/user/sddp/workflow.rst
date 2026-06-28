@@ -20,11 +20,13 @@ The lifecycle
 A model goes through the same sequence every time:
 
 .. image:: ../images/sddp_lifecycle.svg
+   :alt: SDDP model lifecycle stages
    :width: 540
    :align: center
    :class: only-light
 
 .. image:: ../images/sddp_lifecycle_dark.svg
+   :alt: SDDP model lifecycle stages
    :width: 540
    :align: center
    :class: only-dark

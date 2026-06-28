@@ -100,6 +100,7 @@ dataset consists of handwritten digits that are 28x28 in size. Examples are
 grayscale. Here are some examples:
 
 .. image:: ../images/mnist.png
+  :alt: Sample handwritten digits from the MNIST dataset
   :align: center
 
 MNIST from:
@@ -406,6 +407,7 @@ severe overfitting and is extremely challenging.
 We can visualize the loss per iteration:
 
 .. image:: ../images/loss_per_iter_2.png
+  :alt: Training loss per iteration
   :align: center
 
 

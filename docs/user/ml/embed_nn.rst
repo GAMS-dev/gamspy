@@ -39,6 +39,7 @@ Sample Problem
       <https://github.com/GAMS-dev/gamspy/blob/develop/docs/_static/cnn_data.pth?raw=true>`_.
 
 .. image:: ../images/mnist.png
+  :alt: Sample handwritten digits from the MNIST dataset
   :align: center
 
 MNIST from:
@@ -626,6 +627,7 @@ But the question remains: would we also confuse the image?
       :sync: ffn
       
       .. image:: ../images/noisy_image.png
+        :alt: Noisy MNIST digit misclassified by the feedforward network
         :align: center
       
       A human would easily recognize this digit as a 7, not a 3, leading us to
@@ -635,6 +637,7 @@ But the question remains: would we also confuse the image?
       :sync: cnn
 
       .. image:: ../images/noisy_image_2.png
+        :alt: Noisy MNIST digit misclassified by the convolutional network
         :align: center
       
       A human would easily recognize this digit as a 7, not a 2, leading us to

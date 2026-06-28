@@ -1,5 +1,9 @@
 .. _user:
 
+.. meta::
+   :description: The GAMSPy User Guide explains the core concepts — Container, Set, Parameter, Variable, Equation, and Model — with examples for building and solving optimization models in Python.
+   :keywords: GAMSPy, gamspy, GAMS, gams, user guide, tutorial, mathematical optimization, Python, Container, Set, Parameter, Variable, Equation, Model
+
 ##########
 User Guide
 ##########

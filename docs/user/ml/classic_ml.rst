@@ -34,6 +34,7 @@ tree as a :meth:`DecisionTreeStruct <gamspy.formulations.DecisionTreeStruct>`
 instance.
 
 .. image:: ../images/regressionTree.png
+  :alt: Regression tree diagram
   :align: center
 
 .. code-block:: python
