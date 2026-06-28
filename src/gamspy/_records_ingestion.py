@@ -54,32 +54,52 @@ class BaseIngestor:
         """Converts domain columns into pd.Categorical objects, standardizing strings."""
         for i in range(self.symbol.dimension):
             col = records.iloc[:, i]
-            if not isinstance(col.dtype, pd.CategoricalDtype):
-                records.isetitem(
-                    i,
-                    col.astype(
-                        pd.CategoricalDtype(categories=col.unique(), ordered=True)
-                    ),
-                )
 
-            old_cats = records.iloc[:, i].cat.categories.tolist()
-            is_ordered = records.iloc[:, i].cat.ordered
+            if isinstance(col.dtype, pd.CategoricalDtype):
+                # Already categorical (e.g. coming from GAMS Transfer): operate on
+                # the category list.
+                old_cats = col.cat.categories.tolist()
+                new_cats = list(dict.fromkeys(str(x).rstrip() for x in old_cats))
 
-            # Convert to str, strip whitespace, and de-dup
-            new_cats = list(dict.fromkeys(str(x).rstrip() for x in old_cats))
-
-            if len(old_cats) != len(new_cats):
-                records.isetitem(
-                    i,
-                    records.iloc[:, i]
-                    .astype(str)
-                    .str.rstrip()
-                    .astype(
-                        pd.CategoricalDtype(categories=new_cats, ordered=is_ordered)
-                    ),
-                )
+                if len(old_cats) != len(new_cats):
+                    # Whitespace stripping collapsed categories: re-encode the column.
+                    records.isetitem(
+                        i,
+                        col.astype(str)
+                        .str.rstrip()
+                        .astype(
+                            pd.CategoricalDtype(
+                                categories=new_cats, ordered=col.cat.ordered
+                            )
+                        ),
+                    )
+                elif new_cats != old_cats:
+                    records.isetitem(i, col.cat.rename_categories(new_cats))
+                # else: categories unchanged, nothing to do.
             else:
-                records.isetitem(i, records.iloc[:, i].cat.rename_categories(new_cats))
+                # Single factorize pass yields codes + appearance-ordered uniques,
+                # matching the previous `col.unique()` ordering semantics.
+                codes, uniques = pd.factorize(col, sort=False)
+                stripped = [str(x).rstrip() for x in uniques]
+                new_cats = list(dict.fromkeys(stripped))
+
+                if len(new_cats) == len(stripped):
+                    # No collisions after stripping: the codes are still valid
+                    # skip pandas validations.
+                    dtype = pd.CategoricalDtype._from_fastpath(
+                        categories=pd.Index(stripped), ordered=True
+                    )
+                    records.isetitem(
+                        i,
+                        pd.Categorical.from_codes(codes, dtype=dtype, validate=False),
+                    )
+                else:
+                    records.isetitem(
+                        i,
+                        col.astype(str)
+                        .str.rstrip()
+                        .astype(pd.CategoricalDtype(categories=new_cats, ordered=True)),
+                    )
 
         return records
 
@@ -225,12 +245,18 @@ class ParameterIngestor(BaseIngestor):
             df = pd.DataFrame(cartesian_product(*tuple(codes)))
 
             for n, d in enumerate(self.symbol.domain):
-                dtype = pd.CategoricalDtype(
+                # Codes come from a cartesian product of arange(...) over each
+                # domain's UELs, so they are in-bounds by construction: skip the
+                # redundant validation pandas would otherwise run.
+                dtype = pd.CategoricalDtype._from_fastpath(
                     categories=d.records.iloc[:, 0].cat.categories,
                     ordered=d.records.iloc[:, 0].cat.ordered,
                 )
                 df.isetitem(
-                    n, pd.Categorical.from_codes(codes=df.iloc[:, n], dtype=dtype)
+                    n,
+                    pd.Categorical.from_codes(
+                        codes=df.iloc[:, n], dtype=dtype, validate=False
+                    ),
                 )
 
         df["value"] = records.reshape(-1, 1)
@@ -519,12 +545,18 @@ class VarEquIngestor(BaseIngestor):
             df = pd.DataFrame(cartesian_product(*tuple(codes)))
 
             for n, d in enumerate(self.symbol.domain):
-                dtype = pd.CategoricalDtype(
+                # Codes come from a cartesian product of arange(...) over each
+                # domain's UELs, so they are in-bounds by construction: skip the
+                # redundant validation pandas would otherwise run.
+                dtype = pd.CategoricalDtype._from_fastpath(
                     categories=d.records.iloc[:, 0].cat.categories,
                     ordered=d.records.iloc[:, 0].cat.ordered,
                 )
                 df.isetitem(
-                    n, pd.Categorical.from_codes(codes=df.iloc[:, n], dtype=dtype)
+                    n,
+                    pd.Categorical.from_codes(
+                        codes=df.iloc[:, n], dtype=dtype, validate=False
+                    ),
                 )
 
         for i in records:

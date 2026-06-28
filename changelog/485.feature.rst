@@ -1,1 +1,0 @@
-``Container.read`` now accepts a ``dict`` for ``symbol_names`` to rename symbols on read. Keys are the symbol names in the source (GDX file or container) and values are the names of the symbols to create in the container, e.g. ``m.read(path, symbol_names={"X": "A"})``.

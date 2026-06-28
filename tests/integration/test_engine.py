@@ -151,7 +151,7 @@ def test_network_license(network_license):
 
 def test_engine(data):
     m, canning_plants, markets, capacities, demands, distances = data
-    m = Container(debugging_level="keep")
+    m = Container()
 
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)

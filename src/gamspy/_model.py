@@ -1762,6 +1762,10 @@ class Model:
         )
 
         summary = runner.run()
+
+        if client is not None and not client.is_blocking:
+            return
+
         symbol_names = gdxio._get_symbol_names_from_gdx(
             self.container.system_directory, self.container._gdx_out
         )
