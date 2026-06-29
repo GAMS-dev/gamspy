@@ -615,8 +615,10 @@ def _unpack(domain: list[Set | Alias | ImplicitSet]):
                 for member in elem.domain:
                     if isinstance(member, implicits.ImplicitSet):
                         members.append(member.parent)
+                        members.extend(member.domain)
                     else:
                         members.append(member)
+
                 unpacked.extend([*members, elem.parent])
         else:
             unpacked.append(elem)
