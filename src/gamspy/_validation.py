@@ -216,6 +216,31 @@ def validate_dimension(
         )
 
 
+def _index_components(
+    given: Set | Alias | ImplicitSet | str,
+) -> list[Set | Alias | None] | None:
+    """Expand given indices into 1-dimensional sets occupying each of the
+    positions it spans.
+
+    - A 1-D set maps to the set itself.
+    - A multi-dimensional set maps to its declared domain leaves, one per position.
+    - Anything else (string label, universe alias etc.) returns None to signal that
+    none of its positions can be validated.
+    """
+    base = given.parent if isinstance(given, implicits.ImplicitSet) else given
+
+    if isinstance(base, (symbols.Set, symbols.Alias)):
+        if base.dimension == 1:
+            return [base]
+
+        return [
+            leaf if isinstance(leaf, (symbols.Set, symbols.Alias)) else None
+            for leaf in base.domain
+        ]
+
+    return None
+
+
 def validate_one_dimensional_sets(
     given: Set | Alias | ImplicitSet,
     actual: str | Set | Alias,
@@ -337,18 +362,26 @@ def validate_domain(
 
     offset = 0
     for given in index_list:
-        actual = symbol.domain[offset]
-        # skip validation if the actual domain element is universe.
-        if actual == "*" or isinstance(actual, symbols.UniverseAlias):
+        components = _index_components(given)
+
+        if components is None:
+            offset += getattr(given, "dimension", 1)
             continue
 
-        given_dim = getattr(given, "dimension", 1)
-        actual_dim = getattr(actual, "dimension", 1)
+        for position, component in enumerate(components):
+            actual = symbol.domain[offset + position]
+            # Skip positions whose declared domain is the universe or whose
+            # given component carries no set to validate (e.g. a literal).
+            if (
+                component is None
+                or actual == "*"
+                or isinstance(actual, symbols.UniverseAlias)
+            ):
+                continue
 
-        if actual_dim == 1 and given_dim == 1 and not isinstance(given, str):
-            validate_one_dimensional_sets(given, actual)
+            validate_one_dimensional_sets(component, actual)
 
-        offset += given_dim
+        offset += len(components)
 
     return index_list
 

@@ -751,41 +751,11 @@ class Expression(operable.Operable):
     def _validate_definition(
         self, control_stack: list[Set | Alias | ImplicitSet]
     ) -> None:
-        if not get_option("DOMAIN_VALIDATION") or not get_option("DOMAIN_VALIDATION"):
+        if not get_option("VALIDATION") or not get_option("DOMAIN_VALIDATION"):
             return
 
-        stack = []
-
-        node = self.right
-        while True:
-            if node is not None:
-                stack.append(node)
-                node = getattr(node, "left", None)
-            elif stack:
-                node = stack.pop()
-
-                if isinstance(node, operation.Operation):
-                    node._validate_operation(control_stack.copy())
-                elif isinstance(node, ImplicitSymbol):
-                    for elem in node.domain:
-                        if hasattr(elem, "is_singleton") and elem.is_singleton:
-                            continue
-
-                        if isinstance(elem, BaseSymbol) and elem not in control_stack:
-                            raise ValidationError(
-                                f"Uncontrolled set `{elem}` entered as constant!"
-                            )
-                        elif (
-                            isinstance(elem, ImplicitSymbol)
-                            and elem.parent not in control_stack
-                        ):
-                            raise ValidationError(
-                                f"Uncontrolled set `{elem.parent}` entered as constant!"
-                            )
-
-                node = getattr(node, "right", None)
-            else:
-                break  # pragma: no cover
+        # LHS carries the controlled indices only the right-hand side must be checked.
+        _validate_controlled(self.right, control_stack)
 
 
 class SetExpression(Expression):
@@ -848,3 +818,52 @@ class SetExpression(Expression):
                     raise ValidationError(
                         f"Incompatible operand `{self.left}` for the set operation `{self.operator}`."
                     )
+
+
+def _check_uncontrolled_indices(
+    node: ImplicitSymbol, control_stack: list[Set | Alias | ImplicitSet]
+) -> None:
+    """Raise if any set used as an index of node is not controlled.
+
+    A set is controlled when it is an index of the symbol being defined or
+    of an enclosing operation (Sum etc.). Singleton sets are always allowed.
+    """
+    for elem in node.domain:
+        if hasattr(elem, "is_singleton") and elem.is_singleton:
+            continue
+
+        if isinstance(elem, BaseSymbol) and elem not in control_stack:
+            raise ValidationError(f"Uncontrolled set `{elem}` entered as constant!")
+
+        if isinstance(elem, ImplicitSymbol) and elem.parent not in control_stack:
+            raise ValidationError(
+                f"Uncontrolled set `{elem.parent}` entered as constant!"
+            )
+
+
+def _validate_controlled(node, control_stack: list[Set | Alias | ImplicitSet]) -> None:
+    """
+    Walk a right-hand-side value expression and ensure every set used as an index is
+    controlled by control_stack.
+    """
+    stack = [node]
+    while stack:
+        current = stack.pop()
+
+        if isinstance(current, operation.Operation):
+            current._validate_operation(list(control_stack))
+        elif isinstance(current, ImplicitSymbol):
+            _check_uncontrolled_indices(current, control_stack)
+        elif isinstance(current, condition.Condition):
+            stack.append(current.conditioning_on)
+            stack.append(current.condition)
+        elif isinstance(current, (operation.Ord, operation.Card)):
+            stack.append(current._symbol)
+        elif isinstance(current, MathOp):
+            stack.extend(current.elements)
+        elif isinstance(current, ExtrinsicFunction):
+            stack.extend(current.args)
+        elif isinstance(current, Expression):
+            stack.append(current.left)
+            stack.append(current.right)
+        # Other leaves (numbers, literals, bare sets, ...) carry no index to validate.
