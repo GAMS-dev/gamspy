@@ -8,8 +8,10 @@ import subprocess
 import sys
 import tempfile
 
+import pandas as pd
 import pytest
 
+import gamspy as gp
 from gamspy import Container, Equation, Options, Parameter, Set, Variable
 from gamspy._miro import MiroJSONEncoder
 from gamspy.exceptions import ValidationError
@@ -1011,3 +1013,18 @@ def test_miro_args():
         assert "--model must be provided to run MIRO" in process.stderr.replace(
             os.linesep, ""
         ).replace("\n", "")
+
+
+def test_column_names_on_miro_symbols():
+    m = gp.Container()
+
+    a = gp.Set(m, name="a", records=["1"])
+    b = gp.Set(m, name="b", records=["2"])
+
+    input_df = pd.DataFrame({"a_id": ["1"], "b_id": ["2"]})
+
+    d = gp.Set(m, name="d", domain=[a, b], is_miro_input=True, records=input_df)
+    assert d.records.columns.to_list() == ["a", "b", "element_text"]
+
+    e = gp.Set(m, name="e", domain=[a, b], is_miro_input=False, records=input_df)
+    assert e.records.columns.to_list() == ["a_id", "b_id", "element_text"]

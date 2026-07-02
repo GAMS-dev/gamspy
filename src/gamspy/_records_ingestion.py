@@ -193,7 +193,11 @@ class ParameterIngestor(BaseIngestor):
         if not isinstance(records.iloc[:, -1].dtype, float):
             records.isetitem(-1, records.iloc[:, -1].astype(float))
 
-        labels = col_labels if col_labels is not None else self.symbol.domain_names
+        labels = (
+            col_labels
+            if col_labels is not None and not self.symbol._is_miro_symbol
+            else self.symbol.domain_names
+        )
         records.columns = generate_unique_labels(labels) + self.symbol._attributes
         self.symbol.records = records
 
@@ -360,7 +364,11 @@ class SetIngestor(BaseIngestor):
     def _finalize_records(
         self, records: pd.DataFrame, col_labels: list[str] | None = None
     ) -> None:
-        labels = col_labels if col_labels is not None else self.symbol.domain_names
+        labels = (
+            col_labels
+            if col_labels is not None and not self.symbol._is_miro_symbol
+            else self.symbol.domain_names
+        )
         records.columns = generate_unique_labels(labels) + self.symbol._attributes
 
         records.isetitem(-1, records.iloc[:, -1].astype(object))
