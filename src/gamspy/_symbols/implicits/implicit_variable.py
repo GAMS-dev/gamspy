@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import EllipsisType
 
+    import numpy as np
     import pandas as pd
 
     from gamspy import Set, Variable
@@ -62,6 +63,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             self.parent,
             name=self.parent.l.name,
             domain=self.domain,
+            permutation=self.permutation,
             scalar_domains=self._scalar_domains,
         )
 
@@ -76,6 +78,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             self.parent,
             name=self.parent.m.name,
             domain=self.domain,
+            permutation=self.permutation,
             scalar_domains=self._scalar_domains,
         )
 
@@ -90,6 +93,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             self.parent,
             name=self.parent.lo.name,
             domain=self.domain,
+            permutation=self.permutation,
             scalar_domains=self._scalar_domains,
         )
 
@@ -104,6 +108,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             self.parent,
             name=self.parent.up.name,
             domain=self.domain,
+            permutation=self.permutation,
             scalar_domains=self._scalar_domains,
         )
 
@@ -118,6 +123,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             self.parent,
             name=self.parent.scale.name,
             domain=self.domain,
+            permutation=self.permutation,
             scalar_domains=self._scalar_domains,
         )
 
@@ -135,6 +141,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             self.parent,
             name=self.parent.fx.name,
             domain=self.domain,
+            permutation=self.permutation,
             scalar_domains=self._scalar_domains,
         )
 
@@ -149,6 +156,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             self.parent,
             name=self.parent.prior.name,
             domain=self.domain,
+            permutation=self.permutation,
             scalar_domains=self._scalar_domains,
         )
 
@@ -166,6 +174,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             self.parent,
             name=self.parent.stage.name,
             domain=self.domain,
+            permutation=self.permutation,
             scalar_domains=self._scalar_domains,
         )
 
@@ -216,14 +225,15 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             return None
 
         temp_name = "iv" + utils._get_unique_name()
+        given_domain, declaration_domain = self._get_temp_domain()
         temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, self.parent.domain
+            self.container, temp_name, declaration_domain
         )
-        domain = list(self.domain)
-        for i, d in self._scalar_domains:
-            domain.insert(i, d)
 
-        temp_param[domain] = self.l
+        if given_domain == []:
+            given_domain = [...]
+
+        temp_param[given_domain] = self.l
         del self.container._data[temp_name]
 
         recs = temp_param.records
@@ -233,6 +243,61 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             recs.columns = columns
 
         return recs
+
+    def toDense(self, column: str = "level") -> np.ndarray:
+        """
+        Converts the records to a dense numpy.array format.
+
+        Parameters
+        ----------
+        column : str, optional
+            The attribute to convert, by default "level". One of "level",
+            "marginal", "lower", "upper" or "scale".
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array with the records. An array of zeros if the parent
+            symbol has no records.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> j = gp.Set(m, "j", records=["j1", "j2", "j3"])
+        >>> p = gp.Parameter(m, "p", domain=[i, j], records=np.array([[1, 2, 3], [4, 5, 6]]))
+        >>> v = gp.Variable(m, "v", domain=[i, j])
+        >>> v.l[i, j] = p[i, j]
+        >>> print(v[i, j].toDense())
+        [[1. 2. 3.]
+         [4. 5. 6.]]
+        >>> print(v.t().toDense())
+        [[1. 4.]
+         [2. 5.]
+         [3. 6.]]
+        >>> print(v[i, "j2"].toDense())
+        [2. 5.]
+
+        """
+        if not isinstance(column, str):
+            raise TypeError("Argument 'column' must be type str")
+
+        columns = {
+            "level": "l",
+            "marginal": "m",
+            "lower": "lo",
+            "upper": "up",
+            "scale": "scale",
+        }
+
+        if column not in columns:
+            raise TypeError(
+                f"Argument 'column' must be one of the following: {list(columns)}"
+            )
+
+        return getattr(self, columns[column]).toDense()
 
     def __eq__(self, other):
         return expression.Expression(self, "=e=", other)
@@ -247,7 +312,12 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         representation = self.name
         domain = list(self.domain)
         if domain and self.permutation is not None:
-            domain = utils._permute_domain(domain, self.permutation)
+            # self.permutation maps each axis to its position in the
+            # parent's declared domain, so invert it to render the
+            # reference in the parent's domain order.
+            domain = utils._permute_domain(
+                domain, utils._invert_permutation(self.permutation)
+            )
 
         for i, d in self._scalar_domains:
             domain.insert(i, d)

@@ -106,6 +106,28 @@ class ImplicitSymbol(ABC):
     def dimension(self) -> int:
         return self.parent.dimension - len(self._scalar_domains)
 
+    def _get_temp_domain(self) -> tuple[list, list]:
+        """
+        Helper to get a valid domain for the temp parameter to get the records.
+
+        Returns a tuple (given_domain, declaration_domain). given_domain is the given domain
+        at initialization where literals are inserted to their original positions and
+        declaration_domain is the matching domain to declare the temporary parameter
+        where each literal is replaced by the parent set at that position. Declaring the
+        temporary parameter over declaration_domain rather than the parent's domain keeps the
+        assignment valid for permuted (e.g. transposed) symbols, whose domain order differs
+        from the parent's domain order.
+        """
+        given_domain = list(self.domain)
+        for index, scalar in self._scalar_domains:
+            given_domain.insert(index, scalar)
+
+        declaration_domain = [
+            self.parent.domain[index] if isinstance(elem, str) and elem != "*" else elem
+            for index, elem in enumerate(given_domain)
+        ]
+        return given_domain, declaration_domain
+
     @abstractmethod
     def gamsRepr(self):
         """Representation of the implicit symbol in GAMS"""

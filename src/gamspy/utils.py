@@ -586,6 +586,17 @@ def _permute_domain(domain, dims):
     return new_domain
 
 
+def _invert_permutation(dims: list[int]) -> list[int]:
+    """
+    Returns the inverse of a permutation given as a list of integers.
+    """
+    inverse = [0] * len(dims)
+    for position, dim in enumerate(dims):
+        inverse[dim] = position
+
+    return inverse
+
+
 def _get_set(domain: list[Set | Alias | Domain | Expression]):
     from gamspy import Domain
 

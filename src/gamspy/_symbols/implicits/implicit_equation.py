@@ -10,6 +10,7 @@ import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
+    import numpy as np
     import pandas as pd
 
     from gamspy import Equation, Set
@@ -161,6 +162,59 @@ class ImplicitEquation(ImplicitSymbol):
             recs.columns = columns
 
         return recs
+
+    def toDense(self, column: str = "level") -> np.ndarray:
+        """
+        Converts the records to a dense numpy.array format.
+
+        Parameters
+        ----------
+        column : str, optional
+            The attribute to convert, by default "level". One of "level",
+            "marginal", "lower", "upper" or "scale".
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array with the records. An array of zeros if the parent
+            symbol has no records.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> j = gp.Set(m, "j", records=["j1", "j2", "j3"])
+        >>> p = gp.Parameter(m, "p", domain=[i, j], records=np.array([[1, 2, 3], [4, 5, 6]]))
+        >>> v = gp.Variable(m, "v", domain=[i, j])
+        >>> e = gp.Equation(m, "e", domain=[i, j])
+        >>> e[i, j] = v[i, j] <= p[i, j]
+        >>> e.l[i, j] = p[i, j]
+        >>> print(e[i, j].toDense())
+        [[1. 2. 3.]
+         [4. 5. 6.]]
+        >>> print(e[i, "j2"].toDense())
+        [2. 5.]
+
+        """
+        if not isinstance(column, str):
+            raise TypeError("Argument 'column' must be type str")
+
+        columns = {
+            "level": "l",
+            "marginal": "m",
+            "lower": "lo",
+            "upper": "up",
+            "scale": "scale",
+        }
+
+        if column not in columns:
+            raise TypeError(
+                f"Argument 'column' must be one of the following: {list(columns)}"
+            )
+
+        return getattr(self, columns[column]).toDense()
 
     def gamsRepr(self) -> str:
         representation = f"{self.name}"

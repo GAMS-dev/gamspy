@@ -15,6 +15,7 @@ from gamspy.exceptions import ValidationError
 from gamspy.math.matrix import permute
 
 if TYPE_CHECKING:
+    import numpy as np
     import pandas as pd
 
     from gamspy import Alias, Equation, Parameter, Set, Variable
@@ -179,17 +180,15 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             return temp_param.records
         elif isinstance(self.parent, syms.Parameter):
             temp_name = "p" + utils._get_unique_name()
+            given_domain, declaration_domain = self._get_temp_domain()
             temp_param = syms.Parameter._constructor_bypass(
-                self.container, temp_name, self.parent.domain
+                self.container, temp_name, declaration_domain
             )
-            domain = list(self.domain)
-            for i, d in self._scalar_domains:
-                domain.insert(i, d)
 
-            if domain == []:
-                domain = [...]
+            if given_domain == []:
+                given_domain = [...]
 
-            temp_param[domain] = self[...]
+            temp_param[given_domain] = self[...]
             del self.container._data[temp_name]
 
             recs = temp_param.records
@@ -197,17 +196,15 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         elif isinstance(self.parent, (syms.Variable, syms.Equation)):
             extension = self.name.split(".")[-1]
             temp_name = "ip" + utils._get_unique_name()
+            given_domain, declaration_domain = self._get_temp_domain()
             temp_param = syms.Parameter._constructor_bypass(
-                self.container, temp_name, self.parent.domain
+                self.container, temp_name, declaration_domain
             )
-            domain = list(self.domain)
-            for i, d in self._scalar_domains:
-                domain.insert(i, d)
 
-            if domain == []:
-                domain = [...]
+            if given_domain == []:
+                given_domain = [...]
 
-            temp_param[domain] = self
+            temp_param[given_domain] = self
             del self.container._data[temp_name]
 
             recs = temp_param.records
@@ -222,6 +219,53 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             return recs
 
         return None
+
+    def toDense(self) -> np.ndarray:
+        """
+        Converts records to a dense numpy.array format.
+
+        The shape of the returned array follows the domain of this implicit
+        parameter: literal indices reduce the dimensionality and a
+        transpose/permutation reorders the axes accordingly.
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array with the records. An array of zeros if the parent
+            symbol has no records.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> j = gp.Set(m, "j", records=["j1", "j2", "j3"])
+        >>> p = gp.Parameter(m, "p", domain=[i, j], records=np.array([[1, 2, 3], [4, 5, 6]]))
+        >>> print(p.t().toDense())
+        [[1. 4.]
+         [2. 5.]
+         [3. 6.]]
+        >>> print(p[i, "j2"].toDense())
+        [2. 5.]
+
+        """
+        if isinstance(self.parent, (syms.Set, syms.Alias)):
+            # Set attributes (e.g. i.pos) are indexed by the parent set.
+            domain: list = [self.parent]
+        else:
+            domain = list(self.domain)
+
+        temp_name = "p" + utils._get_unique_name()
+        temp_param = syms.Parameter._constructor_bypass(
+            self.container, temp_name, domain
+        )
+
+        try:
+            temp_param[domain if domain else [...]] = self
+            return temp_param.toDense()
+        finally:
+            del self.container._data[temp_name]
 
     @property
     def T(self) -> ImplicitParameter:
@@ -266,7 +310,12 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         representation = self.name
         domain = list(self.domain)
         if domain and self.permutation is not None:
-            domain = utils._permute_domain(domain, self.permutation)
+            # self.permutation maps each axis to its position in the
+            # parent's declared domain, so invert it to render the
+            # reference in the parent's domain order.
+            domain = utils._permute_domain(
+                domain, utils._invert_permutation(self.permutation)
+            )
 
         for i, d in self._scalar_domains:
             domain.insert(i, d)
