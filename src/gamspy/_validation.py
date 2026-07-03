@@ -223,10 +223,27 @@ def _index_components(
     positions it spans.
 
     - A 1-D set maps to the set itself.
-    - A multi-dimensional set maps to its declared domain leaves, one per position.
+    - A multi-dimensional set maps to its declared domain elements, one per position.
+    - A multi-dimensional implicit set is unpacked across the positions it spans.
+    - A 1-D implicit set keeps the parent set A in its single position.
     - Anything else (string label, universe alias etc.) returns None to signal that
     none of its positions can be validated.
     """
+    if (
+        isinstance(given, implicits.ImplicitSet)
+        and given.parent.dimension > 1
+        and given.domain != ["*"]
+    ):
+        # Reinsert literals
+        full_domain = list(given.domain)
+        for position, label in given._scalar_domains:
+            full_domain.insert(position, label)
+
+        return [
+            leaf if isinstance(leaf, (symbols.Set, symbols.Alias)) else None
+            for leaf in full_domain
+        ]
+
     base = given.parent if isinstance(given, implicits.ImplicitSet) else given
 
     if isinstance(base, (symbols.Set, symbols.Alias)):

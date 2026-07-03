@@ -250,6 +250,46 @@ def test_domain_validation_implicit_set_index():
         r[sub_k] = p[sub_k[k]]
 
 
+def test_domain_validation_implicit_set_narrower_than_parent_domain():
+    m = gp.Container()
+    ALLYEAR = gp.Set(m, "ALLYEAR")
+    PRC = gp.Set(m, "PRC")
+    REG = gp.Set(m, "REG")
+    P = gp.Alias(m, "P", alias_with=PRC)
+    R = gp.Alias(m, "R", alias_with=REG)
+    RTPCPTYR = gp.Set(m, "RTPCPTYR", domain=[R, ALLYEAR, ALLYEAR, P])
+    MODLYEAR = gp.Set(m, "MODLYEAR", domain=ALLYEAR)
+    V = gp.Alias(m, "V", alias_with=MODLYEAR)
+    MILESTONYR = gp.Set(m, "MILESTONYR", domain=ALLYEAR)
+    T = gp.Alias(m, "T", alias_with=MILESTONYR)
+    COEF_AF = gp.Parameter(m, "COEF_AF", domain=[R, ALLYEAR, T, PRC])
+
+    # [R, V, T, P] line up with COEF_AF's domain.
+    COEF_AF[RTPCPTYR[R, V, T, P]]
+
+    # V is a subset of ALLYEAR but not of the T.
+    with pytest.raises(ValidationError):
+        COEF_AF[RTPCPTYR[R, V, V, P]]
+
+
+def test_domain_validation_one_dimensional_implicit_set():
+    m = gp.Container()
+    UC_NAME = gp.Set(m, "UC_NAME")
+    TSLVL = gp.Set(m, "TSLVL")
+    TSL = gp.Alias(m, "TSL", alias_with=TSLVL)
+    UC_ATTR = gp.Set(m, "UC_ATTR", domain=UC_NAME)
+
+    # Must not raise: the position is filled by UC_NAME, matching the declaration.
+    UC_ATTR[UC_NAME[TSL]]
+
+    # A parent that is not compatible with the declared domain is still rejected.
+    other = gp.Set(m, "other")
+    sub_other = gp.Set(m, "sub_other", domain=other)
+    p = gp.Parameter(m, "p", domain=UC_NAME)
+    with pytest.raises(ValidationError):
+        p[sub_other[other]]
+
+
 def test_domain_validation_universe_offset():
     # A universe ("*") domain position must not shift validation of the
     # following positions.
