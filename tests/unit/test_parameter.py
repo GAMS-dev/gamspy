@@ -781,7 +781,7 @@ def test_toSparseCoo():
 def test_toDense():
     m = gp.Container()
 
-    # 0D Parameter (Scalar)
+    # Scalar
     p_scalar = gp.Parameter(m, "p_scalar")
     p_scalar.setRecords(42.5)
     arr_scalar = p_scalar.toDense()
@@ -811,7 +811,7 @@ def test_toDense():
     assert arr_2d_output.shape == (3, 2)
     assert np.array_equal(arr_2d_output, arr_2d_input)
 
-    # 3D Parameter (Dense handles >2D arrays)
+    # 3D Parameter
     k = gp.Set(m, "k", records=["1", "2"])
     p_3d = gp.Parameter(m, "p_3d", domain=[i, j, k])
     arr_3d_input = np.arange(12).reshape((3, 2, 2))
@@ -835,3 +835,71 @@ def test_toDense():
         ValidationError, match=r"The domain element `i` of `p` has no records."
     ):
         p.toDense()
+
+
+def test_implicit_parameter_toDense():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1", "j2", "j3"])
+    k = Set(m, "k", records=["k1", "k2"])
+
+    arr_2d = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    p = Parameter(m, "p", domain=[i, j], records=arr_2d)
+    arr_3d = np.arange(12).reshape((2, 3, 2)).astype(float)
+    p3 = Parameter(m, "p3", domain=[i, j, k], records=arr_3d, uels_on_axes=True)
+
+    # Full indexing keeps the parent dense representation.
+    full = p[i, j].toDense()
+    assert isinstance(full, np.ndarray)
+    assert full.dtype == float
+    assert np.array_equal(full, arr_2d)
+    assert np.array_equal(p3[i, j, k].toDense(), arr_3d)
+
+    # Literal indices reduce the dimensionality.
+    assert np.array_equal(p[i, "j2"].toDense(), arr_2d[:, 1])
+    assert np.array_equal(p["i1", j].toDense(), arr_2d[0, :])
+    assert np.array_equal(p3[i, "j2", k].toDense(), arr_3d[:, 1, :])
+    # All indices fixed -> 0-d scalar array.
+    scalar = p["i2", "j3"].toDense()
+    assert scalar.shape == ()
+    assert scalar.item() == arr_2d[1, 2]
+
+    # Transpose / permutation reorders the axes.
+    assert np.array_equal(p.t().toDense(), arr_2d.T)
+    assert np.array_equal(p.T.toDense(), arr_2d.T)
+    assert np.array_equal(p3.t().toDense(), np.transpose(arr_3d, [0, 2, 1]))
+    assert np.array_equal(
+        gp.math.permute(p3, [1, 0, 2]).toDense(), np.transpose(arr_3d, [1, 0, 2])
+    )
+
+    # Variable attributes.
+    v = Variable(m, "v", domain=[i, j])
+    v.l[i, j] = p[i, j]
+    v.up[i, j] = p[i, j] + 10
+    assert np.array_equal(v.l[i, j].toDense(), arr_2d)
+    assert np.array_equal(v.l.t().toDense(), arr_2d.T)
+    assert np.array_equal(v.up[i, j].toDense(), arr_2d + 10)
+    assert np.array_equal(v.l[i, "j1"].toDense(), arr_2d[:, 0])
+
+    # Equation attributes.
+    e = gp.Equation(m, "e", domain=[i, j])
+    e[i, j] = v[i, j] <= p[i, j]
+    e.l[i, j] = p[i, j]
+    assert np.array_equal(e.l[i, j].toDense(), arr_2d)
+
+    # Set attributes are indexed by the parent set.
+    s = Set(m, "s", records=["a", "b", "c", "d"])
+    a = Alias(m, "a", alias_with=s)
+    assert np.array_equal(s.pos.toDense(), np.array([1.0, 2.0, 3.0, 4.0]))
+    assert np.array_equal(s.ord.toDense(), np.array([1.0, 2.0, 3.0, 4.0]))
+    assert np.array_equal(a.pos.toDense(), np.array([1.0, 2.0, 3.0, 4.0]))
+
+    # Parent without records.
+    q = Parameter(m, "q", domain=[i, j])
+    assert np.allclose(q[i, j].toDense(), np.zeros((2, 3)))
+    assert np.allclose(q[i, "j1"].toDense(), np.zeros(2))
+
+    # The temporary parameters used internally must not leak into the container.
+    assert set(m.data) == {"i", "j", "k", "p", "p3", "v", "e", "s", "a", "q"}
+
+    m.close()

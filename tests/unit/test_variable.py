@@ -1204,3 +1204,75 @@ def test_toDense():
     # Invalid: Bad column string
     with pytest.raises(TypeError, match="must be one of the following"):
         v.toDense(column="invalid_col")
+
+
+def test_implicit_variable_toDense():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1", "j2", "j3"])
+    k = Set(m, "k", records=["k1", "k2"])
+
+    arr_2d = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    p = Parameter(m, "p", domain=[i, j], records=arr_2d)
+    arr_3d = np.arange(12).reshape((2, 3, 2)).astype(float)
+    p3 = Parameter(m, "p3", domain=[i, j, k], records=arr_3d, uels_on_axes=True)
+
+    v = Variable(m, "v", domain=[i, j])
+    v.l[i, j] = p[i, j]
+    v.m[i, j] = p[i, j] + 10
+    v.up[i, j] = p[i, j] + 100
+    v.lo[i, j] = p[i, j] - 100
+    v3 = Variable(m, "v3", domain=[i, j, k])
+    v3.l[i, j, k] = p3[i, j, k]
+
+    # Full indexing returns the level by default and matches the parent.
+    full = v[i, j].toDense()
+    assert isinstance(full, np.ndarray)
+    assert full.dtype == float
+    assert np.array_equal(full, arr_2d)
+    assert np.array_equal(v3[i, j, k].toDense(), arr_3d)
+
+    # The column argument selects the attribute and agrees with the parent.
+    for column in ("level", "marginal", "lower", "upper", "scale"):
+        assert np.array_equal(v[i, j].toDense(column), v.toDense(column))
+    assert np.array_equal(v[i, j].toDense("marginal"), arr_2d + 10)
+    assert np.array_equal(v[i, j].toDense("upper"), arr_2d + 100)
+    assert np.array_equal(v[i, j].toDense("lower"), arr_2d - 100)
+
+    # Literal indices reduce the dimensionality.
+    assert np.array_equal(v[i, "j2"].toDense(), arr_2d[:, 1])
+    assert np.array_equal(v["i1", j].toDense(), arr_2d[0, :])
+    assert np.array_equal(v[i, "j2"].toDense("marginal"), (arr_2d + 10)[:, 1])
+    assert np.array_equal(v3[i, "j2", k].toDense(), arr_3d[:, 1, :])
+    # All indices fixed -> 0-d scalar array.
+    scalar = v["i2", "j3"].toDense()
+    assert scalar.shape == ()
+    assert scalar.item() == arr_2d[1, 2]
+
+    # Transpose / permutation reorders the axes (for every attribute).
+    assert np.array_equal(v.t().toDense(), arr_2d.T)
+    assert np.array_equal(v.T.toDense(), arr_2d.T)
+    assert np.array_equal(v.t().toDense("marginal"), (arr_2d + 10).T)
+    assert np.array_equal(v3.t().toDense(), np.transpose(arr_3d, [0, 2, 1]))
+    assert np.array_equal(
+        gp.math.permute(v3, [1, 0, 2]).toDense(), np.transpose(arr_3d, [1, 0, 2])
+    )
+
+    # Parent without records: level/marginal are zeros, bounds use the
+    # (free variable) defaults, consistent with the parent's toDense.
+    w = Variable(m, "w", domain=[i, j])
+    assert np.allclose(w[i, j].toDense(), np.zeros((2, 3)))
+    assert np.allclose(w[i, "j1"].toDense(), np.zeros(2))
+    assert np.allclose(w[i, j].toDense("marginal"), np.zeros((2, 3)))
+    assert np.array_equal(w[i, j].toDense("lower"), w.toDense("lower"))
+
+    # Invalid column.
+    with pytest.raises(TypeError, match="Argument 'column' must be type str"):
+        v[i, j].toDense(column=123)
+    with pytest.raises(TypeError, match="must be one of the following"):
+        v[i, j].toDense(column="invalid_col")
+
+    # The temporary parameters used internally must not leak into the container.
+    assert set(m.data) == {"i", "j", "k", "p", "p3", "v", "v3", "w"}
+
+    m.close()
