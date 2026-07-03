@@ -970,6 +970,82 @@ def test_shift_permute(data):
     assert a3["i1", "j1", "k1"].gamsRepr() == 'a("i1","j1","k1")'
 
 
+def test_permute_values(data):
+    m = data
+    i = Set(m, name="i", records=["i1", "i2"])
+    j = Set(m, name="j", records=["j1", "j2", "j3"])
+    k = Set(m, name="k", records=["k1", "k2", "k3", "k4"])
+    records = np.arange(2 * 3 * 4).reshape(2, 3, 4)
+    p = Parameter(m, name="p", domain=[i, j, k], records=records, uels_on_axes=True)
+
+    for perm in itertools.permutations(range(3)):
+        permuted = permute(p, list(perm))
+        expected = np.transpose(records, perm)
+
+        assert permuted.gamsRepr() == "p(i,j,k)"
+
+        # Test assigning the permuted view into a regular parameter.
+        out = Parameter(
+            m, name="o" + "".join(str(d) for d in perm), domain=permuted.domain
+        )
+        out[permuted.domain] = permuted
+        assert np.allclose(out.toDense(), expected)
+
+        # toDense on the implicit parameter itself must match the expected.
+        assert np.allclose(permuted.toDense(), expected)
+
+    # Variable attributes must behave the same.
+    v = Variable(m, name="v", domain=[i, j, k])
+    v.l[i, j, k] = p[i, j, k]
+    for perm in ([2, 0, 1], [1, 2, 0]):
+        assert np.allclose(permute(v.l, perm).toDense(), np.transpose(records, perm))
+
+
+def test_permute_records(data):
+    m = data
+    i = Set(m, name="i", records=["i1", "i2"])
+    j = Set(m, name="j", records=["j1", "j2", "j3"])
+    k = Set(m, name="k", records=["k1", "k2", "k3", "k4"])
+    uels = {"i": ["i1", "i2"], "j": ["j1", "j2", "j3"], "k": ["k1", "k2", "k3", "k4"]}
+    records = np.arange(2 * 3 * 4).reshape(2, 3, 4).astype(float)
+    p = Parameter(m, name="p", domain=[i, j, k], records=records, uels_on_axes=True)
+
+    def dense_from_records(recs):
+        # Rebuild a dense array following the recs column order.
+        domain_labels = list(recs.columns[:-1])
+        value_column = recs.columns[-1]
+        out = np.zeros([len(uels[c]) for c in domain_labels])
+        idx = tuple(
+            recs[c].map({u: n for n, u in enumerate(uels[c])}).to_numpy()
+            for c in domain_labels
+        )
+        out[idx] = recs[value_column].to_numpy()
+        return domain_labels, out
+
+    for perm in itertools.permutations(range(3)):
+        permuted = permute(p, list(perm))
+        domain_labels, dense = dense_from_records(permuted.records)
+        assert domain_labels == [d.name for d in permuted.domain]  # column order
+        assert np.allclose(dense, np.transpose(records, perm))
+
+    # Variable level records
+    v = Variable(m, name="v", domain=[i, j, k])
+    v.l[i, j, k] = p[i, j, k]
+    vt = permute(v.l, [2, 0, 1])
+    assert list(vt.records.columns) == ["k", "i", "j", "level"]
+    _, vdense = dense_from_records(vt.records)
+    assert np.allclose(vdense, np.transpose(records, [2, 0, 1]))
+
+    # Transpose of an ImplicitVariable.
+    vtt = v[i, j, k].t()  # swaps last two -> [i, k, j]
+    assert list(vtt.records.columns) == ["i", "k", "j", "level"]
+
+    # A literal index is still kept as a constant column.
+    sliced = p[i, "j2", k].records
+    assert list(sliced.columns) == ["i", "j", "k", "value"]
+    assert (sliced["j"] == "j2").all()
+
+
 def test_permute_bruteforce_var(data):
     m = data
     i = Set(m, name="i", records=["i1", "i2", "i3"])
@@ -993,7 +1069,6 @@ def test_permute_bruteforce_par(data):
     l = Set(m, name="l", records=["l1", "l2", "l3"])
     a = Parameter(m, name="a", domain=[i, j, k, l])
     ax = a
-    # we trust that itertools will give permutations always in same order
     for perm in itertools.permutations(range(4)):
         ax = permute(ax, perm)
 

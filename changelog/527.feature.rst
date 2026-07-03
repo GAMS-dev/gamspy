@@ -1,0 +1,1 @@
+Add toDense function to implicit symbols so that indexed, sliced, transposed or permuted references can be converted to a dense array. 

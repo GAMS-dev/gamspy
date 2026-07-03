@@ -1164,3 +1164,69 @@ def test_equation_setrecords_clear():
     # Clear
     eq.setRecords(None)
     assert eq.records is None
+
+
+def test_implicit_equation_toDense():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1", "j2", "j3"])
+    k = Set(m, "k", records=["k1", "k2"])
+
+    arr_2d = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    p = Parameter(m, "p", domain=[i, j], records=arr_2d)
+    arr_3d = np.arange(12).reshape((2, 3, 2)).astype(float)
+    p3 = Parameter(m, "p3", domain=[i, j, k], records=arr_3d, uels_on_axes=True)
+
+    v = Variable(m, "v", domain=[i, j])
+    e = Equation(m, "e", domain=[i, j])
+    e[i, j] = v[i, j] <= p[i, j]
+    e.l[i, j] = p[i, j]
+    e.m[i, j] = p[i, j] + 10
+    e.up[i, j] = p[i, j] + 100
+    e.lo[i, j] = p[i, j] - 100
+
+    v3 = Variable(m, "v3", domain=[i, j, k])
+    e3 = Equation(m, "e3", domain=[i, j, k])
+    e3[i, j, k] = v3[i, j, k] <= p3[i, j, k]
+    e3.l[i, j, k] = p3[i, j, k]
+
+    # Full indexing returns the level by default.
+    full = e[i, j].toDense()
+    assert isinstance(full, np.ndarray)
+    assert full.dtype == float
+    assert np.array_equal(full, arr_2d)
+    assert np.array_equal(e3[i, j, k].toDense(), arr_3d)
+
+    # The column argument selects the attribute and agrees with the parent.
+    for column in ("level", "marginal", "lower", "upper", "scale"):
+        assert np.array_equal(e[i, j].toDense(column), e.toDense(column))
+    assert np.array_equal(e[i, j].toDense("marginal"), arr_2d + 10)
+    assert np.array_equal(e[i, j].toDense("upper"), arr_2d + 100)
+    assert np.array_equal(e[i, j].toDense("lower"), arr_2d - 100)
+
+    # Literal indices reduce the dimensionality.
+    assert np.array_equal(e[i, "j2"].toDense(), arr_2d[:, 1])
+    assert np.array_equal(e["i1", j].toDense(), arr_2d[0, :])
+    assert np.array_equal(e[i, "j2"].toDense("marginal"), (arr_2d + 10)[:, 1])
+    assert np.array_equal(e3[i, "j2", k].toDense(), arr_3d[:, 1, :])
+    # All indices fixed -> 0-d scalar array.
+    scalar = e["i2", "j3"].toDense()
+    assert scalar.shape == ()
+    assert scalar.item() == arr_2d[1, 2]
+
+    # Parent without records -> array of zeros.
+    f = Equation(m, "f", domain=[i, j])
+    f[i, j] = v[i, j] <= p[i, j]
+    assert np.allclose(f[i, j].toDense(), np.zeros((2, 3)))
+    assert np.allclose(f[i, "j1"].toDense(), np.zeros(2))
+
+    # Invalid column.
+    with pytest.raises(TypeError, match="Argument 'column' must be type str"):
+        e[i, j].toDense(column=123)
+    with pytest.raises(TypeError, match="must be one of the following"):
+        e[i, j].toDense(column="invalid_col")
+
+    # The temporary parameters used internally must not leak into the container.
+    assert set(m.data) == {"i", "j", "k", "p", "p3", "v", "e", "v3", "e3", "f"}
+
+    m.close()
