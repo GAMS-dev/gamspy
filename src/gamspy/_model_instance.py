@@ -302,7 +302,8 @@ class ModelInstance:
         rc, _, _, _ = gmdInfo(self.sync_db.gmd, GMD_NRUELS)
         self.sync_db._check_for_gmd_error(rc, self.workspace)
 
-        # Prepare the required lines to solve with model instance
+        # Prepare the required lines to solve with model instance.
+        model._add_runtime_options(options)
         scenario_str = self._get_scenario(model)
         self.container._add_statement(scenario_str)
         model._assign_model_attributes()

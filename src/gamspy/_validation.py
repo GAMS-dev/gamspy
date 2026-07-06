@@ -25,7 +25,11 @@ import gamspy.utils as utils
 from gamspy._config import get_option
 from gamspy._internals import GAMS_SYMBOL_MAX_LENGTH
 from gamspy._model import Problem, Sense
-from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
+from gamspy._options import (
+    CONTAINER_FORBIDDEN_OPTIONS,
+    EXECUTION_OPTIONS,
+    Options,
+)
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -710,9 +714,9 @@ def validate_global_options(options: Options | None) -> Options:
 
     if isinstance(options, Options):
         options_dict = options.model_dump(exclude_none=True)
-        if any(option in options_dict for option in MODEL_ATTR_OPTION_MAP):
+        if any(option in options_dict for option in CONTAINER_FORBIDDEN_OPTIONS):
             raise ValidationError(
-                f"The following model options cannot be provided at Container creation time: {', '.join(MODEL_ATTR_OPTION_MAP.keys())}."
+                f"The following model options cannot be provided at Container creation time: {', '.join(CONTAINER_FORBIDDEN_OPTIONS)}."
             )
 
         if any(option in options_dict for option in EXECUTION_OPTIONS):

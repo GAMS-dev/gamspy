@@ -1,0 +1,1 @@
+Fixes a bug where certain solve options (e.g. iteration_limit and time_limit) would incorrectly persist across subsequent model.solve() calls in case the subsequent solves do not redefine those options. These are now properly reset between solves unless explicitly specified.
