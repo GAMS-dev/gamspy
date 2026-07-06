@@ -102,6 +102,7 @@ def license(
             if cmex_type not in (
                 "demo",
                 "community",
+                "nosolve",
                 "gamspy",
                 "gamspy++",
                 "gamsall",
@@ -171,14 +172,14 @@ def license(
             raise typer.Exit(code=1) from e
 
         if license_type == "+":
-            if lines[2][:2] not in ("00", "07", "08", "09"):
+            if lines[2][:2] not in ("00", "06", "07", "08", "09"):
                 typer.echo(
                     f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
                 raise typer.Exit(code=1)
         else:
-            if lines[2][8:10] not in ("00", "07", "08", "09"):
+            if lines[2][8:10] not in ("00", "06", "07", "08", "09"):
                 typer.echo(
                     f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
@@ -190,14 +191,14 @@ def license(
 
         license_type = lines[0][54]
         if license_type == "+":
-            if lines[2][:2] not in ("00", "07", "08", "09"):
+            if lines[2][:2] not in ("00", "06", "07", "08", "09"):
                 typer.echo(
                     f"Given license file `{license}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
                 raise typer.Exit(code=1)
         else:
-            if lines[2][8:10] not in ("00", "07", "08", "09"):
+            if lines[2][8:10] not in ("00", "06", "07", "08", "09"):
                 typer.echo(
                     f"Given license file `{license}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."

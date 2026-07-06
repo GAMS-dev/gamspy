@@ -102,6 +102,19 @@ def test_install_license(teardown):
             capture_output=True,
         )
 
+    # Test nosolve license
+    _ = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "install",
+            "license",
+            os.environ["NOSOLVE_LICENSE"],
+        ],
+        check=True,
+    )
+
     # Test network license
     _ = subprocess.run(
         [
