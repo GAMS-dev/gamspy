@@ -151,7 +151,7 @@ class Variable(operable.Operable, VarEquSymbol):
         The Container object that this variable belongs to.
     name : str, optional
         Name of the variable. If not provided, a unique name is generated automatically.
-    type : str, optional
+    type : str | VariableType, optional
         Type of the variable. Options: "free", "positive", "negative", "binary",
         "integer", "sos1", "sos2", "semicont", "semiint". Default is "free".
     domain : DomainType, optional
@@ -181,7 +181,7 @@ class Variable(operable.Operable, VarEquSymbol):
         cls,
         container: Container,
         name: str,
-        type: str = "free",
+        type: str | VariableType = "free",
         domain: DomainType | None = None,
         records: VarEquRecordsType | None = None,
         description: str = "",
@@ -191,9 +191,9 @@ class Variable(operable.Operable, VarEquSymbol):
 
         # legacy gtp attributes
         ## set private properties directly
-        obj._type = type
+        obj._type = cast_type(type)
         obj._gams_type = cast("int", GMS_DT_VAR)
-        obj._gams_subtype = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[type]
+        obj._gams_subtype = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[obj._type]
 
         obj._container = cast(
             "Container",
@@ -234,7 +234,7 @@ class Variable(operable.Operable, VarEquSymbol):
         cls,
         container: Container | None = None,
         name: str | None = None,
-        type: str = "free",
+        type: str | VariableType = "free",
         domain: DomainType | None = None,
         records: VarEquRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
@@ -277,7 +277,7 @@ class Variable(operable.Operable, VarEquSymbol):
         self,
         container: Container | None = None,
         name: str | None = None,
-        type: str = "free",
+        type: str | VariableType = "free",
         domain: DomainType | None = None,
         records: VarEquRecordsType | None = None,
         domain_forwarding: bool | list[bool] = False,
@@ -302,11 +302,11 @@ class Variable(operable.Operable, VarEquSymbol):
             has_symbol = True
 
         if has_symbol:
-            if self.type != type.casefold():
+            if self.type != cast_type(type):
                 raise TypeError(
                     "Cannot overwrite symbol in container unless variable"
                     f" types are equal: `{self.type}` !="
-                    f" `{type.casefold()}`"
+                    f" `{type}`"
                 )
 
             domain = self._normalize_domain(self.container, domain)

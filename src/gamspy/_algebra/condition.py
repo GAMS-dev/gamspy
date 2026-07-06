@@ -119,25 +119,15 @@ class Condition(operable.Operable):
         | float
         | bool
         | Parameter
-        | ImplicitParameter,
+        | ImplicitParameter
+        | ImplicitSet,
     ):
         if not isinstance(self.container, Container):
             raise FatalError("Cannot determine the container of the expression!")
 
         # conditioning_on.where[condition] = rhs
         eq_types = (syms.Equation, implicits.ImplicitEquation)
-        right_operand: (
-            Expression
-            | Operation
-            | Condition
-            | MathOp
-            | int
-            | float
-            | bool
-            | str
-            | Parameter
-            | ImplicitParameter
-        ) = rhs
+        right_operand = rhs
         if isinstance(rhs, bool):
             right_operand = "yes" if rhs is True else "no"
 

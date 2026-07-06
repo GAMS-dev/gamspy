@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from gamspy import Alias, Equation, Parameter, Set, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Card, Operation, Ord
+    from gamspy._symbols.implicits import ImplicitSet
     from gamspy._types import IndexType
     from gamspy.math.misc import MathOp
 
@@ -104,6 +105,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         | Operation
         | MathOp
         | ImplicitParameter
+        | ImplicitSet
         | int
         | float
         | Parameter
