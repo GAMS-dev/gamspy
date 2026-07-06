@@ -7,7 +7,12 @@ from typing import TYPE_CHECKING, Any
 
 import gamspy._symbols as syms
 import gamspy.utils as utils
-from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
+from gamspy._options import (
+    EXECUTION_OPTIONS,
+    MODEL_ATTR_OPTION_MAP,
+    Options,
+    _format_model_attr_value,
+)
 from gamspy.exceptions import LatexException, ValidationError
 
 if TYPE_CHECKING:
@@ -443,13 +448,9 @@ class GamsConverter:
             self.options._export(os.path.join(self.path, f"{self.model.name}.pf"))
             for key, value in self.options.model_dump(exclude_none=True).items():
                 if key in MODEL_ATTR_OPTION_MAP:
-                    if isinstance(value, bool):
-                        value = int(value)
-                    elif isinstance(value, str):
-                        value = f"'{value}'"
-
                     options_strs.append(
-                        f"{self.model.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};"
+                        f"{self.model.name}.{MODEL_ATTR_OPTION_MAP[key]} = "
+                        f"{_format_model_attr_value(key, value)};"
                     )
                 elif key in EXECUTION_OPTIONS:
                     options_strs.append(f"{EXECUTION_OPTIONS[key]} '{value}'")

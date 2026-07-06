@@ -34,6 +34,7 @@ from gamspy._options import (
     ConvertOptions,
     FreezeOptions,
     Options,
+    _format_model_attr_value,
     write_solver_options,
 )
 from gamspy.exceptions import GamspyException, ValidationError
@@ -1195,25 +1196,34 @@ class Model:
         return " ".join(solve_statement)
 
     def _add_runtime_options(self, options: Options, backend: str = "local") -> None:
-        for key, value in options.model_dump(exclude_none=True).items():
-            if key in MODEL_ATTR_OPTION_MAP:
-                if isinstance(value, bool):
-                    value = int(value)
-                elif isinstance(value, str):
-                    value = f"'{value}'"
-
+        # Model attribute options are emitted before every solve so that an
+        # option set in one solve does not stick to subsequent solves. When the
+        # user did not set an option, the attribute is reset to its default with
+        # NA (which reverts to the global setting) so the previous value does
+        # not leak.
+        dumped = options.model_dump()
+        for key, attr_name in MODEL_ATTR_OPTION_MAP.items():
+            value = dumped.get(key)
+            if value is None:
+                self.container._add_statement(f"{self.name}.{attr_name} = NA;")
+            else:
                 self.container._add_statement(
-                    f"{self.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};\n"
+                    f"{self.name}.{attr_name} = {_format_model_attr_value(key, value)};"
                 )
-            elif key in EXECUTION_OPTIONS:
-                if key == "loadpoint":
-                    if isinstance(value, os.PathLike):
-                        value = os.path.abspath(value)
 
-                    if backend == "engine":
-                        value = os.path.relpath(value, self.container.working_directory)
+        for key, statement in EXECUTION_OPTIONS.items():
+            value = dumped.get(key)
+            if value is None:
+                continue
 
-                self.container._add_statement(f"{EXECUTION_OPTIONS[key]} '{value}';\n")
+            if key == "loadpoint":
+                if isinstance(value, os.PathLike):
+                    value = os.path.abspath(value)
+
+                if backend == "engine":
+                    value = os.path.relpath(value, self.container.working_directory)
+
+            self.container._add_statement(f"{statement} '{value}';\n")
 
     def _create_model_attributes(self) -> list[str]:
         self.container._add_statement("$offListing")

@@ -23,6 +23,8 @@ SOLVE_LINK_MAP_REVERSE = dict(
     zip(SOLVE_LINK_MAP.values(), SOLVE_LINK_MAP.keys(), strict=True)
 )
 
+SOLVE_OPT_MAP = {"replace": 0, "merge": 1, "clear": 2}
+
 # GAMSPy to GAMS option mapping
 OPTION_MAP = {
     "cns": "cns",
@@ -80,6 +82,9 @@ OPTION_MAP = {
 }
 OPTION_MAP_REVERSE = dict(zip(OPTION_MAP.values(), OPTION_MAP.keys(), strict=False))
 
+# GAMSPy option name -> GAMS model attribute name.
+# These options are emitted as model attributes (e.g. `model.iterlim = 2;`)
+# instead of global GAMS options so that they do not stick across solves.
 MODEL_ATTR_OPTION_MAP = {
     "generate_name_dict": "dictfile",
     "enable_scaling": "scaleopt",
@@ -91,8 +96,51 @@ MODEL_ATTR_OPTION_MAP = {
     "try_partial_integer_solution": "tryInt",
     "examine_linearity": "tryLinear",
     "bypass_solver": "justscrdir",
+    "basis_detection_threshold": "bratio",
+    "domain_violation_limit": "domlim",
+    "hold_fixed_variables": "holdfixed",
+    "iteration_limit": "iterlim",
+    "node_limit": "nodlim",
+    "absolute_optimality_gap": "optca",
+    "relative_optimality_gap": "optcr",
+    "time_limit": "reslim",
+    "savepoint": "savepoint",
+    "merge_strategy": "solveopt",
+    "report_solver_status": "sysout",
+    "threads": "threads",
 }
 EXECUTION_OPTIONS = {"loadpoint": "execute_loadpoint"}
+
+# Model attribute options that may not be set as Container defaults; they must
+# be provided per solve. The remaining model attribute options (e.g.
+# iteration_limit, time_limit) may still be set at Container creation time as
+# defaults for solves that do not override them.
+CONTAINER_FORBIDDEN_OPTIONS = (
+    "generate_name_dict",
+    "enable_scaling",
+    "min_improvement_threshold",
+    "cutoff",
+    "default_point",
+    "enable_prior",
+    "infeasibility_tolerance",
+    "try_partial_integer_solution",
+    "examine_linearity",
+    "bypass_solver",
+)
+
+
+def _format_model_attr_value(key: str, value: Any) -> str:
+    """Formats an option value for a GAMS model attribute assignment."""
+    if key == "merge_strategy":
+        return str(SOLVE_OPT_MAP[value])
+
+    if isinstance(value, bool):
+        return str(int(value))
+
+    if isinstance(value, str):
+        return f"'{value}'"
+
+    return str(value)
 
 
 class Options(BaseModel):
@@ -551,7 +599,9 @@ class Options(BaseModel):
 
         gams_options = {}
         for key, value in gamspy_options.items():
-            if key not in OPTION_MAP:
+            # Model attribute options are emitted as model attributes at solve
+            # time, not as global GAMS options, so that they do not stick across solves.
+            if key not in OPTION_MAP or key in MODEL_ATTR_OPTION_MAP:
                 continue
 
             value = int(value) if isinstance(value, bool) else value
