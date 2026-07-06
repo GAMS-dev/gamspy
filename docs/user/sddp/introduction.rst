@@ -64,11 +64,13 @@ into a **scenario tree**: one outcome branches into three, each of those into
 three again, and so on.
 
 .. image:: ../images/sddp_scenario_tree.svg
+   :alt: SDDP scenario tree showing how each stage multiplies the number of paths
    :width: 680
    :align: center
    :class: only-light
 
 .. image:: ../images/sddp_scenario_tree_dark.svg
+   :alt: SDDP scenario tree showing how each stage multiplies the number of paths
    :width: 680
    :align: center
    :class: only-dark

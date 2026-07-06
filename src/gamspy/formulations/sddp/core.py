@@ -1068,7 +1068,7 @@ class SDDP:
             ],
             prob_param[sp],
         )
-        cvar_w[i_set, s_set] = (1.0 - risk.weight) * prob_param[s_set] + (  # ty: ignore[invalid-assignment]
+        cvar_w[i_set, s_set] = (1.0 - risk.weight) * prob_param[s_set] + (
             risk.weight
             * gp.math.Max(
                 0.0,
@@ -1374,7 +1374,7 @@ class SDDP:
                             term if slope_dot_trial is None else slope_dot_trial + term
                         )
                     assert slope_dot_trial is not None
-                    guss_d[i_set] = (  # ty: ignore[invalid-assignment]
+                    guss_d[i_set] = (
                         gp.Sum(s_set, weight * is_acost[i_set, s_set]) - slope_dot_trial
                     )
 
@@ -1484,7 +1484,7 @@ class SDDP:
                     gp_model.solve(options=solve_opts, scenario=dict_f)
 
                     # Accumulate stage cost into zt
-                    zt[j_label, i_set] = zt[j_label, i_set] + gp.Sum(  # ty: ignore[invalid-assignment]
+                    zt[j_label, i_set] = zt[j_label, i_set] + gp.Sum(
                         s_set.where[f_scen[i_set, s_set]],
                         f_cost[i_set, s_set],
                     )

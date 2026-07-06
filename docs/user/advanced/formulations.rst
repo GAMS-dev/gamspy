@@ -58,6 +58,7 @@ To define a piecewise linear function, you need to specify x and y coordinates
 of the breakpoints. Let's imagine we want to model the following function:
 
 .. image:: ../images/pwl.png
+  :alt: Piecewise linear function
   :width: 300
   :align: center
 
@@ -107,6 +108,7 @@ that the corresponding line segments are extended. However, to accomplish
 that new `SOS1` and `binary` type variables are introduced.
 
 .. image:: ../images/pwl_unbounded.png
+  :alt: Piecewise linear function with an unbounded final segment
   :width: 300
   :align: center
 
@@ -135,6 +137,7 @@ between x values that you like to exclude.
 
 
 .. image:: ../images/pwl_excluded.png
+  :alt: Piecewise linear function with an excluded segment
   :width: 300
   :align: center
 

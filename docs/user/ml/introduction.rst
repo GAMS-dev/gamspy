@@ -19,11 +19,13 @@ However, for ML practitioners, writing this:
 
 
 .. image:: ../images/network.svg
+  :alt: Neural network architecture diagram
   :width: 350
   :align: center
   :class: only-light
 
 .. image:: ../images/network_dark.svg
+  :alt: Neural network architecture diagram
   :width: 350
   :align: center
   :class: only-dark

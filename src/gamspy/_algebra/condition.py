@@ -119,25 +119,15 @@ class Condition(operable.Operable):
         | float
         | bool
         | Parameter
-        | ImplicitParameter,
+        | ImplicitParameter
+        | ImplicitSet,
     ):
         if not isinstance(self.container, Container):
             raise FatalError("Cannot determine the container of the expression!")
 
         # conditioning_on.where[condition] = rhs
         eq_types = (syms.Equation, implicits.ImplicitEquation)
-        right_operand: (
-            Expression
-            | Operation
-            | Condition
-            | MathOp
-            | int
-            | float
-            | bool
-            | str
-            | Parameter
-            | ImplicitParameter
-        ) = rhs
+        right_operand = rhs
         if isinstance(rhs, bool):
             right_operand = "yes" if rhs is True else "no"
 
@@ -154,7 +144,7 @@ class Condition(operable.Operable):
             # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
             if not self.container._in_loop:
                 statement._validate_definition(
-                    utils._unpack(self.conditioning_on.domain)
+                    utils._unpack(self.conditioning_on.domain)  # ty: ignore[invalid-argument-type]
                 )
 
             if isinstance(self.conditioning_on, implicits.ImplicitEquation):

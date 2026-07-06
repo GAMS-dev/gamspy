@@ -1,5 +1,9 @@
 .. _installation:
 
+.. meta::
+   :description: How to install GAMSPy with pip, set up a virtual environment, and configure a GAMS license — including the free demo license and installing add-on solvers.
+   :keywords: GAMSPy, gamspy, GAMS, gams, installation, pip install gamspy, license, demo license, install solver, virtual environment
+
 ==========================
 Installation and Licensing
 ==========================

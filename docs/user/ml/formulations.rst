@@ -106,6 +106,7 @@ Formulation generator for 1D Convolution symbol in GAMS. It applies a
 |
 
 .. image:: ../images/conv1d.gif
+   :alt: Animation of a 1D convolution operation
    :align: center
 
 |
@@ -383,6 +384,7 @@ it is either min or max of the corresponding input points.
 |
 
 .. image:: ../images/pooling.png
+   :alt: Max pooling operation diagram
    :align: center
 
 |

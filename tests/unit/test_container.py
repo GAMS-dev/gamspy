@@ -182,7 +182,7 @@ def test_container(data, tmp_path):
     assert id(v1) == id(v2)
     with pytest.raises(ValueError):
         m.addVariable("v", "free", ["*"])
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         m.addVariable("v", "dayum")
 
     e1 = m.addEquation("e")

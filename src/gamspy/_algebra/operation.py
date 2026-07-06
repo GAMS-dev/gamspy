@@ -212,9 +212,9 @@ class Operation(operable.Operable):
                 )
 
             if isinstance(elem, condition.Condition):
-                if isinstance(elem.conditioning_on, implicits.ImplicitSet):
-                    raw_domain.append(elem.conditioning_on.parent)
-                elif isinstance(elem.conditioning_on, (syms.Set, syms.Alias)):
+                if isinstance(
+                    elem.conditioning_on, (implicits.ImplicitSet, syms.Set, syms.Alias)
+                ):
                     raw_domain.append(elem.conditioning_on)
                 elif isinstance(elem.conditioning_on, domain.Domain):
                     raw_domain += elem.conditioning_on.sets
@@ -239,13 +239,16 @@ class Operation(operable.Operable):
             if elem in control_stack:
                 raise ValidationError(f"Set {elem} is already in control")
 
+        # Cannot validate definition if we are in a gp.Loop since the control
+        # indices can be provided by the gp.Loop.
+        if self.container._in_loop:
+            return
+
+        # The operation's own indices are now controlled; validate the body
+        # (whatever its type: expression, nested operation, implicit symbol,
+        # math/extrinsic function, condition, ...) against the extended stack.
         stack = control_stack + self.raw_domain
-        if isinstance(self.rhs, expression.Expression):
-            # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
-            if not self.container._in_loop:
-                self.rhs._validate_definition(utils._unpack(stack))
-        elif isinstance(self.rhs, Operation) and not self.container._in_loop:
-            self.rhs._validate_operation(utils._unpack(stack))
+        expression._validate_controlled(self.rhs, utils._unpack(stack))
 
     def _get_index_str(self) -> str:
         if len(self.op_domain) == 1:

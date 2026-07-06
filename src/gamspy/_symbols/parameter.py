@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Operation
     from gamspy._extrinsic import ExtrinsicFunction
-    from gamspy._symbols.implicits import ImplicitParameter
+    from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import DomainType, IndexType, ParameterRecordsType
     from gamspy.math.misc import MathOp
 
@@ -326,6 +326,7 @@ class Parameter(operable.Operable, RecordSymbol):
         | MathOp
         | Condition
         | Parameter
+        | ImplicitSet
         | ImplicitParameter
         | float
         | int

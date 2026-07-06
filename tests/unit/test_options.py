@@ -15,10 +15,12 @@ import gamspy.exceptions as exceptions
 import gamspy.math as math
 from gamspy import (
     Alias,
+    Card,
     Container,
     Equation,
     Model,
     Options,
+    Ord,
     Parameter,
     Problem,
     Sense,
@@ -204,7 +206,238 @@ def test_gamspy_to_gams_options(data):
     gams_options = options._get_gams_compatible_options(output=None)
     assert gams_options["suffixalgebravars"] == "off"
     assert gams_options["suffixdlvars"] == "off"
-    assert gams_options["solveopt"] == "replace"
+    # merge_strategy is now emitted as a model attribute (solveopt), not as a
+    # global GAMS option, so that it does not stick across solves.
+    assert "solveopt" not in gams_options
+
+
+@pytest.mark.unit
+def test_format_model_attr_value():
+    from gamspy._options import _format_model_attr_value
+
+    # merge_strategy keywords are converted to their solveopt integer values.
+    assert _format_model_attr_value("merge_strategy", "replace") == "0"
+    assert _format_model_attr_value("merge_strategy", "merge") == "1"
+    assert _format_model_attr_value("merge_strategy", "clear") == "2"
+
+    # Booleans are converted to integers.
+    assert _format_model_attr_value("hold_fixed_variables", True) == "1"
+    assert _format_model_attr_value("hold_fixed_variables", False) == "0"
+
+    # Numeric values are passed through.
+    assert _format_model_attr_value("iteration_limit", 5) == "5"
+    assert _format_model_attr_value("time_limit", 10.0) == "10.0"
+
+
+@pytest.mark.unit
+def test_model_attr_options_excluded_from_pf():
+    from gamspy._options import MODEL_ATTR_OPTION_MAP
+
+    options = Options(
+        iteration_limit=5,
+        time_limit=10,
+        node_limit=3,
+        merge_strategy="replace",
+        threads=2,
+        seed=7,
+    )
+    gams_options = options._get_gams_compatible_options(output=None)
+
+    # Options that map to GAMS model attributes must not leak into the pf file;
+    # they are emitted as model attributes at solve time instead.
+    for gamspy_name in (
+        "iteration_limit",
+        "time_limit",
+        "node_limit",
+        "merge_strategy",
+        "threads",
+    ):
+        assert gamspy_name in MODEL_ATTR_OPTION_MAP
+        assert MODEL_ATTR_OPTION_MAP[gamspy_name] not in gams_options
+
+    assert "iterlim" not in gams_options
+    assert "reslim" not in gams_options
+    assert "solveopt" not in gams_options
+
+    # Non-model-attribute options are still written to the pf file, and
+    # solve_link_type stays a global option.
+    assert gams_options["seed"] == 7
+    assert "solvelink" in gams_options
+
+
+@pytest.mark.unit
+def test_container_creation_option_restrictions():
+    for opt in (
+        Options(cutoff=5),
+        Options(enable_scaling=True),
+        Options(generate_name_dict=True),
+    ):
+        with pytest.raises(exceptions.ValidationError):
+            _ = Container(options=opt)
+
+    # Options that are set as model attributes are allowed as
+    # Container-level defaults.
+    for opt in (
+        Options(iteration_limit=100),
+        Options(time_limit=60),
+        Options(merge_strategy="replace"),
+    ):
+        m = Container(options=opt)
+        m.close()
+
+
+@pytest.mark.unit
+def test_model_attr_options_reset_across_solves(data):
+    m, *_ = data
+    x = Variable(m, "x")
+    e = Equation(m, "e")
+    e[...] = x >= 1
+    model = Model(m, "mdl", equations=[e], problem="LP", sense=Sense.MIN, objective=x)
+
+    # When set, the option is emitted as a model attribute.
+    m._unsaved_statements = []
+    model._add_runtime_options(
+        Options(iteration_limit=2, time_limit=10, merge_strategy="clear")
+    )
+    statements = "".join(s for s in m._unsaved_statements if isinstance(s, str))
+    assert "mdl.iterlim = 2;" in statements
+    assert "mdl.reslim = 10.0;" in statements
+    assert "mdl.solveopt = 2;" in statements
+
+    # When not set, the attribute is reset to NA so a previously set value does
+    # not stick to subsequent solves.
+    m._unsaved_statements = []
+    model._add_runtime_options(Options())
+    statements = "".join(s for s in m._unsaved_statements if isinstance(s, str))
+    assert "mdl.iterlim = NA;" in statements
+    assert "mdl.reslim = NA;" in statements
+    assert "mdl.solveopt = NA;" in statements
+
+
+@pytest.mark.unit
+def test_iteration_limit_not_sticky():
+    m = Container()
+
+    # SETS #
+    t = Set(
+        m,
+        name="t",
+        records=[f"t{t}" for t in range(1, 51)],
+        description="time periods",
+    )
+    tfirst = Set(m, name="tfirst", domain=t, description="first interval (t0)")
+    tlast = Set(m, name="tlast", domain=t, description="last intervat [T]")
+    tnotlast = Set(m, name="tnotlast", domain=t, description="all intervals but last")
+
+    tfirst[t].where[Ord(t) == 1] = True
+    tlast[t].where[Ord(t) == Card(t)] = True
+    tnotlast[t] = ~tlast[t]
+
+    # SCALARS #
+    rho = Parameter(m, name="rho", records=0.04, description="discount factor")
+    g = Parameter(m, name="g", records=0.03, description="labor growth rate")
+    delta = Parameter(
+        m,
+        name="delta",
+        records=0.02,
+        description="capital depreciation factor",
+    )
+    K0 = Parameter(m, name="K0", records=3.00, description="initial capital")
+    I0 = Parameter(m, name="I0", records=0.07, description="initial investment")
+    C0 = Parameter(m, name="C0", records=0.95, description="initial consumption")
+    L0 = Parameter(m, name="L0", records=1.00, description="initial labor")
+    b = Parameter(m, name="b", records=0.25, description="Cobb Douglas coefficient")
+    a = Parameter(m, name="a", description="Cobb Douglas coefficient")
+
+    # PARAMETERS #
+    L = Parameter(m, name="L", domain=t, description="labor (production input)")
+    beta = Parameter(
+        m,
+        name="beta",
+        domain=t,
+        description="weight factor for future utilities",
+    )
+    tval = Parameter(m, name="tval", domain=t, description="numerical value of t")
+
+    tval[t] = Ord(t) - 1
+
+    # The terminal weight beta(tlast) computation.
+    beta[tnotlast[t]] = math.power(1 + rho, -tval[t])
+    beta[tlast[t]] = (1 / rho) * math.power(1 + rho, 1 - tval[t])
+    # display beta
+
+    # Labor is determined using an exponential growth process.
+    L[t] = math.power(1 + g, tval[t]) * L0
+
+    # Cobb-Douglas coefficient a computation.
+    a = (C0 + I0) / (K0**b * L0 ** (1 - b))
+
+    # VARIABLES #
+    C = Variable(m, name="C", domain=t, description="consumption")
+    Y = Variable(m, name="Y", domain=t, description="production")
+    K = Variable(m, name="K", domain=t, description="capital")
+    I = Variable(m, name="I", domain=t, description="investment")
+
+    # EQUATIONS #
+    production = Equation(
+        m,
+        name="production",
+        type="regular",
+        domain=t,
+        description="Cobb-Douglas production function",
+    )
+    allocation = Equation(
+        m,
+        name="allocation",
+        type="regular",
+        domain=t,
+        description="household choose between consumption and saving",
+    )
+    accumulation = Equation(
+        m,
+        name="accumulation",
+        type="regular",
+        domain=t,
+        description="capital accumulation",
+    )
+    final = Equation(
+        m,
+        name="final",
+        type="regular",
+        domain=t,
+        description="minimal investment in final period",
+    )
+
+    # Objective function; total utility
+    utility = Sum(t, beta[t] * math.log(C[t]))
+    production[t] = Y[t] == a * (K[t] ** b) * (L[t] ** (1 - b))
+    allocation[t] = Y[t] == C[t] + I[t]
+    accumulation[tnotlast[t]] = K[t + 1] == (1 - delta) * K[t] + I[t]
+    final[tlast] = I[tlast] >= (g + delta) * K[tlast]
+
+    # Bounds.
+    K.lo[t] = 0.001
+    C.lo[t] = 0.001
+
+    # Initial conditions
+    K.fx[tfirst] = K0
+    I.fx[tfirst] = I0
+    C.fx[tfirst] = C0
+
+    ramsey = Model(
+        m,
+        name="ramsey",
+        equations=m.getEquations(),
+        problem="nlp",
+        sense="MAX",
+        objective=utility,
+    )
+
+    ramsey.solve(solver="minos", options=Options(iteration_limit=2))
+    assert ramsey.num_iterations == 2
+
+    ramsey.solve(solver="minos")
+    assert ramsey.num_iterations != 2
 
 
 @pytest.mark.unit

@@ -57,6 +57,8 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_favicon",
     "sphinx_tabs.tabs",
+    "sphinxext.opengraph",
+    "sphinx_sitemap",
 ]
 
 copybutton_prompt_text = ">>> "
@@ -70,6 +72,12 @@ html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 html_show_sourcelink = False
+
+# Canonical URL — Read the Docs injects READTHEDOCS_CANONICAL_URL (e.g.
+# https://gamspy.readthedocs.io/en/latest/). Setting html_baseurl makes Sphinx
+# emit <link rel="canonical"> tags so search engines deduplicate the versioned
+# copies of each page. Empty in local builds.
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "")
 html_theme_options = {
     "icon_links": [
         {
@@ -113,6 +121,21 @@ todo_include_todos = False
 
 favicons = ["gams.ico"]
 linkcheck_ignore = [r'https://license.gams.com']
+
+# -- Open Graph / Twitter cards (sphinxext-opengraph) ------------------------
+ogp_site_url = html_baseurl or "https://gamspy.readthedocs.io/en/latest/"
+ogp_site_name = "GAMSPy Documentation"
+ogp_image = "https://gamspy.readthedocs.io/en/latest/_static/gamspy_logo.png"
+ogp_type = "website"
+# Auto-generate <meta name="description"> from each page's first paragraph for
+# pages without an explicit ".. meta::" directive.
+ogp_enable_meta_description = True
+ogp_description_length = 200
+
+# -- Sitemap (sphinx-sitemap) ------------------------------------------------
+# READTHEDOCS_CANONICAL_URL already carries the language/version path, so emit
+# bare page links to avoid duplicating it.
+sitemap_url_scheme = "{link}"
 
 # Analytics
 def setup(app):

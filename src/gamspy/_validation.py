@@ -25,7 +25,11 @@ import gamspy.utils as utils
 from gamspy._config import get_option
 from gamspy._internals import GAMS_SYMBOL_MAX_LENGTH
 from gamspy._model import Problem, Sense
-from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
+from gamspy._options import (
+    CONTAINER_FORBIDDEN_OPTIONS,
+    EXECUTION_OPTIONS,
+    Options,
+)
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -216,6 +220,48 @@ def validate_dimension(
         )
 
 
+def _index_components(
+    given: Set | Alias | ImplicitSet | str,
+) -> list[Set | Alias | None] | None:
+    """Expand given indices into 1-dimensional sets occupying each of the
+    positions it spans.
+
+    - A 1-D set maps to the set itself.
+    - A multi-dimensional set maps to its declared domain elements, one per position.
+    - A multi-dimensional implicit set is unpacked across the positions it spans.
+    - A 1-D implicit set keeps the parent set A in its single position.
+    - Anything else (string label, universe alias etc.) returns None to signal that
+    none of its positions can be validated.
+    """
+    if (
+        isinstance(given, implicits.ImplicitSet)
+        and given.parent.dimension > 1
+        and given.domain != ["*"]
+    ):
+        # Reinsert literals
+        full_domain = list(given.domain)
+        for position, label in given._scalar_domains:
+            full_domain.insert(position, label)
+
+        return [
+            leaf if isinstance(leaf, (symbols.Set, symbols.Alias)) else None
+            for leaf in full_domain
+        ]
+
+    base = given.parent if isinstance(given, implicits.ImplicitSet) else given
+
+    if isinstance(base, (symbols.Set, symbols.Alias)):
+        if base.dimension == 1:
+            return [base]
+
+        return [
+            leaf if isinstance(leaf, (symbols.Set, symbols.Alias)) else None
+            for leaf in base.domain
+        ]
+
+    return None
+
+
 def validate_one_dimensional_sets(
     given: Set | Alias | ImplicitSet,
     actual: str | Set | Alias,
@@ -337,18 +383,26 @@ def validate_domain(
 
     offset = 0
     for given in index_list:
-        actual = symbol.domain[offset]
-        # skip validation if the actual domain element is universe.
-        if actual == "*" or isinstance(actual, symbols.UniverseAlias):
+        components = _index_components(given)
+
+        if components is None:
+            offset += getattr(given, "dimension", 1)
             continue
 
-        given_dim = getattr(given, "dimension", 1)
-        actual_dim = getattr(actual, "dimension", 1)
+        for position, component in enumerate(components):
+            actual = symbol.domain[offset + position]
+            # Skip positions whose declared domain is the universe or whose
+            # given component carries no set to validate (e.g. a literal).
+            if (
+                component is None
+                or actual == "*"
+                or isinstance(actual, symbols.UniverseAlias)
+            ):
+                continue
 
-        if actual_dim == 1 and given_dim == 1 and not isinstance(given, str):
-            validate_one_dimensional_sets(given, actual)
+            validate_one_dimensional_sets(component, actual)
 
-        offset += given_dim
+        offset += len(components)
 
     return index_list
 
@@ -660,9 +714,9 @@ def validate_global_options(options: Options | None) -> Options:
 
     if isinstance(options, Options):
         options_dict = options.model_dump(exclude_none=True)
-        if any(option in options_dict for option in MODEL_ATTR_OPTION_MAP):
+        if any(option in options_dict for option in CONTAINER_FORBIDDEN_OPTIONS):
             raise ValidationError(
-                f"The following model options cannot be provided at Container creation time: {', '.join(MODEL_ATTR_OPTION_MAP.keys())}."
+                f"The following model options cannot be provided at Container creation time: {', '.join(CONTAINER_FORBIDDEN_OPTIONS)}."
             )
 
         if any(option in options_dict for option in EXECUTION_OPTIONS):

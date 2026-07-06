@@ -2,6 +2,10 @@
 
 .. _cli:
 
+.. meta::
+   :description: Reference for the GAMSPy command-line interface (CLI) used to install solvers and licenses, manage components, and run GAMSPy from the terminal.
+   :keywords: GAMSPy, gamspy, GAMS, gams, CLI, command-line interface, install solver, install license, gamspy install
+
 gamspy
 ======
 

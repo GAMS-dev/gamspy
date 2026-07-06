@@ -187,8 +187,6 @@ class Loop:
         self.container._in_loop -= 1
 
         self.container._add_statement(");")
-        self.container._add_statement(f"execute_unload '{self.container._gdx_out}';")
-        self.container._last_control_flow = "loop"
 
         # An exception occurred inside the with block.
         # Don't do synchronization that may raise another exception.
@@ -197,6 +195,10 @@ class Loop:
 
         # Run only in the most outer loop
         if self.container._in_loop == 0:
+            self.container._add_statement(
+                f"execute_unload '{self.container._gdx_out}';"
+            )
+            self.container._last_control_flow = "loop"
             self.container._synch_with_gams()
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, self.container._gdx_out
@@ -389,8 +391,6 @@ class For:
         self.container._in_loop -= 1
 
         self.container._add_statement(");")
-        self.container._add_statement(f"execute_unload '{self.container._gdx_out}';")
-        self.container._last_control_flow = "for"
 
         # An exception occurred inside the with block.
         # Don't do synchronization that may raise another exception.
@@ -398,6 +398,10 @@ class For:
             return False
 
         if self.container._in_loop == 0:  # Run only in the most outer loop
+            self.container._add_statement(
+                f"execute_unload '{self.container._gdx_out}';"
+            )
+            self.container._last_control_flow = "for"
             self.container._synch_with_gams()
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, self.container._gdx_out
@@ -488,8 +492,6 @@ class While:
         self.container._in_loop -= 1
 
         self.container._add_statement(");")
-        self.container._add_statement(f"execute_unload '{self.container._gdx_out}';")
-        self.container._last_control_flow = "while"
 
         # An exception occurred inside the with block.
         # Don't do synchronization that may raise another exception.
@@ -497,6 +499,10 @@ class While:
             return False
 
         if self.container._in_loop == 0:  # Run only in the most outer loop
+            self.container._add_statement(
+                f"execute_unload '{self.container._gdx_out}';"
+            )
+            self.container._last_control_flow = "while"
             self.container._synch_with_gams()
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, self.container._gdx_out
