@@ -1191,6 +1191,9 @@ class Container:
         self, symbol_names: Iterable[str], value: bool = True
     ) -> None:
         for name in symbol_names:
+            if name not in self._data:
+                continue
+
             symbol = self._data[name]
             symbol._should_load_from_gams = value
             if not isinstance(symbol, (gp.Alias, gp.UniverseAlias)):

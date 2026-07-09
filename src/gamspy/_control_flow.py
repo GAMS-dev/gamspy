@@ -204,8 +204,7 @@ class Loop:
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, self.container._gdx_out
             )
-            for name in symbol_names:
-                self.container._data[name]._should_load_from_gams = True
+            self.container._should_load_from_gams(symbol_names)
 
 
 class For:
@@ -408,8 +407,7 @@ class For:
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, self.container._gdx_out
             )
-            for name in symbol_names:
-                self.container._data[name]._should_load_from_gams = True
+            self.container._should_load_from_gams(symbol_names)
 
 
 class While:
@@ -510,8 +508,7 @@ class While:
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, self.container._gdx_out
             )
-            for name in symbol_names:
-                self.container._data[name]._should_load_from_gams = True
+            self.container._should_load_from_gams(symbol_names)
 
 
 class If:
