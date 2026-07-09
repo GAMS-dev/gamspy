@@ -69,6 +69,10 @@ class MathOp(operable.Operable):
 
         self.where = condition.Condition(self)
 
+        for elem in elements:
+            if isinstance(elem, expression.Expression):
+                elem._fix_equalities()
+
     def __eq__(self, other):
         return expression.Expression(self, "=e=", other)
 
