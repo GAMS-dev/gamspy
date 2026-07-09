@@ -172,7 +172,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             return None
 
         if isinstance(self.parent, (syms.Set, syms.Alias)):
-            temp_name = "p" + utils._get_unique_name()
+            temp_name = "autotemp" + utils._get_unique_name()
             temp_param = syms.Parameter._constructor_bypass(
                 self.container, temp_name, [self.parent, "*"]
             )
@@ -181,7 +181,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             del self.container._data[temp_name]
             return temp_param.records
         elif isinstance(self.parent, syms.Parameter):
-            temp_name = "p" + utils._get_unique_name()
+            temp_name = "autotemp" + utils._get_unique_name()
             given_domain, declaration_domain = self._get_temp_domain()
             temp_param = syms.Parameter._constructor_bypass(
                 self.container, temp_name, declaration_domain
@@ -197,7 +197,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             return recs
         elif isinstance(self.parent, (syms.Variable, syms.Equation)):
             extension = self.name.split(".")[-1]
-            temp_name = "ip" + utils._get_unique_name()
+            temp_name = "autotemp" + utils._get_unique_name()
             given_domain, declaration_domain = self._get_temp_domain()
             temp_param = syms.Parameter._constructor_bypass(
                 self.container, temp_name, declaration_domain
@@ -258,7 +258,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         else:
             domain = list(self.domain)
 
-        temp_name = "p" + utils._get_unique_name()
+        temp_name = "autotemp" + utils._get_unique_name()
         temp_param = syms.Parameter._constructor_bypass(
             self.container, temp_name, domain
         )

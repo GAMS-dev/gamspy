@@ -240,7 +240,7 @@ class Condition(operable.Operable):
             self.conditioning_on,
             (syms.Set, syms.Alias, implicits.ImplicitSet),
         ):
-            temp_name = "c" + utils._get_unique_name()
+            temp_name = "autotemp" + utils._get_unique_name()
             temp_sym = syms.Set._constructor_bypass(
                 self.container,
                 temp_name,
@@ -249,7 +249,7 @@ class Condition(operable.Operable):
             temp_sym[...] = self
             del self.container._data[temp_name]
         elif isinstance(self.conditioning_on, domain.Domain):
-            temp_name = "c" + utils._get_unique_name()
+            temp_name = "autotemp" + utils._get_unique_name()
             temp_sym = syms.Set._constructor_bypass(
                 self.container,
                 temp_name,
@@ -258,7 +258,7 @@ class Condition(operable.Operable):
             temp_sym[...].where[self.condition] = True  # ty: ignore[invalid-assignment]
             del self.container._data[temp_name]
         else:
-            temp_name = "c" + utils._get_unique_name()
+            temp_name = "autotemp" + utils._get_unique_name()
             temp_sym = syms.Parameter._constructor_bypass(
                 self.container,
                 temp_name,

@@ -451,7 +451,7 @@ class Expression(operable.Operable):
                 "Could not discover the container from the expression. Therefore, cannot call .records on this expression."
             )
 
-        temp_name = "a" + utils._get_unique_name()
+        temp_name = "autotemp" + utils._get_unique_name()
         temp_param = gp_syms.Parameter._constructor_bypass(
             self.container, temp_name, self.domain
         )

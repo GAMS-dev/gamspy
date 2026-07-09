@@ -224,7 +224,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         if self.parent.records is None:
             return None
 
-        temp_name = "iv" + utils._get_unique_name()
+        temp_name = "autotemp" + utils._get_unique_name()
         given_domain, declaration_domain = self._get_temp_domain()
         temp_param = syms.Parameter._constructor_bypass(
             self.container, temp_name, declaration_domain

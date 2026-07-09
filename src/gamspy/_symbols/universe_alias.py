@@ -22,8 +22,8 @@ if TYPE_CHECKING:
     from gamspy import Container
 
 unique_name = gp.utils._get_unique_name()
-TEMP_ALIAS_NAME = "a" + unique_name + "gpauto"
-TEMP_SET_NAME = "s" + unique_name + "gpauto"
+TEMP_ALIAS_NAME = "autotemp_a" + unique_name
+TEMP_SET_NAME = "autotemp_s" + unique_name
 TEMP_GDX_OUT_NAME = "_" + unique_name + ".gdx"
 
 

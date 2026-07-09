@@ -73,7 +73,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         if self.extension is not None:
             raise ValidationError(".records is not allowed for lag/lead operations.")
 
-        temp_name = "is" + utils._get_unique_name()
+        temp_name = "autotemp" + utils._get_unique_name()
         temp_param = syms.Set._constructor_bypass(
             self.container, temp_name, self.parent.domain
         )
