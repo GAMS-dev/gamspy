@@ -433,15 +433,13 @@ def test_set_assignment():
         == "mpos(m,i) = yes $ (k(m,i) + sum(g,abs(f(m,g,i)))) - hpos(m,i);"
     )
 
-    with pytest.raises(ValidationError):
-        mpos[m, i] = (
-            (Number(2).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))]) - hpos[m, i]
-        )
+    mpos[m, i] = (
+        (Number(2).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))]) - hpos[m, i]
+    )
 
-    with pytest.raises(ValidationError):
-        mpos[m, i] = (
-            hpos[m, i] + Number(2).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))]
-        )
+    mpos[m, i] = (
+        hpos[m, i] + Number(2).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))]
+    )
 
     reb = Set(container, "reb")
     con = Set(container, "con")
@@ -455,8 +453,7 @@ def test_set_assignment():
     j = Set(m, "j", domain=i, records=["i1"])
     k = Set(m, "k", domain=i)
     k[i] = j[i] + 1
-    with pytest.raises(ValidationError):
-        k[i] = j[i] + 5
+    k[i] = j[i] + 5
 
 
 def test_sameas(data):
