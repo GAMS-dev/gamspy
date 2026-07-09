@@ -42,7 +42,7 @@ class ExtrinsicFunction(operable.Operable):
         -------
         pd.DataFrame | None
         """
-        temp_name = "a" + utils._get_unique_name()
+        temp_name = "autotemp" + utils._get_unique_name()
         temp_param = syms.Parameter._constructor_bypass(
             self.container, temp_name, self.domain
         )

@@ -157,7 +157,6 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         self._latex_name = self.name.replace("_", r"\_")
         self.where = condition.Condition(self)
         self._container._add_statement(self)
-        self._container._synch_with_gams()
 
     @property
     def _should_unload_to_gams(self) -> bool:

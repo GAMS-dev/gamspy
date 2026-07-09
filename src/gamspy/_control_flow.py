@@ -195,16 +195,17 @@ class Loop:
 
         # Run only in the most outer loop
         if self.container._in_loop == 0:
-            self.container._add_statement(
-                f"execute_unload '{self.container._gdx_out}';"
-            )
             self.container._last_control_flow = "loop"
-            self.container._synch_with_gams()
-            symbol_names = gdxio._get_symbol_names_from_gdx(
-                self.container.system_directory, self.container._gdx_out
+            gdx_out = self.container._gdx_out
+            self.container._options._set_extra_options(
+                {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
             )
-            for name in symbol_names:
-                self.container._data[name]._should_load_from_gams = True
+            self.container._synch_with_gams()
+            self.container._options._set_extra_options({})
+            symbol_names = gdxio._get_symbol_names_from_gdx(
+                self.container.system_directory, gdx_out
+            )
+            self.container._should_load_from_gams(symbol_names)
 
 
 class For:
@@ -398,16 +399,17 @@ class For:
             return False
 
         if self.container._in_loop == 0:  # Run only in the most outer loop
-            self.container._add_statement(
-                f"execute_unload '{self.container._gdx_out}';"
-            )
             self.container._last_control_flow = "for"
-            self.container._synch_with_gams()
-            symbol_names = gdxio._get_symbol_names_from_gdx(
-                self.container.system_directory, self.container._gdx_out
+            gdx_out = self.container._gdx_out
+            self.container._options._set_extra_options(
+                {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
             )
-            for name in symbol_names:
-                self.container._data[name]._should_load_from_gams = True
+            self.container._synch_with_gams()
+            self.container._options._set_extra_options({})
+            symbol_names = gdxio._get_symbol_names_from_gdx(
+                self.container.system_directory, gdx_out
+            )
+            self.container._should_load_from_gams(symbol_names)
 
 
 class While:
@@ -499,16 +501,17 @@ class While:
             return False
 
         if self.container._in_loop == 0:  # Run only in the most outer loop
-            self.container._add_statement(
-                f"execute_unload '{self.container._gdx_out}';"
-            )
             self.container._last_control_flow = "while"
-            self.container._synch_with_gams()
-            symbol_names = gdxio._get_symbol_names_from_gdx(
-                self.container.system_directory, self.container._gdx_out
+            gdx_out = self.container._gdx_out
+            self.container._options._set_extra_options(
+                {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
             )
-            for name in symbol_names:
-                self.container._data[name]._should_load_from_gams = True
+            self.container._synch_with_gams()
+            self.container._options._set_extra_options({})
+            symbol_names = gdxio._get_symbol_names_from_gdx(
+                self.container.system_directory, gdx_out
+            )
+            self.container._should_load_from_gams(symbol_names)
 
 
 class If:

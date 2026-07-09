@@ -676,10 +676,10 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
             self._container._options.miro_protect = False
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
-            else:
-                if self._is_miro_symbol:
-                    self._should_unload_to_gams = True
-
+            elif self._is_miro_symbol:
+                # miro symbols must sync at declaration so their records are
+                # loaded from the miro input gdx.
+                self._should_unload_to_gams = True
                 self._container._synch_with_gams()
 
             self._container._options.miro_protect = previous_state
@@ -1001,7 +1001,6 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         """
         if records is None:
             self._container._add_statement(f"option clear={self.name};")
-            self._container._synch_with_gams()
             self._records = None
             return
 

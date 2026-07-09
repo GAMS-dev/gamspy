@@ -451,7 +451,7 @@ class Expression(operable.Operable):
                 "Could not discover the container from the expression. Therefore, cannot call .records on this expression."
             )
 
-        temp_name = "a" + utils._get_unique_name()
+        temp_name = "autotemp" + utils._get_unique_name()
         temp_param = gp_syms.Parameter._constructor_bypass(
             self.container, temp_name, self.domain
         )
@@ -778,46 +778,25 @@ class SetExpression(Expression):
     def _adjust_left_right(self) -> None:
         if isinstance(self.left, (ImplicitSet, SetExpression)):
             if isinstance(self.right, (int, float)):
-                if self.right == 0:
-                    self.right = "no"
-                elif self.right == 1:
-                    self.right = "yes"
-                else:
-                    raise ValidationError(
-                        f"Incompatible operand `{self.right}` for the set operation `{self.operator}`."
-                    )
+                self.right = "yes" if self.right else "no"
             elif isinstance(self.right, condition.Condition) and isinstance(
                 self.right.conditioning_on, number.Number
             ):
                 if self.right.conditioning_on._value == 0:
                     self.right.conditioning_on._value = "no"
-                elif self.right.conditioning_on._value == 1:
+                else:
                     self.right.conditioning_on._value = "yes"
-                raise ValidationError(
-                    f"Incompatible operand `{self.right}` for the set operation `{self.operator}`."
-                )
 
         if isinstance(self.right, (ImplicitSet, SetExpression)):
             if isinstance(self.left, (int, float)):
-                if self.left == 0:
-                    self.left = "no"
-                elif self.left == 1:
-                    self.left = "yes"
-                else:
-                    raise ValidationError(
-                        f"Incompatible operand `{self.left}` for the set operation `{self.operator}`."
-                    )
+                self.left = "yes" if self.left else "no"
             elif isinstance(self.left, condition.Condition) and isinstance(
                 self.left.conditioning_on, number.Number
             ):
                 if self.left.conditioning_on._value == 0:
                     self.left.conditioning_on._value = "no"
-                elif self.left.conditioning_on._value == 1:
-                    self.left.conditioning_on._value = "yes"
                 else:
-                    raise ValidationError(
-                        f"Incompatible operand `{self.left}` for the set operation `{self.operator}`."
-                    )
+                    self.left.conditioning_on._value = "yes"
 
 
 def _check_uncontrolled_indices(

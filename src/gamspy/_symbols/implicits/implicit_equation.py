@@ -144,7 +144,7 @@ class ImplicitEquation(ImplicitSymbol):
         if self.parent.records is None:
             return None
 
-        temp_name = "ie" + utils._get_unique_name()
+        temp_name = "autotemp" + utils._get_unique_name()
         temp_param = syms.Parameter._constructor_bypass(
             self.container, temp_name, self.parent.domain
         )
