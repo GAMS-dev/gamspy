@@ -134,7 +134,6 @@ class UniverseAlias(BaseSymbol):
         self.where = condition.Condition(self)
 
         self._container._add_statement(self)
-        self._container._synch_with_gams()
 
     @property
     def _should_unload_to_gams(self) -> bool:

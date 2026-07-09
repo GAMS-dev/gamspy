@@ -1214,6 +1214,14 @@ class Container:
 
     def _generate_gams_string(self, gdx_in: str, symbol_names: list[str]) -> str:
         LOADABLE = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
+        DECLARABLE = (
+            gp.Set,
+            gp.Parameter,
+            gp.Variable,
+            gp.Equation,
+            gp.Alias,
+            gp.UniverseAlias,
+        )
         MIRO_INPUT_TYPES = (gp.Set, gp.Parameter)
         assume_suffix = int(get_option("ASSUME_VARIABLE_SUFFIX"))
 
@@ -1223,11 +1231,35 @@ class Container:
         elif assume_suffix == 2:
             strings.append("$onDotScale")
 
+        # Ordering constraints for a single sync:
+        #   1. A symbol must be declared before it can be loaded, so all
+        #      declarations are emitted first.
+        #   2. An assignment/definition that reads a symbol must see its data
+        #      already loaded. So the load section must precede the first such expression.
+        import gamspy._algebra.expression as expression_module
+
+        declarations: list[str] = []
+        pre_load_statements: list[str] = []
+        post_load_statements: list[str] = []
+        seen_expression = False
         for statement in self._unsaved_statements:
-            if type(statement) is str:
-                strings.append(statement)
-            else:
-                strings.append(statement.getDeclaration())
+            if isinstance(statement, DECLARABLE):
+                declarations.append(statement.getDeclaration())
+                continue
+
+            if isinstance(statement, expression_module.Expression):
+                seen_expression = True
+                post_load_statements.append(statement.getDeclaration())
+                continue
+
+            rendered = (
+                statement if type(statement) is str else statement.getDeclaration()
+            )
+            target = post_load_statements if seen_expression else pre_load_statements
+            target.append(rendered)
+
+        strings.extend(declarations)
+        strings.extend(pre_load_statements)
 
         if symbol_names:
             loadables = []
@@ -1251,6 +1283,8 @@ class Container:
                         strings.append(f"$loadDC {loadable.name}")
 
                 strings.append("$gdxIn")
+
+        strings.extend(post_load_statements)
 
         if assume_suffix == 1:
             strings.append("$offDotL")

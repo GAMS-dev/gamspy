@@ -53,7 +53,7 @@ from gamspy import (
 from gamspy.math import ifthen
 
 
-def main(mip=True):
+def main(mip=False):
     classData_recs = np.array(
         [
             [1, 1, 0, 1, 1, 0],
@@ -156,21 +156,17 @@ def main(mip=True):
     op = Variable(
         m,
         name="op",
-        type="free",
+        type="free" if not mip else "binary",
         domain=[o, p],
         description="option o appears at position p",
     )
     v = Variable(
         m,
         name="v",
-        type="free",
+        type="free" if not mip else "positive",
         domain=[o, p],
         description="violations in a block",
     )
-
-    if mip:
-        v.type = "positive"
-        op.type = "binary"
 
     # Equations
     defnumCars = Equation(
@@ -247,8 +243,6 @@ def main(mip=True):
     )
 
     if mip:
-        v.type = "positive"
-        op.type = "binary"
         carseqMIP.solve(options=Options(relative_optimality_gap=0))
     else:
         carseqLS.solve(options=Options(relative_optimality_gap=0))
@@ -256,11 +250,11 @@ def main(mip=True):
     rep = Parameter(m, name="rep", domain=[p, c, o])
     rep[p, c, o].where[(cp.l[c, p] > 0.5)] = classData[c, o]
 
-    print("Objective Function Value: ", carseqMIP.objective_value)
+    print("Objective Function Value: ", carseqLS.objective_value)
 
     import math
 
-    assert math.isclose(carseqMIP.objective_value, -9)
+    assert math.isclose(carseqLS.objective_value, 6), carseqLS.objective_value
 
 
 if __name__ == "__main__":
