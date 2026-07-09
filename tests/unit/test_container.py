@@ -1961,6 +1961,12 @@ def test_addGamsCode_with_equations():
     model.solve()
 
 
+@pytest.mark.unit
+def test_addGamsCode_with_debugging_level_keep():
+    m = gp.Container(debugging_level="keep")
+    m.addGamsCode("Set i / i1 /;")
+
+
 def test_describe_symbols():
     m = gp.Container()
     assert m.describeAliases() is None

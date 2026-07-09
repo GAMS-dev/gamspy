@@ -196,13 +196,14 @@ class Loop:
         # Run only in the most outer loop
         if self.container._in_loop == 0:
             self.container._last_control_flow = "loop"
+            gdx_out = self.container._gdx_out
             self.container._options._set_extra_options(
-                {"gdx": self.container._gdx_out, "gdxSymbols": "newOrChangedNoData"}
+                {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
             )
             self.container._synch_with_gams()
             self.container._options._set_extra_options({})
             symbol_names = gdxio._get_symbol_names_from_gdx(
-                self.container.system_directory, self.container._gdx_out
+                self.container.system_directory, gdx_out
             )
             self.container._should_load_from_gams(symbol_names)
 
@@ -399,13 +400,14 @@ class For:
 
         if self.container._in_loop == 0:  # Run only in the most outer loop
             self.container._last_control_flow = "for"
+            gdx_out = self.container._gdx_out
             self.container._options._set_extra_options(
-                {"gdx": self.container._gdx_out, "gdxSymbols": "newOrChangedNoData"}
+                {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
             )
             self.container._synch_with_gams()
             self.container._options._set_extra_options({})
             symbol_names = gdxio._get_symbol_names_from_gdx(
-                self.container.system_directory, self.container._gdx_out
+                self.container.system_directory, gdx_out
             )
             self.container._should_load_from_gams(symbol_names)
 
@@ -500,13 +502,14 @@ class While:
 
         if self.container._in_loop == 0:  # Run only in the most outer loop
             self.container._last_control_flow = "while"
+            gdx_out = self.container._gdx_out
             self.container._options._set_extra_options(
-                {"gdx": self.container._gdx_out, "gdxSymbols": "newOrChangedNoData"}
+                {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
             )
             self.container._synch_with_gams()
             self.container._options._set_extra_options({})
             symbol_names = gdxio._get_symbol_names_from_gdx(
-                self.container.system_directory, self.container._gdx_out
+                self.container.system_directory, gdx_out
             )
             self.container._should_load_from_gams(symbol_names)
 

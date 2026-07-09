@@ -1927,16 +1927,15 @@ $endIf
 
         """
         self._add_statement(gams_code)
+
+        gdx_out = self._gdx_out
         self._options._set_extra_options(
-            {"gdx": self._gdx_out, "gdxSymbols": "newOrChangedNoData"}
+            {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
         )
+
         self._synch_with_gams()
-        symbol_names = gdxio._get_symbol_names_from_gdx(
-            self.system_directory, self._gdx_out
-        )
-        gdxio.load_missing_symbols(
-            self, self._gdx_out, symbol_names, declare_in_gams=False
-        )
+        symbol_names = gdxio._get_symbol_names_from_gdx(self.system_directory, gdx_out)
+        gdxio.load_missing_symbols(self, gdx_out, symbol_names, declare_in_gams=False)
         self._options._set_extra_options({})
         self._should_load_from_gams(symbol_names, value=True)
 
