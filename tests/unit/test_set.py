@@ -436,9 +436,17 @@ def test_set_assignment():
     mpos[m, i] = (
         (Number(2).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))]) - hpos[m, i]
     )
+    assert (
+        mpos.getAssignment()
+        == "mpos(m,i) = 2 $ (k(m,i) + sum(g,abs(f(m,g,i)))) - 1 * hpos(m,i);"
+    )
 
     mpos[m, i] = (
         hpos[m, i] + Number(2).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))]
+    )
+    assert (
+        mpos.getAssignment()
+        == "mpos(m,i) = 1 * hpos(m,i) + 2 $ (k(m,i) + sum(g,abs(f(m,g,i))));"
     )
 
     reb = Set(container, "reb")
@@ -453,7 +461,17 @@ def test_set_assignment():
     j = Set(m, "j", domain=i, records=["i1"])
     k = Set(m, "k", domain=i)
     k[i] = j[i] + 1
+    assert k.getAssignment() == "k(i) = j(i) + yes;"
+
     k[i] = j[i] + 5
+    assert k.getAssignment() == "k(i) = 1 * j(i) + 5;"
+    assert list(k.records["i"]) == ["i1", "i2"]
+
+    # Numbers other than 0 and 1 must stay numeric: GAMS evaluates the
+    # expression numerically and any nonzero result means membership.
+    k[i] = 1 - 2 * j[i]
+    assert k.getAssignment() == "k(i) = 1 - 2 * j(i);"
+    assert list(k.records["i"]) == ["i1", "i2"]
 
 
 def test_sameas(data):
