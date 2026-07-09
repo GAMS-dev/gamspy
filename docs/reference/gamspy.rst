@@ -36,6 +36,8 @@ gamspy
    gamspy.Loop
    gamspy.For
    gamspy.If
+   gamspy.ElseIf
+   gamspy.Else
    gamspy._engine
    gamspy._neos
    gamspy.math
