@@ -1333,6 +1333,37 @@ def same_as(arg1: Set | Alias | str, arg2: Set | Alias | str) -> MathOp:
     return MathOp("sameAs", (arg1, arg2))
 
 
+def diag(arg1: Set | Alias | str, arg2: Set | Alias | str) -> MathOp:
+    """
+    Returns the numerical value 1 if the first argument is identical to the
+    second argument, 0 otherwise. This is the numerical counterpart of
+    :meth:`same_as <gamspy.math.same_as>`, which returns a logical value.
+
+    Parameters
+    ----------
+    arg1 : Set | Alias | str
+    arg2 : Set | Alias | str
+
+    Returns
+    -------
+    MathOp
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> from gamspy.math import diag
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+    >>> j = gp.Set(m, name="j", records=["new-york", "seattle"])
+    >>> attr = gp.Parameter(m, "attr", domain = [i, j])
+    >>> attr[i,j]  =  diag(i, j)
+    >>> attr.records.values.tolist()
+    [['seattle', 'seattle', 1.0]]
+
+    """
+    return MathOp("diag", (arg1, arg2))
+
+
 def slrec(x: OperableType, S: int | float = 1e-10) -> MathOp:
     """
     Smooth (linear) reciprocal, where ``S >= 1e-10``. (Default ``S = 1e-10``)

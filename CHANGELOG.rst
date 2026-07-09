@@ -3,6 +3,8 @@ GAMSPy 1.26.1 (2026-07-09)
 
 Improvements in existing functionality
 --------------------------------------
+- #858: Add ``diag`` function to ``gamspy.math`` module.
+- #859: Improve the docstrings of ``gamspy.math.project`` and ``gamspy.math.aggregate`` functions.
 - #860: Improve the performance of loop control structures by employing the new newOrChangedNoData option in GAMS.
 
 Bug fixes

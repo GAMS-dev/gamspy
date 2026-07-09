@@ -382,6 +382,22 @@ def test_math_2(data):
     op1 = 3 ** a[i]
     assert op1.gamsRepr() == "rPower(3,a(i))"
 
+    # same_as
+    j = Set(m, "j", records=["1", "3"])
+    op1 = gams_math.same_as(i, j)
+    assert op1.gamsRepr() == "sameAs(i,j)"
+
+    # diag
+    op1 = gams_math.diag(i, j)
+    assert op1.gamsRepr() == "diag(i,j)"
+
+    op1 = gams_math.diag(i, "1")
+    assert op1.gamsRepr() == 'diag(i,"1")'
+
+    attr = Parameter(m, "attr", domain=[i, j])
+    attr[i, j] = gams_math.diag(i, j)
+    assert attr.getAssignment() == "attr(i,j) = diag(i,j);"
+
 
 def test_logical(data):
     m, _, _ = data
