@@ -294,7 +294,7 @@ def project(
     direction: Literal["right", "left"] = "right",
 ) -> None:
     """
-    Projects the dimensions of a source set onto a target set.
+    Projects the dimensions of a source symbol onto a target set.
 
     Parameters
     ----------
@@ -330,7 +330,7 @@ def aggregate(
     direction: Literal["right", "left"] = "right",
 ) -> None:
     """
-    Aggregates the elements of a source set into a target parameter.
+    Aggregates the elements of a source symbol into a target parameter.
 
     Parameters
     ----------
