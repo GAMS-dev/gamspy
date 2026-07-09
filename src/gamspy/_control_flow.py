@@ -195,11 +195,12 @@ class Loop:
 
         # Run only in the most outer loop
         if self.container._in_loop == 0:
-            self.container._add_statement(
-                f"execute_unload '{self.container._gdx_out}';"
-            )
             self.container._last_control_flow = "loop"
+            self.container._options._set_extra_options(
+                {"gdx": self.container._gdx_out, "gdxSymbols": "newOrChangedNoData"}
+            )
             self.container._synch_with_gams()
+            self.container._options._set_extra_options({})
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, self.container._gdx_out
             )
@@ -398,11 +399,12 @@ class For:
             return False
 
         if self.container._in_loop == 0:  # Run only in the most outer loop
-            self.container._add_statement(
-                f"execute_unload '{self.container._gdx_out}';"
-            )
             self.container._last_control_flow = "for"
+            self.container._options._set_extra_options(
+                {"gdx": self.container._gdx_out, "gdxSymbols": "newOrChangedNoData"}
+            )
             self.container._synch_with_gams()
+            self.container._options._set_extra_options({})
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, self.container._gdx_out
             )
@@ -499,11 +501,12 @@ class While:
             return False
 
         if self.container._in_loop == 0:  # Run only in the most outer loop
-            self.container._add_statement(
-                f"execute_unload '{self.container._gdx_out}';"
-            )
             self.container._last_control_flow = "while"
+            self.container._options._set_extra_options(
+                {"gdx": self.container._gdx_out, "gdxSymbols": "newOrChangedNoData"}
+            )
             self.container._synch_with_gams()
+            self.container._options._set_extra_options({})
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, self.container._gdx_out
             )

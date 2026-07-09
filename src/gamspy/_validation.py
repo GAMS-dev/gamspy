@@ -220,6 +220,33 @@ def validate_dimension(
         )
 
 
+def _expand_leaf(
+    leaf: Set | Alias | ImplicitSet | str,
+) -> list[Set | Alias | None]:
+    """
+    Flattens a single domain element into the components it spans.
+    For example, R_UC[r, UC_N] used inside R_UCT[R_UC[r, UC_N], t] occupies
+    two positions. Expanding it keeps subsequent positions aligned.
+    """
+    if isinstance(leaf, implicits.ImplicitSet):
+        components = _index_components(leaf)
+        if components is not None:
+            return components
+
+        return [None] * getattr(leaf, "dimension", 1)
+
+    if isinstance(leaf, (symbols.Set, symbols.Alias)):
+        if leaf.dimension == 1:
+            return [leaf]
+
+        return [
+            elem if isinstance(elem, (symbols.Set, symbols.Alias)) else None
+            for elem in leaf.domain
+        ]
+
+    return [None]
+
+
 def _index_components(
     given: Set | Alias | ImplicitSet | str,
 ) -> list[Set | Alias | None] | None:
@@ -228,7 +255,8 @@ def _index_components(
 
     - A 1-D set maps to the set itself.
     - A multi-dimensional set maps to its declared domain elements, one per position.
-    - A multi-dimensional implicit set is unpacked across the positions it spans.
+    - A multi-dimensional implicit set is unpacked across the positions it spans,
+    recursively expanding any nested implicit sets in its domain.
     - A 1-D implicit set keeps the parent set A in its single position.
     - Anything else (string label, universe alias etc.) returns None to signal that
     none of its positions can be validated.
@@ -243,10 +271,11 @@ def _index_components(
         for position, label in given._scalar_domains:
             full_domain.insert(position, label)
 
-        return [
-            leaf if isinstance(leaf, (symbols.Set, symbols.Alias)) else None
-            for leaf in full_domain
-        ]
+        components: list[Set | Alias | None] = []
+        for leaf in full_domain:
+            components.extend(_expand_leaf(leaf))
+
+        return components
 
     base = given.parent if isinstance(given, implicits.ImplicitSet) else given
 

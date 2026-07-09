@@ -250,6 +250,27 @@ def test_domain_validation_implicit_set_index():
         r[sub_k] = p[sub_k[k]]
 
 
+def test_domain_validation_nested_implicit_set_index():
+    m = gp.Container()
+    r = gp.Set(m, "r", records=["r1", "r2", "r3"])
+    UC_N = gp.Set(m, "UC_N", records=["u1", "u2", "u3"])
+    t = gp.Set(m, "t", records=["t1", "t2", "t3"])
+    R_UC = gp.Set(m, "R_UC", domain=[r, UC_N])
+    R_UCT = gp.Set(m, "R_UCT", domain=[r, UC_N, t])
+    UC_RHSTMP = gp.Set(m, "UC_RHSTMP", domain=[r, UC_N, t])
+
+    # A nested implicit set spanning multiple positions must keep the
+    # following indices aligned with the declared domain:
+    # UC_RHSTMP(R_UCT(R_UC(R,UC_N),T)) = YES;).
+    UC_RHSTMP[R_UCT[R_UC[r, UC_N], t]] = True
+
+    # A single component that is wrong should still be rejected.
+    x = gp.Set(m, "x", records=["x1"])
+    bad = gp.Set(m, "bad", domain=[r, UC_N, x])
+    with pytest.raises(ValidationError):
+        bad[R_UCT[R_UC[r, UC_N], t]] = True
+
+
 def test_domain_validation_implicit_set_narrower_than_parent_domain():
     m = gp.Container()
     ALLYEAR = gp.Set(m, "ALLYEAR")
