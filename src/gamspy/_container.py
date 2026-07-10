@@ -1191,6 +1191,9 @@ class Container:
         self, symbol_names: Iterable[str], value: bool = True
     ) -> None:
         for name in symbol_names:
+            if name not in self._data:
+                continue
+
             symbol = self._data[name]
             symbol._should_load_from_gams = value
             if not isinstance(symbol, (gp.Alias, gp.UniverseAlias)):
@@ -1214,6 +1217,14 @@ class Container:
 
     def _generate_gams_string(self, gdx_in: str, symbol_names: list[str]) -> str:
         LOADABLE = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
+        DECLARABLE = (
+            gp.Set,
+            gp.Parameter,
+            gp.Variable,
+            gp.Equation,
+            gp.Alias,
+            gp.UniverseAlias,
+        )
         MIRO_INPUT_TYPES = (gp.Set, gp.Parameter)
         assume_suffix = int(get_option("ASSUME_VARIABLE_SUFFIX"))
 
@@ -1223,11 +1234,35 @@ class Container:
         elif assume_suffix == 2:
             strings.append("$onDotScale")
 
+        # Ordering constraints for a single sync:
+        #   1. A symbol must be declared before it can be loaded, so all
+        #      declarations are emitted first.
+        #   2. An assignment/definition that reads a symbol must see its data
+        #      already loaded. So the load section must precede the first such expression.
+        import gamspy._algebra.expression as expression_module
+
+        declarations: list[str] = []
+        pre_load_statements: list[str] = []
+        post_load_statements: list[str] = []
+        seen_expression = False
         for statement in self._unsaved_statements:
-            if type(statement) is str:
-                strings.append(statement)
-            else:
-                strings.append(statement.getDeclaration())
+            if isinstance(statement, DECLARABLE):
+                declarations.append(statement.getDeclaration())
+                continue
+
+            if isinstance(statement, expression_module.Expression):
+                seen_expression = True
+                post_load_statements.append(statement.getDeclaration())
+                continue
+
+            rendered = (
+                statement if type(statement) is str else statement.getDeclaration()
+            )
+            target = post_load_statements if seen_expression else pre_load_statements
+            target.append(rendered)
+
+        strings.extend(declarations)
+        strings.extend(pre_load_statements)
 
         if symbol_names:
             loadables = []
@@ -1251,6 +1286,8 @@ class Container:
                         strings.append(f"$loadDC {loadable.name}")
 
                 strings.append("$gdxIn")
+
+        strings.extend(post_load_statements)
 
         if assume_suffix == 1:
             strings.append("$offDotL")
@@ -1890,16 +1927,15 @@ $endIf
 
         """
         self._add_statement(gams_code)
+
+        gdx_out = self._gdx_out
         self._options._set_extra_options(
-            {"gdx": self._gdx_out, "gdxSymbols": "newOrChangedNoData"}
+            {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
         )
+
         self._synch_with_gams()
-        symbol_names = gdxio._get_symbol_names_from_gdx(
-            self.system_directory, self._gdx_out
-        )
-        gdxio.load_missing_symbols(
-            self, self._gdx_out, symbol_names, declare_in_gams=False
-        )
+        symbol_names = gdxio._get_symbol_names_from_gdx(self.system_directory, gdx_out)
+        gdxio.load_missing_symbols(self, gdx_out, symbol_names, declare_in_gams=False)
         self._options._set_extra_options({})
         self._should_load_from_gams(symbol_names, value=True)
 

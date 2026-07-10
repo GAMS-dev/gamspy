@@ -136,7 +136,7 @@ class Operation(operable.Operable):
                 "Could not discover the container from the operation. Therefore, cannot call .records on this operation."
             )
 
-        temp_name = "a" + utils._get_unique_name()
+        temp_name = "autotemp" + utils._get_unique_name()
         domain = []
         for elem in self.domain:
             if hasattr(elem, "dimension") and elem.dimension > 1:

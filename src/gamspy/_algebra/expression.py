@@ -451,7 +451,7 @@ class Expression(operable.Operable):
                 "Could not discover the container from the expression. Therefore, cannot call .records on this expression."
             )
 
-        temp_name = "a" + utils._get_unique_name()
+        temp_name = "autotemp" + utils._get_unique_name()
         temp_param = gp_syms.Parameter._constructor_bypass(
             self.container, temp_name, self.domain
         )
@@ -758,6 +758,26 @@ class Expression(operable.Operable):
         _validate_controlled(self.right, control_stack)
 
 
+def _is_acting_like_set(operand) -> bool:
+    """True if the operand acts as a set in GAMS set algebra."""
+    if isinstance(operand, ImplicitSet):
+        return True
+
+    if isinstance(operand, str):
+        return operand in ("yes", "no")
+
+    if isinstance(operand, SetExpression):
+        return operand._acting_like_set
+
+    if isinstance(operand, condition.Condition):
+        return _is_acting_like_set(operand.conditioning_on)
+
+    if isinstance(operand, number.Number):
+        return operand._value in ("yes", "no")
+
+    return False
+
+
 class SetExpression(Expression):
     """
     Represents an expression involving set operations.
@@ -773,51 +793,59 @@ class SetExpression(Expression):
         right: OperableType,
     ):
         super().__init__(left, data, right)
+        self._acting_like_set = True
         self._adjust_left_right()
 
     def _adjust_left_right(self) -> None:
-        if isinstance(self.left, (ImplicitSet, SetExpression)):
-            if isinstance(self.right, (int, float)):
-                if self.right == 0:
-                    self.right = "no"
-                elif self.right == 1:
-                    self.right = "yes"
-                else:
-                    raise ValidationError(
-                        f"Incompatible operand `{self.right}` for the set operation `{self.operator}`."
-                    )
-            elif isinstance(self.right, condition.Condition) and isinstance(
-                self.right.conditioning_on, number.Number
-            ):
-                if self.right.conditioning_on._value == 0:
-                    self.right.conditioning_on._value = "no"
-                elif self.right.conditioning_on._value == 1:
-                    self.right.conditioning_on._value = "yes"
-                raise ValidationError(
-                    f"Incompatible operand `{self.right}` for the set operation `{self.operator}`."
-                )
+        if isinstance(self.left, bool):
+            self.left = int(self.left)
+        if isinstance(self.right, bool):
+            self.right = int(self.right)
 
-        if isinstance(self.right, (ImplicitSet, SetExpression)):
-            if isinstance(self.left, (int, float)):
-                if self.left == 0:
-                    self.left = "no"
-                elif self.left == 1:
-                    self.left = "yes"
-                else:
-                    raise ValidationError(
-                        f"Incompatible operand `{self.left}` for the set operation `{self.operator}`."
-                    )
-            elif isinstance(self.left, condition.Condition) and isinstance(
-                self.left.conditioning_on, number.Number
-            ):
-                if self.left.conditioning_on._value == 0:
-                    self.left.conditioning_on._value = "no"
-                elif self.left.conditioning_on._value == 1:
-                    self.left.conditioning_on._value = "yes"
-                else:
-                    raise ValidationError(
-                        f"Incompatible operand `{self.left}` for the set operation `{self.operator}`."
-                    )
+        if self.operator == "not":
+            self._acting_like_set = _is_acting_like_set(self.right)
+            return
+
+        left_is_set = _is_acting_like_set(self.left)
+        right_is_set = _is_acting_like_set(self.right)
+
+        if left_is_set == right_is_set:
+            # Either a pure set operation or a purely numeric expression.
+            self._acting_like_set = left_is_set
+            return
+
+        # One operand is a set, the other is not. 0 and 1 are interchangeable
+        # with no and yes, so the operation stays a pure set operation.
+        num_attr = "right" if left_is_set else "left"
+        num_operand = getattr(self, num_attr)
+
+        if isinstance(num_operand, (int, float)):
+            if num_operand in (0, 1):
+                setattr(self, num_attr, "yes" if num_operand else "no")
+                return
+        elif isinstance(num_operand, condition.Condition) and isinstance(
+            num_operand.conditioning_on, number.Number
+        ):
+            if num_operand.conditioning_on._value in (0, 1):
+                num_operand.conditioning_on._value = (
+                    "yes" if num_operand.conditioning_on._value else "no"
+                )
+                return
+        elif not isinstance(num_operand, SetExpression):
+            # Operands such as parameters or expressions over them are left
+            # untouched since the expression might be lag/lead arithmetic,
+            # e.g. shape[j, age - yearval[ll]]
+            return
+
+        # A numeric operand other than 0 and 1 makes GAMS evaluate the whole
+        # expression numerically. GAMS does not allow mixing numbers and sets
+        # in additions, so a set operand of + or - must be coerced to its 0/1
+        # value by multiplying it with 1: e.g. `2 - s(i)` is invalid GAMS while
+        # `2 - 1*s(i)` is valid.
+        self._acting_like_set = False
+        if self.operator != "*":
+            set_attr = "left" if left_is_set else "right"
+            setattr(self, set_attr, Expression(1, "*", getattr(self, set_attr)))
 
 
 def _check_uncontrolled_indices(

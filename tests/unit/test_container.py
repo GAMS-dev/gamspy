@@ -552,8 +552,14 @@ def test_generate_gams_string():
     _ = Variable(m, "v")
     _ = Equation(m, "e")
 
+    # Bare declarations (no records) are not synced eagerly; they are deferred
+    # until the next real sync. Nothing has been sent to GAMS yet.
+    assert m.generateGamsString() == ""
+
+    # A real sync flushes all pending declarations together in a single block.
+    m._synch_with_gams()
     generated = m.generateGamsString()
-    expected = "$onMultiR\n$onUNDF\n$onDotL\nSet i(*) / /;\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nAlias(i,a);\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nParameter p / /;\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nfree Variable v / /;\n$offDotL\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\n$onDotL\nEquation e / /;\n$offDotL\n$offUNDF\n$offMulti\n"
+    expected = "$onMultiR\n$onUNDF\n$onDotL\nSet i(*) / /;\nAlias(i,a);\nParameter p / /;\nfree Variable v / /;\nEquation e / /;\n$offDotL\n$offUNDF\n$offMulti\n"
     assert generated == expected
 
     assert (
@@ -706,11 +712,14 @@ def test_debugging_level():
         working_directory = m.working_directory
         _ = Equation(m, "e")
         _ = Equation(m, "e2")
+        # Bare declarations are deferred and flushed together on the next sync,
+        # producing a single .gms file rather than one per declaration.
+        m._synch_with_gams()
 
     test_keep_success()
     gc.collect()
     assert os.path.exists(working_directory)
-    assert len(glob.glob(os.path.join(working_directory, "*.gms"))) == 2
+    assert len(glob.glob(os.path.join(working_directory, "*.gms"))) == 1
 
     def test_keep_err():
         m = Container(debugging_level="keep")
@@ -723,7 +732,9 @@ def test_debugging_level():
     test_keep_err()
     gc.collect()
     assert os.path.exists(working_directory)
-    assert len(glob.glob(os.path.join(working_directory, "*.gms"))) == 2
+    # The bare declaration is deferred, so only the failing assignment syncs,
+    # producing a single .gms file.
+    assert len(glob.glob(os.path.join(working_directory, "*.gms"))) == 1
 
     def test_keep_on_error_success():
         m = Container(debugging_level="keep_on_error")
@@ -966,7 +977,7 @@ def test_output(tmp_path):
     path = str(tmp_path / (str(uuid.uuid4()) + ".py"))
     with open(path, "w") as file:
         file.write(
-            "import sys\nfrom gamspy import Container, Set\nm = Container(output=sys.stdout)\ni = Set(m)\nj = Set(m)"
+            "import sys\nfrom gamspy import Container, Set\nm = Container(output=sys.stdout)\ni = Set(m, records=['i1', 'i2'])\nj = Set(m)"
         )
 
     process = subprocess.run(
@@ -1948,6 +1959,12 @@ def test_addGamsCode_with_equations():
     )
 
     model.solve()
+
+
+@pytest.mark.unit
+def test_addGamsCode_with_debugging_level_keep():
+    m = gp.Container(debugging_level="keep")
+    m.addGamsCode("Set i / i1 /;")
 
 
 def test_describe_symbols():

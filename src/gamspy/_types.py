@@ -81,6 +81,6 @@ if TYPE_CHECKING:
         | Number
     )
 
-    SetRecordsType: TypeAlias = Sequence | pd.DataFrame | pd.Series
+    SetRecordsType: TypeAlias = Sequence | pd.DataFrame | pd.Series | dict[str, float]
     ParameterRecordsType: TypeAlias = SetRecordsType | np.ndarray | int | float
     VarEquRecordsType: TypeAlias = ParameterRecordsType | dict

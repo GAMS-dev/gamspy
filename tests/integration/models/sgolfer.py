@@ -36,7 +36,7 @@ from gamspy import (
 from gamspy.math import Max as gams_max
 
 
-def main(gr_c=8, gg_c=4, nw_c=10, mip=True):
+def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
     cont = Container()
 
     gf_c = gr_c * gg_c
@@ -79,7 +79,7 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=True):
     m = Variable(
         cont,
         name="m",
-        type="free",
+        type="free" if not mip else "binary",
         domain=[w, gr, gf, gf],
         description="golfers meet in week w in some group",
     )
@@ -93,7 +93,7 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=True):
     redm = Variable(
         cont,
         name="redm",
-        type="free",
+        type="free" if not mip else "positive",
         domain=[gf, gf],
         description="number of redundant meetings",
     )
@@ -131,9 +131,6 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=True):
         raise Exception(f"Argument <mip> should be a boolean. Not {type(mip)}.")
 
     if mip:
-        m.type = "binary"
-        redm.type = "positive"
-
         defm2 = Equation(
             cont,
             name="defm2",

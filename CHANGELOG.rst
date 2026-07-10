@@ -1,3 +1,17 @@
+GAMSPy 1.26.1 (2026-07-09)
+==========================
+
+Improvements in existing functionality
+--------------------------------------
+- #858: Add ``diag`` function to ``gamspy.math`` module.
+- #859: Improve the docstrings of ``gamspy.math.project`` and ``gamspy.math.aggregate`` functions.
+- #860: Improve the performance of loop control structures by employing the new newOrChangedNoData option in GAMS.
+
+Bug fixes
+---------
+- #856: Fix debugging level keep bug when container.addGamsCode is called. 
+- #860: Fixes a false domain violation when indexing a symbol with a nested implicit set that spans multiple positions. The nested set's positions are now expanded correctly so subsequent indices stay aligned with the declared domain.
+
 GAMSPy 1.26.0 (2026-07-06)
 ==========================
 

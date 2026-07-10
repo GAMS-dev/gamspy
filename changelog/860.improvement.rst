@@ -1,1 +1,0 @@
-Improve the performance of loop control structures by employing the new newOrChangedNoData option in GAMS.
