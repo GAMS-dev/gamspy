@@ -473,6 +473,16 @@ def test_set_assignment():
     assert k.getAssignment() == "k(i) = 1 - 2 * j(i);"
     assert list(k.records["i"]) == ["i1", "i2"]
 
+    # Sign flipper: 1 - 2 * s(i) is a common GAMS trick where a set is used
+    # in a numeric context to yield +1 when i is not in s and -1 when it is.
+    # As a multiplier the whole expression must stay numeric.
+    ie = Set(m, "ie", records=["ie1", "ie2"])
+    xpt = Set(m, "xpt", domain=ie, records=["ie1"])
+    val = Parameter(m, "val", domain=ie, records=[("ie1", 3), ("ie2", 5)])
+    res = Parameter(m, "res")
+    res[...] = Sum(ie, val[ie] * (1 - 2 * xpt[ie]))
+    assert res.getAssignment() == "res = sum(ie,val(ie) * (1 - 2 * xpt(ie)));"
+
 
 def test_sameas(data):
     m, *_ = data

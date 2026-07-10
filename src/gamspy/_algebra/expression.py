@@ -758,18 +758,23 @@ class Expression(operable.Operable):
         _validate_controlled(self.right, control_stack)
 
 
-def _is_set_typed(operand) -> bool:
-    """True if the operand acts as a set (not a number) in GAMS set algebra."""
+def _is_acting_like_set(operand) -> bool:
+    """True if the operand acts as a set in GAMS set algebra."""
     if isinstance(operand, ImplicitSet):
         return True
+
     if isinstance(operand, str):
         return operand in ("yes", "no")
+
     if isinstance(operand, SetExpression):
-        return operand._set_typed
+        return operand._acting_like_set
+
     if isinstance(operand, condition.Condition):
-        return _is_set_typed(operand.conditioning_on)
+        return _is_acting_like_set(operand.conditioning_on)
+
     if isinstance(operand, number.Number):
         return operand._value in ("yes", "no")
+
     return False
 
 
@@ -788,7 +793,7 @@ class SetExpression(Expression):
         right: OperableType,
     ):
         super().__init__(left, data, right)
-        self._set_typed = True
+        self._acting_like_set = True
         self._adjust_left_right()
 
     def _adjust_left_right(self) -> None:
@@ -798,16 +803,15 @@ class SetExpression(Expression):
             self.right = int(self.right)
 
         if self.operator == "not":
-            self._set_typed = _is_set_typed(self.right)
+            self._acting_like_set = _is_acting_like_set(self.right)
             return
 
-        left_is_set = _is_set_typed(self.left)
-        right_is_set = _is_set_typed(self.right)
+        left_is_set = _is_acting_like_set(self.left)
+        right_is_set = _is_acting_like_set(self.right)
 
         if left_is_set == right_is_set:
-            # Either a pure set operation or a purely numeric expression;
-            # both are valid GAMS as they are.
-            self._set_typed = left_is_set
+            # Either a pure set operation or a purely numeric expression.
+            self._acting_like_set = left_is_set
             return
 
         # One operand is a set, the other is not. 0 and 1 are interchangeable
@@ -829,17 +833,16 @@ class SetExpression(Expression):
                 return
         elif not isinstance(num_operand, SetExpression):
             # Operands such as parameters or expressions over them are left
-            # untouched since the expression might be index (lag / lead)
-            # arithmetic, e.g. shape[j, age - yearval[ll]], where sets and
-            # numbers mix freely.
+            # untouched since the expression might be lag/lead arithmetic,
+            # e.g. shape[j, age - yearval[ll]]
             return
 
         # A numeric operand other than 0 and 1 makes GAMS evaluate the whole
-        # expression numerically (nonzero result -> membership). GAMS does
-        # not allow mixing numbers and sets in additions, so a set operand of
-        # + or - must be coerced to its 0/1 value by multiplying it with 1:
-        # e.g. `2 - s(i)` is invalid GAMS while `2 - 1*s(i)` is valid.
-        self._set_typed = False
+        # expression numerically. GAMS does not allow mixing numbers and sets
+        # in additions, so a set operand of + or - must be coerced to its 0/1
+        # value by multiplying it with 1: e.g. `2 - s(i)` is invalid GAMS while
+        # `2 - 1*s(i)` is valid.
+        self._acting_like_set = False
         if self.operator != "*":
             set_attr = "left" if left_is_set else "right"
             setattr(self, set_attr, Expression(1, "*", getattr(self, set_attr)))
