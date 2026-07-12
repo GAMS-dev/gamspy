@@ -4,7 +4,7 @@ import os
 import re
 from collections.abc import Iterable, Sequence
 from types import EllipsisType
-from typing import TYPE_CHECKING, Literal, TextIO
+from typing import TYPE_CHECKING, Literal, TextIO, cast
 
 from gams.core.opt import (
     GMS_SSSIZE,
@@ -298,15 +298,33 @@ def validate_one_dimensional_sets(
     if type(given) in (implicits.ImplicitSet, expression.SetExpression):
         return
 
-    given_path = get_domain_path(given)
+    if type(actual) not in (symbols.Set, symbols.Alias):
+        return
 
-    if (type(actual) is symbols.Set and actual.name not in given_path) or (
-        type(actual) is symbols.Alias and actual.alias_with.name not in given_path
-    ):
-        raise ValidationError(
-            f"`Given set `{given.name}` is not a valid domain for declared"
-            f" domain `{actual.name}`"
-        )
+    actual = cast("Set | Alias", actual)
+
+    # Two sets are domain-compatible when they lie on the same domain chain,
+    # i.e. one is an ancestor of the other. GAMS accepts indexing with either
+    # a subset (given ⊆ actual) or a superset (given ⊇ actual) of the declared
+    # domain, so the relationship must be checked in both directions.
+    given_path = get_domain_path(given)
+    actual_name = (
+        actual.alias_with.name if type(actual) is symbols.Alias else actual.name
+    )
+
+    if actual_name in given_path:
+        return
+
+    actual_path = get_domain_path(actual)
+    given_name = given.alias_with.name if type(given) is symbols.Alias else given.name
+
+    if given_name in actual_path:
+        return
+
+    raise ValidationError(
+        f"`Given set `{given.name}` is not a valid domain for declared"
+        f" domain `{actual.name}`"
+    )
 
 
 def validate_type(domain):
