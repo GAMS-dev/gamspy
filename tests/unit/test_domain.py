@@ -387,3 +387,16 @@ def test_conditioned_sum_iterator_is_controlled():
         )
         <= 1
     )
+
+
+def test_superset_index():
+    m = gp.Container()
+
+    r = gp.Set(m, name="r", records=["r1", "r2"])
+    t = gp.Set(m, name="t", records=["t1", "t2"])
+    sub_t = gp.Set(m, name="sub_t", domain=[t], records=["t1"])
+    Rtpc = gp.Set(m, name="Rtpc", domain=[r, t], records=[("r1", "t1")])
+    GgRtpc = gp.Set(m, name="GgRtpc", domain=[r, sub_t], records=[("r1", "t1")])
+
+    gg_klp = gp.Parameter(m, name="gg_klp", domain=[r, t])
+    gg_klp[Rtpc[r, sub_t]].where[~GgRtpc[Rtpc]] = 0.0

@@ -445,6 +445,41 @@ def test_multiple_ops(data):
         pytest.fail("Unexpected ValidationError.")
 
 
+def test_mathop_as_operation_index():
+    from gamspy.math import same_as
+
+    m = Container()
+    t = Set(m, "t", records=[str(i) for i in range(5)])
+    tt = Alias(m, "tt", t)
+    v = Set(m, "v", domain=[t])
+    r = Set(m, "r", records=["r1"])
+    p = Set(m, "p", records=["p1"])
+    rtp = Set(m, "rtp", domain=[r, t, p])
+    cap = Variable(m, "cap", domain=[r, t, p])
+
+    # Bare MathOp index.
+    bare = Sum(same_as(t.lag(1), v[tt]), cap[r, v, p])
+    assert bare.container is not None
+    assert bare.gamsRepr() == "sum(sameAs(t - 1,v(tt)),cap(r,v,p))"
+
+    # Conditioned MathOp index: sameAs(t-1, v(tt)) $ rtp(r, v, p)
+    conditioned = Sum(same_as(t.lag(1), v[tt]).where[rtp[r, v, p]], cap[r, v, p])
+    assert conditioned.container is not None
+    assert (
+        conditioned.gamsRepr() == "sum(sameAs(t - 1,v(tt)) $ (rtp(r,v,p)),cap(r,v,p))"
+    )
+
+    # Full equation definition exercises operation validation.
+    eq = Equation(m, "eq", domain=[r, t, p])
+    eq[r, t, p] = conditioned == 0
+    assert (
+        eq.getDefinition()
+        == "eq(r,t,p) .. sum(sameAs(t - 1,v(tt)) $ (rtp(r,v,p)),cap(r,v,p)) =e= 0;"
+    )
+
+    m.close()
+
+
 def test_number():
     m = Container()
 
