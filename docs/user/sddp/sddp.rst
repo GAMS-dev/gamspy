@@ -33,8 +33,8 @@ When to use SDDP
 
 SDDP fits problems that
 
-* unfold over several **stages**, with decisions made before each stage's
-  uncertainty is revealed;
+* unfold over several **stages**, with each decision made before the later
+  stages' uncertainty is revealed;
 * carry a **state** from one stage to the next (a reservoir level, an inventory,
   a stored quantity);
 * have a convex (linear) stage problem and a finite set of noise **scenarios**.
@@ -48,6 +48,7 @@ few dozen lines.
    :maxdepth: 1
 
    ./introduction
+   ./how_it_works
    ./workflow
    ./state_variables
    ./scenarios

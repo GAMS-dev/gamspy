@@ -8,8 +8,9 @@
 Training and Convergence
 ************************
 
-``train()`` runs the SDDP forward/backward iterations and returns an
-``SDDPResult`` holding the lower bound and the convergence history.
+``train()`` runs the SDDP forward/backward iterations (explained in
+:doc:`how_it_works <how_it_works>`) and returns an ``SDDPResult`` holding the
+lower bound and the convergence history.
 
 .. code-block:: python
 
@@ -49,7 +50,7 @@ Measuring the optimality gap
 
 The lower bound tells you how good the policy *could* be, not how good it *is*.
 Passing ``gap_paths`` runs an out-of-sample Monte Carlo of the trained policy
-after training and reports a rigorous gap:
+after training and reports an estimated gap:
 
 .. code-block:: python
 
@@ -60,11 +61,23 @@ after training and reports a rigorous gap:
      Policy cost          :    1.210000E+2 ±  3.626809E+1   (500 MC paths, 95% CI)
      Optimality gap       :        7.1862 %
 
-The policy's mean realised cost upper-bounds the true optimum, which the lower
-bound bounds from below, so their difference is the optimality gap
-(``result.optimality_gap_pct``), reported with the Monte Carlo confidence
-interval (``policy_cost_mean`` ± ``policy_cost_stderr``). ``gap_paths=0`` (the
-default) skips this entirely and is perf-neutral.
+The true optimum sits between two computed values: the lower bound underneath
+it and the expected cost of any feasible policy above it. The distance between
+them is the optimality gap. The simulation *estimates* that expected cost from
+``gap_paths`` random paths, so ``result.optimality_gap_pct`` is a Monte Carlo
+estimate rather than a rigorous bound; the reported confidence interval
+(``policy_cost_mean`` ± 1.96 × ``policy_cost_stderr``, the 95% interval shown
+in the box) says how wide that estimate is. ``gap_paths=0`` (the default) skips
+this entirely and is perf-neutral.
+
+.. note::
+   This gap is only meaningful for risk-neutral training. With
+   ``risk=CVaR(...)`` the lower bound is the risk-adjusted cost while the
+   simulation still reports the plain average cost, so the two do not line up
+   and ``optimality_gap_pct`` is not an optimality gap; ignore it in that case.
+   ``policy_cost_mean`` on its own still tells you the policy's average cost
+   over the sampled paths, though not the tail cost that ``risk=CVaR(...)``
+   trains against.
 
 Interrupting training
 =====================
@@ -76,4 +89,5 @@ and usable. Pressing :kbd:`Ctrl+C` a second time aborts hard.
 
 .. seealso::
    The :doc:`ClearLake tutorial <clearlake>` shows a full training run and its
-   summary.
+   summary; :doc:`how_it_works <how_it_works>` explains what each iteration
+   does and why the lower bound can be trusted.

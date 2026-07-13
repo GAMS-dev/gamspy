@@ -30,8 +30,8 @@ Describing the noise
 ``set_noise()`` takes:
 
 - ``parameter``: the GAMSPy ``Parameter`` that carries the noise into your
-  equations. You declare it empty; before each per-scenario solve the engine
-  overwrites it with the value for the scenario being solved.
+  equations. You declare it empty; before each per-scenario solve the sddp
+  instance overwrites it with the value for the scenario being solved.
 - ``scenario_data``: a 2-D array of shape ``(n_stages, n_scenarios)``: one row
   per stage, one column per scenario, holding the noise value for that
   combination. The ClearLake array above gives three inflow outcomes for each of
@@ -53,8 +53,8 @@ them, a 1-D array of length ``n_scenarios`` that is non-negative and sums to 1:
 
 The same probabilities apply at every stage. They weight the dual aggregation in
 the backward pass and the path sampling in the forward pass, so they shape both
-the cuts and the lower bound. Weighting scenarios unevenly is also the substrate
-for :doc:`risk-averse training <risk>`.
+the cuts and the lower bound. :doc:`Risk-averse training <risk>` builds on this
+same mechanism.
 
 .. note::
    ``set_noise()`` validates the inputs: ``scenario_data`` must be 2-D with one

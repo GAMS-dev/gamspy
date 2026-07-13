@@ -1,0 +1,1 @@
+Adds a "How SDDP Works" page to the SDDP documentation: the cut algebra, the forward and backward passes, and the lower bound.

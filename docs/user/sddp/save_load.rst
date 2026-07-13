@@ -35,9 +35,9 @@ A loaded instance is **read-only**: ``policy()`` and ``simulate()`` work, but
 model or add iterations, rebuild and retrain from scratch.
 
 .. note::
-   The file records the module version it was written with. A file from an
-   incompatible (older major) version is rejected with a clear message rather
-   than failing obscurely; retrain to produce a current file.
+   The file records the module version it was written with. A file from a
+   different major version is rejected with a clear message rather than
+   failing obscurely; retrain to produce a current file.
 
 .. seealso::
    :doc:`policy_and_simulation` covers the queries a loaded policy supports; the
