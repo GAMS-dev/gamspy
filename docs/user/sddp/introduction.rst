@@ -27,8 +27,9 @@ ClearLake is a reservoir managed over four months (``jan``, ``feb``, ``mar``,
 ``apr``). Each month the operator chooses how much water to release, how much
 to spill in a controlled flood, and how much to import to avoid running dry.
 Spilling and importing are both costly, so the operator would rather do
-neither. The catch is the **inflow**: the rainfall feeding the reservoir each
-month is uncertain, and the decision must be made *before* it is seen.
+neither. The catch is the **inflow**: the rainfall feeding the reservoir is
+uncertain, and each month's decision must be made *before the later months'
+inflows are known*.
 
 The goal is a *policy* (a rule that, for any reservoir level and any realised
 inflow, tells the operator what to do) that minimises the expected total cost
@@ -127,10 +128,12 @@ a time, by alternating two passes:
   approximation.
 
 Each iteration also yields a **lower bound** on the optimal expected cost. As
-cuts accumulate the approximation sharpens and the bound rises; when it stops
-improving, the policy has converged. The exact algebra of the cuts, the bound,
-and the sampling is left to the topic pages; the recursion above is all you
-need to read the tutorial.
+cuts accumulate the approximation sharpens and the bound rises; when it levels
+off, training stops.
+
+Curious how all of this actually works? :doc:`how_it_works <how_it_works>`
+opens the machinery: how a cut is computed from LP duals, what one iteration
+does, and why the lower bound can be trusted.
 
 The workflow in GAMSPy
 ======================

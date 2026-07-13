@@ -23,8 +23,8 @@ Registering a state
 ``add_state()`` takes the GAMSPy ``variable`` (indexed over the time set) plus
 three optional descriptors: ``lower_bound``, ``upper_bound`` and
 ``initial_state``. The variable is an ordinary decision variable in your model;
-registering it tells SDDP to track it across stages and to build cuts in terms
-of it.
+registering it tells SDDP to track it across stages and to build the
+:doc:`cuts <how_it_works>` in terms of it.
 
 Bounds
 ======
@@ -62,8 +62,8 @@ A problem can have more than one state (coupled reservoirs, or joint inventory
 and capacity) by calling ``add_state()`` once per variable. SDDP then builds a
 single cut with one slope per state, and ``policy()`` takes the incoming state
 as a ``dict`` keyed by variable name instead of a scalar. The single-state case
-above is the common starting point; the multi-state workflow is covered in its
-own example.
+above is the common starting point; a dedicated multi-state example will
+follow.
 
 .. seealso::
    The :doc:`ClearLake tutorial <clearlake>` registers a state in context.

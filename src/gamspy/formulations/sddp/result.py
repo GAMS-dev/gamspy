@@ -31,7 +31,7 @@ class SDDPResult:
     upper_bound_95 : float
         Upper end of the 95% confidence interval around ``upper_bound``.
     sigma : float
-        Standard error of the forward-pass cost estimate.
+        Sample standard deviation of the forward-pass path costs.
     total_time : float
         Wall-clock training time in seconds.
     stop_reason : str
