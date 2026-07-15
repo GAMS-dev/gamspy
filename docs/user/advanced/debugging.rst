@@ -230,6 +230,92 @@ The code snippet above prints the GAMS statement for the symbol ``i``::
 
     'eq .. sum(i,a(i)) =l= z;'
 
+.. _to_graph:
+
+Visualizing the Expression Tree
+===============================
+
+While ``getDeclaration``/``getDefinition`` show the flat GAMS string, it can be
+hard to see how a complex expression is structured. The ``toGraph`` method
+returns a `graphviz <https://graphviz.readthedocs.io/>`_ ``Digraph`` of the
+underlying expression tree, which is sometimes easier to inspect visually. Every
+operator/operation is drawn as a box and every symbol or number as a leaf node.
+
+``toGraph`` requires the optional ``graphviz`` dependency, which can be installed with:
+
+.. code-block:: shell
+
+    pip install gamspy[graph]
+
+Rendering the graph to an image additionally requires the Graphviz system
+binaries (e.g. ``apt install graphviz`` on Debian/Ubuntu or ``brew install graphviz`` on macOS).
+
+``toGraph`` is available on expressions, aggregations (``Sum``, ``Product``, ...),
+and symbols (:meth:`Set <gamspy.Set>`, :meth:`Parameter <gamspy.Parameter>`,
+:meth:`Variable <gamspy.Variable>`, :meth:`Equation <gamspy.Equation>`,
+:meth:`Alias <gamspy.Alias>`). For a ``Parameter``/``Variable`` it graphs the
+latest assignment and for an ``Equation`` its definition.
+
+.. code-block:: python
+
+    from gamspy import Container, Parameter
+
+    m = Container()
+    a = Parameter(m, name="a")
+    b = Parameter(m, name="b")
+    c = Parameter(m, name="c")
+    d = Parameter(m, name="d")
+
+    graph = (a * b + c / d).toGraph()
+
+The returned object can be visualized in a few ways:
+
+- **Render to an image file.** ``render`` writes the image (and opens it when
+  ``view=True``); ``cleanup=True`` removes the intermediate DOT file.
+
+  .. code-block:: python
+
+      graph.render("expr_tree", format="svg", cleanup=True)  # writes expr_tree.svg
+      graph.render("expr_tree", format="png", view=True)     # write and open
+
+- **Inline in a Jupyter notebook.** Making the graph the last expression in a
+  cell renders it automatically as an SVG.
+
+  .. code-block:: python
+
+      (a * b + c / d).toGraph()
+
+- **Inspect the raw DOT source** (no system binaries needed). The resulting
+  string can be pasted into any online Graphviz viewer.
+
+  .. code-block:: python
+
+      print(graph.source)
+
+The graph for ``a * b + c / d`` looks like this::
+
+        +
+       / \
+      *   /
+     / \ / \
+    a  b c  d
+
+The same works for symbols. The following graphs an equation's definition:
+
+.. code-block:: python
+
+    from gamspy import Container, Set, Parameter, Variable, Equation, Sum
+
+    m = Container()
+    i = Set(m, name="i")
+    a = Parameter(m, name="a", domain=i)
+    x = Variable(m, name="x", domain=i)
+
+    supply = Equation(m, name="supply", domain=i)
+    supply[i] = Sum(i, x[i]) <= a[i]
+
+    supply.toGraph().render("supply", format="svg", cleanup=True)
+
 Inspecting the Generated Equations and Variables
 ================================================
 The user may determine whether the model generated is the the model that the user has intended by studying the

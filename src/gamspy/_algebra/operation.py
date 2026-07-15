@@ -337,6 +337,29 @@ class Operation(operable.Operable):
 
         return output
 
+    def toGraph(self):
+        """
+        Return a ``graphviz.Digraph`` of this operation's tree.
+
+        The operation (e.g. ``sum``) is drawn as a box with an edge to each
+        index of its domain (labeled ``index``) and an edge to its body. Requires
+        the optional ``graphviz`` dependency (``pip install gamspy[graph]``).
+
+        Returns
+        -------
+        graphviz.Digraph
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=range(3))
+        >>> a = gp.Parameter(m, "a", domain=i)
+        >>> graph = gp.Sum(i, a[i]).toGraph()  # doctest: +SKIP
+
+        """
+        return expression.create_graph(self)
+
     def latexRepr(self) -> str:
         """
         Representation of this operation in Latex.

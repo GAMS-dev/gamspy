@@ -293,6 +293,96 @@ def create_latex_expression(root_node: Expression) -> str:
     return final_string
 
 
+def _describe_graph_node(node):
+    """
+    Return (label, shape, children) for a single node of an expression
+    tree. children is a list of (child, edge_label) tuples; leaves
+    return an empty list. Mirrors the node kinds enumerated in
+    ``Expression._find_all_symbols``.
+    """
+    OP_SHAPE = "box"
+    LEAF_SHAPE = "ellipse"
+
+    if isinstance(node, Expression):
+        children = []
+        if node.left is not None:
+            children.append((node.left, None))
+        if node.right is not None:
+            children.append((node.right, None))
+        return node.operator, OP_SHAPE, children
+
+    if isinstance(node, operation.Operation):
+        children: list[tuple] = [(index, "index") for index in node.op_domain]
+        children.append((node.rhs, None))
+        return node._op_name, OP_SHAPE, children
+
+    if isinstance(node, condition.Condition):
+        children = [(node.conditioning_on, None)]
+        if node.condition is not None:
+            children.append((node.condition, "cond"))
+        return "$", OP_SHAPE, children
+
+    if isinstance(node, operation.Ord):
+        return "ord", OP_SHAPE, [(node._symbol, None)]
+
+    if isinstance(node, operation.Card):
+        return "card", OP_SHAPE, [(node._symbol, None)]
+
+    if isinstance(node, MathOp):
+        return node.op_name, OP_SHAPE, [(el, None) for el in node.elements]
+
+    if isinstance(node, ExtrinsicFunction):
+        return node.name, OP_SHAPE, [(arg, None) for arg in node.args]
+
+    if isinstance(node, domain.Domain):
+        return "domain", OP_SHAPE, [(s, None) for s in node.sets]
+
+    # Leaf: bare symbol, implicit symbol, Number, or raw scalar.
+    return get_operand_gams_repr(node), LEAF_SHAPE, []
+
+
+def create_graph(root_node):
+    """
+    Build a graphviz.Digraph representing the tree structure of ``root_node``
+    (an ``Expression``, ``Operation``, or ``Condition``). Every node in the tree
+    becomes a graph node and every parent -> child relationship becomes a
+    directed edge. Symbols and numbers are leaves.
+    """
+    try:
+        import graphviz
+    except ModuleNotFoundError as e:
+        raise ValidationError(
+            "graphviz is required for `toGraph()`. Install it with "
+            "`pip install gamspy[graph]`. Rendering the graph additionally "
+            "requires the Graphviz system binaries (e.g. `apt install graphviz`)."
+        ) from e
+
+    graph = graphviz.Digraph()
+    counter = 0
+
+    # Each stack item is (node, parent_id, edge_label). A running counter keeps
+    # node ids unique so a symbol appearing multiple times gets a distinct node
+    # per occurrence rather than merging into one.
+    stack: list[tuple] = [(root_node, None, None)]
+    while stack:
+        node, parent_id, edge_label = stack.pop()
+
+        counter += 1
+        node_id = f"n{counter}"
+
+        label, shape, children = _describe_graph_node(node)
+        graph.node(node_id, label=label, shape=shape)
+
+        if parent_id is not None:
+            graph.edge(parent_id, node_id, label=edge_label)
+
+        # Push children reversed so they are processed (and drawn) left to right.
+        for child, child_label in reversed(children):
+            stack.append((child, node_id, child_label))
+
+    return graph
+
+
 class Expression(operable.Operable):
     """
     Represents an expression involving two operands and an operator.
@@ -586,6 +676,34 @@ class Expression(operable.Operable):
 
         """
         return self.representation
+
+    def toGraph(self):
+        """
+        Return a ``graphviz.Digraph`` of this expression's tree.
+
+        Each operator/operation is drawn as a box and each symbol or number as
+        a leaf, so the structure of the expression can be inspected visually or
+        rendered to a file. Requires the optional ``graphviz`` dependency
+        (``pip install gamspy[graph]``); a :class:`~gamspy.exceptions.ValidationError`
+        is raised if it is not installed.
+
+        Returns
+        -------
+        graphviz.Digraph
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, name="a")
+        >>> b = gp.Parameter(m, name="b")
+        >>> c = gp.Parameter(m, name="c")
+        >>> d = gp.Parameter(m, name="d")
+        >>> graph = (a * b + c / d).toGraph()  # doctest: +SKIP
+        >>> graph.render("expr", format="svg")  # doctest: +SKIP
+
+        """
+        return create_graph(self)
 
     def getDeclaration(self) -> str:
         """
