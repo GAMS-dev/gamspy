@@ -1,0 +1,2 @@
+Fixes a bug where creating a symbol with empty records from an empty iterable (e.g. ``[]``, ``set()``, ``range(0)``) raised a ``ValueError`` about inconsistent dimensionality. 
+Empty iterables are now accepted and produce a symbol with no records.

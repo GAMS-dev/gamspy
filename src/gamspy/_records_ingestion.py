@@ -350,6 +350,12 @@ class ParameterIngestor(BaseIngestor):
         except Exception as err:
             raise TypeError(f"Could not convert to pandas DataFrame: {err}") from err
 
+        # Empty iterables yield a (0, 0) frame with no columns, which would fail the
+        # dimensionality check. Give it one column per dimension so it is treated
+        # as an empty set.
+        if records.shape[1] == 0 and self.symbol.dimension >= 1:
+            records = pd.DataFrame(columns=list(range(self.symbol.dimension + 1)))
+
         c = records.shape[1]
         if c - 1 != self.symbol.dimension:
             raise ValueError(
@@ -467,6 +473,12 @@ class SetIngestor(BaseIngestor):
             )
         except Exception as err:
             raise TypeError(f"Could not convert to pandas DataFrame: {err}") from err
+
+        # Empty iterables yield a (0, 0) frame with no columns, which would fail the
+        # dimensionality check. Give it one column per dimension so it is treated
+        # as an empty set.
+        if records.shape[1] == 0:
+            records = pd.DataFrame(columns=list(range(self.symbol.dimension)))
 
         if records.shape[1] == self.symbol.dimension:
             records = records.assign(element_text="")
