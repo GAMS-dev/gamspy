@@ -111,7 +111,8 @@ def test_policy_scalar_rejected_for_multistate():
     # A bare scalar is ambiguous with several states -> must raise.
     c = _two_independent_clearlakes()
     with pytest.raises(ValidationError):
-        c.sddp.policy("mar", 180.0, 100.0)
+        with pytest.warns(UserWarning):
+            c.sddp.policy("mar", 180.0, 100.0)
     c.m.close()
 
 
@@ -120,10 +121,12 @@ def test_policy_bad_state_keys_rejected():
     c = _two_independent_clearlakes()
     # Missing a key.
     with pytest.raises(ValidationError):
-        c.sddp.policy("mar", {"L1": 180.0}, 100.0)
+        with pytest.warns(UserWarning):
+            c.sddp.policy("mar", {"L1": 180.0}, 100.0)
     # Unknown key.
     with pytest.raises(ValidationError):
-        c.sddp.policy("mar", {"L1": 180.0, "L3": 1.0}, 100.0)
+        with pytest.warns(UserWarning):
+            c.sddp.policy("mar", {"L1": 180.0, "L3": 1.0}, 100.0)
     c.m.close()
 
 

@@ -736,6 +736,32 @@ def test_set_setrecords_list():
     assert ij.toList() == [("A", "A"), ("B", "B")]
 
 
+def test_set_empty_records():
+    m = gp.Container()
+
+    # Empty iterables should produce a valid set with no records.
+    for empty in ([], set(), range(0)):
+        i = gp.Set(m, "i", records=empty)
+        assert i.records is not None
+        assert len(i) == 0
+        assert list(i.records.columns) == ["uni", "element_text"]
+
+    # Empty records with an explicit domain.
+    a = gp.Set(m, "a", records=["A", "B"])
+    b = gp.Set(m, "b", domain=a, records=[])
+    assert len(b) == 0
+    assert list(b.records.columns) == ["a", "element_text"]
+
+    # Multidimensional empty set.
+    ij = gp.Set(m, "ij", domain=["*", "*"], records=[])
+    assert len(ij) == 0
+    assert ij.records.shape == (0, 3)
+
+    # Records can be populated afterwards.
+    b.setRecords(["A"])
+    assert b.toList() == ["A"]
+
+
 def test_set_setrecords_dataframe():
     m = gp.Container()
     i = gp.Set(m, "i", records=["A", "B"])

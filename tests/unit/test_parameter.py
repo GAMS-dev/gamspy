@@ -628,6 +628,31 @@ def test_parameter_setrecords_list_and_array():
     assert p2.toList() == [("A", 100.0), ("B", 200.0)]
 
 
+def test_parameter_empty_records():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+
+    # Empty iterables should produce a valid parameter with no records.
+    for empty in ([], set(), range(0)):
+        p = gp.Parameter(m, "p", domain=[i], records=empty)
+        assert p.records is not None
+        assert len(p.records) == 0
+        assert list(p.records.columns) == ["i", "value"]
+
+    # Multidimensional empty parameter.
+    p2 = gp.Parameter(m, "p2", domain=["*", "*"], records=[])
+    assert p2.records.shape == (0, 3)
+
+    # A scalar parameter has no dimension to fill, so empty records are rejected.
+    with pytest.raises(ValueError, match="Dimensionality of records is inconsistent"):
+        gp.Parameter(m, "p3", records=[])
+
+    # Records can be populated afterwards.
+    p = gp.Parameter(m, "p4", domain=[i], records=[])
+    p.setRecords([("A", 1.0)])
+    assert p.toList() == [("A", 1.0)]
+
+
 def test_parameter_setrecords_dataframe():
     m = gp.Container()
     i = gp.Set(m, "i", records=["A", "B"])
