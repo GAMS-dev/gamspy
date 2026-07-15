@@ -23,7 +23,7 @@ leg-test-3.14:
     - apt-get update && apt-get install -y ca-certificates git
     - uv venv .venv -v --python 3.14 && source .venv/bin/activate
     - uv sync --group test
-    - uv pip install .[torch] --force-reinstall
+    - uv pip install .[torch,graph] --force-reinstall
     - gamspy install license $LOCAL_LICENSE
     - UV_NO_CONFIG=1 gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
