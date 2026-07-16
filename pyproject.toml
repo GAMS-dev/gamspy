@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.26.1"
+version = "1.26.2"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -51,6 +51,7 @@ changelog = "https://github.com/GAMS-dev/gamspy/blob/develop/CHANGELOG.rst"
 
 [project.optional-dependencies]
 torch = ["torch>=2.7.0"]
+graph = ["graphviz>=0.20"]
 
 [tool.uv]
 exclude-newer = "3 days"

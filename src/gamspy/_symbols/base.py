@@ -87,6 +87,50 @@ class BaseSymbol:
         """
         return self._latex_name
 
+    def toGraph(self: SymbolType):
+        """
+        Return a ``graphviz.Digraph`` of this symbol's expression tree.
+
+        For an :class:`~gamspy.Equation` this is the ``..`` definition; for a
+        :class:`~gamspy.Parameter`/:class:`~gamspy.Variable` (and attribute
+        assignments) it is the latest assignment. Requires the optional
+        ``graphviz`` dependency (``pip install gamspy[graph]``).
+
+        Returns
+        -------
+        graphviz.Digraph
+
+        Raises
+        ------
+        ValidationError
+            If the symbol has no assignment or definition to graph.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> v = gp.Variable(m, "v", domain=[i])
+        >>> a = gp.Parameter(m, "a", domain=[i])
+        >>> e = gp.Equation(m, "e", domain=[i])
+        >>> e[i] = a[i] <= v[i]
+        >>> graph = e.toGraph()  # doctest: +SKIP
+
+        """
+        import gamspy._algebra.expression as expression
+
+        definition = getattr(self, "_definition", None)
+        if definition is not None:
+            return expression.create_graph(definition)
+
+        assignment = getattr(self, "_assignment", None)
+        if assignment is not None:
+            return expression.create_graph(assignment)
+
+        raise ValidationError(
+            f"'{self.name}' has no assignment or definition to graph."
+        )
+
     @property
     def synchronize(self: SymbolType) -> bool:
         """
@@ -1245,7 +1289,9 @@ class VarEquSymbol(RecordSymbol):
 
         return toValueVariableEquation(self, column=column)
 
-    def toList(self: Variable | Equation, columns: str | None = None) -> list:
+    def toList(
+        self: Variable | Equation, columns: str | list[str] | None = None
+    ) -> list:
         """
         Converts the specified attributes of the symbol records to a Python list.
 

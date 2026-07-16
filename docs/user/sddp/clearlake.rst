@@ -113,14 +113,16 @@ equations belonging to the stage currently being solved.
 Registering the state and the noise
 ===================================
 
-We tell the sddp instance which variable is the state (with its initial value
-and upper bound) and how the noise is distributed, then ``build()`` injects the
-SDDP machinery. ``stage_cost`` is the per-stage cost variable, *without* any
-future-cost term, which SDDP adds itself.
+We tell the sddp instance which variable is the state and how the noise is
+distributed, then ``build()`` injects the SDDP machinery. The state's bounds
+come from the variable itself here (``L.up`` is already the flood threshold);
+passing ``upper_bound=L_FLOOD`` to ``add_state()`` would work just as well
+(see :doc:`state_variables`). ``stage_cost`` is the per-stage cost variable,
+*without* any future-cost term, which SDDP adds itself.
 
 .. code-block:: python
 
-   sddp.add_state(variable=L, initial_state=L0, upper_bound=L_FLOOD)
+   sddp.add_state(variable=L, initial_state=L0)
    sddp.set_noise(parameter=precip, scenario_data=scenario_data, probabilities=scenario_probs)
    sddp.build(stage_cost=cost)
 
@@ -162,9 +164,9 @@ iteration and a summary:
    ========================================================================
 
 The ``bound`` column is the **lower bound**: a rigorous under-estimate of the
-optimal expected cost that rises as cuts accumulate. It climbs from 107.42 and
-settles at 112.3047, where the plateau rule stops training after 8 of the 20
-allowed iterations. The ``sim cost`` column is a small-sample (``n_trials``)
+optimal expected cost that rises as :doc:`cuts <how_it_works>` accumulate. It
+climbs from 107.42 and settles at 112.3047, where the plateau rule stops
+training after 8 of the 20 allowed iterations. The ``sim cost`` column is a small-sample (``n_trials``)
 diagnostic of the forward paths, *not* a bound; it is noisy and can even be
 zero, which is why training watches the bound, not this column.
 

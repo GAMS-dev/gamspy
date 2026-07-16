@@ -269,6 +269,94 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         finally:
             del self.container._data[temp_name]
 
+    def toValue(self) -> float:
+        """
+        Returns the numerical value of a scalar (fully indexed) implicit
+        parameter.
+
+        Returns
+        -------
+        float
+
+        Raises
+        ------
+        TypeError
+            If the implicit parameter is not scalar (all indices must be
+            literals).
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> j = gp.Set(m, "j", records=["j1", "j2", "j3"])
+        >>> p = gp.Parameter(m, "p", domain=[i, j], records=np.array([[1, 2, 3], [4, 5, 6]]))
+        >>> p["i1", "j2"].toValue()
+        np.float64(2.0)
+
+        """
+        if isinstance(self.parent, (syms.Set, syms.Alias)):
+            # Set attributes (e.g. i.pos) are indexed by the parent set.
+            domain: list = [self.parent]
+        else:
+            domain = list(self.domain)
+
+        temp_name = "autotemp" + utils._get_unique_name()
+        temp_param = syms.Parameter._constructor_bypass(
+            self.container, temp_name, domain
+        )
+
+        try:
+            temp_param[domain if domain else [...]] = self
+            return temp_param.toValue()
+        finally:
+            del self.container._data[temp_name]
+
+    def toList(self) -> list:
+        """
+        Converts the records of the implicit parameter to a Python list.
+
+        Returns
+        -------
+        list
+            For scalars, a list with a single numerical value. For
+            multi-dimensional implicit parameters, a list of tuples where the
+            last element of each tuple is the value. An empty list if the
+            parent symbol has no records.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> j = gp.Set(m, "j", records=["j1", "j2", "j3"])
+        >>> p = gp.Parameter(m, "p", domain=[i, j], records=np.array([[1, 2, 3], [4, 5, 6]]))
+        >>> p[i, "j2"].toList()
+        [('i1', 2.0), ('i2', 5.0)]
+
+        """
+        if self.parent.records is None:
+            return []
+
+        if isinstance(self.parent, (syms.Set, syms.Alias)):
+            # Set attributes (e.g. i.pos) are indexed by the parent set.
+            domain: list = [self.parent]
+        else:
+            domain = list(self.domain)
+
+        temp_name = "autotemp" + utils._get_unique_name()
+        temp_param = syms.Parameter._constructor_bypass(
+            self.container, temp_name, domain
+        )
+
+        try:
+            temp_param[domain if domain else [...]] = self
+            return temp_param.toList()
+        finally:
+            del self.container._data[temp_name]
+
     @property
     def T(self) -> ImplicitParameter:
         """See gamspy.ImplicitParameter.t"""

@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     import pandas as pd
 
     from gamspy import Alias, Container, Set
+    from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitSet
@@ -202,7 +203,11 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
 
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
-    def __setitem__(self, indices: IndexType, rhs: Expression | Operation | bool | str):
+    def __setitem__(
+        self,
+        indices: IndexType,
+        rhs: Expression | Operation | Condition | ImplicitSet | bool | str,
+    ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 

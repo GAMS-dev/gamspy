@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" font-family="Helvetica, Arial, sans-serif">
+<defs><marker id="a2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#fb923c"/></marker></defs>
+<text x="380" y="44" fill="#dfe6f5" font-size="13" font-weight="bold" text-anchor="middle">one SDDP iteration</text>
+<rect x="56" y="58" width="648" height="244" rx="14" fill="none" stroke="#dfe6f5" stroke-opacity="0.45" stroke-width="1.4" stroke-dasharray="7 5"/>
+<rect x="90" y="88" width="240" height="170" rx="10" fill="none" stroke="#dfe6f5" stroke-width="1.8"/>
+<text x="210.0" y="115" fill="#dfe6f5" font-size="15" font-weight="bold" text-anchor="middle">Forward pass</text>
+<line x1="106" y1="129" x2="314" y2="129" stroke="#dfe6f5" stroke-opacity="0.35" stroke-width="1.2"/>
+<circle cx="119" cy="158" r="9.5" fill="none" stroke="#fb923c" stroke-width="1.7"/>
+<text x="119" y="162" fill="#fb923c" font-size="11" font-weight="bold" text-anchor="middle">1</text>
+<text x="138" y="162" fill="#dfe6f5" font-size="12">sample scenario paths</text>
+<circle cx="119" cy="188" r="9.5" fill="none" stroke="#fb923c" stroke-width="1.7"/>
+<text x="119" y="192" fill="#fb923c" font-size="11" font-weight="bold" text-anchor="middle">2</text>
+<text x="138" y="192" fill="#dfe6f5" font-size="12">roll the states forward</text>
+<circle cx="119" cy="218" r="9.5" fill="none" stroke="#fb923c" stroke-width="1.7"/>
+<text x="119" y="222" fill="#fb923c" font-size="11" font-weight="bold" text-anchor="middle">3</text>
+<text x="138" y="222" fill="#dfe6f5" font-size="12">collect the visited states</text>
+<rect x="430" y="88" width="240" height="170" rx="10" fill="none" stroke="#dfe6f5" stroke-width="1.8"/>
+<text x="550.0" y="115" fill="#dfe6f5" font-size="15" font-weight="bold" text-anchor="middle">Backward pass</text>
+<line x1="446" y1="129" x2="654" y2="129" stroke="#dfe6f5" stroke-opacity="0.35" stroke-width="1.2"/>
+<circle cx="459" cy="158" r="9.5" fill="none" stroke="#fb923c" stroke-width="1.7"/>
+<text x="459" y="162" fill="#fb923c" font-size="11" font-weight="bold" text-anchor="middle">1</text>
+<text x="478" y="162" fill="#dfe6f5" font-size="12">solve stage LPs at the trials</text>
+<circle cx="459" cy="188" r="9.5" fill="none" stroke="#fb923c" stroke-width="1.7"/>
+<text x="459" y="192" fill="#fb923c" font-size="11" font-weight="bold" text-anchor="middle">2</text>
+<text x="478" y="192" fill="#dfe6f5" font-size="12">aggregate duals into a cut</text>
+<circle cx="459" cy="218" r="9.5" fill="none" stroke="#fb923c" stroke-width="1.7"/>
+<text x="459" y="222" fill="#fb923c" font-size="11" font-weight="bold" text-anchor="middle">3</text>
+<text x="478" y="222" fill="#dfe6f5" font-size="12">tighten Q, raise the bound</text>
+<path d="M 330 150 Q 380 134 430 150" fill="none" stroke="#fb923c" stroke-width="2.2" marker-end="url(#a2)"/>
+<text x="380" y="126" fill="#dfe6f5" font-size="12" text-anchor="middle">trial states</text>
+<path d="M 430 206 Q 380 222 330 206" fill="none" stroke="#fb923c" stroke-width="2.2" marker-end="url(#a2)"/>
+<text x="380" y="242" fill="#dfe6f5" font-size="12" text-anchor="middle">new cuts</text>
+</svg>

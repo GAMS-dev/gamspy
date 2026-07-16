@@ -177,7 +177,7 @@ class Operation(operable.Operable):
             )
         return records["value"][0]
 
-    def toList(self) -> list | None:
+    def toList(self) -> list:
         """
         Convenience method to return the records of the operation as a list.
 
@@ -201,9 +201,11 @@ class Operation(operable.Operable):
         if records is not None:
             return records.values.tolist()
 
-        return None
+        return []
 
     def _get_raw_domain(self) -> list[Set | Alias | ImplicitSet]:
+        from gamspy.math import MathOp
+
         raw_domain = []
         for elem in self.op_domain:
             if isinstance(elem, (str, syms.UniverseAlias)):
@@ -213,7 +215,8 @@ class Operation(operable.Operable):
 
             if isinstance(elem, condition.Condition):
                 if isinstance(
-                    elem.conditioning_on, (implicits.ImplicitSet, syms.Set, syms.Alias)
+                    elem.conditioning_on,
+                    (implicits.ImplicitSet, syms.Set, syms.Alias, MathOp),
                 ):
                     raw_domain.append(elem.conditioning_on)
                 elif isinstance(elem.conditioning_on, domain.Domain):
@@ -230,7 +233,22 @@ class Operation(operable.Operable):
     def _validate_operation(
         self, control_stack: list[Set | Alias | ImplicitSet]
     ) -> None:
+        from gamspy.math import MathOp
+
+        set_indices = []
         for elem in self.raw_domain:
+            if isinstance(elem, MathOp):
+                # A MathOp index (e.g. sameAs(t-1, v(tt))) is not itself a set;
+                # it controls the sets that appear in its arguments. Unpack its
+                # controlled sets instead.
+                control_stack += [
+                    member
+                    for member in utils._unpack(elem.elements)
+                    if isinstance(member, (syms.Set, syms.Alias))
+                    and member not in control_stack
+                ]
+                continue
+
             if isinstance(elem, implicits.ImplicitSet):
                 control_stack += [
                     member for member in elem.domain if member not in control_stack
@@ -239,15 +257,16 @@ class Operation(operable.Operable):
             if elem in control_stack:
                 raise ValidationError(f"Set {elem} is already in control")
 
+            set_indices.append(elem)
+
         # Cannot validate definition if we are in a gp.Loop since the control
         # indices can be provided by the gp.Loop.
         if self.container._in_loop:
             return
 
         # The operation's own indices are now controlled; validate the body
-        # (whatever its type: expression, nested operation, implicit symbol,
-        # math/extrinsic function, condition, ...) against the extended stack.
-        stack = control_stack + self.raw_domain
+        # against the extended stack.
+        stack = control_stack + set_indices
         expression._validate_controlled(self.rhs, utils._unpack(stack))
 
     def _get_index_str(self) -> str:
@@ -317,6 +336,29 @@ class Operation(operable.Operable):
         output = self._replace_operations(output)
 
         return output
+
+    def toGraph(self):
+        """
+        Return a ``graphviz.Digraph`` of this operation's tree.
+
+        The operation (e.g. ``sum``) is drawn as a box with an edge to each
+        index of its domain (labeled ``index``) and an edge to its body. Requires
+        the optional ``graphviz`` dependency (``pip install gamspy[graph]``).
+
+        Returns
+        -------
+        graphviz.Digraph
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=range(3))
+        >>> a = gp.Parameter(m, "a", domain=i)
+        >>> graph = gp.Sum(i, a[i]).toGraph()  # doctest: +SKIP
+
+        """
+        return expression.create_graph(self)
 
     def latexRepr(self) -> str:
         """

@@ -68,9 +68,12 @@ class Condition(operable.Operable):
         self.condition = condition
         self._where = None
         self.container: Container | None = None
-        if hasattr(conditioning_on, "container") and conditioning_on.container:
+        if (
+            hasattr(conditioning_on, "container")
+            and conditioning_on.container is not None
+        ):
             self.container = cast("Container | None", conditioning_on.container)
-        elif hasattr(condition, "container") and condition.container:
+        elif hasattr(condition, "container") and condition.container is not None:
             self.container = cast("Container | None", condition.container)
 
         self.domain = None

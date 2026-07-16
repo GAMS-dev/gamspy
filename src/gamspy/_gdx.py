@@ -344,7 +344,6 @@ def read(
         for source_name, md in symbols_with_records
     )
     container._add_statement(f"$gdxLoad {load_from} {symbol_str}")
-    container._synch_with_gams()
     container._should_load_from_gams(load_symbols)
 
 

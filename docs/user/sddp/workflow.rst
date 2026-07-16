@@ -70,8 +70,8 @@ always contains exactly the stage currently being solved. You reference it in a
        L[t] - L[t.lag(1, "circular")] + R[t] + F[t] - Z[t] == precip
    )
 
-During each per-stage solve the engine flips ``active_stage`` to the current
-stage, so only that stage's equations are active. You never assign to it
+During each per-stage solve the sddp instance flips ``active_stage`` to the
+current stage, so only that stage's equations are active. You never assign to it
 yourself; you only read it in the gate.
 
 .. note::
@@ -111,8 +111,9 @@ before it, and cannot be called afterwards.
 Training and using the policy
 =============================
 
-With the model built, ``train()`` runs the iterations and returns a result
-object carrying the lower bound and convergence history; ``policy()`` answers a
+With the model built, ``train()`` runs the iterations (the forward and
+backward passes described in :doc:`how_it_works <how_it_works>`) and returns a
+result object carrying the lower bound and convergence history; ``policy()`` answers a
 single "what should I do here?" query, and ``simulate()`` evaluates the policy
 over many Monte Carlo paths. A trained instance can be written to a ``.sddp``
 file with ``save()`` and reloaded with ``SDDP.load()`` for inference without

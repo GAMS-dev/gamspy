@@ -1584,7 +1584,6 @@ class Container:
             load_from = os.fspath(load_from)
 
         self._read(load_from, symbol_names, encoding)
-        self._synch_with_gams()
 
     def setRecords(
         self, records: dict[SymbolType, Any], *, uels_on_axes: bool | list[bool] = False

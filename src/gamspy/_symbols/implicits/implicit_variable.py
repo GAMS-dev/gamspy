@@ -299,6 +299,112 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
 
         return getattr(self, columns[column]).toDense()
 
+    def toValue(self, column: str = "level") -> float:
+        """
+        Returns the numerical value of a scalar (fully indexed) implicit
+        variable attribute.
+
+        Parameters
+        ----------
+        column : str, optional
+            The attribute to convert, by default "level". One of "level",
+            "marginal", "lower", "upper" or "scale".
+
+        Returns
+        -------
+        float
+
+        Raises
+        ------
+        TypeError
+            If the implicit variable is not scalar (all indices must be
+            literals).
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> j = gp.Set(m, "j", records=["j1", "j2", "j3"])
+        >>> p = gp.Parameter(m, "p", domain=[i, j], records=np.array([[1, 2, 3], [4, 5, 6]]))
+        >>> v = gp.Variable(m, "v", domain=[i, j])
+        >>> v.l[i, j] = p[i, j]
+        >>> v["i1", "j2"].toValue()
+        np.float64(2.0)
+
+        """
+        if not isinstance(column, str):
+            raise TypeError("Argument 'column' must be type str")
+
+        columns = {
+            "level": "l",
+            "marginal": "m",
+            "lower": "lo",
+            "upper": "up",
+            "scale": "scale",
+        }
+
+        if column not in columns:
+            raise TypeError(
+                f"Argument 'column' must be one of the following: {list(columns)}"
+            )
+
+        return getattr(self, columns[column]).toValue()
+
+    def toList(self, columns: str | list[str] | None = None) -> list:
+        """
+        Converts the specified attributes of the implicit variable to a Python
+        list.
+
+        Parameters
+        ----------
+        columns : str | list[str] | None, optional
+            The attribute column(s) to include (e.g., "level", "marginal",
+            "lower", "upper", "scale"). If None, defaults to "level".
+
+        Returns
+        -------
+        list
+            A list of the requested attribute values. For scalars, a list of
+            the attribute values. For multi-dimensional implicit variables, a
+            list of tuples where domain indices are followed by the requested
+            attributes. An empty list if the parent symbol has no records.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> j = gp.Set(m, "j", records=["j1", "j2", "j3"])
+        >>> p = gp.Parameter(m, "p", domain=[i, j], records=np.array([[1, 2, 3], [4, 5, 6]]))
+        >>> v = gp.Variable(m, "v", domain=[i, j])
+        >>> v.l[i, j] = p[i, j]
+        >>> v[i, "j2"].toList()
+        [('i1', 2.0), ('i2', 5.0)]
+
+        """
+        if self.parent.records is None:
+            return []
+
+        domain = list(self.domain)
+        temp_name = "autotemp" + utils._get_unique_name()
+        temp_var = syms.Variable._constructor_bypass(
+            self.container, temp_name, domain=domain
+        )
+
+        try:
+            index = domain if domain else [...]
+            temp_var.l[index] = self.l
+            temp_var.m[index] = self.m
+            temp_var.lo[index] = self.lo
+            temp_var.up[index] = self.up
+            temp_var.scale[index] = self.scale
+            return temp_var.toList(columns)
+        finally:
+            del self.container._data[temp_name]
+
     def __eq__(self, other):
         return expression.Expression(self, "=e=", other)
 

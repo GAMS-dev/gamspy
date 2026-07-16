@@ -63,7 +63,7 @@ if TYPE_CHECKING:
         | Condition
     )
     OperationIndexType: TypeAlias = (
-        Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition
+        Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition | MathOp
     )
     OperationRhsType: TypeAlias = (
         Operation
@@ -75,6 +75,7 @@ if TYPE_CHECKING:
         | ImplicitParameter
         | ImplicitSet
         | int
+        | float
         | Ord
         | Card
         | bool

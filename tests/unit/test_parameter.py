@@ -628,6 +628,31 @@ def test_parameter_setrecords_list_and_array():
     assert p2.toList() == [("A", 100.0), ("B", 200.0)]
 
 
+def test_parameter_empty_records():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+
+    # Empty iterables should produce a valid parameter with no records.
+    for empty in ([], set(), range(0)):
+        p = gp.Parameter(m, "p", domain=[i], records=empty)
+        assert p.records is not None
+        assert len(p.records) == 0
+        assert list(p.records.columns) == ["i", "value"]
+
+    # Multidimensional empty parameter.
+    p2 = gp.Parameter(m, "p2", domain=["*", "*"], records=[])
+    assert p2.records.shape == (0, 3)
+
+    # A scalar parameter has no dimension to fill, so empty records are rejected.
+    with pytest.raises(ValueError, match="Dimensionality of records is inconsistent"):
+        gp.Parameter(m, "p3", records=[])
+
+    # Records can be populated afterwards.
+    p = gp.Parameter(m, "p4", domain=[i], records=[])
+    p.setRecords([("A", 1.0)])
+    assert p.toList() == [("A", 1.0)]
+
+
 def test_parameter_setrecords_dataframe():
     m = gp.Container()
     i = gp.Set(m, "i", records=["A", "B"])
@@ -901,5 +926,67 @@ def test_implicit_parameter_toDense():
 
     # The temporary parameters used internally must not leak into the container.
     assert set(m.data) == {"i", "j", "k", "p", "p3", "v", "e", "s", "a", "q"}
+
+    m.close()
+
+
+def test_implicit_parameter_toValue():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1", "j2", "j3"])
+
+    arr_2d = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    p = Parameter(m, "p", domain=[i, j], records=arr_2d)
+
+    # Fully indexed implicit parameter -> scalar value.
+    assert p["i1", "j2"].toValue() == arr_2d[0, 1]
+    assert p["i2", "j3"].toValue() == arr_2d[1, 2]
+    # Transpose/permutation still resolves to the right element.
+    assert p.t()["j2", "i1"].toValue() == arr_2d[0, 1]
+
+    # Non-scalar implicit parameters are not supported.
+    with pytest.raises(TypeError):
+        p[i, j].toValue()
+    with pytest.raises(TypeError):
+        p[i, "j2"].toValue()
+
+    # The temporary parameters used internally must not leak into the container.
+    assert set(m.data) == {"i", "j", "p"}
+
+    m.close()
+
+
+def test_implicit_parameter_toList():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1", "j2", "j3"])
+
+    arr_2d = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    p = Parameter(m, "p", domain=[i, j], records=arr_2d)
+
+    # Full indexing keeps the parent's list representation.
+    assert p[i, j].toList() == p.toList()
+
+    # Literal indices reduce the dimensionality.
+    assert p[i, "j2"].toList() == [("i1", 2.0), ("i2", 5.0)]
+    assert p["i1", j].toList() == [("j1", 1.0), ("j2", 2.0), ("j3", 3.0)]
+
+    # All indices fixed -> list with a single scalar value.
+    assert p["i2", "j3"].toList() == [6.0]
+
+    # Transpose reorders the domain columns.
+    assert p.t()[j, i].toList() == p.t().toList()
+
+    # Set attributes are indexed by the parent set.
+    s = Set(m, "s", records=["a", "b", "c"])
+    assert s.pos.toList() == [("a", 1.0), ("b", 2.0), ("c", 3.0)]
+
+    # Parent without records -> empty list.
+    q = Parameter(m, "q", domain=[i, j])
+    assert q[i, j].toList() == []
+    assert q[i, "j1"].toList() == []
+
+    # The temporary parameters used internally must not leak into the container.
+    assert set(m.data) == {"i", "j", "p", "s", "q"}
 
     m.close()

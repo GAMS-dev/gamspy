@@ -90,8 +90,9 @@ class MathOp(operable.Operable):
 
     def _find_container(self) -> Container | None:
         for elem in self.elements:
-            if hasattr(elem, "container"):
-                return elem.container
+            container = getattr(elem, "container", None)
+            if container is not None:
+                return container
 
         return None
 
@@ -167,13 +168,13 @@ class MathOp(operable.Operable):
 
         return records["value"][0]
 
-    def toList(self) -> list | None:
+    def toList(self) -> list:
         """
         Convenience method to return the records of the expression as a list.
 
         Returns
         -------
-        list | None
+        list
 
         Examples
         --------
@@ -191,7 +192,7 @@ class MathOp(operable.Operable):
         if records is not None:
             return records.values.tolist()
 
-        return None
+        return []
 
     def gamsRepr(self) -> str:
         """
@@ -1304,14 +1305,17 @@ def rand_triangle(low: int | float, mid: int | float, high: int | float) -> Math
     return MathOp("randTriangle", (low, mid, high))
 
 
-def same_as(arg1: Set | Alias | str, arg2: Set | Alias | str) -> MathOp:
+def same_as(
+    arg1: Set | Alias | ImplicitSet | str,
+    arg2: Set | Alias | ImplicitSet | str,
+) -> MathOp:
     """
     Evaluates to true if this set is identical to the given set or alias, false otherwise.
 
     Parameters
     ----------
-    arg1 : Set | Alias | str
-    other : Set | Alias | str
+    arg1 : Set | Alias | ImplicitSet | str
+    other : Set | Alias | ImplicitSet | str
 
     Returns
     -------
@@ -1333,7 +1337,10 @@ def same_as(arg1: Set | Alias | str, arg2: Set | Alias | str) -> MathOp:
     return MathOp("sameAs", (arg1, arg2))
 
 
-def diag(arg1: Set | Alias | str, arg2: Set | Alias | str) -> MathOp:
+def diag(
+    arg1: Set | Alias | ImplicitSet | str,
+    arg2: Set | Alias | ImplicitSet | str,
+) -> MathOp:
     """
     Returns the numerical value 1 if the first argument is identical to the
     second argument, 0 otherwise. This is the numerical counterpart of
@@ -1341,8 +1348,8 @@ def diag(arg1: Set | Alias | str, arg2: Set | Alias | str) -> MathOp:
 
     Parameters
     ----------
-    arg1 : Set | Alias | str
-    arg2 : Set | Alias | str
+    arg1 : Set | Alias | ImplicitSet | str
+    arg2 : Set | Alias | ImplicitSet | str
 
     Returns
     -------

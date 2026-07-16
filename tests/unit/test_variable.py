@@ -1276,3 +1276,89 @@ def test_implicit_variable_toDense():
     assert set(m.data) == {"i", "j", "k", "p", "p3", "v", "v3", "w"}
 
     m.close()
+
+
+def test_implicit_variable_toValue():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1", "j2", "j3"])
+
+    arr_2d = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    p = Parameter(m, "p", domain=[i, j], records=arr_2d)
+    v = Variable(m, "v", domain=[i, j])
+    v.l[i, j] = p[i, j]
+    v.m[i, j] = p[i, j] + 10
+    v.up[i, j] = p[i, j] + 100
+    v.lo[i, j] = p[i, j] - 100
+
+    # Fully indexed implicit variable -> scalar value (level by default).
+    assert v["i1", "j2"].toValue() == arr_2d[0, 1]
+    assert v["i2", "j3"].toValue() == arr_2d[1, 2]
+
+    # The column argument selects the attribute.
+    assert v["i1", "j2"].toValue("marginal") == arr_2d[0, 1] + 10
+    assert v["i1", "j2"].toValue("upper") == arr_2d[0, 1] + 100
+    assert v["i1", "j2"].toValue("lower") == arr_2d[0, 1] - 100
+
+    # Transpose still resolves to the right element.
+    assert v.t()["j2", "i1"].toValue() == arr_2d[0, 1]
+
+    # Non-scalar implicit variables are not supported.
+    with pytest.raises(TypeError):
+        v[i, j].toValue()
+    with pytest.raises(TypeError):
+        v[i, "j2"].toValue()
+
+    # Invalid column.
+    with pytest.raises(TypeError, match="Argument 'column' must be type str"):
+        v["i1", "j2"].toValue(column=123)
+    with pytest.raises(TypeError, match="must be one of the following"):
+        v["i1", "j2"].toValue(column="invalid_col")
+
+    # The temporary parameters used internally must not leak into the container.
+    assert set(m.data) == {"i", "j", "p", "v"}
+
+    m.close()
+
+
+def test_implicit_variable_toList():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1", "j2", "j3"])
+
+    arr_2d = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    p = Parameter(m, "p", domain=[i, j], records=arr_2d)
+    v = Variable(m, "v", domain=[i, j])
+    v.l[i, j] = p[i, j]
+    v.m[i, j] = p[i, j] + 10
+
+    # Full indexing returns the level by default and matches the parent.
+    assert v[i, j].toList() == v.toList()
+    assert v[i, j].toList(["level", "marginal"]) == v.toList(["level", "marginal"])
+
+    # Literal indices reduce the dimensionality.
+    assert v[i, "j2"].toList() == [("i1", 2.0), ("i2", 5.0)]
+    assert v[i, "j2"].toList("marginal") == [("i1", 12.0), ("i2", 15.0)]
+
+    # All indices fixed -> scalar list (single column) / tuple list (multi).
+    assert v["i2", "j3"].toList() == [6.0]
+    assert v["i2", "j3"].toList(["level", "marginal"]) == [(6.0, 16.0)]
+
+    # Transpose reorders the domain columns.
+    assert v.t()[j, i].toList() == v.t().toList()
+
+    # Invalid column.
+    with pytest.raises(TypeError, match="must be type str or list"):
+        v[i, j].toList(columns=123)
+    with pytest.raises(TypeError, match="must be a subset of the following"):
+        v[i, j].toList(columns="invalid_col")
+
+    # Parent without records -> empty list.
+    w = Variable(m, "w", domain=[i, j])
+    assert w[i, j].toList() == []
+    assert w[i, "j1"].toList() == []
+
+    # The temporary parameters used internally must not leak into the container.
+    assert set(m.data) == {"i", "j", "p", "v", "w"}
+
+    m.close()

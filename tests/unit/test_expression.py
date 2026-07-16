@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 import gamspy as gp
+from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
 
@@ -235,3 +236,134 @@ def test_expression_order():
     e = gp.Equation(m, "e", domain=i)
     e[...] = v[i].where[gp.Ord(i) > 3] == a[i]
     assert e.getDefinition() == "e(i) .. v(i) $ (ord(i) > 3) =e= a(i);"
+
+
+def _edge_count(graph) -> int:
+    return sum(1 for line in graph.body if "->" in line)
+
+
+def _node_count(graph) -> int:
+    return sum(1 for line in graph.body if "->" not in line)
+
+
+def test_to_graph_expression():
+    graphviz = pytest.importorskip("graphviz")
+    m = gp.Container()
+    a = gp.Parameter(m, "a")
+    b = gp.Parameter(m, "b")
+    c = gp.Parameter(m, "c")
+    d = gp.Parameter(m, "d")
+
+    graph = (a * b + c / d).toGraph()
+    assert isinstance(graph, graphviz.Digraph)
+
+    source = graph.source
+    for label in ("+", "*", "/", "label=a", "label=b", "label=c", "label=d"):
+        assert label in source
+
+    # 7 nodes (+, *, /, a, b, c, d) and 6 edges connecting them.
+    assert _node_count(graph) == 7
+    assert _edge_count(graph) == 6
+
+
+def test_to_graph_aggregation():
+    pytest.importorskip("graphviz")
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    j = gp.Set(m, "j")
+    x = gp.Variable(m, "x", domain=[i, j], type="Positive")
+    a = gp.Parameter(m, "a", domain=i)
+
+    graph = (gp.Sum(j, x[i, j]) <= a[i]).toGraph()
+    source = graph.source
+    assert "label=sum" in source
+    assert "=l=" in source
+    # The index of the Sum is drawn with an "index"-labeled edge.
+    assert "label=index" in source
+
+
+def test_to_graph_operation_root():
+    pytest.importorskip("graphviz")
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    j = gp.Set(m, "j")
+    x = gp.Variable(m, "x", domain=[i, j], type="Positive")
+    c = gp.Parameter(m, "c", domain=[i, j])
+
+    graph = gp.Sum((i, j), c[i, j] * x[i, j]).toGraph()
+    source = graph.source
+    assert "label=sum" in source
+    # Two index edges (i and j) plus one edge to the body.
+    assert source.count("label=index") == 2
+
+
+def test_to_graph_equation_definition():
+    pytest.importorskip("graphviz")
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    a = gp.Parameter(m, "a", domain=i)
+    v = gp.Variable(m, "v", domain=i)
+    e = gp.Equation(m, "e", domain=i)
+    e[i] = a[i] <= v[i]
+
+    graph = e.toGraph()
+    source = graph.source
+    assert ".." in source
+    assert "=l=" in source
+
+
+def test_to_graph_parameter_assignment():
+    pytest.importorskip("graphviz")
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    j = gp.Set(m, "j")
+    d = gp.Parameter(m, "d", domain=[i, j])
+    c = gp.Parameter(m, "c", domain=[i, j])
+    c[i, j] = 90 * d[i, j] / 1000
+
+    graph = c.toGraph()
+    source = graph.source
+    assert 'label="="' in source
+    assert "label=90" in source
+    assert "label=1000" in source
+
+
+def test_to_graph_condition():
+    pytest.importorskip("graphviz")
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    a = gp.Parameter(m, "a", domain=i)
+    v = gp.Variable(m, "v", domain=i)
+    e = gp.Equation(m, "e", domain=i)
+    e[i] = v[i].where[gp.Ord(i) > 3] == a[i]
+
+    source = e.toGraph().source
+    assert 'label="$"' in source
+    assert "label=ord" in source
+
+
+def test_to_graph_unassigned_raises():
+    pytest.importorskip("graphviz")
+    m = gp.Container()
+    a = gp.Parameter(m, "a")
+    with pytest.raises(ValidationError):
+        a.toGraph()
+
+
+def test_to_graph_missing_graphviz(monkeypatch):
+    import builtins
+
+    m = gp.Container()
+    a = gp.Parameter(m, "a")
+    b = gp.Parameter(m, "b")
+
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "graphviz":
+            raise ModuleNotFoundError("No module named 'graphviz'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    with pytest.raises(ValidationError, match="graphviz is required"):
+        (a + b).toGraph()
