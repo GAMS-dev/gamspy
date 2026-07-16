@@ -9,14 +9,14 @@ repos:
     -   id: check-ast
     -   id: check-case-conflict
 -   repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.59
+    rev: v0.0.60
     hooks:
     -   id: ty
         entry: uv run ty check src
         language: python
         pass_filenames: false
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.21
+    rev: v0.15.22
     hooks:
     # Run the linter.
     -   id: ruff-check
