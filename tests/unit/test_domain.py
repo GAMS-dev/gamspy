@@ -17,10 +17,6 @@ def test_domain():
     domain = gp.Domain(i, j)
     assert domain.gamsRepr() == "(i,j)"
 
-    # Domain with less than two sets
-    with pytest.raises(ValidationError):
-        gp.Domain(i)
-
     # Domain with no set or alias symbols
     with pytest.raises(ValidationError):
         gp.Domain("i", "j")

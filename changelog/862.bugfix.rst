@@ -1,1 +1,0 @@
-Fixes a bug where indexing a symbol with a set that is a superset of the declared domain raised a ``ValidationError``, even though GAMS accepts it. Domain compatibility is now checked in both directions, so both subset and superset index sets on the same domain chain are allowed (e.g. indexing ``GgRtpc(r, sub_t)`` with ``Rtpc(r, t)`` where ``sub_t`` is a subset of ``t``).

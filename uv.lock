@@ -927,7 +927,7 @@ wheels = [
 
 [[package]]
 name = "gamspy"
-version = "1.26.1"
+version = "1.26.2"
 source = { editable = "." }
 dependencies = [
     { name = "gamsapi" },

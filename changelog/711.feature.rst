@@ -1,3 +1,0 @@
-Implements `toGraph()`` method to expressions, operations, and symbols. ``toGraph`` returns a ``graphviz.Digraph`` 
-of the underlying expression tree for inspection. For an ``Equation`` this graphs the definition of the equation and 
-for other symbols its definition. ``graphviz`` is added as an optional dependency.
