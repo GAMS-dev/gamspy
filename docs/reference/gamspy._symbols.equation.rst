@@ -6,6 +6,7 @@ Equation
    :keywords: Reference, Equation, EquationType, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
 
 .. autoclass:: gamspy.Equation
+   :inherited-members:
    :members:
    :undoc-members:
    :show-inheritance:
