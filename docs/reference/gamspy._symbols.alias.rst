@@ -6,5 +6,6 @@ Alias
    :keywords: Reference, Alias, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
 
 .. autoclass:: gamspy.Alias
+   :members:
    :undoc-members:
    :show-inheritance:

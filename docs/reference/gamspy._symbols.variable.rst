@@ -6,6 +6,7 @@ Variable
    :keywords: Reference, Variable, VariableType, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
 
 .. autoclass:: gamspy.Variable
+   :members:
    :undoc-members:
    :show-inheritance:
 
