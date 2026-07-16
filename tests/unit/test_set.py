@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -159,6 +160,106 @@ def test_implicit_sets(data):
     k[j] = ~k[j]
 
     assert k.getAssignment() == "k(j) = (not k(j));"
+
+
+def test_implicit_set_toDense():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2", "i3"])
+    j = Set(m, "j", records=["j1", "j2"])
+    k = Set(m, "k", domain=[i, j], records=[("i1", "j1"), ("i2", "j2")])
+
+    arr_2d = np.array([[1.0, 0.0], [0.0, 1.0], [0.0, 0.0]])
+
+    # Full indexing gives the membership as a dense array of ones and zeros.
+    full = k[i, j].toDense()
+    assert isinstance(full, np.ndarray)
+    assert full.dtype == float
+    assert np.array_equal(full, arr_2d)
+
+    # Literal indices reduce the dimensionality.
+    assert np.array_equal(k[i, "j2"].toDense(), arr_2d[:, 1])
+    assert np.array_equal(k["i1", j].toDense(), arr_2d[0, :])
+
+    # All indices fixed -> 0-d scalar array.
+    member = k["i1", "j1"].toDense()
+    assert member.shape == ()
+    assert member.item() == 1.0
+    assert k["i1", "j2"].toDense().item() == 0.0
+
+    # Aliases share the behavior.
+    a = Alias(m, "a", alias_with=i)
+    subset = Set(m, "s", domain=[i], records=["i1", "i3"])
+    assert np.array_equal(subset[a].toDense(), np.array([1.0, 0.0, 1.0]))
+
+    # Parent without records -> zeros.
+    empty = Set(m, "empty", domain=[i, j])
+    assert np.array_equal(empty[i, j].toDense(), np.zeros((3, 2)))
+
+    # Lag/lead operations are not supported.
+    with pytest.raises(ValidationError):
+        i.lead(1).toDense()
+
+    # The temporary parameters used internally must not leak into the container.
+    assert set(m.data) == {"i", "j", "k", "a", "s", "empty"}
+
+
+def test_implicit_set_toValue():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2", "i3"])
+    j = Set(m, "j", records=["j1", "j2"])
+    k = Set(m, "k", domain=[i, j], records=[("i1", "j1"), ("i2", "j2")])
+
+    # Fully indexed set -> membership as a float.
+    assert k["i1", "j1"].toValue() == 1.0
+    assert k["i2", "j2"].toValue() == 1.0
+    assert k["i1", "j2"].toValue() == 0.0
+
+    # Non-scalar implicit sets are not supported.
+    with pytest.raises(TypeError):
+        k[i, j].toValue()
+    with pytest.raises(TypeError):
+        k[i, "j1"].toValue()
+
+    # Lag/lead operations are not supported.
+    with pytest.raises(ValidationError):
+        i.lead(1).toValue()
+
+    # The temporary parameters used internally must not leak into the container.
+    assert set(m.data) == {"i", "j", "k"}
+
+
+def test_implicit_set_toList():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2", "i3"])
+    j = Set(m, "j", records=["j1", "j2"])
+    k = Set(m, "k", domain=[i, j], records=[("i1", "j1"), ("i2", "j2")])
+
+    # Full indexing returns the membership tuples.
+    assert k[i, j].toList() == [("i1", "j1"), ("i2", "j2")]
+
+    # Literal indices filter the membership.
+    assert k[i, "j2"].toList() == [("i2", "j2")]
+
+    # Element text can be included.
+    assert k[i, j].toList(include_element_text=True) == [
+        ("i1", "j1", ""),
+        ("i2", "j2", ""),
+    ]
+
+    # 1-D subsets return a flat list of elements.
+    subset = Set(m, "s", domain=[i], records=["i1", "i3"])
+    assert subset[i].toList() == ["i1", "i3"]
+
+    # Parent without records -> empty list.
+    empty = Set(m, "empty", domain=[i, j])
+    assert empty[i, j].toList() == []
+
+    # Lag/lead operations are not supported.
+    with pytest.raises(ValidationError):
+        i.lead(1).toList()
+
+    # The temporary parameters used internally must not leak into the container.
+    assert set(m.data) == {"i", "j", "k", "s", "empty"}
 
 
 def test_set_operations(data):

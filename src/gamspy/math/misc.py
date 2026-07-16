@@ -168,13 +168,13 @@ class MathOp(operable.Operable):
 
         return records["value"][0]
 
-    def toList(self) -> list | None:
+    def toList(self) -> list:
         """
         Convenience method to return the records of the expression as a list.
 
         Returns
         -------
-        list | None
+        list
 
         Examples
         --------
@@ -192,7 +192,7 @@ class MathOp(operable.Operable):
         if records is not None:
             return records.values.tolist()
 
-        return None
+        return []
 
     def gamsRepr(self) -> str:
         """

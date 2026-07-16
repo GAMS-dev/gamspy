@@ -177,7 +177,7 @@ class Operation(operable.Operable):
             )
         return records["value"][0]
 
-    def toList(self) -> list | None:
+    def toList(self) -> list:
         """
         Convenience method to return the records of the operation as a list.
 
@@ -201,7 +201,7 @@ class Operation(operable.Operable):
         if records is not None:
             return records.values.tolist()
 
-        return None
+        return []
 
     def _get_raw_domain(self) -> list[Set | Alias | ImplicitSet]:
         from gamspy.math import MathOp

@@ -1230,3 +1230,88 @@ def test_implicit_equation_toDense():
     assert set(m.data) == {"i", "j", "k", "p", "p3", "v", "e", "v3", "e3", "f"}
 
     m.close()
+
+
+def test_implicit_equation_toValue():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1", "j2", "j3"])
+
+    arr_2d = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    p = Parameter(m, "p", domain=[i, j], records=arr_2d)
+    v = Variable(m, "v", domain=[i, j])
+    e = Equation(m, "e", domain=[i, j])
+    e[i, j] = v[i, j] <= p[i, j]
+    e.l[i, j] = p[i, j]
+    e.m[i, j] = p[i, j] + 10
+    e.up[i, j] = p[i, j] + 100
+    e.lo[i, j] = p[i, j] - 100
+
+    # Fully indexed implicit equation -> scalar value (level by default).
+    assert e["i1", "j2"].toValue() == arr_2d[0, 1]
+    assert e["i2", "j3"].toValue() == arr_2d[1, 2]
+
+    # The column argument selects the attribute.
+    assert e["i1", "j2"].toValue("marginal") == arr_2d[0, 1] + 10
+    assert e["i1", "j2"].toValue("upper") == arr_2d[0, 1] + 100
+    assert e["i1", "j2"].toValue("lower") == arr_2d[0, 1] - 100
+
+    # Non-scalar implicit equations are not supported.
+    with pytest.raises(TypeError):
+        e[i, j].toValue()
+    with pytest.raises(TypeError):
+        e[i, "j2"].toValue()
+
+    # Invalid column.
+    with pytest.raises(TypeError, match="Argument 'column' must be type str"):
+        e["i1", "j2"].toValue(column=123)
+    with pytest.raises(TypeError, match="must be one of the following"):
+        e["i1", "j2"].toValue(column="invalid_col")
+
+    # The temporary parameters used internally must not leak into the container.
+    assert set(m.data) == {"i", "j", "p", "v", "e"}
+
+    m.close()
+
+
+def test_implicit_equation_toList():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1", "j2", "j3"])
+
+    arr_2d = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    p = Parameter(m, "p", domain=[i, j], records=arr_2d)
+    v = Variable(m, "v", domain=[i, j])
+    e = Equation(m, "e", domain=[i, j])
+    e[i, j] = v[i, j] <= p[i, j]
+    e.l[i, j] = p[i, j]
+    e.m[i, j] = p[i, j] + 10
+
+    # Full indexing returns the level by default and matches the parent.
+    assert e[i, j].toList() == e.toList()
+    assert e[i, j].toList(["level", "marginal"]) == e.toList(["level", "marginal"])
+
+    # Literal indices reduce the dimensionality.
+    assert e[i, "j2"].toList() == [("i1", 2.0), ("i2", 5.0)]
+    assert e[i, "j2"].toList("marginal") == [("i1", 12.0), ("i2", 15.0)]
+
+    # All indices fixed -> scalar list (single column) / tuple list (multi).
+    assert e["i2", "j3"].toList() == [6.0]
+    assert e["i2", "j3"].toList(["level", "marginal"]) == [(6.0, 16.0)]
+
+    # Invalid column.
+    with pytest.raises(TypeError, match="must be type str or list"):
+        e[i, j].toList(columns=123)
+    with pytest.raises(TypeError, match="must be a subset of the following"):
+        e[i, j].toList(columns="invalid_col")
+
+    # Parent without records -> empty list.
+    f = Equation(m, "f", domain=[i, j])
+    f[i, j] = v[i, j] <= p[i, j]
+    assert f[i, j].toList() == []
+    assert f[i, "j1"].toList() == []
+
+    # The temporary parameters used internally must not leak into the container.
+    assert set(m.data) == {"i", "j", "p", "v", "e", "f"}
+
+    m.close()

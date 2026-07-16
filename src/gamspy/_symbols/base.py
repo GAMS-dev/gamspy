@@ -1289,7 +1289,9 @@ class VarEquSymbol(RecordSymbol):
 
         return toValueVariableEquation(self, column=column)
 
-    def toList(self: Variable | Equation, columns: str | None = None) -> list:
+    def toList(
+        self: Variable | Equation, columns: str | list[str] | None = None
+    ) -> list:
         """
         Converts the specified attributes of the symbol records to a Python list.
 

@@ -7,6 +7,10 @@ New features
   of the underlying expression tree for inspection. For an ``Equation`` this graphs the definition of the equation and 
   for other symbols its definition. ``graphviz`` is added as an optional dependency.
 
+Improvements in existing functionality
+--------------------------------------
+- #527 Add ``toDense`` and ``toValue`` to ``ImplicitSet``. ``toDense`` converts set membership into a dense numpy array of ones and zeros, and ``toValue`` returns the membership of a fully indexed set as a float.
+
 Bug fixes
 ---------
 - #741: Fixes a bug where creating a symbol with empty records from an empty iterable (e.g. ``[]``, ``set()``, ``range(0)``) raised a ``ValueError`` about inconsistent dimensionality. 

@@ -244,7 +244,7 @@ class UniverseAlias(BaseSymbol):
         """
         return 1
 
-    def toList(self) -> list[str] | None:
+    def toList(self) -> list[str]:
         """
         Convenience method to return symbol records as a python list
 
