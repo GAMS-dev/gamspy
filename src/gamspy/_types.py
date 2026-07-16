@@ -75,6 +75,7 @@ if TYPE_CHECKING:
         | ImplicitParameter
         | ImplicitSet
         | int
+        | float
         | Ord
         | Card
         | bool
