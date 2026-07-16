@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import typing
+from abc import abstractmethod
 
 import gamspy._algebra.expression as expression
 import gamspy.math as gamspy_math
@@ -186,5 +187,9 @@ class Operable:
         left_domain, right_domain, sum_domain = _validate_matrix_mult_dims(self, other)
         return operation.Sum([sum_domain], self[left_domain] * other[right_domain])
 
-    def gamsRepr(self):
+    def __str__(self):
+        return self.gamsRepr()
+
+    @abstractmethod
+    def gamsRepr(self) -> str:
         """Representation of the symbol in GAMS"""
