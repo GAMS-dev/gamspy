@@ -871,9 +871,11 @@ class Card(operable.Operable):
     """
 
     def __init__(self, symbol: Set | Alias | Parameter) -> None:
-        if not isinstance(symbol, (syms.Set, syms.Alias, syms.Parameter)):
+        if not isinstance(
+            symbol, (syms.Set, syms.Alias, syms.Parameter, syms.Variable, syms.Equation)
+        ):
             raise ValidationError(
-                "Card operation is only for Set, Alias and Parameter objects!"
+                "Card operation is only for Set, Alias, Parameter, Variable and Equation objects!"
             )
 
         self._symbol = symbol
