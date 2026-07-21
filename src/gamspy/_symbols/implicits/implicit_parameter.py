@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
@@ -67,7 +67,6 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         parent: Set | Alias | Parameter | Variable | Equation,
         name: str,
         domain: IndexType | None = None,
-        records: Any | None = None,
         permutation: list[int] | None = None,
         scalar_domains: list[tuple[int, Set]] | None = None,
     ) -> None:
@@ -84,7 +83,6 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             domain = []
 
         super().__init__(parent, name, domain, permutation, scalar_domains)
-        self._records = records
         self._assignment = None
 
     def __getitem__(self, indices: IndexType) -> ImplicitParameter:

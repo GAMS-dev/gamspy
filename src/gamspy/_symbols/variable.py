@@ -511,7 +511,6 @@ class Variable(operable.Operable, VarEquSymbol):
         return implicits.ImplicitParameter(
             self,
             name=f"{self.name}.{attr_name}",
-            records=self.records,
             domain=self.domain,
         )
 
