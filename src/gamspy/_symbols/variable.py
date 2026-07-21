@@ -519,49 +519,41 @@ class Variable(operable.Operable, VarEquSymbol):
         self._l.__init__(
             self,
             name=f"{self.name}.l",
-            records=self.records,
             domain=self.domain,
         )
         self._m.__init__(
             self,
             name=f"{self.name}.m",
-            records=self.records,
             domain=self.domain,
         )
         self._lo.__init__(
             self,
             name=f"{self.name}.lo",
-            records=self.records,
             domain=self.domain,
         )
         self._up.__init__(
             self,
             name=f"{self.name}.up",
-            records=self.records,
             domain=self.domain,
         )
         self._s.__init__(
             self,
             name=f"{self.name}.scale",
-            records=self.records,
             domain=self.domain,
         )
         self._fx.__init__(
             self,
             name=f"{self.name}.fx",
-            records=self.records,
             domain=self.domain,
         )
         self._prior.__init__(
             self,
             name=f"{self.name}.prior",
-            records=self.records,
             domain=self.domain,
         )
         self._stage.__init__(
             self,
             name=f"{self.name}.stage",
-            records=self.records,
             domain=self.domain,
         )
 
