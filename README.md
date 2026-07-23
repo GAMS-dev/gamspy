@@ -26,12 +26,12 @@ Equation) to compose mathematical models, a math package, and various utility fu
 The official documentation is hosted on [GAMSPy Readthedocs](https://gamspy.readthedocs.io/en/latest/index.html).
 
 ## Design Philosophy
-GAMSPy makes extensive use of set based operations -- the absence of any explicit looping, indexing, etc., in native Python.
+GAMSPy makes extensive use of set-based operations -- the absence of any explicit looping, indexing, etc., in native Python.
 These things are taking place, of course, just “behind the scenes” in optimized, pre-compiled C code.
 
-Set based approach has many advantages:
+A set-based approach has many advantages:
 
-  - Results in more concise Python code -- avoids inefficient and difficult to read for loops
+  - Results in more concise Python code -- avoids inefficient and difficult-to-read for loops
   - Closely resembles standard mathematical notation
   - Easier to read
   - Fewer lines of code generally means fewer bugs
