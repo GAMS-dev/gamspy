@@ -13,7 +13,7 @@ For a more detailed overview of the development workflow and tooling, please als
 ## Getting Started
 
 ```bash
-git clone git@git.gams.com:devel/gamspy.git
+git clone https://github.com/<your-username>/gamspy.git
 cd gamspy
 pip install .[test,dev,doc] # or uv sync
 ```
@@ -27,7 +27,7 @@ The extra dependencies install tools required for testing, development, and docu
 We follow a standard topic-branch workflow:
 
 1. Create or find an issue describing the bug, feature, or improvement.
-2. Create a branch from the development branch (develop).
+2. Create a branch from the development branch (`develop`).
    - Branch names should reference the issue number when possible  
      (e.g. `187-add-new-feature`).
 3. Make your changes with clear, focused commits.
