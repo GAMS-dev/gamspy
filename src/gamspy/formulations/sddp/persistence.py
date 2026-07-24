@@ -220,6 +220,7 @@ def _reattach_sddp(container: gp.Container, metadata: dict[str, Any]) -> SDDP:
     sddp._sim_call_count = int(metadata["sim_call_count"])
     sddp._built = True
     sddp._loaded_from_save = True
+    sddp._trained = True
 
     # sddp-internal symbols (all under the sddp_ prefix)
     sddp._active_stage = _lookup("sddp_active")

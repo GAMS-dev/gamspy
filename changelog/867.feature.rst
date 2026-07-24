@@ -1,0 +1,1 @@
+Add cut selection to the ``sddp`` module; keeps only the cuts from the most recent ``N`` iterations and deactivates the older ones, bounding the size of the subproblems.

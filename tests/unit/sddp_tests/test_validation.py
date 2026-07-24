@@ -83,6 +83,14 @@ def test_train_argument_validation(clearlake_built):
         sddp.train(rel_tol=-1e-3)
     with pytest.raises(ValidationError):
         sddp.train(patience=0)
+    with pytest.raises(ValidationError):
+        sddp.train(n_iter=True)
+    with pytest.raises(ValidationError):
+        sddp.train(n_iter=20.0)
+    with pytest.raises(ValidationError):
+        sddp.train(patience=True)
+    with pytest.raises(ValidationError):
+        sddp.train(gap_paths=1.5)
 
 
 def test_simulate_argument_validation(clearlake_built):

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from gamspy.formulations.sddp.cut_selection import LastCuts
     from gamspy.formulations.sddp.risk import CVaR
 
 
@@ -42,6 +43,10 @@ class SDDPResult:
     risk : CVaR | None
         Risk measure used during training, or ``None`` for the risk-neutral
         expectation.
+    cut_selection : LastCuts | None
+        Cut-selection strategy used during training, or ``None`` when every cut
+        was kept. When set, ``lower_bound`` is measured against the full cut
+        pool, which is restored at the end of training.
     policy_cost_mean : float
         Mean policy cost from the end-of-training Monte-Carlo run, populated
         only when ``train(gap_paths >= 1)``.
@@ -61,6 +66,7 @@ class SDDPResult:
     stop_reason: str = "max_iter"
     iterations_run: int = 0
     risk: CVaR | None = None
+    cut_selection: LastCuts | None = None
     policy_cost_mean: float = float("nan")
     policy_cost_stderr: float = float("nan")
     policy_cost_paths: int = 0
@@ -82,13 +88,52 @@ class SDDPResult:
         denom = max(abs(ub), 1e-10)
         return max(0.0, 100.0 * (ub - self.lower_bound) / denom)
 
+    @property
+    def selection_bound_gap_pct(self) -> float:
+        """How much bound the cut-selection window was giving up at the end.
+
+        Percentage difference between ``lower_bound`` (measured against the
+        full cut pool, restored once training finishes) and the last bound
+        obtained while only the retained window was active. Near zero means the
+        window cost almost nothing; the retired cuts were not holding the
+        bound up, so cut selection was effectively free. A large value means
+        ``keep_iter`` was too small: the window kept discarding cuts that were
+        still tightening the bound, so a larger pool/window would likely reach the
+        same bound in fewer iterations.
+
+        ``nan`` when no cut selection was used.
+        """
+        if self.cut_selection is None or not self.convergence_table:
+            return float("nan")
+        windowed = self.convergence_table[-1].get("lo")
+        if windowed is None or math.isnan(self.lower_bound):
+            return float("nan")
+        denom = max(abs(self.lower_bound), 1e-10)
+        # The full pool is a superset of the window, so it cannot give a looser
+        # bound; clamp at 0 to absorb float noise rather than report a negative.
+        return max(0.0, 100.0 * (self.lower_bound - float(windowed)) / denom)
+
     def __str__(self) -> str:
         risk_adjusted = self.risk is not None
-        bound_label = "Lower bound (risk-adj.)" if risk_adjusted else "Lower bound"
+        selected = self.cut_selection is not None
+        qualifiers = []
+        if risk_adjusted:
+            qualifiers.append("risk-adj.")
+        if selected:
+            qualifiers.append("full pool")
+        bound_label = "Lower bound" + (
+            f" ({', '.join(qualifiers)})" if qualifiers else ""
+        )
         lines = ["=" * 72]
         if risk_adjusted:
             lines.append(f"  Risk measure         : {self.risk!r}")
+        if selected:
+            lines.append(f"  Cut selection        : {self.cut_selection!r}")
         lines.append(f"  {bound_label:<21s}: {_sci(self.lower_bound):>14s}")
+        if selected and not math.isnan(self.selection_bound_gap_pct):
+            lines.append(
+                f"  Window bound gap     : {self.selection_bound_gap_pct:>13.4f} %"
+            )
         lines.append(f"  Iterations run       : {self.iterations_run:>14d}")
         lines.append(f"  Stop reason          : {self.stop_reason:>14s}")
         lines.append(f"  Total time           : {self.total_time:>14.2f} s")
