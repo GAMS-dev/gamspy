@@ -11,6 +11,7 @@ import pandas as pd
 
 import gamspy as gp
 from gamspy.exceptions import GamspyException, ValidationError
+from gamspy.formulations.sddp.cut_selection import LastCuts
 from gamspy.formulations.sddp.noise import NoiseConfig
 from gamspy.formulations.sddp.policy import PolicyResult
 from gamspy.formulations.sddp.result import SDDPResult, _sci
@@ -130,6 +131,7 @@ class SDDP:
         self._gp_model: gp.Model | None = None
 
         self._loaded_from_save: bool = False
+        self._trained: bool = False
 
     @property
     def active_stage(self) -> gp.Set:
@@ -1077,6 +1079,88 @@ class SDDP:
             / risk.tail
         )
 
+    def _set_active_cuts(self, completed: int, keep_iter: int | None) -> None:
+        """Point the active-cut set at a window of the completed iterations.
+
+        Cuts are only ever deactivated, never deleted: ``cut_slope`` and
+        ``cut_intercept`` keep every value they were given, and ``jj`` decides
+        which of them become LP rows. Restoring the whole pool is therefore a
+        single set assignment rather than a recomputation.
+
+        Parameters
+        ----------
+        completed : int
+            Number of iterations finished so far, i.e. labels ``j1..j{completed}``.
+        keep_iter : int | None
+            Retain only the most recent ``keep_iter`` of them; ``None`` retains
+            all of them.
+        """
+        assert self._j_set is not None
+        assert self._jj_set is not None
+        j = self._j_set
+        jj = self._jj_set
+
+        first = 1 if keep_iter is None else max(1, completed - keep_iter + 1)
+        jj[j] = False
+        jj[j].where[(gp.Ord(j) >= first) & (gp.Ord(j) <= completed)] = True
+
+    def _stage1_bound(self, slot: str) -> float:
+        """Expected stage-1 cost under whichever cuts are currently active.
+
+        This is what the lower bound *is*, so pricing a different cut pool needs
+        only this one wait-and-see batch: the pool is being evaluated, not
+        extended, so no backward pass is involved. Costs ``n_scenarios`` LPs
+        against the several thousand a full iteration solves.
+        """
+        assert self._noise is not None
+        assert self._gp_model is not None
+        s_set = self._noise.scenario_set
+        assert s_set is not None
+
+        m = self._m
+        w = self._w
+        ww = self._active_stage
+        t_set = self._time_set
+        conv = self._conv
+        w1 = self._w_labels[0]
+
+        # Same single-sync pattern as the training loop: batch every statement
+        # and this solve into one GAMS job rather than a round-trip apiece.
+        m._in_loop += 1
+        try:
+            ww[w] = False
+            ww[w1] = True
+            for sv_k in self._states:
+                assert sv_k.is_w1_init is not None
+                assert sv_k.is_w1_lstate is not None
+                assert sv_k.orig_lo_param is not None
+                assert sv_k.orig_up_param is not None
+                sv_k.variable.lo[t_set] = sv_k.orig_lo_param[t_set]
+                sv_k.variable.up[t_set] = sv_k.orig_up_param[t_set]
+                sv_k.is_w1_init[s_set, t_set] = 0
+                sv_k.is_w1_init[s_set, self._state_hour] = max(
+                    sv_k.initial_state
+                    if sv_k.initial_state is not None
+                    else sv_k.lower_bound,
+                    self._EPS,
+                )
+                sv_k.is_w1_lstate[s_set, t_set] = 0
+
+            self._is_w1_noise[s_set] = self._sw_inflow_param[w1, s_set]
+            self._is_w1_acost[s_set] = 0
+            self._is_w1_cost[s_set] = 0
+
+            self._gp_model.solve(options=self._solve_opts, scenario=self._dict_w1)
+
+            conv[slot, "lo_full"] = gp.Sum(
+                s_set, self._prob_param[s_set] * self._is_w1_acost[s_set]
+            )
+        finally:
+            m._in_loop -= 1
+        m._synch_with_gams()
+
+        return float(_pv_at_j(conv, slot).get("lo_full", 0.0))
+
     # training (running) the model
     def train(
         self,
@@ -1085,6 +1169,7 @@ class SDDP:
         patience: int = 5,
         risk: CVaR | None = None,
         gap_paths: int = 0,
+        cut_selection: LastCuts | None = None,
     ) -> SDDPResult:
         """Run the SDDP iteration loop and return convergence results.
 
@@ -1108,6 +1193,9 @@ class SDDP:
             simulation of the trained policy with this many independent paths
             and report a statistically meaningful optimality gap (95% CI of the
             policy cost vs. the lower bound) on the result. By default 0.
+        cut_selection : LastCuts | None
+            Strategy bounding how many cuts stay active in the stage
+            subproblems. By default None, keeping every cut.
 
         Notes
         -----
@@ -1115,6 +1203,7 @@ class SDDP:
         is finalized (or, if its in-flight solve was aborted, discarded) and the
         policy trained so far is returned with ``stop_reason == "interrupted"``.
         Press CTRL+C a second time to abort hard (raises ``KeyboardInterrupt``).
+
         """
         if not self._built:
             raise ValidationError("Call build() before train()")
@@ -1124,6 +1213,14 @@ class SDDP:
                 "Loaded instances are read-only; use policy() / simulate() "
                 "for inference, or retrain from scratch."
             )
+
+        for _name, _value in (
+            ("n_iter", n_iter),
+            ("patience", patience),
+            ("gap_paths", gap_paths),
+        ):
+            if isinstance(_value, bool) or not isinstance(_value, int):
+                raise ValidationError(f"{_name} must be an int")
         if n_iter < 1:
             raise ValidationError(f"n_iter must be >= 1, got {n_iter}")
         if rel_tol is not None and rel_tol <= 0:
@@ -1134,6 +1231,26 @@ class SDDP:
             raise ValidationError("risk must be a CVaR(...) instance or None")
         if gap_paths < 0:
             raise ValidationError(f"gap_paths must be >= 0, got {gap_paths}")
+        if cut_selection is not None and not isinstance(cut_selection, LastCuts):
+            raise ValidationError(
+                "cut_selection must be a LastCuts(...) instance or None"
+            )
+        if cut_selection is not None and cut_selection.keep_iter >= n_iter:
+            warnings.warn(
+                f"cut_selection=LastCuts(keep_iter={cut_selection.keep_iter}) "
+                f"retains at least as many iterations as the {n_iter} about to "
+                f"run, so no cut will ever be deactivated and cut selection "
+                f"will have no effect.",
+                UserWarning,
+                stacklevel=2,
+            )
+            cut_selection = None
+
+        if self._trained:
+            raise ValidationError(
+                "train() has already been called on this sddp instance."
+            )
+        self._trained = True
 
         # build() invariants: narrow Optional fields for the type checker.
         assert self._noise is not None
@@ -1153,7 +1270,6 @@ class SDDP:
         assert sv.trial_set is not None
         assert sv.trial_param is not None
         assert sv.cut_slope is not None
-        assert self._cut_intercept is not None
 
         nc = self._noise
         assert nc.scenario_set is not None
@@ -1253,8 +1369,11 @@ class SDDP:
 
         result = SDDPResult()
         result.risk = risk
+        result.cut_selection = cut_selection
         t_total = time.perf_counter()
         prev_lo: float | None = None
+        best_windowed: float | None = None
+        best_full: float | None = None
         flat_streak = 0  # consecutive iterations with sub-rel_tol LB gain
         completed = 0  # fully finished iterations (-> result.iterations_run)
         lo = up = up_95 = sigma = float("nan")  # last completed iteration's stats
@@ -1507,6 +1626,13 @@ class SDDP:
                 # Upper bound
                 # Average total-path cost across all n_trials forward trajectories
                 conv[j_label, "up"] = gp.Sum(i_set, zt[j_label, i_set]) / gp.Card(i_set)
+
+                # Cut selection: retire the iteration that has just fallen out
+                # of the window.
+                if cut_selection is not None:
+                    expire = pos - cut_selection.keep_iter
+                    if expire >= 0:
+                        jj[j_labels[expire]] = False
             except GamspyException:
                 if self._stop_requested:
                     result.stop_reason = "interrupted"
@@ -1536,16 +1662,27 @@ class SDDP:
 
             # Safety: jj must round-trip back to Python after every iteration.
             # If it doesn't, downstream policy()/simulate() solves see jj empty,
-            # the Benders cuts deactivate, alpha collapses to its prior bound,
-            # and decisions are silently wrong. Catches refactor breakage of
-            # the load_symbols list at the moment it happens, not three steps
+            # the Benders cuts deactivate, alpha collapses to its zero bound,
+            # and decisions are silently wrong. Catches breakage of the
+            # end-of-iteration sync at the moment it happens, not three steps
             # downstream when a user sees a nonsense policy result.
-            assert jj.records is not None and len(jj.records) >= pos + 1, (
-                f"jj sync failed after iteration {j_label}: expected at least "
-                f"{pos + 1} record(s), got "
-                f"{0 if jj.records is None else len(jj.records)}. "
-                f"Check that `jj` is in the load_symbols list above."
+            active_labels = 0 if jj.records is None else len(jj.records)
+            expected_labels = (
+                min(pos + 1, cut_selection.keep_iter)
+                if cut_selection is not None
+                else pos + 1
             )
+            if active_labels != expected_labels:
+                _restore_sigint()
+                raise GamspyException(
+                    f"jj out of step after iteration {j_label}: expected "
+                    f"{expected_labels} active cut iteration(s), got "
+                    f"{active_labels}. Either the end-of-iteration sync did not "
+                    f"bring `jj` back to Python, or cut selection retired the wrong "
+                    f"label."
+                )
+
+            active_cuts = active_labels * self._n_trials
 
             # Read back convergence bounds
             # Filter for this iteration's rows
@@ -1562,13 +1699,20 @@ class SDDP:
             sigma = float(np.std(path_costs, ddof=1)) if n_paths > 1 else 0.0
             up_95 = up + 1.96 * sigma / np.sqrt(n_paths)
 
-            if prev_lo is not None and lo < prev_lo - 1e-3:
+            # Cut selection makes the bound non-monotone by design: retiring a
+            # binding cut may lower it.
+            if cut_selection is None and prev_lo is not None and lo < prev_lo - 1e-3:
                 _restore_sigint()
                 raise GamspyException(
                     f"Lower bound decreased at {j_label}: {prev_lo:,.3f} -> {lo:,.3f}"
                 )
 
-            # LB-plateau stopping
+            # Every `lo` is the optimum of a relaxation over a subset of valid
+            # cuts, so each one bounds the true optimum from below and so does
+            # their maximum.
+            best_windowed = lo if best_windowed is None else max(best_windowed, lo)
+
+            # LB-plateau
             if rel_tol is not None and prev_lo is not None:
                 rel_gain = (lo - prev_lo) / max(abs(prev_lo), 1e-12)
                 flat_streak = flat_streak + 1 if rel_gain < rel_tol else 0
@@ -1582,6 +1726,7 @@ class SDDP:
                 "sigma": sigma,
                 "up_95": up_95,
                 "elapsed": elapsed,
+                "active_cuts": active_cuts,
             }
             result.convergence_table.append(row)
 
@@ -1602,11 +1747,72 @@ class SDDP:
 
             # Stop once the LB has plateaued for `patience` consecutive iters
             if rel_tol is not None and flat_streak >= patience:
-                result.stop_reason = "converged"
-                break
+                converged = True
+                if cut_selection is not None:
+                    # A plateau under cut selection is ambiguous: the run may
+                    # have converged, or the cuts retired earlier may have been
+                    # the ones holding the bound up. Price the whole pool - one
+                    # stage-1 batch - and only believe the plateau if the full
+                    # pool agrees there is no progress left.
+                    self._set_active_cuts(completed, None)
+                    full_lo = self._stage1_bound(j_label)
+                    self._set_active_cuts(completed, cut_selection.keep_iter)
+
+                    # Measure against the previous full-pool reading once there
+                    # is one
+                    ref = best_full if best_full is not None else best_windowed
+                    assert ref is not None  # set on every completed iteration
+                    best_full = (
+                        full_lo if best_full is None else max(best_full, full_lo)
+                    )
+                    if (full_lo - ref) / max(abs(ref), 1e-12) > rel_tol:
+                        flat_streak = 0
+                        converged = False
+                        if self._verbose:
+                            print(
+                                f"  {j_label:>4s}:  plateau overruled - full "
+                                f"cut pool bound = {_sci(full_lo)} beats the "
+                                f"previous best {_sci(ref)}; continuing"
+                            )
+                if converged:
+                    result.stop_reason = "converged"
+                    break
 
         _restore_sigint()
         result.iterations_run = completed
+
+        # Cut selection is a training-time device only. Restore every cut that
+        # was ever generated, so the policy that is kept - and save(), policy()
+        # and simulate() with it - uses the full approximation, and so the
+        # reported bound is measured against the model actually being kept
+        # rather than against a window that no longer exists. Runs on the
+        # interrupt path too: an interrupted run must not hand back a windowed
+        # policy.
+        if cut_selection is not None and completed > 0:
+            self._set_active_cuts(completed, None)
+            try:
+                lo = self._stage1_bound(j_labels[completed - 1])
+            except GamspyException:
+                # An interrupted run can leave GAMS unable to solve again. The
+                # restoration above is still queued and will be applied by the
+                # next GAMS interaction, so the policy is intact; only this
+                # bound measurement is lost.
+                if result.stop_reason != "interrupted":
+                    raise
+            else:
+                # A superset of valid cuts cannot give a looser bound. This is
+                # the invariant that replaces the monotonicity guard, and it is
+                # sharper: it tests the thing that can actually go wrong.
+                proved = [b for b in (best_windowed, best_full) if b is not None]
+                witness = max(proved) if proved else None
+                if witness is not None and lo < witness - 1e-6 * max(abs(witness), 1.0):
+                    raise GamspyException(
+                        f"the full cut pool gave a looser bound ({lo:,.6f}) than a "
+                        f"bound already proved during training ({witness:,.6f}); a "
+                        f"superset of valid cuts cannot do that, so cut selection "
+                        f"retired or restored the wrong labels. "
+                        f"Please report if you see this error"
+                    )
 
         total = time.perf_counter() - t_total
         result.lower_bound = lo

@@ -9,7 +9,7 @@ Training and Convergence
 ************************
 
 ``train()`` runs the SDDP forward/backward iterations (explained in
-:doc:`how_it_works <how_it_works>`) and returns an ``SDDPResult`` holding the
+:doc:`how_it_works`) and returns an ``SDDPResult`` holding the
 lower bound and the convergence history.
 
 .. code-block:: python
@@ -30,6 +30,53 @@ after 8 of the 20 allowed iterations. Leaving ``rel_tol=None`` (the default)
 disables early stopping and runs all ``n_iter``.
 
 To train a risk-averse policy, pass ``risk=``; see :doc:`risk`.
+
+Bounding the cut pool
+=====================
+
+Every iteration adds cuts to each stage subproblem and never removes them (see
+the note in :doc:`how_it_works`). The subproblems therefore grow
+as training runs, and each iteration solves slightly more slowly than the last.
+On a short run this is invisible; on a long run over many stages it adds up.
+
+``cut_selection`` bounds the pool. A
+:meth:`LastCuts <gamspy.formulations.LastCuts>` strategy keeps only the cuts
+from the most recent ``keep_iter`` iterations and deactivates the older ones, so
+the subproblems stop growing once the pool is full:
+
+.. code-block:: python
+
+   from gamspy.formulations import LastCuts
+
+   result = sddp.train(n_iter=500, cut_selection=LastCuts(keep_iter=50))
+
+``keep_iter`` counts *iterations*, not cuts. One iteration contributes
+``n_trials`` cuts to every stage transition, so with ``n_trials=5`` and 52
+stages ``keep_iter=50`` retains ``50 * 5 = 250`` cuts on each cost-to-go rather
+than the 2500 an unbounded 500-iteration run would carry.
+
+The default, ``cut_selection=None``, keeps every cut and is identical to not
+passing the argument at all.
+
+.. note::
+   Dropping cuts means the lower bound is no longer guaranteed to rise every
+   iteration: retiring a cut that was holding the bound up can lower it. Training
+   handles this for you. Before it reports convergence it re-checks the bound
+   against the *full* set of cuts generated so far, and when training finishes
+   it restores the full set, so the returned ``lower_bound`` and the trained
+   policy reflect every cut. Cut selection only ever speeds up training; it
+   does not change the policy you get.
+
+``result.cut_selection`` echoes the strategy used, and
+``result.selection_bound_gap_pct`` reports how much bound the window was
+giving up at the end. Near zero means the window cost almost nothing, so cut
+selection was effectively free; a large value means ``keep_iter`` was too
+small, and a bigger pool would likely reach the same bound in fewer
+iterations.
+
+Setting ``keep_iter`` to at least ``n_iter`` can never retire a cut, so
+training warns and drops to plain no selection; ``result.cut_selection`` is
+then ``None`` and ``result.selection_bound_gap_pct`` is ``nan``.
 
 The result
 ==========
@@ -89,5 +136,5 @@ and usable. Pressing :kbd:`Ctrl+C` a second time aborts hard.
 
 .. seealso::
    The :doc:`ClearLake tutorial <clearlake>` shows a full training run and its
-   summary; :doc:`how_it_works <how_it_works>` explains what each iteration
+   summary; :doc:`how_it_works` explains what each iteration
    does and why the lower bound can be trusted.

@@ -27,6 +27,7 @@ from gamspy.formulations.result import FormulationResult
 from gamspy.formulations.sddp import (
     SDDP,
     CVaR,
+    LastCuts,
     PolicyResult,
     SimulationResult,
 )
@@ -39,6 +40,7 @@ __all__ = [
     "Conv2d",
     "DecisionTreeStruct",
     "GradientBoosting",
+    "LastCuts",
     "Linear",
     "MaxPool2d",
     "MinPool2d",
