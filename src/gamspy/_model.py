@@ -1061,7 +1061,7 @@ class Model:
 
     def _set_objective_variable(
         self,
-        assignment: None | Variable | Operation | Expression | MathOp = None,
+        assignment: Variable | Operation | Expression | MathOp | None = None,
     ) -> Variable | None:
         """
         Returns objective variable. If the assignment is an Expression
