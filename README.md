@@ -18,8 +18,8 @@ pip install gamspy
 
 ## What is it?
 
-**GAMSPy** is a mathematical optimization package that combines the power of the high performance GAMS execution system
-and flexibility of the Python language. It includes all GAMS symbols (Set, Alias, Parameter, Variable, and
+**GAMSPy** is a mathematical optimization package that combines the power of the high-performance GAMS execution system
+and the flexibility of the Python language. It includes all GAMS symbols (Set, Alias, Parameter, Variable, and
 Equation) to compose mathematical models, a math package, and various utility functions.
 
 ## Documentation
