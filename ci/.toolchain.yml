@@ -26,7 +26,6 @@ variables:
         curl -LsSf https://astral.sh/uv/install.sh | INSTALLER_NO_MODIFY_PATH=1 sh
         export PATH="$UV_INSTALL_DIR:$PATH"
       fi
-    - echo "Downloading Python toolchain: $PY_VERSIONS"
     - uv python install $PY_VERSIONS
   artifacts:
     name: "toolchain-$CI_JOB_NAME"
@@ -62,7 +61,6 @@ setup-wei-toolchain:
     - $env:INSTALLER_NO_MODIFY_PATH = "1"
     - irm https://astral.sh/uv/install.ps1 | iex
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
-    - echo "Downloading Python toolchain for Windows: $env:PY_VERSIONS"
     - uv python install ($env:PY_VERSIONS -split ' ')
     # Compress the folder manually to bypass GitLab Runner's symlink/junction issues
     - echo "Compressing toolchain to avoid 'Incorrect function' artifact error..."
