@@ -7,15 +7,11 @@ leg-cli-3.14:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - apt-get update && apt-get install -y ca-certificates git
-    - uv venv .venv -v --python 3.14
+    - uv venv .venv --python 3.14
     - source .venv/bin/activate
     - uv build
     - uv sync --group test
-    - UV_NO_CONFIG=1 python -m pytest -x -v -s -m 'cli' tests
-  artifacts:
-    name: linux_3.14
-    expire_in: 2 hours
-    paths: [dist/*]
+    - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
 leg-cli-3.10:
   stage: cli
@@ -26,10 +22,10 @@ leg-cli-3.10:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - apt-get update && apt-get install -y ca-certificates git
-    - uv venv .venv -v --python 3.10
+    - uv venv .venv --python 3.10
     - source .venv/bin/activate
     - uv sync --group test
-    - UV_NO_CONFIG=1 python -m pytest -x -v -s -m 'cli' tests
+    - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
 lag-cli-3.14:
   stage: cli
@@ -40,16 +36,12 @@ lag-cli-3.14:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - apt-get update && apt-get install -y ca-certificates git
-    - uv venv .venv -v --python 3.14
+    - uv venv .venv --python 3.14
     - source .venv/bin/activate
     - uv build
     - uv sync --group test
     - uv pip install gamspy-arm-perf
-    - UV_NO_CONFIG=1 python -m pytest -x -v -s -m 'cli' tests
-  artifacts:
-    name: linux_arm64_3.14
-    expire_in: 2 hours
-    paths: [dist/*]
+    - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
 lag-cli-3.10:
   stage: cli
@@ -60,11 +52,11 @@ lag-cli-3.10:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - apt-get update && apt-get install -y ca-certificates git
-    - uv venv .venv -v --python 3.10
+    - uv venv .venv --python 3.10
     - source .venv/bin/activate
     - uv sync --group test
     - uv pip install gamspy-arm-perf
-    - UV_NO_CONFIG=1 python -m pytest -x -v -s -m 'cli' tests
+    - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
 dac-cli-3.14:
   stage: cli
@@ -75,15 +67,11 @@ dac-cli-3.14:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv -v --python 3.14
+    - uv venv .venv --python 3.14
     - source .venv/bin/activate
     - uv build
     - uv sync --group test
-    - UV_NO_CONFIG=1 python -m pytest -x -v -s -m 'cli' tests
-  artifacts:
-    name: macos_arm64_3.14
-    expire_in: 2 hours
-    paths: [dist/*]
+    - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
 dac-cli-3.10:
   stage: cli
@@ -93,10 +81,10 @@ dac-cli-3.10:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv -v --python 3.10
+    - uv venv .venv --python 3.10
     - source .venv/bin/activate
     - uv sync --group test
-    - UV_NO_CONFIG=1 python -m pytest -x -v -s -m 'cli' tests
+    - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
 deg-cli-3.14:
   stage: cli
@@ -106,15 +94,11 @@ deg-cli-3.14:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv -v --python 3.14
+    - uv venv .venv --python 3.14
     - source .venv/bin/activate
     - uv build
     - uv sync --group test
-    - UV_NO_CONFIG=1 python -m pytest -x -v -s -m 'cli' tests
-  artifacts:
-    name: macos_x86_64_3.14
-    expire_in: 2 hours
-    paths: [dist/*]
+    - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
 deg-cli-3.10:
   stage: cli
@@ -125,10 +109,10 @@ deg-cli-3.10:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv -v --python 3.10
+    - uv venv .venv --python 3.10
     - source .venv/bin/activate
     - uv sync --group test
-    - UV_NO_CONFIG=1 python -m pytest -x -v -s -m 'cli' tests
+    - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
 wei-cli-3.14:
   stage: cli
@@ -140,15 +124,11 @@ wei-cli-3.14:
     - Expand-Archive -Path uv_toolchain.zip -DestinationPath . -Force
     - Expand-Archive -Path uv_bin.zip -DestinationPath . -Force
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
-    - uv venv .venv -v --python 3.14
+    - uv venv .venv --python 3.14
     - .venv\Scripts\Activate.ps1
     - uv build
     - uv sync --group test
-    - $env:UV_NO_CONFIG="1"; python -m pytest -x -v -s -m 'cli' tests
-  artifacts:
-    name: windows_3.14
-    expire_in: 2 hours
-    paths: [dist/*]
+    - $env:UV_NO_CONFIG="1"; python -m pytest -x -ra -m 'cli' tests
 
 wei-cli-3.10:
   stage: cli
@@ -160,7 +140,7 @@ wei-cli-3.10:
     - Expand-Archive -Path uv_toolchain.zip -DestinationPath . -Force
     - Expand-Archive -Path uv_bin.zip -DestinationPath . -Force
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
-    - uv venv .venv -v --python 3.10
+    - uv venv .venv --python 3.10
     - .venv\Scripts\Activate.ps1
     - uv sync --group test
-    - $env:UV_NO_CONFIG="1"; python -m pytest -x -v -s -m 'cli' tests
+    - $env:UV_NO_CONFIG="1"; python -m pytest -x -ra -m 'cli' tests

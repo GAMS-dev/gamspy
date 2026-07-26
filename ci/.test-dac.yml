@@ -7,13 +7,13 @@
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv -v --python $PYTHON_VERSION
+    - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - UV_NO_CONFIG=1 gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -B -m pytest -x -v -s -m 'unit or integration or model_library or requires_license' tests
+    - python -B -m pytest -x -ra -m 'unit or integration or model_library or requires_license' tests
 
 dac-test-3.14:
   extends: .dac_template
@@ -21,13 +21,13 @@ dac-test-3.14:
     PYTHON_VERSION: "3.14"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv -v --python $PYTHON_VERSION
+    - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - UV_NO_CONFIG=1 gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
-    - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or requires_license or doc' tests
+    - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -ra -m 'unit or integration or model_library or requires_license or doc' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
 
@@ -74,10 +74,10 @@ dac-test-3.10:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv -v --python $PYTHON_VERSION
+    - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
-    - python -B -m pytest -x -v -s -m 'engine' tests
+    - python -B -m pytest -x -ra -m 'engine' tests
 
 dac-engine-3.14:
   extends: .dac_engine_template
@@ -100,11 +100,11 @@ dac-engine-3.10:
     UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv -v --python $PYTHON_VERSION
+    - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
     - gamspy install solver -a --use-uv
-    - python -B -m pytest -x -v -s -m 'neos' tests
+    - python -B -m pytest -x -ra -m 'neos' tests
 
 dac-neos-3.14:
   extends: .dac_neos_template
