@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 import weakref
+from pathlib import Path
 
 from gamspy.exceptions import ValidationError
 
@@ -36,9 +37,9 @@ class Workspace:
     def __init__(
         self,
         debugging_level: str,
-        working_directory: str | os.PathLike | None = None,
+        working_directory: str | Path | None = None,
     ):
-        if isinstance(working_directory, os.PathLike):
+        if isinstance(working_directory, Path):
             working_directory = os.fspath(working_directory)
 
         validate_arguments(working_directory, debugging_level)

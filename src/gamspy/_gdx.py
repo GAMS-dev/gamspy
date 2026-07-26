@@ -25,8 +25,8 @@ from gamspy._symbols.base import BaseSymbol
 from gamspy.exceptions import GdxException, ValidationError
 
 if TYPE_CHECKING:
-    import os
     from collections.abc import Iterable
+    from pathlib import Path
 
     from gams.core.numpy import Gams2Numpy
     from pandas import DataFrame
@@ -56,7 +56,7 @@ class GDXSymbolMetadata:
 @contextlib.contextmanager
 def open_gdx(
     system_directory: str,
-    file_path: str | os.PathLike,
+    file_path: str | Path,
     mode: str = "r",
     *,
     compress: bool = False,
@@ -164,7 +164,7 @@ def _fetch_metadata(
 
 def load_missing_symbols(
     container: Container,
-    load_from: str | os.PathLike,
+    load_from: str | Path,
     symbol_names: list[str] | dict[str, str],
     *,
     declare_in_gams: bool = True,
@@ -198,7 +198,7 @@ def load_missing_symbols(
 
 def get_records(
     container: Container,
-    load_from: str | os.PathLike,
+    load_from: str | Path,
     symbols: list[str] | dict[str, str],
     encoding: str | None = None,
 ) -> dict[str, DataFrame | None]:
@@ -280,7 +280,7 @@ def get_records(
 
 def read(
     container: Container,
-    load_from: str | os.PathLike,
+    load_from: str | Path,
     symbol_names: list[str] | None,
     encoding: str | None,
     mapping: dict[str, str] | None = None,
@@ -586,7 +586,7 @@ def _write_symbols_to_gdx(
 
 def write(
     container: Container,
-    write_to: str | os.PathLike,
+    write_to: str | Path,
     symbols: list[str] | None,
     *,
     compress: bool,

@@ -250,7 +250,7 @@ class Options(BaseModel):
         Absolute path of the license.
     listing_file: str | None
         Listing file name
-    loadpoint: os.PathLike | str | None
+    loadpoint: Path | str | None
         Path to the loadpoint GDX file that contains starting point records.
     log_file: str | None
         Log file name
@@ -405,7 +405,7 @@ class Options(BaseModel):
     keep_temporary_files: int | None = None
     license: str | None = None
     listing_file: str | None = None
-    loadpoint: str | os.PathLike | None = None
+    loadpoint: str | Path | None = None
     log_file: str | None = None
     variable_listing_limit: int = 0
     equation_listing_limit: int = 0

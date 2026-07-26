@@ -1217,7 +1217,7 @@ class Model:
                 continue
 
             if key == "loadpoint":
-                if isinstance(value, os.PathLike):
+                if isinstance(value, Path):
                     value = os.path.abspath(value)
 
                 if backend == "engine":
