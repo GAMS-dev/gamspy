@@ -3,7 +3,17 @@ variables:
   UV_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_bin"
   UV_LINK_MODE: "copy"
 
+.python_versions:
+  variables:
+    PY_VERSIONS: "3.10 3.14"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+      variables:
+        PY_VERSIONS: "3.10 3.11 3.12 3.13 3.14"
+    - when: on_success
+
 .setup_template:
+  extends: .python_versions
   stage: setup
   script:
     - |
@@ -16,8 +26,8 @@ variables:
         curl -LsSf https://astral.sh/uv/install.sh | INSTALLER_NO_MODIFY_PATH=1 sh
         export PATH="$UV_INSTALL_DIR:$PATH"
       fi
-    - echo "Downloading Python toolchain..."
-    - uv python install 3.10 3.11 3.12 3.13 3.14
+    - echo "Downloading Python toolchain: $PY_VERSIONS"
+    - uv python install $PY_VERSIONS
   artifacts:
     name: "toolchain-$CI_JOB_NAME"
     paths:
@@ -44,6 +54,7 @@ setup-dac-toolchain:
   tags: [macos-arm64]
 
 setup-wei-toolchain:
+  extends: .python_versions
   stage: setup
   tags: [windows]
   script:
@@ -51,8 +62,8 @@ setup-wei-toolchain:
     - $env:INSTALLER_NO_MODIFY_PATH = "1"
     - irm https://astral.sh/uv/install.ps1 | iex
     - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
-    - echo "Downloading Python toolchain for Windows..."
-    - uv python install 3.10 3.11 3.12 3.13 3.14
+    - echo "Downloading Python toolchain for Windows: $env:PY_VERSIONS"
+    - uv python install ($env:PY_VERSIONS -split ' ')
     # Compress the folder manually to bypass GitLab Runner's symlink/junction issues
     - echo "Compressing toolchain to avoid 'Incorrect function' artifact error..."
     - Compress-Archive -Path "$CI_PROJECT_DIR\.uv_pythons" -DestinationPath "$CI_PROJECT_DIR\uv_toolchain.zip" -Force
