@@ -9,8 +9,7 @@ import pytest
 import gamspy as gp
 from gamspy import Container
 from gamspy.exceptions import ValidationError
-from gamspy.formulations import SDDP
-from gamspy.formulations.sddp import CVaR
+from gamspy.formulations.sddp import SDDP, CVaR
 
 # Two independent identical ClearLake reservoirs sharing one noise. The problem
 # decomposes, so the risk-neutral lower bound is exactly 2 x 112.3046875.

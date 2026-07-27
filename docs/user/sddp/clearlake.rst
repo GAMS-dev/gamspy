@@ -13,7 +13,7 @@ ClearLake Reservoir
 This tutorial builds the reservoir problem from the :doc:`introduction
 <introduction>` into a complete, runnable SDDP model. We declare the stage
 problem in ordinary GAMSPy, hand it to an :meth:`SDDP
-<gamspy.formulations.SDDP>` instance, train a policy, and then ask it what to
+<gamspy.formulations.sddp.SDDP>` instance, train a policy, and then ask it what to
 do and how well it performs.
 
 The problem
@@ -44,7 +44,7 @@ We start from the data and a container. The inflow scenarios are a
 
    import numpy as np
    import gamspy as gp
-   from gamspy.formulations import SDDP
+   from gamspy.formulations.sddp import SDDP
 
    # Problem data
    L_FLOOD     = 250.0   # reservoir capacity (flood threshold)
@@ -62,7 +62,7 @@ We start from the data and a container. The inflow scenarios are a
    ])
    scenario_probs = [0.25, 0.50, 0.25]
 
-The :meth:`SDDP <gamspy.formulations.SDDP>` instance is created early, because
+The :meth:`SDDP <gamspy.formulations.sddp.SDDP>` instance is created early, because
 it owns a special set, the **active-stage** singleton, that the stage
 equations are gated on. ``stage_set`` is the set of stages, ``n_trials`` is the
 number of forward trial paths per iteration, and ``seed`` fixes the sampler.

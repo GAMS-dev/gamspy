@@ -5,7 +5,7 @@ import pytest
 import gamspy as gp
 from gamspy import Container
 from gamspy.exceptions import ValidationError
-from gamspy.formulations import SDDP
+from gamspy.formulations.sddp import SDDP
 
 pytestmark = pytest.mark.unit
 

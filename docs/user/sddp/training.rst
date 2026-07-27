@@ -40,13 +40,13 @@ as training runs, and each iteration solves slightly more slowly than the last.
 On a short run this is invisible; on a long run over many stages it adds up.
 
 ``cut_selection`` bounds the pool. A
-:meth:`LastCuts <gamspy.formulations.LastCuts>` strategy keeps only the cuts
+:meth:`LastCuts <gamspy.formulations.sddp.LastCuts>` strategy keeps only the cuts
 from the most recent ``keep_iter`` iterations and deactivates the older ones, so
 the subproblems stop growing once the pool is full:
 
 .. code-block:: python
 
-   from gamspy.formulations import LastCuts
+   from gamspy.formulations.sddp import LastCuts
 
    result = sddp.train(n_iter=500, cut_selection=LastCuts(keep_iter=50))
 
