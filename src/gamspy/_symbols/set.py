@@ -331,7 +331,7 @@ class SetMixin:
         [['y-1988', 1987.0], ['y-1989', 1988.0], ['y-1990', 1989.0], ['y-1991', 1990.0]]
 
         """
-        jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
+        jump = n if isinstance(n, int) else f"({n.gamsRepr()})"  # type: ignore
 
         if type == "circular":
             return implicits.ImplicitSet(self, name=self.name, extension=f" -- {jump}")
