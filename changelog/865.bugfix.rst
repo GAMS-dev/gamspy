@@ -1,0 +1,1 @@
+Fix missing parentheses in set.lag operations when the jump is a multi-term expression.

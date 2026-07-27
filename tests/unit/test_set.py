@@ -344,9 +344,22 @@ def test_lag_and_lead(data):
     t = Set(m, name="t", records=[f"t{i}" for i in range(1, 6)])
 
     sMinDown = Set(m, name="sMinDown", domain=[s, t])
-    sMinDown[s, t.lead(Ord(t) - Ord(s))] = 1
+    sMinDown[s, t.lead(Ord(t) - Ord(s))] = True
 
-    assert sMinDown.getAssignment() == "sMinDown(s,t + (ord(t) - ord(s))) = 1;"
+    assert sMinDown.getAssignment() == "sMinDown(s,t + (ord(t) - ord(s))) = yes;"
+
+    sMinUp = Set(m, name="sMinUp", domain=[s, t])
+    sMinUp[s, t.lag(Ord(t) - Ord(s))] = True
+
+    assert sMinUp.getAssignment() == "sMinUp(s,t - (ord(t) - ord(s))) = yes;"
+
+    # Multi-term jumps must be parenthesized as a whole.
+    p = Parameter(m, name="p", domain=[t])
+    q = Parameter(m, name="q")
+    assert t.lag(p[t] - q + 1).gamsRepr() == "t - (p(t) - q + 1)"
+    assert t.lag(p[t] - q + 1, "circular").gamsRepr() == "t -- (p(t) - q + 1)"
+    assert t.lead(p[t] - q + 1).gamsRepr() == "t + (p(t) - q + 1)"
+    assert t.lead(p[t] - q + 1, "circular").gamsRepr() == "t ++ (p(t) - q + 1)"
 
     i = Set(m, "i", records=range(3))
     t = Set(m, "t", records=range(3))
