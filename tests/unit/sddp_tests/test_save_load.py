@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from gamspy.exceptions import ValidationError
-from gamspy.formulations import SDDP
+from gamspy.formulations.sddp import SDDP
 
 
 @pytest.mark.unit

@@ -7,7 +7,7 @@ import pytest
 
 import gamspy as gp
 from gamspy import Container
-from gamspy.formulations import SDDP
+from gamspy.formulations.sddp import SDDP
 
 # ClearLake 4-stage reservoir - the canonical SDDP regression problem. With
 # probabilities [0.25, 0.5, 0.25] the deterministic lower bound is exactly

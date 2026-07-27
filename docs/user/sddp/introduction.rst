@@ -138,7 +138,8 @@ does, and why the lower bound can be trusted.
 The workflow in GAMSPy
 ======================
 
-The whole method lives behind the :meth:`SDDP <gamspy.formulations.SDDP>`
+The whole method lives behind the
+:meth:`SDDP <gamspy.formulations.sddp.SDDP>`
 class. You write your stage problem as ordinary GAMSPy variables and equations,
 register the state and the noise, and then:
 

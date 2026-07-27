@@ -1,0 +1,1 @@
+Move SDDP API from the top-level ``gamspy.formulations`` namespace to the dedicated ``gamspy.formulations.sddp`` namespace.

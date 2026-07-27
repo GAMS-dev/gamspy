@@ -22,7 +22,7 @@ class PolicyResult:
     noise : float
         The realised noise value injected for the stage.
     approx_cost_to_go : float
-        ``acost.l`` from the point solve: the immediate stage cost **plus**
+        ``approx_cost.l`` from the point solve: the immediate stage cost **plus**
         the cut-approximated expected future cost.
     decisions : dict[str, Any]
         ``{variable_name: level}`` for each reported variable, evaluated at

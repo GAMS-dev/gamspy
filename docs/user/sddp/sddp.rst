@@ -21,7 +21,8 @@ Many decisions have to be made over time and under uncertainty: how much water
 to release from a reservoir before the season's rainfall is known, how much to
 store before tomorrow's demand, how to commit resources as the future unfolds.
 GAMSPy supports these **multistage stochastic** problems through
-:meth:`SDDP <gamspy.formulations.SDDP>` (Stochastic Dual Dynamic Programming).
+:meth:`SDDP <gamspy.formulations.sddp.SDDP>`
+(Stochastic Dual Dynamic Programming).
 
 You write the single-stage problem as an ordinary GAMSPy model, describe how the
 state carries forward and how the uncertainty is distributed, and SDDP learns a

@@ -8,8 +8,7 @@ import pytest
 import gamspy as gp
 from gamspy import Container
 from gamspy.exceptions import ValidationError
-from gamspy.formulations import SDDP
-from gamspy.formulations.sddp import CVaR
+from gamspy.formulations.sddp import SDDP, CVaR
 
 # Same ClearLake regression problem as conftest. The risk-neutral lower bound
 # is exactly 112.3046875 (== 28750 / 256); CVaR with weight=0 (or tail=1,
