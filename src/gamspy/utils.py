@@ -616,21 +616,16 @@ def _get_set(domain: list[Set | Alias | Domain | Expression]):
 
 
 def _unpack(domain: list[Set | Alias | ImplicitSet]):
+    """Flatten a domain into the sets it puts under control."""
     unpacked = []
     for elem in domain:
         if isinstance(elem, implicits.ImplicitSet):
-            if elem.extension is not None:
-                unpacked.append(elem.parent)
-            else:
-                members = []
-                for member in elem.domain:
-                    if isinstance(member, implicits.ImplicitSet):
-                        members.append(member.parent)
-                        members.extend(member.domain)
-                    else:
-                        members.append(member)
+            # A lag/lead operation carries no domain of its own; the shifted
+            # set itself is the controlled index.
+            if elem.extension is None:
+                unpacked.extend(_unpack(elem.domain))
 
-                unpacked.extend([*members, elem.parent])
+            unpacked.append(elem.parent)
         else:
             unpacked.append(elem)
 
