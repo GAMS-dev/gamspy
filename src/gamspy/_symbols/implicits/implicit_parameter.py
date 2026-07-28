@@ -111,7 +111,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         | Ord,
     ) -> None:
         if (
-            isinstance(self.parent, (syms.Variable, syms.Equation))
+            self.parent.container._in_loop == 0
+            and isinstance(self.parent, (syms.Variable, syms.Equation))
             and len(self.parent.domain) > 0
             and all(len(elem) == 0 for elem in self.parent.domain)
         ):

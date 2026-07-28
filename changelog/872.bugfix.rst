@@ -1,0 +1,1 @@
+Fix a false negative domain validation when a lag/lead operation is nested in the index of another set.
