@@ -401,9 +401,64 @@ In the following examples ``i`` is a set and ``s`` and ``t`` are parameters. ::
     s[i].where[t[i]] = t[i]
     s[i].where[(t[i] - 1) > 0] = t[i] ** 0.5
 
-Note that the first assignment is suppressed if the value of the parameter ``t`` equals 
-zero. The second assignment is suppressed for values of the parameter ``t`` that are 
+Note that the first assignment is suppressed if the value of the parameter ``t`` equals
+zero. The second assignment is suppressed for values of the parameter ``t`` that are
 smaller or equal to 1.
+
+.. _sparse-assignments:
+
+Sparse Assignments
+------------------
+
+The first of the last two examples is special in the way that the logical condition on
+the left and the expression on the right-hand side of the assignment are the same. Such
+an assignment can be written with :meth:`sparse <gamspy.sparse>`, which marks the
+right-hand side of an assignment as sparse: ::
+
+    s[i] = sparse(t[i])
+
+A sparse assignment assigns to a label only if the right-hand side is non-zero, labels for
+which the right-hand side is zero are left untouched. Therefore ``s[i] = sparse(t[i])`` and
+``s[i].where[t[i]] = t[i]`` are equivalent, but the sparse assignment evaluates the
+right-hand side only once. This can be significantly faster if the right-hand side is
+expensive to evaluate: ::
+
+    from gamspy import Container, Set, Parameter, Sum, sparse
+
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2", "i3"])
+    j = Set(m, "j", records=["j1", "j2"])
+    a = Parameter(m, "a", domain=[i, j], records=[["i1", "j1", 3], ["i3", "j2", 5]])
+    u = Parameter(m, "u", domain=i)
+
+    u[i] = sparse(Sum(j, a[i, j]))
+
+::
+
+    In [1]: u.records
+    Out[1]:
+    	 i	value
+    0	i1	  3.0
+    1	i3	  5.0
+
+Here the :meth:`Sum <gamspy.Sum>` is computed once per label of ``i``, whereas the
+equivalent formulation ``u[i].where[Sum(j, a[i, j])] = Sum(j, a[i, j])`` computes it
+twice. Sparse assignments may be combined with a ``where`` condition on the left and are
+also allowed for sets, aliases and variable or equation attributes. Here ``v`` is a
+parameter and ``x`` is a variable, both indexed over ``i``: ::
+
+    v[i].where[u[i] > 3] = sparse(Sum(j, a[i, j]))
+    x.l[i] = sparse(u[i])
+
+.. warning::
+    Unlike a ``where`` condition on the left, a sparse assignment always evaluates the
+    right-hand side. It therefore does not protect against undefined arithmetic:
+    ``rho[i] = sparse(1 / sig[i] - 1)`` raises a division by zero error for those labels
+    where ``sig[i]`` is zero, while ``rho[i].where[sig[i]] = 1 / sig[i] - 1`` does not.
+
+.. note::
+    :meth:`sparse <gamspy.sparse>` is only allowed on the right-hand side of an
+    assignment. It cannot be used in equation definitions.
 
 
 .. _where-on-the-right:

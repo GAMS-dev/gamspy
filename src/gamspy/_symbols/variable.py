@@ -410,8 +410,8 @@ class Variable(operable.Operable, VarEquSymbol):
     def _deserialize(self, info: dict) -> None:
         for key, value in info.items():
             if key == "_assignment":
-                left, right = value.split(" = ")
-                value = expression.Expression(left, "=", right[:-1])
+                left, operator, right = expression.split_assignment(value)
+                value = expression.Expression(left, operator, right[:-1])
 
             setattr(self, key, value)
 

@@ -15,6 +15,7 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
+import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -35,6 +36,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Operation
+    from gamspy._algebra.sparse import SparseAssignment
     from gamspy._extrinsic import ExtrinsicFunction
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import DomainType, IndexType, ParameterRecordsType
@@ -299,8 +301,8 @@ class Parameter(operable.Operable, RecordSymbol):
     def _deserialize(self, info: dict) -> None:
         for key, value in info.items():
             if key == "_assignment":
-                left, right = value.split(" = ")
-                value = expression.Expression(left, "=", right[:-1])
+                left, operator, right = expression.split_assignment(value)
+                value = expression.Expression(left, operator, right[:-1])
 
             setattr(self, key, value)
 
@@ -332,10 +334,12 @@ class Parameter(operable.Operable, RecordSymbol):
         | float
         | int
         | Number
-        | ExtrinsicFunction,
+        | ExtrinsicFunction
+        | SparseAssignment,
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
+        rhs, operator = sparse._unwrap(rhs)
 
         if self._is_miro_input and self._container._options.miro_protect:
             raise ValidationError(
@@ -349,7 +353,7 @@ class Parameter(operable.Operable, RecordSymbol):
 
         statement = expression.Expression(
             implicits.ImplicitParameter(self, name=self.name, domain=domain),
-            "=",
+            operator,
             rhs,
         )
 

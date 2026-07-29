@@ -230,6 +230,25 @@ Mapping:
         error01(s1,s2) = rt(s1,s2) and not lfr(s1,s2) or not rt(s1,s2) and lfr(s1,s2);
 
 
+Sparse Assignments
+------------------
+
+The GAMS sparse assignment operator **$=** is expressed with :meth:`sparse <gamspy.sparse>`
+on the right-hand side of the assignment.
+
+.. tab-set-code::
+
+    .. code-block:: python
+        :name: Python
+
+        rho[i] = gp.sparse(sig[i])
+
+    .. code-block:: text
+        :name: GAMS
+
+        rho(i) $= sig(i);
+
+
 Translating GAMS Macros
 -----------------------
 
