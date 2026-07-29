@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
+import gamspy._algebra.sparse as sparse
 import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
     from gamspy import Alias, Equation, Parameter, Set, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Card, Operation, Ord
+    from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy._types import IndexType
     from gamspy.math.misc import MathOp
@@ -108,7 +110,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         | float
         | Parameter
         | Card
-        | Ord,
+        | Ord
+        | SparseAssignment,
     ) -> None:
         if (
             self.parent.container._in_loop == 0
@@ -121,6 +124,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             )
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
+        rhs, operator = sparse._unwrap(rhs)
 
         if isinstance(rhs, float):
             rhs = utils._map_special_values(rhs)
@@ -133,7 +137,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
                 permutation=self.permutation,
                 scalar_domains=self._scalar_domains,
             ),
-            "=",
+            operator,
             rhs,
         )
 

@@ -15,6 +15,7 @@ import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -404,8 +405,8 @@ class Equation(VarEquSymbol):
     def _deserialize(self, info: dict) -> None:
         for key, value in info.items():
             if key == "_assignment":
-                left, right = value.split(" = ")
-                value = expression.Expression(left, "=", right[:-1])
+                left, operator, right = expression.split_assignment(value)
+                value = expression.Expression(left, operator, right[:-1])
             elif key == "_definition":
                 left, right = value.split(" .. ")
                 value = expression.Expression(left, "..", right[:-1])
@@ -556,6 +557,12 @@ class Equation(VarEquSymbol):
 
     def _set_definition(self, domain, rhs):
         # self[domain] = rhs
+        if isinstance(rhs, sparse.SparseAssignment):
+            raise ValidationError(
+                "`sparse` cannot be used in an equation definition because GAMS "
+                "supports the sparse assignment operator ($=) in assignments only."
+            )
+
         rhs_repr = rhs.gamsRepr()
         if self.type == "nonbinding" and not any(
             eq_type in rhs_repr for eq_type in EQ_TYPES

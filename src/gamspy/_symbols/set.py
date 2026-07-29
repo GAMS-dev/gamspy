@@ -13,6 +13,7 @@ import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -30,6 +31,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import DomainType, IndexType, OperableType, SetRecordsType
     from gamspy.math.misc import MathOp
@@ -700,8 +702,8 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         # Set attributes
         for key, value in info.items():
             if key == "_assignment":
-                left, right = value.split(" = ")
-                value = expression.Expression(left, "=", right[:-1])
+                left, operator, right = expression.split_assignment(value)
+                value = expression.Expression(left, operator, right[:-1])
 
             setattr(self, key, value)
 
@@ -723,17 +725,24 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
     def __setitem__(
         self,
         indices: IndexType,
-        rhs: Expression | Operation | Condition | ImplicitSet | bool | str,
+        rhs: Expression
+        | Operation
+        | Condition
+        | ImplicitSet
+        | bool
+        | str
+        | SparseAssignment,
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
+        rhs, operator = sparse._unwrap(rhs)
 
         if isinstance(rhs, bool):
             rhs = "yes" if rhs is True else "no"
 
         statement = expression.Expression(
             implicits.ImplicitSet(self, name=self.name, domain=domain),
-            "=",
+            operator,
             rhs,
         )
 

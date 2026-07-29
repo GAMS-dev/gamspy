@@ -8,6 +8,7 @@ import gamspy._algebra.domain as domain
 import gamspy._algebra.number as number
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
+import gamspy._algebra.sparse as sparse
 import gamspy._symbols as gp_syms
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -47,6 +48,7 @@ def peek(stack):
 PRECEDENCE = {
     "..": 0,
     "=": 0,
+    "$=": 0,
     "or": 1,
     "xor": 2,
     "and": 3,
@@ -82,6 +84,7 @@ ASSOCIATIVITY = {
     "eq": "left",
     "ne": "left",
     "=": "left",
+    "$=": "left",
     ">=": "left",
     "<=": "left",
     ">": "left",
@@ -99,6 +102,18 @@ ASSOCIATIVITY = {
 
 # Precedence for a leaf node is considered infinite.
 LEAF_PRECEDENCE = float("inf")
+
+ASSIGNMENT_OPERATORS = (sparse.SPARSE, "=")
+STATEMENT_OPERATORS = (*ASSIGNMENT_OPERATORS, "..")
+
+
+def split_assignment(declaration: str) -> tuple[str, str, str]:
+    for operator in ASSIGNMENT_OPERATORS:
+        left, separator, right = declaration.partition(f" {operator} ")
+        if separator:
+            return left, operator, right
+
+    raise ValidationError(f"`{declaration}` is not a valid GAMS assignment.")
 
 
 def get_operand_gams_repr(operand) -> str:
@@ -197,7 +212,7 @@ def create_gams_expression(root_node: Expression) -> str:
 
     final_string = eval_stack[0][0]
 
-    if root_node.operator in ("=", ".."):
+    if root_node.operator in STATEMENT_OPERATORS:
         return f"{final_string};"
 
     return final_string
@@ -222,6 +237,7 @@ def create_latex_expression(root_node: Expression) -> str:
         "or": "\\vee",
         "xor": "\\oplus",
         "$": "|",
+        "$=": "\\stackrel{\\$}{=}",
     }
 
     # 1. Get nodes in post-order (left - right - parent).
@@ -413,7 +429,7 @@ class Expression(operable.Operable):
 
     def __init__(
         self,
-        left: OperableType | ImplicitEquation | None,
+        left: OperableType | ImplicitEquation | str | None,
         operator: str,
         right: OperableType | str | None,
     ):
@@ -423,7 +439,7 @@ class Expression(operable.Operable):
             utils._map_special_values(right) if isinstance(right, float) else right
         )
 
-        if operator == "=" and isinstance(right, Expression):
+        if operator in ASSIGNMENT_OPERATORS and isinstance(right, Expression):
             right._fix_equalities()
 
         self._representation: str | None = None
@@ -511,7 +527,7 @@ class Expression(operable.Operable):
                 else:
                     right_domain[pos] = s
 
-        left = self.left[left_domain] if left_domain else self.left  # ty: ignore[not-subscriptable]
+        left = self.left[left_domain] if left_domain else self.left  # ty: ignore[not-subscriptable, invalid-argument-type]
         right = self.right[right_domain] if right_domain else self.right  # ty: ignore
 
         return Expression(left, self.operator, right)

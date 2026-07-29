@@ -68,6 +68,26 @@ Set-based equivalent:
 The conditional expression is evaluated inside the GAMS engine and avoids
 branching in Python.
 
+Sparse Assignments
+------------------
+If the condition of an assignment is the right-hand side itself, the same
+expression is evaluated twice: once for the condition and once for the value.
+
+.. code-block:: python
+
+    a[i].where[gp.Sum(j, b[i, j])] = gp.Sum(j, b[i, j])
+
+:meth:`sparse <gamspy.sparse>` expresses the same assignment with a single
+evaluation of the right-hand side, only assigning where it is non-zero:
+
+.. code-block:: python
+
+    a[i] = gp.sparse(gp.Sum(j, b[i, j]))
+
+The speedup grows with the cost of the right-hand side, so it is most
+noticeable for indexed operations over large domains. See
+:ref:`sparse-assignments` for the semantics and its limitations.
+
 Lagged Assignments
 ------------------
 Some patterns that are often written as loops can still be expressed in a
