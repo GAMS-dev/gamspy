@@ -488,13 +488,13 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         container: Container,
         name: str,
         domain: DomainType | None = None,
-        records: SetRecordsType | None = None,
+        records: pd.DataFrame | None = None,
         description: str = "",
         *,
         is_singleton: bool = False,
     ) -> Set:
         # create new symbol object
-        obj = object.__new__(cls)
+        obj = cast("Set", object.__new__(cls))
 
         # legacy gtp attributes
         ## set private properties directly

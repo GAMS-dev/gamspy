@@ -92,10 +92,10 @@ class Parameter(operable.Operable, RecordSymbol):
         container: Container,
         name: str,
         domain: DomainType | None = None,
-        records: ParameterRecordsType | None = None,
+        records: pd.DataFrame | None = None,
         description: str = "",
     ) -> Parameter:
-        obj = object.__new__(cls)
+        obj = cast("Parameter", object.__new__(cls))
 
         # legacy gtp attributes
         ## set private properties directly

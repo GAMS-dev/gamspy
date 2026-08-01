@@ -59,7 +59,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         cls, container: Container, name: str, alias_with: Set | Alias
     ) -> Alias:
         # create new symbol object
-        obj = object.__new__(cls)
+        obj = cast("Alias", object.__new__(cls))
 
         # legacy gtp attributes
         ## set private properties directly
@@ -71,7 +71,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
             else container,
         )
         obj.name = name
-        obj._alias_with = alias_with
+        obj._alias_with = obj._validate_alias_with(alias_with)
 
         ## typing
         obj._gams_type = GMS_DT_ALIAS

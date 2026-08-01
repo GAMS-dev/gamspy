@@ -160,11 +160,11 @@ class Equation(VarEquSymbol):
         name: str,
         type: str | EquationType = "regular",
         domain: DomainType | None = None,
-        records: VarEquRecordsType | None = None,
+        records: pd.DataFrame | None = None,
         description: str = "",
     ) -> Equation:
         # create new symbol object
-        obj = object.__new__(cls)
+        obj = cast("Equation", object.__new__(cls))
 
         # set private properties directly
         type = cast_type(type)

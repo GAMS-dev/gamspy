@@ -183,11 +183,11 @@ class Variable(operable.Operable, VarEquSymbol):
         name: str,
         type: str | VariableType = "free",
         domain: DomainType | None = None,
-        records: VarEquRecordsType | None = None,
+        records: pd.DataFrame | None = None,
         description: str = "",
     ) -> Variable:
         # create new symbol object
-        obj = object.__new__(cls)
+        obj = cast("Variable", object.__new__(cls))
 
         # legacy gtp attributes
         ## set private properties directly
