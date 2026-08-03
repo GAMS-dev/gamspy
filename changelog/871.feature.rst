@@ -1,5 +1,0 @@
-Add `gamspy.sparse`` to mark the right-hand side of an assignment as a sparse assignment. 
-``p[i] = gp.sparse(rhs)`` generates the GAMS sparse assignment ``p(i) $= rhs;`` which 
-only assigns where the right-hand side is non-zero. It is equivalent to ``p[i].where[rhs] = rhs`` 
-but evaluates the right-hand side only once, which can be significantly faster if the right-hand 
-side is expensive to evaluate.
