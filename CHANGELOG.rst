@@ -1,3 +1,15 @@
+GAMSPy 1.26.4 (2026-08-03)
+==========================
+
+Bug fixes
+---------
+- #30: Fix missing miro related attribute of set and parameter objects.
+
+Acknowledgements
+----------------
+- #30 is reported by @jiedxu: https://github.com/GAMS-dev/gamspy/issues/30.
+
+
 GAMSPy 1.26.3 (2026-08-03)
 ==========================
 

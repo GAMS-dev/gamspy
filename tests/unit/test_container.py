@@ -676,6 +676,19 @@ def test_read(data, tmp_path):
 
 
 @pytest.mark.unit
+def test_read_gdx(tmp_path):
+    # reported by jiedxu: https://github.com/GAMS-dev/gamspy/issues/30
+    m = Container()
+    _ = Set(m, "byear", records=range(2000, 2101))
+    m.write(tmp_path / "test.gdx")
+
+    container = Container()
+    container.read(tmp_path / "test.gdx")
+    byear = container["byear"]
+    container.setRecords({byear: pd.DataFrame({"*": [1, 2, 3, 4, 5]})})
+
+
+@pytest.mark.unit
 def test_debugging_level():
     from gamspy.math import sqrt
 
