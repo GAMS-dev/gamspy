@@ -509,12 +509,14 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         obj._latex_name = name.replace("_", r"\_")
         obj._container._add_statement(obj)
         obj._metadata = {}
+        obj._assignment = None
         obj._should_load_from_gams = False
         obj._should_unload_to_gams = False
 
         # miro support
         obj._is_miro_input = False
         obj._is_miro_output = False
+        obj._is_miro_symbol = False
 
         return obj
 

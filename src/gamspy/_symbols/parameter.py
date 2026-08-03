@@ -118,8 +118,9 @@ class Parameter(operable.Operable, RecordSymbol):
         obj._domain_violations = None
         obj.where = condition.Condition(obj)
         obj._latex_name = name.replace("_", r"\_")
-        obj.container._add_statement(obj)
+        obj._container._add_statement(obj)
         obj._metadata = {}
+        obj._assignment = None
         obj._should_load_from_gams = False
         obj._should_unload_to_gams = False
 
@@ -127,6 +128,7 @@ class Parameter(operable.Operable, RecordSymbol):
         obj._is_miro_input = False
         obj._is_miro_output = False
         obj._is_miro_table = False
+        obj._is_miro_symbol = False
 
         return obj
 
