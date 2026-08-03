@@ -551,7 +551,13 @@ class If:
     """
 
     def __init__(
-        self, condition: Expression | Condition | Operation | MathOp | Parameter
+        self,
+        condition: Expression
+        | Condition
+        | Operation
+        | MathOp
+        | Parameter
+        | ImplicitSet,
     ):
         self.condition = condition
 
@@ -567,7 +573,7 @@ class If:
         tid = threading.get_native_id()
         _last_containers[(pid, tid)] = self.container
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         if not self.container._in_loop:
             raise ValidationError(
                 "`gp.If` context manager can only be used in `gp.Loop` context managers. Use regular Python if statements instead."
@@ -594,7 +600,13 @@ class ElseIf:
     """
 
     def __init__(
-        self, condition: Expression | Condition | Operation | MathOp | Parameter
+        self,
+        condition: Expression
+        | Condition
+        | Operation
+        | MathOp
+        | Parameter
+        | ImplicitSet,
     ):
         self.condition = condition
 
@@ -610,7 +622,7 @@ class ElseIf:
         tid = threading.get_native_id()
         _last_containers[(pid, tid)] = self.container
 
-    def __enter__(self):
+    def __enter__(self) -> ElseIf:
         if not self.container._in_loop:
             raise ValidationError(
                 "`gp.ElseIf` context manager can only be used in `gp.Loop` context managers."
@@ -650,7 +662,7 @@ class Else:
     conditions were False.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pid = os.getpid()
         tid = threading.get_native_id()
         container = _last_containers.get((pid, tid))
@@ -663,7 +675,7 @@ class Else:
 
         self.container = container
 
-    def __enter__(self):
+    def __enter__(self) -> Else:
         if not getattr(self.container, "_in_loop", 0):
             raise ValidationError(
                 "`gp.Else` context manager can only be used in `gp.Loop` context managers."

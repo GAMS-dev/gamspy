@@ -81,10 +81,11 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         domain : list[Set | str], optional
         records : Any, optional
         """
+        self.parent = parent
         if domain is None:
             domain = []
 
-        super().__init__(parent, name, domain, permutation, scalar_domains)
+        super().__init__(name, domain, permutation, scalar_domains)
         self._assignment = None
 
     def __getitem__(self, indices: IndexType) -> ImplicitParameter:

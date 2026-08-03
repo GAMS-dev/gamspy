@@ -43,7 +43,7 @@ import gamspy as gp
 from gamspy.exceptions import GamspyException, ValidationError
 
 
-def mtz_formulation(m: gp.Container) -> gp.Equation:
+def mtz_formulation(m: gp.Container) -> list[gp.Equation]:
     n1, n2, i, j, ij, X, start_point = m.getSymbols(
         ["n1", "n2", "i", "j", "allowed_arcs", "X", "start_point"]
     )

@@ -506,6 +506,29 @@ def _map_special_values(value: float):
     return value
 
 
+_DOMAIN_ELEMENT_TYPES: tuple[type, ...] = ()
+
+
+def _get_domain_element_types() -> tuple[type, ...]:
+    """
+    Types that can occupy a position of a domain and know how to represent
+    themselves in GAMS/LaTeX.
+    """
+    global _DOMAIN_ELEMENT_TYPES
+    if not _DOMAIN_ELEMENT_TYPES:
+        from gamspy._algebra.expression import ShiftExpression
+
+        _DOMAIN_ELEMENT_TYPES = (
+            syms.Set,
+            syms.Alias,
+            syms.UniverseAlias,
+            implicits.ImplicitSet,
+            ShiftExpression,
+        )
+
+    return _DOMAIN_ELEMENT_TYPES
+
+
 def _get_domain_str(
     domain: Iterable[Set | Alias | UniverseAlias | ImplicitSet | str],
     *,
@@ -529,14 +552,7 @@ def _get_domain_str(
     """
     domain_strs = []
     for elem in domain:
-        if isinstance(
-            elem, (syms.Set, syms.Alias, syms.UniverseAlias, implicits.ImplicitSet)
-        ):
-            if latex:
-                domain_strs.append(elem.latexRepr())
-            else:
-                domain_strs.append(elem.gamsRepr())
-        elif isinstance(elem, str):
+        if isinstance(elem, str):
             if elem == "*":
                 domain_strs.append(elem)
             else:
@@ -544,6 +560,11 @@ def _get_domain_str(
                     domain_strs.append('"' + elem.replace("_", r"\_") + '"')
                 else:
                     domain_strs.append('"' + elem + '"')
+        elif isinstance(elem, _get_domain_element_types()):
+            if latex:
+                domain_strs.append(elem.latexRepr())
+            else:
+                domain_strs.append(elem.gamsRepr())
         else:
             raise ValidationError(
                 f"Domain type must be str, Set or Alias but found {type(elem)}"
@@ -599,10 +620,15 @@ def _invert_permutation(dims: list[int]) -> list[int]:
 
 def _get_set(domain: list[Set | Alias | Domain | Expression]):
     from gamspy import Domain
+    from gamspy._algebra.expression import ShiftExpression
 
     res = []
     for el in domain:
-        if hasattr(el, "left"):
+        if isinstance(el, ShiftExpression):
+            # A lag/lead is a domain element on its own, unpacking it to its
+            # left operand would drop the shift.
+            res.append(el)
+        elif hasattr(el, "left"):
             if hasattr(el.left, "sets"):
                 res.extend(el.left.sets)  # type: ignore
             else:
@@ -617,14 +643,16 @@ def _get_set(domain: list[Set | Alias | Domain | Expression]):
 
 def _unpack(domain: list[Set | Alias | ImplicitSet]):
     """Flatten a domain into the sets it puts under control."""
+    from gamspy._algebra.expression import ShiftExpression
+
     unpacked = []
     for elem in domain:
-        if isinstance(elem, implicits.ImplicitSet):
+        if isinstance(elem, ShiftExpression):
             # A lag/lead operation carries no domain of its own; the shifted
             # set itself is the controlled index.
-            if elem.extension is None:
-                unpacked.extend(_unpack(elem.domain))
-
+            unpacked.append(elem.parent)
+        elif isinstance(elem, implicits.ImplicitSet):
+            unpacked.extend(_unpack(elem.domain))
             unpacked.append(elem.parent)
         else:
             unpacked.append(elem)

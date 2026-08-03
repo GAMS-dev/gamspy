@@ -1306,16 +1306,16 @@ def rand_triangle(low: int | float, mid: int | float, high: int | float) -> Math
 
 
 def same_as(
-    arg1: Set | Alias | ImplicitSet | str,
-    arg2: Set | Alias | ImplicitSet | str,
+    arg1: Set | Alias | ImplicitSet | Expression | str,
+    arg2: Set | Alias | ImplicitSet | Expression | str,
 ) -> MathOp:
     """
     Evaluates to true if this set is identical to the given set or alias, false otherwise.
 
     Parameters
     ----------
-    arg1 : Set | Alias | ImplicitSet | str
-    other : Set | Alias | ImplicitSet | str
+    arg1 : Set | Alias | ImplicitSet | Expression | str
+    other : Set | Alias | ImplicitSet | Expression | str
 
     Returns
     -------

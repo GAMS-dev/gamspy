@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
     from gamspy import Alias, Container, UniverseAlias
     from gamspy._algebra.condition import Condition
-    from gamspy._algebra.expression import Expression
+    from gamspy._algebra.expression import Expression, ShiftExpression
     from gamspy._algebra.operation import Operation
     from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
@@ -297,7 +297,7 @@ class SetMixin:
         self: Set | Alias,
         n: OperableType,
         type: Literal["linear", "circular"] = "linear",
-    ) -> ImplicitSet:
+    ) -> ShiftExpression:
         """
         Shifts the values of a Set or Alias by `n` positions to the left (lag).
 
@@ -312,7 +312,7 @@ class SetMixin:
 
         Returns
         -------
-        ImplicitSet
+        ShiftExpression
             The shifted set expression.
 
         Raises
@@ -333,21 +333,15 @@ class SetMixin:
         [['y-1988', 1987.0], ['y-1989', 1988.0], ['y-1990', 1989.0], ['y-1991', 1990.0]]
 
         """
-        jump = n if isinstance(n, int) else f"({n.gamsRepr()})"  # type: ignore
-
-        if type == "circular":
-            return implicits.ImplicitSet(self, name=self.name, extension=f" -- {jump}")
-
-        if type == "linear":
-            return implicits.ImplicitSet(self, name=self.name, extension=f" - {jump}")
-
-        raise ValueError("Lag type must be linear or circular")
+        return expression.ShiftExpression(
+            self, expression._lag_lead_operator("-", type), n
+        )
 
     def lead(
         self: Set | Alias,
         n: OperableType,
         type: Literal["linear", "circular"] = "linear",
-    ) -> ImplicitSet:
+    ) -> ShiftExpression:
         """
         Shifts the values of a Set or Alias by `n` positions to the right (lead).
 
@@ -362,7 +356,7 @@ class SetMixin:
 
         Returns
         -------
-        ImplicitSet
+        ShiftExpression
             The shifted set expression.
 
         Raises
@@ -383,15 +377,9 @@ class SetMixin:
         [['y-1989', 1987.0], ['y-1990', 1988.0], ['y-1991', 1989.0]]
 
         """
-        jump = n if isinstance(n, int) else f"({n.gamsRepr()})"  # type: ignore
-
-        if type == "circular":
-            return implicits.ImplicitSet(self, name=self.name, extension=f" ++ {jump}")
-
-        if type == "linear":
-            return implicits.ImplicitSet(self, name=self.name, extension=f" + {jump}")
-
-        raise ValueError("Lead type must be linear or circular")
+        return expression.ShiftExpression(
+            self, expression._lag_lead_operator("+", type), n
+        )
 
     def sameAs(self: Set | Alias, other: Set | Alias | str) -> MathOp:
         """

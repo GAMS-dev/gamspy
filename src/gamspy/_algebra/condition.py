@@ -115,11 +115,14 @@ class Condition(operable.Operable):
         | Condition
         | Parameter
         | ImplicitSet
-        | ImplicitParameter,
+        | ImplicitParameter
+        | bool
+        | Number,
         rhs: Expression
         | Operation
         | Condition
         | MathOp
+        | Number
         | int
         | float
         | bool
@@ -163,10 +166,10 @@ class Condition(operable.Operable):
             if isinstance(self.conditioning_on, implicits.ImplicitEquation):
                 self.conditioning_on.parent._definition = statement
             else:
-                self.conditioning_on.parent._assignment = statement
+                self.conditioning_on.parent._assignment = statement  # ty: ignore[unresolved-attribute]
 
             self.conditioning_on.container._synch_with_gams()
-            self.conditioning_on.parent._should_load_from_gams = True
+            self.conditioning_on.parent._should_load_from_gams = True  # ty: ignore[unresolved-attribute]
 
         elif isinstance(self.conditioning_on, syms.Alias):
             self.conditioning_on._assignment = statement

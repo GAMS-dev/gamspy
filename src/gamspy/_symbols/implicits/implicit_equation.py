@@ -3,9 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import gamspy._symbols as syms
-import gamspy._symbols.alias as alias
 import gamspy._symbols.implicits as implicits
-import gamspy._symbols.set as gams_set
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
@@ -33,7 +31,8 @@ class ImplicitEquation(ImplicitSymbol):
         name : str
         domain : List[Set | str]
         """
-        super().__init__(parent, name, domain)
+        self.parent = parent
+        super().__init__(name, domain)
         self.type = type
 
     def __repr__(self) -> str:
@@ -335,7 +334,7 @@ class ImplicitEquation(ImplicitSymbol):
         if len(domain):
             set_strs = []
             for set in domain:
-                if isinstance(set, (gams_set.Set, alias.Alias, implicits.ImplicitSet)):
+                if isinstance(set, utils._get_domain_element_types()):
                     set_strs.append(set.gamsRepr())
                 elif isinstance(set, str):
                     if set == "*":

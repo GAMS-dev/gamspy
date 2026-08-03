@@ -160,7 +160,7 @@ def get_dimension(
     for elem in domain:
         if isinstance(elem, (symbols.Set, symbols.Alias)):
             dimension += elem.dimension
-        elif isinstance(elem, implicits.ImplicitSet):
+        elif isinstance(elem, (implicits.ImplicitSet, expression.ShiftExpression)):
             dimension += elem.parent.dimension
         else:
             if hasattr(elem, "dimension"):
@@ -228,7 +228,7 @@ def _expand_leaf(
     For example, R_UC[r, UC_N] used inside R_UCT[R_UC[r, UC_N], t] occupies
     two positions. Expanding it keeps subsequent positions aligned.
     """
-    if isinstance(leaf, implicits.ImplicitSet):
+    if isinstance(leaf, (implicits.ImplicitSet, expression.ShiftExpression)):
         components = _index_components(leaf)
         if components is not None:
             return components
@@ -277,7 +277,11 @@ def _index_components(
 
         return components
 
-    base = given.parent if isinstance(given, implicits.ImplicitSet) else given
+    base = (
+        given.parent
+        if isinstance(given, (implicits.ImplicitSet, expression.ShiftExpression))
+        else given
+    )
 
     if isinstance(base, (symbols.Set, symbols.Alias)):
         if base.dimension == 1:
@@ -295,7 +299,11 @@ def validate_one_dimensional_sets(
     given: Set | Alias | ImplicitSet,
     actual: str | Set | Alias,
 ):
-    if type(given) in (implicits.ImplicitSet, expression.SetExpression):
+    if type(given) in (
+        implicits.ImplicitSet,
+        expression.SetExpression,
+        expression.ShiftExpression,
+    ):
         return
 
     if type(actual) not in (symbols.Set, symbols.Alias):
@@ -339,6 +347,7 @@ def validate_type(domain):
             EllipsisType,
             slice,
             expression.SetExpression,
+            expression.ShiftExpression,
         ):
             raise TypeError(
                 "Domain item must be type Set, Alias, ImplicitSet or str but"
@@ -421,6 +430,10 @@ def validate_domain(
     index_list = utils._to_list(indices)
     index_list = [str(elem) if type(elem) is int else elem for elem in index_list]
     index_list = _expand_ellipsis_slice(symbol.domain, index_list)
+
+    if symbol.container is not None and symbol.container._in_loop:
+        return index_list
+
     if not get_option("VALIDATION") or not get_option("DOMAIN_VALIDATION"):
         return index_list
 

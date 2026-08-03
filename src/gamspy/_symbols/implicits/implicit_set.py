@@ -8,7 +8,6 @@ import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
-from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -38,13 +37,12 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         name: str,
         domain: list[Set | str] | None = None,
         scalar_domains: list[tuple[int, Set]] | None = None,
-        extension: str | None = None,
     ) -> None:
+        self.parent = parent
         if domain is None:
             domain = ["*"]
 
-        super().__init__(parent, name, domain, parent_scalar_domains=scalar_domains)
-        self.extension = extension
+        super().__init__(name, domain, parent_scalar_domains=scalar_domains)
 
     def __ge__(self, other) -> Expression:
         return expression.Expression(self, ">=", other)
@@ -53,7 +51,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         return expression.Expression(self, "<=", other)
 
     def __repr__(self) -> str:
-        return f"ImplicitSet(parent={self.parent}, name='{self.name}', domain={self.domain}, extension={self.extension}, parent_scalar_domains={self.parent_scalar_domains})"
+        return f"ImplicitSet(parent={self.parent}, name='{self.name}', domain={self.domain}, parent_scalar_domains={self.parent_scalar_domains})"
 
     def __getitem__(
         self, indices: Sequence | str | EllipsisType | slice
@@ -70,9 +68,6 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
     def records(self) -> pd.DataFrame | None:
         if self.parent.records is None:
             return None
-
-        if self.extension is not None:
-            raise ValidationError(".records is not allowed for lag/lead operations.")
 
         temp_name = "autotemp" + utils._get_unique_name()
         temp_param = syms.Set._constructor_bypass(
@@ -115,9 +110,6 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         [0. 1. 0.]
 
         """
-        if self.extension is not None:
-            raise ValidationError(".toDense is not allowed for lag/lead operations.")
-
         domain = list(self.domain)
         temp_name = "autotemp" + utils._get_unique_name()
         temp_param = syms.Parameter._constructor_bypass(
@@ -159,9 +151,6 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         np.float64(0.0)
 
         """
-        if self.extension is not None:
-            raise ValidationError(".toValue is not allowed for lag/lead operations.")
-
         domain = list(self.domain)
         temp_name = "autotemp" + utils._get_unique_name()
         temp_param = syms.Parameter._constructor_bypass(
@@ -204,9 +193,6 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         [('i2', 'j2')]
 
         """
-        if self.extension is not None:
-            raise ValidationError(".toList is not allowed for lag/lead operations.")
-
         if self.parent.records is None:
             return []
 
@@ -228,9 +214,6 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         name = self._latex_name
         representation = name
 
-        if self.extension is not None:
-            representation += f"{self.extension}"
-
         domain = list(self.domain)
 
         for i, d in self._scalar_domains:
@@ -239,7 +222,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         if domain != ["*"]:
             set_strs = []
             for elem in domain:
-                if isinstance(elem, (syms.Set, syms.Alias, ImplicitSet)):
+                if isinstance(elem, utils._get_domain_element_types()):
                     set_strs.append(elem.latexRepr())
                 elif isinstance(elem, str):
                     elem = elem.replace("_", r"\_")
@@ -252,9 +235,6 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
 
     def gamsRepr(self) -> str:
         representation = self.name
-
-        if self.extension is not None:
-            representation += f"{self.extension}"
 
         if self.domain != ["*"]:
             domain = list(self.domain)

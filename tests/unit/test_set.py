@@ -22,7 +22,7 @@ from gamspy import (
     Sum,
     Variable,
 )
-from gamspy._algebra.expression import SetExpression
+from gamspy._algebra.expression import Expression, SetExpression, ShiftExpression
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
@@ -374,6 +374,130 @@ def test_lag_and_lead(data):
     c[i.lead(i.val)] = 5
     d[i + i.val] = 5
     assert c.records.equals(d.records)
+
+
+def test_lag_and_lead_type():
+    m = Container()
+    t = Set(m, name="t", records=[f"t{idx}" for idx in range(1, 6)])
+    a = Alias(m, name="a", alias_with=t)
+    p = Parameter(m, name="p", records=2)
+
+    for shift in (t.lag(1), t.lead(1), t - 1, t + p, a.lag(1), a - 1):
+        assert isinstance(shift, ShiftExpression)
+        assert isinstance(shift, Expression)
+
+    shift = t.lag(1)
+    assert shift.parent is t
+    assert shift.jump == 1
+    assert shift.dimension == 1
+    assert not shift.is_circular
+    assert t.lag(1, "circular").is_circular
+    assert repr(shift) == "ShiftExpression(parent=t, operator='-', jump=1)"
+
+    # A lag/lead is an index and not a value. It compares by identity so that
+    # membership checks on control stacks keep working.
+    assert shift == shift
+    assert shift != t.lag(1)
+    assert shift not in [t, a]
+
+    # A negative jump must be parenthesized.
+    assert t.lag(-1).gamsRepr() == "t - (-1)"
+
+    # Records of a lag/lead operation cannot be evaluated.
+    with pytest.raises(ValidationError):
+        shift.records  # noqa: B018
+    with pytest.raises(ValidationError):
+        shift.toDense()
+    with pytest.raises(ValidationError):
+        shift.toValue()
+    with pytest.raises(ValidationError):
+        shift.toList()
+
+    with pytest.raises(ValidationError):
+        shift[t]
+
+    with pytest.raises(ValidationError):
+        ShiftExpression(t, "+++", 1)
+
+    # GAMS does not accept a lag/lead as a controlling index.
+    a_param = Parameter(m, name="a_param", domain=[t])
+    with pytest.raises(ValidationError):
+        Sum(t.lag(1), a_param[t])
+
+
+def test_lag_and_lead_composition():
+    m = Container()
+    t = Set(m, name="t", records=[f"t{idx}" for idx in range(1, 8)])
+    p = Parameter(m, name="p", records=2)
+
+    # GAMS allows one lag/lead operator per index only, hence the jumps are combined.
+    assert (t.lag(1) - 1).gamsRepr() == "t - 2"
+    assert t.lag(1).lag(2).gamsRepr() == "t - 3"
+    assert (t.lead(1) + 2).gamsRepr() == "t + 3"
+    assert t.lead(1).lead(2).gamsRepr() == "t + 3"
+
+    # Opposite directions cancel each other out.
+    assert (t.lag(1) + 3).gamsRepr() == "t + 2"
+    assert (t.lead(3) - 1).gamsRepr() == "t + 2"
+    assert (t.lag(1) + 1).gamsRepr() == "t - 0"
+
+    # Circular shifts are combined as well.
+    assert t.lag(1, "circular").lag(2, "circular").gamsRepr() == "t -- 3"
+    assert t.lead(1, "circular").lag(3, "circular").gamsRepr() == "t -- 2"
+
+    # Non-constant jumps are combined symbolically.
+    assert (t.lag(p) - 1).gamsRepr() == "t - (p + 1)"
+    assert (t.lag(p) + 1).gamsRepr() == "t - (p - 1)"
+
+    # A linear and a circular shift cannot be combined into a single operator.
+    with pytest.raises(ValidationError):
+        t.lag(1, "circular").lag(1, "linear")
+    with pytest.raises(ValidationError):
+        t.lag(1).lead(1, "circular")
+
+    # The combined shift must be valid GAMS and equal to a single shift.
+    a = Parameter(m, name="a", domain=[t])
+    b = Parameter(m, name="b", domain=[t])
+    c = Parameter(m, name="c", domain=[t])
+    a[t] = Ord(t)
+    b[t] = a[t.lag(1) - 1]
+    c[t] = a[t.lag(2)]
+    assert b.toList() == c.toList()
+
+
+def test_lag_and_lead_domain():
+    m = Container()
+    t = Set(m, name="t", records=[f"t{idx}" for idx in range(1, 6)])
+    u = Set(m, name="u", records=[f"t{idx}" for idx in range(1, 6)])
+    p = Parameter(m, name="p", domain=[t])
+    a = Parameter(m, name="a", domain=[t])
+    b = Parameter(m, name="b", domain=[t])
+
+    # The shifted set is the index that enters the domain.
+    a[t] = Ord(t)
+    b[t] = a[t.lag(1)]
+    assert b.getAssignment() == "b(t) = a(t - 1);"
+    assert b.toList() == [("t2", 1.0), ("t3", 2.0), ("t4", 3.0), ("t5", 4.0)]
+
+    # An uncontrolled shifted set is still detected.
+    with pytest.raises(ValidationError):
+        b[t] = a[u.lag(1)]
+
+    # Both the shifted set and the symbols of the jump are discovered.
+    assert sorted(set((a[t.lag(p[t])] * 2)._find_all_symbols())) == ["a", "p", "t"]
+
+
+def test_lag_and_lead_latex():
+    m = Container()
+    t = Set(m, name="t", records=[f"t{idx}" for idx in range(1, 6)])
+    p = Parameter(m, name="p", domain=[t])
+    a = Parameter(m, name="a", domain=[t])
+
+    assert t.lag(1).latexRepr() == "t - 1"
+    assert t.lead(2, "circular").latexRepr() == "t ++ 2"
+    assert t.lag(p[t]).latexRepr() == "t - (p_{t})"
+    assert a[t.lag(1)].latexRepr() == "a_{t - 1}"
+    assert a[t.lag(p[t])].latexRepr() == "a_{t - (p_{t})}"
 
 
 def test_set_attributes(data):

@@ -9,7 +9,16 @@ import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Product, Sand, Set, Smax, Smin, Sor, Sum
+    from gamspy import (
+        Alias,
+        Product,
+        Sand,
+        Set,
+        Smax,
+        Smin,
+        Sor,
+        Sum,
+    )
     from gamspy._symbols.implicits import (
         ImplicitParameter,
         ImplicitSet,
@@ -21,14 +30,12 @@ if TYPE_CHECKING:
 class ImplicitSymbol(ABC):
     def __init__(
         self: ImplicitSymbolType,
-        parent,
         name,
         domain,
         permutation=None,
         parent_scalar_domains=None,
     ) -> None:
-        self.parent = parent
-        self.container = parent.container
+        self.container = self.parent.container
         self.name = name
         self.domain = domain
         self.where = condition.Condition(self)
@@ -48,7 +55,7 @@ class ImplicitSymbol(ABC):
         self.fix_domain_scalars(parent_scalar_domains)
 
     @property
-    def _latex_name(self) -> str:
+    def _latex_name(self: ImplicitSymbolType) -> str:
         return self.parent._latex_name
 
     def __bool__(self):
@@ -103,10 +110,10 @@ class ImplicitSymbol(ABC):
         self.permutation = new_perm
 
     @property
-    def dimension(self) -> int:
+    def dimension(self: ImplicitSymbolType) -> int:
         return self.parent.dimension - len(self._scalar_domains)
 
-    def _get_temp_domain(self) -> tuple[list, list]:
+    def _get_temp_domain(self: ImplicitSymbolType) -> tuple[list, list]:
         """
         Helper to get a valid domain for the temp parameter to get the records.
 
@@ -133,8 +140,6 @@ class ImplicitSymbol(ABC):
         """Representation of the implicit symbol in GAMS"""
 
     def latexRepr(self):
-        from .implicit_set import ImplicitSet
-
         name = self._latex_name
         representation = name
         domain = list(self.domain)
@@ -145,7 +150,7 @@ class ImplicitSymbol(ABC):
         if domain:
             set_strs = []
             for elem in domain:
-                if isinstance(elem, (gp.Set, gp.Alias, ImplicitSet)):
+                if isinstance(elem, utils._get_domain_element_types()):
                     set_strs.append(elem.latexRepr())
                 elif isinstance(elem, str):
                     elem = elem.replace("_", r"\_")

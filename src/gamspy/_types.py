@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.domain import Domain
-    from gamspy._algebra.expression import Expression
+    from gamspy._algebra.expression import Expression, ShiftExpression
     from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._symbols import Alias, Equation, Parameter, Set, UniverseAlias, Variable
@@ -56,7 +56,9 @@ if TYPE_CHECKING:
         | Alias
         | UniverseAlias
         | ImplicitSet
+        | Expression
         | ImplicitParameter
+        | ShiftExpression
         | Sequence
         | str
         | int
@@ -68,6 +70,7 @@ if TYPE_CHECKING:
     OperationRhsType: TypeAlias = (
         Operation
         | Expression
+        | Condition
         | MathOp
         | Variable
         | Parameter

@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
     from scipy.sparse import coo_matrix
 
-    from gamspy import Alias, Container, Set
+    from gamspy import Alias, Card, Container, Ord, Set
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.number import Number
@@ -333,6 +333,8 @@ class Parameter(operable.Operable, RecordSymbol):
         | ImplicitParameter
         | float
         | int
+        | Ord
+        | Card
         | Number
         | ExtrinsicFunction
         | SparseAssignment,

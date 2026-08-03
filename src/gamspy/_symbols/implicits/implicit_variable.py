@@ -40,7 +40,8 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         name : str
         domain : list[Set | str]
         """
-        super().__init__(parent, name, domain, permutation, scalar_domains)
+        self.parent = parent
+        super().__init__(name, domain, permutation, scalar_domains)
 
     def __repr__(self) -> str:
         return f"ImplicitVariable(parent={self.parent}, name='{self.name}', domain={self.domain}, permutation={self.permutation}, parent_scalar_domains={self.parent_scalar_domains})"
