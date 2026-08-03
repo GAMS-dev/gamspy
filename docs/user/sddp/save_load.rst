@@ -18,7 +18,7 @@ it back.
    sddp.save("clearlake.sddp")
 
    # later, in a fresh session
-   from gamspy.formulations import SDDP
+   from gamspy.formulations.sddp import SDDP
 
    sddp = SDDP.load("clearlake.sddp")
    sddp.policy(stage="mar", state=150, noise=350, report=[R, L, Z, F])

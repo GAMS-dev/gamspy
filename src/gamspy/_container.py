@@ -85,8 +85,8 @@ def add_sysdir_to_path(system_directory: str) -> None:
             os.environ["PATH"] = system_directory
 
 
-def get_system_directory(system_directory: str | os.PathLike | None) -> str:
-    if isinstance(system_directory, os.PathLike):
+def get_system_directory(system_directory: str | Path | None) -> str:
+    if isinstance(system_directory, Path):
         system_directory = os.fspath(system_directory)
 
     if system_directory is not None:
@@ -127,15 +127,15 @@ class Container:
 
     Parameters
     ----------
-    load_from : str, os.PathLike, Container, gt.Container, optional
+    load_from : str, Path, Container, gt.Container, optional
         Source to initialize the container from:
 
         * ``.gdx`` file: loads symbols and records from a GDX file.
         * ``.g00`` file: restarts from a GAMS save file.
         * Container: Copies symbols from the given container into the new container.
-    system_directory : str, os.PathLike, optional
+    system_directory : str, Path, optional
         Path to the directory that holds the GAMS installation, by default None
-    working_directory : str, os.PathLike, optional
+    working_directory : str, Path, optional
         Directory used for temporary files (``.gms``, ``.lst``, ``.gdx``).
         If omitted, a temporary directory is created.
     debugging_level : {"keep", "keep_on_error", "delete"}, optional
@@ -180,9 +180,9 @@ class Container:
 
     def __init__(
         self,
-        load_from: str | os.PathLike | Container | gt.Container | None = None,
-        system_directory: str | os.PathLike | None = None,
-        working_directory: str | os.PathLike | None = None,
+        load_from: str | Path | Container | gt.Container | None = None,
+        system_directory: str | Path | None = None,
+        working_directory: str | Path | None = None,
         debugging_level: Literal["keep", "keep_on_error", "delete"] = "keep_on_error",
         options: Options | None = None,
         output: TextIO | None = None,
@@ -235,7 +235,7 @@ class Container:
 
         self._is_restarted = False
         if load_from is not None:
-            if isinstance(load_from, os.PathLike):
+            if isinstance(load_from, Path):
                 load_from = os.fspath(load_from)
 
             if not isinstance(load_from, (str, gt.Container, Container)):
@@ -1472,7 +1472,7 @@ class Container:
 
     def _read(
         self,
-        load_from: str | os.PathLike | Container | gt.Container,
+        load_from: str | Path | Container | gt.Container,
         symbol_names: list[str] | dict[str, str] | None = None,
         encoding: str | None = None,
     ) -> None:
@@ -1483,8 +1483,8 @@ class Container:
                 f"Argument 'encoding' must be type str but found {type(encoding)}"
             )
 
-        if isinstance(load_from, (os.PathLike, str)):
-            fpath = Path(load_from).expanduser().resolve()  # ty: ignore[invalid-argument-type]
+        if isinstance(load_from, (Path, str)):
+            fpath = Path(load_from).expanduser().resolve()
             if not fpath.exists():
                 raise ValueError(
                     f"GDX file '{os.fspath(fpath)}' does not exist, "
@@ -1503,7 +1503,7 @@ class Container:
         else:
             raise ValueError(
                 "Argument 'load_from' expects "
-                "type str or PathLike (i.e., a path to a GDX file) "
+                "type str or Path (i.e., a path to a GDX file) "
                 ", a valid gmdHandle (or GamsDatabase instance) "
                 ", an instance of another Container "
                 ", User passed: "
@@ -1512,7 +1512,7 @@ class Container:
 
     def read(
         self,
-        load_from: str | os.PathLike | Container | gt.Container,
+        load_from: str | Path | Container | gt.Container,
         symbol_names: list[str] | dict[str, str] | None = None,
         encoding: str | None = None,
         *,
@@ -1524,7 +1524,7 @@ class Container:
 
         Parameters
         ----------
-        load_from : str | os.PathLike | Container | gt.Container
+        load_from : str | Path | Container | gt.Container
             Source to read from.
 
 
@@ -1580,7 +1580,7 @@ class Container:
                 stacklevel=2,
             )
 
-        if isinstance(load_from, os.PathLike):
+        if isinstance(load_from, Path):
             load_from = os.fspath(load_from)
 
         self._read(load_from, symbol_names, encoding)
@@ -1641,7 +1641,7 @@ class Container:
 
     def _write(
         self,
-        write_to: str | os.PathLike,
+        write_to: str | Path,
         symbol_names: list[str] | None = None,
         *,
         compress: bool = False,
@@ -1651,7 +1651,7 @@ class Container:
             self._resolve_symbols(symbol_names) if symbol_names is not None else None
         )
 
-        if isinstance(write_to, (os.PathLike, str)):
+        if isinstance(write_to, (Path, str)):
             fpath = Path(write_to).expanduser().resolve()
             if not os.fspath(fpath).casefold().endswith(".gdx"):
                 raise ValueError(
@@ -1663,7 +1663,7 @@ class Container:
             )
         else:
             raise TypeError(
-                "Argument 'write_to' expects type str/Pathlike (.gdx), a valid gmdHandle, or GamsDatabase."
+                "Argument 'write_to' expects type str/Path (.gdx), a valid gmdHandle, or GamsDatabase."
             )
 
     def write(

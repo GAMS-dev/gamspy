@@ -104,9 +104,10 @@ cost-to-go.
 .. note::
    Each cut averages over all scenarios and yields one plane (the
    *single-cut* form of SDDP; other variants add one cut per scenario).
-   Every cut is kept: the sddp module does no cut selection or pruning. An
-   iteration adds ``n_trials`` cuts per stage transition, so a trained model
-   carries at most ``n_iter * n_trials`` cuts on each :math:`\alpha_{t+1}`.
+   An iteration adds ``n_trials`` cuts per stage transition, so by default a
+   trained model carries up to ``n_iter * n_trials`` cuts on each
+   :math:`\alpha_{t+1}`. Every cut is kept unless you bound the pool with
+   ``train(cut_selection=...)``; see :doc:`training <training>`.
 
 The backward pass
 =================

@@ -15,6 +15,7 @@ import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -159,11 +160,11 @@ class Equation(VarEquSymbol):
         name: str,
         type: str | EquationType = "regular",
         domain: DomainType | None = None,
-        records: VarEquRecordsType | None = None,
+        records: pd.DataFrame | None = None,
         description: str = "",
     ) -> Equation:
         # create new symbol object
-        obj = object.__new__(cls)
+        obj = cast("Equation", object.__new__(cls))
 
         # set private properties directly
         type = cast_type(type)
@@ -404,8 +405,8 @@ class Equation(VarEquSymbol):
     def _deserialize(self, info: dict) -> None:
         for key, value in info.items():
             if key == "_assignment":
-                left, right = value.split(" = ")
-                value = expression.Expression(left, "=", right[:-1])
+                left, operator, right = expression.split_assignment(value)
+                value = expression.Expression(left, operator, right[:-1])
             elif key == "_definition":
                 left, right = value.split(" .. ")
                 value = expression.Expression(left, "..", right[:-1])
@@ -481,7 +482,6 @@ class Equation(VarEquSymbol):
         return implicits.ImplicitParameter(
             self,
             name=f"{self.name}.{attr_name}",
-            records=self.records,
             domain=self.domain,
         )
 
@@ -489,67 +489,56 @@ class Equation(VarEquSymbol):
         self._l.__init__(
             self,
             name=f"{self.name}.l",
-            records=self.records,
             domain=self.domain,
         )
         self._m.__init__(
             self,
             name=f"{self.name}.m",
-            records=self.records,
             domain=self.domain,
         )
         self._lo.__init__(
             self,
             name=f"{self.name}.lo",
-            records=self.records,
             domain=self.domain,
         )
         self._up.__init__(
             self,
             name=f"{self.name}.up",
-            records=self.records,
             domain=self.domain,
         )
         self._s.__init__(
             self,
             name=f"{self.name}.scale",
-            records=self.records,
             domain=self.domain,
         )
         self._stage.__init__(
             self,
             name=f"{self.name}.stage",
-            records=self.records,
             domain=self.domain,
         )
         self._range.__init__(
             self,
             name=f"{self.name}.range",
-            records=self.records,
             domain=self.domain,
         )
         self._slackup.__init__(
             self,
             name=f"{self.name}.slackup",
-            records=self.records,
             domain=self.domain,
         )
         self._slacklo.__init__(
             self,
             name=f"{self.name}.slacklo",
-            records=self.records,
             domain=self.domain,
         )
         self._slack.__init__(
             self,
             name=f"{self.name}.slack",
-            records=self.records,
             domain=self.domain,
         )
         self._infeas.__init__(
             self,
             name=f"{self.name}.infeas",
-            records=self.records,
             domain=self.domain,
         )
 
@@ -568,6 +557,12 @@ class Equation(VarEquSymbol):
 
     def _set_definition(self, domain, rhs):
         # self[domain] = rhs
+        if isinstance(rhs, sparse.SparseAssignment):
+            raise ValidationError(
+                "`sparse` cannot be used in an equation definition because GAMS "
+                "supports the sparse assignment operator ($=) in assignments only."
+            )
+
         rhs_repr = rhs.gamsRepr()
         if self.type == "nonbinding" and not any(
             eq_type in rhs_repr for eq_type in EQ_TYPES

@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 # Layout inside the .sddp archive (a zip under the hood).
 _CONTAINER_ARCHIVE = "container.gpz"
 _METADATA_FILE = "sddp_metadata.json"
-_FILE_FORMAT_VERSION = "0.4.0"
+_FILE_FORMAT_VERSION = "0.5.0"
 
 
 # File-format pack / unpack
@@ -96,23 +96,31 @@ def _collect_sddp_metadata(sddp: SDDP) -> dict[str, Any]:
 
     state_vars = [
         {
-            "name": sv.variable.name,
-            "lower_bound": float(sv.lower_bound),
-            "upper_bound": float(sv.upper_bound),
+            "name": state_var.variable.name,
+            "lower_bound": float(state_var.lower_bound),
+            "upper_bound": float(state_var.upper_bound),
             "initial_state": (
-                float(sv.initial_state) if sv.initial_state is not None else None
+                float(state_var.initial_state)
+                if state_var.initial_state is not None
+                else None
             ),
         }
-        for sv in sddp._states
+        for state_var in sddp._states
     ]
 
-    jj_records = sddp._jj_set.records if sddp._jj_set is not None else None
-    iterations_completed = 0 if jj_records is None else len(jj_records)
+    active_iteration_records = (
+        sddp._active_cut_iteration_set.records
+        if sddp._active_cut_iteration_set is not None
+        else None
+    )
+    iterations_completed = (
+        0 if active_iteration_records is None else len(active_iteration_records)
+    )
 
     return {
         "sddp_version": _FILE_FORMAT_VERSION,
         "constructor": {
-            "stage_set_name": sddp._stage_parent.name,
+            "stage_set_name": sddp._stage_set.name,
             "time_set_name": sddp._time_set.name,
             "n_trials": int(sddp._n_trials),
             "seed": int(sddp._seed),
@@ -161,21 +169,21 @@ def _validate_metadata(metadata: dict[str, Any]) -> None:
             f"versions must match. Retrain from scratch to migrate."
         )
 
-    def _minor_tuple(v: str) -> tuple[int, ...]:
+    def _minor_tuple(version: str) -> tuple[int, ...]:
         parts: list[int] = []
-        for piece in v.split("."):
+        for piece in version.split("."):
             try:
                 parts.append(int(piece))
             except ValueError:
                 break
         return tuple(parts[:2])
 
-    if _minor_tuple(saved_version) < (0, 4):
+    if _minor_tuple(saved_version) < (0, 5):
         raise ValidationError(
-            f"sddp save file version `{saved_version}` predates the multi-state "
-            f"refactor (0.4.0), which changed the internal symbol layout. These "
-            f"files cannot be loaded by sddp `{current_version}`; retrain from "
-            f"scratch to migrate."
+            f"sddp save file version `{saved_version}` predates the internal "
+            f"symbol naming refactor (0.5.0). Files using the older symbol "
+            f"layout cannot be loaded by sddp `{current_version}`; retrain "
+            f"from scratch to migrate."
         )
 
 
@@ -190,7 +198,7 @@ def _reattach_sddp(container: gp.Container, metadata: dict[str, Any]) -> SDDP:
 
     constructor = metadata["constructor"]
     build_args = metadata["build_args"]
-    state_var_specs = metadata["state_vars"]
+    state_specs = metadata["state_vars"]
     noise_spec = metadata["noise"]
 
     def _lookup(name: str) -> Any:
@@ -211,8 +219,8 @@ def _reattach_sddp(container: gp.Container, metadata: dict[str, Any]) -> SDDP:
     # Allocate an SDDP without going through __init__ (we are not
     # creating any GAMSPy symbols - they're all already in `container`).
     sddp = SDDP.__new__(SDDP)
-    sddp._m = container
-    sddp._stage_parent = stage_set
+    sddp._container = container
+    sddp._stage_set = stage_set
     sddp._time_set = time_set
     sddp._n_trials = int(constructor["n_trials"])
     sddp._seed = int(constructor["seed"])
@@ -220,21 +228,22 @@ def _reattach_sddp(container: gp.Container, metadata: dict[str, Any]) -> SDDP:
     sddp._sim_call_count = int(metadata["sim_call_count"])
     sddp._built = True
     sddp._loaded_from_save = True
+    sddp._trained = True
 
     # sddp-internal symbols (all under the sddp_ prefix)
-    sddp._active_stage = _lookup("sddp_active")
-    sddp._j_set = _lookup("sddp_j")
-    sddp._jj_set = _lookup("sddp_jj")
+    sddp._active_stage_set = _lookup("sddp_active_stage")
+    sddp._iteration_set = _lookup("sddp_iteration")
+    sddp._active_cut_iteration_set = _lookup("sddp_active_cut_iteration")
     sddp._alpha = _lookup("sddp_alpha")
-    sddp._acost = _lookup("sddp_acost")
+    sddp._approx_cost = _lookup("sddp_approx_cost")
     sddp._obj_approx_eq = _lookup("sddp_obj_approx")
     sddp._cuts_eq = _lookup("sddp_cuts")
-    sddp._tt = _lookup("sddp_tt")
-    sddp._last_set = _lookup("sddp_last")
-    sddp._prevlast_set = _lookup("sddp_prevlast")
-    sddp._so = _lookup("sddp_so")
-    sddp._prob_param = _lookup("sddp_prob")
-    sddp._sw_inflow_param = _lookup("sddp_sw_inflow")
+    sddp._time_alias = _lookup("sddp_time_alias")
+    sddp._stage_end_map = _lookup("sddp_stage_end")
+    sddp._previous_stage_end_map = _lookup("sddp_previous_stage_end")
+    sddp._guss_options = _lookup("sddp_guss_options")
+    sddp._scenario_prob = _lookup("sddp_prob")
+    sddp._stage_scenario_noise = _lookup("sddp_stage_scenario_noise")
 
     if "sddp_model" not in container.models:
         raise ValidationError(
@@ -244,79 +253,82 @@ def _reattach_sddp(container: gp.Container, metadata: dict[str, Any]) -> SDDP:
     sddp._gp_model = container.models["sddp_model"]
 
     # sddp-owned composite trial set + shared Benders cut intercept.
-    sddp._i_set = _lookup("sddp_i")
-    sddp._cut_intercept = _lookup("sddp_d")
+    sddp._trial_set = _lookup("sddp_trial")
+    sddp._cut_intercept = _lookup("sddp_cut_intercept")
 
     # State variables
     sddp._states = []
-    for sv_spec in state_var_specs:
-        variable = _lookup(sv_spec["name"])
-        sv = StateVar(  # type: ignore[call-arg]
+    for state_spec in state_specs:
+        variable = _lookup(state_spec["name"])
+        state_var = StateVar(  # type: ignore[call-arg]
             variable=variable,
-            lower_bound=float(sv_spec["lower_bound"]),
-            upper_bound=float(sv_spec["upper_bound"]),
+            lower_bound=float(state_spec["lower_bound"]),
+            upper_bound=float(state_spec["upper_bound"]),
             initial_state=(
-                float(sv_spec["initial_state"])
-                if sv_spec["initial_state"] is not None
+                float(state_spec["initial_state"])
+                if state_spec["initial_state"] is not None
                 else None
             ),
         )
-        sv.trial_set = sddp._i_set
-        sv.trial_param = _lookup(f"sddp_ires_{sv.name}")
-        sv.cut_slope = _lookup(f"sddp_cm_{sv.name}")
-        sddp._states.append(sv)
+        state_var.trial_values = _lookup(f"sddp_trial_values_{state_var.name}")
+        state_var.cut_slope = _lookup(f"sddp_cut_slope_{state_var.name}")
+        sddp._states.append(state_var)
 
     # Rebuild scenario_data and probabilities arrays
-    scenario_set = _lookup("sddp_s")
-    nc_scenario_data = _read_scenario_data(
-        sddp._sw_inflow_param, stage_set, scenario_set
+    scenario_set = _lookup("sddp_scenario")
+    scenario_data = _read_scenario_data(
+        sddp._stage_scenario_noise, stage_set, scenario_set
     )
-    nc_probabilities = (
-        _read_probabilities(sddp._prob_param)
+    probabilities = (
+        _read_probabilities(sddp._scenario_prob)
         if noise_spec["has_probabilities"]
         else None
     )
-    nc = NoiseConfig(  # type: ignore[call-arg]
+    noise_config = NoiseConfig(  # type: ignore[call-arg]
         parameter=noise_param,
-        scenario_data=nc_scenario_data,
-        probabilities=nc_probabilities,
+        scenario_data=scenario_data,
+        probabilities=probabilities,
     )
-    nc.scenario_set = scenario_set
-    sddp._noise = nc
+    noise_config.scenario_set = scenario_set
+    sddp._noise = noise_config
 
     # GUSS scenario dicts - wrappers reconstructed via from_existing
-    sddp._dict_b = GUSSScenarioDict.from_existing(container, "sddp_dict_b")
-    sddp._dict_f = GUSSScenarioDict.from_existing(container, "sddp_dict_f")
-    sddp._dict_w1 = GUSSScenarioDict.from_existing(container, "sddp_dict_w1")
+    sddp._backward_scenario_dict = GUSSScenarioDict.from_existing(
+        container, "sddp_backward_scenario_dict"
+    )
+    sddp._forward_scenario_dict = GUSSScenarioDict.from_existing(
+        container, "sddp_forward_scenario_dict"
+    )
+    sddp._initial_stage_scenario_dict = GUSSScenarioDict.from_existing(
+        container, "sddp_initial_stage_scenario_dict"
+    )
 
     sddp._stage_cost_var = stage_cost_var
     sddp._user_equations = []
 
     # Python-side stage geometry - recompute from the recovered sets.
-    sddp._w = stage_set
-    w_labels = stage_set.toList()
-    t_labels = time_set.toList()
-    n_stages = len(w_labels)
-    n_times = len(t_labels)
-    hpw = n_times // n_stages
-    last_hour: dict[str, str] = {}
-    prev_last_hour: dict[str, str] = {}
-    for pos, wl in enumerate(w_labels):
-        last_hour[wl] = t_labels[(pos + 1) * hpw - 1]
-        prev_last_hour[wl] = t_labels[((pos - 1) % n_stages + 1) * hpw - 1]
+    stage_labels = stage_set.toList()
+    time_labels = time_set.toList()
+    n_stages = len(stage_labels)
+    n_times = len(time_labels)
+    time_steps_per_stage = n_times // n_stages
+    stage_end_time: dict[str, str] = {}
+    previous_stage_end_time: dict[str, str] = {}
+    for stage_index, stage_label in enumerate(stage_labels):
+        stage_end_time[stage_label] = time_labels[
+            (stage_index + 1) * time_steps_per_stage - 1
+        ]
+        previous_stage_end_time[stage_label] = time_labels[
+            ((stage_index - 1) % n_stages + 1) * time_steps_per_stage - 1
+        ]
 
-    sddp._w_labels = w_labels
-    sddp._t_labels = t_labels
-    sddp._last_hour = last_hour
-    sddp._prev_last_hour = prev_last_hour
-    sddp._hpw = hpw
-    sddp._state_hour = prev_last_hour[w_labels[0]]
+    sddp._stage_labels = stage_labels
+    sddp._stage_end_time = stage_end_time
+    sddp._previous_stage_end_time = previous_stage_end_time
+    sddp._initial_state_time = previous_stage_end_time[stage_labels[0]]
 
-    trial_set0 = sddp._states[0].trial_set
-    assert trial_set0 is not None
-    sddp._j_labels = sddp._j_set.toList()
-    sddp._s_labels = scenario_set.toList()
-    sddp._i_labels = trial_set0.toList()
+    sddp._scenario_labels = scenario_set.toList()
+    sddp._trial_labels = sddp._trial_set.toList()
 
     # Solve options - match the construction in build().
     sddp._solve_opts = gp.Options(
@@ -328,16 +340,12 @@ def _reattach_sddp(container: gp.Container, metadata: dict[str, Any]) -> SDDP:
     )
 
     # Per-state snapshot parameters for the original user bounds.
-    for sv in sddp._states:
-        sv.orig_lo_param = _lookup(f"sddp_orig_lo_{sv.name}")
-        sv.orig_up_param = _lookup(f"sddp_orig_up_{sv.name}")
-    sddp._state_orig_lo, sddp._state_orig_up = SDDP._read_var_bounds(
-        sddp._states[0].variable, sddp._state_hour
-    )
-
+    for state_var in sddp._states:
+        state_var.orig_lo_param = _lookup(f"sddp_orig_lo_{state_var.name}")
+        state_var.orig_up_param = _lookup(f"sddp_orig_up_{state_var.name}")
     # Reconstruct the user-variable bound
     sddp._user_variables = []
-    sddp._user_bound_snaps = []
+    sddp._user_bound_snapshots = []
     for name in container.data:
         if not name.startswith("sddp_blo_"):
             continue
@@ -345,7 +353,7 @@ def _reattach_sddp(container: gp.Container, metadata: dict[str, Any]) -> SDDP:
         up_name = f"sddp_bup_{var_name}"
         if var_name in container.data and up_name in container.data:
             v = container.data[var_name]
-            sddp._user_bound_snaps.append(
+            sddp._user_bound_snapshots.append(
                 (v, list(v.domain), container.data[name], container.data[up_name])
             )
 
@@ -356,30 +364,43 @@ def _reattach_sddp(container: gp.Container, metadata: dict[str, Any]) -> SDDP:
 
 
 def _read_scenario_data(
-    sw_inflow: gp.Parameter,
+    stage_scenario_noise: gp.Parameter,
     stage_set: gp.Set,
     scenario_set: gp.Set,
 ) -> np.ndarray:
-    """Recover the (n_stages, n_scenarios) ndarray from sddp_sw_inflow."""
+    """Recover stage/scenario noise values from sddp_stage_scenario_noise."""
     n_stages = len(stage_set.records) if stage_set.records is not None else 0
     n_scenarios = len(scenario_set.records) if scenario_set.records is not None else 0
     result = np.zeros((n_stages, n_scenarios), dtype=float)
-    rec = sw_inflow.records
+    rec = stage_scenario_noise.records
     if rec is None or len(rec) == 0:
         return result
 
-    w_idx = {wl: i for i, wl in enumerate(stage_set.toList())}
-    s_idx = {sl: i for i, sl in enumerate(scenario_set.toList())}
+    stage_index_by_label = {
+        stage_label: index for index, stage_label in enumerate(stage_set.toList())
+    }
+    scenario_index_by_label = {
+        scenario_label: index
+        for index, scenario_label in enumerate(scenario_set.toList())
+    }
     for row in rec.itertuples(index=False, name=None):
-        wl, sl, v = str(row[0]), str(row[1]), float(row[2])
-        if wl in w_idx and sl in s_idx:
-            result[w_idx[wl], s_idx[sl]] = v
+        stage_label = str(row[0])
+        scenario_label = str(row[1])
+        value = float(row[2])
+        if (
+            stage_label in stage_index_by_label
+            and scenario_label in scenario_index_by_label
+        ):
+            result[
+                stage_index_by_label[stage_label],
+                scenario_index_by_label[scenario_label],
+            ] = value
     return result
 
 
-def _read_probabilities(prob_param: gp.Parameter) -> np.ndarray:
+def _read_probabilities(scenario_prob: gp.Parameter) -> np.ndarray:
     """Recover the 1-D probabilities ndarray from sddp_prob."""
-    rec = prob_param.records
+    rec = scenario_prob.records
     if rec is None or len(rec) == 0:
         return np.array([], dtype=float)
     return rec["value"].to_numpy(dtype=float)

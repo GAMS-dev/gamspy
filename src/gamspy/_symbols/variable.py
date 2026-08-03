@@ -183,11 +183,11 @@ class Variable(operable.Operable, VarEquSymbol):
         name: str,
         type: str | VariableType = "free",
         domain: DomainType | None = None,
-        records: VarEquRecordsType | None = None,
+        records: pd.DataFrame | None = None,
         description: str = "",
     ) -> Variable:
         # create new symbol object
-        obj = object.__new__(cls)
+        obj = cast("Variable", object.__new__(cls))
 
         # legacy gtp attributes
         ## set private properties directly
@@ -410,8 +410,8 @@ class Variable(operable.Operable, VarEquSymbol):
     def _deserialize(self, info: dict) -> None:
         for key, value in info.items():
             if key == "_assignment":
-                left, right = value.split(" = ")
-                value = expression.Expression(left, "=", right[:-1])
+                left, operator, right = expression.split_assignment(value)
+                value = expression.Expression(left, operator, right[:-1])
 
             setattr(self, key, value)
 
@@ -511,7 +511,6 @@ class Variable(operable.Operable, VarEquSymbol):
         return implicits.ImplicitParameter(
             self,
             name=f"{self.name}.{attr_name}",
-            records=self.records,
             domain=self.domain,
         )
 
@@ -519,49 +518,41 @@ class Variable(operable.Operable, VarEquSymbol):
         self._l.__init__(
             self,
             name=f"{self.name}.l",
-            records=self.records,
             domain=self.domain,
         )
         self._m.__init__(
             self,
             name=f"{self.name}.m",
-            records=self.records,
             domain=self.domain,
         )
         self._lo.__init__(
             self,
             name=f"{self.name}.lo",
-            records=self.records,
             domain=self.domain,
         )
         self._up.__init__(
             self,
             name=f"{self.name}.up",
-            records=self.records,
             domain=self.domain,
         )
         self._s.__init__(
             self,
             name=f"{self.name}.scale",
-            records=self.records,
             domain=self.domain,
         )
         self._fx.__init__(
             self,
             name=f"{self.name}.fx",
-            records=self.records,
             domain=self.domain,
         )
         self._prior.__init__(
             self,
             name=f"{self.name}.prior",
-            records=self.records,
             domain=self.domain,
         )
         self._stage.__init__(
             self,
             name=f"{self.name}.stage",
-            records=self.records,
             domain=self.domain,
         )
 

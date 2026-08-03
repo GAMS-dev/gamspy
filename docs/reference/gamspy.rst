@@ -46,6 +46,7 @@ gamspy
    gamspy.SpecialValues
    gamspy.exceptions
 
+.. autofunction:: gamspy.sparse
 .. autofunction:: gamspy.set_options
 .. autofunction:: gamspy.get_option
 .. autofunction:: gamspy.serialize

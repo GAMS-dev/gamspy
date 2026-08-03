@@ -9,7 +9,8 @@ The SDDP Workflow
 *****************
 
 Using SDDP in GAMSPy means writing your stage problem as an ordinary GAMSPy
-model and letting an :meth:`SDDP <gamspy.formulations.SDDP>` instance drive it.
+model and letting an
+:meth:`SDDP <gamspy.formulations.sddp.SDDP>` instance drive it.
 This page walks the lifecycle and the one pattern that is specific to SDDP: the
 **active-stage gate**. The :doc:`ClearLake tutorial <clearlake>` shows every
 step running end to end.

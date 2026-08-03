@@ -1061,7 +1061,7 @@ class Model:
 
     def _set_objective_variable(
         self,
-        assignment: None | Variable | Operation | Expression | MathOp = None,
+        assignment: Variable | Operation | Expression | MathOp | None = None,
     ) -> Variable | None:
         """
         Returns objective variable. If the assignment is an Expression
@@ -1217,7 +1217,7 @@ class Model:
                 continue
 
             if key == "loadpoint":
-                if isinstance(value, os.PathLike):
+                if isinstance(value, Path):
                     value = os.path.abspath(value)
 
                 if backend == "engine":

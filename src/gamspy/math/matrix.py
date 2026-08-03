@@ -345,7 +345,6 @@ def permute(
         return implicits.ImplicitParameter(
             x,
             name=x.name,
-            records=x.records,
             domain=permuted_domain,
             permutation=dims,
         )
@@ -356,7 +355,6 @@ def permute(
         return implicits.ImplicitParameter(
             x.parent,
             name=x.name,
-            records=x._records,
             domain=permuted_domain,
             permutation=dims,
             scalar_domains=x._scalar_domains,

@@ -26,11 +26,11 @@ the centre.
 The CVaR risk measure
 =====================
 
-Pass a :meth:`CVaR <gamspy.formulations.CVaR>` object to ``train()``:
+Pass a :meth:`CVaR <gamspy.formulations.sddp.CVaR>` object to ``train()``:
 
 .. code-block:: python
 
-   from gamspy.formulations import CVaR
+   from gamspy.formulations.sddp import CVaR
 
    result = sddp.train(n_iter=40, risk=CVaR(tail=0.25, weight=0.5))
 

@@ -385,6 +385,70 @@ def test_conditioned_sum_iterator_is_controlled():
     )
 
 
+def test_lag_lead_index_is_controlled():
+    m = gp.Container()
+    t = gp.Set(m, "t", records=[f"t{n}" for n in range(1, 6)])
+    tt = gp.Alias(m, "tt", alias_with=t)
+    t2 = gp.Alias(m, "t2", alias_with=t)
+    st = gp.Set(m, "st", domain=[t], records=["t1", "t2"])
+    p = gp.Parameter(m, "p", domain=[t, t])
+    r = gp.Parameter(m, "r", domain=[t, t])
+
+    # tt is the driving index of the lead operation, hence controlled by the
+    # left-hand side and usable on the right-hand side. Must not raise.
+    r[st[tt.lead(1, "circular")], t] = p[tt, t]
+    r[st[tt.lag(1)], t] = p[tt, t]
+
+    # The same holds when the lag/lead is nested one level deeper.
+    sst = gp.Set(m, "sst", domain=[t, t], records=[("t1", "t2")])
+    r[sst[st[tt.lead(1, "circular")], t]] = p[tt, t]
+
+    # A set that the left-hand side does not control is still rejected.
+    with pytest.raises(ValidationError):
+        r[st[tt.lead(1, "circular")], t] = p[tt, t2]
+
+
+def test_lag_lead_index_is_controlled2():
+    m = gp.Container()
+
+    PRC = gp.Set(m)
+    ALL_YEAR = gp.Set(m)
+    ALL_REG = gp.Set(m)
+
+    MODLYEAR = gp.Alias(m, alias_with=ALL_YEAR)
+    V = gp.Alias(m, alias_with=MODLYEAR)
+    YEAR = gp.Alias(m, alias_with=ALL_YEAR)
+    MILESTONYR = gp.Alias(m, alias_with=ALL_YEAR)
+    REG = gp.Alias(m, alias_with=ALL_REG)
+    R = gp.Alias(m, alias_with=REG)
+    T = gp.Alias(m, alias_with=MILESTONYR)
+    TT = gp.Alias(m, alias_with=MILESTONYR)
+    P = gp.Alias(m, alias_with=PRC)
+    LL = gp.Alias(m, alias_with=ALL_YEAR)
+
+    RTP = gp.Set(m, domain=[R, ALL_YEAR, P])
+    PYRS = gp.Set(m, domain=ALL_YEAR)
+    VNT = gp.Set(m, domain=[ALL_YEAR, ALL_YEAR])
+    RTP_TT = gp.Set(m, domain=[R, YEAR, T, PRC])
+
+    RP_RTF = gp.Parameter(m, domain=[R, P])
+    PRC_YMAX = gp.Parameter(m, domain=[REG, PRC])
+    RTFORC = gp.Parameter(m, domain=[R, LL, LL, P])
+
+    VAR_RCAP = gp.Variable(m, domain=[R, ALL_YEAR, LL, P])
+
+    # This example is from TIMES model. Must not raise.
+    VAR_RCAP.up[RTP_TT[R, T[TT.lead(1, "circular")], T, P]].where[
+        ((RP_RTF[R, P] < 3.0).where[PRC_YMAX[R, P]])
+    ] = gp.math.Max(
+        0.0,
+        gp.Sum(
+            gp.Domain(RTP[R, PYRS[V], P]),
+            RTFORC[R, V, T, P] - RTFORC[R, V, TT, P],
+        ).where[(VNT[TT, T]) & (gp.math.mod(RP_RTF[R, P], 2.0) == 0.0)],
+    )
+
+
 def test_superset_index():
     m = gp.Container()
 

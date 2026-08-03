@@ -75,7 +75,7 @@ class Operation(operable.Operable):
             rhs = rhs.conditioning_on  # type: ignore
 
         if not isinstance(rhs, (bool, float, int)):
-            for i, x in enumerate(rhs.domain):
+            for i, x in enumerate(rhs.domain):  # ty: ignore[invalid-argument-type]
                 sum_index = -1
                 for idx, elem in enumerate(self._bare_op_domain):
                     if elem is x:
@@ -211,6 +211,13 @@ class Operation(operable.Operable):
             if isinstance(elem, (str, syms.UniverseAlias)):
                 raise ValidationError(
                     f"`{elem}` is not a valid index for an operation."
+                )
+
+            if isinstance(elem, expression.ShiftExpression):
+                raise ValidationError(
+                    f"`{elem.gamsRepr()}` is a lag/lead operation and cannot be"
+                    " used as an index of an operation. Use the set itself as"
+                    " the index and the lag/lead operation in the expression."
                 )
 
             if isinstance(elem, condition.Condition):
@@ -871,9 +878,11 @@ class Card(operable.Operable):
     """
 
     def __init__(self, symbol: Set | Alias | Parameter) -> None:
-        if not isinstance(symbol, (syms.Set, syms.Alias, syms.Parameter)):
+        if not isinstance(
+            symbol, (syms.Set, syms.Alias, syms.Parameter, syms.Variable, syms.Equation)
+        ):
             raise ValidationError(
-                "Card operation is only for Set, Alias and Parameter objects!"
+                "Card operation is only for Set, Alias, Parameter, Variable and Equation objects!"
             )
 
         self._symbol = symbol

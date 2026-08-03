@@ -11,6 +11,7 @@ import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -21,10 +22,11 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     import pandas as pd
 
-    from gamspy import Alias, Container, Set
+    from gamspy import Container, Set
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy._types import IndexType, NormalizedDomainType, SetRecordsType
 
@@ -57,7 +59,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         cls, container: Container, name: str, alias_with: Set | Alias
     ) -> Alias:
         # create new symbol object
-        obj = object.__new__(cls)
+        obj = cast("Alias", object.__new__(cls))
 
         # legacy gtp attributes
         ## set private properties directly
@@ -69,7 +71,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
             else container,
         )
         obj.name = name
-        obj._alias_with = alias_with
+        obj._alias_with = obj._validate_alias_with(alias_with)
 
         ## typing
         obj._gams_type = GMS_DT_ALIAS
@@ -185,8 +187,8 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
     def _deserialize(self, info: dict) -> None:
         for key, value in info.items():
             if key == "_assignment":
-                left, right = value.split(" = ")
-                value = expression.Expression(left, "=", right)
+                left, operator, right = expression.split_assignment(value)
+                value = expression.Expression(left, operator, right)
 
             setattr(self, key, value)
 
@@ -206,17 +208,24 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
     def __setitem__(
         self,
         indices: IndexType,
-        rhs: Expression | Operation | Condition | ImplicitSet | bool | str,
+        rhs: Expression
+        | Operation
+        | Condition
+        | ImplicitSet
+        | bool
+        | str
+        | SparseAssignment,
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
+        rhs, operator = sparse._unwrap(rhs)
 
         if isinstance(rhs, bool):
             rhs = "yes" if rhs is True else "no"
 
         statement = expression.Expression(
             implicits.ImplicitSet(self, name=self.name, domain=domain),
-            "=",
+            operator,
             rhs,
         )
 

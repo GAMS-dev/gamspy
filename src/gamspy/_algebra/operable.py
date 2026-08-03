@@ -12,7 +12,6 @@ if typing.TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Sum
     from gamspy._symbols import Parameter, Variable
-    from gamspy._symbols.implicits import ImplicitSet
     from gamspy._types import OperableType
     from gamspy.math.misc import MathOp
 
@@ -29,12 +28,12 @@ class Operable:
         )
 
     # +, -, /, *, **, %
-    def __add__(self, other: OperableType) -> Expression | ImplicitSet:
+    def __add__(self, other: OperableType) -> Expression:
         from gamspy._symbols import Alias, Set
         from gamspy._symbols.implicits import ImplicitSet
 
         if isinstance(self, (Alias, Set)) and not isinstance(
-            other, (Alias, Set, ImplicitSet)
+            other, (Alias, Set, ImplicitSet, expression.ShiftExpression)
         ):
             return self.lead(other)
 
@@ -55,12 +54,12 @@ class Operable:
 
         return expression.Expression(other, "+", self)
 
-    def __sub__(self, other: OperableType) -> Expression | ImplicitSet:
+    def __sub__(self, other: OperableType) -> Expression:
         from gamspy._symbols import Alias, Set
         from gamspy._symbols.implicits import ImplicitSet
 
         if isinstance(self, (Alias, Set)) and not isinstance(
-            other, (Alias, Set, ImplicitSet)
+            other, (Alias, Set, ImplicitSet, expression.ShiftExpression)
         ):
             return self.lag(other)
 

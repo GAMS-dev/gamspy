@@ -8,6 +8,7 @@ import gamspy._algebra.domain as domain
 import gamspy._algebra.number as number
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
+import gamspy._algebra.sparse as sparse
 import gamspy._symbols as gp_syms
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -22,6 +23,7 @@ from gamspy.math.misc import MathOp
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+    import numpy as np
     import pandas as pd
 
     from gamspy import Alias, Container, Set
@@ -47,6 +49,7 @@ def peek(stack):
 PRECEDENCE = {
     "..": 0,
     "=": 0,
+    "$=": 0,
     "or": 1,
     "xor": 2,
     "and": 3,
@@ -82,6 +85,7 @@ ASSOCIATIVITY = {
     "eq": "left",
     "ne": "left",
     "=": "left",
+    "$=": "left",
     ">=": "left",
     "<=": "left",
     ">": "left",
@@ -99,6 +103,18 @@ ASSOCIATIVITY = {
 
 # Precedence for a leaf node is considered infinite.
 LEAF_PRECEDENCE = float("inf")
+
+ASSIGNMENT_OPERATORS = (sparse.SPARSE, "=")
+STATEMENT_OPERATORS = (*ASSIGNMENT_OPERATORS, "..")
+
+
+def split_assignment(declaration: str) -> tuple[str, str, str]:
+    for operator in ASSIGNMENT_OPERATORS:
+        left, separator, right = declaration.partition(f" {operator} ")
+        if separator:
+            return left, operator, right
+
+    raise ValidationError(f"`{declaration}` is not a valid GAMS assignment.")
 
 
 def get_operand_gams_repr(operand) -> str:
@@ -197,7 +213,7 @@ def create_gams_expression(root_node: Expression) -> str:
 
     final_string = eval_stack[0][0]
 
-    if root_node.operator in ("=", ".."):
+    if root_node.operator in STATEMENT_OPERATORS:
         return f"{final_string};"
 
     return final_string
@@ -222,6 +238,7 @@ def create_latex_expression(root_node: Expression) -> str:
         "or": "\\vee",
         "xor": "\\oplus",
         "$": "|",
+        "$=": "\\stackrel{\\$}{=}",
     }
 
     # 1. Get nodes in post-order (left - right - parent).
@@ -413,7 +430,7 @@ class Expression(operable.Operable):
 
     def __init__(
         self,
-        left: OperableType | ImplicitEquation | None,
+        left: OperableType | ImplicitEquation | str | None,
         operator: str,
         right: OperableType | str | None,
     ):
@@ -423,7 +440,7 @@ class Expression(operable.Operable):
             utils._map_special_values(right) if isinstance(right, float) else right
         )
 
-        if operator == "=" and isinstance(right, Expression):
+        if operator in ASSIGNMENT_OPERATORS and isinstance(right, Expression):
             right._fix_equalities()
 
         self._representation: str | None = None
@@ -437,9 +454,9 @@ class Expression(operable.Operable):
         )
         self.container: Container | None = None
         if hasattr(left, "container") and left.container is not None:
-            self.container = left.container  # type: ignore
+            self.container = left.container  # ty: ignore[invalid-assignment]
         elif hasattr(right, "container") and right.container is not None:
-            self.container = right.container  # type: ignore
+            self.container = right.container  # ty: ignore[invalid-assignment]
 
         self.where = condition.Condition(self)
 
@@ -511,7 +528,7 @@ class Expression(operable.Operable):
                 else:
                     right_domain[pos] = s
 
-        left = self.left[left_domain] if left_domain else self.left  # ty: ignore[not-subscriptable]
+        left = self.left[left_domain] if left_domain else self.left  # ty: ignore[not-subscriptable, invalid-argument-type]
         right = self.right[right_domain] if right_domain else self.right  # ty: ignore
 
         return Expression(left, self.operator, right)
@@ -802,6 +819,9 @@ class Expression(operable.Operable):
                     stack.extend(node.domain)
                     stack.extend(node.container[node.parent.name].domain)
                     node = None
+                elif isinstance(node, ShiftExpression):
+                    stack.append(node.right)
+                    node = node.left
                 elif isinstance(node, operation.Operation):
                     stack.extend(node.op_domain)
                     node = node.rhs
@@ -950,9 +970,8 @@ class SetExpression(Expression):
                 )
                 return
         elif not isinstance(num_operand, SetExpression):
-            # Operands such as parameters or expressions over them are left
-            # untouched since the expression might be lag/lead arithmetic,
-            # e.g. shape[j, age - yearval[ll]]
+            # Operands such as parameters, lag/lead operations or expressions
+            # over them are left untouched. e.g. s(i) + t.lag(1) or s(i) + yearval[ll]
             return
 
         # A numeric operand other than 0 and 1 makes GAMS evaluate the whole
@@ -964,6 +983,320 @@ class SetExpression(Expression):
         if self.operator != "*":
             set_attr = "left" if left_is_set else "right"
             setattr(self, set_attr, Expression(1, "*", getattr(self, set_attr)))
+
+
+LAG_LEAD_OPERATORS = ("+", "-", "++", "--")
+INVERSE_LAG_LEAD_OPERATORS = {"+": "-", "-": "+", "++": "--", "--": "++"}
+
+
+def _lag_lead_operator(direction: Literal["+", "-"], type: str) -> str:
+    if type == "circular":
+        return direction * 2
+
+    if type == "linear":
+        return direction
+
+    raise ValueError(
+        f"{'Lead' if direction == '+' else 'Lag'} type must be linear or circular"
+    )
+
+
+class ShiftExpression(Expression):
+    """
+    Represents a lag or lead operation on an ordered set, e.g. ``t - 1``.
+
+    A shift denotes the element that is ``jump`` positions before (lag) or
+    after (lead) the current element of ``parent``. It is an index expression
+    and not a set reference of its own: wherever a shift is used as an index,
+    the shifted set is the one that is put under control.
+
+    Parameters
+    ----------
+    parent : Set | Alias
+        The ordered set that is shifted.
+    operator : '+' | '-' | '++' | '--'
+        ``-``/``+`` are linear lag/lead, ``--``/``++`` are circular lag/lead.
+    jump : OperableType
+        Number of positions to shift by. Anything that evaluates to an integer
+        in GAMS, e.g. an int, a Parameter or Card.
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> t = gp.Set(m, name="t", records=[f"y{idx}" for idx in range(3)])
+    >>> t.lag(1).gamsRepr()
+    't - 1'
+    >>> t.lead(gp.Card(t), "circular").gamsRepr()
+    't ++ (card(t))'
+
+    """
+
+    def __init__(
+        self,
+        parent: Set | Alias,
+        operator: str,
+        jump: OperableType,
+    ) -> None:
+        if operator not in LAG_LEAD_OPERATORS:
+            raise ValidationError(
+                f"`{operator}` is not a valid lag/lead operator. Valid lag/lead"
+                f" operators are {LAG_LEAD_OPERATORS}"
+            )
+
+        self.parent = parent
+        super().__init__(parent, operator, jump)
+
+    @property
+    def jump(self) -> OperableType:
+        """Number of positions the parent set is shifted by."""
+        return self.right  # ty: ignore[invalid-return-type]
+
+    @property
+    def is_circular(self) -> bool:
+        """True for circular (``++``, ``--``) shifts."""
+        return len(self.operator) == 2
+
+    def _create_domain(self) -> None:
+        # A shift occupies a single index position but carries no domain of its own.
+        self._left_domain = []
+        self._right_domain = []
+        self._shadow_domain = []
+        self.domain = ["*"]
+        self.dimension = 1
+
+    def _jump_repr(self, *, latex: bool = False) -> str:
+        if latex:
+            representation = get_operand_latex_repr(self.jump)
+        else:
+            representation = get_operand_gams_repr(self.jump)
+
+        if isinstance(self.jump, (int, float)):
+            return representation
+
+        return f"({representation})"
+
+    def __eq__(self, other):
+        # A shift is an index and not a value. Identity check instead of building expression.
+        return self is other
+
+    def __ne__(self, other):
+        return self is not other
+
+    def __hash__(self):
+        return id(self)
+
+    def __add__(self, other: OperableType) -> Expression:
+        """
+        Shifts this lag/lead operation by `n` more positions to the right.
+
+        Parameters
+        ----------
+        other
+
+        Returns
+        -------
+        ShiftExpression
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> t = gp.Set(m, name="t", records=[f"y{idx}" for idx in range(3)])
+        >>> (t + 1 + 2).gamsRepr()
+        't + 3'
+
+        """
+        if isinstance(
+            other, (gp_syms.Set, gp_syms.Alias, ImplicitSet, ShiftExpression)
+        ):
+            return super().__add__(other)
+
+        return self.lead(other)
+
+    def __sub__(self, other: OperableType) -> Expression:
+        """
+        Shifts this lag/lead operation by `n` more positions to the left.
+
+        Parameters
+        ----------
+        other
+
+        Returns
+        -------
+        ShiftExpression
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> t = gp.Set(m, name="t", records=[f"y{idx}" for idx in range(3)])
+        >>> (t - 1 - 2).gamsRepr()
+        't - 3'
+
+        """
+        if isinstance(
+            other, (gp_syms.Set, gp_syms.Alias, ImplicitSet, ShiftExpression)
+        ):
+            return super().__sub__(other)
+
+        return self.lag(other)
+
+    def __ge__(self, other: OperableType) -> Expression:
+        return Expression(self, ">=", other)
+
+    def __le__(self, other: OperableType) -> Expression:
+        return Expression(self, "<=", other)
+
+    def __getitem__(self, indices) -> None:
+        raise ValidationError(
+            f"`{self.gamsRepr()}` is a lag/lead operation and cannot be indexed."
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"ShiftExpression(parent={self.parent}, operator='{self.operator}',"
+            f" jump={self.jump})"
+        )
+
+    def lag(
+        self, n: OperableType, type: Literal["linear", "circular"] = "linear"
+    ) -> ShiftExpression:
+        """
+        Shifts this lag/lead operation by `n` more positions to the left.
+
+        Parameters
+        ----------
+        n : OperableType
+            The number of positions to shift.
+        type : 'linear' or 'circular', optional
+            The type of lag to perform.
+
+        Returns
+        -------
+        ShiftExpression
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> t = gp.Set(m, name="t", records=[f"y{idx}" for idx in range(3)])
+        >>> t.lag(1).lag(2).gamsRepr()
+        't - 3'
+
+        """
+        return self._combine(_lag_lead_operator("-", type), n)
+
+    def lead(
+        self, n: OperableType, type: Literal["linear", "circular"] = "linear"
+    ) -> ShiftExpression:
+        """
+        Shifts this lag/lead operation by `n` more positions to the right.
+
+        Parameters
+        ----------
+        n : OperableType
+            The number of positions to shift.
+        type : 'linear' or 'circular', optional
+            The type of lead to perform.
+
+        Returns
+        -------
+        ShiftExpression
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> t = gp.Set(m, name="t", records=[f"y{idx}" for idx in range(3)])
+        >>> t.lag(1).lead(3).gamsRepr()
+        't + 2'
+
+        """
+        return self._combine(_lag_lead_operator("+", type), n)
+
+    def _combine(self, operator: str, jump: OperableType) -> ShiftExpression:
+        """
+        Folds another shift into this one.
+
+        GAMS allows one lag/lead operator per index position only (`t - 1 - 1`
+        does not compile), therefore the jumps are combined instead of the
+        operators being chained.
+        """
+        if (len(operator) == 2) != self.is_circular:
+            raise ValidationError(
+                f"`{self.gamsRepr()}` is a"
+                f" {'circular' if self.is_circular else 'linear'} lag/lead"
+                " operation and cannot be combined with a"
+                f" {'linear' if self.is_circular else 'circular'} one. Combine"
+                " the jumps and apply a single lag/lead operation instead."
+            )
+
+        same_direction = operator[0] == self.operator[0]
+        new_operator = self.operator
+
+        if isinstance(self.jump, (int, float)) and isinstance(jump, (int, float)):
+            new_jump = self.jump + jump if same_direction else self.jump - jump
+            if new_jump < 0:
+                new_jump = -new_jump
+                new_operator = INVERSE_LAG_LEAD_OPERATORS[new_operator]
+        else:
+            new_jump = self.jump + jump if same_direction else self.jump - jump
+
+        return ShiftExpression(self.parent, new_operator, new_jump)
+
+    @property
+    def records(self) -> pd.DataFrame | None:
+        raise ValidationError(".records is not allowed for lag/lead operations.")
+
+    def toDense(self) -> np.ndarray:
+        raise ValidationError(".toDense is not allowed for lag/lead operations.")
+
+    def toValue(self) -> float:
+        raise ValidationError(".toValue is not allowed for lag/lead operations.")
+
+    def toList(self) -> list:
+        raise ValidationError(".toList is not allowed for lag/lead operations.")
+
+    def latexRepr(self) -> str:
+        """
+        Returns the LaTeX representation of this lag/lead operation.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> t = gp.Set(m, name="t", records=[f"y{idx}" for idx in range(3)])
+        >>> t.lag(1).latexRepr()
+        't - 1'
+
+        """
+        return (
+            f"{self.parent.latexRepr()} {self.operator} {self._jump_repr(latex=True)}"
+        )
+
+    def gamsRepr(self) -> str:
+        """
+        Representation of this lag/lead operation in GAMS language.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> t = gp.Set(m, name="t", records=[f"y{idx}" for idx in range(3)])
+        >>> t.lead(2, "circular").gamsRepr()
+        't ++ 2'
+
+        """
+        return f"{self.parent.gamsRepr()} {self.operator} {self._jump_repr()}"
 
 
 def _check_uncontrolled_indices(
@@ -981,7 +1314,10 @@ def _check_uncontrolled_indices(
         if isinstance(elem, BaseSymbol) and elem not in control_stack:
             raise ValidationError(f"Uncontrolled set `{elem}` entered as constant!")
 
-        if isinstance(elem, ImplicitSymbol) and elem.parent not in control_stack:
+        if (
+            isinstance(elem, (ImplicitSymbol, ShiftExpression))
+            and elem.parent not in control_stack
+        ):
             raise ValidationError(
                 f"Uncontrolled set `{elem.parent}` entered as constant!"
             )

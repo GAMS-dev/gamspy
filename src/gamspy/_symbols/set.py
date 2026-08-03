@@ -13,6 +13,7 @@ import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -28,8 +29,9 @@ if TYPE_CHECKING:
 
     from gamspy import Alias, Container, UniverseAlias
     from gamspy._algebra.condition import Condition
-    from gamspy._algebra.expression import Expression
+    from gamspy._algebra.expression import Expression, ShiftExpression
     from gamspy._algebra.operation import Operation
+    from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import DomainType, IndexType, OperableType, SetRecordsType
     from gamspy.math.misc import MathOp
@@ -295,7 +297,7 @@ class SetMixin:
         self: Set | Alias,
         n: OperableType,
         type: Literal["linear", "circular"] = "linear",
-    ) -> ImplicitSet:
+    ) -> ShiftExpression:
         """
         Shifts the values of a Set or Alias by `n` positions to the left (lag).
 
@@ -310,7 +312,7 @@ class SetMixin:
 
         Returns
         -------
-        ImplicitSet
+        ShiftExpression
             The shifted set expression.
 
         Raises
@@ -331,21 +333,15 @@ class SetMixin:
         [['y-1988', 1987.0], ['y-1989', 1988.0], ['y-1990', 1989.0], ['y-1991', 1990.0]]
 
         """
-        jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
-
-        if type == "circular":
-            return implicits.ImplicitSet(self, name=self.name, extension=f" -- {jump}")
-
-        if type == "linear":
-            return implicits.ImplicitSet(self, name=self.name, extension=f" - {jump}")
-
-        raise ValueError("Lag type must be linear or circular")
+        return expression.ShiftExpression(
+            self, expression._lag_lead_operator("-", type), n
+        )
 
     def lead(
         self: Set | Alias,
         n: OperableType,
         type: Literal["linear", "circular"] = "linear",
-    ) -> ImplicitSet:
+    ) -> ShiftExpression:
         """
         Shifts the values of a Set or Alias by `n` positions to the right (lead).
 
@@ -360,7 +356,7 @@ class SetMixin:
 
         Returns
         -------
-        ImplicitSet
+        ShiftExpression
             The shifted set expression.
 
         Raises
@@ -381,15 +377,9 @@ class SetMixin:
         [['y-1989', 1987.0], ['y-1990', 1988.0], ['y-1991', 1989.0]]
 
         """
-        jump = n if isinstance(n, int) else f"({n.gamsRepr()})"  # type: ignore
-
-        if type == "circular":
-            return implicits.ImplicitSet(self, name=self.name, extension=f" ++ {jump}")
-
-        if type == "linear":
-            return implicits.ImplicitSet(self, name=self.name, extension=f" + {jump}")
-
-        raise ValueError("Lead type must be linear or circular")
+        return expression.ShiftExpression(
+            self, expression._lag_lead_operator("+", type), n
+        )
 
     def sameAs(self: Set | Alias, other: Set | Alias | str) -> MathOp:
         """
@@ -486,13 +476,13 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         container: Container,
         name: str,
         domain: DomainType | None = None,
-        records: SetRecordsType | None = None,
+        records: pd.DataFrame | None = None,
         description: str = "",
         *,
         is_singleton: bool = False,
     ) -> Set:
         # create new symbol object
-        obj = object.__new__(cls)
+        obj = cast("Set", object.__new__(cls))
 
         # legacy gtp attributes
         ## set private properties directly
@@ -700,8 +690,8 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         # Set attributes
         for key, value in info.items():
             if key == "_assignment":
-                left, right = value.split(" = ")
-                value = expression.Expression(left, "=", right[:-1])
+                left, operator, right = expression.split_assignment(value)
+                value = expression.Expression(left, operator, right[:-1])
 
             setattr(self, key, value)
 
@@ -723,17 +713,24 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
     def __setitem__(
         self,
         indices: IndexType,
-        rhs: Expression | Operation | Condition | ImplicitSet | bool | str,
+        rhs: Expression
+        | Operation
+        | Condition
+        | ImplicitSet
+        | bool
+        | str
+        | SparseAssignment,
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
+        rhs, operator = sparse._unwrap(rhs)
 
         if isinstance(rhs, bool):
             rhs = "yes" if rhs is True else "no"
 
         statement = expression.Expression(
             implicits.ImplicitSet(self, name=self.name, domain=domain),
-            "=",
+            operator,
             rhs,
         )
 

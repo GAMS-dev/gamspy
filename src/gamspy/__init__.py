@@ -16,6 +16,7 @@ from gamspy._algebra import (
     Sum,
 )
 from gamspy._algebra.expression import Expression
+from gamspy._algebra.sparse import sparse
 from gamspy._backend.engine import EngineClient
 from gamspy._backend.neos import NeosClient
 from gamspy._config import _set_default_options, get_option, set_options
@@ -86,6 +87,7 @@ __all__ = [
     "If",
     "ElseIf",
     "Else",
+    "sparse",
     "__version__",
     "get_option",
     "set_options",

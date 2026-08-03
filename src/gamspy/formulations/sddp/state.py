@@ -26,27 +26,25 @@ class StateVar:
     initial_state: float | None = None
 
     # created by build()
-    # The trial set is the sddp-owned composite set `sddp_i` (shared by all
-    # states). The cut intercept is sddp-owned too (a single scalar per cut),
-    # so it does NOT live here; only the per-state slope does.
-    trial_set: gp.Set | None = field(default=None, repr=False)
-    trial_param: gp.Parameter | None = field(default=None, repr=False)
-    cut_slope: gp.Parameter | None = field(default=None, repr=False)  # cont_m
+    # The trial set and cut intercept are shared SDDP symbols, so only the
+    # per-state trial values and cut slopes live here.
+    trial_values: gp.Parameter | None = field(default=None, repr=False)
+    cut_slope: gp.Parameter | None = field(default=None, repr=False)
 
     # Per-state backward-pass GUSS scatter/extract + slope accumulator.
-    is_res_fx: gp.Parameter | None = field(default=None, repr=False)
-    is_res_m: gp.Parameter | None = field(default=None, repr=False)
-    guss_cm: gp.Parameter | None = field(default=None, repr=False)
+    backward_fixed_state: gp.Parameter | None = field(default=None, repr=False)
+    backward_state_marginal: gp.Parameter | None = field(default=None, repr=False)
+    cut_slope_accumulator: gp.Parameter | None = field(default=None, repr=False)
 
     # Per-state forward-pass GUSS scatter/extract + forward-state trackers.
-    f_res_fixed: gp.Parameter | None = field(default=None, repr=False)
-    f_res_level: gp.Parameter | None = field(default=None, repr=False)
-    forward_state: gp.Parameter | None = field(default=None, repr=False)
-    forward_res_state: gp.Parameter | None = field(default=None, repr=False)
+    forward_fixed_state: gp.Parameter | None = field(default=None, repr=False)
+    forward_state_level: gp.Parameter | None = field(default=None, repr=False)
+    current_forward_state: gp.Parameter | None = field(default=None, repr=False)
+    forward_state_history: gp.Parameter | None = field(default=None, repr=False)
 
     # Per-state stage-1 wait-and-see GUSS scatter/extract.
-    is_w1_init: gp.Parameter | None = field(default=None, repr=False)
-    is_w1_lstate: gp.Parameter | None = field(default=None, repr=False)
+    initial_stage_fixed_state: gp.Parameter | None = field(default=None, repr=False)
+    initial_stage_state_level: gp.Parameter | None = field(default=None, repr=False)
 
     # Per-state snapshot of the user's original variable bounds.
     orig_lo_param: gp.Parameter | None = field(default=None, repr=False)

@@ -5,12 +5,13 @@ from typing import TYPE_CHECKING, cast
 import gamspy._algebra.domain as domain
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._algebra.sparse as sparse
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._container import Container
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
-from gamspy.exceptions import FatalError
+from gamspy.exceptions import FatalError, ValidationError
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Card, Operation, Ord
+    from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import ImplicitSymbolType, SymbolType
     from gamspy.math import MathOp
@@ -113,28 +115,39 @@ class Condition(operable.Operable):
         | Condition
         | Parameter
         | ImplicitSet
-        | ImplicitParameter,
+        | ImplicitParameter
+        | bool
+        | Number,
         rhs: Expression
         | Operation
         | Condition
         | MathOp
+        | Number
         | int
         | float
         | bool
         | Parameter
         | ImplicitParameter
-        | ImplicitSet,
+        | ImplicitSet
+        | SparseAssignment,
     ):
         if not isinstance(self.container, Container):
             raise FatalError("Cannot determine the container of the expression!")
 
         # conditioning_on.where[condition] = rhs
         eq_types = (syms.Equation, implicits.ImplicitEquation)
-        right_operand = rhs
-        if isinstance(rhs, bool):
-            right_operand = "yes" if rhs is True else "no"
+        right_operand, op_type = sparse._unwrap(rhs)
+        if isinstance(right_operand, bool):
+            right_operand = "yes" if right_operand is True else "no"
 
-        op_type = ".." if isinstance(self.conditioning_on, eq_types) else "="
+        if isinstance(self.conditioning_on, eq_types):
+            if op_type == sparse.SPARSE:
+                raise ValidationError(
+                    "`sparse` cannot be used in an equation definition because GAMS "
+                    "supports the sparse assignment operator ($=) in assignments only."
+                )
+
+            op_type = ".."
 
         if isinstance(condition, (expression.Expression, Condition)):
             condition._fix_equalities()
@@ -153,10 +166,10 @@ class Condition(operable.Operable):
             if isinstance(self.conditioning_on, implicits.ImplicitEquation):
                 self.conditioning_on.parent._definition = statement
             else:
-                self.conditioning_on.parent._assignment = statement
+                self.conditioning_on.parent._assignment = statement  # ty: ignore[unresolved-attribute]
 
             self.conditioning_on.container._synch_with_gams()
-            self.conditioning_on.parent._should_load_from_gams = True
+            self.conditioning_on.parent._should_load_from_gams = True  # ty: ignore[unresolved-attribute]
 
         elif isinstance(self.conditioning_on, syms.Alias):
             self.conditioning_on._assignment = statement

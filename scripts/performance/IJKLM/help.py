@@ -24,12 +24,6 @@ def create_data_frame():
     )
 
 
-def create_directories(model):
-    for d in ["data", "results"]:
-        if not os.path.exists(os.path.join(model, d)):
-            os.makedirs(os.path.join(model, d))
-
-
 def save_to_json(symbol, name, i, model):
     file = os.path.join(model, "data", f"data_{name}{i}.json")
     with open(file, "w") as f:

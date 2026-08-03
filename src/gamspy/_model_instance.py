@@ -71,7 +71,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from gamspy import Container, Model, Parameter, Variable
+    from gamspy import Container, Equation, Model, Parameter, Variable
     from gamspy._options import FreezeOptions, Options
     from gamspy._symbols.implicits import ImplicitParameter
 
@@ -605,6 +605,7 @@ class ModelInstance:
 
                 # If the symbol attr is fx, then modify level, lower and upper.
                 if attr_name == "fx":
+                    symbol.parent = cast("Variable | Equation", symbol.parent)
                     if not utils.isin(symbol.parent.l, will_be_modified):
                         will_be_modified.append(symbol.parent.l)
 

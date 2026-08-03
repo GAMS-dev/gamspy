@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
+import gamspy._algebra.sparse as sparse
 import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
     from gamspy import Alias, Equation, Parameter, Set, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Card, Operation, Ord
+    from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy._types import IndexType
     from gamspy.math.misc import MathOp
@@ -67,7 +69,6 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         parent: Set | Alias | Parameter | Variable | Equation,
         name: str,
         domain: IndexType | None = None,
-        records: Any | None = None,
         permutation: list[int] | None = None,
         scalar_domains: list[tuple[int, Set]] | None = None,
     ) -> None:
@@ -80,11 +81,11 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         domain : list[Set | str], optional
         records : Any, optional
         """
+        self.parent = parent
         if domain is None:
             domain = []
 
-        super().__init__(parent, name, domain, permutation, scalar_domains)
-        self._records = records
+        super().__init__(name, domain, permutation, scalar_domains)
         self._assignment = None
 
     def __getitem__(self, indices: IndexType) -> ImplicitParameter:
@@ -110,10 +111,12 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         | float
         | Parameter
         | Card
-        | Ord,
+        | Ord
+        | SparseAssignment,
     ) -> None:
         if (
-            isinstance(self.parent, (syms.Variable, syms.Equation))
+            self.parent.container._in_loop == 0
+            and isinstance(self.parent, (syms.Variable, syms.Equation))
             and len(self.parent.domain) > 0
             and all(len(elem) == 0 for elem in self.parent.domain)
         ):
@@ -122,6 +125,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             )
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
+        rhs, operator = sparse._unwrap(rhs)
 
         if isinstance(rhs, float):
             rhs = utils._map_special_values(rhs)
@@ -134,7 +138,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
                 permutation=self.permutation,
                 scalar_domains=self._scalar_domains,
             ),
-            "=",
+            operator,
             rhs,
         )
 
