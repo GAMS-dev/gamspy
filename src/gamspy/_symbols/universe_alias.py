@@ -53,6 +53,8 @@ class UniverseAlias(BaseSymbol):
 
     """
 
+    is_universe: bool = True
+
     @classmethod
     def _constructor_bypass(cls, container: Container, name: str) -> UniverseAlias:
         # create new symbol object

@@ -24,6 +24,7 @@ from gamspy._symbols.base import RecordSymbol
 from gamspy._symbols.equals import equals_parameter
 from gamspy._symbols.generate_records import generate_records_parameter
 from gamspy._symbols.pivot import pivot_parameter
+from gamspy._universe import UNIVERSE, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -58,7 +59,8 @@ class Parameter(operable.Operable, RecordSymbol):
         Name of the parameter. If not provided, a unique name is generated automatically.
     domain : DomainType, optional
         The domain of the parameter. Can be a list of Sets/Aliases, a single Set/Alias,
-        or strings representing set names. Use "*" for the universe set. Default is [] (scalar).
+        or strings representing set names. Use :data:`UNIVERSE <gamspy.UNIVERSE>` for the universe
+        set (the bare string ``"*"`` is also accepted, but discouraged). Default is [] (scalar).
     records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series, optional
         Initial values to populate the parameter. Can be a scalar, a list, a numpy array, or a pandas DataFrame.
     domain_forwarding : bool | list[bool], optional
@@ -309,12 +311,14 @@ class Parameter(operable.Operable, RecordSymbol):
             setattr(self, key, value)
 
         # Relink domain symbols
-        new_domain = []
+        new_domain: list = []
         for elem in self._domain:
-            if elem == "*":
+            if is_universe(elem):
+                new_domain.append(UNIVERSE)
+            elif isinstance(elem, str):
                 new_domain.append(elem)
-                continue
-            new_domain.append(self._container[elem.name])
+            else:
+                new_domain.append(self._container[elem.name])
 
         self._domain = new_domain
 

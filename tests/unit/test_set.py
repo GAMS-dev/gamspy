@@ -761,6 +761,47 @@ def test_sameas(data):
     assert p.getAssignment() == 'p(i) = sameAs(i,"2");'
 
 
+def test_sameas_operator(data):
+    m, *_ = data
+    i = Set(m, "i", records=["i1", "i2", "i3"])
+    j = Alias(m, "j", i)
+
+    # set == "label" is sugar for set.sameAs("label").
+    assert (i == "i1").gamsRepr() == i.sameAs("i1").gamsRepr()
+    assert (j == "i1").gamsRepr() == j.sameAs("i1").gamsRepr()
+
+    # set != "label" is sugar for ~set.sameAs("label").
+    assert (i != "i1").gamsRepr() == (~i.sameAs("i1")).gamsRepr()
+    assert (j != "i1").gamsRepr() == (~j.sameAs("i1")).gamsRepr()
+
+    # Comparing two symbols is an identity check.
+    assert (i == i) is True
+    assert (i == j) is False
+    assert (i != j) is True
+
+    # Quoted "*" as an ordinary element label
+    assert (i == "*").gamsRepr() == i.sameAs("*").gamsRepr()
+    assert (i != "*").gamsRepr() == (~i.sameAs("*")).gamsRepr()
+
+    star = Set(m, "star", records=["*", "a"])
+    p_star = Parameter(m, "p_star", domain=[star])
+    p_star[star] = star == "*"
+    assert p_star.toList() == [("*", 1.0)]
+
+    # Sets and aliases remain hashable and usable as dict/set keys.
+    assert hash(i) == hash(i)
+    assert {i, j} == {i, j}
+
+    # The sugar filters an assignment just like sameAs.
+    p = Parameter(m, "p", [i], records=[("i1", 5), ("i2", 6), ("i3", 7)])
+    p[i].where[i == "i1"] = 0
+    assert p.toList() == [("i2", 6.0), ("i3", 7.0)]
+
+    p[i] = 10
+    p[i].where[i != "i2"] = 0
+    assert p.toList() == [("i2", 10.0)]
+
+
 def test_assignment_dimensionality(data):
     m, *_ = data
     j1 = Set(m, "j1")

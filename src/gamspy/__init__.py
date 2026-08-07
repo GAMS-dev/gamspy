@@ -37,6 +37,7 @@ from gamspy._symbols import (
     Variable,
     VariableType,
 )
+from gamspy._universe import UNIVERSE
 
 from .version import __version__
 
@@ -47,6 +48,7 @@ __all__ = [
     "Container",
     "Set",
     "Alias",
+    "UNIVERSE",
     "UniverseAlias",
     "Parameter",
     "Variable",

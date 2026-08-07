@@ -22,18 +22,23 @@ from gamspy._symbols.base import DomainSymbol
 from gamspy._symbols.equals import equals_set
 from gamspy._symbols.generate_records import generate_records_set
 from gamspy._symbols.pivot import pivot_set
+from gamspy._universe import UNIVERSE, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
-    from gamspy import Alias, Container, UniverseAlias
+    from gamspy import Alias, Container
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression, ShiftExpression
     from gamspy._algebra.operation import Operation
     from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import DomainType, IndexType, OperableType, SetRecordsType
+    from gamspy._types import (
+        DomainType,
+        IndexType,
+        NormalizedDomainType,
+        OperableType,
+        SetRecordsType,
+    )
     from gamspy.math.misc import MathOp
 
 
@@ -405,13 +410,36 @@ class SetMixin:
         >>> j = gp.Set(m, name="j", records=["new-york", "seattle"])
         >>> attr = gp.Parameter(m, "attr", domain=[i, j])
         >>> attr[i,j] = i.sameAs(j)
-        >>> attr.records.values.tolist()
-        [['seattle', 'seattle', 1.0]]
+        >>> attr.toList()
+        [('seattle', 'seattle', 1.0)]
+
+        Comparing a set to an element label with ``==`` (or ``!=``) is
+        shorthand for ``sameAs`` (or its negation):
+
+        >>> (i == "seattle").gamsRepr()
+        'sameAs(i,"seattle")'
+        >>> (i != "seattle").gamsRepr()
+        '(not sameAs(i,"seattle"))'
 
         """
         assert isinstance(self, (gp.Set, gp.Alias))
         assert isinstance(other, (gp.Set, gp.Alias, str))
         return gp.math.same_as(self, other)
+
+    def __eq__(self: Set | Alias, other):
+        # i == "i1" is sugar for i.sameAs("i1"). Any string is an element label.
+        # For other types, fall back to identity semantics by returning NotImplemented.
+        if isinstance(other, str):
+            return gp.math.same_as(self, other)
+
+        return NotImplemented
+
+    def __ne__(self: Set | Alias, other):
+        # Follows the same logic with __eq__.
+        if isinstance(other, str):
+            return ~gp.math.same_as(self, other)
+
+        return NotImplemented
 
 
 class Set(operable.Operable, DomainSymbol, SetMixin):
@@ -426,9 +454,11 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         The Container object that this set belongs to.
     name : str, optional
         Name of the set. If not provided, a unique name is generated automatically.
-    domain : Sequence[Set | Alias | str] | Set | Alias | str, optional
+    domain : DomainType, optional
         The domain of the set. Can be a list of other Sets/Aliases, a single Set/Alias,
-        or strings representing set names. Use "*" for the universe set. Default is ["*"].
+        or strings representing set names. Use :data:`UNIVERSE <gamspy.UNIVERSE>` for the universe
+        set (the bare string ``"*"`` is also accepted, but discouraged). Default is
+        ``[UNIVERSE]``.
     is_singleton : bool, optional
         If True, restricts the set to contain at most one element. Default is False.
     records : pd.DataFrame | np.ndarray | list, optional
@@ -698,12 +728,14 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
             setattr(self, key, value)
 
         # Relink domain symbols
-        new_domain = []
+        new_domain: list = []
         for elem in self._domain:
-            if elem == "*":
+            if is_universe(elem):
+                new_domain.append(UNIVERSE)
+            elif isinstance(elem, str):
                 new_domain.append(elem)
-                continue
-            new_domain.append(self._container[elem.name])
+            else:
+                new_domain.append(self._container[elem.name])
 
         self._domain = new_domain
 
@@ -756,7 +788,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         self,
         is_singleton: bool,
         records: SetRecordsType | None,
-        domain: Sequence[Set | Alias | UniverseAlias | Literal["*"]],
+        domain: NormalizedDomainType,
     ):
         if is_singleton:
             if records is not None and len(records) != 1:

@@ -21,6 +21,7 @@ import gamspy.utils as utils
 from gamspy._internals import TRANSFER_TO_GAMS_VARIABLE_SUBTYPES
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import VarEquSymbol
+from gamspy._universe import UNIVERSE, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -156,7 +157,8 @@ class Variable(operable.Operable, VarEquSymbol):
         "integer", "sos1", "sos2", "semicont", "semiint". Default is "free".
     domain : DomainType, optional
         The domain of the variable. Can be a list of Sets/Aliases, a single Set/Alias,
-        or strings representing set names. Use "*" for the universe set. Default is [] (scalar).
+        or strings representing set names. Use :data:`UNIVERSE <gamspy.UNIVERSE>` for the universe
+        set (the bare string ``"*"`` is also accepted, but discouraged). Default is [] (scalar).
     records : Sequence | pd.DataFrame | pd.Series | np.ndarray | int | float | dict, optional
         Initial records (level/marginal/bounds) to populate the variable.
     domain_forwarding : bool | list[bool], optional
@@ -416,12 +418,14 @@ class Variable(operable.Operable, VarEquSymbol):
             setattr(self, key, value)
 
         # Relink domain symbols
-        new_domain = []
+        new_domain: list = []
         for elem in self._domain:
-            if elem == "*":
+            if is_universe(elem):
+                new_domain.append(UNIVERSE)
+            elif isinstance(elem, str):
                 new_domain.append(elem)
-                continue
-            new_domain.append(self._container[elem.name])
+            else:
+                new_domain.append(self._container[elem.name])
 
         self._domain = new_domain
 

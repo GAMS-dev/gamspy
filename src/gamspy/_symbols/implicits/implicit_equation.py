@@ -332,18 +332,6 @@ class ImplicitEquation(ImplicitSymbol):
             domain.insert(i, d)
 
         if len(domain):
-            set_strs = []
-            for set in domain:
-                if isinstance(set, utils._get_domain_element_types()):
-                    set_strs.append(set.gamsRepr())
-                elif isinstance(set, str):
-                    if set == "*":
-                        set_strs.append(set)
-                    else:
-                        set_strs.append('"' + set + '"')
-
-            domain_str = "(" + ",".join(set_strs) + ")"
-
-            representation += domain_str
+            representation += utils._get_domain_str(domain)
 
         return representation

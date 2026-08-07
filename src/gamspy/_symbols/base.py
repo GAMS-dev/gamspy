@@ -20,6 +20,7 @@ from gamspy._special_values import SpecialValues
 from gamspy._symbols.equals import equals_variable
 from gamspy._symbols.generate_records import generate_records_variable
 from gamspy._symbols.pivot import pivot_variable
+from gamspy._universe import UNIVERSE, Universe, is_universe
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -59,6 +60,8 @@ class DomainViolation:
 
 
 class BaseSymbol:
+    is_universe: bool = False
+
     def __bool__(self):
         raise ValidationError("A symbol cannot be used as a truth value.")
 
@@ -450,7 +453,7 @@ class DomainSymbol(BaseSymbol):
                 forwardings = self._domain_forwarding
 
             for elem, forwarding in zip(self.domain, forwardings, strict=True):
-                if forwarding and elem != "*":
+                if forwarding and isinstance(elem, (gp.Set, gp.Alias)):
                     elem._should_load_from_gams = True
 
     def _get_domain_str(
@@ -468,7 +471,7 @@ class DomainSymbol(BaseSymbol):
                 if forwarding:
                     elem_str += "<"
                 set_strs.append(elem_str)
-            elif isinstance(elem, (str, gp.UniverseAlias)):
+            elif is_universe(elem) or isinstance(elem, str):
                 set_strs.append("*")
 
         return "(" + ",".join(set_strs) + ")"
@@ -476,12 +479,7 @@ class DomainSymbol(BaseSymbol):
     @property
     def domain_names(self) -> list[str]:
         """String version of domain names"""
-        AnyContainerDomainSymbol = (gp.Set, gp.Alias, gp.UniverseAlias)
-
-        return [
-            i.name if isinstance(i, AnyContainerDomainSymbol) else i
-            for i in self.domain
-        ]
+        return [i if isinstance(i, str) else i.name for i in self.domain]
 
     @property
     def domain_labels(self: Set | Parameter | Variable | Equation) -> list[str]:
@@ -518,30 +516,40 @@ class DomainSymbol(BaseSymbol):
         domain: DomainType | None,
         default: Literal["*"] | None = None,
     ) -> NormalizedDomainType:
+        """
+        Turn a user given domain into the canonical form. It replaces * elements
+        with UNIVERSE sentinel.
+        """
         if domain is None:
-            domain = ["*"] if default == "*" else []
-        elif isinstance(domain, (gp.Set, gp.Alias, gp.UniverseAlias)):
-            domain = [domain]
-        elif domain == "*":
-            domain = ["*"]
-        elif isinstance(domain, gp.math.Dim):
-            domain = gp.math._generate_dims(container, domain.dims)
+            return [UNIVERSE] if default == "*" else []
 
-        return domain
+        if isinstance(domain, (gp.Set, gp.Alias, gp.UniverseAlias)):
+            return [domain]
+
+        if isinstance(domain, (Universe, str)):
+            return [UNIVERSE] if is_universe(domain) else [domain]
+
+        if isinstance(domain, gp.math.Dim):
+            return gp.math._generate_dims(container, domain.dims)
+
+        return [UNIVERSE if is_universe(elem) else elem for elem in domain]
 
     @property
     def domain(
         self: Set | Parameter | Variable | Equation,
     ) -> NormalizedDomainType:
         """
-        List of domains given either as string (* for universe set) or as reference to the Set/Alias object
+        List of domains given either as the UNIVERSE sentinel, a relaxed domain string,
+        or as a reference to the Set/Alias object.
         """
-        return self._domain
+        return cast("NormalizedDomainType", self._domain)
 
     def _validate_domain(self, domain: NormalizedDomainType) -> NormalizedDomainType:
         AnyContainerDomainSymbol = (gp.Set, gp.Alias, gp.UniverseAlias)
 
-        if not all(isinstance(i, (AnyContainerDomainSymbol, str)) for i in domain):
+        if not all(
+            isinstance(i, (AnyContainerDomainSymbol, Universe, str)) for i in domain
+        ):
             raise TypeError(
                 "All 'domain' elements must be type Set, Alias, UniverseAlias, or str"
             )
@@ -784,7 +792,7 @@ class DomainSymbol(BaseSymbol):
             and self.dimension != 0
         ):
             return DomainStatus.regular
-        elif all(i == "*" for i in self.domain) or self.dimension == 0:
+        elif all(is_universe(i) for i in self.domain) or self.dimension == 0:
             return DomainStatus.none
 
         return DomainStatus.relaxed

@@ -200,6 +200,9 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
     def __repr__(self) -> str:
         return f"Alias(name='{self.name}', alias_with={self.alias_with})"
 
+    def __hash__(self):
+        return id(self)
+
     def __getitem__(self, indices: IndexType) -> ImplicitSet:
         domain = validation.validate_domain(self, indices)
 
@@ -454,12 +457,12 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
     @property
     def domain(self) -> NormalizedDomainType:
         """
-        Returns list of domains given either as string (* for universe set) or as reference to the Set/Alias object
+        Returns list of domains given either as the :data:`UNIVERSE <gamspy.UNIVERSE>` sentinel, a relaxed domain string, or as a reference to the Set/Alias object
 
         Returns
         -------
-        list[Set | str]
-            A list of domains given either as string (* for universe set) or as reference to the Set/Alias object
+        list[Set | Universe | str]
+            A list of domains given either as the :data:`UNIVERSE <gamspy.UNIVERSE>` sentinel, a relaxed domain string, or as a reference to the Set/Alias object
         """
         return self.alias_with.domain
 

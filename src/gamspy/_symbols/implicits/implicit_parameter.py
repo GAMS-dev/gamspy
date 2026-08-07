@@ -12,6 +12,7 @@ import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy._symbols.implicits.implicit_variable import ImplicitVariable
+from gamspy._universe import UNIVERSE
 from gamspy.exceptions import ValidationError
 from gamspy.math.matrix import permute
 
@@ -118,7 +119,10 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             self.parent.container._in_loop == 0
             and isinstance(self.parent, (syms.Variable, syms.Equation))
             and len(self.parent.domain) > 0
-            and all(len(elem) == 0 for elem in self.parent.domain)
+            and all(
+                isinstance(elem, (syms.Set, syms.Alias)) and len(elem) == 0
+                for elem in self.parent.domain
+            )
         ):
             logger.warning(
                 f"Domain was not initialized. Default values for {self.gamsRepr()} will be used."
@@ -178,7 +182,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         if isinstance(self.parent, (syms.Set, syms.Alias)):
             temp_name = "autotemp" + utils._get_unique_name()
             temp_param = syms.Parameter._constructor_bypass(
-                self.container, temp_name, [self.parent, "*"]
+                self.container, temp_name, [self.parent, UNIVERSE]
             )
             column_name = SET_ATTR_MAPPING[self.name.split(".")[1]]
             temp_param[self.parent, column_name] = self

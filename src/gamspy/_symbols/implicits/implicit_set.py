@@ -8,6 +8,7 @@ import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy._universe import UNIVERSE, Universe, is_universe, is_universe_domain
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -35,12 +36,12 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         self,
         parent: Set | Alias,
         name: str,
-        domain: list[Set | str] | None = None,
+        domain: list[Set | Universe | str] | None = None,
         scalar_domains: list[tuple[int, Set]] | None = None,
     ) -> None:
         self.parent = parent
         if domain is None:
-            domain = ["*"]
+            domain = [UNIVERSE]
 
         super().__init__(name, domain, parent_scalar_domains=scalar_domains)
 
@@ -219,11 +220,13 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         for i, d in self._scalar_domains:
             domain.insert(i, d)
 
-        if domain != ["*"]:
+        if not is_universe_domain(domain):
             set_strs = []
             for elem in domain:
                 if isinstance(elem, utils._get_domain_element_types()):
                     set_strs.append(elem.latexRepr())
+                elif is_universe(elem):
+                    set_strs.append(r"\text{`*'}")
                 elif isinstance(elem, str):
                     elem = elem.replace("_", r"\_")
                     set_strs.append(f"\\text{{`{elem}'}}")
@@ -236,7 +239,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
     def gamsRepr(self) -> str:
         representation = self.name
 
-        if self.domain != ["*"]:
+        if not is_universe_domain(self.domain):
             domain = list(self.domain)
             for i, d in self._scalar_domains:
                 domain.insert(i, d)

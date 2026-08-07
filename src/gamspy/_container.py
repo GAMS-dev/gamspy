@@ -1463,7 +1463,8 @@ class Container:
                     else i
                     for i in domain
                 ]
-                self._data[symname]._domain = domain
+                symbol = self._data[symname]
+                symbol._domain = symbol._normalize_domain(self, domain)
 
             self._synch_with_gams()
 
@@ -2053,8 +2054,9 @@ $endIf
         ----------
         name : str, optional
             Name of the set. If omitted, a unique name is generated.
-        domain : Sequence[Set | Alias | str] | Set | Alias | str, optional
-            Domain over which the set is defined.
+        domain : DomainType, optional
+            Domain over which the set is defined. Use :data:`UNIVERSE <gamspy.UNIVERSE>`
+            for the universe set.
         is_singleton : bool, optional
             If True, the set may contain at most one element.
         records : pd.DataFrame | np.ndarray | list, optional
@@ -2139,8 +2141,9 @@ $endIf
         ----------
         name : str, optional
             Name of the parameter. If omitted, a unique name is generated.
-        domain : Sequence[Set | Alias | str] | Set | Alias | Dim | str, optional
-            Domain over which the parameter is defined.
+        domain : DomainType, optional
+            Domain over which the parameter is defined. Use :data:`UNIVERSE <gamspy.UNIVERSE>`
+            for the universe set.
         records : int | float | pd.DataFrame | np.ndarray | list, optional
             Records of the parameter.
         domain_forwarding : bool | list[bool], optional
@@ -2211,8 +2214,9 @@ $endIf
             Name of the variable. If omitted, a unique name is generated.
         type : str, optional
             Type of the variable. "free" by default.
-        domain : Sequence[Set | Alias | str] | Set | Alias | Dim | str, optional
-            Domain of the variable.
+        domain : DomainType, optional
+            Domain of the variable. Use :data:`UNIVERSE <gamspy.UNIVERSE>` for the
+            universe set.
         records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict, optional
             Records of the variable.
         domain_forwarding : bool | list[bool], optional
@@ -2278,8 +2282,9 @@ $endIf
             Name of the equation. If omitted, a unique name is generated.
         type : str
             Type of the equation. "regular" by default.
-        domain : Sequence[Set | Alias] | Set | Alias, optional
-            Domain of the variable.
+        domain : DomainType, optional
+            Domain of the equation. Use :data:`UNIVERSE <gamspy.UNIVERSE>` for the
+            universe set.
         definition: Expression, optional
             Definition of the equation.
         records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict, optional

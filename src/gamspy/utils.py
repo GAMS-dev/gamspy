@@ -13,6 +13,7 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 from gamspy._config import get_option
 from gamspy._special_values import SpecialValues
+from gamspy._universe import Universe, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -295,7 +296,9 @@ def checkAllSame(
     return all_same
 
 
-def isin(symbol: SymbolType | ImplicitParameter, sequence: Sequence) -> bool:
+def isin(
+    symbol: SymbolType | ImplicitParameter | ImplicitSet, sequence: Sequence
+) -> bool:
     """
     Checks whether the given symbol in the sequence.
     Needed for symbol comparison since __eq__ magic
@@ -530,7 +533,7 @@ def _get_domain_element_types() -> tuple[type, ...]:
 
 
 def _get_domain_str(
-    domain: Iterable[Set | Alias | UniverseAlias | ImplicitSet | str],
+    domain: Iterable[Set | Alias | UniverseAlias | ImplicitSet | Universe | str],
     *,
     latex: bool = False,
 ) -> str:
@@ -553,14 +556,14 @@ def _get_domain_str(
     domain_strs = []
     for elem in domain:
         if isinstance(elem, str):
-            if elem == "*":
+            # A relaxed domain label is quoted, the universe label is not.
+            if is_universe(elem):
                 domain_strs.append(elem)
+            elif latex:
+                domain_strs.append('"' + elem.replace("_", r"\_") + '"')
             else:
-                if latex:
-                    domain_strs.append('"' + elem.replace("_", r"\_") + '"')
-                else:
-                    domain_strs.append('"' + elem + '"')
-        elif isinstance(elem, _get_domain_element_types()):
+                domain_strs.append('"' + elem + '"')
+        elif isinstance(elem, (Universe, *_get_domain_element_types())):
             if latex:
                 domain_strs.append(elem.latexRepr())
             else:

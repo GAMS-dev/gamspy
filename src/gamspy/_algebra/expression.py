@@ -17,6 +17,7 @@ from gamspy._extrinsic import ExtrinsicFunction
 from gamspy._symbols.base import BaseSymbol
 from gamspy._symbols.implicits import ImplicitSet
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy._universe import is_universe
 from gamspy.exceptions import GamspyException, ValidationError
 from gamspy.math.misc import MathOp
 
@@ -488,8 +489,8 @@ class Expression(operable.Operable):
             ("r", right_domain),
         ):
             for i, d in enumerate(domain_ptr):
-                if isinstance(d, str):
-                    continue  # string domains are fixed and they do not count
+                if isinstance(d, str) or is_universe(d):
+                    continue
 
                 if d not in set_to_index:
                     set_to_index[d] = []
@@ -499,7 +500,7 @@ class Expression(operable.Operable):
         shadow_domain = []
         result_domain = []
         for d in (*left_domain, *right_domain):
-            if isinstance(d, str):
+            if isinstance(d, str) or is_universe(d):
                 continue
 
             if d not in result_domain:
@@ -1305,12 +1306,11 @@ def _check_uncontrolled_indices(
         if hasattr(elem, "is_singleton") and elem.is_singleton:
             continue
 
-        if isinstance(elem, BaseSymbol) and elem not in control_stack:
+        if isinstance(elem, BaseSymbol) and not utils.isin(elem, control_stack):
             raise ValidationError(f"Uncontrolled set `{elem}` entered as constant!")
 
-        if (
-            isinstance(elem, (ImplicitSymbol, ShiftExpression))
-            and elem.parent not in control_stack
+        if isinstance(elem, (ImplicitSymbol, ShiftExpression)) and not utils.isin(
+            elem.parent, control_stack
         ):
             raise ValidationError(
                 f"Uncontrolled set `{elem.parent}` entered as constant!"
