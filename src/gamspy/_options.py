@@ -927,6 +927,30 @@ def get_options_file_name(solver: str, file_number: int) -> str:
     return f"{solver}.{file_number}"
 
 
+def _format_scip_value(value: Any) -> Any:
+    """
+    SCIP's option file parser requires the value of a string parameter to be
+    enclosed in double quotes (e.g. `lp/solver = "highs"`) whereas the values of
+    char, and bool parameters must stay unquoted.
+    """
+    if not isinstance(value, str):
+        return value
+
+    # Char parameters (e.g. branching/scorefunc = s) are given as a single
+    # character and rejected by SCIP if they are quoted.
+    if len(value) == 1:
+        return value
+
+    # Already quoted by the user.
+    if value.startswith('"') and value.endswith('"'):
+        return value
+
+    if value.lower() in ("true", "false"):
+        return value
+
+    return f'"{value}"'
+
+
 def write_solver_options(
     container: Container,
     solver: str,
@@ -949,8 +973,12 @@ def write_solver_options(
         path = Path(solver_options)
         shutil.copy2(path, options_file_name)
     else:
+        is_scip = solver.upper() == "SCIP"
         with open(options_file_name, "w", encoding="utf-8") as solver_file:
             for key, value in solver_options.items():
+                if is_scip:
+                    value = _format_scip_value(value)
+
                 row = f"{key} {value}\n"
                 if solver.upper() in ("SHOT", "SOPLEX", "SCIP", "HIGHS"):
                     row = f"{key} = {value}\n"
