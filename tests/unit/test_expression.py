@@ -367,3 +367,189 @@ def test_to_graph_missing_graphviz(monkeypatch):
     monkeypatch.setattr(builtins, "__import__", fake_import)
     with pytest.raises(ValidationError, match="graphviz is required"):
         (a + b).toGraph()
+
+
+def test_latex_unary_operators():
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    a = gp.Parameter(m, "a", domain=i)
+
+    assert (-a[i]).latexRepr() == "(-a_{i})"
+    assert (-a[i]).gamsRepr() == "(-a(i))"
+
+    assert (~(a[i] > 1)).latexRepr() == "not (a_{i} > 1)"
+    assert (~(a[i] > 1)).gamsRepr() == "(not (a(i) > 1))"
+    m.close()
+
+
+def test_long_expressions_are_wrapped():
+    from gamspy._algebra.expression import (
+        GMS_MAX_LINE_LENGTH,
+        LINE_LENGTH_OFFSET,
+        Expression,
+    )
+
+    # GAMS caps line length, so long operands get a newline before the operand
+    leaf = "z" * (GMS_MAX_LINE_LENGTH - LINE_LENGTH_OFFSET)
+    expression = Expression(leaf, "+", leaf)
+
+    assert expression.gamsRepr() == f"{leaf} +\n {leaf}"
+    assert expression.latexRepr() == f"{leaf} +\n {leaf}"
+
+
+def test_domain_as_expression_operand():
+    from gamspy._algebra.domain import Domain
+    from gamspy._algebra.expression import Expression
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a"])
+    j = gp.Set(m, "j", records=["x"])
+
+    expression = Expression(Domain(i, j), "+", 1)
+    assert expression.gamsRepr() == "(i,j) + 1"
+    # the domain contributes its sets to the expression domain
+    assert expression.domain == [i, j]
+    m.close()
+
+
+def test_to_graph_card():
+    pytest.importorskip("graphviz")
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a"])
+    v = gp.Variable(m, "v", domain=[i])
+    e = gp.Equation(m, "e", domain=[i])
+    e[i] = v[i] == gp.Card(i)
+
+    assert "label=card" in e.toGraph().source
+    m.close()
+
+
+def test_to_graph_math_operation():
+    pytest.importorskip("graphviz")
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a"])
+    v = gp.Variable(m, "v", domain=[i])
+    b = gp.Parameter(m, "b", domain=[i], records=[("a", 4.0)])
+    e = gp.Equation(m, "e", domain=[i])
+    e[i] = v[i] == gp.math.sqrt(b[i])
+
+    assert "label=sqrt" in e.toGraph().source
+    m.close()
+
+
+def test_to_graph_domain():
+    pytest.importorskip("graphviz")
+    from gamspy._algebra.domain import Domain
+    from gamspy._algebra.expression import create_graph
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a"])
+    j = gp.Set(m, "j", records=["x"])
+    v = gp.Variable(m, "v", domain=[i])
+
+    source = create_graph(v[i].where[Domain(i, j)] == 1).source
+    assert "label=domain" in source
+    m.close()
+
+
+def test_to_value_on_non_scalar_expression():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    a = gp.Parameter(m, "a", domain=[i])
+    b = gp.Parameter(m, "b", domain=[i])
+
+    with pytest.raises(TypeError, match="non-scalar expressions"):
+        (a[i] + b[i]).toValue()
+    m.close()
+
+
+def test_to_list_without_records():
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    a = gp.Parameter(m, "a", domain=[i])
+    b = gp.Parameter(m, "b", domain=[i])
+
+    assert (a[i] + b[i]).toList() == []
+    m.close()
+
+
+def test_expression_ne_and_hash():
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    a = gp.Parameter(m, "a", domain=i)
+    b = gp.Parameter(m, "b", domain=i)
+
+    # the receiver has to be an Expression for Expression.__ne__ to run
+    assert ((a[i] + b[i]) != 1).gamsRepr() == "a(i) + b(i) ne 1"
+
+    expression = a[i] + b[i]
+    assert hash(expression) == id(expression)
+    m.close()
+
+
+def test_set_expression_with_string_operand():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    s = gp.Set(m, "s", domain=[i], records=["a"])
+
+    # "yes"/"no" act as sets in GAMS set algebra
+    assert (s[i] + "yes").gamsRepr() == "s(i) + yes"
+    m.close()
+
+
+def test_set_expression_with_bool_operands():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    s = gp.Set(m, "s", domain=[i], records=["a"])
+
+    # booleans are normalised to 0/1 and then to no/yes
+    assert (True + s[i]).gamsRepr() == "yes + s(i)"
+    assert (s[i] + True).gamsRepr() == "s(i) + yes"
+    m.close()
+
+
+def test_set_expression_with_non_set_operand():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    s = gp.Set(m, "s", domain=[i], records=["a"])
+    a = gp.Parameter(m, "a", domain=[i])
+
+    assert (s[i] + a[i]).gamsRepr() == "s(i) + a(i)"
+    assert (s[i] + i.lag(1)).gamsRepr() == "s(i) + (i - 1)"
+    m.close()
+
+
+def test_shift_expression_with_set_operand():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+
+    # a Set operand falls through to ordinary addition/subtraction instead of
+    # shifting the lag/lead further
+    assert (i.lead(1) + i).gamsRepr() == "i + 1 + i"
+    assert (i.lag(1) - i).gamsRepr() == "i - 1 - i"
+
+    # a plain number keeps shifting
+    assert (i.lead(1) + 2).gamsRepr() == "i + 3"
+    m.close()
+
+
+def test_shift_expression_comparisons():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+
+    assert (i.lead(1) >= 1).gamsRepr() == "i + 1 >= 1"
+    assert (i.lead(1) <= 1).gamsRepr() == "i + 1 <= 1"
+    m.close()
+
+
+def test_find_symbols_in_nested_condition():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a"])
+    v = gp.Variable(m, "v", domain=[i])
+    b = gp.Parameter(m, "b", domain=[i], records=[("a", 4.0)])
+    e = gp.Equation(m, "e", domain=[i])
+    e[i] = v[i].where[b[i] > 1] == 1
+
+    # the condition is an Expression, so its symbols are yielded from the nested traversal
+    assert sorted(set(e._definition._find_symbols_in_conditions())) == ["b", "i"]
+    m.close()

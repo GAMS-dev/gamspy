@@ -440,34 +440,26 @@ class ModelInstance:
             )
             ls_handle = gevGetLShandle(self._gev)
 
+        workdir = self.workspace.working_directory
         if instance_options is not None and instance_options.debug:
-            with open(
-                os.path.join(self.workspace.working_directory, "convert.opt"),
-                "w",
-            ) as opt_file:
-                opt_file.writelines(
-                    [
-                        "gams "
-                        + os.path.join(self.workspace.working_directory, "gams.gms"),
-                        "dumpgdx "
-                        + os.path.join(self.workspace.working_directory, "dump.gdx\n"),
-                        "dictmap "
-                        + os.path.join(self.workspace.working_directory, "dictmap.gdx"),
-                    ]
-                )
+            opt_file_path = os.path.join(workdir, "convert.opt")
+            lines = [
+                f"gams {os.path.join(workdir, 'gams.gms')}",
+                f"dumpgdx {os.path.join(workdir, 'dump.gdx')}",
+                f"dictmap {os.path.join(workdir, 'dictmap.gdx')}",
+            ]
+            with open(opt_file_path, "w") as opt_file:
+                opt_file.write("\n".join(lines) + "\n")
 
-                gmoOptFileSet(self._gmo, 1)
-                gmoNameOptFileSet(
-                    self._gmo,
-                    os.path.join(self.workspace.working_directory, "convert.opt"),
-                )
-                rc = gmdCallSolver(self.sync_db.gmd, "convert")
-                self.sync_db._check_for_gmd_error(rc, self.workspace)
+            gmoOptFileSet(self._gmo, 1)
+            gmoNameOptFileSet(self._gmo, opt_file_path)
+            rc = gmdCallSolver(self.sync_db.gmd, "convert")
+            self.sync_db._check_for_gmd_error(rc, self.workspace)
 
         gmoOptFileSet(self._gmo, option_file)
         gmoNameOptFileSet(
             self._gmo,
-            os.path.join(self.workspace.working_directory, solver.lower() + ".opt"),
+            os.path.join(workdir, solver.lower() + ".opt"),
         )
 
         rc = gmdCallSolver(self.sync_db.gmd, solver)

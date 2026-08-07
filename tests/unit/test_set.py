@@ -90,6 +90,30 @@ def test_set_creation(data):
         sum(i)
 
 
+def test_set_override_mismatches(data):
+    m, *_ = data
+    k = Set(m, name="k", records=["k1"])
+    l = Set(m, name="l", records=["l1"])
+
+    Set(m, name="dfset", domain=[k], domain_forwarding=False)
+    with pytest.raises(ValueError):
+        Set(m, name="dfset", domain=[k], domain_forwarding=True)
+
+    Set(m, name="ssset", is_singleton=False)
+    with pytest.raises(ValueError):
+        Set(m, name="ssset", is_singleton=True)
+
+    Set(m, name="domset", domain=[k])
+    with pytest.raises(ValueError):
+        Set(m, name="domset", domain=[l])
+
+
+def test_set_is_miro_output(data):
+    m, *_ = data
+    Set(m, name="out_set", is_miro_output=True)
+    assert "out_set" in m._miro_output_symbols
+
+
 def test_set_string(data):
     m, canning_plants, *_ = data
     # Check if the name is reserved

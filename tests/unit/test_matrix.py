@@ -6,8 +6,8 @@ import math
 import numpy as np
 import pytest
 
-from gamspy import Alias, Container, Parameter, Set, Sum, Variable
-from gamspy.exceptions import ValidationError
+from gamspy import Alias, Container, Equation, Parameter, Set, Sum, Variable
+from gamspy.exceptions import GamspyException, ValidationError
 from gamspy.math import dim, permute, trace, vector_norm
 from gamspy.math.misc import MathOp
 
@@ -541,6 +541,10 @@ def test_trace_on_matrix(data):
 
     with pytest.raises(ValidationError):
         (lambda: trace(rect))()
+
+    universe_mat = Parameter(m, name="universe_mat", domain=["*", "*"])
+    with pytest.raises(ValidationError):
+        (lambda: trace(universe_mat))()
 
 
 def test_trace_on_vector(data):
@@ -1093,6 +1097,15 @@ def test_permute_bad(data):
         (lambda: permute(a, [0, 2, 2, 3]))()
     with pytest.raises(ValidationError):
         (lambda: permute(a, ["1", 2, 3, 4]))()
+
+    e = Equation(m, name="e", domain=[i, j, k, l])
+    with pytest.raises(GamspyException):
+        permute(e, [0, 1, 2, 3])
+
+
+def test_invalid_dim(data):
+    with pytest.raises(ValidationError):
+        dim([3, "3"])
 
 
 def test_transpose(data):

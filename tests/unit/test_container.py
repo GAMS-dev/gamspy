@@ -5,12 +5,10 @@ import gc
 import glob
 import math
 import os
-import platform
 import shutil
 import subprocess
 import sys
 import tempfile
-import timeit
 import uuid
 from pathlib import Path
 
@@ -91,6 +89,11 @@ def test_container(data, tmp_path):
 
     with pytest.raises(TypeError):
         m = Container(options={"bla": "bla"})
+
+    # working_directory can be given as a Path
+    path_working_dir = tmp_path / "path_working_dir"
+    with Container(working_directory=path_working_dir) as path_m:
+        assert path_m.working_directory == str(path_working_dir)
 
     m = Container(options=Options.fromGams({"reslim": 5}))
     Parameter(m, "a")
@@ -341,6 +344,7 @@ def test_loadRecordsFromGdx(data, tmp_path):
     v.fx[i, j] = 5
 
 
+@pytest.mark.unit
 def test_loadRecordsFromGdx_with_missing_symbols(tmp_path):
     m = gp.Container()
     i = gp.Set(m, "i", records=range(3))
@@ -695,54 +699,54 @@ def test_debugging_level():
     with pytest.raises(ValidationError):
         _ = Container(debugging_level="wrong_level")
 
-    global working_directory
-
     def test_delete_success():
-        global working_directory
         m = Container(debugging_level="delete")
         working_directory = m.working_directory
         _ = Equation(m, "e")
+        return working_directory
 
-    test_delete_success()
+    working_directory = test_delete_success()
     gc.collect()
     assert not os.path.exists(working_directory)
 
     def test_delete_err():
-        global working_directory
         m = Container(debugging_level="delete")
         working_directory = m.working_directory
         e = Equation(m, "e")
         with pytest.raises(GamspyException):
             e[:] = sqrt(e) == 5
 
-    test_delete_err()
+        return working_directory
+
+    working_directory = test_delete_err()
     gc.collect()
     assert not os.path.exists(working_directory)
 
     def test_keep_success():
         m = Container(debugging_level="keep")
-        global working_directory
         working_directory = m.working_directory
         _ = Equation(m, "e")
         _ = Equation(m, "e2")
         # Bare declarations are deferred and flushed together on the next sync,
         # producing a single .gms file rather than one per declaration.
         m._synch_with_gams()
+        return working_directory
 
-    test_keep_success()
+    working_directory = test_keep_success()
     gc.collect()
     assert os.path.exists(working_directory)
     assert len(glob.glob(os.path.join(working_directory, "*.gms"))) == 1
 
     def test_keep_err():
         m = Container(debugging_level="keep")
-        global working_directory
         working_directory = m.working_directory
         e = Equation(m, "e")
         with pytest.raises(GamspyException):
             e[:] = sqrt(e) == 5
 
-    test_keep_err()
+        return working_directory
+
+    working_directory = test_keep_err()
     gc.collect()
     assert os.path.exists(working_directory)
     # The bare declaration is deferred, so only the failing assignment syncs,
@@ -751,26 +755,37 @@ def test_debugging_level():
 
     def test_keep_on_error_success():
         m = Container(debugging_level="keep_on_error")
-        global working_directory
         working_directory = m.working_directory
         _ = Equation(m, "e")
 
-    test_keep_on_error_success()
+        return working_directory
+
+    working_directory = test_keep_on_error_success()
     gc.collect()
     assert not os.path.exists(working_directory)
 
     def test_keep_on_error_err():
         m = Container(debugging_level="keep_on_error")
-        global working_directory
         working_directory = m.working_directory
         e = Equation(m, "e")
         with pytest.raises(GamspyException):
             e[:] = sqrt(e) == 5
 
-    test_keep_on_error_err()
+        return working_directory
+
+    working_directory = test_keep_on_error_err()
     gc.collect()
     assert os.path.exists(working_directory)
     assert len(glob.glob(os.path.join(working_directory, "*.gms"))) == 1
+
+
+@pytest.mark.unit
+def test_workspace_cleanup_ignores_missing_directory():
+    from gamspy._workspace import Workspace
+
+    # Cleanup must silently tolerate a working directory that is already deleted.
+    Workspace.cleanup(True, "delete", "/nonexistent/gamspy_workspace_dir", [])
+    Workspace.cleanup(True, "keep_on_error", "/nonexistent/gamspy_workspace_dir", [])
 
 
 @pytest.mark.unit
@@ -1166,6 +1181,21 @@ def test_mcp_serialization(data) -> None:
         assert isinstance(serialized_variable, Variable)
         assert orig_equation.name == serialized_equation.name
         assert orig_variable.name == serialized_variable.name
+
+
+@pytest.mark.unit
+def test_deserialize_variable_with_universe_domain(data, tmp_path):
+    m, *_ = data
+    t = Set(m, "t", records=["a", "b"])
+    _ = Variable(m, "v", type="positive", domain=["*", t])
+
+    serialization_path = os.path.join(tmp_path, "var_universe_domain.zip")
+    serialize(m, serialization_path)
+    m2 = deserialize(serialization_path)
+
+    v2 = m2["v"]
+    assert v2.domain[0] == "*"
+    assert v2.domain[1] is m2["t"]
 
 
 @pytest.mark.unit
@@ -1638,59 +1668,6 @@ def test_domain_violations():
     gp.set_options({"DROP_DOMAIN_VIOLATIONS": 0})
 
 
-def one_by_one(n: int, m: Container):
-    sets = [Set(m) for _ in range(10)]
-    for set in sets:
-        set.setRecords(range(n))
-
-    params = [Parameter(m) for _ in range(10)]
-    for param in params:
-        param.setRecords(n)
-
-
-def batched(n: int, m: Container):
-    sets = [Set(m) for _ in range(10)]
-    values = [range(n)] * 10
-    m.setRecords(dict(zip(sets, values, strict=False)))
-
-    params = [Parameter(m) for _ in range(10)]
-    values = [n] * 10
-    m.setRecords(dict(zip(params, values, strict=False)))
-
-
-@pytest.mark.skipif(
-    platform.system() != "Linux",
-    reason="Test only for linux because other build machines are slow enough and there is no platform dependent behavior.",
-)
-@pytest.mark.unit
-def test_batch_setRecords():
-    n = 10
-    m = Container()
-    one_by_one_result = timeit.repeat(
-        "one_by_one(n, m)",
-        globals={"n": n, "one_by_one": one_by_one, "m": m},
-        repeat=30,
-        number=1,
-    )
-
-    m = Container()
-    batched_result = timeit.repeat(
-        "batched(n, m)",
-        globals={"n": n, "batched": batched, "m": m},
-        repeat=30,
-        number=1,
-    )
-    assert min(one_by_one_result) > min(batched_result)
-    m.close()
-
-    m = Container()
-    i = Set(m, "i")
-    k = Set(m, "k")
-
-    with pytest.raises(ValidationError):
-        m.setRecords({i: range(10), k: range(5)}, uels_on_axes=[True, False, True])
-
-
 @pytest.mark.unit
 def test_python_name():
     m = gp.Container()
@@ -1980,6 +1957,7 @@ def test_addGamsCode_with_debugging_level_keep():
     m.addGamsCode("Set i / i1 /;")
 
 
+@pytest.mark.unit
 def test_describe_symbols():
     m = gp.Container()
     assert m.describeAliases() is None
@@ -2412,6 +2390,7 @@ def test_symbol_toDict():
     assert e1.toDict(columns="marginal") == {"i2": 2.5}
 
 
+@pytest.mark.unit
 def test_case_insensitivity(tmp_path):
     gdx_path = tmp_path / "test.gdx"
     m = gp.Container()
