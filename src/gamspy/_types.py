@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypeAlias
+from typing import TYPE_CHECKING, TypeAlias
 
 from gamspy._algebra.operable import Operable
 
@@ -25,6 +25,7 @@ if TYPE_CHECKING:
         ImplicitSet,
         ImplicitVariable,
     )
+    from gamspy._universe import Universe
     from gamspy.math import Dim, MathOp
 
     SymbolType: TypeAlias = (
@@ -35,19 +36,23 @@ if TYPE_CHECKING:
     )
     SymbolWithRecordsType: TypeAlias = Set | Parameter | Variable | Equation
 
-    # Possible types that the user can provide as a domain
+    # Possible types that the user can provide as a domain. A `str` is either
+    # the universe label "*" or a relaxed domain.
     DomainType: TypeAlias = (
-        Sequence[Set | Alias | UniverseAlias | Literal["*"]]
+        Sequence[Set | Alias | UniverseAlias | Universe | str]
         | Set
         | Alias
         | UniverseAlias
+        | Universe
         | Dim
-        | Literal["*"]
+        | str
     )
 
-    # Possible types after normalization of the provided domain.
+    # Possible types after normalization of the provided domain. The universe
+    # label "*" has been replaced by the `UNIVERSE` sentinel, so a remaining
+    # `str` is always a relaxed domain.
     NormalizedDomainType: TypeAlias = Sequence[
-        Set | Alias | UniverseAlias | Literal["*"]
+        Set | Alias | UniverseAlias | Universe | str
     ]
     IndexType: TypeAlias = (
         EllipsisType
@@ -55,6 +60,7 @@ if TYPE_CHECKING:
         | Set
         | Alias
         | UniverseAlias
+        | Universe
         | ImplicitSet
         | Expression
         | ImplicitParameter

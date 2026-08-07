@@ -30,6 +30,7 @@ from gamspy._options import (
     EXECUTION_OPTIONS,
     Options,
 )
+from gamspy._universe import Universe, is_universe, is_universe_domain
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -173,25 +174,31 @@ def get_dimension(
 
 def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
     path: list[str] = []
-    domain = symbol
+    # Walks through: a set-like symbol, the universe, or a relaxed domain label.
+    # The latter two terminates the walk.
+    elem = symbol
 
-    while domain != "*":
-        if isinstance(domain, str):
-            path.insert(0, domain)
+    while not is_universe(elem):
+        if isinstance(elem, str):
+            # A relaxed domain label terminates the path.
+            path.insert(0, elem)
+            break
+
+        path.insert(0, elem.name)
+
+        if type(elem) is symbols.Alias:
+            path.insert(0, elem.alias_with.name)
+
+        if hasattr(elem, "domain"):
+            parent = elem.domain[0]
         else:
-            path.insert(0, domain.name)
+            break
 
-        if type(domain) is symbols.Alias:
-            path.insert(0, domain.alias_with.name)
+        # i(i) case
+        if not isinstance(parent, str) and parent.name == elem.name:
+            break
 
-        if type(domain) is str:
-            domain = "*"
-        else:
-            parent = domain.domain[0]
-            if not isinstance(parent, str) and parent.name == domain.name:
-                break
-
-            domain = parent
+        elem = parent
 
     return path
 
@@ -264,7 +271,7 @@ def _index_components(
     if (
         isinstance(given, implicits.ImplicitSet)
         and given.parent.dimension > 1
-        and given.domain != ["*"]
+        and not is_universe_domain(given.domain)
     ):
         # Reinsert literals
         full_domain = list(given.domain)
@@ -342,6 +349,7 @@ def validate_type(domain):
             symbols.Alias,
             symbols.UniverseAlias,
             implicits.ImplicitSet,
+            Universe,
             str,
             int,
             EllipsisType,
@@ -375,7 +383,7 @@ def _get_ellipsis_range(domain, given_domain):
 
 
 def _expand_ellipsis_slice(
-    domain: Sequence[Set | Alias | UniverseAlias | str],
+    domain: Sequence[Set | Alias | UniverseAlias | Universe | str],
     indices: Sequence[Set | Alias | str | EllipsisType | slice],
 ) -> list:
     if len(domain) == 0:
@@ -451,12 +459,10 @@ def validate_domain(
 
         for position, component in enumerate(components):
             actual = symbol.domain[offset + position]
-            # Skip positions whose declared domain is the universe or whose
-            # given component carries no set to validate (e.g. a literal).
-            if (
-                component is None
-                or actual == "*"
-                or isinstance(actual, symbols.UniverseAlias)
+            # Only a position declared over a concrete set can be validated;
+            # skip the universe, relaxed labels, and literals.
+            if component is None or not isinstance(
+                actual, (symbols.Set, symbols.Alias)
             ):
                 continue
 
@@ -478,7 +484,7 @@ def validate_container(
     | ImplicitVariable
     | Operation
     | Expression,
-    given_indices: Sequence[str | Set | Alias | UniverseAlias],
+    given_indices: Sequence[str | Set | Alias | UniverseAlias | Universe],
 ):
     for set in given_indices:
         if (

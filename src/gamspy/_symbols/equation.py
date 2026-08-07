@@ -22,6 +22,7 @@ import gamspy.utils as utils
 from gamspy._internals import EQU_TYPE, TRANSFER_TO_GAMS_EQUATION_SUBTYPES
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import VarEquSymbol
+from gamspy._universe import UNIVERSE, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -123,9 +124,10 @@ class Equation(VarEquSymbol):
     type : str, optional
         Type of the equation. Options: "regular", "nonbinding", "external", "boolean".
         Default is "regular".
-    domain : Sequence[Set | Alias | str] | Set | Alias | str, optional
+    domain : DomainType, optional
         The domain of the equation. Can be a list of Sets/Aliases, a single Set/Alias,
-        or strings representing set names. Use "*" for the universe set. Default is [] (scalar).
+        or strings representing set names. Use :data:`UNIVERSE <gamspy.UNIVERSE>` for the universe
+        set (the bare string ``"*"`` is also accepted, but discouraged). Default is [] (scalar).
     definition : Variable | Operation | Expression, optional
         The mathematical definition of the equation. Can be set later via assignment.
     records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict, optional
@@ -414,12 +416,14 @@ class Equation(VarEquSymbol):
             setattr(self, key, value)
 
         # Relink domain symbols
-        new_domain = []
+        new_domain: list = []
         for elem in self._domain:
-            if elem == "*":
+            if is_universe(elem):
+                new_domain.append(UNIVERSE)
+            elif isinstance(elem, str):
                 new_domain.append(elem)
-                continue
-            new_domain.append(self._container[elem.name])
+            else:
+                new_domain.append(self._container[elem.name])
 
         self._domain = new_domain
 

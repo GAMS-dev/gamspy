@@ -120,7 +120,7 @@ This class is exclusively for conditioning on a domain with more than one set.
         node = gp.Alias(m, name="node", alias_with=bus)
         conex = gp.Set(m, name="conex", domain=[bus, bus])
 
-        branch = gp.Parameter(m,"branch", [bus, node, "*"] ,records=...)
+        branch = gp.Parameter(m,"branch", [bus, node, gp.UNIVERSE] ,records=...)
 
         p = gp.Parameter(m, name="p")
         

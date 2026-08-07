@@ -11,6 +11,7 @@ gamspy
    gamspy._container
    gamspy._symbols.set
    gamspy._symbols.alias
+   gamspy.UNIVERSE
    gamspy._symbols.universe_alias
    gamspy._symbols.parameter
    gamspy._symbols.variable

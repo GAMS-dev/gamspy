@@ -256,12 +256,30 @@ sets. ::
     b = Parameter(m)
     b[...] = Sum(Domain(i, j).where[i.sameAs(j)], 1)
 
-In the assignment statement we :meth:`Sum <gamspy.Sum>` over both sets and we use :meth:`sameAs <gamspy.Set.sameAs>` to 
-restrict the domain of the indexed operation to those label combinations ``(i, j)`` where ``sameAs`` 
+In the assignment statement we :meth:`Sum <gamspy.Sum>` over both sets and we use :meth:`sameAs <gamspy.Set.sameAs>` to
+restrict the domain of the indexed operation to those label combinations ``(i, j)`` where ``sameAs``
 evaluates to TRUE. Thus only identical elements are counted.
 
+When comparing a set (or alias) element to a text string, the Python comparison operators
+``==`` and ``!=`` may be used as a convenient shorthand for :meth:`sameAs <gamspy.Set.sameAs>`.
+That is, ``i == "label"`` is equivalent to ``i.sameAs("label")``, and ``i != "label"`` is
+equivalent to ``~i.sameAs("label")``. For example, the following two assignments are identical: ::
+
+    a[i].where[i.sameAs("i1")] = 0
+    a[i].where[i == "i1"] = 0
+
+and likewise for the negated form: ::
+
+    a[i].where[~i.sameAs("i1")] = 0
+    a[i].where[i != "i1"] = 0
+
 .. note::
-    While a GAMSPy ``Set`` has the method ``where`` (e.g. ``i.where(...)``), a tuple of sets, e.g. 
+    The shorthand only applies when comparing against a text string. Comparing two symbols
+    (e.g. ``i == j``) keeps its usual Python meaning of an identity check; use
+    ``i.sameAs(j)`` to compare two set elements.
+
+.. note::
+    While a GAMSPy ``Set`` has the method ``where`` (e.g. ``i.where(...)``), a tuple of sets, e.g.
     ``(i, j)`` does not have the ``where`` method. In this case a new ``Domain`` object needs to be
     created from the tuple that features the ``where`` method: ``Domain(i, j).where(...)``. This construct
     is required for multi-dimensional indexes in index operators like ``Sum``, ``Product``, etc.

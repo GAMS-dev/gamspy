@@ -21,7 +21,7 @@ from gamspy._internals import (
     DomainStatus,
 )
 from gamspy._special_values import SpecialValues
-from gamspy._symbols.base import BaseSymbol
+from gamspy._symbols.base import BaseSymbol, DomainSymbol
 from gamspy.exceptions import GdxException, ValidationError
 
 if TYPE_CHECKING:
@@ -189,7 +189,9 @@ def load_missing_symbols(
                 if elem != "*" and elem in container._data:
                     domain[n] = container._data[elem]
 
-            container._data[md.name]._domain = domain
+            symbol = container._data[md.name]
+            if isinstance(symbol, DomainSymbol):
+                symbol._domain = symbol._normalize_domain(container, domain)
 
         symbol = container._data[md.name]
         if isinstance(symbol, (Variable, Equation)):
@@ -333,7 +335,7 @@ def read(
             if dom_name != "*" and dom_name in read_source_names:
                 domain[n] = container._data[to_gamspy_name(dom_name)]
 
-        symbol._domain = domain
+        symbol._domain = symbol._normalize_domain(container, domain)
 
         if isinstance(symbol, (Variable, Equation)):
             symbol._update_attr_domains()
