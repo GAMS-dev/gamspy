@@ -1,0 +1,2 @@
+Quote the values of SCIP string options (e.g. ``solver_options={"lp/solver": "highs"}``) since SCIP's option file parser requires them to be enclosed in double quotes. 
+Char, and bool values as well as already quoted values are left untouched.

@@ -1625,6 +1625,48 @@ def test_writeSolverOptions():
 
 
 @pytest.mark.unit
+def test_writeSolverOptions_scip():
+    m = Container()
+
+    # Values of string parameters must be quoted, values of char, and bool parameters
+    # must not be.
+    m.writeSolverOptions(
+        "scip",
+        solver_options={
+            "lp/solver": "highs",
+            "branching/scorefunc": "s",
+            "lp/checkstability": "TRUE",
+            "heuristics/actconsdiving/freq": "false",
+            "limits/nodes": 10,
+            "limits/gap": 1e-4,
+            "limits/time": 3.5,
+            "gams/solvetrace": '"trace.txt"',
+        },
+    )
+
+    with open(os.path.join(m.working_directory, "scip.opt")) as file:
+        lines = file.read().splitlines()
+
+    assert lines == [
+        'lp/solver = "highs"',
+        "branching/scorefunc = s",
+        "lp/checkstability = TRUE",
+        "heuristics/actconsdiving/freq = false",
+        "limits/nodes = 10",
+        "limits/gap = 0.0001",
+        "limits/time = 3.5",
+        'gams/solvetrace = "trace.txt"',
+    ]
+
+    # Other solvers that use the `key = value` format must not be quoted.
+    m.writeSolverOptions("shot", solver_options={"Subsolver.GAMS.NLP.Solver": "conopt"})
+    with open(os.path.join(m.working_directory, "shot.opt")) as file:
+        assert file.read().splitlines() == ["Subsolver.GAMS.NLP.Solver = conopt"]
+
+    m.close()
+
+
+@pytest.mark.unit
 def test_domain_violations():
     import gamspy as gp
 
