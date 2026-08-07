@@ -229,11 +229,7 @@ def _expand_leaf(
     two positions. Expanding it keeps subsequent positions aligned.
     """
     if isinstance(leaf, (implicits.ImplicitSet, expression.ShiftExpression)):
-        components = _index_components(leaf)
-        if components is not None:
-            return components
-
-        return [None] * getattr(leaf, "dimension", 1)
+        return cast("list[Set | Alias | None]", _index_components(leaf))
 
     if isinstance(leaf, (symbols.Set, symbols.Alias)):
         if leaf.dimension == 1:
@@ -299,13 +295,6 @@ def validate_one_dimensional_sets(
     given: Set | Alias | ImplicitSet,
     actual: str | Set | Alias,
 ):
-    if type(given) in (
-        implicits.ImplicitSet,
-        expression.SetExpression,
-        expression.ShiftExpression,
-    ):
-        return
-
     if type(actual) not in (symbols.Set, symbols.Alias):
         return
 
@@ -313,8 +302,8 @@ def validate_one_dimensional_sets(
 
     # Two sets are domain-compatible when they lie on the same domain chain,
     # i.e. one is an ancestor of the other. GAMS accepts indexing with either
-    # a subset (given ⊆ actual) or a superset (given ⊇ actual) of the declared
-    # domain, so the relationship must be checked in both directions.
+    # a subset or a superset of the declared domain, so the relationship must
+    # be checked in both directions.
     given_path = get_domain_path(given)
     actual_name = (
         actual.alias_with.name if type(actual) is symbols.Alias else actual.name

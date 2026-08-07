@@ -20,6 +20,10 @@ def test_domain():
     # Domain with no set or alias symbols
     with pytest.raises(ValidationError):
         gp.Domain("i", "j")
+
+    # Domain requires at least one set
+    with pytest.raises(ValidationError):
+        gp.Domain()
     m.close()
 
 

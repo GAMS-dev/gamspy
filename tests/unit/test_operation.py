@@ -496,4 +496,7 @@ def test_number():
     f = Equation(m, name="f", definition=Number(1) == Sum(i, x[i] * x[i]))
     assert f.getDefinition() == "f .. 1 =e= sum(i,x(i) * x(i));"
 
+    n = Number(5)
+    assert hash(n) == id(n)
+
     m.close()

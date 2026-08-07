@@ -15,7 +15,7 @@
     - gamspy install license $LOCAL_LICENSE
     - UV_NO_CONFIG=1 gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
-    - python -m pytest -x -ra -m 'unit or integration or model_library or requires_license' tests
+    - python -m pytest -n $NUM_PROCESS -x -ra -m 'unit or integration or model_library or requires_license' tests
 
 lag-test-3.14:
   extends: .lag_template
@@ -30,7 +30,7 @@ lag-test-3.14:
     - gamspy install license $LOCAL_LICENSE
     - UV_NO_CONFIG=1 gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
-    - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -ra -m 'unit or integration or model_library or requires_license or doc' tests
+    - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -n $NUM_PROCESS -x -ra -m 'unit or integration or model_library or requires_license or doc' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
 

@@ -53,12 +53,6 @@ class CasePreservingDict(UserDict):
         else:
             self.data[self._casefolded_key_map[key_cf]] = item
 
-    def _repr_pretty_(self, p, cycle):
-        if cycle:
-            p.pretty(self.data)
-        else:
-            p.pretty(self.data)
-
     def __getitem__(self, key):
         return self.data[self._casefolded_key_map[key.casefold()]]
 

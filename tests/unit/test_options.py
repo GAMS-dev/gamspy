@@ -228,6 +228,23 @@ def test_format_model_attr_value():
     assert _format_model_attr_value("iteration_limit", 5) == "5"
     assert _format_model_attr_value("time_limit", 10.0) == "10.0"
 
+    # Strings are quoted.
+    assert _format_model_attr_value("some_attr", "abc") == "'abc'"
+
+
+@pytest.mark.unit
+def test_options_cast_value():
+    assert Options._cast_value("yes") is True
+    assert Options._cast_value("on") is True
+    assert Options._cast_value("true") is True
+    assert Options._cast_value("no") is False
+    assert Options._cast_value("off") is False
+    assert Options._cast_value("false") is False
+    assert Options._cast_value("5") == 5
+    assert Options._cast_value("5.5") == 5.5
+    assert Options._cast_value("bla") == "bla"
+    assert Options._cast_value(5) == 5
+
 
 @pytest.mark.unit
 def test_model_attr_options_excluded_from_pf():
@@ -930,16 +947,17 @@ def test_loadpoint(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
 
-    transport.solve(options=Options(savepoint=1))
+    transport.solve(options=Options(savepoint=3))
     assert transport.num_iterations == 4
 
-    transport.solve(options=Options(loadpoint="transport_p.gdx"))
+    loadpoint_path = os.path.join(m._process_directory, "transport_p.gdx")
+    transport.solve(options=Options(loadpoint=loadpoint_path))
     assert transport.num_iterations == 0
 
     with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as temp_file:
         transport.solve(
             output=temp_file,
-            options=Options(loadpoint=Path("transport_p.gdx")),
+            options=Options(loadpoint=Path(loadpoint_path)),
         )
         temp_file.close()
         with open(temp_file.name) as file:
@@ -1243,6 +1261,7 @@ def test_bypass_solver():
     m.close()
 
 
+@pytest.mark.unit
 def test_options_from_gams():
     options = Options.fromGams(
         {"reslim": 5, "lp": "cplex", "solvelink": 5, "solveopt": "replace"}
@@ -1258,6 +1277,7 @@ def test_options_from_gams():
         _ = Options.fromGams({"bla": 4})
 
 
+@pytest.mark.unit
 def test_monitor_process_tree_memory(tmp_path):
     gamspy_script_path = tmp_path / "test.py"
     with open(gamspy_script_path, "w") as file:

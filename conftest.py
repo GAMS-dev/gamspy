@@ -22,10 +22,10 @@ def pytest_collection_modifyitems(items: list[Function]) -> None:
 
     # Run unit tests first
     new_items: list[Function] = []
-    model_library = None
+    model_library: list[Function] = []
     for item, markers in zip(items, all_markers, strict=False):
         if "model_library" in markers:
-            model_library = item
+            model_library.append(item)
             continue
 
         if "unit" in markers:
@@ -33,8 +33,7 @@ def pytest_collection_modifyitems(items: list[Function]) -> None:
         else:
             new_items.append(item)
 
-    # Run model library last since takes a lot of time
-    if model_library is not None:
-        new_items.append(model_library)
+    # Run model library last since it takes a lot of time
+    new_items.extend(model_library)
 
     items[:] = new_items

@@ -150,9 +150,6 @@ def create_gams_expression(root_node: Expression) -> str:
     adding parentheses only when necessary based on operator precedence and
     associativity rules.
     """
-    if not isinstance(root_node, Expression):
-        return get_operand_gams_repr(root_node)
-
     # 1. Get nodes in post-order (left - right - parent).
     s1: list[OperableType | ImplicitEquation | str] = [root_node]
     post_order_nodes = []
@@ -226,9 +223,6 @@ def create_latex_expression(root_node: Expression) -> str:
     adding parentheses only when necessary based on operator precedence and
     associativity rules.
     """
-    if not isinstance(root_node, Expression):
-        return get_operand_latex_repr(root_node)
-
     op_map = {
         "=g=": "\\geq",
         "=l=": "\\leq",
@@ -596,7 +590,7 @@ class Expression(operable.Operable):
             )
 
         records = self.records
-        if records is None:
+        if records is None:  # pragma: no cover
             raise ValidationError(
                 "Could not get the value of the expression. Please report to support@gams.com."
             )

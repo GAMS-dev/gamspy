@@ -116,6 +116,7 @@ test = [
     "networkx>=3.4.2",
     "openpyxl>=3.1.5",
     "pytest>=9.0.2",
+    "pytest-xdist>=3.8.0",
     "python-dotenv>=1.2.1",
     "pyyaml>=6.0.3",
     "scikit-learn>=1.7.2",
@@ -189,6 +190,8 @@ name = "Miscellaneous internal changes"
 showcontent = true
 
 [tool.coverage.run]
+parallel = true
+patch = ["subprocess"]
 omit = ["*/gamspy_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py", "*_gmd.py"]
 
 [tool.coverage.report]
