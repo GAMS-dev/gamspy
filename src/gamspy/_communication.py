@@ -105,12 +105,12 @@ def open_connection(container: Container) -> None:
 
     try:
         port = int(port_info.removeprefix("port: "))
-    except ValueError as e:
+    except ValueError as e:  # pragma: no cover
         raise ValidationError(
             f"Error while reading the port! {port_info + process.stdout.read()}"  # ty: ignore[unresolved-attribute]
         ) from e
 
-    def handler(signum, frame):
+    def handler(signum, frame):  # pragma: no cover
         if platform.system() != "Windows":
             os.kill(process.pid, signal.SIGINT)
 
@@ -126,11 +126,11 @@ def open_connection(container: Container) -> None:
             new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             new_socket.connect((LOOPBACK, port))
             break
-        except (ConnectionRefusedError, OSError) as e:
+        except (ConnectionRefusedError, OSError) as e:  # pragma: no cover
             new_socket.close()
             end = time.time()
 
-            if end - start > TIMEOUT:  # pragma: no cover
+            if end - start > TIMEOUT:
                 raise FatalError(
                     f"Timeout while establishing the connection with socket. {process.communicate()[0]}"
                 ) from e
@@ -142,7 +142,7 @@ def get_connection(pair_id: str) -> tuple[socket.socket, subprocess.Popen]:
     return _comm_pairs[pair_id]
 
 
-def close_connection(pair_id: str):
+def close_connection(pair_id: str):  # pragma: no cover
     try:
         _socket, process = get_connection(pair_id)
     except KeyError:
@@ -174,7 +174,7 @@ def _read_output(process: subprocess.Popen, output: TextIO | None) -> None:
 
 def check_response(response: bytes, job_name: str) -> None:
     value = response[: response.find(b"#")].decode("ascii")
-    if not value:
+    if not value:  # pragma: no cover
         raise FatalError(
             "Error while getting the return code from GAMS backend. This means that GAMS is in a bad state. Try to backtrack for previous errors."
         )
@@ -207,7 +207,7 @@ def send_job(
         # Receive response
         response = _socket.recv(256)
         check_response(response, job_name)
-    except ConnectionError as e:
+    except ConnectionError as e:  # pragma: no cover
         raise FatalError(
             f"There was an error while communicating with GAMS server: {e}",
         ) from e

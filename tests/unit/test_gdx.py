@@ -5,6 +5,7 @@ import gamspy._gdx as gdx
 from gamspy.exceptions import GdxException
 
 
+@pytest.mark.unit
 def test_opening_non_existent_file():
     m = gp.Container()
 

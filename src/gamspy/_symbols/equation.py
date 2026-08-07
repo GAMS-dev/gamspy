@@ -1137,7 +1137,10 @@ class Equation(VarEquSymbol):
         Parameters
         ----------
         records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict
-            The data to load (e.g., list, numpy array, DataFrame).
+            The data to load (e.g., list, numpy array, DataFrame). Tabular input
+            must name its attribute columns (``level``, ``marginal``, ``lower``,
+            ``upper``, ``scale``); every other column is read as a domain column,
+            whatever order they appear in. Omitted attributes take their default.
         uels_on_axes : bool, optional
             If True, assumes domain elements are in the axes of the DataFrame. Default is False.
 

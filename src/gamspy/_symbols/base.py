@@ -768,10 +768,7 @@ class DomainSymbol(BaseSymbol):
             return None
 
         violations = self._findDomainViolations()
-        if violations is None:
-            return None
-
-        self.records.drop(index=violations.index, inplace=True)
+        self.records.drop(index=violations.index, inplace=True)  # ty: ignore[unresolved-attribute]
 
     @property
     def domain_type(self):

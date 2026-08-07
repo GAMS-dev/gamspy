@@ -375,9 +375,6 @@ class Container:
             row = row_extractor(sym)
             rows.append(row)
 
-        if not rows:
-            return None
-
         df = pd.DataFrame(rows)
         return df.round(3).sort_values(by="name", ignore_index=True)
 
@@ -2519,13 +2516,13 @@ $endIf
 
         return external_lib
 
-    def gamsJobName(self) -> str | None:
+    def gamsJobName(self) -> str:
         """
         Returns the name of the latest GAMS job that was executed
 
         Returns
         -------
-        str | None
+        str
 
         Examples
         --------

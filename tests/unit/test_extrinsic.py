@@ -107,3 +107,33 @@ def test_extrinsic_functions(data):
     assert f.getDefinition() == "f .. myCos(90) =e= sum(i,x(i) * x(i));"
 
     m.close()
+
+
+def test_extrinsic_function_traversal(data):
+    m = data
+    user_platform = get_default_platform()
+
+    if user_platform == "linux_aarch64":
+        return
+
+    names = {
+        "linux": "libtricclib64.so",
+        "mac_x86_64": "libtricclib64x86.dylib",
+        "mac_arm64": "libtricclib64arm.dylib",
+        "windows": "tricclib64.dll",
+    }
+    directory = os.path.dirname(os.path.abspath(__file__))
+    trilib = m.importExtrinsicLibrary(
+        os.path.join(directory, names[user_platform]),
+        functions={"myCos": "Cosine"},
+    )
+
+    v = Variable(m, "v")
+    e = Equation(m, "e")
+    e[...] = v == trilib.myCos(90)
+
+    # the arguments of an extrinsic function are walked like any other operand
+    assert sorted(set(e._definition._find_all_symbols())) == ["e", "v"]
+
+    pytest.importorskip("graphviz")
+    assert "label=myCos" in e.toGraph().source
