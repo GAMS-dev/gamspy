@@ -209,7 +209,7 @@ class Container:
 
         self._unsaved_statements: list = []
 
-        self._data: CasePreservingDict[str, SymbolType] = CasePreservingDict()
+        self._data: CasePreservingDict[SymbolType] = CasePreservingDict()
 
         self._options = validation.validate_global_options(options)
         if self._options.license is not None:
@@ -319,13 +319,13 @@ class Container:
         return len(self._data)
 
     @property
-    def data(self) -> dict[str, SymbolType]:
+    def data(self) -> CasePreservingDict[SymbolType]:
         """
-        The dictionary that contains all symbols in the Container. Keys are symbol names and values are the symbols themselves.
+        The dictionary that contains all symbols in the Container. Keys are symbol names and values are the symbols themselves. Lookups are case insensitive.
 
         Returns
         -------
-        dict[str, SymbolType]
+        CasePreservingDict[SymbolType]
 
         Examples
         --------

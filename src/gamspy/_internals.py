@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 from collections import UserDict
 from enum import Enum
-from typing import Any
+from typing import Any, TypeVar
 
 from gams.core.gdx import (
     GMS_EQUTYPE_B,
@@ -32,7 +32,10 @@ GAMS_DESCRIPTION_MAX_LENGTH = GMS_SSSIZE - 1
 GAMS_MAX_INDEX_DIM = GMS_MAX_INDEX_DIM
 
 
-class CasePreservingDict(UserDict):
+_VT = TypeVar("_VT")
+
+
+class CasePreservingDict(UserDict[str, _VT]):
     def __init__(self, *args, **kwargs):
         self._casefolded_key_map = {}
         super().__init__(*args, **kwargs)
@@ -67,7 +70,7 @@ class CasePreservingDict(UserDict):
         except KeyError:
             return default
 
-    def copy(self) -> CasePreservingDict:
+    def copy(self) -> CasePreservingDict[_VT]:
         import copy
 
         return copy.deepcopy(self)
