@@ -840,12 +840,14 @@ class DomainSymbol(BaseSymbol):
         if self.domain_type in {"relaxed", "none"}:
             return float("nan")
 
+        domain = cast("list[Set | Alias | UniverseAlias]", self.domain)
+
         # if there are any domain symbols that do not have records
-        if any(not n.number_records for n in self.domain):
+        if any(not n.number_records for n in domain):
             return float("nan")
         else:
             dense = 1
-            for i in [n.number_records for n in self.domain]:
+            for i in [n.number_records for n in domain]:
                 dense *= i
 
             return 1 - self.number_records / dense
@@ -1572,7 +1574,7 @@ class VarEquSymbol(RecordSymbol):
             if self._domain_status is DomainStatus.regular:
                 col = (
                     self.records.iloc[:, 0]
-                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))
+                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))  # ty: ignore[unresolved-attribute]
                     .to_numpy(dtype=int)
                 )
             else:
@@ -1588,12 +1590,12 @@ class VarEquSymbol(RecordSymbol):
             if self._domain_status is DomainStatus.regular:
                 row = (
                     self.records.iloc[:, 0]
-                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))
+                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))  # ty: ignore[unresolved-attribute]
                     .to_numpy(dtype=int)
                 )
                 col = (
                     self.records.iloc[:, 1]
-                    .map(self.domain[1]._getUELCodes(0, ignore_unused=True))
+                    .map(self.domain[1]._getUELCodes(0, ignore_unused=True))  # ty: ignore[unresolved-attribute]
                     .to_numpy(dtype=int)
                 )
             else:
