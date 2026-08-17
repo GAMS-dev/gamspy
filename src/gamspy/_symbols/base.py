@@ -477,7 +477,7 @@ class DomainSymbol(BaseSymbol):
         return "(" + ",".join(set_strs) + ")"
 
     @property
-    def domain_names(self) -> list[str]:
+    def domain_names(self: SymbolWithRecordsType) -> list[str]:
         """String version of domain names"""
         return [i if isinstance(i, str) else i.name for i in self.domain]
 
@@ -570,7 +570,7 @@ class DomainSymbol(BaseSymbol):
         return self._description
 
     @property
-    def dimension(self) -> int:
+    def dimension(self: SymbolWithRecordsType) -> int:
         """The dimension of symbol"""
         return len(self.domain)
 
@@ -779,12 +779,12 @@ class DomainSymbol(BaseSymbol):
         self.records.drop(index=violations.index, inplace=True)  # ty: ignore[unresolved-attribute]
 
     @property
-    def domain_type(self):
+    def domain_type(self: SymbolWithRecordsType):
         """State of the domain links"""
         return self._domain_status.name
 
     @property
-    def _domain_status(self):
+    def _domain_status(self: SymbolWithRecordsType):
         AnyContainerDomainSymbol = (gp.Set, gp.Alias, gp.UniverseAlias)
 
         if (
@@ -810,7 +810,7 @@ class DomainSymbol(BaseSymbol):
                     "Cannot write symbol until domain labels have been been restored."
                 )
 
-    def getSparsity(self) -> float:
+    def getSparsity(self: SymbolWithRecordsType) -> float:
         """
         Calculates the sparsity of the symbol's records.
 
@@ -885,7 +885,7 @@ class RecordSymbol(DomainSymbol):
             )
 
     @property
-    def is_scalar(self) -> bool:
+    def is_scalar(self: Parameter | Variable | Equation) -> bool:
         """
         Returns True if the len(self.domain) = 0
 
@@ -1510,7 +1510,9 @@ class VarEquSymbol(RecordSymbol):
         """
         return equals_variable(self, other, columns, check_meta_data, rtol, atol)
 
-    def toSparseCoo(self, column: str = "level") -> coo_matrix | None:
+    def toSparseCoo(
+        self: Variable | Equation, column: str = "level"
+    ) -> coo_matrix | None:
         """
         Converts a specified attribute column of the symbol's records to a SciPy sparse
         COOrdinate format (coo_matrix).

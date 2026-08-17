@@ -17,12 +17,8 @@ if TYPE_CHECKING:
 
     from gamspy import Alias, Parameter, Set
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols.implicits.implicit_symbol import (
-        ImplicitParameter,
-        ImplicitSet,
-        ImplicitSymbol,
-    )
-    from gamspy._types import OperableType, SymbolType
+    from gamspy._symbols.implicits.implicit_symbol import ImplicitParameter, ImplicitSet
+    from gamspy._types import ImplicitSymbolType, OperableType, SymbolType
 
 
 class MathOp(operable.Operable):
@@ -373,7 +369,7 @@ def aggregate(
 
 
 def _stringify(
-    x: str | int | float | SymbolType | ImplicitSymbol, *, latex: bool = False
+    x: str | int | float | SymbolType | ImplicitSymbolType, *, latex: bool = False
 ):
     if isinstance(x, (int, float)):
         x = utils._map_special_values(x)

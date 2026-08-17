@@ -142,7 +142,7 @@ class ImplicitSymbol(ABC):
     def gamsRepr(self):
         """Representation of the implicit symbol in GAMS"""
 
-    def latexRepr(self):
+    def latexRepr(self: ImplicitSymbolType):
         name = self._latex_name
         representation = name
         domain = list(self.domain)
