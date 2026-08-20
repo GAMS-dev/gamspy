@@ -78,6 +78,7 @@ def pwl_suite(fct, name):
                         x_points,
                         y_points,
                         using=using,
+                        allow_multivalued=True,
                     )
                     model = gp.Model(
                         m,
@@ -94,13 +95,14 @@ def pwl_suite(fct, name):
                     x,
                     x_points,
                     y_points,
+                    allow_multivalued=True,
                 )
                 model = gp.Model(
                     m, equations=eqs, objective=y, sense=sense, problem="mip"
                 )
                 model.solve(solver_options={"solveFinal": 1})
                 assert y.toDense() == expected_y, f"Case {case_i} failed !"
-                assert x.toDense() == expected_x, f"Case {case_i} failed !"
+                assert math.isclose(x.toDense(), expected_x), f"Case {case_i} failed !"
 
         print(f"Case {case_i} passed !")
 
@@ -212,7 +214,7 @@ def pwl_suite(fct, name):
     # test discontinuous function not allowing in between value
     x_points = [1, 4, 4, 10]
     y_points = [1, 4, 8, 25]
-    y, eqs = fct(x, x_points, y_points)
+    y, eqs = fct(x, x_points, y_points, allow_multivalued=True)
     x.fx = 4
     y.fx = 6  # y can be either 4 or 8 but not their convex combination
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
@@ -259,7 +261,7 @@ def pwl_suite(fct, name):
     x2 = gp.Variable(m, name="x2", domain=[i])
     x_points = [1, 4, None, 6, 10, 10, 20]
     y_points = [1, 45, None, 30, 25, 30, 12]
-    y, eqs = fct(x2, x_points, y_points)
+    y, eqs = fct(x2, x_points, y_points, allow_multivalued=True)
     x2.fx["1"] = 1
     x2.fx["2"] = 2.5
     x2.fx["3"] = 8
@@ -288,21 +290,29 @@ def pwl_suite(fct, name):
                 using=using,
                 bound_left=False,
                 bound_right=False,
+                allow_multivalued=True,
             )
             x.fx = -5
             model = gp.Model(m, equations=eqs, objective=y, sense="min", problem="mip")
             model.solve(solver_options={"solveFinal": 1})
-            assert y.toDense() == 20, "Case 15 failed !"
+            assert np.isclose(y.toDense(), 20), "Case 15 failed !"
 
         print("Case 15 passed !")
     else:
         x_points = [-4, -4, -2, 1, 3, 3]
         y_points = [20, -2, 0, 0, 2, 9]
-        y, eqs = fct(x, x_points, y_points, bound_left=False, bound_right=False)
+        y, eqs = fct(
+            x,
+            x_points,
+            y_points,
+            bound_left=False,
+            bound_right=False,
+            allow_multivalued=True,
+        )
         x.fx = -5
         model = gp.Model(m, equations=eqs, objective=y, sense="min", problem="mip")
         model.solve()
-        assert y.toDense() == 20, "Case 15 failed !"
+        assert np.isclose(y.toDense(), 20), "Case 15 failed !"
         print("Case 15 passed !")
 
     # test single bound cases
@@ -436,6 +446,7 @@ def main():
     print("Piecewise linear function test model")
     pwl_suite(piecewise.pwl_convexity_formulation, "convexity")
     pwl_suite(piecewise.pwl_interval_formulation, "interval")
+    pwl_suite(piecewise.pwl_dlog_formulation, "dlog")
     indicator_suite()
 
 

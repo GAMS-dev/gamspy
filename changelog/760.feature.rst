@@ -1,0 +1,4 @@
+Enhance piecewise linear formulations with heterogeneous indexed data,
+broadcasting across omitted domains, rays, and overlapping-chain support in
+Interval and DLog, and add a container-independent curve API through
+``PWLCurve`` and ``pwlinear`` for selecting Interval, Convexity, or DLog.
