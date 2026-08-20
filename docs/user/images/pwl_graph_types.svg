@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 610" font-family="Helvetica, Arial, sans-serif">
+  <title>Piecewise linear graph types supported by GAMSPy</title>
+  <desc>Six rounded panels show a connected graph, left and right rays, an excluded range, a discontinuity, and overlapping chains.</desc>
+  <defs>
+    <marker id="left-ray-arrow" markerWidth="10" markerHeight="10" refX="7" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 Z" fill="#258b6c"/>
+    </marker>
+    <marker id="right-ray-arrow" markerWidth="10" markerHeight="10" refX="7" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 Z" fill="#1c7f89"/>
+    </marker>
+  </defs>
+
+  <rect x="15" y="15" width="290" height="280" rx="28" fill="#e6f2fb" stroke="#2973b9" stroke-opacity="0.2"/>
+  <rect x="335" y="15" width="290" height="280" rx="28" fill="#e7f6ef" stroke="#258b6c" stroke-opacity="0.2"/>
+  <rect x="655" y="15" width="290" height="280" rx="28" fill="#e8f5f7" stroke="#1c7f89" stroke-opacity="0.2"/>
+  <rect x="15" y="315" width="290" height="280" rx="28" fill="#fff0e4" stroke="#df762f" stroke-opacity="0.2"/>
+  <rect x="335" y="315" width="290" height="280" rx="28" fill="#f1ebfa" stroke="#6f52b5" stroke-opacity="0.2"/>
+  <rect x="655" y="315" width="290" height="280" rx="28" fill="#fdebec" stroke="#c84a46" stroke-opacity="0.2"/>
+
+  <g fill="#17314a" font-size="17" font-weight="bold">
+    <text x="35" y="55">Connected graph</text>
+    <text x="355" y="55">Left ray</text>
+    <text x="675" y="55">Right ray</text>
+    <text x="35" y="355">Excluded range</text>
+    <text x="355" y="355">Discontinuity</text>
+    <text x="675" y="355">Overlapping chains</text>
+  </g>
+
+  <g fill="#ffffff" fill-opacity="0.45">
+    <rect x="45" y="70" width="250" height="185" rx="10"/>
+    <rect x="365" y="70" width="250" height="185" rx="10"/>
+    <rect x="685" y="70" width="250" height="185" rx="10"/>
+    <rect x="45" y="370" width="250" height="185" rx="10"/>
+    <rect x="365" y="370" width="250" height="185" rx="10"/>
+    <rect x="685" y="370" width="250" height="185" rx="10"/>
+  </g>
+
+  <g fill="none" stroke="#687681" stroke-opacity="0.26" stroke-width="1">
+    <path d="M110 85 V245 M165 85 V245 M220 85 V245 M55 125 H285 M55 165 H285 M55 205 H285"/>
+    <path d="M430 85 V245 M485 85 V245 M540 85 V245 M375 125 H605 M375 165 H605 M375 205 H605"/>
+    <path d="M750 85 V245 M805 85 V245 M860 85 V245 M695 125 H925 M695 165 H925 M695 205 H925"/>
+    <path d="M110 385 V545 M165 385 V545 M220 385 V545 M55 425 H285 M55 465 H285 M55 505 H285"/>
+    <path d="M430 385 V545 M485 385 V545 M540 385 V545 M375 425 H605 M375 465 H605 M375 505 H605"/>
+    <path d="M750 385 V545 M805 385 V545 M860 385 V545 M695 425 H925 M695 465 H925 M695 505 H925"/>
+  </g>
+
+  <g fill="none" stroke="#596773" stroke-opacity="0.72" stroke-width="1.5">
+    <path d="M55 245 H285 M55 245 V85"/>
+    <path d="M375 245 H605 M375 245 V85"/>
+    <path d="M695 245 H925 M695 245 V85"/>
+    <path d="M55 545 H285 M55 545 V385"/>
+    <path d="M375 545 H605 M375 545 V385"/>
+    <path d="M695 545 H925 M695 545 V385"/>
+  </g>
+
+  <path d="M75 215 L160 155 L265 95" fill="none" stroke="#2973b9" stroke-width="4"/>
+  <g fill="#2973b9" stroke="#2973b9" stroke-width="3">
+    <circle cx="75" cy="215" r="6"/>
+    <circle cx="160" cy="155" r="6"/>
+    <circle cx="265" cy="95" r="6"/>
+  </g>
+
+  <path d="M475 155 L585 100" fill="none" stroke="#258b6c" stroke-width="4"/>
+  <path d="M475 155 L390 185" fill="none" stroke="#258b6c" stroke-width="4" marker-end="url(#left-ray-arrow)"/>
+  <g fill="#258b6c" stroke="#258b6c" stroke-width="3">
+    <circle cx="475" cy="155" r="6"/>
+    <circle cx="585" cy="100" r="6"/>
+  </g>
+
+  <path d="M715 200 L815 135" fill="none" stroke="#1c7f89" stroke-width="4"/>
+  <path d="M815 135 L920 200" fill="none" stroke="#1c7f89" stroke-width="4" marker-end="url(#right-ray-arrow)"/>
+  <g fill="#1c7f89" stroke="#1c7f89" stroke-width="3">
+    <circle cx="715" cy="200" r="6"/>
+    <circle cx="815" cy="135" r="6"/>
+  </g>
+
+  <path d="M75 515 L150 460 M205 445 L280 390" fill="none" stroke="#df762f" stroke-width="4"/>
+  <line x1="165" y1="505" x2="190" y2="505" stroke="#df762f" stroke-width="2" stroke-dasharray="8 6"/>
+  <g fill="#df762f" stroke="#df762f" stroke-width="3">
+    <circle cx="75" cy="515" r="6"/>
+    <circle cx="150" cy="460" r="6"/>
+    <circle cx="205" cy="445" r="6"/>
+    <circle cx="280" cy="390" r="6"/>
+  </g>
+
+  <path d="M395 515 L475 465 M475 420 L595 385" fill="none" stroke="#6f52b5" stroke-width="4"/>
+  <line x1="475" y1="420" x2="475" y2="465" stroke="#6f52b5" stroke-width="2" stroke-dasharray="7 6"/>
+  <g fill="#6f52b5" stroke="#6f52b5" stroke-width="3">
+    <circle cx="395" cy="515" r="6"/>
+    <circle cx="475" cy="465" r="6"/>
+    <circle cx="475" cy="420" r="6"/>
+    <circle cx="595" cy="385" r="6"/>
+  </g>
+
+  <path d="M740 425 L915 385" fill="none" stroke="#c84a46" stroke-width="4"/>
+  <path d="M715 510 L810 470" fill="none" stroke="#6f52b5" stroke-width="4"/>
+  <g stroke-width="3">
+    <circle cx="740" cy="425" r="6" fill="#c84a46" stroke="#c84a46"/>
+    <circle cx="915" cy="385" r="6" fill="#c84a46" stroke="#c84a46"/>
+    <circle cx="715" cy="510" r="6" fill="#6f52b5" stroke="#6f52b5"/>
+    <circle cx="810" cy="470" r="6" fill="#6f52b5" stroke="#6f52b5"/>
+  </g>
+</svg>

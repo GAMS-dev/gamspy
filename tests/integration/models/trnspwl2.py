@@ -72,6 +72,7 @@ from __future__ import annotations
 
 import numpy as np
 
+import gamspy.formulations as formulations
 from gamspy import (
     Card,
     Container,
@@ -253,26 +254,34 @@ def main():
     sqrtp[ss] = sqrt(p[ss])
     sqrtp["slopeN"] = (sqrt(xmax) - sqrt(xhigh)) / (xmax - xhigh)
 
-    xs = Variable(m, name="xs", type="sos2", domain=[i, j, s])
-    sqrtx = Variable(m, name="sqrtx", type="positive", domain=[i, j])
+    x_points = [record[-1] for record in p[ss].toList()]
+    y_points = [record[-1] for record in sqrtp[ss].toList()]
+    left_gradient = -sqrtp["slope0"].toList()[0]
+    right_gradient = sqrtp["slopeN"].toList()[0]
+    sqrtx, eqs = formulations.pwl_convexity_formulation(
+        x,
+        [-float("inf"), *x_points, float("inf")],
+        [left_gradient, *y_points, right_gradient],
+        using="sos2",
+    )
+    sqrtx.lo[...] = 0
 
-    # Equations
-    defsos1 = Equation(m, name="defsos1", domain=[i, j])
-    defsos2 = Equation(m, name="defsos2", domain=[i, j])
-    defsos3 = Equation(m, name="defsos3", domain=[i, j])
-
-    defsos1[i, j] = x[i, j] == Sum(s, p[s] * xs[i, j, s])
-
-    defsos2[i, j] = sqrtx[i, j] == Sum(s, sqrtp[s] * xs[i, j, s])
-
-    defsos3[i, j] = Sum(ss, xs[i, j, ss]) == 1
+    # Alternatively, use the Curve API:
+    # curve = formulations.PWLCurve(
+    #     list(zip(x_points, y_points, strict=True)),
+    #     left_gradient=left_gradient,
+    #     right_gradient=right_gradient,
+    # )
+    # sqrtx, eqs = formulations.pwlinear(
+    #     x, curve, method="convexity", using="sos2"
+    # )
 
     defobjdisc = Sum([i, j], c[i, j] * sqrtx[i, j])
 
     trnsdiscA = Model(
         m,
         name="trnsdiscA",
-        equations=[supply, demand, defsos1, defsos2, defsos3],
+        equations=[supply, demand, *eqs],
         problem="mip",
         sense=Sense.MIN,
         objective=defobjdisc,
@@ -288,104 +297,56 @@ def main():
     p["slopeN"] = xmax
     sqrtp[s] = sqrt(p[s])
 
-    # We can just use model trnsdiscA but need to include the first and
-    # last segment into the set ss that builds the convex combinations.
-    ss[s] = True
-
-    trnsdiscA.solve()
-
-    # The next model (formulation c) implements another formulation for a
-    # piecewise linear function. We need to assume that the domain region
-    # is bounded. We use the same discretization as in the previous
-    # formulation.
-    # Sets
-    g = Set(
-        m,
-        name="g",
-        domain=s,
-        records=["slope0"] + [f"s{i}" for i in range(1, 7)],
-        description="Segments",
+    x_points = [0, *[record[-1] for record in p[ss].toList()], xmax.toValue()]
+    y_points = [
+        0,
+        *[record[-1] for record in sqrtp[ss].toList()],
+        sqrtp["slopeN"].toList()[0],
+    ]
+    sqrtx, eqs = formulations.pwl_convexity_formulation(
+        x, x_points, y_points, using="sos2"
     )
 
-    # Parameters
-    nseg = Parameter(
-        m,
-        name="nseg",
-        domain=s,
-        description="relative increase of x in segment",
-    )
-    ninc = Parameter(
-        m,
-        name="ninc",
-        domain=s,
-        description="relative increase of sqrtx in segment",
-    )
+    # Alternatively, use the Curve API:
+    # curve = formulations.PWLCurve(list(zip(x_points, y_points, strict=True)))
+    # sqrtx, eqs = formulations.pwlinear(
+    #     x, curve, method="convexity", using="sos2"
+    # )
 
-    nseg[s].where[g[s]] = p[s + 1] - p[s]
-    ninc[s].where[g[s]] = sqrtp[s + 1] - sqrtp[s]
-
-    # Variables
-    seg = Variable(
-        m,
-        name="seg",
-        type="positive",
-        domain=[i, j, s],
-        description="shipment in segment",
-    )
-    gs = Variable(
-        m,
-        name="gs",
-        type="binary",
-        domain=[i, j, s],
-        description="indicator for shipment in segment",
-    )
-
-    # Equations
-    defx = Equation(
-        m,
-        name="defx",
-        domain=[i, j],
-        description="definition of x",
-    )
-    defsqrt = Equation(
-        m,
-        name="defsqrt",
-        domain=[i, j],
-        description="definition of sqrt",
-    )
-    defseg = Equation(
-        m,
-        name="defseg",
-        domain=[i, j, s],
-        description="segment can only have shipment if indicator is on",
-    )
-    defgs = Equation(
-        m,
-        name="defgs",
-        domain=[i, j],
-        description="select at most one segment",
-    )
-
-    defx[i, j] = x[i, j] == Sum(g, p[g] * gs[i, j, g] + nseg[g] * seg[i, j, g])
-
-    defsqrt[i, j] = sqrtx[i, j] == Sum(
-        g, sqrtp[g] * gs[i, j, g] + ninc[g] * seg[i, j, g]
-    )
-
-    defseg[i, j, g] = seg[i, j, g] <= gs[i, j, g]
-
-    defgs[i, j] = Sum(g, gs[i, j, g]) <= 1
+    defobjdisc = Sum([i, j], c[i, j] * sqrtx[i, j])
 
     trnsdiscB = Model(
         m,
         name="trnsdiscB",
-        equations=[supply, demand, defx, defsqrt, defseg, defgs],
+        equations=[supply, demand, *eqs],
         problem="mip",
         sense=Sense.MIN,
         objective=defobjdisc,
     )
 
     trnsdiscB.solve()
+
+    # The next model (formulation c) implements another formulation for a
+    # piecewise linear function. We need to assume that the domain region
+    # is bounded. We use the same discretization as in the previous
+    # formulation.
+    sqrtx, eqs = formulations.pwl_interval_formulation(x, x_points, y_points)
+
+    # Alternatively, use the Curve API with the curve defined above:
+    # sqrtx, eqs = formulations.pwlinear(x, curve, method="interval")
+
+    defobjdisc = Sum([i, j], c[i, j] * sqrtx[i, j])
+
+    trnsdiscC = Model(
+        m,
+        name="trnsdiscC",
+        equations=[supply, demand, *eqs],
+        problem="mip",
+        sense=Sense.MIN,
+        objective=defobjdisc,
+    )
+
+    trnsdiscC.solve()
 
     # Now restart the local solver from this approximate point
     transport.solve(options=Options(nlp="conopt"))

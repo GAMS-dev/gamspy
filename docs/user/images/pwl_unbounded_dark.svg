@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="330" viewBox="0 0 500 330" font-family="Helvetica, Arial, sans-serif">
+  <title>Piecewise linear graph with two unbounded rays</title>
+  <desc>The first and last segments continue beyond the finite breakpoints as rays.</desc>
+  <rect width="500" height="330" fill="#171c22"/>
+
+  <defs>
+    <marker id="arrow" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L14 7 L0 14 Z" fill="#5bc49e"/>
+    </marker>
+  </defs>
+
+  <g fill="none" stroke="#aab4c0" stroke-opacity="0.25" stroke-width="1">
+    <path d="M70 20 V270 M125 20 V270 M180 20 V270 M235 20 V270 M290 20 V270 M345 20 V270 M400 20 V270"/>
+    <path d="M70 220 H430 M70 170 H430 M70 120 H430 M70 70 H430 M70 20 H430"/>
+  </g>
+
+  <g fill="none" stroke="#dbe3ec" stroke-width="1.5">
+    <path d="M50 270 H445"/>
+    <path d="M125 285 V10"/>
+  </g>
+
+  <g fill="none" stroke="#5bc49e" stroke-width="4">
+    <path d="M125 170 L70 120" marker-end="url(#arrow)"/>
+    <path d="M125 170 L180 220 L290 220 L345 120"/>
+    <path d="M345 120 L400 20" marker-end="url(#arrow)"/>
+  </g>
+  <g fill="#5bc49e" stroke="#5bc49e" stroke-width="3">
+    <circle cx="125" cy="170" r="6"/>
+    <circle cx="180" cy="220" r="6"/>
+    <circle cx="290" cy="220" r="6"/>
+    <circle cx="345" cy="120" r="6"/>
+  </g>
+
+  <g fill="#dbe3ec" font-size="14" text-anchor="middle">
+    <text x="70" y="292">-1</text>
+    <text x="125" y="292">0</text>
+    <text x="180" y="292">1</text>
+    <text x="235" y="292">2</text>
+    <text x="290" y="292">3</text>
+    <text x="345" y="292">4</text>
+    <text x="400" y="292">5</text>
+  </g>
+  <g fill="#dbe3ec" font-size="14" text-anchor="end">
+    <text x="118" y="225">1</text>
+    <text x="118" y="175">2</text>
+    <text x="118" y="125">3</text>
+    <text x="118" y="75">4</text>
+    <text x="118" y="25">5</text>
+  </g>
+  <g fill="#dbe3ec" font-family="Georgia, serif" font-size="20" font-style="italic">
+    <text x="445" y="307">x</text>
+    <text x="25" y="27">y</text>
+  </g>
+</svg>
