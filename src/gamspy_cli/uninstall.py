@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Annotated
 import certifi
 import typer
 
+from . import cuopt
 from .util import has_pip, has_uv, remove_solver_entry
 
 if TYPE_CHECKING:
@@ -18,6 +19,39 @@ app = typer.Typer(
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy uninstall license | gamspy uninstall solver <solver_name>",
     context_settings={"help_option_names": ["-h", "--help"]},
 )
+
+
+def _get_installed_addons(addons_path: str) -> list[str]:
+    try:
+        with open(addons_path) as file:
+            return [solver for solver in file.read().splitlines() if solver]
+    except FileNotFoundError:
+        return []
+
+
+def _remove_installed_addon(addons_path: str, solver_name: str) -> None:
+    installed = _get_installed_addons(addons_path)
+    try:
+        installed.remove(solver_name.upper())
+    except ValueError:
+        ...
+
+    with open(addons_path, "w") as file:
+        file.write("\n".join(installed) + "\n")
+
+
+def _get_removable_solvers(addons_path: str) -> set[str]:
+    import gamspy_base
+
+    import gamspy.utils as utils
+
+    installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
+    config_solvers = set(utils._get_config_solvers(gamspy_base.directory))
+    return (
+        set(installed_solvers)
+        - set(gamspy_base.default_solvers)
+        - (config_solvers - set(_get_installed_addons(addons_path)))
+    )
 
 
 def complete_solver_names(ctx: typer.Context, incomplete: str):
@@ -78,17 +112,19 @@ def solver(
 
     import gamspy.utils as utils
 
-    if not use_uv and not has_pip():
-        typer.echo(
-            "pip is not installed in your environment. Please install pip first or add --use-uv flag to uninstall solvers with uv."
-        )
-        raise typer.Exit(code=1)
+    requested = [name.lower() for name in solver or []]
+    if not requested or any(name != cuopt.SOLVER_NAME for name in requested):
+        if not use_uv and not has_pip():
+            typer.echo(
+                "pip is not installed in your environment. Please install pip first or add --use-uv flag to uninstall solvers with uv."
+            )
+            raise typer.Exit(code=1)
 
-    if use_uv and not has_uv():
-        typer.echo(
-            "uv is not installed in your machine. Please install uv first to uninstall solvers with --use-uv flag."
-        )
-        raise typer.Exit(code=1)
+        if use_uv and not has_uv():
+            typer.echo(
+                "uv is not installed in your machine. Please install uv first to uninstall solvers with --use-uv flag."
+            )
+            raise typer.Exit(code=1)
 
     addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
     environment_variables = os.environ.copy()
@@ -99,16 +135,18 @@ def solver(
         for item in addons:
             solver_name = item.lower()
 
-            installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
-            removable_solvers = set(installed_solvers) - set(
-                gamspy_base.default_solvers
-            )
+            removable_solvers = _get_removable_solvers(addons_path)
             if solver_name.upper() not in removable_solvers:
                 typer.echo(
                     f'Given solver name ("{solver_name}") is not valid. Installed'
                     f" solvers that can be uninstalled: {sorted(removable_solvers)}"
                 )
                 raise typer.Exit(code=1)
+
+            if solver_name == cuopt.SOLVER_NAME:
+                cuopt.uninstall()
+                _remove_installed_addon(addons_path, solver_name)
+                continue
 
             if not skip_pip_uninstall:
                 # uninstall specified solver
@@ -141,29 +179,10 @@ def solver(
 
             # do not delete files from gamspy_base as other solvers might depend on it
             remove_solver_entry(gamspy_base.directory, solver_name)
-
-            try:
-                with open(addons_path) as file:
-                    installed = file.read().splitlines()
-            except FileNotFoundError:
-                installed = []
-
-            try:
-                installed.remove(solver_name.upper())
-            except ValueError:
-                ...
-
-            with open(addons_path, "w") as file:
-                file.write("\n".join(installed) + "\n")
+            _remove_installed_addon(addons_path, solver_name)
 
     if uninstall_all_solvers:
-        installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
-        solvers = [
-            solver
-            for solver in installed_solvers
-            if solver not in gamspy_base.default_solvers
-        ]
-        remove_addons(solvers)
+        remove_addons(sorted(_get_removable_solvers(addons_path)))
 
         # All add-on solvers are gone.
         return

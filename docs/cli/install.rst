@@ -105,12 +105,31 @@ Usage
      - False
      - Use uv instead of pip to install solvers.
 
+The installation of the ``cuopt`` solver can be adjusted with the following environment variables:
+
+.. list-table::
+   :widths: 25 20 55
+   :header-rows: 1
+
+   * - Environment Variable
+     - Default
+     - Description
+   * - ``GAMSPY_CUOPT_VERSION``
+     - latest
+     - Version of the GAMS ``cuopt`` link to install, e.g. ``0.0.8``.
+   * - ``GAMSPY_CUDA_VERSION``
+     - autodetected
+     - Major version of the CUDA runtime (``12`` or ``13``) to install ``cuopt`` for.
+   * - ``GAMSPY_CUDA_RUNTIME``
+     - ``1``
+     - Whether to install the CUDA runtime libraries that ``cuopt`` requires along with it. Either ``1`` or ``0``.
+
 Examples
 ~~~~~~~~
 
 Install specific solvers::
 
-  $ gamspy install solver mosek conopt xpress
+  $ gamspy install solver mosek conopt xpress cuopt
 
 Install all available solvers::
 
@@ -123,3 +142,7 @@ Reinstall previously installed solvers::
 Skip pip installation::
 
   $ gamspy install solver mosek -s
+
+Install a specific ``cuopt`` version for CUDA 12 without the CUDA runtime libraries::
+
+  $ GAMSPY_CUOPT_VERSION=0.0.8 GAMSPY_CUDA_VERSION=12 GAMSPY_CUDA_RUNTIME=0 gamspy install solver cuopt
