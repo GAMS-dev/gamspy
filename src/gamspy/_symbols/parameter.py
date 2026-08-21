@@ -19,6 +19,7 @@ import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
+from gamspy._internals import DataSource
 from gamspy._records_ingestion import ParameterIngestor
 from gamspy._symbols.base import RecordSymbol
 from gamspy._symbols.equals import equals_parameter
@@ -123,7 +124,7 @@ class Parameter(operable.Operable, RecordSymbol):
         obj._container._add_statement(obj)
         obj._metadata = {}
         obj._assignment = None
-        obj._should_load_from_gams = False
+        obj._should_load_from = DataSource.NONE
         obj._should_unload_to_gams = False
 
         ## miro support
@@ -258,7 +259,7 @@ class Parameter(operable.Operable, RecordSymbol):
             self._gams_type = GMS_DT_PAR
             self._gams_subtype = 0
             self._latex_name = self.name.replace("_", r"\_")
-            self._should_load_from_gams = False
+            self._should_load_from = DataSource.NONE
             self._should_unload_to_gams = False
             self._container._data.update({name: self})
 
@@ -373,7 +374,7 @@ class Parameter(operable.Operable, RecordSymbol):
         self._assignment = statement
 
         self.container._synch_with_gams()
-        self._should_load_from_gams = True
+        self._should_load_from = DataSource.GAMS
 
     def __eq__(self, other):
         op = "eq"
@@ -834,8 +835,8 @@ class Parameter(operable.Operable, RecordSymbol):
         [('seattle', 10.0), ('san-diego', 25.0)]
 
         """
-        if self._should_load_from_gams:
-            self._load_from_gams()
+        if self._should_load_from is not DataSource.NONE:
+            self._load_records()
 
         return self._records
 
@@ -857,6 +858,7 @@ class Parameter(operable.Operable, RecordSymbol):
 
         self._records = records
         self._should_unload_to_gams = True
+        self._should_load_from = DataSource.NONE
         self._handle_domain_forwarding()
 
     def __hash__(self):
@@ -911,12 +913,15 @@ class Parameter(operable.Operable, RecordSymbol):
         if records is None:
             self._container._add_statement(f"option clear={self.name};")
             self._records = None
-        elif isinstance(records, (int, float)):
+        elif isinstance(records, (int, float)) and not self._is_frozen_modifiable:
             self._container._add_statement(f"{self.name} = {records};")
             self._container._synch_with_gams()
-            self._should_load_from_gams = True
+            self._should_load_from = DataSource.GAMS
         else:
             self._setRecords(records, uels_on_axes=uels_on_axes)
+            if self._is_frozen_modifiable:
+                return
+
             self._container._synch_with_gams()
 
     def gamsRepr(self) -> str:

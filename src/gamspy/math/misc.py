@@ -10,6 +10,7 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._container import Container
+from gamspy._internals import DataSource
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -279,14 +280,14 @@ def _option_statement(
     source.container._synch_with_gams()
 
     if isinstance(source, (implicits.ImplicitSet, implicits.ImplicitParameter)):
-        source.parent._should_load_from_gams = True
+        source.parent._should_load_from = DataSource.GAMS
     else:
-        source._should_load_from_gams = True
+        source._should_load_from = DataSource.GAMS
 
     if isinstance(target, (implicits.ImplicitSet, implicits.ImplicitParameter)):
-        target.parent._should_load_from_gams = True
+        target.parent._should_load_from = DataSource.GAMS
     else:
-        target._should_load_from_gams = True
+        target._should_load_from = DataSource.GAMS
 
 
 def project(

@@ -367,6 +367,49 @@ def test_loadRecordsFromGdx_with_missing_symbols(tmp_path):
 
 
 @pytest.mark.unit
+def test_hibernate():
+    from gamspy._communication import is_connected
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=range(5))
+    p = gp.Parameter(m, "p", domain=i)
+    p[i] = 3
+    assert is_connected(m._comm_pair_id)
+
+    m.hibernate()
+    assert not is_connected(m._comm_pair_id)
+    m.hibernate()  # idempotent
+
+    # the next statement that needs GAMS restarts it from the saved state
+    p[i] = p[i] + 1
+    assert (p.toDense() == [4.0] * 5).all()
+    assert is_connected(m._comm_pair_id)
+    assert m._restart_from is None
+
+    # the sets are still known to GAMS, not just to python
+    m.hibernate()
+    q = gp.Parameter(m, "q", domain=i)
+    q[i] = gp.Ord(i)
+    assert (q.toDense() == [1.0, 2.0, 3.0, 4.0, 5.0]).all()
+
+    # the state cannot be saved from inside a loop, so it must not be stopped
+    with gp.Loop(i):
+        p[i] = 1
+        with pytest.raises(ValidationError, match="Cannot hibernate while a loop"):
+            m.hibernate()
+
+    assert is_connected(m._comm_pair_id)
+    assert (p.toDense() == [1.0] * 5).all()
+
+    # a closed container does not come back from hibernation
+    m.hibernate()
+    m.close()
+    with pytest.raises(ValidationError, match="connection to the GAMS execution"):
+        p[i] = 2
+        _ = p.records
+
+
+@pytest.mark.unit
 def test_enums():
     assert str(Problem.LP) == "LP"
     assert str(Sense.MAX) == "MAX"
@@ -2126,6 +2169,70 @@ def test_generateRecords():
     i2 = gp.Set(m, "i2", records=range(5))
     p3 = gp.Parameter(m, "p3", domain=i2)
     p3.generateRecords(density=0)
+
+
+@pytest.mark.unit
+def test_generateRecords_sparse_large_domain():
+    # The dense cartesian product of these domains (10**10 rows) does not fit in
+    # memory, but a sparse sample out of it must still be generated.
+    m = gp.Container()
+    i = gp.Set(m, "i", records=range(100_000))
+    j = gp.Set(m, "j", records=range(100_000))
+    cardinality = len(i) * len(j)
+
+    p = gp.Parameter(m, "p", domain=[i, j])
+    p.generateRecords(density=50_000 / cardinality, seed=42)
+
+    assert len(p.records) == 50_000
+    # records must be unique and sorted (as with a dense cartesian product)
+    keys = p.records.iloc[:, 0].cat.codes.to_numpy().astype(np.int64) * len(
+        j
+    ) + p.records.iloc[:, 1].cat.codes.to_numpy().astype(np.int64)
+    assert np.all(np.diff(keys) > 0)
+
+    # the same seed must give the same records
+    other = gp.Parameter(m, "other", domain=[i, j])
+    other.generateRecords(density=50_000 / cardinality, seed=42)
+    assert p.records.equals(other.records)
+
+    s = gp.Set(m, "s", domain=[i, j])
+    s.generateRecords(density=10 / cardinality, seed=1)
+    assert len(s.records) == 10
+    assert set(s.records.columns) == {"i", "j", "element_text"}
+
+    v = gp.Variable(m, "v", domain=[i, j])
+    v.generateRecords(density=10 / cardinality, seed=1)
+    assert len(v.records) == 10
+
+    # a density per dimension only takes the product of the sampled labels
+    p2 = gp.Parameter(m, "p2", domain=[i, j])
+    p2.generateRecords(density=[0.001, 0.0001], seed=42)
+    assert len(p2.records) == 100 * 10
+
+    m.close()
+
+
+@pytest.mark.unit
+def test_generateRecords_cardinality_overflow():
+    from gamspy._symbols.generate_records import _validate_cardinality
+
+    _validate_cardinality(np.iinfo(np.int64).max)
+
+    with pytest.raises(ValidationError, match="too large to index"):
+        _validate_cardinality(np.iinfo(np.int64).max + 1)
+
+
+@pytest.mark.unit
+def test_choice_no_replace_huge_pool():
+    from gamspy._algorithms import choice_no_replace
+
+    idx = choice_no_replace(10**15, 100_000, seed=42)
+
+    assert idx.size == 100_000
+    assert np.all(np.diff(idx) > 0)  # unique and sorted
+    assert idx.min() >= 0
+    assert idx.max() < 10**15
+    assert np.array_equal(idx, choice_no_replace(10**15, 100_000, seed=42))
 
 
 @pytest.mark.unit

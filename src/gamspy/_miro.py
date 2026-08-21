@@ -7,6 +7,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, cast
 
 import gamspy as gp
+from gamspy._internals import DataSource
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -44,7 +45,7 @@ def load_miro_symbol_records(container: Container):
 
         symbol_str = " ".join(names)
         container._add_statement(f"$gdxLoad {MIRO_GDX_IN} {symbol_str}")
-        container._should_load_from_gams(names)
+        container._should_load_from(names, source=DataSource.GAMS)
         for name in names:
             symbol = cast("Set | Parameter", container._data[name])
             symbol._already_loaded = True
@@ -59,7 +60,9 @@ def load_miro_symbol_records(container: Container):
     if MIRO_GDX_OUT and container._miro_output_symbols:
         symbol_str = " ".join(container._miro_output_symbols)
         container._add_statement(f"$gdxLoad {MIRO_GDX_OUT} {symbol_str}")
-        container._should_load_from_gams(container._miro_output_symbols)
+        container._should_load_from(
+            container._miro_output_symbols, source=DataSource.GAMS
+        )
 
     for name in container._miro_input_symbols + container._miro_output_symbols:
         container._data[name]._should_unload_to_gams = False

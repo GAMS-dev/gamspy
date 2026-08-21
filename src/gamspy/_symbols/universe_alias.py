@@ -13,6 +13,7 @@ import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._gdx as gdxio
 import gamspy._validation as validation
+from gamspy._internals import DataSource
 from gamspy._symbols.base import BaseSymbol
 from gamspy.exceptions import ValidationError
 
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from gamspy import Container
+    from gamspy._types import RecordsSourceType
 
 unique_name = gp.utils._get_unique_name()
 TEMP_ALIAS_NAME = "autotemp_a" + unique_name
@@ -145,11 +147,11 @@ class UniverseAlias(BaseSymbol):
     def _should_unload_to_gams(self, value: bool) -> None: ...
 
     @property
-    def _should_load_from_gams(self) -> bool:
-        return True
+    def _should_load_from(self) -> RecordsSourceType:
+        return DataSource.GAMS
 
-    @_should_load_from_gams.setter
-    def _should_load_from_gams(self, value: bool) -> None: ...
+    @_should_load_from.setter
+    def _should_load_from(self, value: RecordsSourceType) -> None: ...
 
     def _serialize(self) -> dict:
         return {}

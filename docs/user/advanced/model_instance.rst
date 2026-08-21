@@ -27,9 +27,10 @@ non-linear models from different starting points.
 
 The :meth:`solve <gamspy.Model.solve>` method takes the data of the modifiables from the container symbols and updates the frozen model. Variable and equation attributes
 are applied in a direct manner. Moreover, the data of the modifiable *parameters* is taken from the container symbol and applied to the model instance. Behind the scenes,
-the :meth:`freeze <gamspy.Model.freeze>` method turned these modifiable parameters into fixed *variables* with the name of the parameter plus ``_var``. After a solve 
-these variables become accessible in the container. The marginal of these variables can provide useful sensitivity information about the parameter setting. In addition,
-the container will contain the primal and dual solution with respect to the regular variables and equations of the model instance together with many model attributes including 
+the :meth:`freeze <gamspy.Model.freeze>` method turned these modifiable parameters into fixed *variables* with the name of the parameter plus ``_var`` and mirrored them in the
+container. After a solve these variables hold the solution of the modifiable parameters. The marginal of these variables can provide useful sensitivity information about the
+parameter setting. In addition,
+the container will contain the primal and dual solution with respect to the regular variables and equations of the model instance together with many model attributes including
 :meth:`status <gamspy.Model.status>`, 
 :meth:`solve_status <gamspy.Model.solve_status>`,
 :meth:`objective_value <gamspy.Model.objective_value>`,
@@ -94,8 +95,44 @@ the container will contain the primal and dual solution with respect to the regu
     In the solver's presolve the fixed variables will be removed and there is minimal computational overhead with these newly introduced variables.
     
 When all scenarios of a frozen model have been solved or the model needs to be changed beyond the modifiables, the :meth:`unfreeze <gamspy.Model.unfreeze>` method
-needs to be called. This will releases the resources of the model instance and turns the model back to a regular model that is generated *and* solved when the
-:meth:`solve <gamspy.Model.solve>` method is called.
+needs to be called. This releases the resources of the model instance and turns the model back to a regular model that is generated *and* solved when the
+:meth:`solve <gamspy.Model.solve>` method is called. Any solution record that has not been read yet is read from the model instance before it is released, so the
+records of the symbols stay available afterwards.
+
+.. _frozen_memory:
+
+Memory of a frozen model
+------------------------
+
+A frozen solve does not use the GAMS execution engine at all: the model, the solver and the data of the modifiables all live inside the Python process. The engine
+is only needed to *generate* the model instance, which happens in :meth:`freeze <gamspy.Model.freeze>`. For a large model that matters, because the engine keeps the
+data it was given (and the model it generated) for as long as the :meth:`Container <gamspy.Container>` is open, next to the model instance.
+
+Passing ``hibernate=True`` to :meth:`freeze <gamspy.Model.freeze>` puts the engine to sleep as soon as the model instance has been generated. The state of the
+engine is saved to a restart file before it is stopped, and the next statement that needs the engine restarts it from that state. Hibernation is therefore
+transparent: nothing has to be redeclared, the container stays usable, and the only thing that is given up in between is the memory the engine was holding:
+
+::
+
+    model.freeze(modifiables=[ax], hibernate=True)   # engine stopped, its state saved
+
+    for scenario in scenarios:
+        ax.setRecords(scenario)     # applied to the model instance, engine stays asleep
+        model.solve()
+
+How long the engine stays asleep depends on what the loop does. Setting the records of a modifiable does not synchronize with GAMS while the model is frozen, since
+a frozen solve reads them from the container, and the solve itself does not need the engine either. A statement that has to be executed by GAMS, on the other hand,
+such as ``ax[j] = 0`` or any other assignment, wakes the engine up once, from the saved state, and it stays resident from then on. A loop that prepares its data
+with GAMS expressions has the engine back from its first iteration on; preparing that data in Python (:meth:`setRecords <gamspy.Parameter.setRecords>`) is what
+keeps it out of the picture for the whole scenario loop.
+
+Saving a state and restarting from it is not free, so hibernating pays off only when the data the engine holds is large enough to be worth reclaiming. The same
+mechanism is available outside of freezing through :meth:`Container.hibernate <gamspy.Container.hibernate>`. It cannot be used while a
+:class:`Loop <gamspy.Loop>`, :class:`For <gamspy.For>` or :class:`While <gamspy.While>` context manager is active, because the state of the engine cannot be saved
+before the loop is closed.
+
+:meth:`unfreeze <gamspy.Model.unfreeze>` reads the solution records that were never accessed before it releases the model instance, since they exist nowhere else.
+For a large model that is a lot of data, so ``unfreeze(load_records=False)`` discards them instead, and only the memory of the instance is left behind.
 
 The following example shows how to use a single multiplier ``bmult`` to adjust the demand (equation ``demand``) of the markets and solve the model with different value for this demand multiplier.
 

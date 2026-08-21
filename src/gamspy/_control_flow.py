@@ -9,6 +9,7 @@ import gamspy as gp
 import gamspy._gdx as gdxio
 from gamspy._algebra.condition import Condition
 from gamspy._algebra.domain import Domain
+from gamspy._internals import DataSource
 from gamspy._symbols.implicits import ImplicitSet
 from gamspy.exceptions import ValidationError
 
@@ -205,7 +206,7 @@ class Loop:
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, gdx_out
             )
-            self.container._should_load_from_gams(symbol_names)
+            self.container._should_load_from(symbol_names, source=DataSource.GAMS)
 
 
 class For:
@@ -409,7 +410,7 @@ class For:
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, gdx_out
             )
-            self.container._should_load_from_gams(symbol_names)
+            self.container._should_load_from(symbol_names, source=DataSource.GAMS)
 
 
 class While:
@@ -511,7 +512,7 @@ class While:
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, gdx_out
             )
-            self.container._should_load_from_gams(symbol_names)
+            self.container._should_load_from(symbol_names, source=DataSource.GAMS)
 
 
 class If:

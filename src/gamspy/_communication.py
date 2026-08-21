@@ -142,6 +142,10 @@ def get_connection(pair_id: str) -> tuple[socket.socket, subprocess.Popen]:
     return _comm_pairs[pair_id]
 
 
+def is_connected(pair_id: str) -> bool:
+    return pair_id in _comm_pairs
+
+
 def close_connection(pair_id: str):  # pragma: no cover
     try:
         _socket, process = get_connection(pair_id)
@@ -196,7 +200,15 @@ def check_response(response: bytes, job_name: str) -> None:
 def send_job(
     comm_pair_id: str, job_name: str, pf_file: str, output: TextIO | None = None
 ):
-    _socket, process = get_connection(comm_pair_id)
+    try:
+        _socket, process = get_connection(comm_pair_id)
+    except KeyError as e:
+        raise ValidationError(
+            "The connection to the GAMS execution engine is closed. After "
+            "`Container.close()`, only frozen models can be solved and only "
+            "records that are already in Python can be read."
+        ) from e
+
     try:
         # Send pf file
         _socket.sendall(pf_file.encode("utf-8"))

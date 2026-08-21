@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import ctypes
 import inspect
 import os
 import platform
@@ -759,3 +760,13 @@ def _parse_generated_variables(model: Model, listing_file: str) -> None:
         variable._column_listing = listings
 
     return None
+
+
+def _return_freed_memory_to_os() -> None:
+    if platform.system() != "Linux":
+        return
+
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except (OSError, AttributeError):  # pragma: no cover
+        ...

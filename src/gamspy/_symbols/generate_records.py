@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 
-from gamspy._algorithms import cartesian_product, choice_no_replace
+from gamspy._algorithms import cartesian_product, choice_no_replace, sorted_unique
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -41,6 +42,8 @@ def _validate_density_and_domain(
                 raise ValueError(
                     "Argument 'density' must contain values on the interval [0,1]."
                 )
+    elif not (0 <= density <= 1):
+        raise ValueError("Argument 'density' must be a value on the interval [0,1].")
 
     if symbol.domain_type != "regular":
         raise ValidationError(
@@ -82,6 +85,71 @@ def _set_empty_records(symbol: Any) -> None:
         )
 
 
+def _get_categories(symobj: Set | Alias | UniverseAlias) -> pd.Index | list[str]:
+    """
+    Helper function to get the labels a domain symbol contributes, as a pandas Index when possible.
+    """
+    from gamspy._symbols import UniverseAlias
+
+    records = symobj.records
+    if isinstance(symobj, UniverseAlias) or symobj.dimension != 1 or records is None:
+        return symobj._getUELs(ignore_unused=True)
+
+    column = records.iloc[:, 0]
+    if not isinstance(column.dtype, CategoricalDtype):
+        return symobj._getUELs(ignore_unused=True)
+
+    categories = column.cat.categories
+    used = sorted_unique(column.cat.codes.to_numpy())
+    if used.size == categories.size:
+        return categories
+
+    return categories.take(used)
+
+
+def _get_categorical_dtype(categories: pd.Index | list[str]) -> CategoricalDtype:
+    if isinstance(categories, pd.Index):
+        # Domain labels are unique by construction, so skip pandas' uniqueness
+        # check -- it dominates the runtime for large domain sets.
+        return CategoricalDtype._from_fastpath(categories=categories, ordered=True)
+
+    return CategoricalDtype(categories, ordered=True)
+
+
+def _validate_cardinality(num_rows: int) -> None:
+    """Helper function to reject record counts that cannot even be enumerated."""
+    if num_rows > np.iinfo(np.int64).max:
+        raise ValidationError(
+            f"Generating records would require enumerating {num_rows} rows, which is "
+            "too large to index. Either use smaller domain sets or pass a `density` "
+            "list to reduce the domains before their cartesian product is taken."
+        )
+
+
+def _sample_cartesian_rows(
+    shape: list[int], num_rows: int, seed: int | None
+) -> list[np.ndarray]:
+    """Helper function to draw `num_rows` rows out of the cartesian product of `shape`."""
+    cardinality = math.prod(shape)
+
+    if num_rows == cardinality:
+        # Every row is kept; enumerate them directly instead of drawing indices.
+        codes = []
+        for axis, size in enumerate(shape):
+            codes.append(
+                np.tile(
+                    np.repeat(np.arange(size), math.prod(shape[axis + 1 :])),
+                    math.prod(shape[:axis]),
+                )
+            )
+
+        return codes
+
+    idx = choice_no_replace(cardinality, num_rows, seed=seed)
+
+    return list(np.unravel_index(idx, shape))
+
+
 def _generate_base_dataframe(
     domain: list[Set | Alias | UniverseAlias],
     density: int | float | list,
@@ -89,33 +157,38 @@ def _generate_base_dataframe(
 ) -> pd.DataFrame:
     """Helper function to perform cartesian products, density sampling, and categorical conversions."""
 
-    dtypes = []
-    codes = []
+    categories = [_get_categories(symobj) for symobj in domain]
 
     if isinstance(density, (int, float)):
-        for symobj in domain:
-            cats = symobj._getUELs(ignore_unused=True)
-            dtypes.append(CategoricalDtype(cats, ordered=True))
-            codes.append(np.arange(len(cats)))
-
-        arr = cartesian_product(*tuple(codes))
-        num_rows = arr.shape[0]
-        idx = choice_no_replace(num_rows, density * num_rows, seed=seed)
-        df = pd.DataFrame(arr[idx, ...])
+        # A scalar density samples rows out of the cartesian product of the complete domains.
+        shape = [len(cats) for cats in categories]
+        cardinality = math.prod(shape)
+        _validate_cardinality(cardinality)
+        num_rows = min(int(density * cardinality), cardinality)
+        codes = _sample_cartesian_rows(shape, num_rows, seed)
     elif isinstance(density, list):
-        for symobj, dense in zip(domain, density, strict=True):
-            cats = symobj._getUELs(ignore_unused=True)
-            dtypes.append(CategoricalDtype(cats, ordered=True))
-            codes.append(choice_no_replace(len(cats), dense * len(cats), seed=seed))
-
-        df = pd.DataFrame(cartesian_product(*tuple(codes)))
+        # A density per dimension samples the labels of each domain first and
+        # then takes the cartesian product of whatever survived.
+        selected = [
+            choice_no_replace(len(cats), dense * len(cats), seed=seed)
+            for cats, dense in zip(categories, density, strict=True)
+        ]
+        _validate_cardinality(math.prod(len(sel) for sel in selected))
+        arr = cartesian_product(*tuple(selected))
+        codes = [arr[:, x] for x in range(len(domain))]
     else:
         raise TypeError(f"Encountered unsupported 'density' type: {type(density)}")
 
-    for x, _ in enumerate(domain):
-        df.isetitem(x, pd.Categorical.from_codes(codes=df.iloc[:, x], dtype=dtypes[x]))
+    # Codes are generated from the positions of the domain labels, hence they are
+    # in-bounds by construction: skip the validation pandas would otherwise run.
+    data = {
+        x: pd.Categorical.from_codes(
+            codes=codes[x], dtype=_get_categorical_dtype(categories[x]), validate=False
+        )
+        for x in range(len(domain))
+    }
 
-    return df
+    return pd.DataFrame(data, copy=False)
 
 
 def generate_records_set(

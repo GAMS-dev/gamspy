@@ -18,6 +18,8 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression, ShiftExpression
     from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Card, Operation, Ord
+    from gamspy._internals import DataSource
+    from gamspy._model_instance import ModelInstance
     from gamspy._symbols import Alias, Equation, Parameter, Set, UniverseAlias, Variable
     from gamspy._symbols.implicits import (
         ImplicitEquation,
@@ -35,6 +37,9 @@ if TYPE_CHECKING:
         ImplicitSet | ImplicitParameter | ImplicitVariable | ImplicitEquation
     )
     SymbolWithRecordsType: TypeAlias = Set | Parameter | Variable | Equation
+
+    # Where the records of a symbol must be read from
+    RecordsSourceType: TypeAlias = DataSource | ModelInstance
 
     # Possible types that the user can provide as a domain. A `str` is either
     # the universe label "*" or a relaxed domain.

@@ -19,7 +19,11 @@ import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
-from gamspy._internals import EQU_TYPE, TRANSFER_TO_GAMS_EQUATION_SUBTYPES
+from gamspy._internals import (
+    EQU_TYPE,
+    TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
+    DataSource,
+)
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import VarEquSymbol
 from gamspy._universe import UNIVERSE, is_universe
@@ -195,7 +199,7 @@ class Equation(VarEquSymbol):
         obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
         obj._metadata = {}
-        obj._should_load_from_gams = False
+        obj._should_load_from = DataSource.NONE
         obj._should_unload_to_gams = False
         obj._equation_listing = None
 
@@ -354,7 +358,7 @@ class Equation(VarEquSymbol):
             self._gams_type: int = GMS_DT_EQU
             self._gams_subtype: int = TRANSFER_TO_GAMS_EQUATION_SUBTYPES[self.type]
             self._latex_name = self.name.replace("_", r"\_")
-            self._should_load_from_gams = False
+            self._should_load_from = DataSource.NONE
             self._should_unload_to_gams = False
             self._container._data.update({name: self})
 
@@ -1113,8 +1117,8 @@ class Equation(VarEquSymbol):
         np.float64(10.0)
 
         """
-        if self._should_load_from_gams:
-            self._load_from_gams()
+        if self._should_load_from is not DataSource.NONE:
+            self._load_records()
 
         return self._records
 
@@ -1125,6 +1129,7 @@ class Equation(VarEquSymbol):
 
         self._records = records
         self._should_unload_to_gams = True
+        self._should_load_from = DataSource.NONE
         self._handle_domain_forwarding()
 
     def __hash__(self):
@@ -1167,6 +1172,9 @@ class Equation(VarEquSymbol):
             return
 
         self._setRecords(records, uels_on_axes=uels_on_axes)
+        if self._is_frozen_modifiable:
+            return
+
         self._container._synch_with_gams()
 
     @property

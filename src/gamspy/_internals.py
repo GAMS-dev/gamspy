@@ -103,6 +103,23 @@ class DomainStatus(Enum):
     regular = 3
 
 
+class DataSource(Enum):
+    """
+    Where the records of a symbol must be read from. A frozen model is not a
+    member because the symbol stores the ModelInstance to read from itself:
+    a container can hold more than one frozen model of the same symbol.
+    """
+
+    NONE = 0
+    """The records are up to date, there is nothing to read."""
+
+    GAMS = 1
+    """The GAMS state is the up to date. Read from GAMS."""
+
+    def __bool__(self) -> bool:
+        return self is not DataSource.NONE
+
+
 GAMS_VARIABLE_SUBTYPES: dict[int, str] = {
     GMS_VARTYPE_BINARY: "binary",
     GMS_VARTYPE_INTEGER: "integer",

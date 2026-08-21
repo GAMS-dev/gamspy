@@ -18,6 +18,7 @@ from gamspy._internals import (
     ATTR_PREFIX,
     GAMS_EQUATION_SUBTYPES,
     GAMS_VARIABLE_SUBTYPES,
+    DataSource,
     DomainStatus,
 )
 from gamspy._special_values import SpecialValues
@@ -53,6 +54,9 @@ class GDXSymbolMetadata:
     parent_set: str | None = None
 
 
+SKIP_UEL_TABLE = 1
+
+
 @contextlib.contextmanager
 def open_gdx(
     system_directory: str,
@@ -60,6 +64,7 @@ def open_gdx(
     mode: str = "r",
     *,
     compress: bool = False,
+    load_uels: bool = True,
 ):
     """Context manager to safely create, open, and close a GDX handle for reading or writing."""
     global cached_system_directory
@@ -74,7 +79,13 @@ def open_gdx(
 
     try:
         if mode == "r":
-            is_successful, error_code = gdx.gdxOpenRead(gdx_handle, file_path)
+            if load_uels:
+                is_successful, error_code = gdx.gdxOpenRead(gdx_handle, file_path)
+            else:
+                is_successful, error_code = gdx.gdxOpenReadEx(
+                    gdx_handle, file_path, SKIP_UEL_TABLE
+                )
+
             if is_successful != 1:
                 error_str: str = gdx.gdxErrorStr(gdx_handle, error_code)
                 raise GdxException(
@@ -118,7 +129,7 @@ def _get_model_attr_records(
 def _get_symbol_names_from_gdx(
     system_directory: str, load_from: str, symbol_type: int | None = None
 ) -> list[str]:
-    with open_gdx(system_directory, load_from) as gdx_handle:
+    with open_gdx(system_directory, load_from, load_uels=False) as gdx_handle:
         _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
 
         symbol_names = []
@@ -171,7 +182,9 @@ def load_missing_symbols(
 ) -> None:
     from gamspy._symbols import Equation, Variable
 
-    with open_gdx(container.system_directory, load_from, mode="r") as handle:
+    with open_gdx(
+        container.system_directory, load_from, mode="r", load_uels=False
+    ) as handle:
         _set_special_values(handle)
         metadata = gdx_get_metadata_by_names(container._gams2np, handle, symbol_names)
 
@@ -346,7 +359,7 @@ def read(
         for source_name, md in symbols_with_records
     )
     container._add_statement(f"$gdxLoad {load_from} {symbol_str}")
-    container._should_load_from_gams(load_symbols)
+    container._should_load_from(load_symbols, source=DataSource.GAMS)
 
 
 # TODO: fix typing here.

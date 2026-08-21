@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, TextIO
 
 import gamspy._backend.backend as backend
 import gamspy._miro as miro
-from gamspy._communication import send_job
+from gamspy._communication import is_connected, open_connection, send_job
 from gamspy.exceptions import GamspyException, _customize_exception
 
 if TYPE_CHECKING:
@@ -54,6 +54,9 @@ class Local(backend.Backend):
         if self.container._network_license:
             hidden_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
 
+        if self.container._restart_from is not None:
+            hidden_options["restart"] = self.container._restart_from
+
         return hidden_options
 
     def is_async(self):
@@ -79,6 +82,11 @@ class Local(backend.Backend):
         with open(self.gms_file, "w", encoding="utf-8") as gams_file:
             gams_file.write(gams_string)
 
+        # A hibernating container has no engine running, so start one.
+        is_waking_up = self.container._restart_from is not None
+        if is_waking_up and not is_connected(self.container._comm_pair_id):
+            open_connection(self.container)
+
         # Write pf file
         hidden_options = self._prepare_hidden_options()
         self.options._set_hidden_options(hidden_options)
@@ -88,6 +96,9 @@ class Local(backend.Backend):
             send_job(
                 self.container._comm_pair_id, self.job_name, self.pf_file, self.output
             )
+
+            if is_waking_up:
+                self.container._restart_from = None
 
             if self.model:
                 self.model._update_model_attributes()
