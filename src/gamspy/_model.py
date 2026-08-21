@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import inspect
 import logging
 import os
@@ -26,7 +27,7 @@ from gamspy._convert import (
     LatexConverter,
     get_convert_solver_options,
 )
-from gamspy._internals import ATTR_PREFIX, MODEL_ATTRIBUTE_MAP
+from gamspy._internals import ATTR_PREFIX, MODEL_ATTRIBUTE_MAP, DataSource
 from gamspy._model_instance import ModelInstance
 from gamspy._options import (
     EXECUTION_OPTIONS,
@@ -489,6 +490,8 @@ class Model:
 
         # allow freezing
         self._is_frozen: bool = False
+        self.instance: ModelInstance | None = None
+        self._modifiable_names: set[str] = set()
 
         # Attributes
         self._num_domain_violations: float | None = None
@@ -1504,6 +1507,8 @@ class Model:
         self,
         modifiables: list[Parameter | ImplicitParameter],
         options: Options | None = None,
+        *,
+        hibernate: bool = False,
     ) -> None:
         """
         Instantiates a model instance. After calling freeze, only modifiables can be modified.
@@ -1514,6 +1519,12 @@ class Model:
             Modifiable symbols.
         options : Options | None, optional
             GAMSPy options, by default None
+        hibernate : bool, optional
+            Whether to stop the GAMS execution engine once the model instance has
+            been generated. The engine is not needed after building the model instance.
+            Its state is saved first and restored by the next statement that needs it,
+            which is only worth it for a model that is large enough to pay for saving and
+            restarting. Local backend only. Default is False.
 
         Examples
         --------
@@ -1534,12 +1545,41 @@ class Model:
             options = self.container._options
 
         self.instance = ModelInstance(
-            self.container, self, modifiables, options, self.container.output
+            self.container,
+            self,
+            modifiables,
+            options,
+            self.container.output,
+            hibernate=hibernate,
         )
 
-    def unfreeze(self) -> None:
+        # Records of the modifiables are read from the gmd so they do not have to be
+        # sent to GAMS while frozen.
+        self._modifiable_names = {
+            symbol.parent.name
+            if isinstance(symbol, implicits.ImplicitParameter)
+            else symbol.name
+            for symbol in self.instance.modifiables
+        }
+        self.container._frozen_modifiables |= self._modifiable_names
+
+    def unfreeze(self, *, load_records: bool = True) -> None:
         """
-        Unfreezes the model
+        Unfreezes the model and releases the resources of its model instance.
+
+        Parameters
+        ----------
+        load_records : bool, optional
+            Whether to read the solution of the last frozen solve before the
+            model instance is released. Only the records that were not accessed
+            yet are read, since they exist nowhere else. For a large model this
+            can be a lot of data that may not be needed, in which case False
+            discards them and only the memory of the instance is left. Default is True.
+
+        Raises
+        ------
+        ValidationError
+            If the model is not frozen.
 
         Examples
         --------
@@ -1555,8 +1595,26 @@ class Model:
         >>> model.unfreeze()
 
         """
-        self._is_frozen = False
+        if self.instance is None:
+            raise ValidationError(
+                f"Model `{self.name}` is not frozen. `unfreeze` requires a `freeze` first."
+            )
+
+        if load_records:
+            self.instance._read_pending_records()
+        else:
+            self.instance._discard_pending_records()
+
         self.instance.close_license_session()
+
+        self.container._frozen_modifiables -= self._modifiable_names
+        self._modifiable_names = set()
+        self._is_frozen = False
+        self.instance = None
+
+        # The database of the instance is gone now. That might be gigabytes of memory.
+        gc.collect()
+        utils._return_freed_memory_to_os()
 
     def solve(
         self,
@@ -1744,7 +1802,7 @@ class Model:
             if freeze_options is not None:
                 instance_options = freeze_options
 
-            summary = self.instance.solve(
+            summary = self.instance.solve(  # ty: ignore[unresolved-attribute]
                 solver, instance_options, solver_options, output
             )
             return summary
@@ -1779,7 +1837,7 @@ class Model:
         symbol_names = gdxio._get_symbol_names_from_gdx(
             self.container.system_directory, self.container._gdx_out
         )
-        self.container._should_load_from_gams(symbol_names)
+        self.container._should_load_from(symbol_names, source=DataSource.GAMS)
 
         if IS_MIRO_INIT:
             miro._write_default_gdx_miro(self.container)

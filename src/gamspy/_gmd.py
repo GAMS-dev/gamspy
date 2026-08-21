@@ -31,11 +31,21 @@ class SymbolMetadata:
     parent_set: str | None
 
 
+def get_uel_list(
+    gams2np: Gams2Numpy, load_from, encoding: str | None = None
+) -> list[str]:
+    uels = gams2np.gmdGetUelList(load_from, encoding=encoding)
+    uels[0] = "*"
+
+    return uels
+
+
 def get_records(
     gams2np: Gams2Numpy,
     load_from,
     symbols: list[str] | None = None,
     encoding: str | None = None,
+    uels: list[str] | None = None,
 ) -> dict[str, DataFrame]:
     default_special_vaules = gmd.doubleArray(gmd.GMS_SVIDX_MAX)
     gmd.gmdGetUserSpecialValues(load_from, default_special_vaules)
@@ -70,8 +80,6 @@ def get_records(
                 gmd_get_metadata_by_number(gams2np, load_from, i, encoding, rc)
             )
 
-    GMD_UELS = gams2np.gmdGetUelList(load_from, encoding=encoding)
-    GMD_UELS[0] = "*"
     records_dict = {}
 
     for md in SYMBOL_METADATA:
@@ -120,6 +128,9 @@ def get_records(
                 dtype=float,
             )
         else:
+            if uels is None:
+                uels = get_uel_list(gams2np, load_from, encoding)
+
             try:
                 (
                     arrkeys,
@@ -128,7 +139,7 @@ def get_records(
                 ) = gams2np.gmdReadSymbolCat(
                     load_from,
                     md.name,
-                    GMD_UELS,
+                    uels,
                     encoding=encoding,
                 )
             except Exception as err:

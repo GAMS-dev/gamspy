@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, TextIO
 import gamspy._backend.backend as backend
 import gamspy._gdx as gdxio
 from gamspy._communication import send_job
+from gamspy._internals import DataSource
 from gamspy._options import Options
 from gamspy.exceptions import (
     EngineClientException,
@@ -930,7 +931,7 @@ class GAMSEngine(backend.Backend):
             f'execute_load "{self.container._gdx_out}", {dirty_str};'
         )
         self.container._synch_with_gams()
-        self.container._should_load_from_gams(symbols, value=True)
+        self.container._should_load_from(symbols, source=DataSource.GAMS)
 
     def _append_gamspy_files(self) -> list[str]:
         extra_model_files = self.client.extra_model_files + [self.restart_file]

@@ -34,6 +34,7 @@ from gamspy._internals import (
     TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
     TRANSFER_TO_GAMS_VARIABLE_SUBTYPES,
     CasePreservingDict,
+    DataSource,
 )
 from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem, Sense
@@ -209,6 +210,9 @@ class Container:
 
         self._unsaved_statements: list = []
 
+        self._frozen_modifiables: set[str] = set()
+        self._restart_from: str | None = None
+
         self._data: CasePreservingDict[SymbolType] = CasePreservingDict()
 
         self._options = validation.validate_global_options(options)
@@ -262,7 +266,7 @@ class Container:
                     gdxio.load_missing_symbols(
                         self, self._gdx_out, symbol_names, declare_in_gams=False
                     )
-                    self._should_load_from_gams(symbol_names, value=True)
+                    self._should_load_from(symbol_names, source=DataSource.GAMS)
                     self._is_restarted = True
                 else:
                     raise ValidationError(
@@ -1184,15 +1188,15 @@ class Container:
         for symbol in self._data.values():
             symbol._should_unload_to_gams = value
 
-    def _should_load_from_gams(
-        self, symbol_names: Iterable[str], value: bool = True
+    def _should_load_from(
+        self, symbol_names: Iterable[str], source: DataSource
     ) -> None:
         for name in symbol_names:
             if name not in self._data:
                 continue
 
             symbol = self._data[name]
-            symbol._should_load_from_gams = value
+            symbol._should_load_from = source
             if not isinstance(symbol, (gp.Alias, gp.UniverseAlias)):
                 symbol._handle_domain_forwarding()
 
@@ -1882,7 +1886,7 @@ $endIf
             )
             self._add_statement(f"$declareAndLoad {load_from}")
             self._synch_with_gams()
-            self._should_load_from_gams(symbol_names)
+            self._should_load_from(symbol_names, source=DataSource.GAMS)
             return
 
         if not isinstance(symbol_names, (dict, list)):
@@ -1896,13 +1900,13 @@ $endIf
             )
             self._add_statement(f"$gdxLoad {load_from} {symbol_str}")
             self._synch_with_gams()
-            self._should_load_from_gams(symbol_names.values())
+            self._should_load_from(symbol_names.values(), source=DataSource.GAMS)
         else:
             symbol_str = " ".join(symbol_names)
             gdxio.load_missing_symbols(self, load_from, symbol_names)
             self._add_statement(f"$gdxLoad {load_from} {symbol_str}")
             self._synch_with_gams()
-            self._should_load_from_gams(symbol_names)
+            self._should_load_from(symbol_names, source=DataSource.GAMS)
 
     def addGamsCode(self, gams_code: str) -> None:
         """
@@ -1934,7 +1938,7 @@ $endIf
         symbol_names = gdxio._get_symbol_names_from_gdx(self.system_directory, gdx_out)
         gdxio.load_missing_symbols(self, gdx_out, symbol_names, declare_in_gams=False)
         self._options._set_extra_options({})
-        self._should_load_from_gams(symbol_names, value=True)
+        self._should_load_from(symbol_names, source=DataSource.GAMS)
 
         # Unfortunately MPSGE requires a dirty trick
         pattern = re.compile(r"^\$sysInclude\s+mpsgeset\s+(\w+)\s*$", re.MULTILINE)
@@ -1945,6 +1949,46 @@ $endIf
 
         self._unsaved_statements = []
         self._arbitrary_code_executed = True
+
+    def hibernate(self) -> None:
+        """
+        Save the state of the GAMS execution engine and stop it. The engine is restarted
+        from the saved state by the next statement that needs it, so the container stays usable.
+
+        Raises
+        ------
+        ValidationError
+            If a loop context manager (`gp.For`, `gp.While`, `gp.Loop`) is active.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=range(3))
+        >>> p = gp.Parameter(m, "p", domain=i, records=[(str(n), 1) for n in range(3)])
+        >>> m.hibernate()  # The execution engine is stopped, the state is saved.
+        >>> p[i] = p[i] + 1  # The engine is restarted from the saved state.
+        >>> p.toList()
+        [('0', 2.0), ('1', 2.0), ('2', 2.0)]
+
+        """
+        if self._restart_from is not None:
+            return
+
+        if self._in_loop:
+            raise ValidationError(
+                "Cannot hibernate while a loop context manager (e.g. with gp.For, "
+                "gp.While, gp.Loop) is active, because the state of the execution "
+                "engine cannot be saved before the loop is closed."
+            )
+
+        save_file = self._job + ".g00"
+        self._options._set_extra_options({"save": save_file})
+        self._synch_with_gams()
+        self._options._set_extra_options({})
+
+        close_connection(self._comm_pair_id)
+        self._restart_from = save_file
 
     def close(self) -> None:
         """
@@ -1962,6 +2006,7 @@ $endIf
         >>> m.close()           # Closes the connection to the execution engine.
 
         """
+        self._restart_from = None
         close_connection(self._comm_pair_id)
 
     def addAlias(

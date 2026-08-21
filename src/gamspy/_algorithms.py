@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import random
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -129,14 +128,74 @@ def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
     return arr.reshape(la, -1).T
 
 
+def sorted_unique(arr: np.ndarray, *, copy: bool = True) -> np.ndarray:
+    if copy:
+        arr = np.sort(arr)
+    else:
+        arr.sort()
+
+    keep = np.ones(arr.size, dtype=bool)
+    np.not_equal(arr[1:], arr[:-1], out=keep[1:])
+
+    if keep.all():
+        return arr
+
+    return arr[keep]
+
+
+def drop_unused_categories(column: pd.Series) -> pd.Series:
+    codes = column.cat.codes.to_numpy()
+    categories = column.cat.categories
+
+    used = sorted_unique(codes)
+    has_na = used.size > 0 and used[0] == -1  # the NA sentinel is not a category
+    if has_na:
+        used = used[1:]
+
+    if used.size == categories.size:
+        return column
+
+    lookup = np.full(categories.size, -1, dtype=codes.dtype)
+    lookup[used] = np.arange(used.size, dtype=codes.dtype)
+    new_codes = lookup[codes]
+    if has_na:
+        new_codes[codes < 0] = -1
+
+    dtype = pd.CategoricalDtype._from_fastpath(
+        categories.take(used), ordered=column.cat.ordered
+    )
+
+    return pd.Series(
+        pd.Categorical.from_codes(new_codes, dtype=dtype, validate=False),
+        index=column.index,
+        name=column.name,
+    )
+
+
+def _sample_unique(choose_from: int, n_choose: int, seed: int | None) -> np.ndarray:
+    """Select unique items from a huge pool by drawing with replacement and refilling."""
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, choose_from, size=n_choose)
+
+    while True:
+        idx = sorted_unique(idx, copy=False)
+        deficit = n_choose - idx.size
+        if deficit == 0:
+            return idx  # already sorted
+
+        idx = np.concatenate((idx, rng.integers(0, choose_from, size=deficit)))
+
+
 def choice_no_replace(
     choose_from: int,
     n_choose: int,
     seed: int | None = None,
 ) -> np.ndarray:
-    """Randomly select unique items from a pool without replacement."""
     if not isinstance(seed, (int, type(None))):
         raise TypeError("Argument 'seed' must be type int or NoneType")
+
+    LOW_DENSITY = 0.08
+    MAX_MATERIALIZED_POOL = 10_000_000
 
     choose_from, n_choose = int(choose_from), int(n_choose)
     density = n_choose / choose_from
@@ -149,13 +208,11 @@ def choice_no_replace(
     if density == 1:
         return np.arange(choose_from, dtype=int)
 
-    # numpy is faster as density grows
-    if density > 0.08:
-        rng = np.random.default_rng(seed)
-        idx = rng.choice(choose_from, replace=False, size=n_choose)
-    # random.shuffle is much faster at low density
-    else:
-        random.seed(seed)
-        idx = np.array(random.sample(range(choose_from), n_choose), dtype=int)
+    # rng.choice allocates a pool O(choose_from). So 10M is the point where the pool
+    # is ~80 MB. _sample_unique holds O(n_choose).
+    if density <= LOW_DENSITY and choose_from > MAX_MATERIALIZED_POOL:
+        return _sample_unique(choose_from, n_choose, seed)
 
+    rng = np.random.default_rng(seed)
+    idx = rng.choice(choose_from, replace=False, size=n_choose)
     return np.sort(idx)

@@ -10,9 +10,10 @@ import pandas as pd
 
 import gamspy as gp
 import gamspy.utils as utils
-from gamspy._algorithms import generate_unique_labels
+from gamspy._algorithms import drop_unused_categories, generate_unique_labels
 from gamspy._internals import (
     GAMS_MAX_INDEX_DIM,
+    DataSource,
     DomainStatus,
 )
 from gamspy._records_ingestion import VarEquIngestor
@@ -43,9 +44,11 @@ if TYPE_CHECKING:
         UniverseAlias,
         Variable,
     )
+    from gamspy._model_instance import ModelInstance
     from gamspy._types import (
         DomainType,
         NormalizedDomainType,
+        RecordsSourceType,
         SymbolType,
         SymbolWithRecordsType,
     )
@@ -423,7 +426,15 @@ class BaseSymbol:
 class DomainSymbol(BaseSymbol):
     """Base class for Set, Parameter, Variable, and Equation."""
 
-    def _load_from_gams(self: Set | Parameter | Variable | Equation) -> None:
+    _should_load_from: RecordsSourceType
+
+    def _load_records(self: Set | Parameter | Variable | Equation) -> None:
+        source = self._should_load_from
+        if source is not DataSource.GAMS:
+            self._should_load_from = DataSource.NONE
+            cast("ModelInstance", source)._read_records(self)
+            return
+
         if self._container._in_loop:
             raise ValidationError(
                 "Cannot load symbol records while a loop context manager (e.g. with gp.For, gp.While, gp.Loop) is active."
@@ -431,7 +442,7 @@ class DomainSymbol(BaseSymbol):
 
         from gamspy._gdx import get_records
 
-        self._should_load_from_gams = False
+        self._should_load_from = DataSource.NONE
         container = self._container
         gdx_out_name = "_" + utils._get_unique_name() + ".gdx"
         gdx_out_path = os.path.join(container.working_directory, gdx_out_name)
@@ -439,6 +450,11 @@ class DomainSymbol(BaseSymbol):
         container._synch_with_gams()
         records = get_records(container, gdx_out_path, symbols=[self.name])
         self._records = records[self.name]
+
+    @property
+    def _is_frozen_modifiable(self: Set | Parameter | Variable | Equation) -> bool:
+        """Whether a frozen model may modify this symbol."""
+        return self.name in self._container._frozen_modifiables
 
     def _handle_domain_violations(self: Set | Parameter | Variable | Equation) -> None:
         if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
@@ -454,7 +470,7 @@ class DomainSymbol(BaseSymbol):
 
             for elem, forwarding in zip(self.domain, forwardings, strict=True):
                 if forwarding and isinstance(elem, (gp.Set, gp.Alias)):
-                    elem._should_load_from_gams = True
+                    elem._should_load_from = DataSource.GAMS
 
     def _get_domain_str(
         self: SymbolWithRecordsType, forwardings: bool | list[bool]
@@ -699,7 +715,7 @@ class DomainSymbol(BaseSymbol):
             for n in dimensions:
                 try:
                     self.records.isetitem(
-                        n, self.records.iloc[:, n].cat.remove_unused_categories()
+                        n, drop_unused_categories(self.records.iloc[:, n])
                     )
                 except Exception as err:
                     raise GamspyException(

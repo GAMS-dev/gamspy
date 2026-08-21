@@ -10,6 +10,7 @@ import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._container import Container
+from gamspy._internals import DataSource
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy.exceptions import FatalError, ValidationError
 
@@ -169,19 +170,19 @@ class Condition(operable.Operable):
                 self.conditioning_on.parent._assignment = statement  # ty: ignore[unresolved-attribute]
 
             self.conditioning_on.container._synch_with_gams()
-            self.conditioning_on.parent._should_load_from_gams = True  # ty: ignore[unresolved-attribute]
+            self.conditioning_on.parent._should_load_from = DataSource.GAMS  # ty: ignore[unresolved-attribute]
 
         elif isinstance(self.conditioning_on, syms.Alias):
             self.conditioning_on._assignment = statement
             self.conditioning_on.container._synch_with_gams()
-            self.conditioning_on.alias_with._should_load_from_gams = True
+            self.conditioning_on.alias_with._should_load_from = DataSource.GAMS
         elif isinstance(
             self.conditioning_on,
             (syms.Set, syms.Parameter, syms.Variable, syms.Equation),
         ):
             self.conditioning_on._assignment = statement
             self.conditioning_on.container._synch_with_gams()
-            self.conditioning_on._should_load_from_gams = True
+            self.conditioning_on._should_load_from = DataSource.GAMS
 
         else:
             self.container._synch_with_gams()
