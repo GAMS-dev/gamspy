@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Annotated
 import certifi
 import typer
 
+from . import cuopt
 from .util import add_solver_entry, has_pip, has_uv
 
 if TYPE_CHECKING:
@@ -266,6 +267,21 @@ def append_dist_info(files, gamspy_base_dir: str):
             record.write("\n".join(lines) + "\n")
 
 
+def _add_installed_addon(addons_path: str, solver_name: str) -> None:
+    try:
+        with open(addons_path) as file:
+            installed = file.read().splitlines()
+            installed = [solver for solver in installed if solver not in {"", "\n"}]
+    except FileNotFoundError:
+        installed = []
+
+    if solver_name.upper() not in installed:
+        installed.append(solver_name.upper())
+
+    with open(addons_path, "w") as file:
+        file.write("\n".join(installed) + "\n")
+
+
 def complete_solver_names(ctx: typer.Context, incomplete: str):
     import gamspy.utils as utils
 
@@ -312,17 +328,19 @@ def solver(
 
     import gamspy.utils as utils
 
-    if not use_uv and not has_pip():
-        typer.echo(
-            "pip is not installed in your environment. Please install pip first or add --use-uv flag to install solvers with uv."
-        )
-        raise typer.Exit(code=1)
+    requested = [name.lower() for name in solver or []]
+    if not requested or any(name != cuopt.SOLVER_NAME for name in requested):
+        if not use_uv and not has_pip():
+            typer.echo(
+                "pip is not installed in your environment. Please install pip first or add --use-uv flag to install solvers with uv."
+            )
+            raise typer.Exit(code=1)
 
-    if use_uv and not has_uv():
-        typer.echo(
-            "uv is not installed in your machine. Please install uv first to install solvers with --use-uv flag."
-        )
-        raise typer.Exit(code=1)
+        if use_uv and not has_uv():
+            typer.echo(
+                "uv is not installed in your machine. Please install uv first to install solvers with --use-uv flag."
+            )
+            raise typer.Exit(code=1)
 
     addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
     os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
@@ -337,6 +355,13 @@ def solver(
             if solver_name.upper() in gamspy_base.default_solvers:
                 print(f"`{solver_name}` is a default solver, skipping...")
                 continue
+
+            if solver_name == cuopt.SOLVER_NAME:
+                files = cuopt.install()
+                append_dist_info(files, utils._get_gamspy_base_directory())
+                _add_installed_addon(addons_path, solver_name)
+                continue
+
             installable_solvers = utils.getInstallableSolvers()
             if solver_name.upper() not in installable_solvers:
                 typer.echo(
@@ -387,25 +412,18 @@ def solver(
             verbatims = [solver_lib.verbatim]
             append_dist_info(files, gamspy_base_dir)
             add_solver_entry(gamspy_base_dir, solver_name, verbatims)
-
-            try:
-                with open(addons_path) as file:
-                    installed = file.read().splitlines()
-                    installed = [
-                        solver for solver in installed if solver not in {"", "\n"}
-                    ]
-            except FileNotFoundError:
-                installed = []
-
-            with open(addons_path, "w") as file:
-                if solver_name.upper() not in installed:
-                    file.write("\n".join(installed + [solver_name.upper()]))
+            _add_installed_addon(addons_path, solver_name)
 
     if install_all_solvers:
         available_solvers = utils.getAvailableSolvers()
         installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
         diff = []
         for available_solver in available_solvers:
+            # cuOpt requires an NVIDIA GPU and downloads more than a gigabyte,
+            # hence it is only installed when it is asked for by name.
+            if available_solver == "CUOPT":
+                continue
+
             if available_solver not in installed_solvers:
                 diff.append(available_solver)
 

@@ -12,7 +12,7 @@ repos:
     rev: v0.0.73
     hooks:
     -   id: ty
-        entry: uv run ty check src
+        entry: uv run --active ty check src
         language: python
         pass_filenames: false
 -   repo: https://github.com/astral-sh/ruff-pre-commit

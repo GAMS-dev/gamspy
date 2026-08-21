@@ -38,6 +38,7 @@ dependencies = [
   "gamspy_base >= 54.1.0, < 55.0.0",
   "pandas >= 2.2.2, < 3.1",
   "pydantic >= 2.0",
+  "pyyaml >= 6.0",
   "requests >= 2.28.0",
   "typer >= 0.16.0",
 ]
@@ -118,7 +119,6 @@ test = [
     "pytest>=9.0.2",
     "pytest-xdist>=3.8.0",
     "python-dotenv>=1.2.1",
-    "pyyaml>=6.0.3",
     "scikit-learn>=1.7.2",
 ]
 

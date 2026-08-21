@@ -8,6 +8,8 @@ import platform
 import uuid
 from typing import TYPE_CHECKING, cast
 
+import yaml
+
 import gamspy._gdx as gdxio
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
@@ -47,6 +49,7 @@ elif platform.system() == "Windows":
 _defaults: dict[str, dict[str, str]] = {}
 _capabilities: dict[str, dict[str, list[str]]] = {}
 _installed_solvers: dict[str, list[str]] = {}
+_config_solvers: dict[str, dict[str, list[str]]] = {}
 
 _cached_system_directory = None
 
@@ -89,6 +92,79 @@ def getDefaultSolvers(system_directory: str) -> dict[str, str]:
     return defaults
 
 
+def _get_capabilities_file_solvers(system_directory: str) -> dict[str, list[str]]:
+    """
+    Returns the solvers listed in the capabilities file mapped to the problem
+    types they can solve.
+
+    Parameters
+    ----------
+    system_directory : str
+
+    Returns
+    -------
+    dict[str, list[str]]
+    """
+    capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
+    capabilities: dict[str, list[str]] = {}
+
+    with open(capabilities_path, encoding="utf-8") as file:
+        lines = file.read().splitlines()
+
+    while True:
+        line = lines.pop(0)
+        if line.startswith("*") or line == "":
+            continue
+        if line == "DEFAULTS":
+            break
+
+        solver, _, _, _, _, _, num_lines, *problem_types = line.split()
+
+        for _ in range(int(num_lines) + 1):
+            _ = lines.pop(0)
+
+        capabilities[solver] = problem_types
+
+    return capabilities
+
+
+def _parse_solver_config(text: str) -> dict[str, list[str]]:
+    config = yaml.safe_load(text)
+    if not isinstance(config, dict):
+        return {}
+
+    solvers: dict[str, list[str]] = {}
+    for entry in config.get("solverConfig") or []:
+        for name, attributes in entry.items():
+            solvers[name.upper()] = [
+                str(model_type).upper() for model_type in attributes["modelTypes"]
+            ]
+
+    return solvers
+
+
+def _get_config_solvers(system_directory: str) -> dict[str, list[str]]:
+    """The solvers that are registered through gamsconfig.yaml"""
+    global _config_solvers
+    try:
+        return _config_solvers[system_directory]
+    except KeyError:
+        ...
+
+    solvers: dict[str, list[str]] = {}
+    config_path = os.path.join(system_directory, "gamsconfig.yaml")
+    try:
+        with open(config_path, encoding="utf-8") as file:
+            solvers = _parse_solver_config(file.read())
+    except OSError:
+        ...
+    except yaml.YAMLError as e:
+        raise ValidationError(f"`{config_path}` is not a valid YAML file: {e}") from e
+
+    _config_solvers[system_directory] = solvers
+    return solvers
+
+
 def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
     """
     Returns a dictionary where keys are the solvers and values are the
@@ -116,26 +192,8 @@ def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
     except KeyError:
         ...
 
-    capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
-    capabilities: dict[str, list[str]] = {}
-
-    with open(capabilities_path, encoding="utf-8") as file:
-        lines = file.read().splitlines()
-
-    while True:
-        line = lines.pop(0)
-        if line.startswith("*") or line == "":
-            continue
-        if line == "DEFAULTS":
-            break
-
-        solver, _, _, _, _, _, num_lines, *problem_types = line.split()
-
-        for _ in range(int(num_lines) + 1):
-            _ = lines.pop(0)
-
-        capabilities[solver] = problem_types
-
+    capabilities = _get_capabilities_file_solvers(system_directory)
+    capabilities.update(_get_config_solvers(system_directory))
     capabilities.pop("MPSGE", None)
     _capabilities[system_directory] = capabilities
     return capabilities
@@ -189,6 +247,11 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
             solvers.append(solver)
 
     solvers.remove("CONOPT")
+    solvers.extend(
+        solver
+        for solver in _get_config_solvers(system_directory)
+        if solver not in solvers
+    )
     solvers.sort()
     _installed_solvers[system_directory] = solvers
     return solvers
@@ -222,6 +285,12 @@ def getAvailableSolvers() -> list[str]:
     solvers = sorted(gamspy_base.available_solvers)
     if "CONOPT" in solvers and "CONOPT4" in solvers:
         solvers.remove("CONOPT")
+
+    # cuOpt is not shipped as a gamspy-<solver_name> package but is installed from a
+    # release archive. It is only available on Linux.
+    if platform.system() == "Linux" and "CUOPT" not in solvers:
+        solvers.append("CUOPT")
+        solvers.sort()
 
     return solvers
 
