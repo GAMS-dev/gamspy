@@ -1,14 +1,19 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 import gamspy._algebra.condition as condition
 import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Set
+    from gamspy import Alias, Set, UniverseAlias
     from gamspy._symbols.implicits import ImplicitSet
+    from gamspy._universe import Universe
+
+    DomainElementType: TypeAlias = (
+        Set | Alias | UniverseAlias | ImplicitSet | Universe | str
+    )
 
 
 class Domain:
@@ -18,7 +23,8 @@ class Domain:
 
     Parameters
     ----------
-    sets: tuple[Set | str]
+    sets: Set | Alias | UniverseAlias | ImplicitSet | Universe | str
+        The sets that make up the domain.
 
     Examples
     --------
@@ -35,7 +41,7 @@ class Domain:
 
     """
 
-    def __init__(self, *sets: Set | Alias | ImplicitSet) -> None:
+    def __init__(self, *sets: DomainElementType) -> None:
         self._sanity_check(sets)
         self.sets = sets
         self.container = self._find_container()
@@ -45,7 +51,7 @@ class Domain:
     def __repr__(self) -> str:
         return f"Domain(sets={self.sets})"
 
-    def _sanity_check(self, sets: tuple[Set | Alias | ImplicitSet, ...]):
+    def _sanity_check(self, sets: tuple[DomainElementType, ...]):
         if len(sets) < 1:
             error_message = f"Domain requires at least one set but found {len(sets)}. "
             raise ValidationError(error_message)

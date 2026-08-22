@@ -57,7 +57,7 @@ Examples
 
 Uninstall specific solvers::
 
-  $ gamspy uninstall solver mosek conopt
+  $ gamspy uninstall solver mosek conopt cuopt
 
 Uninstall all add-on solvers::
 

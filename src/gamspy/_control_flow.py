@@ -9,14 +9,16 @@ import gamspy as gp
 import gamspy._gdx as gdxio
 from gamspy._algebra.condition import Condition
 from gamspy._algebra.domain import Domain
+from gamspy._internals import DataSource
 from gamspy._symbols.implicits import ImplicitSet
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Container, Parameter, Set
+    from gamspy import Container, Parameter
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Card, Operation
     from gamspy._symbols.implicits import ImplicitParameter
+    from gamspy._types import ConditionType, OperationIndexType
     from gamspy.math import MathOp
 
 # Dictionary to track the container used in the most recent If/ElseIf block
@@ -33,7 +35,7 @@ class Loop:
 
     Parameters
     ----------
-    indices : Set | Alias | ImplicitSet | Condition | Domain | Sequence[Set | Alias]
+    indices : Set | Alias | ImplicitSet | Condition | Domain | MathOp | Sequence[Set | Alias | ImplicitSet | Condition | Domain | MathOp]
         The controlling domain of the loop. This can be a single Set, a sequence of Sets,
         or a domain restricted by a logical condition (using `.where`).
 
@@ -74,16 +76,7 @@ class Loop:
 
     """
 
-    def __init__(
-        self,
-        indices: Set
-        | Alias
-        | ImplicitSet
-        | Condition
-        | Domain
-        | Sequence[Set | Alias]
-        | MathOp,
-    ):
+    def __init__(self, indices: OperationIndexType):
         self.indices = indices
         self._loop_number = -1
         self.container = self._find_container()
@@ -96,8 +89,9 @@ class Loop:
             return self.indices.container  # type: ignore
         elif isinstance(self.indices, Sequence):
             for elem in self.indices:
-                if hasattr(elem, "container"):
-                    return elem.container
+                container = getattr(elem, "container", None)
+                if isinstance(container, gp.Container):
+                    return container
 
         raise ValidationError(
             f"`{type(self.indices)}` is not an allowed type for a loop index. "
@@ -205,7 +199,7 @@ class Loop:
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, gdx_out
             )
-            self.container._should_load_from_gams(symbol_names)
+            self.container._should_load_from(symbol_names, source=DataSource.GAMS)
 
 
 class For:
@@ -409,7 +403,7 @@ class For:
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, gdx_out
             )
-            self.container._should_load_from_gams(symbol_names)
+            self.container._should_load_from(symbol_names, source=DataSource.GAMS)
 
 
 class While:
@@ -423,7 +417,7 @@ class While:
 
     Parameters
     ----------
-    condition : Expression | Condition | Operation | MathOp | Parameter
+    condition : ConditionType
         The logical condition that must remain true to continue executing the nested statements.
 
     Examples
@@ -440,9 +434,7 @@ class While:
 
     """
 
-    def __init__(
-        self, condition: Expression | Condition | Operation | MathOp | Parameter
-    ):
+    def __init__(self, condition: ConditionType):
         self.condition = condition
 
         if not isinstance(condition.container, gp.Container):
@@ -511,7 +503,7 @@ class While:
             symbol_names = gdxio._get_symbol_names_from_gdx(
                 self.container.system_directory, gdx_out
             )
-            self.container._should_load_from_gams(symbol_names)
+            self.container._should_load_from(symbol_names, source=DataSource.GAMS)
 
 
 class If:
@@ -523,7 +515,7 @@ class If:
 
     Parameters
     ----------
-    condition : Expression
+    condition : ConditionType
         The logical condition that must be satisfied to execute the nested statements.
 
     Examples
@@ -550,15 +542,7 @@ class If:
 
     """
 
-    def __init__(
-        self,
-        condition: Expression
-        | Condition
-        | Operation
-        | MathOp
-        | Parameter
-        | ImplicitSet,
-    ):
+    def __init__(self, condition: ConditionType):
         self.condition = condition
 
         if not isinstance(condition.container, gp.Container):
@@ -595,19 +579,11 @@ class ElseIf:
 
     Parameters
     ----------
-    condition : Expression
+    condition : ConditionType
         The logical condition that must be satisfied to execute the nested statements.
     """
 
-    def __init__(
-        self,
-        condition: Expression
-        | Condition
-        | Operation
-        | MathOp
-        | Parameter
-        | ImplicitSet,
-    ):
+    def __init__(self, condition: ConditionType):
         self.condition = condition
 
         if not isinstance(condition.container, gp.Container):

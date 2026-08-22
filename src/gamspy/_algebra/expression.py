@@ -17,6 +17,7 @@ from gamspy._extrinsic import ExtrinsicFunction
 from gamspy._symbols.base import BaseSymbol
 from gamspy._symbols.implicits import ImplicitSet
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy._universe import is_universe
 from gamspy.exceptions import GamspyException, ValidationError
 from gamspy.math.misc import MathOp
 
@@ -150,9 +151,6 @@ def create_gams_expression(root_node: Expression) -> str:
     adding parentheses only when necessary based on operator precedence and
     associativity rules.
     """
-    if not isinstance(root_node, Expression):
-        return get_operand_gams_repr(root_node)
-
     # 1. Get nodes in post-order (left - right - parent).
     s1: list[OperableType | ImplicitEquation | str] = [root_node]
     post_order_nodes = []
@@ -226,9 +224,6 @@ def create_latex_expression(root_node: Expression) -> str:
     adding parentheses only when necessary based on operator precedence and
     associativity rules.
     """
-    if not isinstance(root_node, Expression):
-        return get_operand_latex_repr(root_node)
-
     op_map = {
         "=g=": "\\geq",
         "=l=": "\\leq",
@@ -494,8 +489,8 @@ class Expression(operable.Operable):
             ("r", right_domain),
         ):
             for i, d in enumerate(domain_ptr):
-                if isinstance(d, str):
-                    continue  # string domains are fixed and they do not count
+                if isinstance(d, str) or is_universe(d):
+                    continue
 
                 if d not in set_to_index:
                     set_to_index[d] = []
@@ -505,7 +500,7 @@ class Expression(operable.Operable):
         shadow_domain = []
         result_domain = []
         for d in (*left_domain, *right_domain):
-            if isinstance(d, str):
+            if isinstance(d, str) or is_universe(d):
                 continue
 
             if d not in result_domain:
@@ -596,7 +591,7 @@ class Expression(operable.Operable):
             )
 
         records = self.records
-        if records is None:
+        if records is None:  # pragma: no cover
             raise ValidationError(
                 "Could not get the value of the expression. Please report to support@gams.com."
             )
@@ -1311,12 +1306,11 @@ def _check_uncontrolled_indices(
         if hasattr(elem, "is_singleton") and elem.is_singleton:
             continue
 
-        if isinstance(elem, BaseSymbol) and elem not in control_stack:
+        if isinstance(elem, BaseSymbol) and not utils.isin(elem, control_stack):
             raise ValidationError(f"Uncontrolled set `{elem}` entered as constant!")
 
-        if (
-            isinstance(elem, (ImplicitSymbol, ShiftExpression))
-            and elem.parent not in control_stack
+        if isinstance(elem, (ImplicitSymbol, ShiftExpression)) and not utils.isin(
+            elem.parent, control_stack
         ):
             raise ValidationError(
                 f"Uncontrolled set `{elem.parent}` entered as constant!"

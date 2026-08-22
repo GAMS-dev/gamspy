@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="330" viewBox="0 0 420 330" font-family="Helvetica, Arial, sans-serif">
+  <title>Connected piecewise linear graph</title>
+  <desc>Four breakpoints joined by three connected line segments.</desc>
+  <rect width="420" height="330" fill="#171c22"/>
+
+  <g fill="none" stroke="#aab4c0" stroke-opacity="0.25" stroke-width="1">
+    <path d="M120 30 V270 M180 30 V270 M240 30 V270 M300 30 V270 M360 30 V270"/>
+    <path d="M60 210 H360 M60 150 H360 M60 90 H360 M60 30 H360"/>
+  </g>
+
+  <g fill="none" stroke="#dbe3ec" stroke-width="1.5">
+    <path d="M45 270 H375"/>
+    <path d="M60 285 V15"/>
+  </g>
+
+  <path d="M60 150 L120 210 L240 210 L300 90" fill="none" stroke="#6eb4ef" stroke-width="4"/>
+  <g fill="#6eb4ef" stroke="#6eb4ef" stroke-width="3">
+    <circle cx="60" cy="150" r="6"/>
+    <circle cx="120" cy="210" r="6"/>
+    <circle cx="240" cy="210" r="6"/>
+    <circle cx="300" cy="90" r="6"/>
+  </g>
+
+  <g fill="#dbe3ec" font-size="14" text-anchor="middle">
+    <text x="60" y="292">0</text>
+    <text x="120" y="292">1</text>
+    <text x="180" y="292">2</text>
+    <text x="240" y="292">3</text>
+    <text x="300" y="292">4</text>
+    <text x="360" y="292">5</text>
+  </g>
+  <g fill="#dbe3ec" font-size="14" text-anchor="end">
+    <text x="53" y="215">1</text>
+    <text x="53" y="155">2</text>
+    <text x="53" y="95">3</text>
+    <text x="53" y="35">4</text>
+  </g>
+  <g fill="#dbe3ec" font-family="Georgia, serif" font-size="20" font-style="italic">
+    <text x="375" y="307">x</text>
+    <text x="20" y="27">y</text>
+  </g>
+</svg>

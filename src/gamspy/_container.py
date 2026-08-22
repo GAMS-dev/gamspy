@@ -34,6 +34,7 @@ from gamspy._internals import (
     TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
     TRANSFER_TO_GAMS_VARIABLE_SUBTYPES,
     CasePreservingDict,
+    DataSource,
 )
 from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem, Sense
@@ -209,7 +210,10 @@ class Container:
 
         self._unsaved_statements: list = []
 
-        self._data: CasePreservingDict[str, SymbolType] = CasePreservingDict()
+        self._frozen_modifiables: set[str] = set()
+        self._restart_from: str | None = None
+
+        self._data: CasePreservingDict[SymbolType] = CasePreservingDict()
 
         self._options = validation.validate_global_options(options)
         if self._options.license is not None:
@@ -262,7 +266,7 @@ class Container:
                     gdxio.load_missing_symbols(
                         self, self._gdx_out, symbol_names, declare_in_gams=False
                     )
-                    self._should_load_from_gams(symbol_names, value=True)
+                    self._should_load_from(symbol_names, source=DataSource.GAMS)
                     self._is_restarted = True
                 else:
                     raise ValidationError(
@@ -319,13 +323,13 @@ class Container:
         return len(self._data)
 
     @property
-    def data(self) -> dict[str, SymbolType]:
+    def data(self) -> CasePreservingDict[SymbolType]:
         """
-        The dictionary that contains all symbols in the Container. Keys are symbol names and values are the symbols themselves.
+        The dictionary that contains all symbols in the Container. Keys are symbol names and values are the symbols themselves. Lookups are case insensitive.
 
         Returns
         -------
-        dict[str, SymbolType]
+        CasePreservingDict[SymbolType]
 
         Examples
         --------
@@ -374,9 +378,6 @@ class Container:
         for sym in self.getSymbols(resolved_symbols):
             row = row_extractor(sym)
             rows.append(row)
-
-        if not rows:
-            return None
 
         df = pd.DataFrame(rows)
         return df.round(3).sort_values(by="name", ignore_index=True)
@@ -1187,15 +1188,15 @@ class Container:
         for symbol in self._data.values():
             symbol._should_unload_to_gams = value
 
-    def _should_load_from_gams(
-        self, symbol_names: Iterable[str], value: bool = True
+    def _should_load_from(
+        self, symbol_names: Iterable[str], source: DataSource
     ) -> None:
         for name in symbol_names:
             if name not in self._data:
                 continue
 
             symbol = self._data[name]
-            symbol._should_load_from_gams = value
+            symbol._should_load_from = source
             if not isinstance(symbol, (gp.Alias, gp.UniverseAlias)):
                 symbol._handle_domain_forwarding()
 
@@ -1466,7 +1467,8 @@ class Container:
                     else i
                     for i in domain
                 ]
-                self._data[symname]._domain = domain
+                symbol = self._data[symname]
+                symbol._domain = symbol._normalize_domain(self, domain)
 
             self._synch_with_gams()
 
@@ -1884,7 +1886,7 @@ $endIf
             )
             self._add_statement(f"$declareAndLoad {load_from}")
             self._synch_with_gams()
-            self._should_load_from_gams(symbol_names)
+            self._should_load_from(symbol_names, source=DataSource.GAMS)
             return
 
         if not isinstance(symbol_names, (dict, list)):
@@ -1898,13 +1900,13 @@ $endIf
             )
             self._add_statement(f"$gdxLoad {load_from} {symbol_str}")
             self._synch_with_gams()
-            self._should_load_from_gams(symbol_names.values())
+            self._should_load_from(symbol_names.values(), source=DataSource.GAMS)
         else:
             symbol_str = " ".join(symbol_names)
             gdxio.load_missing_symbols(self, load_from, symbol_names)
             self._add_statement(f"$gdxLoad {load_from} {symbol_str}")
             self._synch_with_gams()
-            self._should_load_from_gams(symbol_names)
+            self._should_load_from(symbol_names, source=DataSource.GAMS)
 
     def addGamsCode(self, gams_code: str) -> None:
         """
@@ -1936,7 +1938,7 @@ $endIf
         symbol_names = gdxio._get_symbol_names_from_gdx(self.system_directory, gdx_out)
         gdxio.load_missing_symbols(self, gdx_out, symbol_names, declare_in_gams=False)
         self._options._set_extra_options({})
-        self._should_load_from_gams(symbol_names, value=True)
+        self._should_load_from(symbol_names, source=DataSource.GAMS)
 
         # Unfortunately MPSGE requires a dirty trick
         pattern = re.compile(r"^\$sysInclude\s+mpsgeset\s+(\w+)\s*$", re.MULTILINE)
@@ -1947,6 +1949,46 @@ $endIf
 
         self._unsaved_statements = []
         self._arbitrary_code_executed = True
+
+    def hibernate(self) -> None:
+        """
+        Save the state of the GAMS execution engine and stop it. The engine is restarted
+        from the saved state by the next statement that needs it, so the container stays usable.
+
+        Raises
+        ------
+        ValidationError
+            If a loop context manager (`gp.For`, `gp.While`, `gp.Loop`) is active.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=range(3))
+        >>> p = gp.Parameter(m, "p", domain=i, records=[(str(n), 1) for n in range(3)])
+        >>> m.hibernate()  # The execution engine is stopped, the state is saved.
+        >>> p[i] = p[i] + 1  # The engine is restarted from the saved state.
+        >>> p.toList()
+        [('0', 2.0), ('1', 2.0), ('2', 2.0)]
+
+        """
+        if self._restart_from is not None:
+            return
+
+        if self._in_loop:
+            raise ValidationError(
+                "Cannot hibernate while a loop context manager (e.g. with gp.For, "
+                "gp.While, gp.Loop) is active, because the state of the execution "
+                "engine cannot be saved before the loop is closed."
+            )
+
+        save_file = self._job + ".g00"
+        self._options._set_extra_options({"save": save_file})
+        self._synch_with_gams()
+        self._options._set_extra_options({})
+
+        close_connection(self._comm_pair_id)
+        self._restart_from = save_file
 
     def close(self) -> None:
         """
@@ -1964,6 +2006,7 @@ $endIf
         >>> m.close()           # Closes the connection to the execution engine.
 
         """
+        self._restart_from = None
         close_connection(self._comm_pair_id)
 
     def addAlias(
@@ -2056,8 +2099,9 @@ $endIf
         ----------
         name : str, optional
             Name of the set. If omitted, a unique name is generated.
-        domain : Sequence[Set | Alias | str] | Set | Alias | str, optional
-            Domain over which the set is defined.
+        domain : DomainType, optional
+            Domain over which the set is defined. Use :data:`UNIVERSE <gamspy.UNIVERSE>`
+            for the universe set.
         is_singleton : bool, optional
             If True, the set may contain at most one element.
         records : pd.DataFrame | np.ndarray | list, optional
@@ -2142,8 +2186,9 @@ $endIf
         ----------
         name : str, optional
             Name of the parameter. If omitted, a unique name is generated.
-        domain : Sequence[Set | Alias | str] | Set | Alias | Dim | str, optional
-            Domain over which the parameter is defined.
+        domain : DomainType, optional
+            Domain over which the parameter is defined. Use :data:`UNIVERSE <gamspy.UNIVERSE>`
+            for the universe set.
         records : int | float | pd.DataFrame | np.ndarray | list, optional
             Records of the parameter.
         domain_forwarding : bool | list[bool], optional
@@ -2214,8 +2259,9 @@ $endIf
             Name of the variable. If omitted, a unique name is generated.
         type : str, optional
             Type of the variable. "free" by default.
-        domain : Sequence[Set | Alias | str] | Set | Alias | Dim | str, optional
-            Domain of the variable.
+        domain : DomainType, optional
+            Domain of the variable. Use :data:`UNIVERSE <gamspy.UNIVERSE>` for the
+            universe set.
         records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict, optional
             Records of the variable.
         domain_forwarding : bool | list[bool], optional
@@ -2281,8 +2327,9 @@ $endIf
             Name of the equation. If omitted, a unique name is generated.
         type : str
             Type of the equation. "regular" by default.
-        domain : Sequence[Set | Alias] | Set | Alias, optional
-            Domain of the variable.
+        domain : DomainType, optional
+            Domain of the equation. Use :data:`UNIVERSE <gamspy.UNIVERSE>` for the
+            universe set.
         definition: Expression, optional
             Definition of the equation.
         records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict, optional
@@ -2519,13 +2566,13 @@ $endIf
 
         return external_lib
 
-    def gamsJobName(self) -> str | None:
+    def gamsJobName(self) -> str:
         """
         Returns the name of the latest GAMS job that was executed
 
         Returns
         -------
-        str | None
+        str
 
         Examples
         --------

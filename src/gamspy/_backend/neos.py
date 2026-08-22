@@ -15,6 +15,7 @@ import certifi
 import gamspy._backend.backend as backend
 import gamspy._gdx as gdxio
 from gamspy._communication import send_job
+from gamspy._internals import DataSource
 from gamspy._options import Options
 from gamspy.exceptions import (
     GamspyException,
@@ -527,7 +528,7 @@ class NEOSServer(backend.Backend):
             f'execute_load "{self.container._gdx_out}", {dirty_str};'
         )
         self.container._synch_with_gams()
-        self.container._should_load_from_gams(symbols, value=True)
+        self.container._should_load_from(symbols, source=DataSource.GAMS)
 
 
 def _parse_solver_options(path: Path) -> dict[str, Any]:

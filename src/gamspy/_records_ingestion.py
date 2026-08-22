@@ -103,11 +103,19 @@ class BaseIngestor:
 
         return records
 
-    def _remap_str_special_values(self, records: pd.DataFrame) -> pd.DataFrame:
-        """Converts string representations of EPS, NA, and UNDEF to float equivalents."""
+    def _remap_str_special_values(
+        self, records: pd.DataFrame, start_idx: int | None = None
+    ) -> pd.DataFrame:
+        """Converts string representations of EPS, NA, and UNDEF to float equivalents.
+
+        Columns before start_idx are label columns and are left alone. It
+        defaults to the symbol dimension.
+        """
         from pandas.api.types import infer_dtype
 
-        start_idx = self.symbol.dimension
+        if start_idx is None:
+            start_idx = self.symbol.dimension
+
         for i in records.columns[start_idx:]:
             if infer_dtype(records[i]) not in [
                 "integer",
@@ -535,7 +543,8 @@ class VarEquIngestor(BaseIngestor):
                 (1, arr.size),
                 (arr.size, 1),
             ):
-                records[k] = arr.reshape((arr.size,))
+                arr = arr.reshape((arr.size,))
+                records[k] = arr
             if arr.ndim != self.symbol.dimension:
                 raise ValueError("Dimensionality mismatch between arrays and symbol.")
 
@@ -610,29 +619,30 @@ class VarEquIngestor(BaseIngestor):
             else pd.DataFrame(records)
         )
 
-        # Fill defaults
-        if set(records[self.symbol.dimension :].columns) != set(
-            self.symbol._attributes
-        ):
-            for i in set(self.symbol._attributes) - set(
-                records[self.symbol.dimension :].columns
-            ):
-                records[i] = self.symbol._default_records[i]
+        attributes = self.symbol._attributes
+        domain_positions = [
+            n for n, col in enumerate(records.columns) if col not in attributes
+        ]
+        present_attributes = {col for col in records.columns if col in attributes}
 
-        r = records.shape[0]
-        if len(records.columns) != self.symbol.dimension + len(self.symbol._attributes):
+        if len(domain_positions) != self.symbol.dimension:
             raise ValueError(
-                "Dimensionality of records is inconsistent with domain specification."
+                "Dimensionality of records is inconsistent with domain specification. "
+                f"Found {len(domain_positions)} domain column(s) but symbol "
+                f"`{self.symbol.name}` has dimension {self.symbol.dimension}. "
+                f"Attribute columns must be named one of {attributes}."
             )
 
-        if self.symbol.is_scalar and r > 1:
+        if self.symbol.is_scalar and records.shape[0] > 1:
             raise ValueError("Attempting to set multiple records for a scalar symbol.")
 
+        # Fill defaults
+        for attribute in attributes:
+            if attribute not in present_attributes:
+                records[attribute] = self.symbol._default_records[attribute]
+
         records = pd.concat(
-            [
-                records.iloc[:, : self.symbol.dimension],
-                records[self.symbol._attributes],
-            ],
+            [records.iloc[:, domain_positions], records[attributes]],
             axis=1,
         )
         records = self._format_categorical_domains(records)
@@ -668,7 +678,9 @@ class VarEquIngestor(BaseIngestor):
             )
 
         records = _flatten_and_convert(records)
-        records = self._remap_str_special_values(records)
+        records = self._remap_str_special_values(
+            records, start_idx=self.symbol.dimension + sum(n_idx)
+        )
 
         if any(n_idx):
             attr = records.iloc[:, n_idx.index(True)].cat.categories.tolist()
@@ -735,7 +747,9 @@ class VarEquIngestor(BaseIngestor):
                 )
 
             records = _flatten_and_convert(records)
-            records = self._remap_str_special_values(records)
+            records = self._remap_str_special_values(
+                records, start_idx=self.symbol.dimension + sum(n_idx)
+            )
 
             if any(n_idx):
                 attr = records.iloc[:, n_idx.index(True)].cat.categories.tolist()

@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 from collections import UserDict
 from enum import Enum
-from typing import Any
+from typing import Any, TypeVar
 
 from gams.core.gdx import (
     GMS_EQUTYPE_B,
@@ -32,7 +32,10 @@ GAMS_DESCRIPTION_MAX_LENGTH = GMS_SSSIZE - 1
 GAMS_MAX_INDEX_DIM = GMS_MAX_INDEX_DIM
 
 
-class CasePreservingDict(UserDict):
+_VT = TypeVar("_VT")
+
+
+class CasePreservingDict(UserDict[str, _VT]):
     def __init__(self, *args, **kwargs):
         self._casefolded_key_map = {}
         super().__init__(*args, **kwargs)
@@ -53,12 +56,6 @@ class CasePreservingDict(UserDict):
         else:
             self.data[self._casefolded_key_map[key_cf]] = item
 
-    def _repr_pretty_(self, p, cycle):
-        if cycle:
-            p.pretty(self.data)
-        else:
-            p.pretty(self.data)
-
     def __getitem__(self, key):
         return self.data[self._casefolded_key_map[key.casefold()]]
 
@@ -73,7 +70,7 @@ class CasePreservingDict(UserDict):
         except KeyError:
             return default
 
-    def copy(self) -> CasePreservingDict:
+    def copy(self) -> CasePreservingDict[_VT]:
         import copy
 
         return copy.deepcopy(self)
@@ -104,6 +101,23 @@ class DomainStatus(Enum):
     none = 1
     relaxed = 2
     regular = 3
+
+
+class DataSource(Enum):
+    """
+    Where the records of a symbol must be read from. A frozen model is not a
+    member because the symbol stores the ModelInstance to read from itself:
+    a container can hold more than one frozen model of the same symbol.
+    """
+
+    NONE = 0
+    """The records are up to date, there is nothing to read."""
+
+    GAMS = 1
+    """The GAMS state is the up to date. Read from GAMS."""
+
+    def __bool__(self) -> bool:
+        return self is not DataSource.NONE
 
 
 GAMS_VARIABLE_SUBTYPES: dict[int, str] = {

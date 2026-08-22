@@ -18,9 +18,13 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
-from gamspy._internals import TRANSFER_TO_GAMS_VARIABLE_SUBTYPES
+from gamspy._internals import (
+    TRANSFER_TO_GAMS_VARIABLE_SUBTYPES,
+    DataSource,
+)
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import VarEquSymbol
+from gamspy._universe import UNIVERSE, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -156,7 +160,8 @@ class Variable(operable.Operable, VarEquSymbol):
         "integer", "sos1", "sos2", "semicont", "semiint". Default is "free".
     domain : DomainType, optional
         The domain of the variable. Can be a list of Sets/Aliases, a single Set/Alias,
-        or strings representing set names. Use "*" for the universe set. Default is [] (scalar).
+        or strings representing set names. Use :data:`UNIVERSE <gamspy.UNIVERSE>` for the universe
+        set (the bare string ``"*"`` is also accepted, but discouraged). Default is [] (scalar).
     records : Sequence | pd.DataFrame | pd.Series | np.ndarray | int | float | dict, optional
         Initial records (level/marginal/bounds) to populate the variable.
     domain_forwarding : bool | list[bool], optional
@@ -215,7 +220,7 @@ class Variable(operable.Operable, VarEquSymbol):
         obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
         obj._metadata = {}
-        obj._should_load_from_gams = False
+        obj._should_load_from = DataSource.NONE
         obj._should_unload_to_gams = False
         obj._column_listing = None
 
@@ -367,7 +372,7 @@ class Variable(operable.Operable, VarEquSymbol):
             self._gams_type = GMS_DT_VAR
             self._gams_subtype = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[self._type]
             self._latex_name = self.name.replace("_", r"\_")
-            self._should_load_from_gams = False
+            self._should_load_from = DataSource.NONE
             self._should_unload_to_gams = False
             self._container._data.update({name: self})
 
@@ -416,12 +421,14 @@ class Variable(operable.Operable, VarEquSymbol):
             setattr(self, key, value)
 
         # Relink domain symbols
-        new_domain = []
+        new_domain: list = []
         for elem in self._domain:
-            if elem == "*":
+            if is_universe(elem):
+                new_domain.append(UNIVERSE)
+            elif isinstance(elem, str):
                 new_domain.append(elem)
-                continue
-            new_domain.append(self._container[elem.name])
+            else:
+                new_domain.append(self._container[elem.name])
 
         self._domain = new_domain
 
@@ -939,8 +946,8 @@ class Variable(operable.Operable, VarEquSymbol):
         [['seattle', 7.0, 0.0, 7.0, 7.0, 1.0], ['san-diego', 18.0, 0.0, 18.0, 18.0, 1.0]]
 
         """
-        if self._should_load_from_gams:
-            self._load_from_gams()
+        if self._should_load_from is not DataSource.NONE:
+            self._load_records()
 
         return self._records
 
@@ -951,6 +958,7 @@ class Variable(operable.Operable, VarEquSymbol):
 
         self._records = records
         self._should_unload_to_gams = True
+        self._should_load_from = DataSource.NONE
         self._handle_domain_forwarding()
 
     def __hash__(self):
@@ -968,7 +976,10 @@ class Variable(operable.Operable, VarEquSymbol):
         Parameters
         ----------
         records : Sequence | np.ndarray | int | float | pd.DataFrame | pd.Series | dict
-            The data to load (e.g., list, numpy array, DataFrame).
+            The data to load (e.g., list, numpy array, DataFrame). Tabular input
+            must name its attribute columns (``level``, ``marginal``, ``lower``,
+            ``upper``, ``scale``); every other column is read as a domain column,
+            whatever order they appear in. Omitted attributes take their default.
         uels_on_axes : bool, optional
             If True, assumes domain elements are in the axes of the DataFrame. Default is False.
 
@@ -990,6 +1001,9 @@ class Variable(operable.Operable, VarEquSymbol):
             return
 
         self._setRecords(records, uels_on_axes=uels_on_axes)
+        if self._is_frozen_modifiable:
+            return
+
         self._container._synch_with_gams()
 
     @property

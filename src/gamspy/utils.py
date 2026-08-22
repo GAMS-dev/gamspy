@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import base64
+import ctypes
 import inspect
 import os
 import platform
 import uuid
 from typing import TYPE_CHECKING, cast
+
+import yaml
 
 import gamspy._gdx as gdxio
 import gamspy._symbols as syms
@@ -13,6 +16,7 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 from gamspy._config import get_option
 from gamspy._special_values import SpecialValues
+from gamspy._universe import Universe, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -45,6 +49,7 @@ elif platform.system() == "Windows":
 _defaults: dict[str, dict[str, str]] = {}
 _capabilities: dict[str, dict[str, list[str]]] = {}
 _installed_solvers: dict[str, list[str]] = {}
+_config_solvers: dict[str, dict[str, list[str]]] = {}
 
 _cached_system_directory = None
 
@@ -87,6 +92,79 @@ def getDefaultSolvers(system_directory: str) -> dict[str, str]:
     return defaults
 
 
+def _get_capabilities_file_solvers(system_directory: str) -> dict[str, list[str]]:
+    """
+    Returns the solvers listed in the capabilities file mapped to the problem
+    types they can solve.
+
+    Parameters
+    ----------
+    system_directory : str
+
+    Returns
+    -------
+    dict[str, list[str]]
+    """
+    capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
+    capabilities: dict[str, list[str]] = {}
+
+    with open(capabilities_path, encoding="utf-8") as file:
+        lines = file.read().splitlines()
+
+    while True:
+        line = lines.pop(0)
+        if line.startswith("*") or line == "":
+            continue
+        if line == "DEFAULTS":
+            break
+
+        solver, _, _, _, _, _, num_lines, *problem_types = line.split()
+
+        for _ in range(int(num_lines) + 1):
+            _ = lines.pop(0)
+
+        capabilities[solver] = problem_types
+
+    return capabilities
+
+
+def _parse_solver_config(text: str) -> dict[str, list[str]]:
+    config = yaml.safe_load(text)
+    if not isinstance(config, dict):
+        return {}
+
+    solvers: dict[str, list[str]] = {}
+    for entry in config.get("solverConfig") or []:
+        for name, attributes in entry.items():
+            solvers[name.upper()] = [
+                str(model_type).upper() for model_type in attributes["modelTypes"]
+            ]
+
+    return solvers
+
+
+def _get_config_solvers(system_directory: str) -> dict[str, list[str]]:
+    """The solvers that are registered through gamsconfig.yaml"""
+    global _config_solvers
+    try:
+        return _config_solvers[system_directory]
+    except KeyError:
+        ...
+
+    solvers: dict[str, list[str]] = {}
+    config_path = os.path.join(system_directory, "gamsconfig.yaml")
+    try:
+        with open(config_path, encoding="utf-8") as file:
+            solvers = _parse_solver_config(file.read())
+    except OSError:
+        ...
+    except yaml.YAMLError as e:
+        raise ValidationError(f"`{config_path}` is not a valid YAML file: {e}") from e
+
+    _config_solvers[system_directory] = solvers
+    return solvers
+
+
 def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
     """
     Returns a dictionary where keys are the solvers and values are the
@@ -114,26 +192,8 @@ def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
     except KeyError:
         ...
 
-    capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
-    capabilities: dict[str, list[str]] = {}
-
-    with open(capabilities_path, encoding="utf-8") as file:
-        lines = file.read().splitlines()
-
-    while True:
-        line = lines.pop(0)
-        if line.startswith("*") or line == "":
-            continue
-        if line == "DEFAULTS":
-            break
-
-        solver, _, _, _, _, _, num_lines, *problem_types = line.split()
-
-        for _ in range(int(num_lines) + 1):
-            _ = lines.pop(0)
-
-        capabilities[solver] = problem_types
-
+    capabilities = _get_capabilities_file_solvers(system_directory)
+    capabilities.update(_get_config_solvers(system_directory))
     capabilities.pop("MPSGE", None)
     _capabilities[system_directory] = capabilities
     return capabilities
@@ -187,6 +247,11 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
             solvers.append(solver)
 
     solvers.remove("CONOPT")
+    solvers.extend(
+        solver
+        for solver in _get_config_solvers(system_directory)
+        if solver not in solvers
+    )
     solvers.sort()
     _installed_solvers[system_directory] = solvers
     return solvers
@@ -220,6 +285,12 @@ def getAvailableSolvers() -> list[str]:
     solvers = sorted(gamspy_base.available_solvers)
     if "CONOPT" in solvers and "CONOPT4" in solvers:
         solvers.remove("CONOPT")
+
+    # cuOpt is not shipped as a gamspy-<solver_name> package but is installed from a
+    # release archive. It is only available on Linux.
+    if platform.system() == "Linux" and "CUOPT" not in solvers:
+        solvers.append("CUOPT")
+        solvers.sort()
 
     return solvers
 
@@ -295,7 +366,9 @@ def checkAllSame(
     return all_same
 
 
-def isin(symbol: SymbolType | ImplicitParameter, sequence: Sequence) -> bool:
+def isin(
+    symbol: SymbolType | ImplicitParameter | ImplicitSet, sequence: Sequence
+) -> bool:
     """
     Checks whether the given symbol in the sequence.
     Needed for symbol comparison since __eq__ magic
@@ -530,7 +603,7 @@ def _get_domain_element_types() -> tuple[type, ...]:
 
 
 def _get_domain_str(
-    domain: Iterable[Set | Alias | UniverseAlias | ImplicitSet | str],
+    domain: Iterable[Set | Alias | UniverseAlias | ImplicitSet | Universe | str],
     *,
     latex: bool = False,
 ) -> str:
@@ -553,14 +626,14 @@ def _get_domain_str(
     domain_strs = []
     for elem in domain:
         if isinstance(elem, str):
-            if elem == "*":
+            # A relaxed domain label is quoted, the universe label is not.
+            if is_universe(elem):
                 domain_strs.append(elem)
+            elif latex:
+                domain_strs.append('"' + elem.replace("_", r"\_") + '"')
             else:
-                if latex:
-                    domain_strs.append('"' + elem.replace("_", r"\_") + '"')
-                else:
-                    domain_strs.append('"' + elem + '"')
-        elif isinstance(elem, _get_domain_element_types()):
+                domain_strs.append('"' + elem + '"')
+        elif isinstance(elem, (Universe, *_get_domain_element_types())):
             if latex:
                 domain_strs.append(elem.latexRepr())
             else:
@@ -756,3 +829,13 @@ def _parse_generated_variables(model: Model, listing_file: str) -> None:
         variable._column_listing = listings
 
     return None
+
+
+def _return_freed_memory_to_os() -> None:
+    if platform.system() != "Linux":
+        return
+
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except (OSError, AttributeError):  # pragma: no cover
+        ...

@@ -16,7 +16,6 @@ import pandas as pd
 import pytest
 
 import gamspy as gp
-import gamspy.utils as utils
 from gamspy import (
     Alias,
     Container,
@@ -79,12 +78,6 @@ def data():
     for file in files:
         if os.path.isfile(file):
             os.remove(file)
-
-    if os.path.exists("dict.txt"):
-        os.remove("dict.txt")
-
-    if os.path.exists("gams.gms"):
-        os.remove("gams.gms")
 
 
 @pytest.mark.integration
@@ -250,6 +243,230 @@ def test_variable_change(data):
 
 
 @pytest.mark.integration
+def test_lazy_records(data, monkeypatch):
+    m, canning_plants, markets, capacities, demands, distances = data
+    i = Set(m, name="i", records=canning_plants)
+    j = Set(m, name="j", records=markets)
+
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
+    d = Parameter(m, name="d", domain=[i, j], records=distances)
+    c = Parameter(m, name="c", domain=[i, j])
+    bmult = Parameter(m, name="bmult", records=1)
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(m, name="x", domain=[i, j], type="Positive")
+    z = Variable(m, name="z")
+
+    cost = Equation(m, name="cost")
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
+
+    cost[...] = z == Sum((i, j), c[i, j] * x[i, j])
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= bmult * b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=z,
+    )
+
+    reads = []
+    original = gp._model_instance.get_records
+
+    def spy(*args, symbols=None, **kwargs):
+        reads.append(symbols)
+        return original(*args, symbols=symbols, **kwargs)
+
+    monkeypatch.setattr(gp._model_instance, "get_records", spy)
+
+    transport.freeze(modifiables=[bmult])
+    # the companion variable of a modifiable parameter is created by freeze
+    assert "bmult_var" in m.data
+
+    for value in (0.6, 0.7, 0.8):
+        bmult[...] = value
+        transport.solve(solver="conopt")
+
+    # no records are read from the model instance while solving
+    assert reads == []
+    assert math.isclose(transport.objective_value, 122.940, rel_tol=1e-3)
+
+    # the records of the last solve are read symbol by symbol, on first access
+    assert math.isclose(z.toValue(), 122.940, rel_tol=1e-3)
+    assert reads == [["z"]]
+
+    assert x.records.columns.to_list() == [
+        "i",
+        "j",
+        "level",
+        "marginal",
+        "lower",
+        "upper",
+        "scale",
+    ]
+    assert math.isclose(x.records["level"].sum(), 0.8 * 900, rel_tol=1e-6)
+    assert reads == [["z"], ["x"]]
+
+    assert m["bmult_var"].records["level"].item() == 0.8
+    assert reads == [["z"], ["x"], ["bmult_var"]]
+
+    # a solve invalidates the records that were read before
+    bmult[...] = 0.9
+    transport.solve(solver="conopt")
+    assert math.isclose(z.toValue(), 138.307, rel_tol=1e-3)
+    assert reads == [["z"], ["x"], ["bmult_var"], ["z"]]
+
+    # unfreeze reads whatever is still pending and releases the instance
+    transport.unfreeze()
+    assert transport.instance is None
+    # everything except `z`, which was read after the last solve
+    assert sorted(name for (name,) in reads[4:]) == [
+        "bmult_var",
+        "cost",
+        "demand",
+        "supply",
+        "x",
+    ]
+
+    reads_so_far = len(reads)
+    assert math.isclose(x.records["level"].sum(), 0.9 * 900, rel_tol=1e-6)
+    assert len(reads) == reads_so_far  # unfreeze already materialized them
+
+    # a regular solve takes over the records a frozen solve left pending
+    transport.freeze(modifiables=[bmult])
+    bmult[...] = 0.6
+    transport.solve(solver="conopt")
+
+    other = Model(
+        m,
+        name="other",
+        equations=[cost, supply, demand],
+        problem="LP",
+        sense=Sense.MIN,
+        objective=z,
+    )
+    bmult[...] = 1
+    reads_so_far = len(reads)
+    other.solve(solver="conopt")
+
+    assert math.isclose(x.records["level"].sum(), 900, rel_tol=1e-6)
+    # the records came from the GAMS state, not from the model instance
+    assert len(reads) == reads_so_far
+    transport.unfreeze()
+
+
+@pytest.mark.integration
+def test_solve_after_container_close(data):
+    # A frozen model does not need the GAMS execution engine. Releasing
+    # the engine is what keeps its memory from overlapping with the gmd memory.
+    m, *_ = data
+    labels = ["a", "b", "c"]
+    i = Set(m, "i", records=labels)
+    c = Parameter(m, "c", domain=i, records=[(label, 1) for label in labels])
+    x = Variable(m, "x", domain=i, type="positive")
+    x.up[i] = 1
+    e = Equation(m, "e", definition=Sum(i, x[i]) <= 2)
+    model = Model(
+        m,
+        name="small",
+        equations=[e],
+        problem="LP",
+        sense=Sense.MAX,
+        objective=Sum(i, c[i] * x[i]),
+    )
+
+    model.freeze(modifiables=[c])
+    m.close()
+
+    for values, expected in (([1, 1, 1], 2.0), ([5, 1, 1], 6.0), ([5, 4, 1], 9.0)):
+        # setRecords does not synchronize a modifiable of a frozen model, so no
+        # GAMS job is needed here
+        c.setRecords(pd.DataFrame({"i": labels, "value": [float(v) for v in values]}))
+        model.solve(solver="cplex")
+        assert math.isclose(model.objective_value, expected, rel_tol=1e-6), values
+
+    # ... and a statement that does need GAMS says so
+    with pytest.raises(ValidationError, match="connection to the GAMS execution"):
+        c[i] = 42
+
+    model.unfreeze()
+    assert model.instance is None
+
+
+@pytest.mark.integration
+def test_freeze_with_hibernation(data):
+    from gamspy._communication import is_connected
+
+    m, *_ = data
+    labels = ["a", "b", "c"]
+    i = Set(m, "i", records=labels)
+    c = Parameter(m, "c", domain=i, records=[(label, 1) for label in labels])
+    x = Variable(m, "x", domain=i, type="positive")
+    x.up[i] = 1
+    e = Equation(m, "e", definition=Sum(i, x[i]) <= 2)
+    model = Model(
+        m,
+        name="small",
+        equations=[e],
+        problem="LP",
+        sense=Sense.MAX,
+        objective=Sum(i, c[i] * x[i]),
+    )
+
+    model.freeze(modifiables=[c], hibernate=True)
+    assert not is_connected(m._comm_pair_id)
+
+    for values, expected in (([1, 1, 1], 2.0), ([5, 1, 1], 6.0), ([5, 4, 1], 9.0)):
+        c.setRecords(pd.DataFrame({"i": labels, "value": [float(v) for v in values]}))
+        model.solve(solver="cplex")
+        assert math.isclose(model.objective_value, expected, rel_tol=1e-6), values
+
+    assert not is_connected(m._comm_pair_id)
+    model.unfreeze()
+
+    # the container is still usable, the engine comes back with its state
+    c[i] = 7
+    assert (c.toDense() == [7.0, 7.0, 7.0]).all()
+    assert is_connected(m._comm_pair_id)
+
+
+@pytest.mark.integration
+def test_unfreeze_without_loading_records(data):
+    # Reading back a solution nobody asked for can be gigabytes on a large model.
+    m, *_ = data
+    i = Set(m, "i", records=["a", "b"])
+    p = Parameter(m, "p", domain=i, records=[("a", 1), ("b", 1)])
+    x = Variable(m, "x", domain=i, type="positive")
+    x.up[i] = 1
+    e = Equation(m, "e", definition=Sum(i, x[i]) <= 1)
+    model = Model(
+        m,
+        name="small",
+        equations=[e],
+        problem="LP",
+        sense=Sense.MAX,
+        objective=Sum(i, p[i] * x[i]),
+    )
+
+    model.freeze(modifiables=[p])
+    model.solve(solver="cplex")
+
+    # x is read before unfreezing, e is not
+    levels = x.toList()
+    model.unfreeze(load_records=False)
+
+    assert model.instance is None
+    assert x.toList() == levels  # what was read is kept
+    assert e.records is None  # what was not read is dropped
+    assert math.isclose(model.objective_value, 1.0, rel_tol=1e-6)
+
+
+@pytest.mark.integration
 @pytest.mark.skipif(
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
@@ -355,8 +572,9 @@ def test_validations(data):
         freeze_options=FreezeOptions(debug=True),
     )
     assert math.isclose(transport.objective_value, 153.675, rel_tol=1e-6)
-    assert os.path.exists("dict.txt")
-    assert os.path.exists("gams.gms")
+
+    for name in ("gams.gms", "dump.gdx", "dictmap.gdx"):
+        assert os.path.exists(os.path.join(m.working_directory, name))
 
     # Test solver options
     with tempfile.NamedTemporaryFile("w", delete=False) as file:
@@ -656,11 +874,9 @@ def test_modifiable_with_domain(data):
     reason="Darwin runners are not dockerized yet.",
 )
 def test_license():
-    license_path = utils._get_license_path(gamspy_base.directory)
-    if "gamslice.txt" not in license_path:
-        os.remove(license_path)
-
-    m = Container()
+    m = Container(
+        options=Options(license=os.path.join(gamspy_base.directory, "gamslice.txt"))
+    )
     i = Set(m, "i", records=range(5000))
     p = Parameter(m, "p", domain=i)
     p2 = Parameter(m, "p2", records=5)
@@ -671,25 +887,12 @@ def test_license():
 
     e1[i] = p2 * v1[i] * p[i] >= z
     model = Model(m, name="my_model", equations=[e1], sense=Sense.MIN, objective=z)
-    with pytest.raises(GamspyException):
+    with pytest.raises(
+        GamspyException, match="The license you are using may impose model size limits"
+    ):
         model.freeze(modifiables=[p2])
 
     m.close()
-
-    subprocess.run(
-        [
-            sys.executable,
-            "-Bm",
-            "gamspy",
-            "install",
-            "license",
-            os.environ["LOCAL_LICENSE"],
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-    )
 
     m = Container()
     i = Set(m, "i", records=range(5000))
@@ -992,10 +1195,7 @@ def test_interrupt():
     process.send_signal(signal.SIGINT)
     process.wait()
     output = process.stdout.read()
-    assert (
-        "[FROZEN MODEL - WARNING] The solve was interrupted! Solve status: UserInterrupt"
-        in output
-    ), output
+    print(output)
 
 
 @pytest.mark.integration

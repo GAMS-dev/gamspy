@@ -10,9 +10,10 @@ import pandas as pd
 
 import gamspy as gp
 import gamspy.utils as utils
-from gamspy._algorithms import generate_unique_labels
+from gamspy._algorithms import drop_unused_categories, generate_unique_labels
 from gamspy._internals import (
     GAMS_MAX_INDEX_DIM,
+    DataSource,
     DomainStatus,
 )
 from gamspy._records_ingestion import VarEquIngestor
@@ -20,6 +21,7 @@ from gamspy._special_values import SpecialValues
 from gamspy._symbols.equals import equals_variable
 from gamspy._symbols.generate_records import generate_records_variable
 from gamspy._symbols.pivot import pivot_variable
+from gamspy._universe import UNIVERSE, Universe, is_universe
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -42,9 +44,11 @@ if TYPE_CHECKING:
         UniverseAlias,
         Variable,
     )
+    from gamspy._model_instance import ModelInstance
     from gamspy._types import (
         DomainType,
         NormalizedDomainType,
+        RecordsSourceType,
         SymbolType,
         SymbolWithRecordsType,
     )
@@ -59,6 +63,8 @@ class DomainViolation:
 
 
 class BaseSymbol:
+    is_universe: bool = False
+
     def __bool__(self):
         raise ValidationError("A symbol cannot be used as a truth value.")
 
@@ -420,7 +426,15 @@ class BaseSymbol:
 class DomainSymbol(BaseSymbol):
     """Base class for Set, Parameter, Variable, and Equation."""
 
-    def _load_from_gams(self: Set | Parameter | Variable | Equation) -> None:
+    _should_load_from: RecordsSourceType
+
+    def _load_records(self: Set | Parameter | Variable | Equation) -> None:
+        source = self._should_load_from
+        if source is not DataSource.GAMS:
+            self._should_load_from = DataSource.NONE
+            cast("ModelInstance", source)._read_records(self)
+            return
+
         if self._container._in_loop:
             raise ValidationError(
                 "Cannot load symbol records while a loop context manager (e.g. with gp.For, gp.While, gp.Loop) is active."
@@ -428,7 +442,7 @@ class DomainSymbol(BaseSymbol):
 
         from gamspy._gdx import get_records
 
-        self._should_load_from_gams = False
+        self._should_load_from = DataSource.NONE
         container = self._container
         gdx_out_name = "_" + utils._get_unique_name() + ".gdx"
         gdx_out_path = os.path.join(container.working_directory, gdx_out_name)
@@ -436,6 +450,11 @@ class DomainSymbol(BaseSymbol):
         container._synch_with_gams()
         records = get_records(container, gdx_out_path, symbols=[self.name])
         self._records = records[self.name]
+
+    @property
+    def _is_frozen_modifiable(self: Set | Parameter | Variable | Equation) -> bool:
+        """Whether a frozen model may modify this symbol."""
+        return self.name in self._container._frozen_modifiables
 
     def _handle_domain_violations(self: Set | Parameter | Variable | Equation) -> None:
         if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
@@ -450,8 +469,8 @@ class DomainSymbol(BaseSymbol):
                 forwardings = self._domain_forwarding
 
             for elem, forwarding in zip(self.domain, forwardings, strict=True):
-                if forwarding and elem != "*":
-                    elem._should_load_from_gams = True
+                if forwarding and isinstance(elem, (gp.Set, gp.Alias)):
+                    elem._should_load_from = DataSource.GAMS
 
     def _get_domain_str(
         self: SymbolWithRecordsType, forwardings: bool | list[bool]
@@ -468,20 +487,15 @@ class DomainSymbol(BaseSymbol):
                 if forwarding:
                     elem_str += "<"
                 set_strs.append(elem_str)
-            elif isinstance(elem, (str, gp.UniverseAlias)):
+            elif is_universe(elem) or isinstance(elem, str):
                 set_strs.append("*")
 
         return "(" + ",".join(set_strs) + ")"
 
     @property
-    def domain_names(self) -> list[str]:
+    def domain_names(self: SymbolWithRecordsType) -> list[str]:
         """String version of domain names"""
-        AnyContainerDomainSymbol = (gp.Set, gp.Alias, gp.UniverseAlias)
-
-        return [
-            i.name if isinstance(i, AnyContainerDomainSymbol) else i
-            for i in self.domain
-        ]
+        return [i if isinstance(i, str) else i.name for i in self.domain]
 
     @property
     def domain_labels(self: Set | Parameter | Variable | Equation) -> list[str]:
@@ -518,30 +532,40 @@ class DomainSymbol(BaseSymbol):
         domain: DomainType | None,
         default: Literal["*"] | None = None,
     ) -> NormalizedDomainType:
+        """
+        Turn a user given domain into the canonical form. It replaces * elements
+        with UNIVERSE sentinel.
+        """
         if domain is None:
-            domain = ["*"] if default == "*" else []
-        elif isinstance(domain, (gp.Set, gp.Alias, gp.UniverseAlias)):
-            domain = [domain]
-        elif domain == "*":
-            domain = ["*"]
-        elif isinstance(domain, gp.math.Dim):
-            domain = gp.math._generate_dims(container, domain.dims)
+            return [UNIVERSE] if default == "*" else []
 
-        return domain
+        if isinstance(domain, (gp.Set, gp.Alias, gp.UniverseAlias)):
+            return [domain]
+
+        if isinstance(domain, (Universe, str)):
+            return [UNIVERSE] if is_universe(domain) else [domain]
+
+        if isinstance(domain, gp.math.Dim):
+            return gp.math._generate_dims(container, domain.dims)
+
+        return [UNIVERSE if is_universe(elem) else elem for elem in domain]
 
     @property
     def domain(
         self: Set | Parameter | Variable | Equation,
     ) -> NormalizedDomainType:
         """
-        List of domains given either as string (* for universe set) or as reference to the Set/Alias object
+        List of domains given either as the UNIVERSE sentinel, a relaxed domain string,
+        or as a reference to the Set/Alias object.
         """
-        return self._domain
+        return cast("NormalizedDomainType", self._domain)
 
     def _validate_domain(self, domain: NormalizedDomainType) -> NormalizedDomainType:
         AnyContainerDomainSymbol = (gp.Set, gp.Alias, gp.UniverseAlias)
 
-        if not all(isinstance(i, (AnyContainerDomainSymbol, str)) for i in domain):
+        if not all(
+            isinstance(i, (AnyContainerDomainSymbol, Universe, str)) for i in domain
+        ):
             raise TypeError(
                 "All 'domain' elements must be type Set, Alias, UniverseAlias, or str"
             )
@@ -562,7 +586,7 @@ class DomainSymbol(BaseSymbol):
         return self._description
 
     @property
-    def dimension(self) -> int:
+    def dimension(self: SymbolWithRecordsType) -> int:
         """The dimension of symbol"""
         return len(self.domain)
 
@@ -691,7 +715,7 @@ class DomainSymbol(BaseSymbol):
             for n in dimensions:
                 try:
                     self.records.isetitem(
-                        n, self.records.iloc[:, n].cat.remove_unused_categories()
+                        n, drop_unused_categories(self.records.iloc[:, n])
                     )
                 except Exception as err:
                     raise GamspyException(
@@ -768,18 +792,15 @@ class DomainSymbol(BaseSymbol):
             return None
 
         violations = self._findDomainViolations()
-        if violations is None:
-            return None
-
-        self.records.drop(index=violations.index, inplace=True)
+        self.records.drop(index=violations.index, inplace=True)  # ty: ignore[unresolved-attribute]
 
     @property
-    def domain_type(self):
+    def domain_type(self: SymbolWithRecordsType):
         """State of the domain links"""
         return self._domain_status.name
 
     @property
-    def _domain_status(self):
+    def _domain_status(self: SymbolWithRecordsType):
         AnyContainerDomainSymbol = (gp.Set, gp.Alias, gp.UniverseAlias)
 
         if (
@@ -787,7 +808,7 @@ class DomainSymbol(BaseSymbol):
             and self.dimension != 0
         ):
             return DomainStatus.regular
-        elif all(i == "*" for i in self.domain) or self.dimension == 0:
+        elif all(is_universe(i) for i in self.domain) or self.dimension == 0:
             return DomainStatus.none
 
         return DomainStatus.relaxed
@@ -805,7 +826,7 @@ class DomainSymbol(BaseSymbol):
                     "Cannot write symbol until domain labels have been been restored."
                 )
 
-    def getSparsity(self) -> float:
+    def getSparsity(self: SymbolWithRecordsType) -> float:
         """
         Calculates the sparsity of the symbol's records.
 
@@ -835,12 +856,14 @@ class DomainSymbol(BaseSymbol):
         if self.domain_type in {"relaxed", "none"}:
             return float("nan")
 
+        domain = cast("list[Set | Alias | UniverseAlias]", self.domain)
+
         # if there are any domain symbols that do not have records
-        if any(not n.number_records for n in self.domain):
+        if any(not n.number_records for n in domain):
             return float("nan")
         else:
             dense = 1
-            for i in [n.number_records for n in self.domain]:
+            for i in [n.number_records for n in domain]:
                 dense *= i
 
             return 1 - self.number_records / dense
@@ -878,7 +901,7 @@ class RecordSymbol(DomainSymbol):
             )
 
     @property
-    def is_scalar(self) -> bool:
+    def is_scalar(self: Parameter | Variable | Equation) -> bool:
         """
         Returns True if the len(self.domain) = 0
 
@@ -1503,7 +1526,9 @@ class VarEquSymbol(RecordSymbol):
         """
         return equals_variable(self, other, columns, check_meta_data, rtol, atol)
 
-    def toSparseCoo(self, column: str = "level") -> coo_matrix | None:
+    def toSparseCoo(
+        self: Variable | Equation, column: str = "level"
+    ) -> coo_matrix | None:
         """
         Converts a specified attribute column of the symbol's records to a SciPy sparse
         COOrdinate format (coo_matrix).
@@ -1567,7 +1592,7 @@ class VarEquSymbol(RecordSymbol):
             if self._domain_status is DomainStatus.regular:
                 col = (
                     self.records.iloc[:, 0]
-                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))
+                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))  # ty: ignore[unresolved-attribute]
                     .to_numpy(dtype=int)
                 )
             else:
@@ -1583,12 +1608,12 @@ class VarEquSymbol(RecordSymbol):
             if self._domain_status is DomainStatus.regular:
                 row = (
                     self.records.iloc[:, 0]
-                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))
+                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))  # ty: ignore[unresolved-attribute]
                     .to_numpy(dtype=int)
                 )
                 col = (
                     self.records.iloc[:, 1]
-                    .map(self.domain[1]._getUELCodes(0, ignore_unused=True))
+                    .map(self.domain[1]._getUELCodes(0, ignore_unused=True))  # ty: ignore[unresolved-attribute]
                     .to_numpy(dtype=int)
                 )
             else:

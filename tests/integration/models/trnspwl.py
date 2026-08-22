@@ -215,7 +215,7 @@ def main():
     s = Set(
         m,
         name="s",
-        records=["slope0", "slopeN"] + [f"s{i}" for i in range(1, 7)],
+        records=["slope0"] + [f"s{i}" for i in range(1, 7)] + ["slopeN"],
         description="SOS2 elements",
     )
     ss = Set(

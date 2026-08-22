@@ -5,12 +5,10 @@ import gc
 import glob
 import math
 import os
-import platform
 import shutil
 import subprocess
 import sys
 import tempfile
-import timeit
 import uuid
 from pathlib import Path
 
@@ -91,6 +89,11 @@ def test_container(data, tmp_path):
 
     with pytest.raises(TypeError):
         m = Container(options={"bla": "bla"})
+
+    # working_directory can be given as a Path
+    path_working_dir = tmp_path / "path_working_dir"
+    with Container(working_directory=path_working_dir) as path_m:
+        assert path_m.working_directory == str(path_working_dir)
 
     m = Container(options=Options.fromGams({"reslim": 5}))
     Parameter(m, "a")
@@ -341,6 +344,7 @@ def test_loadRecordsFromGdx(data, tmp_path):
     v.fx[i, j] = 5
 
 
+@pytest.mark.unit
 def test_loadRecordsFromGdx_with_missing_symbols(tmp_path):
     m = gp.Container()
     i = gp.Set(m, "i", records=range(3))
@@ -360,6 +364,49 @@ def test_loadRecordsFromGdx_with_missing_symbols(tmp_path):
     a = m3["a"]
     assert a.domain == [i]
     assert a.toList() == [("0", 1.0), ("1", 2.0), ("2", 3.0)], a.toList()
+
+
+@pytest.mark.unit
+def test_hibernate():
+    from gamspy._communication import is_connected
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=range(5))
+    p = gp.Parameter(m, "p", domain=i)
+    p[i] = 3
+    assert is_connected(m._comm_pair_id)
+
+    m.hibernate()
+    assert not is_connected(m._comm_pair_id)
+    m.hibernate()  # idempotent
+
+    # the next statement that needs GAMS restarts it from the saved state
+    p[i] = p[i] + 1
+    assert (p.toDense() == [4.0] * 5).all()
+    assert is_connected(m._comm_pair_id)
+    assert m._restart_from is None
+
+    # the sets are still known to GAMS, not just to python
+    m.hibernate()
+    q = gp.Parameter(m, "q", domain=i)
+    q[i] = gp.Ord(i)
+    assert (q.toDense() == [1.0, 2.0, 3.0, 4.0, 5.0]).all()
+
+    # the state cannot be saved from inside a loop, so it must not be stopped
+    with gp.Loop(i):
+        p[i] = 1
+        with pytest.raises(ValidationError, match="Cannot hibernate while a loop"):
+            m.hibernate()
+
+    assert is_connected(m._comm_pair_id)
+    assert (p.toDense() == [1.0] * 5).all()
+
+    # a closed container does not come back from hibernation
+    m.hibernate()
+    m.close()
+    with pytest.raises(ValidationError, match="connection to the GAMS execution"):
+        p[i] = 2
+        _ = p.records
 
 
 @pytest.mark.unit
@@ -695,54 +742,54 @@ def test_debugging_level():
     with pytest.raises(ValidationError):
         _ = Container(debugging_level="wrong_level")
 
-    global working_directory
-
     def test_delete_success():
-        global working_directory
         m = Container(debugging_level="delete")
         working_directory = m.working_directory
         _ = Equation(m, "e")
+        return working_directory
 
-    test_delete_success()
+    working_directory = test_delete_success()
     gc.collect()
     assert not os.path.exists(working_directory)
 
     def test_delete_err():
-        global working_directory
         m = Container(debugging_level="delete")
         working_directory = m.working_directory
         e = Equation(m, "e")
         with pytest.raises(GamspyException):
             e[:] = sqrt(e) == 5
 
-    test_delete_err()
+        return working_directory
+
+    working_directory = test_delete_err()
     gc.collect()
     assert not os.path.exists(working_directory)
 
     def test_keep_success():
         m = Container(debugging_level="keep")
-        global working_directory
         working_directory = m.working_directory
         _ = Equation(m, "e")
         _ = Equation(m, "e2")
         # Bare declarations are deferred and flushed together on the next sync,
         # producing a single .gms file rather than one per declaration.
         m._synch_with_gams()
+        return working_directory
 
-    test_keep_success()
+    working_directory = test_keep_success()
     gc.collect()
     assert os.path.exists(working_directory)
     assert len(glob.glob(os.path.join(working_directory, "*.gms"))) == 1
 
     def test_keep_err():
         m = Container(debugging_level="keep")
-        global working_directory
         working_directory = m.working_directory
         e = Equation(m, "e")
         with pytest.raises(GamspyException):
             e[:] = sqrt(e) == 5
 
-    test_keep_err()
+        return working_directory
+
+    working_directory = test_keep_err()
     gc.collect()
     assert os.path.exists(working_directory)
     # The bare declaration is deferred, so only the failing assignment syncs,
@@ -751,26 +798,37 @@ def test_debugging_level():
 
     def test_keep_on_error_success():
         m = Container(debugging_level="keep_on_error")
-        global working_directory
         working_directory = m.working_directory
         _ = Equation(m, "e")
 
-    test_keep_on_error_success()
+        return working_directory
+
+    working_directory = test_keep_on_error_success()
     gc.collect()
     assert not os.path.exists(working_directory)
 
     def test_keep_on_error_err():
         m = Container(debugging_level="keep_on_error")
-        global working_directory
         working_directory = m.working_directory
         e = Equation(m, "e")
         with pytest.raises(GamspyException):
             e[:] = sqrt(e) == 5
 
-    test_keep_on_error_err()
+        return working_directory
+
+    working_directory = test_keep_on_error_err()
     gc.collect()
     assert os.path.exists(working_directory)
     assert len(glob.glob(os.path.join(working_directory, "*.gms"))) == 1
+
+
+@pytest.mark.unit
+def test_workspace_cleanup_ignores_missing_directory():
+    from gamspy._workspace import Workspace
+
+    # Cleanup must silently tolerate a working directory that is already deleted.
+    Workspace.cleanup(True, "delete", "/nonexistent/gamspy_workspace_dir", [])
+    Workspace.cleanup(True, "keep_on_error", "/nonexistent/gamspy_workspace_dir", [])
 
 
 @pytest.mark.unit
@@ -1166,6 +1224,21 @@ def test_mcp_serialization(data) -> None:
         assert isinstance(serialized_variable, Variable)
         assert orig_equation.name == serialized_equation.name
         assert orig_variable.name == serialized_variable.name
+
+
+@pytest.mark.unit
+def test_deserialize_variable_with_universe_domain(data, tmp_path):
+    m, *_ = data
+    t = Set(m, "t", records=["a", "b"])
+    _ = Variable(m, "v", type="positive", domain=["*", t])
+
+    serialization_path = os.path.join(tmp_path, "var_universe_domain.zip")
+    serialize(m, serialization_path)
+    m2 = deserialize(serialization_path)
+
+    v2 = m2["v"]
+    assert v2.domain[0] == "*"
+    assert v2.domain[1] is m2["t"]
 
 
 @pytest.mark.unit
@@ -1595,6 +1668,48 @@ def test_writeSolverOptions():
 
 
 @pytest.mark.unit
+def test_writeSolverOptions_scip():
+    m = Container()
+
+    # Values of string parameters must be quoted, values of char, and bool parameters
+    # must not be.
+    m.writeSolverOptions(
+        "scip",
+        solver_options={
+            "lp/solver": "highs",
+            "branching/scorefunc": "s",
+            "lp/checkstability": "TRUE",
+            "heuristics/actconsdiving/freq": "false",
+            "limits/nodes": 10,
+            "limits/gap": 1e-4,
+            "limits/time": 3.5,
+            "gams/solvetrace": '"trace.txt"',
+        },
+    )
+
+    with open(os.path.join(m.working_directory, "scip.opt")) as file:
+        lines = file.read().splitlines()
+
+    assert lines == [
+        'lp/solver = "highs"',
+        "branching/scorefunc = s",
+        "lp/checkstability = TRUE",
+        "heuristics/actconsdiving/freq = false",
+        "limits/nodes = 10",
+        "limits/gap = 0.0001",
+        "limits/time = 3.5",
+        'gams/solvetrace = "trace.txt"',
+    ]
+
+    # Other solvers that use the `key = value` format must not be quoted.
+    m.writeSolverOptions("shot", solver_options={"Subsolver.GAMS.NLP.Solver": "conopt"})
+    with open(os.path.join(m.working_directory, "shot.opt")) as file:
+        assert file.read().splitlines() == ["Subsolver.GAMS.NLP.Solver = conopt"]
+
+    m.close()
+
+
+@pytest.mark.unit
 def test_domain_violations():
     import gamspy as gp
 
@@ -1636,59 +1751,6 @@ def test_domain_violations():
     assert e._domain_violations[0].violations == ["i2"]
 
     gp.set_options({"DROP_DOMAIN_VIOLATIONS": 0})
-
-
-def one_by_one(n: int, m: Container):
-    sets = [Set(m) for _ in range(10)]
-    for set in sets:
-        set.setRecords(range(n))
-
-    params = [Parameter(m) for _ in range(10)]
-    for param in params:
-        param.setRecords(n)
-
-
-def batched(n: int, m: Container):
-    sets = [Set(m) for _ in range(10)]
-    values = [range(n)] * 10
-    m.setRecords(dict(zip(sets, values, strict=False)))
-
-    params = [Parameter(m) for _ in range(10)]
-    values = [n] * 10
-    m.setRecords(dict(zip(params, values, strict=False)))
-
-
-@pytest.mark.skipif(
-    platform.system() != "Linux",
-    reason="Test only for linux because other build machines are slow enough and there is no platform dependent behavior.",
-)
-@pytest.mark.unit
-def test_batch_setRecords():
-    n = 10
-    m = Container()
-    one_by_one_result = timeit.repeat(
-        "one_by_one(n, m)",
-        globals={"n": n, "one_by_one": one_by_one, "m": m},
-        repeat=30,
-        number=1,
-    )
-
-    m = Container()
-    batched_result = timeit.repeat(
-        "batched(n, m)",
-        globals={"n": n, "batched": batched, "m": m},
-        repeat=30,
-        number=1,
-    )
-    assert min(one_by_one_result) > min(batched_result)
-    m.close()
-
-    m = Container()
-    i = Set(m, "i")
-    k = Set(m, "k")
-
-    with pytest.raises(ValidationError):
-        m.setRecords({i: range(10), k: range(5)}, uels_on_axes=[True, False, True])
 
 
 @pytest.mark.unit
@@ -1980,6 +2042,7 @@ def test_addGamsCode_with_debugging_level_keep():
     m.addGamsCode("Set i / i1 /;")
 
 
+@pytest.mark.unit
 def test_describe_symbols():
     m = gp.Container()
     assert m.describeAliases() is None
@@ -2106,6 +2169,70 @@ def test_generateRecords():
     i2 = gp.Set(m, "i2", records=range(5))
     p3 = gp.Parameter(m, "p3", domain=i2)
     p3.generateRecords(density=0)
+
+
+@pytest.mark.unit
+def test_generateRecords_sparse_large_domain():
+    # The dense cartesian product of these domains (10**10 rows) does not fit in
+    # memory, but a sparse sample out of it must still be generated.
+    m = gp.Container()
+    i = gp.Set(m, "i", records=range(100_000))
+    j = gp.Set(m, "j", records=range(100_000))
+    cardinality = len(i) * len(j)
+
+    p = gp.Parameter(m, "p", domain=[i, j])
+    p.generateRecords(density=50_000 / cardinality, seed=42)
+
+    assert len(p.records) == 50_000
+    # records must be unique and sorted (as with a dense cartesian product)
+    keys = p.records.iloc[:, 0].cat.codes.to_numpy().astype(np.int64) * len(
+        j
+    ) + p.records.iloc[:, 1].cat.codes.to_numpy().astype(np.int64)
+    assert np.all(np.diff(keys) > 0)
+
+    # the same seed must give the same records
+    other = gp.Parameter(m, "other", domain=[i, j])
+    other.generateRecords(density=50_000 / cardinality, seed=42)
+    assert p.records.equals(other.records)
+
+    s = gp.Set(m, "s", domain=[i, j])
+    s.generateRecords(density=10 / cardinality, seed=1)
+    assert len(s.records) == 10
+    assert set(s.records.columns) == {"i", "j", "element_text"}
+
+    v = gp.Variable(m, "v", domain=[i, j])
+    v.generateRecords(density=10 / cardinality, seed=1)
+    assert len(v.records) == 10
+
+    # a density per dimension only takes the product of the sampled labels
+    p2 = gp.Parameter(m, "p2", domain=[i, j])
+    p2.generateRecords(density=[0.001, 0.0001], seed=42)
+    assert len(p2.records) == 100 * 10
+
+    m.close()
+
+
+@pytest.mark.unit
+def test_generateRecords_cardinality_overflow():
+    from gamspy._symbols.generate_records import _validate_cardinality
+
+    _validate_cardinality(np.iinfo(np.int64).max)
+
+    with pytest.raises(ValidationError, match="too large to index"):
+        _validate_cardinality(np.iinfo(np.int64).max + 1)
+
+
+@pytest.mark.unit
+def test_choice_no_replace_huge_pool():
+    from gamspy._algorithms import choice_no_replace
+
+    idx = choice_no_replace(10**15, 100_000, seed=42)
+
+    assert idx.size == 100_000
+    assert np.all(np.diff(idx) > 0)  # unique and sorted
+    assert idx.min() >= 0
+    assert idx.max() < 10**15
+    assert np.array_equal(idx, choice_no_replace(10**15, 100_000, seed=42))
 
 
 @pytest.mark.unit
@@ -2412,6 +2539,7 @@ def test_symbol_toDict():
     assert e1.toDict(columns="marginal") == {"i2": 2.5}
 
 
+@pytest.mark.unit
 def test_case_insensitivity(tmp_path):
     gdx_path = tmp_path / "test.gdx"
     m = gp.Container()

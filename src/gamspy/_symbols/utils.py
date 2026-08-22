@@ -130,9 +130,7 @@ def toValueParameter(symbol: Parameter) -> float:
         )
 
     if symbol.records is None:
-        raise ValidationError(
-            f"Cannot call toValue on `{symbol.name}` because it has no records."
-        )
+        return 0.0
 
     return symbol.records["value"][0]
 
