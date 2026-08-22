@@ -27,10 +27,11 @@ from gamspy._universe import UNIVERSE, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Container
+    from gamspy import Alias, Container, Parameter
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression, ShiftExpression
-    from gamspy._algebra.operation import Operation
+    from gamspy._algebra.number import Number
+    from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import (
@@ -751,7 +752,15 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         rhs: Expression
         | Operation
         | Condition
+        | MathOp
+        | Number
+        | Card
+        | Ord
+        | Parameter
         | ImplicitSet
+        | ImplicitParameter
+        | int
+        | float
         | bool
         | str
         | SparseAssignment,

@@ -16,7 +16,7 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     import pandas as pd
 
-    from gamspy import Alias, Parameter, Set
+    from gamspy import Alias, Parameter, Set, UniverseAlias
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits.implicit_symbol import ImplicitParameter, ImplicitSet
     from gamspy._types import ImplicitSymbolType, OperableType, SymbolType
@@ -689,13 +689,13 @@ def Round(x: OperableType, num_decimals: int = 0) -> MathOp:
     return MathOp("round", (x, num_decimals))
 
 
-def sign(x: SymbolType) -> MathOp:
+def sign(x: OperableType) -> MathOp:
     """
     Sign of ``x`` returns ``1 if x > 0``, ``-1 if x < 0``, and ``0 if x = 0``
 
     Parameters
     ----------
-    x : SymbolType
+    x : OperableType
 
     Returns
     -------
@@ -1034,14 +1034,14 @@ def lse_min_sc(t, *xs) -> MathOp:
     return MathOp("lseMinSc", (t,) + xs)
 
 
-def ncp_cm(x: SymbolType, y: SymbolType, z: float | int) -> MathOp:
+def ncp_cm(x: OperableType, y: OperableType, z: float | int) -> MathOp:
     """
     Chen-Mangasarian smoothing: ``x - z*ln(1 + exp((x-y)/z))``
 
     Parameters
     ----------
-    x : SymbolType
-    y : SymbolType
+    x : OperableType
+    y : OperableType
     z : int | float
 
     Returns
@@ -1064,14 +1064,14 @@ def ncp_cm(x: SymbolType, y: SymbolType, z: float | int) -> MathOp:
     return MathOp("ncpCM", (x, y, z))
 
 
-def ncp_f(x: SymbolType, y: SymbolType, z: int | float = 0) -> MathOp:
+def ncp_f(x: OperableType, y: OperableType, z: int | float = 0) -> MathOp:
     """
     Fisher-Burmeister smoothing: ``sqrt(x^2 + y^2 + 2z) - x - y`` where ``z >= 0`` (default ``z = 0``)
 
     Parameters
     ----------
-    x : SymbolType
-    y : SymbolType
+    x : OperableType
+    y : OperableType
     z : int | float, optional
 
     Returns
@@ -1095,8 +1095,8 @@ def ncp_f(x: SymbolType, y: SymbolType, z: int | float = 0) -> MathOp:
 
 
 def ncpVUpow(
-    r: SymbolType,
-    s: SymbolType,
+    r: OperableType,
+    s: OperableType,
     mu: int | float = 0,
 ) -> MathOp:
     """
@@ -1104,8 +1104,8 @@ def ncpVUpow(
 
     Parameters
     ----------
-    r : SymbolType
-    s : SymbolType
+    r : OperableType
+    s : OperableType
     mu : int | float, optional
 
     Returns
@@ -1127,14 +1127,14 @@ def ncpVUpow(
     return MathOp("ncpVUpow", (r, s, mu))
 
 
-def ncpVUsin(r: SymbolType, s: SymbolType, mu: int | float = 0) -> MathOp:
+def ncpVUsin(r: OperableType, s: OperableType, mu: int | float = 0) -> MathOp:
     """
     NCP Veelken-Ulbrich (smoothed min(r,s))
 
     Parameters
     ----------
-    r : SymbolType
-    s : SymbolType
+    r : OperableType
+    s : OperableType
     mu : int | float, optional
 
     Returns
@@ -1303,16 +1303,16 @@ def rand_triangle(low: int | float, mid: int | float, high: int | float) -> Math
 
 
 def same_as(
-    arg1: Set | Alias | ImplicitSet | Expression | str,
-    arg2: Set | Alias | ImplicitSet | Expression | str,
+    arg1: Set | Alias | UniverseAlias | ImplicitSet | Expression | str,
+    arg2: Set | Alias | UniverseAlias | ImplicitSet | Expression | str,
 ) -> MathOp:
     """
     Evaluates to true if this set is identical to the given set or alias, false otherwise.
 
     Parameters
     ----------
-    arg1 : Set | Alias | ImplicitSet | Expression | str
-    other : Set | Alias | ImplicitSet | Expression | str
+    arg1 : Set | Alias | UniverseAlias | ImplicitSet | Expression | str
+    other : Set | Alias | UniverseAlias | ImplicitSet | Expression | str
 
     Returns
     -------
@@ -1335,8 +1335,8 @@ def same_as(
 
 
 def diag(
-    arg1: Set | Alias | ImplicitSet | str,
-    arg2: Set | Alias | ImplicitSet | str,
+    arg1: Set | Alias | UniverseAlias | ImplicitSet | str,
+    arg2: Set | Alias | UniverseAlias | ImplicitSet | str,
 ) -> MathOp:
     """
     Returns the numerical value 1 if the first argument is identical to the
@@ -1345,8 +1345,8 @@ def diag(
 
     Parameters
     ----------
-    arg1 : Set | Alias | ImplicitSet | str
-    arg2 : Set | Alias | ImplicitSet | str
+    arg1 : Set | Alias | UniverseAlias | ImplicitSet | str
+    arg2 : Set | Alias | UniverseAlias | ImplicitSet | str
 
     Returns
     -------

@@ -60,3 +60,24 @@ def test_universe_survives_serialization(tmp_path):
     assert m2["p"].domain[1] is gp.UNIVERSE
     m.close()
     m2.close()
+
+
+def test_universe_alias_as_sole_index_is_rendered():
+    m = gp.Container()
+    item = gp.UniverseAlias(m, "item")
+    i = gp.Set(m, "i", records=["i1", "i2"])
+    lim = gp.Set(m, "lim", records=["up", "lo"])
+
+    # A symbol declared over the universe carries no index, but a UniverseAlias
+    # used as an index is a named symbol and must be rendered.
+    assert lim.gamsRepr() == "lim"
+    assert lim[item].gamsRepr() == "lim(item)"
+    assert lim[item].latexRepr() == "lim_{item}"
+    assert gp.Sum(lim[item], 1).gamsRepr() == "sum(lim(item),1)"
+    assert gp.Domain(lim[item], i).gamsRepr() == "(lim(item),i)"
+    assert gp.Number(1).where[lim[item]].gamsRepr() == "1 $ (lim(item))"
+
+    lim[item] = True
+    assert lim._assignment.getDeclaration() == "lim(item) = yes;"
+    assert lim.records["uni"].tolist() == ["i1", "i2", "up", "lo"]
+    m.close()

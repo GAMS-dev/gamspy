@@ -59,4 +59,8 @@ def is_universe(elem) -> bool:
 
 
 def is_universe_domain(domain: Sequence) -> bool:
-    return len(domain) == 1 and is_universe(domain[0])
+    if len(domain) != 1:
+        return False
+
+    elem = domain[0]
+    return isinstance(elem, (Universe, str)) and is_universe(elem)

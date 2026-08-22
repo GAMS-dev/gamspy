@@ -23,18 +23,20 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     import pandas as pd
 
-    from gamspy import Container, Set
+    from gamspy import Container, Parameter, Set
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
-    from gamspy._algebra.operation import Operation
+    from gamspy._algebra.number import Number
+    from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._algebra.sparse import SparseAssignment
-    from gamspy._symbols.implicits import ImplicitSet
+    from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import (
         IndexType,
         NormalizedDomainType,
         RecordsSourceType,
         SetRecordsType,
     )
+    from gamspy.math.misc import MathOp
 
 
 class Alias(operable.Operable, BaseSymbol, SetMixin):
@@ -220,7 +222,15 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         rhs: Expression
         | Operation
         | Condition
+        | MathOp
+        | Number
+        | Card
+        | Ord
+        | Parameter
         | ImplicitSet
+        | ImplicitParameter
+        | int
+        | float
         | bool
         | str
         | SparseAssignment,

@@ -76,7 +76,31 @@ if TYPE_CHECKING:
         | Condition
     )
     OperationIndexType: TypeAlias = (
-        Set | Alias | ImplicitSet | Sequence[Set | Alias] | Domain | Condition | MathOp
+        Set
+        | Alias
+        | ImplicitSet
+        | Domain
+        | Condition
+        | MathOp
+        | Sequence[Set | Alias | ImplicitSet | Domain | Condition | MathOp]
+    )
+
+    # Possible types of a dollar condition.
+    ConditionType: TypeAlias = (
+        Expression
+        | Operation
+        | Condition
+        | MathOp
+        | Card
+        | Ord
+        | Set
+        | Alias
+        | UniverseAlias
+        | Parameter
+        | Variable
+        | ImplicitSet
+        | ImplicitParameter
+        | ImplicitVariable
     )
     OperationRhsType: TypeAlias = (
         Operation

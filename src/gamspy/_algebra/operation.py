@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     import pandas as pd
 
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols import Alias, Parameter, Set
+    from gamspy._symbols import Alias, Equation, Parameter, Set, Variable
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy._types import OperationIndexType, OperationRhsType
 
@@ -868,7 +868,7 @@ class Card(operable.Operable):
 
     Parameters
     ----------
-    symbol : Set | Alias | Parameter | Variable | Equation | Model
+    symbol : Set | Alias | Parameter | Variable | Equation
 
     Examples
     --------
@@ -880,7 +880,7 @@ class Card(operable.Operable):
 
     """
 
-    def __init__(self, symbol: Set | Alias | Parameter) -> None:
+    def __init__(self, symbol: Set | Alias | Parameter | Variable | Equation) -> None:
         if not isinstance(
             symbol, (syms.Set, syms.Alias, syms.Parameter, syms.Variable, syms.Equation)
         ):

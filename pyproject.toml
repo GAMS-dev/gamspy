@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.26.4"
+version = "1.27.0"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -34,8 +34,8 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi >= 54.1.0, < 55.0.0",
-  "gamspy_base >= 54.1.0, < 55.0.0",
+  "gamsapi >= 54.3.1, < 55.0.0",
+  "gamspy_base >= 54.3.1, < 55.0.0",
   "pandas >= 2.2.2, < 3.1",
   "pydantic >= 2.0",
   "pyyaml >= 6.0",
