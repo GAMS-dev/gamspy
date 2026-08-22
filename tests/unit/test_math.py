@@ -766,6 +766,11 @@ def test_log_softmax(data):
     with pytest.raises(IndexError):
         gams_math.log_softmax(x, 2)
 
+    # domain elements must be sets/aliases, not the universe
+    x_universe = Variable(m, name="x_universe", domain=["*", "*"])
+    with pytest.raises(ValidationError):
+        gams_math.log_softmax(x_universe)
+
     # this uses LSE in background
     y, eqs = gams_math.log_softmax(x)
     assert "lseMax" in eqs[0].getDefinition()
@@ -807,6 +812,11 @@ def test_softmax(data):
     # dim out of bounds
     with pytest.raises(IndexError):
         gams_math.softmax(x, 2)
+
+    # domain elements must be sets/aliases, not the universe
+    x_universe = Variable(m, name="x_universe", domain=["*", "*"])
+    with pytest.raises(ValidationError):
+        gams_math.softmax(x_universe)
 
     _y, equations = gams_math.softmax(x)
     assert "exp" in equations[0].getDefinition()
@@ -1058,3 +1068,40 @@ def test_gelu():
     assert np.allclose(y.toDense(), expected, rtol=1e-8), (
         "Unexpected output for gelu activation."
     )
+
+
+def test_mathop_helpers():
+    m = gp.Container()
+
+    a = Parameter(m, "a", records=200)
+    scalar_op = gams_math.Round(gams_math.div(a, 3), 2)
+    assert len(scalar_op) == 1
+    assert str(scalar_op) == scalar_op.gamsRepr() == "round(div(a,3),2)"
+    assert scalar_op.toValue() == 66.67
+
+    i = Set(m, "i", records=[])
+    empty_param = Parameter(m, "empty_param", domain=i)
+    empty_op = gams_math.Round(empty_param, 2)
+    assert len(empty_op) == 0
+    assert empty_op.toList() == []
+
+    j = Set(m, "j", records=["j1", "j2"])
+    p = Parameter(m, "p", domain=j, records=[("j1", 1), ("j2", 2)])
+    non_scalar_op = gams_math.Round(p, 2)
+    with pytest.raises(TypeError):
+        non_scalar_op.toValue()
+
+
+def test_sqrt_cancels_with_power_two():
+    m = gp.Container()
+
+    x = Parameter(m, "x", records=5)
+    safe_sqrt = gams_math.sqrt(x, safe_cancel=True)
+    # `+ 0` wraps the sqrt MathOp as `.left` of an Expression, which is what
+    # the `** 2` optimization in Operable.__pow__ looks for.
+    squared = (safe_sqrt + 0) ** 2
+    assert squared is x
+
+    unsafe_sqrt = gams_math.sqrt(x)
+    not_cancelled = (unsafe_sqrt + 0) ** 2
+    assert not_cancelled is not x

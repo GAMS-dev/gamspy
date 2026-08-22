@@ -17,23 +17,30 @@ import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
+from gamspy._internals import DataSource
 from gamspy._records_ingestion import SetIngestor
 from gamspy._symbols.base import DomainSymbol
 from gamspy._symbols.equals import equals_set
 from gamspy._symbols.generate_records import generate_records_set
 from gamspy._symbols.pivot import pivot_set
+from gamspy._universe import UNIVERSE, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
-    from gamspy import Alias, Container, UniverseAlias
+    from gamspy import Alias, Container, Parameter
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression, ShiftExpression
-    from gamspy._algebra.operation import Operation
+    from gamspy._algebra.number import Number
+    from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import DomainType, IndexType, OperableType, SetRecordsType
+    from gamspy._types import (
+        DomainType,
+        IndexType,
+        NormalizedDomainType,
+        OperableType,
+        SetRecordsType,
+    )
     from gamspy.math.misc import MathOp
 
 
@@ -405,13 +412,36 @@ class SetMixin:
         >>> j = gp.Set(m, name="j", records=["new-york", "seattle"])
         >>> attr = gp.Parameter(m, "attr", domain=[i, j])
         >>> attr[i,j] = i.sameAs(j)
-        >>> attr.records.values.tolist()
-        [['seattle', 'seattle', 1.0]]
+        >>> attr.toList()
+        [('seattle', 'seattle', 1.0)]
+
+        Comparing a set to an element label with ``==`` (or ``!=``) is
+        shorthand for ``sameAs`` (or its negation):
+
+        >>> (i == "seattle").gamsRepr()
+        'sameAs(i,"seattle")'
+        >>> (i != "seattle").gamsRepr()
+        '(not sameAs(i,"seattle"))'
 
         """
         assert isinstance(self, (gp.Set, gp.Alias))
         assert isinstance(other, (gp.Set, gp.Alias, str))
         return gp.math.same_as(self, other)
+
+    def __eq__(self: Set | Alias, other):
+        # i == "i1" is sugar for i.sameAs("i1"). Any string is an element label.
+        # For other types, fall back to identity semantics by returning NotImplemented.
+        if isinstance(other, str):
+            return gp.math.same_as(self, other)
+
+        return NotImplemented
+
+    def __ne__(self: Set | Alias, other):
+        # Follows the same logic with __eq__.
+        if isinstance(other, str):
+            return ~gp.math.same_as(self, other)
+
+        return NotImplemented
 
 
 class Set(operable.Operable, DomainSymbol, SetMixin):
@@ -426,9 +456,11 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         The Container object that this set belongs to.
     name : str, optional
         Name of the set. If not provided, a unique name is generated automatically.
-    domain : Sequence[Set | Alias | str] | Set | Alias | str, optional
+    domain : DomainType, optional
         The domain of the set. Can be a list of other Sets/Aliases, a single Set/Alias,
-        or strings representing set names. Use "*" for the universe set. Default is ["*"].
+        or strings representing set names. Use :data:`UNIVERSE <gamspy.UNIVERSE>` for the universe
+        set (the bare string ``"*"`` is also accepted, but discouraged). Default is
+        ``[UNIVERSE]``.
     is_singleton : bool, optional
         If True, restricts the set to contain at most one element. Default is False.
     records : pd.DataFrame | np.ndarray | list, optional
@@ -510,7 +542,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         obj._container._add_statement(obj)
         obj._metadata = {}
         obj._assignment = None
-        obj._should_load_from_gams = False
+        obj._should_load_from = DataSource.NONE
         obj._should_unload_to_gams = False
 
         # miro support
@@ -650,7 +682,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
             self._gams_subtype = 1 if self._is_singleton else 0
             self.where = condition.Condition(self)
             self._latex_name = self.name.replace("_", r"\_")
-            self._should_load_from_gams = False
+            self._should_load_from = DataSource.NONE
             self._should_unload_to_gams = False
             self._container._data.update({name: self})
 
@@ -698,12 +730,14 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
             setattr(self, key, value)
 
         # Relink domain symbols
-        new_domain = []
+        new_domain: list = []
         for elem in self._domain:
-            if elem == "*":
+            if is_universe(elem):
+                new_domain.append(UNIVERSE)
+            elif isinstance(elem, str):
                 new_domain.append(elem)
-                continue
-            new_domain.append(self._container[elem.name])
+            else:
+                new_domain.append(self._container[elem.name])
 
         self._domain = new_domain
 
@@ -718,7 +752,15 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         rhs: Expression
         | Operation
         | Condition
+        | MathOp
+        | Number
+        | Card
+        | Ord
+        | Parameter
         | ImplicitSet
+        | ImplicitParameter
+        | int
+        | float
         | bool
         | str
         | SparseAssignment,
@@ -744,7 +786,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         self._assignment = statement
 
         self._container._synch_with_gams()
-        self._should_load_from_gams = True
+        self._should_load_from = DataSource.GAMS
 
     def __repr__(self) -> str:
         return f"Set(name='{self.name}', domain={self.domain})"
@@ -756,7 +798,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         self,
         is_singleton: bool,
         records: SetRecordsType | None,
-        domain: Sequence[Set | Alias | UniverseAlias | Literal["*"]],
+        domain: NormalizedDomainType,
     ):
         if is_singleton:
             if records is not None and len(records) != 1:
@@ -936,8 +978,8 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         [['seattle', ''], ['san-diego', '']]
 
         """
-        if self._should_load_from_gams:
-            self._load_from_gams()
+        if self._should_load_from is not DataSource.NONE:
+            self._load_records()
 
         return self._records
 
@@ -959,6 +1001,9 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
 
         self._records = records
         self._should_unload_to_gams = True
+        # Records assigned from Python are the up to date ones, so a pending
+        # read (e.g. from an earlier assignment in GAMS) must not overwrite them.
+        self._should_load_from = DataSource.NONE
         self._handle_domain_forwarding()
 
     def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:

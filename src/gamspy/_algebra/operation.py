@@ -12,6 +12,7 @@ import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
+from gamspy._universe import is_universe
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
     import pandas as pd
 
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols import Alias, Parameter, Set
+    from gamspy._symbols import Alias, Equation, Parameter, Set, Variable
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy._types import OperationIndexType, OperationRhsType
 
@@ -208,7 +209,7 @@ class Operation(operable.Operable):
 
         raw_domain = []
         for elem in self.op_domain:
-            if isinstance(elem, (str, syms.UniverseAlias)):
+            if is_universe(elem) or isinstance(elem, str):
                 raise ValidationError(
                     f"`{elem}` is not a valid index for an operation."
                 )
@@ -252,16 +253,18 @@ class Operation(operable.Operable):
                     member
                     for member in utils._unpack(elem.elements)
                     if isinstance(member, (syms.Set, syms.Alias))
-                    and member not in control_stack
+                    and not utils.isin(member, control_stack)
                 ]
                 continue
 
             if isinstance(elem, implicits.ImplicitSet):
                 control_stack += [
-                    member for member in elem.domain if member not in control_stack
+                    member
+                    for member in elem.domain
+                    if not utils.isin(member, control_stack)
                 ] + [elem.parent]
 
-            if elem in control_stack:
+            if utils.isin(elem, control_stack):
                 raise ValidationError(f"Set {elem} is already in control")
 
             set_indices.append(elem)
@@ -865,7 +868,7 @@ class Card(operable.Operable):
 
     Parameters
     ----------
-    symbol : Set | Alias | Parameter | Variable | Equation | Model
+    symbol : Set | Alias | Parameter | Variable | Equation
 
     Examples
     --------
@@ -877,7 +880,7 @@ class Card(operable.Operable):
 
     """
 
-    def __init__(self, symbol: Set | Alias | Parameter) -> None:
+    def __init__(self, symbol: Set | Alias | Parameter | Variable | Equation) -> None:
         if not isinstance(
             symbol, (syms.Set, syms.Alias, syms.Parameter, syms.Variable, syms.Equation)
         ):

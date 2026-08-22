@@ -529,21 +529,21 @@ controlling index or an indexed operation.
 
 .. _the-universal-set:
 
-The Universal Set: ``*`` as Set Identifier
-==========================================
+The Universal Set: ``UNIVERSE`` as Set Identifier
+=================================================
 
-GAMSPy provides the universal set denoted by ``*`` for cases where the user wishes not to 
-specify a domain set but have only a placeholder for it. The following examples show two ways 
-how the universal set is introduced in a model. We will discuss the advantages and 
-disadvantages of using the universal set later. First example:  ::
+GAMSPy provides the universal set, denoted by :data:`UNIVERSE <gamspy.UNIVERSE>`, for cases
+where the user wishes not to specify a domain set but have only a placeholder for it. The
+following examples show two ways how the universal set is introduced in a model. We will
+discuss the advantages and disadvantages of using the universal set later. First example:  ::
 
-    from gamspy import Container, Set, Parameter
+    from gamspy import Container, Set, Parameter, UNIVERSE
 
     m = Container()
     r = Set(m, name="r", description="raw materials", records=["scrap", "new"])
     misc = Parameter(
         m,
-        domain=["*", r],
+        domain=[UNIVERSE, r],
         records=[
             ["max-stock", "scrap", 400],
             ["max-stock", "new", 275],
@@ -554,12 +554,21 @@ disadvantages of using the universal set later. First example:  ::
         ],
     )
 
-In our example, the first index of parameter ``misc`` is the universal set ``"*"`` and the 
-second index is the previously defined set ``r``. Since the first index is the universal set 
-any entry whatsoever is allowed in this position. In the second position elements of the set 
+In our example, the first index of parameter ``misc`` is the universal set ``UNIVERSE`` and the
+second index is the previously defined set ``r``. Since the first index is the universal set
+any entry whatsoever is allowed in this position. In the second position elements of the set
 ``r`` must appear, they are domain checked, as usual.
 
-Alternatively, :meth:`UniverseAlias <gamspy.UniverseAlias>` can be used instead of ``*``.
+.. note::
+    In GAMS the universal set is written as ``*``, and GAMSPy still accepts the bare string
+    ``"*"`` anywhere a domain is expected -- ``domain=["*", r]`` is equivalent to the example
+    above. Using the string is discouraged in new code and may start emitting a deprecation
+    warning in a future release, so prefer :data:`UNIVERSE <gamspy.UNIVERSE>`. It reads
+    unambiguously, cannot be mistaken for a relaxed domain given as a set name string, and
+    is completed by editors.
+
+Alternatively, :meth:`UniverseAlias <gamspy.UniverseAlias>` can be used instead of
+``UNIVERSE``.
 This allows to use a column name in the data frame other than ``uni``:  ::
     
     from gamspy import Container, Set, Parameter, UniverseAlias
@@ -606,7 +615,7 @@ set definition ::
 
 is the same as ::
 
-    i = Set(m, "i", domain="*", records=range(1, 10))
+    i = Set(m, "i", domain=UNIVERSE, records=range(1, 10))
 
 GAMSPy follows the concept of a domain tree for domains in GAMSPy. It is assumed that a set and its 
 subset are connected by an arc where the two sets are nodes. Now consider the following one 
@@ -622,7 +631,7 @@ dimensional subsets: ::
     jjj = Set(m, "jjj", domain=jj)
 
 These subsets are connected with arcs to the set ``i`` and thus form a domain tree that is rooted 
-in the universe node ``"*"``. This particular domain tree may be represented as follows:
+in the universe node ``UNIVERSE``. This particular domain tree may be represented as follows:
 
 .. image:: ../../_static/set_tree.png
   :alt: Set tree
@@ -737,7 +746,7 @@ The attributes may be accessed like in the following example: ::
 Here ``p`` is a parameter, ``set`` is the set object and ``.attribute`` is one of 
 the attributes listed in :meth:`Set <gamspy.Set>`. The following example serves as illustration: ::
 
-    from gamspy import Container, Set, Parameter
+    from gamspy import Container, Set, Parameter, UNIVERSE
 
     m = Container()
     id = Set(
@@ -752,7 +761,7 @@ the attributes listed in :meth:`Set <gamspy.Set>`. The following example serves 
         ],
     )
 
-    attr = Parameter(m, "attr", domain=[id, "*"], description="Set attribute values")
+    attr = Parameter(m, "attr", domain=[id, UNIVERSE], description="Set attribute values")
     attr[id, "position"] = id.pos
     attr[id, "reverse"] = id.rev
     attr[id, "offset"] = id.off

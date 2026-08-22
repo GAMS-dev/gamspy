@@ -153,6 +153,7 @@ def test_lp_transport(data, tmp_path):
     )
 
     to_gams_path = str(tmp_path / "to_gams")
+    trace_path = os.path.join(to_gams_path, "trace.txt")
     transport.toGams(
         to_gams_path,
         options=Options.fromGams({"lp": "cplex"}),
@@ -170,7 +171,7 @@ def test_lp_transport(data, tmp_path):
             os.path.join(m.system_directory, "gams"),
             os.path.join(to_gams_path, "transport.gms"),
             "traceopt=2",
-            "trace=trace.txt",
+            f"trace={trace_path}",
             f"output={os.path.join(to_gams_path, 'transport.lst')}",
         ],
         capture_output=True,
@@ -179,7 +180,7 @@ def test_lp_transport(data, tmp_path):
 
     assert process.returncode == 0
 
-    with open("trace.txt") as trace:
+    with open(trace_path) as trace:
         lines = trace.read().splitlines()
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert objective.startswith("153.675")
@@ -211,7 +212,7 @@ def test_lp_transport(data, tmp_path):
             os.path.join(m.system_directory, "gams"),
             os.path.join(folder_path, "transport.gms"),
             "traceopt=2",
-            "trace=trace.txt",
+            f"trace={trace_path}",
             f"output={os.path.join(str(tmp_path), 'transport.lst')}",
         ],
         capture_output=True,
@@ -324,6 +325,7 @@ def test_mip_cutstock(data, tmp_path):
     master.solve(options=Options(relative_optimality_gap=0))
 
     to_gams_path = str(tmp_path / "to_gams")
+    trace_path = os.path.join(to_gams_path, "trace.txt")
     master.toGams(to_gams_path)
 
     process = subprocess.run(
@@ -331,7 +333,7 @@ def test_mip_cutstock(data, tmp_path):
             os.path.join(m.system_directory, "gams"),
             os.path.join(to_gams_path, "master.gms"),
             "traceopt=2",
-            "trace=trace.txt",
+            f"trace={trace_path}",
             f"output={os.path.join(to_gams_path, 'master.lst')}",
         ],
         capture_output=True,
@@ -339,7 +341,7 @@ def test_mip_cutstock(data, tmp_path):
     )
 
     assert process.returncode == 0
-    with open("trace.txt") as trace:
+    with open(trace_path) as trace:
         lines = trace.read().splitlines()
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert objective.startswith("452.25")
@@ -580,6 +582,7 @@ def test_nlp_weapons(data, tmp_path):
     war.solve()
 
     to_gams_path = str(tmp_path / "to_gams")
+    trace_path = os.path.join(to_gams_path, "trace.txt")
     war.toGams(to_gams_path)
 
     process = subprocess.run(
@@ -587,7 +590,7 @@ def test_nlp_weapons(data, tmp_path):
             os.path.join(m.system_directory, "gams"),
             os.path.join(to_gams_path, "war.gms"),
             "traceopt=2",
-            "trace=trace.txt",
+            f"trace={trace_path}",
             f"output={os.path.join(to_gams_path, 'war.lst')}",
         ],
         capture_output=True,
@@ -595,7 +598,7 @@ def test_nlp_weapons(data, tmp_path):
     )
 
     assert process.returncode == 0
-    with open("trace.txt") as trace:
+    with open(trace_path) as trace:
         lines = trace.read().splitlines()
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert objective.startswith("1735.569579")
@@ -714,6 +717,7 @@ def test_mcp_qp6(data, tmp_path):
     qp6.solve()
 
     to_gams_path = str(tmp_path / "to_gams")
+    trace_path = os.path.join(to_gams_path, "trace.txt")
     qp6.toGams(to_gams_path)
 
     process = subprocess.run(
@@ -721,7 +725,7 @@ def test_mcp_qp6(data, tmp_path):
             os.path.join(m.system_directory, "gams"),
             os.path.join(to_gams_path, "qp6.gms"),
             "traceopt=2",
-            "trace=trace.txt",
+            f"trace={trace_path}",
             f"output={os.path.join(to_gams_path, 'qp6.lst')}",
         ],
         capture_output=True,
@@ -730,7 +734,7 @@ def test_mcp_qp6(data, tmp_path):
 
     assert process.returncode == 0
 
-    with open("trace.txt") as trace:
+    with open(trace_path) as trace:
         lines = trace.read().splitlines()
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert objective.startswith("8.499300")
@@ -876,6 +880,7 @@ def test_dnlp_inscribedsquare(data, tmp_path):
     square.solve()
 
     to_gams_path = str(tmp_path / "to_gams")
+    trace_path = os.path.join(to_gams_path, "trace.txt")
     square.toGams(to_gams_path)
 
     process = subprocess.run(
@@ -883,7 +888,7 @@ def test_dnlp_inscribedsquare(data, tmp_path):
             os.path.join(m.system_directory, "gams"),
             os.path.join(to_gams_path, "square.gms"),
             "traceopt=2",
-            "trace=trace.txt",
+            f"trace={trace_path}",
             f"output={os.path.join(to_gams_path, 'square.lst')}",
         ],
         capture_output=True,
@@ -892,7 +897,7 @@ def test_dnlp_inscribedsquare(data, tmp_path):
 
     assert process.returncode == 0
 
-    with open("trace.txt") as trace:
+    with open(trace_path) as trace:
         lines = trace.read().splitlines()
         objective = float(lines[-1].split("//")[0].split(" ")[-3])
         assert math.isclose(objective, 1.60087540678543, rel_tol=0.01)
@@ -1586,13 +1591,14 @@ def test_minlp_minlphix(data, tmp_path):
 
     to_gams_path = str(tmp_path / "to_gams")
     skip.toGams(to_gams_path)
+    trace_path = os.path.join(to_gams_path, "trace.txt")
 
     process = subprocess.run(
         [
             os.path.join(m.system_directory, "gams"),
             os.path.join(to_gams_path, "skip.gms"),
             "traceopt=2",
-            "trace=trace.txt",
+            f"trace={trace_path}",
             "domlim=100",
             f"output={os.path.join(to_gams_path, 'skip.lst')}",
         ],
@@ -1602,7 +1608,7 @@ def test_minlp_minlphix(data, tmp_path):
 
     assert process.returncode == 0
 
-    with open("trace.txt") as trace:
+    with open(trace_path) as trace:
         lines = trace.read().splitlines()
         objective = float(lines[-1].split("//")[0].split(" ")[-3])
         assert math.isclose(objective, 316.692694176485, rel_tol=1e-4)
@@ -1666,6 +1672,7 @@ def test_qcp_EDsensitivity(data, tmp_path):
         report[cc, "load"] = load
 
     to_gams_path = str(tmp_path / "to_gams")
+    trace_path = os.path.join(to_gams_path, "trace.txt")
     ECD.toGams(to_gams_path)
 
     process = subprocess.run(
@@ -1673,7 +1680,7 @@ def test_qcp_EDsensitivity(data, tmp_path):
             os.path.join(m.system_directory, "gams"),
             os.path.join(to_gams_path, "ECD.gms"),
             "traceopt=2",
-            "trace=trace.txt",
+            f"trace={trace_path}",
             f"output={os.path.join(to_gams_path, 'ECD.lst')}",
         ],
         capture_output=True,
@@ -1682,7 +1689,7 @@ def test_qcp_EDsensitivity(data, tmp_path):
 
     assert process.returncode == 0
 
-    with open("trace.txt") as trace:
+    with open(trace_path) as trace:
         lines = trace.read().splitlines()
         objective = lines[-1].split("//")[0].split(" ")[-3]
         print(f"{objective=}")
@@ -1721,6 +1728,7 @@ def test_set_attributes(data, tmp_path):
     )
 
     to_gams_path = str(tmp_path / "to_gams")
+    trace_path = os.path.join(to_gams_path, "trace.txt")
     model.toGams(to_gams_path)
 
     process = subprocess.run(
@@ -1728,7 +1736,7 @@ def test_set_attributes(data, tmp_path):
             os.path.join(m.system_directory, "gams"),
             os.path.join(to_gams_path, "attr.gms"),
             "traceopt=2",
-            "trace=trace.txt",
+            f"trace={trace_path}",
             f"output={os.path.join(to_gams_path, 'attr.lst')}",
         ],
         capture_output=True,
@@ -1737,7 +1745,7 @@ def test_set_attributes(data, tmp_path):
 
     assert process.returncode == 0
 
-    with open("trace.txt") as trace:
+    with open(trace_path) as trace:
         lines = trace.read().splitlines()
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert float(objective) == 1

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, no_type_check
 import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy.utils as utils
+from gamspy._universe import is_universe, is_universe_domain
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -28,6 +29,8 @@ if TYPE_CHECKING:
 
 
 class ImplicitSymbol(ABC):
+    is_universe: bool = False
+
     def __init__(
         self: ImplicitSymbolType,
         name,
@@ -68,7 +71,7 @@ class ImplicitSymbol(ABC):
         return 0
 
     def fix_domain_scalars(self, parent_scalar_domains):
-        if len(self.domain) == 1 and self.domain[0] == "*":
+        if is_universe_domain(self.domain):
             self._scalar_domains = []
             return
 
@@ -130,7 +133,7 @@ class ImplicitSymbol(ABC):
             given_domain.insert(index, scalar)
 
         declaration_domain = [
-            self.parent.domain[index] if isinstance(elem, str) and elem != "*" else elem
+            self.parent.domain[index] if isinstance(elem, str) else elem
             for index, elem in enumerate(given_domain)
         ]
         return given_domain, declaration_domain
@@ -139,7 +142,7 @@ class ImplicitSymbol(ABC):
     def gamsRepr(self):
         """Representation of the implicit symbol in GAMS"""
 
-    def latexRepr(self):
+    def latexRepr(self: ImplicitSymbolType):
         name = self._latex_name
         representation = name
         domain = list(self.domain)
@@ -152,6 +155,8 @@ class ImplicitSymbol(ABC):
             for elem in domain:
                 if isinstance(elem, utils._get_domain_element_types()):
                     set_strs.append(elem.latexRepr())
+                elif is_universe(elem):
+                    set_strs.append(r"\text{`*'}")
                 elif isinstance(elem, str):
                     elem = elem.replace("_", r"\_")
                     set_strs.append(f"\\text{{`{elem}'}}")

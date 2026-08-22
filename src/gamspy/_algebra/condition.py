@@ -10,6 +10,7 @@ import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._container import Container
+from gamspy._internals import DataSource
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy.exceptions import FatalError, ValidationError
 
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import ImplicitSymbolType, SymbolType
+    from gamspy._types import ConditionType, ImplicitSymbolType, SymbolType
     from gamspy.math import MathOp
 
 
@@ -55,16 +56,7 @@ class Condition(operable.Operable):
         | Card
         | Ord
         | MathOp,
-        condition: Expression
-        | Operation
-        | Condition
-        | MathOp
-        | Parameter
-        | ImplicitParameter
-        | ImplicitSet
-        | int
-        | Number
-        | None = None,
+        condition: ConditionType | Number | bool | int | float | None = None,
     ):
         self.conditioning_on = conditioning_on
         self.condition = condition
@@ -92,15 +84,7 @@ class Condition(operable.Operable):
         return id(self)
 
     def __getitem__(
-        self,
-        condition: Expression
-        | Operation
-        | MathOp
-        | Condition
-        | ImplicitParameter
-        | ImplicitSet
-        | Parameter
-        | Number,
+        self, condition: ConditionType | Number | bool | int | float
     ) -> Condition:
         if isinstance(condition, expression.Expression):
             condition._fix_equalities()
@@ -109,15 +93,7 @@ class Condition(operable.Operable):
 
     def __setitem__(
         self,
-        condition: Expression
-        | Operation
-        | MathOp
-        | Condition
-        | Parameter
-        | ImplicitSet
-        | ImplicitParameter
-        | bool
-        | Number,
+        condition: ConditionType | Number | bool | int | float,
         rhs: Expression
         | Operation
         | Condition
@@ -169,19 +145,19 @@ class Condition(operable.Operable):
                 self.conditioning_on.parent._assignment = statement  # ty: ignore[unresolved-attribute]
 
             self.conditioning_on.container._synch_with_gams()
-            self.conditioning_on.parent._should_load_from_gams = True  # ty: ignore[unresolved-attribute]
+            self.conditioning_on.parent._should_load_from = DataSource.GAMS  # ty: ignore[unresolved-attribute]
 
         elif isinstance(self.conditioning_on, syms.Alias):
             self.conditioning_on._assignment = statement
             self.conditioning_on.container._synch_with_gams()
-            self.conditioning_on.alias_with._should_load_from_gams = True
+            self.conditioning_on.alias_with._should_load_from = DataSource.GAMS
         elif isinstance(
             self.conditioning_on,
             (syms.Set, syms.Parameter, syms.Variable, syms.Equation),
         ):
             self.conditioning_on._assignment = statement
             self.conditioning_on.container._synch_with_gams()
-            self.conditioning_on._should_load_from_gams = True
+            self.conditioning_on._should_load_from = DataSource.GAMS
 
         else:
             self.container._synch_with_gams()

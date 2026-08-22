@@ -21,8 +21,11 @@ from gamspy.formulations.nn import (
 )
 from gamspy.formulations.piecewise import (
     pwl_convexity_formulation,
+    pwl_dlog_formulation,
     pwl_interval_formulation,
+    pwlinear,
 )
+from gamspy.formulations.pwl_curve import PWLCurve
 from gamspy.formulations.result import FormulationResult
 from gamspy.formulations.shape import flatten_dims
 
@@ -35,6 +38,7 @@ __all__ = [
     "Linear",
     "MaxPool2d",
     "MinPool2d",
+    "PWLCurve",
     "RandomForest",
     "RegressionTree",
     "TorchSequential",
@@ -44,7 +48,9 @@ __all__ = [
     "piecewise",
     "sddp",
     "pwl_convexity_formulation",
+    "pwl_dlog_formulation",
     "pwl_interval_formulation",
+    "pwlinear",
     "utils",
     "FormulationResult",
     "RNN",

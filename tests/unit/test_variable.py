@@ -96,6 +96,14 @@ def test_variable_creation(data):
     with pytest.raises(ValueError):
         _ = Variable(m2, type="Blabla")
 
+    # Same name, different variable type
+    _ = Variable(m, "tv", type="free")
+    with pytest.raises(TypeError):
+        Variable(m, "tv", type="positive")
+
+    n = Variable(m, "hashable")
+    assert hash(n) == id(n)
+
 
 def test_variable_string(data):
     m, *_ = data
@@ -464,6 +472,8 @@ def test_variable_listing(data):
         len(x.getVariableListing(filters=[["seattle"], ["topeka"]]).split("\n\n")) == 1
     )
     assert len(x.getVariableListing(filters=[["seattle"], []], n=2).split("\n\n")) == 2
+    with pytest.raises(ValidationError):
+        x.getVariableListing(filters=[["seattle"]])
 
     transport2 = Model(
         m,
@@ -966,11 +976,16 @@ def test_variable_setrecords_edge_cases():
     ):
         v_scalar.setRecords(df_multi)
 
+    # A (1, n) row vector is reshaped onto a 1-dimensional symbol
+    v_row = gp.Variable(m, "v_row", domain=[i])
+    v_row.setRecords({"level": np.array([[1.0, 2.0]])})
+    assert v_row.records["level"].tolist() == [1.0, 2.0]
+
     # Dict with dimension mismatch
     with pytest.raises(
         ValueError, match="Dimensionality mismatch between arrays and symbol"
     ):
-        v_1d.setRecords({"level": np.array([[1.0, 2.0]])})
+        v_1d.setRecords({"level": np.array([[1.0, 2.0], [3.0, 4.0]])})
 
     # Dict with shape mismatch between attributes
     with pytest.raises(ValueError, match="Arrays passed do not have the same shape"):

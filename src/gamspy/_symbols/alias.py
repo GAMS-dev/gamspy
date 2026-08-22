@@ -15,6 +15,7 @@ import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
+from gamspy._internals import DataSource
 from gamspy._symbols.base import BaseSymbol
 from gamspy._symbols.set import SetMixin
 from gamspy.exceptions import ValidationError
@@ -22,13 +23,20 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     import pandas as pd
 
-    from gamspy import Container, Set
+    from gamspy import Container, Parameter, Set
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
-    from gamspy._algebra.operation import Operation
+    from gamspy._algebra.number import Number
+    from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._algebra.sparse import SparseAssignment
-    from gamspy._symbols.implicits import ImplicitSet
-    from gamspy._types import IndexType, NormalizedDomainType, SetRecordsType
+    from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
+    from gamspy._types import (
+        IndexType,
+        NormalizedDomainType,
+        RecordsSourceType,
+        SetRecordsType,
+    )
+    from gamspy.math.misc import MathOp
 
 
 class Alias(operable.Operable, BaseSymbol, SetMixin):
@@ -170,12 +178,12 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         self.alias_with._should_unload_to_gams = value
 
     @property
-    def _should_load_from_gams(self) -> bool:
-        return self.alias_with._should_load_from_gams
+    def _should_load_from(self) -> RecordsSourceType:
+        return self.alias_with._should_load_from
 
-    @_should_load_from_gams.setter
-    def _should_load_from_gams(self, value: bool) -> None:
-        self.alias_with._should_load_from_gams = value
+    @_should_load_from.setter
+    def _should_load_from(self, value: RecordsSourceType) -> None:
+        self.alias_with._should_load_from = value
 
     def _serialize(self) -> dict:
         info: dict[str, Any] = {"_metadata": self._metadata}
@@ -200,6 +208,9 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
     def __repr__(self) -> str:
         return f"Alias(name='{self.name}', alias_with={self.alias_with})"
 
+    def __hash__(self):
+        return id(self)
+
     def __getitem__(self, indices: IndexType) -> ImplicitSet:
         domain = validation.validate_domain(self, indices)
 
@@ -211,7 +222,15 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         rhs: Expression
         | Operation
         | Condition
+        | MathOp
+        | Number
+        | Card
+        | Ord
+        | Parameter
         | ImplicitSet
+        | ImplicitParameter
+        | int
+        | float
         | bool
         | str
         | SparseAssignment,
@@ -237,7 +256,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         self._assignment = statement
 
         self.container._synch_with_gams()
-        self._should_load_from_gams = True
+        self._should_load_from = DataSource.GAMS
 
     @property
     def records(self) -> pd.DataFrame | None:
@@ -454,12 +473,12 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
     @property
     def domain(self) -> NormalizedDomainType:
         """
-        Returns list of domains given either as string (* for universe set) or as reference to the Set/Alias object
+        Returns list of domains given either as the :data:`UNIVERSE <gamspy.UNIVERSE>` sentinel, a relaxed domain string, or as a reference to the Set/Alias object
 
         Returns
         -------
-        list[Set | str]
-            A list of domains given either as string (* for universe set) or as reference to the Set/Alias object
+        list[Set | Universe | str]
+            A list of domains given either as the :data:`UNIVERSE <gamspy.UNIVERSE>` sentinel, a relaxed domain string, or as a reference to the Set/Alias object
         """
         return self.alias_with.domain
 
