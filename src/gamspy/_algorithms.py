@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import math
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pandas as pd
@@ -105,85 +106,64 @@ def generate_unique_labels(labels: list | str) -> list[str]:
     return labels
 
 
-def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
-    """Calculate the Cartesian product of multiple input arrays."""
+def cartesian_product(*arrays: np.ndarray) -> list[np.ndarray]:
+    """
+    Calculate the Cartesian product of multiple input arrays, returned as one
+    column per input array (rather than a single combined 2D array).
+    """
     if not arrays:
-        return np.empty((0, 0))
+        return []
 
-    la = len(arrays)
-    dtype = np.result_type(*arrays)
+    shape = tuple(len(a) for a in arrays)
 
-    # Pre-allocate array: (num_arrays, len(arr1), len(arr2), ...)
-    arr = np.empty((la, *map(len, arrays)), dtype=dtype)
-
+    columns = []
     for i, a in enumerate(arrays):
-        # Explicitly build a shape to align 'a' along the i-th dimension.
-        # e.g., for 3 arrays: i=0 -> (-1, 1, 1), i=1 -> (1, -1, 1), i=2 -> (1, 1, -1)
-        broadcast_shape = [1] * la
-        broadcast_shape[i] = -1
+        inner = math.prod(shape[i + 1 :])
+        outer = math.prod(shape[:i])
+        columns.append(np.tile(np.repeat(np.asarray(a), inner), outer))
 
-        # Reshape 'a' so broadcasting explicitly matches the target array
-        arr[i, ...] = np.asarray(a).reshape(broadcast_shape)
-
-    return arr.reshape(la, -1).T
+    return columns
 
 
-def sorted_unique(arr: np.ndarray, *, copy: bool = True) -> np.ndarray:
-    if copy:
-        arr = np.sort(arr)
+def used_category_positions(
+    codes: np.ndarray, num_categories: int
+) -> tuple[np.ndarray, bool]:
+    if codes.size == 0:
+        return np.empty(0, dtype=np.intp), False
+
+    has_na = bool(codes.min() < 0)
+    present = np.zeros(num_categories, dtype=bool)
+    if has_na:
+        present[codes[codes >= 0]] = True
     else:
-        arr.sort()
+        present[codes] = True
 
-    keep = np.ones(arr.size, dtype=bool)
-    np.not_equal(arr[1:], arr[:-1], out=keep[1:])
-
-    if keep.all():
-        return arr
-
-    return arr[keep]
+    return np.flatnonzero(present), has_na
 
 
 def drop_unused_categories(column: pd.Series) -> pd.Series:
-    codes = column.cat.codes.to_numpy()
+    # `.array.codes` reads the Categorical backing array directly
+    codes = cast("pd.Categorical", column.array).codes
     categories = column.cat.categories
 
-    used = sorted_unique(codes)
-    has_na = used.size > 0 and used[0] == -1  # the NA sentinel is not a category
-    if has_na:
-        used = used[1:]
+    used, has_na = used_category_positions(codes, categories.size)
 
     if used.size == categories.size:
         return column
 
-    lookup = np.full(categories.size, -1, dtype=codes.dtype)
-    lookup[used] = np.arange(used.size, dtype=codes.dtype)
-    new_codes = lookup[codes]
+    remap = np.full(categories.size, -1, dtype=codes.dtype)
+    remap[used] = np.arange(used.size, dtype=codes.dtype)
+    new_codes = remap[codes]
     if has_na:
         new_codes[codes < 0] = -1
 
-    dtype = pd.CategoricalDtype._from_fastpath(
-        categories.take(used), ordered=column.cat.ordered
-    )
+    dtype = pd.CategoricalDtype._from_fastpath(categories[used], ordered=True)
 
     return pd.Series(
         pd.Categorical.from_codes(new_codes, dtype=dtype, validate=False),
         index=column.index,
         name=column.name,
     )
-
-
-def _sample_unique(choose_from: int, n_choose: int, seed: int | None) -> np.ndarray:
-    """Select unique items from a huge pool by drawing with replacement and refilling."""
-    rng = np.random.default_rng(seed)
-    idx = rng.integers(0, choose_from, size=n_choose)
-
-    while True:
-        idx = sorted_unique(idx, copy=False)
-        deficit = n_choose - idx.size
-        if deficit == 0:
-            return idx  # already sorted
-
-        idx = np.concatenate((idx, rng.integers(0, choose_from, size=deficit)))
 
 
 def choice_no_replace(
@@ -193,9 +173,6 @@ def choice_no_replace(
 ) -> np.ndarray:
     if not isinstance(seed, (int, type(None))):
         raise TypeError("Argument 'seed' must be type int or NoneType")
-
-    LOW_DENSITY = 0.08
-    MAX_MATERIALIZED_POOL = 10_000_000
 
     choose_from, n_choose = int(choose_from), int(n_choose)
     density = n_choose / choose_from
@@ -208,11 +185,19 @@ def choice_no_replace(
     if density == 1:
         return np.arange(choose_from, dtype=int)
 
-    # rng.choice allocates a pool O(choose_from). So 10M is the point where the pool
-    # is ~80 MB. _sample_unique holds O(n_choose).
-    if density <= LOW_DENSITY and choose_from > MAX_MATERIALIZED_POOL:
-        return _sample_unique(choose_from, n_choose, seed)
+    _DENSITY_THRESHOLD = 0.3
 
     rng = np.random.default_rng(seed)
-    idx = rng.choice(choose_from, replace=False, size=n_choose)
-    return np.sort(idx)
+
+    if density <= _DENSITY_THRESHOLD:
+        # directly draw the set of indices to keep, then sort
+        idx = rng.choice(choose_from, replace=False, size=n_choose)
+        idx.sort()
+        return idx
+
+    # draw the excluded complement instead, then invert
+    # np.flatnonzero is ascending for free -- no sort needed
+    excluded = rng.choice(choose_from, replace=False, size=choose_from - n_choose)
+    mask = np.ones(choose_from, dtype=bool)
+    mask[excluded] = False
+    return np.flatnonzero(mask)
