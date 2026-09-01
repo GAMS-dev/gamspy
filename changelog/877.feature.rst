@@ -1,1 +1,0 @@
-Add NVIDIA cuOpt solver as an addon solver.

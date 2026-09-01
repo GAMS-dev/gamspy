@@ -1,3 +1,0 @@
-Using the bare string ``"*"`` as a domain is soft-deprecated in favor of the new ``gamspy.UNIVERSE`` sentinel.
-``"*"`` is still accepted everywhere and behaves identically (no warnings yet) but it may start emitting a
-``DeprecationWarning`` in a future release, so prefer ``gamspy.UNIVERSE`` over ``"*"``.

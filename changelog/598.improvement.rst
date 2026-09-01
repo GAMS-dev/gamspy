@@ -1,1 +1,0 @@
-Improve the performance of the frozen solves with a new hibernate mode. Generate records without materializing the dense cartesian product of the domains to avoid out of memory issues.

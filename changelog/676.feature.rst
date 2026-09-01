@@ -1,4 +1,0 @@
-Allow filtering assignments by comparing a set or alias to an element label with ``==`` and ``!=``. For example, ``a[i].where[i == "i1"] = 0`` is now 
-equivalent to ``a[i].where[i.sameAs("i1")] = 0`` (and ``i != "i1"`` to ``~i.sameAs("i1")``). Expose the universe sentinel as ``gamspy.UNIVERSE``. Use 
-it wherever a domain is expected to leave that position undomain-checked, e.g. ``gp.Parameter(m, "misc", domain=[gp.UNIVERSE, r])``. It is now the 
-recommended way of specifying the GAMS universal set in symbol constructors.
