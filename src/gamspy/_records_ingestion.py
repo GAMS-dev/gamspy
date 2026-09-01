@@ -254,7 +254,7 @@ class ParameterIngestor(BaseIngestor):
                 np.arange(len(d._getUELs(ignore_unused=True)))
                 for d in self.symbol.domain
             ]
-            df = pd.DataFrame(cartesian_product(*tuple(codes)))
+            df = pd.DataFrame(dict(enumerate(cartesian_product(*tuple(codes)))))
 
             for n, d in enumerate(self.symbol.domain):
                 # Codes come from a cartesian product of arange(...) over each
@@ -571,7 +571,7 @@ class VarEquIngestor(BaseIngestor):
                 np.arange(len(d._getUELs(ignore_unused=True)))
                 for d in self.symbol.domain
             ]
-            df = pd.DataFrame(cartesian_product(*tuple(codes)))
+            df = pd.DataFrame(dict(enumerate(cartesian_product(*tuple(codes)))))
 
             for n, d in enumerate(self.symbol.domain):
                 # Codes come from a cartesian product of arange(...) over each

@@ -1,0 +1,1 @@
+Internal performance improvements for `generateRecords`.
