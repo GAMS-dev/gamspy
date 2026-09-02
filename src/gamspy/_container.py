@@ -20,6 +20,7 @@ import gams.transfer as gt
 import pandas as pd
 
 import gamspy as gp
+import gamspy._algebra.expression as expression
 import gamspy._gdx as gdxio
 import gamspy._miro as miro
 import gamspy._validation as validation
@@ -1240,8 +1241,6 @@ class Container:
         #      declarations are emitted first.
         #   2. An assignment/definition that reads a symbol must see its data
         #      already loaded. So the load section must precede the first such expression.
-        import gamspy._algebra.expression as expression_module
-
         declarations: list[str] = []
         pre_load_statements: list[str] = []
         post_load_statements: list[str] = []
@@ -1251,7 +1250,7 @@ class Container:
                 declarations.append(statement.getDeclaration())
                 continue
 
-            if isinstance(statement, expression_module.Expression):
+            if isinstance(statement, expression.Expression):
                 seen_expression = True
                 post_load_statements.append(statement.getDeclaration())
                 continue
