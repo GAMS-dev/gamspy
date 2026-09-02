@@ -38,14 +38,12 @@ def test_universe_in_declarations(universe):
     assert p.getDeclaration() == "Parameter p(i,*) / /;"
     assert v.getDeclaration() == "free Variable v(*,i) / /;"
     assert e.getDeclaration() == "Equation e(*) / /;"
-    m.close()
 
 
 def test_universe_is_default_set_domain():
     m = gp.Container()
     assert gp.Set(m, "i").domain == [gp.UNIVERSE]
     assert gp.Set(m, "j", domain=gp.UNIVERSE).domain == [gp.UNIVERSE]
-    m.close()
 
 
 def test_universe_survives_serialization(tmp_path):
@@ -59,7 +57,6 @@ def test_universe_survives_serialization(tmp_path):
 
     assert m2["p"].domain[1] is gp.UNIVERSE
     m.close()
-    m2.close()
 
 
 def test_universe_alias_as_sole_index_is_rendered():
@@ -80,4 +77,3 @@ def test_universe_alias_as_sole_index_is_rendered():
     lim[item] = True
     assert lim._assignment.getDeclaration() == "lim(item) = yes;"
     assert lim.records["uni"].tolist() == ["i1", "i2", "up", "lo"]
-    m.close()

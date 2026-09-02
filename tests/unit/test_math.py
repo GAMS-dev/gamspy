@@ -15,17 +15,8 @@ from gamspy.math.misc import MathOp
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    markets = ["new-york", "chicago", "topeka"]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    yield m, markets, demands
-
-
-def test_math(data):
-    m, markets, demands = data
+def test_math(transport):
+    m, markets, demands = transport.container, transport.markets, transport.demands
     i = Set(m, name="i", records=markets)
 
     b = Parameter(m, name="b", domain=[i], records=demands)
@@ -281,8 +272,8 @@ def test_math(data):
     assert op2.gamsRepr() == "binomial(b(i),3)"
 
 
-def test_math_2(data):
-    m, _, _ = data
+def test_math_2(transport):
+    m = transport.container
     m = Container()
     i = Set(m, "i", records=["1", "2"])
     a = Parameter(m, "a", domain=[i], records=[("1", 1), ("2", 2)])
@@ -399,8 +390,8 @@ def test_math_2(data):
     assert attr.getAssignment() == "attr(i,j) = diag(i,j);"
 
 
-def test_logical(data):
-    m, _, _ = data
+def test_logical(transport):
+    m = transport.container
     m = Container()
 
     o = Set(m, "o", records=[f"pos{idx}" for idx in range(1, 11)])
@@ -499,8 +490,8 @@ def test_logical(data):
     assert op2.gamsRepr() == "rel_ne(sumc(o,p),op(o,p))"
 
 
-def test_relu(data, relu_type=gams_math.relu_with_binary_var):
-    m, _, _ = data
+def test_relu(transport, relu_type=gams_math.relu_with_binary_var):
+    m = transport.container
 
     i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
 
@@ -562,8 +553,8 @@ def test_relu(data, relu_type=gams_math.relu_with_binary_var):
     assert np.isclose(budget.objective_value, 200.0)
 
 
-def test_leaky_relu(data):
-    m, _, _ = data
+def test_leaky_relu(transport):
+    m = transport.container
     leaky_relu = gams_math.leaky_relu_with_binary_var
 
     i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
@@ -608,8 +599,8 @@ def test_leaky_relu(data):
         assert b.toDense()[0] in b_val
 
 
-def test_relu_2(data):
-    m, _markets, _demands = data
+def test_relu_2(transport):
+    m = transport.container
     m = Container()
 
     i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
@@ -664,12 +655,12 @@ def test_relu_2(data):
     assert np.isclose(budget.objective_value, 180.0)
 
 
-def test_relu_3(data):
-    test_relu(data, gams_math.relu_with_sos1_var)
+def test_relu_3(transport):
+    test_relu(transport, gams_math.relu_with_sos1_var)
 
 
-def test_relu_with_equilibrium(data):
-    m, _markets, _demands = data
+def test_relu_with_equilibrium(transport):
+    m = transport.container
     m = Container()
 
     i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
@@ -742,8 +733,8 @@ def test_relu_with_equilibrium(data):
     assert np.isclose(budget.objective_value, 200)
 
 
-def test_log_softmax(data):
-    m, _, _ = data
+def test_log_softmax(transport):
+    m = transport.container
     m = Container()
 
     labels = Set(m, name="labels", domain=gams_math.dim([30, 3]))
@@ -789,8 +780,8 @@ def test_log_softmax(data):
     set_loss[...] = nll == Sum(labels[y.domain], -y)
 
 
-def test_softmax(data):
-    m, _markets, _demands = data
+def test_softmax(transport):
+    m = transport.container
     m = Container()
 
     labels = Set(m, name="labels", domain=gams_math.dim([30, 3]))
@@ -822,8 +813,8 @@ def test_softmax(data):
     assert "exp" in equations[0].getDefinition()
 
 
-def test_softplus(data):
-    m, _markets, _demands = data
+def test_softplus(transport):
+    m = transport.container
     m = Container()
 
     x = Variable(m, name="x", domain=gams_math.dim([3]))
@@ -852,8 +843,8 @@ def test_softplus(data):
             assert np.allclose(y.toDense(), expected_vals[i], rtol=rtol)
 
 
-def test_tanh_activation(data):
-    m, *_ = data
+def test_tanh_activation(transport):
+    m = transport.container
     m = Container()
 
     x = Variable(m, name="x", domain=gams_math.dim([30, 3]))

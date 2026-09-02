@@ -28,28 +28,8 @@ from gamspy.exceptions import GamspyException, ValidationError
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    canning_plants = ["seattle", "san-diego"]
-    markets = ["new-york", "chicago", "topeka"]
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    yield m, canning_plants, markets, distances, capacities, demands
-    m.close()
-
-
-def test_parameter_creation(data):
-    m, *_ = data
+def test_parameter_creation(transport):
+    m = transport.container
     # no name is fine
     a = Parameter(m)
     m.addParameter()
@@ -85,8 +65,12 @@ def test_parameter_creation(data):
         _ = Parameter(m2, "param1", domain=[set1])
 
 
-def test_parameter_string(data):
-    m, canning_plants, _, _, capacities, _ = data
+def test_parameter_string(transport):
+    m, canning_plants, capacities = (
+        transport.container,
+        transport.canning_plants,
+        transport.capacities,
+    )
     # Check if the name is reserved
     with pytest.raises(ValidationError):
         Parameter(m, "set")
@@ -103,8 +87,12 @@ def test_parameter_string(data):
     assert (b != 5).gamsRepr() == "b ne 5"
 
 
-def test_implicit_parameter_string(data):
-    m, canning_plants, _, _, capacities, _ = data
+def test_implicit_parameter_string(transport):
+    m, canning_plants, capacities = (
+        transport.container,
+        transport.canning_plants,
+        transport.capacities,
+    )
     m = Container()
 
     i = Set(m, name="i", records=canning_plants, description="Canning Plants")
@@ -122,8 +110,8 @@ def test_implicit_parameter_string(data):
     assert a.getAssignment() == "a(i) = (-a(i)) * 5;"
 
 
-def test_parameter_assignment(data):
-    m, *_ = data
+def test_parameter_assignment(transport):
+    m = transport.container
     m = Container()
 
     i = Set(m, "i")
@@ -134,8 +122,12 @@ def test_parameter_assignment(data):
         a[j] = 5
 
 
-def test_implicit_parameter_assignment(data):
-    m, canning_plants, _, _, capacities, _ = data
+def test_implicit_parameter_assignment(transport):
+    m, canning_plants, capacities = (
+        transport.container,
+        transport.canning_plants,
+        transport.capacities,
+    )
     m = Container()
     i = Set(m, name="i", records=canning_plants, description="Canning Plants")
     a = Parameter(
@@ -161,8 +153,8 @@ def test_implicit_parameter_assignment(data):
     assert v.getAssignment() == "v.l(i) = v.l(i) * 5;"
 
 
-def test_equality(data):
-    m, *_ = data
+def test_equality(transport):
+    m = transport.container
     m = Container()
     j = Set(m, "j")
     h = Set(m, "h")
@@ -176,8 +168,8 @@ def test_equality(data):
     )
 
 
-def test_override(data):
-    m, *_ = data
+def test_override(transport):
+    m = transport.container
     # Parameter record override
     s = Set(m, name="s", records=[str(i) for i in range(1, 4)])
     c = Parameter(m, name="c", domain=[s])
@@ -205,8 +197,8 @@ def test_undef():
     assert generated == expected
 
 
-def test_assignment_dimensionality(data):
-    m, *_ = data
+def test_assignment_dimensionality(transport):
+    m = transport.container
     j1 = Set(m, "j1")
     j2 = Set(m, "j2")
     j3 = Parameter(m, "j3", domain=[j1, j2])
@@ -222,15 +214,15 @@ def test_assignment_dimensionality(data):
         j3[j1, j2] = j3[j1, j2, j4] * 5
 
 
-def test_uels_on_axes(data):
-    m, *_ = data
+def test_uels_on_axes(transport):
+    m = transport.container
     s = pd.Series(index=["a", "b", "c"], data=[i + 1 for i in range(3)])
     i = Parameter(m, "i", ["*"], records=s, uels_on_axes=True)
     assert i.records.value.tolist() == [1, 2, 3]
 
 
-def test_domain_violation(data):
-    m, *_ = data
+def test_domain_violation(transport):
+    m = transport.container
     col = Set(m, "col", records=[("col" + str(i), i) for i in range(1, 10)])
     row = Set(m, "row", records=[("row" + str(i), i) for i in range(1, 10)])
 
@@ -260,8 +252,8 @@ def test_domain_violation(data):
         )
 
 
-def test_control_domain(data):
-    m, *_ = data
+def test_control_domain(transport):
+    m = transport.container
     i = Set(m, "i", records=["i1", "i2"])
     j = Set(m, "j", records=["j1", "j2"])
 
@@ -926,8 +918,6 @@ def test_implicit_parameter_toDense():
     # The temporary parameters used internally must not leak into the container.
     assert set(m.data) == {"i", "j", "k", "p", "p3", "v", "e", "s", "a", "q"}
 
-    m.close()
-
 
 def test_implicit_parameter_toValue():
     m = Container()
@@ -951,8 +941,6 @@ def test_implicit_parameter_toValue():
 
     # The temporary parameters used internally must not leak into the container.
     assert set(m.data) == {"i", "j", "p"}
-
-    m.close()
 
 
 def test_implicit_parameter_toList():
@@ -987,5 +975,3 @@ def test_implicit_parameter_toList():
 
     # The temporary parameters used internally must not leak into the container.
     assert set(m.data) == {"i", "j", "p", "s", "q"}
-
-    m.close()

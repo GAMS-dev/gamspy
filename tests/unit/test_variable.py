@@ -32,26 +32,8 @@ from gamspy.exceptions import ValidationError
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    yield m, capacities, demands, distances
-    m.close()
-
-
-def test_variable_creation(data):
-    m, *_ = data
+def test_variable_creation(transport):
+    m = transport.container
     # no name is fine now
     v = Variable(m)
     m.addVariable()
@@ -105,8 +87,8 @@ def test_variable_creation(data):
     assert hash(n) == id(n)
 
 
-def test_variable_string(data):
-    m, *_ = data
+def test_variable_string(transport):
+    m = transport.container
     # Check if the name is reserved
     with pytest.raises(ValidationError):
         Variable(m, "set")
@@ -175,8 +157,8 @@ def test_variable_string(data):
     assert v3.getDeclaration() == "positive Variable v3(*,*);"
 
 
-def test_variable_types(data):
-    m, *_ = data
+def test_variable_types(transport):
+    m = transport.container
     i = Set(m, "i", records=["1", "2"])
 
     v = Variable(m, name="v", type="Positive")
@@ -208,8 +190,8 @@ def test_variable_types(data):
     assert v4.type == "positive"
 
 
-def test_variable_attributes(data):
-    m, *_ = data
+def test_variable_attributes(transport):
+    m = transport.container
     m = Container()
     pi = Variable(
         m,
@@ -265,8 +247,8 @@ def test_variable_attributes(data):
     assert x.getAssignment() == "x.l(k) = 5;"
 
 
-def test_scalar_attr_assignment(data):
-    m, *_ = data
+def test_scalar_attr_assignment(transport):
+    m = transport.container
     a = Variable(m, "a")
     b = Variable(m, "b", "binary")
     a.l = 5
@@ -300,8 +282,8 @@ def test_scalar_attr_assignment(data):
     assert a.getAssignment() == "a.stage = 5;"
 
 
-def test_implicit_variable(data):
-    m, *_ = data
+def test_implicit_variable(transport):
+    m = transport.container
     i = Set(m, "i", records=[f"i{i}" for i in range(10)])
     a = Variable(m, "a", "free", [i])
     a.generateRecords()
@@ -325,8 +307,8 @@ def test_implicit_variable(data):
     ]
 
 
-def test_assignment_dimensionality(data):
-    m, *_ = data
+def test_assignment_dimensionality(transport):
+    m = transport.container
     j1 = Set(m, "j1")
     j2 = Set(m, "j2")
     j3 = Variable(m, "j3", domain=[j1, j2])
@@ -338,8 +320,8 @@ def test_assignment_dimensionality(data):
         e1[j1, j2] = j3[j1, j2, j4] * 5 <= 5
 
 
-def test_type(data):
-    m, *_ = data
+def test_type(transport):
+    m = transport.container
     gamma = Variable(m, "gamma")
     gamma.type = VariableType.BINARY
     assert gamma.type == "binary"
@@ -365,15 +347,20 @@ def test_type(data):
     assert var5.type == "semicont"
 
 
-def test_uels_on_axes(data):
-    m, *_ = data
+def test_uels_on_axes(transport):
+    m = transport.container
     s = pd.Series(index=["a", "b", "c"], data=[i + 1 for i in range(3)])
     v = Variable(m, "v", domain=["*"], records=s, uels_on_axes=True)
     assert v.records.level.tolist() == [1, 2, 3]
 
 
-def test_variable_listing(data):
-    m, capacities, demands, distances = data
+def test_variable_listing(transport):
+    m, capacities, demands, distances = (
+        transport.container,
+        transport.capacities,
+        transport.demands,
+        transport.distances,
+    )
     m = Container()
 
     i = Set(
@@ -1290,8 +1277,6 @@ def test_implicit_variable_toDense():
     # The temporary parameters used internally must not leak into the container.
     assert set(m.data) == {"i", "j", "k", "p", "p3", "v", "v3", "w"}
 
-    m.close()
-
 
 def test_implicit_variable_toValue():
     m = Container()
@@ -1333,8 +1318,6 @@ def test_implicit_variable_toValue():
     # The temporary parameters used internally must not leak into the container.
     assert set(m.data) == {"i", "j", "p", "v"}
 
-    m.close()
-
 
 def test_implicit_variable_toList():
     m = Container()
@@ -1375,5 +1358,3 @@ def test_implicit_variable_toList():
 
     # The temporary parameters used internally must not leak into the container.
     assert set(m.data) == {"i", "j", "p", "v", "w"}
-
-    m.close()

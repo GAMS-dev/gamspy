@@ -10,17 +10,8 @@ from gamspy.math import sqr
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    markets = ["new-york", "chicago", "topeka"]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    yield m, markets, demands
-
-
-def test_magics(data):
-    m, markets, demands = data
+def test_magics(transport):
+    m, markets, demands = transport.container, transport.markets, transport.demands
     i = Set(m, name="i", records=markets)
 
     b = Parameter(m, name="b", domain=[i], records=demands)

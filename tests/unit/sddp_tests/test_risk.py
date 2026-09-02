@@ -107,21 +107,19 @@ def test_train_rejects_invalid_risk(clearlake_built):
 def test_cvar_weight_zero_matches_expectation():
     # weight=0 cancels the CVaR term
 
-    m, sddp = _clearlake_built()
+    _m, sddp = _clearlake_built()
     risk = CVaR(tail=0.05, weight=0.0)
     res = sddp.train(n_iter=20, risk=risk)
     assert res.lower_bound == EXACT_LB
     assert res.risk is not None
-    m.close()
 
 
 @pytest.mark.requires_license
 def test_cvar_tail_one_weight_one_matches_expectation():
     # CVaR over the entire distribution (tail=1) equals the expectation
-    m, sddp = _clearlake_built()
+    _m, sddp = _clearlake_built()
     res = sddp.train(n_iter=20, risk=CVaR(tail=1.0, weight=1.0))
     assert np.isclose(res.lower_bound, EXACT_LB, rtol=1e-6)
-    m.close()
 
 
 @pytest.mark.requires_license
@@ -131,7 +129,7 @@ def test_cvar_raises_risk_adjusted_lower_bound():
     exp = sddp1.train(n_iter=20)
 
     # For a cost distribution with scenario variability CVaR strictly exceeds the expectation
-    m2, sddp2 = _clearlake_built()
+    _m2, sddp2 = _clearlake_built()
     cvar = sddp2.train(n_iter=20, risk=CVaR(tail=0.25, weight=1.0))
 
     assert cvar.lower_bound > exp.lower_bound
@@ -142,20 +140,17 @@ def test_cvar_raises_risk_adjusted_lower_bound():
     assert np.isfinite(pol.approx_cost_to_go)
 
     m1.close()
-    m2.close()
 
 
 @pytest.mark.requires_license
 def test_pure_cvar_value_lb():
-    m, sddp = _clearlake_built()
+    _m, sddp = _clearlake_built()
     res = sddp.train(n_iter=80, risk=CVaR(tail=0.25, weight=1.0))
     assert np.isclose(res.lower_bound, 916.6667, rtol=1e-3)
-    m.close()
 
 
 @pytest.mark.requires_license
 def test_blend_cvar_value_lb():
-    m, sddp = _clearlake_built()
+    _m, sddp = _clearlake_built()
     res = sddp.train(n_iter=80, risk=CVaR(tail=0.25, weight=0.5))
     assert np.isclose(res.lower_bound, 399.1699, rtol=1e-3)
-    m.close()

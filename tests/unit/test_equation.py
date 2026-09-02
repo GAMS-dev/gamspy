@@ -29,27 +29,8 @@ from gamspy.math import sqr
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    canning_plants = ["seattle", "san-diego"]
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    yield m, canning_plants, capacities, demands, distances
-    m.close()
-
-
-def test_equation_creation(data):
-    m, *_ = data
+def test_equation_creation(transport):
+    m = transport.container
     # no name is fine now
     e1 = Equation(m)
     m.addEquation()
@@ -85,8 +66,8 @@ def test_equation_creation(data):
         _ = Equation(m2, "eq1", domain=[set1])
 
 
-def test_equation_types(data):
-    m, *_ = data
+def test_equation_types(transport):
+    m = transport.container
     # Prepare data
     canning_plants = ["seattle", "san-diego"]
 
@@ -145,8 +126,8 @@ def test_equation_types(data):
         eq6[i] = y[i] - c[i]
 
 
-def test_nonbinding(data):
-    m, *_ = data
+def test_nonbinding(transport):
+    m = transport.container
     x = Variable(m, "x")
     e = Equation(m, "e", definition=x == 0, type="NONBINDING")
     assert e.getDefinition() == "e .. x =n= 0;"
@@ -165,8 +146,8 @@ def test_nonbinding(data):
     assert f.getDefinition() == "f .. x - c =n= 0;"
 
 
-def test_equation_declaration(data):
-    m, *_ = data
+def test_equation_declaration(transport):
+    m = transport.container
     # Check if the name is reserved
     with pytest.raises(ValidationError):
         Equation(m, "set")
@@ -208,8 +189,13 @@ def test_equation_declaration(data):
     assert eq[e[u, v]].gamsRepr() == "eq(e(u,v))"
 
 
-def test_equation_definition(data):
-    m, canning_plants, capacities, _, distances = data
+def test_equation_definition(transport):
+    m, canning_plants, capacities, distances = (
+        transport.container,
+        transport.canning_plants,
+        transport.capacities,
+        transport.distances,
+    )
     i = Set(m, name="i", records=canning_plants, description="Canning Plants")
     j = Set(
         m,
@@ -359,8 +345,8 @@ def test_equation_definition(data):
     )
 
 
-def test_equation_attributes(data):
-    m, *_ = data
+def test_equation_attributes(transport):
+    m = transport.container
     pi = Equation(m, "pi")
 
     assert hasattr(pi, "l") and isinstance(pi.l, implicits.ImplicitParameter)
@@ -401,8 +387,8 @@ def test_equation_attributes(data):
     assert pi.infeas.gamsRepr() == "pi.infeas"
 
 
-def test_scalar_attr_assignment(data):
-    m, *_ = data
+def test_scalar_attr_assignment(transport):
+    m = transport.container
     a = Equation(m, "a")
     a.l = 5
     assert a._assignment.getDeclaration() == "a.l = 5;"
@@ -423,8 +409,8 @@ def test_scalar_attr_assignment(data):
     assert a._assignment.getDeclaration() == "a.stage = 5;"
 
 
-def test_mcp_equation(data):
-    m, *_ = data
+def test_mcp_equation(transport):
+    m = transport.container
     c = Parameter(m, name="c", domain=[], records=0.5)
     x = Variable(
         m,
@@ -450,8 +436,8 @@ def test_mcp_equation(data):
     model.solve()
 
 
-def test_equation_assignment(data):
-    m, *_ = data
+def test_equation_assignment(transport):
+    m = transport.container
     m = Container()
 
     i = Set(m, "i")
@@ -476,8 +462,8 @@ def test_equation_assignment(data):
     )
 
 
-def test_assignment_dimensionality(data):
-    m, *_ = data
+def test_assignment_dimensionality(transport):
+    m = transport.container
     j1 = Set(m, "j1")
     j2 = Set(m, "j2")
     j3 = Equation(m, "j3", domain=[j1, j2])
@@ -507,8 +493,8 @@ def test_assignment_dimensionality(data):
         SAMCOEF[ii, jj, kk].where[NONZERO[ii, jj]] = TSAM[ii, jj] == A[ii, jj] * Y[jj]
 
 
-def test_type(data):
-    m, *_ = data
+def test_type(transport):
+    m = transport.container
     eq1 = Equation(m, "eq1")
     eq1.type = EquationType.REGULAR
     assert eq1.type == "eq"
@@ -522,15 +508,15 @@ def test_type(data):
     assert eq3.type == "nonbinding"
 
 
-def test_uels_on_axes(data):
-    m, *_ = data
+def test_uels_on_axes(transport):
+    m = transport.container
     s = pd.Series(index=["a", "b", "c"], data=[i + 1 for i in range(3)])
     e = Equation(m, "e", "eq", domain=["*"], records=s, uels_on_axes=True)
     assert e.records.level.tolist() == [1, 2, 3]
 
 
-def test_equation_listing(data):
-    m, *_ = data
+def test_equation_listing(transport):
+    m = transport.container
     m = Container()
 
     td_data = pd.DataFrame(
@@ -747,8 +733,8 @@ def test_equation_listing(data):
     assert len(maxw.getEquationListing(n=2).split("\n")) == 2
 
 
-def test_equation_listing2(data):
-    m, *_ = data
+def test_equation_listing2(transport):
+    m = transport.container
     cont = Container()
 
     # Prepare data
@@ -1229,8 +1215,6 @@ def test_implicit_equation_toDense():
     # The temporary parameters used internally must not leak into the container.
     assert set(m.data) == {"i", "j", "k", "p", "p3", "v", "e", "v3", "e3", "f"}
 
-    m.close()
-
 
 def test_implicit_equation_toValue():
     m = Container()
@@ -1270,8 +1254,6 @@ def test_implicit_equation_toValue():
 
     # The temporary parameters used internally must not leak into the container.
     assert set(m.data) == {"i", "j", "p", "v", "e"}
-
-    m.close()
 
 
 def test_implicit_equation_toList():
@@ -1313,5 +1295,3 @@ def test_implicit_equation_toList():
 
     # The temporary parameters used internally must not leak into the container.
     assert set(m.data) == {"i", "j", "p", "v", "e", "f"}
-
-    m.close()

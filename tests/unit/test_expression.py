@@ -9,26 +9,6 @@ from gamspy.exceptions import ValidationError
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = gp.Container()
-    canning_plants = ["seattle", "san-diego"]
-    markets = ["new-york", "chicago", "topeka"]
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    yield m, canning_plants, markets, capacities, demands, distances
-    m.close()
-
-
 def test_expression_evaluation():
     m = gp.Container()
     i = gp.Set(m, "i", records=["i1", "i2"])
@@ -135,11 +115,9 @@ def test_expression_evaluation():
         np.array([3.17705801e-01, 1.55903456e-04, 1.07003390e-02, 6.26734443e-03]),
     ).all()
 
-    m.close()
 
-
-def test_assume_variable_suffix(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_assume_variable_suffix(transport, set_options):
+    m, canning_plants, markets, distances, capacities, demands = transport
 
     i = gp.Set(m, name="i", records=canning_plants)
     j = gp.Set(m, name="j", records=markets)
@@ -192,9 +170,8 @@ def test_assume_variable_suffix(data):
     assert obj.toValue() == 153.675
     assert obj.records.values.tolist()[0][0] == 153.675
 
-    gp.set_options({"ASSUME_VARIABLE_SUFFIX": 2})
+    set_options({"ASSUME_VARIABLE_SUFFIX": 2})
     assert obj.records.values.tolist()[0][0] == 1.053
-    gp.set_options({"ASSUME_VARIABLE_SUFFIX": 1})
 
 
 def test_empty_indices():
@@ -379,7 +356,6 @@ def test_latex_unary_operators():
 
     assert (~(a[i] > 1)).latexRepr() == "not (a_{i} > 1)"
     assert (~(a[i] > 1)).gamsRepr() == "(not (a(i) > 1))"
-    m.close()
 
 
 def test_long_expressions_are_wrapped():
@@ -409,7 +385,6 @@ def test_domain_as_expression_operand():
     assert expression.gamsRepr() == "(i,j) + 1"
     # the domain contributes its sets to the expression domain
     assert expression.domain == [i, j]
-    m.close()
 
 
 def test_to_graph_card():
@@ -421,7 +396,6 @@ def test_to_graph_card():
     e[i] = v[i] == gp.Card(i)
 
     assert "label=card" in e.toGraph().source
-    m.close()
 
 
 def test_to_graph_math_operation():
@@ -434,7 +408,6 @@ def test_to_graph_math_operation():
     e[i] = v[i] == gp.math.sqrt(b[i])
 
     assert "label=sqrt" in e.toGraph().source
-    m.close()
 
 
 def test_to_graph_domain():
@@ -449,7 +422,6 @@ def test_to_graph_domain():
 
     source = create_graph(v[i].where[Domain(i, j)] == 1).source
     assert "label=domain" in source
-    m.close()
 
 
 def test_to_value_on_non_scalar_expression():
@@ -460,7 +432,6 @@ def test_to_value_on_non_scalar_expression():
 
     with pytest.raises(TypeError, match="non-scalar expressions"):
         (a[i] + b[i]).toValue()
-    m.close()
 
 
 def test_to_list_without_records():
@@ -470,7 +441,6 @@ def test_to_list_without_records():
     b = gp.Parameter(m, "b", domain=[i])
 
     assert (a[i] + b[i]).toList() == []
-    m.close()
 
 
 def test_expression_ne_and_hash():
@@ -484,7 +454,6 @@ def test_expression_ne_and_hash():
 
     expression = a[i] + b[i]
     assert hash(expression) == id(expression)
-    m.close()
 
 
 def test_set_expression_with_string_operand():
@@ -494,7 +463,6 @@ def test_set_expression_with_string_operand():
 
     # "yes"/"no" act as sets in GAMS set algebra
     assert (s[i] + "yes").gamsRepr() == "s(i) + yes"
-    m.close()
 
 
 def test_set_expression_with_bool_operands():
@@ -505,7 +473,6 @@ def test_set_expression_with_bool_operands():
     # booleans are normalised to 0/1 and then to no/yes
     assert (True + s[i]).gamsRepr() == "yes + s(i)"
     assert (s[i] + True).gamsRepr() == "s(i) + yes"
-    m.close()
 
 
 def test_set_expression_with_non_set_operand():
@@ -516,7 +483,6 @@ def test_set_expression_with_non_set_operand():
 
     assert (s[i] + a[i]).gamsRepr() == "s(i) + a(i)"
     assert (s[i] + i.lag(1)).gamsRepr() == "s(i) + (i - 1)"
-    m.close()
 
 
 def test_shift_expression_with_set_operand():
@@ -530,7 +496,6 @@ def test_shift_expression_with_set_operand():
 
     # a plain number keeps shifting
     assert (i.lead(1) + 2).gamsRepr() == "i + 3"
-    m.close()
 
 
 def test_shift_expression_comparisons():
@@ -539,7 +504,6 @@ def test_shift_expression_comparisons():
 
     assert (i.lead(1) >= 1).gamsRepr() == "i + 1 >= 1"
     assert (i.lead(1) <= 1).gamsRepr() == "i + 1 <= 1"
-    m.close()
 
 
 def test_find_symbols_in_nested_condition():
@@ -552,4 +516,3 @@ def test_find_symbols_in_nested_condition():
 
     # the condition is an Expression, so its symbols are yielded from the nested traversal
     assert sorted(set(e._definition._find_symbols_in_conditions())) == ["b", "i"]
-    m.close()
