@@ -44,30 +44,6 @@ def ReSHOPAnnotation(m, s):
     return m.addGamsCode("EmbeddedCode ReSHOP:\n" + s + "\nendEmbeddedCode")
 
 
-@pytest.fixture
-def data():
-    # Arrange
-    m = Container()
-    canning_plants = ["seattle", "san-diego"]
-    markets = ["new-york", "chicago", "topeka"]
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    # Act and assert
-    yield m, canning_plants, markets, capacities, demands, distances
-
-    # Cleanup
-    m.close()
-
-
 def transport(f_value):
     m = Container()
 
@@ -353,8 +329,8 @@ def transport2(f_value):
     return transport.objective_value
 
 
-def test_uel_order(data):
-    m, *_ = data
+def test_uel_order(transport):
+    m = transport.container
     i = Set(m, "i")
     p = m.addParameter("base", [i])
     d = Parameter(m, "d")
@@ -365,8 +341,8 @@ def test_uel_order(data):
     assert p.records.values.tolist() == [["i1", 1.0], ["i0", 2.0]]
 
 
-def test_records(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_records(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
     k = Set(m, name="k", records=["seattle", "san-diego", "california"])
@@ -814,11 +790,10 @@ def test_records(data):
         ["3", "2", ""],
         ["4", "2", ""],
     ]
-    m.close()
 
 
-def test_after_first_solve(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_after_first_solve(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -871,8 +846,8 @@ def test_after_first_solve(data):
     assert math.isclose(second_z2_value, 768.375, rel_tol=1e-3)
 
 
-def test_solve(data, tmp_path):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_solve(transport, tmp_path):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -1111,8 +1086,8 @@ def test_interrupt():
     assert xdice.solve_status == SolveStatus.ResourceInterrupt
 
 
-def test_solver_options(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_solver_options(transport, set_options):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -1219,9 +1194,9 @@ def test_solver_options(data):
         transport.solve(solver="xpress", solver_options={"blabla": "1.e12"})
 
     # Test disabled solver option validation
-    gp.set_options({"SOLVER_OPTION_VALIDATION": 0})
+    set_options({"SOLVER_OPTION_VALIDATION": 0})
     transport.solve(solver="conopt", solver_options={"blabla": "1.e12"})
-    gp.set_options({"SOLVER_OPTION_VALIDATION": 1})
+    set_options({"SOLVER_OPTION_VALIDATION": 1})
 
     # Read solver options from an existing file
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -1241,8 +1216,8 @@ def test_solver_options(data):
             assert ">>  rtmaxv 1.e12" in content
 
 
-def test_ellipsis(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_ellipsis(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -1297,8 +1272,14 @@ def test_ellipsis(data):
         c[..., ...] = 5
 
 
-def test_slice(data):
-    m, canning_plants, markets, capacities, _, distances = data
+def test_slice(transport):
+    m, canning_plants, markets, capacities, distances = (
+        transport.container,
+        transport.canning_plants,
+        transport.markets,
+        transport.capacities,
+        transport.distances,
+    )
     i = Set(m, name="i", records=canning_plants)
     i2 = Set(m, name="i2", records=canning_plants)
     i3 = Set(m, name="i3", records=canning_plants)
@@ -1338,8 +1319,8 @@ def test_slice(data):
     error_test[:] = Sum(ntd, error[ntd])
 
 
-def test_max_line_length(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_max_line_length(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -1378,8 +1359,8 @@ def test_max_line_length(data):
     transport.solve()
 
 
-def test_summary(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_summary(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -1419,8 +1400,8 @@ def test_summary(data):
     ]
 
 
-def test_validation(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_validation(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -1489,7 +1470,7 @@ def test_validation_3():
     z.up[vk[v, k]] = n[k]
 
 
-def test_context_manager(data):
+def test_context_manager(transport):
     with Container():
         i = Set()
         a = Alias(alias_with=i)
@@ -1497,7 +1478,7 @@ def test_context_manager(data):
         _ = Variable()
         _ = Equation()
 
-    m, canning_plants, markets, capacities, demands, distances = data
+    m, canning_plants, markets, distances, capacities, demands = transport
     with m:
         i = Set(records=canning_plants)
         j = Set(name="j", records=markets)
@@ -1567,8 +1548,8 @@ def test_context_manager(data):
     assert i.container.working_directory is m.working_directory
 
 
-def test_after_exception(data):
-    m, *_ = data
+def test_after_exception(transport):
+    m = transport.container
     x = Variable(m, "x", type="positive")
     e = Equation(m, "e", definition=x <= x + 1)
     with pytest.raises(ValidationError):
@@ -1604,8 +1585,8 @@ def test_after_exception(data):
     assert f.getAssignment() == "f = 5;"
 
 
-def test_invalid_arguments(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_invalid_arguments(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(
         m,
         name="i",
@@ -1697,8 +1678,8 @@ def test_invalid_arguments(data):
         transport.solve(options={"bla": "bla"})
 
 
-def test_marking_updated_symbols(data):
-    m, *_ = data
+def test_marking_updated_symbols(transport):
+    m = transport.container
     height_data = [
         1.47,
         1.50,
@@ -1813,8 +1794,8 @@ def test_threading_with_ctx():
     assert gp._ctx_managers == {}
 
 
-def test_execution_error(data):
-    m, *_ = data
+def test_execution_error(transport):
+    m = transport.container
     m = Container()
     x = Variable(m)
     y = Variable(m)
@@ -1829,8 +1810,8 @@ def test_execution_error(data):
     assert summary is not None
 
 
-def test_emp():
-    gp.set_options({"USE_PY_VAR_NAME": "no"})
+def test_emp(set_options):
+    set_options({"USE_PY_VAR_NAME": "no"})
     m = Container()
     t = Set(m, name="m", records=[0, 1])
     a = Set(m, name="a", records=["a0", "a1"])
@@ -1871,12 +1852,9 @@ def test_emp():
     with pytest.raises(ValidationError):
         _ = Model(m, name="nash", equations=[defobj, cons], problem="emp")
 
-    m.close()
-    gp.set_options({"USE_PY_VAR_NAME": "yes-or-autogenerate"})
 
-
-def test_subsolver_options(data, tmp_path):
-    m, *_ = data
+def test_subsolver_options(transport, tmp_path, set_options):
+    m = transport.container
     t = Set(m, name="m", records=[0, 1])
     a = Set(m, name="a", records=["a0", "a1"])
     beta = 7
@@ -1925,7 +1903,7 @@ def test_subsolver_options(data, tmp_path):
 
     m.writeSolverOptions("path", {"crash_method": "none", "prox_pert": 0})
 
-    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "yes"})
+    set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "yes"})
 
     with tempfile.NamedTemporaryFile("w", delete=False) as file:
         nash.solve(
@@ -1960,10 +1938,8 @@ def test_subsolver_options(data, tmp_path):
         np.array([0.8571428571428571, 2.5, 0.0, 0.5]),
     ).all()
 
-    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
 
-
-def test_ambiguity():
+def test_ambiguity(set_options):
     m = gp.Container()
 
     c = gp.Parameter(m, name="c", domain=[], records=0.5)
@@ -1978,16 +1954,16 @@ def test_ambiguity():
 
     mcp_model = gp.Model(m, "mcp_model", problem="MCP", matches={f: x})
 
-    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
+    set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
 
     with pytest.raises(ValidationError):
         mcp_model.solve()
 
-    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "yes"})
+    set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "yes"})
     with pytest.raises(GamspyException):
         mcp_model.solve()  # error from GAMS bad bound on variable x
 
-    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "no"})
+    set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "no"})
 
     with pytest.raises(ValidationError):
         mcp_model.solve()  # ambiguous equations not allowed
@@ -2000,11 +1976,10 @@ def test_ambiguity():
         objective=x + 2,
         sense="MIN",
     )
-    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
+    set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})
     lp_model.solve()
-    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "yes"})
+    set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "yes"})
     lp_model.solve()
-    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "no"})
+    set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "no"})
     with pytest.raises(ValidationError):
         lp_model.solve()
-    gp.set_options({"ALLOW_AMBIGUOUS_EQUATIONS": "auto"})

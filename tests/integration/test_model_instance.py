@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import glob
 import math
 import os
 import pathlib
@@ -51,33 +50,7 @@ try:
 except Exception:
     pass
 
-
-@pytest.fixture
-def data():
-    # Arrange
-    m = Container()
-    canning_plants = ["seattle", "san-diego"]
-    markets = ["new-york", "chicago", "topeka"]
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    # Act and assert
-    yield m, canning_plants, markets, capacities, demands, distances
-
-    m.close()
-
-    files = glob.glob("_*")
-    for file in files:
-        if os.path.isfile(file):
-            os.remove(file)
+pytestmark = pytest.mark.usefixtures("cleanup_generated_files")
 
 
 @pytest.mark.integration
@@ -85,8 +58,8 @@ def data():
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
 )
-def test_parameter_change(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_parameter_change(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -199,8 +172,8 @@ def test_parameter_change(data):
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
 )
-def test_variable_change(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_variable_change(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -243,8 +216,8 @@ def test_variable_change(data):
 
 
 @pytest.mark.integration
-def test_lazy_records(data, monkeypatch):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_lazy_records(transport, monkeypatch):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -361,10 +334,10 @@ def test_lazy_records(data, monkeypatch):
 
 
 @pytest.mark.integration
-def test_solve_after_container_close(data):
+def test_solve_after_container_close(transport):
     # A frozen model does not need the GAMS execution engine. Releasing
     # the engine is what keeps its memory from overlapping with the gmd memory.
-    m, *_ = data
+    m = transport.container
     labels = ["a", "b", "c"]
     i = Set(m, "i", records=labels)
     c = Parameter(m, "c", domain=i, records=[(label, 1) for label in labels])
@@ -399,10 +372,10 @@ def test_solve_after_container_close(data):
 
 
 @pytest.mark.integration
-def test_freeze_with_hibernation(data):
+def test_freeze_with_hibernation(transport):
     from gamspy._communication import is_connected
 
-    m, *_ = data
+    m = transport.container
     labels = ["a", "b", "c"]
     i = Set(m, "i", records=labels)
     c = Parameter(m, "c", domain=i, records=[(label, 1) for label in labels])
@@ -436,9 +409,9 @@ def test_freeze_with_hibernation(data):
 
 
 @pytest.mark.integration
-def test_unfreeze_without_loading_records(data):
+def test_unfreeze_without_loading_records(transport):
     # Reading back a solution nobody asked for can be gigabytes on a large model.
-    m, *_ = data
+    m = transport.container
     i = Set(m, "i", records=["a", "b"])
     p = Parameter(m, "p", domain=i, records=[("a", 1), ("b", 1)])
     x = Variable(m, "x", domain=i, type="positive")
@@ -471,8 +444,8 @@ def test_unfreeze_without_loading_records(data):
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
 )
-def test_fx(data):
-    m, *_ = data
+def test_fx(transport):
+    m = transport.container
     INCOME0 = Parameter(
         m,
         name="INCOME0",
@@ -524,8 +497,8 @@ def test_fx(data):
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
 )
-def test_validations(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_validations(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -603,8 +576,8 @@ def test_validations(data):
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
 )
-def test_modifiable_in_condition(data):
-    m, *_ = data
+def test_modifiable_in_condition(transport):
+    m = transport.container
     td_data = pd.DataFrame(
         [
             ["icbm", "2", 0.05],
@@ -831,8 +804,8 @@ def test_modifiable_in_condition(data):
     platform.system() == "Darwin" and platform.machine() == "x86_64",
     reason="Darwin runners are not dockerized yet.",
 )
-def test_modifiable_with_domain(data):
-    m, *_ = data
+def test_modifiable_with_domain(transport):
+    m = transport.container
     import gamspy as gp
 
     m = gp.Container()
@@ -909,7 +882,6 @@ def test_license():
     model.freeze(modifiables=[p2])
     model.solve()
     assert model.solve_status == SolveStatus.NormalCompletion
-    m.close()
 
 
 def normal_dice():
@@ -1076,8 +1048,6 @@ def test_timing():
     # Normal execution should take more time than frozen solve
     assert frozen_model_generation < normal_generation_time
 
-    m.close()
-
 
 @pytest.mark.integration
 @pytest.mark.skipif(
@@ -1111,7 +1081,6 @@ def test_database():
 
     m = Container(gdx_path)
     assert len(m) == 6
-    m.close()
 
 
 @pytest.mark.integration
@@ -1129,8 +1098,14 @@ def test_feasibility():
 
 
 @pytest.mark.integration
-def test_output_propagation(data, tmp_path):
-    _, canning_plants, markets, capacities, demands, distances = data
+def test_output_propagation(transport, tmp_path):
+    canning_plants, markets, capacities, demands, distances = (
+        transport.canning_plants,
+        transport.markets,
+        transport.capacities,
+        transport.demands,
+        transport.distances,
+    )
     file_path = tmp_path / "tmp_output.log"
     with open(file_path, "w") as file:
         m = Container(output=file)
@@ -1178,7 +1153,6 @@ def test_output_propagation(data, tmp_path):
     transport.unfreeze()
     file.close()
     os.unlink(file.name)
-    m.close()
 
 
 @pytest.mark.integration

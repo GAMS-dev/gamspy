@@ -24,7 +24,6 @@ def test_domain():
     # Domain requires at least one set
     with pytest.raises(ValidationError):
         gp.Domain()
-    m.close()
 
 
 def test_domain_forwarding():

@@ -27,4 +27,6 @@ repos:
     rev: v1.5.0
     hooks:
     -   id: detect-secrets
-        args: [ --baseline, .secrets.baseline, --exclude-files, ^docs/user/notebooks/]
+        # The separator class keeps the exclusion working on Windows, where
+        # detect-secrets normalises paths to docs\user\notebooks\...
+        args: [ --baseline, .secrets.baseline, --exclude-files, '^docs[/\\]user[/\\]notebooks[/\\]' ]

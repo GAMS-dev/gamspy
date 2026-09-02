@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import glob
 import os
 import pathlib
 import platform
@@ -28,37 +27,13 @@ from gamspy import (
 from gamspy._backend.engine import EngineConfiguration
 from gamspy.exceptions import ValidationError
 
-pytestmark = pytest.mark.engine
+pytestmark = [pytest.mark.engine, pytest.mark.usefixtures("cleanup_generated_files")]
 try:
     from dotenv import load_dotenv
 
     load_dotenv(os.getcwd() + os.sep + ".env")
 except Exception:
     pass
-
-
-@pytest.fixture
-def data():
-    m = Container()
-    canning_plants = ["seattle", "san-diego"]
-    markets = ["new-york", "chicago", "topeka"]
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    yield m, canning_plants, markets, capacities, demands, distances
-    m.close()
-    files = glob.glob("_*")
-    for file in files:
-        if os.path.isfile(file):
-            os.remove(file)
 
 
 @pytest.fixture
@@ -149,8 +124,8 @@ def test_network_license(network_license):
     assert math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
 
 
-def test_engine(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_engine(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     m = Container()
 
     i = Set(m, name="i", records=canning_plants)
@@ -230,8 +205,8 @@ def test_engine(data):
         transport3.solve(None, None, None, None, None, "engine")
 
 
-def test_logoption(data, tmp_path):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_logoption(transport, tmp_path):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -289,8 +264,8 @@ def test_logoption(data, tmp_path):
     assert os.path.exists(log_file_path)
 
 
-def test_no_config(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_no_config(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -321,8 +296,8 @@ def test_no_config(data):
         transport.solve(backend="engine")
 
 
-def test_extra_files(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_extra_files(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -373,8 +348,8 @@ def test_extra_files(data):
             transport.solve(backend="engine", client=client)
 
 
-def test_solve_twice(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_solve_twice(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -412,8 +387,8 @@ def test_solve_twice(data):
     transport.solve(backend="engine", client=client)
 
 
-def test_summary(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_summary(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -443,8 +418,8 @@ def test_summary(data):
     assert isinstance(summary, pd.DataFrame)
 
 
-def test_non_blocking(data, tmp_path):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_non_blocking(transport, tmp_path):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -500,7 +475,7 @@ def test_non_blocking(data, tmp_path):
     assert x.records.equals(container["x"].records)
 
 
-def test_api_job(data, tmp_path):
+def test_api_job(transport, tmp_path):
     client = EngineClient(
         host=os.environ["ENGINE_URL"],
         username=os.environ["ENGINE_USER"],
@@ -523,7 +498,7 @@ def test_api_job(data, tmp_path):
     client.job.delete_results(token)
 
 
-def test_api_auth(data, tmp_path):
+def test_api_auth(transport, tmp_path):
     # /api/auth -> post
     client = EngineClient(
         host=os.environ["ENGINE_URL"],
@@ -576,8 +551,8 @@ def test_api_auth(data, tmp_path):
         assert message is not None and isinstance(message, str)
 
 
-def test_solver_options(data, tmp_path):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_solver_options(transport, tmp_path):
+    m, canning_plants, markets, distances, capacities, demands = transport
     # Set
     i = Set(
         m,
@@ -678,8 +653,8 @@ def test_solver_options(data, tmp_path):
         assert ">>  rtmaxv 1.e12" in content
 
 
-def test_savepoint(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_savepoint(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     # Set
     i = Set(
         m,
@@ -794,7 +769,7 @@ def test_savepoint(data):
         os.remove(temp_file.name)
 
 
-def test_external_equation_on_engine(data):
+def test_external_equation_on_engine(transport):
     directory = str(pathlib.Path(__file__).parent.resolve())
     external_module = os.path.relpath(
         os.path.join(directory, "external_module", "build", "libsimple_ext_module"),

@@ -29,28 +29,14 @@ from gamspy.exceptions import ValidationError
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    canning_plants = ["seattle", "san-diego"]
-    markets = ["new-york", "chicago", "topeka"]
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    yield m, canning_plants, markets, capacities, demands, distances
-    m.close()
-
-
-def test_operations(data):
-    m, canning_plants, markets, capacities, _, distances = data
+def test_operations(transport):
+    m, canning_plants, markets, capacities, distances = (
+        transport.container,
+        transport.canning_plants,
+        transport.markets,
+        transport.capacities,
+        transport.distances,
+    )
     i = Set(
         m,
         name="i",
@@ -161,8 +147,8 @@ def test_operations(data):
     )
 
 
-def test_operation_indices(data):
-    m, *_ = data
+def test_operation_indices(transport):
+    m = transport.container
     # Test operation index
     m = Container()
     mt = 2016
@@ -207,8 +193,8 @@ def test_operation_indices(data):
     )
 
 
-def test_operation_overloads(data):
-    m, *_ = data
+def test_operation_overloads(transport):
+    m = transport.container
     m = Container()
     c = Set(m, "c")
     s = Set(m, "s")
@@ -228,8 +214,8 @@ def test_operation_overloads(data):
     assert bla.getAssignment() == "bla(s) = bla2(s) ne 0;"
 
 
-def test_truth_value(data):
-    m, *_ = data
+def test_truth_value(transport):
+    m = transport.container
     i_list = [f"i{i}" for i in range(10)]
     i = Set(m, "i", records=i_list)
     j = Alias(m, "j", alias_with=i)
@@ -269,8 +255,8 @@ def test_truth_value(data):
             ...
 
 
-def test_condition(data):
-    m, *_ = data
+def test_condition(transport):
+    m = transport.container
     m = Container()
     jj = Set(m, "jj", records=[f"n{idx}" for idx in range(1, 11)])
     depot = Set(m, "depot", domain=jj, records=["n10"])
@@ -284,8 +270,8 @@ def test_condition(data):
     assert ord_j.getAssignment() == "ord_j(jj) = ord(jj) $ (depot(jj));"
 
 
-def test_control_domain(data):
-    m, *_ = data
+def test_control_domain(transport):
+    m = transport.container
     i = Set(m, "i", records=[f"i{idx}" for idx in range(1, 4)])
     j = Set(m, "j", records=[f"j{idx}" for idx in range(1, 4)])
 
@@ -367,8 +353,8 @@ def test_control_domain(data):
         minw[t].where[tm[t]] = Sum(t, tm[t]) >= tm[t]
 
 
-def test_multiple_ops(data):
-    m, *_ = data
+def test_multiple_ops(transport):
+    m = transport.container
 
     activity = m.addSet(
         "activity",
@@ -477,8 +463,6 @@ def test_mathop_as_operation_index():
         == "eq(r,t,p) .. sum(sameAs(t - 1,v(tt)) $ (rtp(r,v,p)),cap(r,v,p)) =e= 0;"
     )
 
-    m.close()
-
 
 def test_number():
     m = Container()
@@ -498,5 +482,3 @@ def test_number():
 
     n = Number(5)
     assert hash(n) == id(n)
-
-    m.close()

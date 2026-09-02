@@ -70,7 +70,6 @@ def test_two_independent_reservoirs_decompose():
     c = _two_independent_clearlakes()
     result = c.sddp.train(n_iter=20)
     assert math.isclose(result.lower_bound, EXACT_2X, rel_tol=1e-9)
-    c.m.close()
 
 
 @pytest.mark.requires_license
@@ -92,7 +91,6 @@ def test_multistate_policy_and_simulate():
     assert sim.total_cost.shape == (20,)
     assert sim.stage_costs.shape == (20, 4)
     assert "L1" in sim.variables and "L2" in sim.variables
-    c.m.close()
 
 
 @pytest.mark.requires_license
@@ -102,7 +100,6 @@ def test_multistate_cvar_composition():
     res = c.sddp.train(n_iter=40, risk=CVaR(tail=1.0, weight=1.0))
     assert np.isclose(res.lower_bound, EXACT_2X, rtol=1e-6)
     assert res.risk is not None
-    c.m.close()
 
 
 @pytest.mark.unit
@@ -112,7 +109,6 @@ def test_policy_scalar_rejected_for_multistate():
     with pytest.raises(ValidationError):
         with pytest.warns(UserWarning):
             c.sddp.policy("mar", 180.0, 100.0)
-    c.m.close()
 
 
 @pytest.mark.unit
@@ -126,7 +122,6 @@ def test_policy_bad_state_keys_rejected():
     with pytest.raises(ValidationError):
         with pytest.warns(UserWarning):
             c.sddp.policy("mar", {"L1": 180.0, "L3": 1.0}, 100.0)
-    c.m.close()
 
 
 @pytest.mark.requires_license
@@ -143,7 +138,6 @@ def test_policy_multiple_calls_respect_bounds_multistate():
     assert np.isclose(p2.decisions["R2"], 200.0, atol=1e-3)
     assert np.isclose(p2.decisions["F1"], 130.0, atol=1e-3)
     assert np.isclose(p2.decisions["F2"], 130.0, atol=1e-3)
-    c.m.close()
 
 
 # ── Coupled cascade vs its deterministic-equivalent optimum

@@ -32,35 +32,17 @@ from gamspy import (
 from gamspy.exceptions import GamspyException
 
 
-@pytest.fixture
-def data():
-    # Arrange
-    m = Container()
-    canning_plants = ["seattle", "san-diego"]
-    markets = ["new-york", "chicago", "topeka"]
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+@pytest.fixture(autouse=True)
+def cleanup_savepoint_file():
+    yield
 
-    # Act and assert
-    yield m, canning_plants, markets, capacities, demands, distances
-
-    # Cleanup
-    m.close()
     savepoint_path = os.path.join(os.getcwd(), "transport_p.gdx")
     if os.path.exists(savepoint_path):
         os.remove(savepoint_path)
 
 
 @pytest.mark.unit
-def test_options(data, tmp_path):
+def test_options(transport, tmp_path):
     with pytest.raises(exceptions.ValidationError):
         options = Options(generate_name_dict=True)
         _ = Container(options=options)
@@ -129,8 +111,8 @@ def test_options(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_seed(data):
-    m, *_ = data
+def test_seed(transport):
+    m = transport.container
     m = Container(
         options=Options(seed=1),
     )
@@ -156,8 +138,8 @@ def test_seed(data):
 
 
 @pytest.mark.unit
-def test_global_options(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_global_options(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     options = Options(lp="conopt")
     m = Container(
         debugging_level="keep",
@@ -196,8 +178,7 @@ def test_global_options(data):
 
 
 @pytest.mark.unit
-def test_gamspy_to_gams_options(data):
-    _m, _canning_plants, _markets, _capacities, _, _distances = data
+def test_gamspy_to_gams_options(transport):
     options = Options(
         allow_suffix_in_equation=False,
         allow_suffix_in_limited_variables=False,
@@ -304,8 +285,8 @@ def test_container_creation_option_restrictions():
 
 
 @pytest.mark.unit
-def test_model_attr_options_reset_across_solves(data):
-    m, *_ = data
+def test_model_attr_options_reset_across_solves(transport):
+    m = transport.container
     x = Variable(m, "x")
     e = Equation(m, "e")
     e[...] = x >= 1
@@ -458,8 +439,8 @@ def test_iteration_limit_not_sticky():
 
 
 @pytest.mark.unit
-def test_log_option(data, tmp_path):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_log_option(transport, tmp_path):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -518,7 +499,7 @@ def test_log_option(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_from_file(data, tmp_path):
+def test_from_file(transport, tmp_path):
     option_file = str(tmp_path / "option_file")
     with open(option_file, "w") as file:
         file.write("lp = conopt\n\n")
@@ -531,8 +512,8 @@ def test_from_file(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_profile(data, tmp_path):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_profile(transport, tmp_path):
+    m, canning_plants, markets, distances, capacities, demands = transport
     # Set
     i = Set(
         m,
@@ -633,8 +614,8 @@ def test_profile(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_solprint(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_solprint(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     m = Container(options=Options(report_solution=1))
 
     # Set
@@ -724,8 +705,8 @@ def test_solprint(data):
 
 
 @pytest.mark.unit
-def test_exception_on_solve_with_listing_file(data, tmp_path):
-    m, *_ = data
+def test_exception_on_solve_with_listing_file(transport, tmp_path):
+    m = transport.container
     x = Variable(m, name="x")
 
     transport = Model(
@@ -745,8 +726,8 @@ def test_exception_on_solve_with_listing_file(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_model_attribute_options(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_model_attribute_options(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     m = Container(debugging_level="keep")
 
     # Set
@@ -833,8 +814,8 @@ def test_model_attribute_options(data):
 
 
 @pytest.mark.unit
-def test_scaling(data, tmp_path):
-    m, *_ = data
+def test_scaling(transport, tmp_path):
+    m = transport.container
     m = Container()
 
     x1 = Variable(m, "x1", type="positive")
@@ -866,8 +847,8 @@ def test_scaling(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_loadpoint(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_loadpoint(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     # Set
     i = Set(
         m,
@@ -968,8 +949,8 @@ def test_loadpoint(data):
 
 
 @pytest.mark.unit
-def test_solver_options_twice(data, tmp_path):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_solver_options_twice(transport, tmp_path):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(
         m,
         name="i",
@@ -1085,12 +1066,11 @@ def test_extra_options():
     _ = Set(m, records=["i1", "i2"])
     assert os.path.exists(save_path)
     os.remove(save_path)
-    m.close()
 
 
 @pytest.mark.unit
-def test_solver_options_highs(data, tmp_path):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_solver_options_highs(transport, tmp_path):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(
         m,
         name="i",
@@ -1257,8 +1237,6 @@ def test_bypass_solver():
     # It should not take more than 5 seconds since we don't pass it to the solver
     # If we pass it to the solver, it should take hours maybe days.
     assert end - start < 5
-
-    m.close()
 
 
 @pytest.mark.unit

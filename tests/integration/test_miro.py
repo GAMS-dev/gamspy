@@ -19,22 +19,16 @@ from gamspy.exceptions import ValidationError
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture
-def data():
-    # Arrange
-    m = Container()
+@pytest.fixture(autouse=True)
+def cleanup_miro_log():
+    yield
 
-    # Act and assert
-    yield m
-
-    # Cleanup
-    m.close()
     if os.path.exists("miro.log"):
         os.remove("miro.log")
 
 
-def test_domain_forwarding(data):
-    m = data
+def test_domain_forwarding(container):
+    m = container
     # Only the parameter is miro input
     i = Set(m, name="i")
     p = Parameter(
@@ -473,8 +467,8 @@ def test_table_columns():
     assert process.returncode == 0, process.stderr
 
 
-def test_miro_encoder(data):
-    m = data
+def test_miro_encoder(container):
+    m = container
     # Prepare data
     distances = [
         ["seattle", "new-york", 2.5],
@@ -889,8 +883,8 @@ def test_args():
     assert process.returncode == 0, process.stderr
 
 
-def test_miro_protect(data):
-    m = data
+def test_miro_protect(container):
+    m = container
     m = Container()
 
     i = Set(m, name="i", is_miro_input=True)

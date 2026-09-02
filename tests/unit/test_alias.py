@@ -24,29 +24,22 @@ from gamspy.exceptions import ValidationError
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def m():
-    container = Container()
-    yield container
-    container.close()
+def test_alias_creation(container):
+    i = Set(container, "i")
+    container.addAlias(alias_with=i)
 
-
-def test_alias_creation(m):
-    i = Set(m, "i")
-    m.addAlias(alias_with=i)
-
-    a = Alias(m, alias_with=i)
+    a = Alias(container, alias_with=i)
     assert len(a) == 0
     with pytest.raises(ValidationError):
         _ = a.getAssignment()
 
     # no alias
     with pytest.raises(ValueError):
-        _ = Alias(m)
+        _ = Alias(container)
 
     # non-str type name
     with pytest.raises(TypeError):
-        _ = Alias(m, 5, i)
+        _ = Alias(container, 5, i)
 
     # no container
     with pytest.raises(ValidationError):
@@ -58,16 +51,16 @@ def test_alias_creation(m):
 
     # try to create a symbol with same name but different type
     with pytest.raises(TypeError):
-        _ = Alias(m, "i", i)
+        _ = Alias(container, "i", i)
 
     # get already created symbol
-    j1 = Alias(m, "j", i)
-    j2 = Alias(m, "j", i)
+    j1 = Alias(container, "j", i)
+    j2 = Alias(container, "j", i)
     assert id(j1) == id(j2)
 
     # len of Alias
-    i2 = Set(m, records=["i1", "i2"])
-    k2 = Alias(m, "k2", alias_with=i2)
+    i2 = Set(container, records=["i1", "i2"])
+    k2 = Alias(container, "k2", alias_with=i2)
     assert len(k2) == 2
 
     k2["i1"] = False
@@ -80,40 +73,40 @@ def test_alias_creation(m):
         k2.synchronize = True
 
 
-def test_alias_string(m):
+def test_alias_string(container):
     # Set and Alias without domain
-    i = Set(m, name="i", records=["a", "b", "c"])
-    j = Alias(m, name="j", alias_with=i)
+    i = Set(container, name="i", records=["a", "b", "c"])
+    j = Alias(container, name="j", alias_with=i)
     assert j.gamsRepr() == "j"
     assert j.getDeclaration() == "Alias(i,j);"
 
     # Set and Alias with domain
-    k = Set(m, name="k", domain=[i], records=["a", "b"])
-    l = Alias(m, name="l", alias_with=k)
+    k = Set(container, name="k", domain=[i], records=["a", "b"])
+    l = Alias(container, name="l", alias_with=k)
     assert l.gamsRepr() == "l"
     assert l.getDeclaration() == "Alias(k,l);"
 
     # Check if the name is reserved
     with pytest.raises(ValidationError):
-        _ = Alias(m, "set", i)
+        _ = Alias(container, "set", i)
 
 
-def test_override(m):
+def test_override(container):
     # Try to add the same Alias with non-Set alias_with
-    u = Set(m, "u")
-    v = Alias(m, "v", alias_with=u)
-    eq = Equation(m, "eq", domain=[u, v])
+    u = Set(container, "u")
+    v = Alias(container, "v", alias_with=u)
+    eq = Equation(container, "eq", domain=[u, v])
     with pytest.raises(ValueError):
-        _ = m.addAlias("v", eq)
+        _ = container.addAlias("v", eq)
 
     # Try to add the same alias
     with pytest.raises(TypeError):
-        _ = m.addAlias("u", u)
+        _ = container.addAlias("u", u)
 
 
-def test_alias_attributes(m):
-    i = Set(m, "i")
-    j = Alias(m, "j", alias_with=i)
+def test_alias_attributes(container):
+    i = Set(container, "i")
+    j = Alias(container, "j", alias_with=i)
     assert j.pos.gamsRepr() == "j.pos"
     assert j.ord.gamsRepr() == "j.ord"
     assert j.off.gamsRepr() == "j.off"
@@ -127,10 +120,10 @@ def test_alias_attributes(m):
     assert j.last.gamsRepr() == "j.last"
 
 
-def test_universe_alias_creation(m):
+def test_universe_alias_creation(container):
     # non-str type name
     with pytest.raises(TypeError):
-        _ = UniverseAlias(m, 5)
+        _ = UniverseAlias(container, 5)
 
     # no container
     with pytest.raises(ValidationError):
@@ -141,51 +134,51 @@ def test_universe_alias_creation(m):
         UniverseAlias(5, "j")
 
     # try to create a symbol with same name but different type
-    _ = Set(m, "i")
+    _ = Set(container, "i")
     with pytest.raises(TypeError):
-        UniverseAlias(m, "i")
+        UniverseAlias(container, "i")
 
     # get already created symbol
-    j1 = UniverseAlias(m, "j")
-    j2 = UniverseAlias(m, "j")
+    j1 = UniverseAlias(container, "j")
+    j2 = UniverseAlias(container, "j")
     assert id(j1) == id(j2)
 
-    u = UniverseAlias(m, name="u")
-    p = Parameter(m, name="p", domain=u)
+    u = UniverseAlias(container, name="u")
+    p = Parameter(container, name="p", domain=u)
     p[u] = 2
 
 
-def test_universe_alias(m, tmp_path):
+def test_universe_alias(container, tmp_path):
     gdx_path = str(tmp_path / "test.gdx")
 
-    h = UniverseAlias(m, "h")
-    _ = Set(m, "i", records=["i1", "i2"])
-    _ = Set(m, "j", records=["j1", "j2"])
+    h = UniverseAlias(container, "h")
+    _ = Set(container, "i", records=["i1", "i2"])
+    _ = Set(container, "j", records=["j1", "j2"])
 
     assert h.toList() == ["i1", "i2", "j1", "j2"]
 
-    m.write(gdx_path)
+    container.write(gdx_path)
 
     bla = Container()
     bla.read(gdx_path)
     assert bla.data["h"].toList() == h.toList()
 
-    m = Container()
+    container = Container()
 
-    r = UniverseAlias(m, name="new_universe")
-    k = Set(m, name="k", domain=r, records="Chicago")
+    r = UniverseAlias(container, name="new_universe")
+    k = Set(container, name="k", domain=r, records="Chicago")
     assert k.getDeclaration() == "Set k(*);"
 
-    u1 = m.addUniverseAlias(name="universe_name")
+    u1 = container.addUniverseAlias(name="universe_name")
     assert u1.name == "universe_name"
 
-    u2 = m.addUniverseAlias()
+    u2 = container.addUniverseAlias()
     assert u2.name == "u2"
 
 
-def test_alias_state(m):
-    i = Set(m, name="i", records=["a", "b", "c"])
-    j = Alias(m, name="j", alias_with=i)
+def test_alias_state(container):
+    i = Set(container, name="i", records=["a", "b", "c"])
+    j = Alias(container, name="j", alias_with=i)
     i._should_unload_to_gams = False
     j.setRecords(["a", "b"])
     assert not i._should_unload_to_gams
@@ -195,20 +188,20 @@ def test_alias_state(m):
     assert i._should_unload_to_gams
 
 
-def test_alias_modified_list(m):
-    nodes = m.addSet("nodes", description="nodes", records=["s"])
-    i = m.addAlias("i", nodes)
-    _ = m.addSet("s", domain=[i], description="sources", records=["s"])
-    symbol_names = m._symbols_to_unload()
+def test_alias_modified_list(container):
+    nodes = container.addSet("nodes", description="nodes", records=["s"])
+    i = container.addAlias("i", nodes)
+    _ = container.addSet("s", domain=[i], description="sources", records=["s"])
+    symbol_names = container._symbols_to_unload()
     assert symbol_names == []
 
 
-def test_indexing(m):
-    row = Set(m, "row", records=[("r-" + str(i), i) for i in range(1, 11)])
-    col = Set(m, "col", records=[("c-" + str(i), i) for i in range(1, 11)])
+def test_indexing(container):
+    row = Set(container, "row", records=[("r-" + str(i), i) for i in range(1, 11)])
+    col = Set(container, "col", records=[("c-" + str(i), i) for i in range(1, 11)])
 
     r = Parameter(
-        m,
+        container,
         "r",
         domain=row,
         records=[
@@ -217,7 +210,7 @@ def test_indexing(m):
         ],
     )
     c = Parameter(
-        m,
+        container,
         "c",
         domain=col,
         records=[
@@ -226,10 +219,10 @@ def test_indexing(m):
         ],
     )
 
-    a = Parameter(m, "a", domain=[row, col])
+    a = Parameter(container, "a", domain=[row, col])
 
-    dyn_col = Set(m, name="dyn_col", domain=[col])
-    dyn_col_alias = Alias(m, name="dyn_col_alias", alias_with=dyn_col)
+    dyn_col = Set(container, name="dyn_col", domain=[col])
+    dyn_col_alias = Alias(container, name="dyn_col_alias", alias_with=dyn_col)
     dyn_col[col] = Ord(col) < 5
 
     a[row, dyn_col_alias[col]] = 13.2 + r[row] * c[dyn_col_alias]
