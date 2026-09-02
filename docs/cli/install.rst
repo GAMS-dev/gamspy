@@ -115,8 +115,8 @@ The installation of the ``cuopt`` solver can be adjusted with the following envi
      - Default
      - Description
    * - ``GAMSPY_CUOPT_VERSION``
-     - latest
-     - Version of the GAMS ``cuopt`` link to install, e.g. ``0.0.8``.
+     - ``0.0.8b``
+     - Version of the GAMS ``cuopt`` link to install, ``0.0.8b`` or newer, e.g. ``0.0.9``.
    * - ``GAMSPY_CUDA_VERSION``
      - autodetected
      - Major version of the CUDA runtime (``12`` or ``13``) to install ``cuopt`` for.
@@ -145,4 +145,4 @@ Skip pip installation::
 
 Install a specific ``cuopt`` version for CUDA 12 without the CUDA runtime libraries::
 
-  $ GAMSPY_CUOPT_VERSION=0.0.8 GAMSPY_CUDA_VERSION=12 GAMSPY_CUDA_RUNTIME=0 gamspy install solver cuopt
+  $ GAMSPY_CUOPT_VERSION=0.0.8b GAMSPY_CUDA_VERSION=12 GAMSPY_CUDA_RUNTIME=0 gamspy install solver cuopt

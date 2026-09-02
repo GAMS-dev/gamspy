@@ -1,0 +1,1 @@
+Merge the solver configuration of the ``cuopt`` release archive into the ``gamsconfig.yaml`` of the GAMS system directory instead of overwriting it.
