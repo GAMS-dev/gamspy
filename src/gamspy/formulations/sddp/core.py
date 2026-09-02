@@ -1186,55 +1186,47 @@ class SDDP:
         scenario_set = self._noise.scenario_set
         assert scenario_set is not None
 
-        container = self._container
         stage_set = self._stage_set
         active_stage_set = self._active_stage_set
         time_set = self._time_set
         convergence_metrics = self._convergence_metrics
         initial_stage_label = self._stage_labels[0]
 
-        # Same single-sync pattern as the training loop: batch every statement
-        # and this solve into one GAMS job rather than a round-trip apiece.
-        container._in_loop += 1
-        try:
-            active_stage_set[stage_set] = False
-            active_stage_set[initial_stage_label] = True
-            for state_var in self._states:
-                assert state_var.initial_stage_fixed_state is not None
-                assert state_var.initial_stage_state_level is not None
-                assert state_var.orig_lo_param is not None
-                assert state_var.orig_up_param is not None
-                state_var.variable.lo[time_set] = state_var.orig_lo_param[time_set]
-                state_var.variable.up[time_set] = state_var.orig_up_param[time_set]
-                state_var.initial_stage_fixed_state[scenario_set, time_set] = 0
-                state_var.initial_stage_fixed_state[
-                    scenario_set, self._initial_state_time
-                ] = max(
-                    state_var.initial_state
-                    if state_var.initial_state is not None
-                    else state_var.lower_bound,
-                    self._EPS,
-                )
-                state_var.initial_stage_state_level[scenario_set, time_set] = 0
-
-            self._initial_stage_noise[scenario_set] = self._stage_scenario_noise[
-                initial_stage_label, scenario_set
-            ]
-            self._initial_stage_approx_cost[scenario_set] = 0
-            self._initial_stage_cost[scenario_set] = 0
-
-            self._gp_model.solve(
-                options=self._solve_opts, scenario=self._initial_stage_scenario_dict
+        active_stage_set[stage_set] = False
+        active_stage_set[initial_stage_label] = True
+        for state_var in self._states:
+            assert state_var.initial_stage_fixed_state is not None
+            assert state_var.initial_stage_state_level is not None
+            assert state_var.orig_lo_param is not None
+            assert state_var.orig_up_param is not None
+            state_var.variable.lo[time_set] = state_var.orig_lo_param[time_set]
+            state_var.variable.up[time_set] = state_var.orig_up_param[time_set]
+            state_var.initial_stage_fixed_state[scenario_set, time_set] = 0
+            state_var.initial_stage_fixed_state[
+                scenario_set, self._initial_state_time
+            ] = max(
+                state_var.initial_state
+                if state_var.initial_state is not None
+                else state_var.lower_bound,
+                self._EPS,
             )
+            state_var.initial_stage_state_level[scenario_set, time_set] = 0
 
-            convergence_metrics[slot, "lo_full"] = gp.Sum(
-                scenario_set,
-                self._scenario_prob[scenario_set]
-                * self._initial_stage_approx_cost[scenario_set],
-            )
-        finally:
-            container._in_loop -= 1
-        container._synch_with_gams()
+        self._initial_stage_noise[scenario_set] = self._stage_scenario_noise[
+            initial_stage_label, scenario_set
+        ]
+        self._initial_stage_approx_cost[scenario_set] = 0
+        self._initial_stage_cost[scenario_set] = 0
+
+        self._gp_model.solve(
+            options=self._solve_opts, scenario=self._initial_stage_scenario_dict
+        )
+
+        convergence_metrics[slot, "lo_full"] = gp.Sum(
+            scenario_set,
+            self._scenario_prob[scenario_set]
+            * self._initial_stage_approx_cost[scenario_set],
+        )
 
         return float(
             _parameter_values_for_iteration(convergence_metrics, slot).get(
@@ -1341,7 +1333,6 @@ class SDDP:
         assert self._approx_cost is not None
         assert self._gp_model is not None
 
-        container = self._container
         active_stage_set = self._active_stage_set
         stage_set = self._stage_set
         time_set = self._time_set
@@ -1472,9 +1463,6 @@ class SDDP:
             t_iter = time.perf_counter()
             interrupted = False
 
-            # Single-sync pattern: pre-bump prevents nested Loop.__exit__ syncs.
-            # One explicit _synch_with_gams() at the end covers the full iteration.
-            container._in_loop += 1
             try:
                 ##########          Adaptive trial-level update          ##########
                 # Replace the static uniform grid with the previous iteration's
@@ -1810,23 +1798,6 @@ class SDDP:
                 else:
                     _restore_sigint()
                     raise
-            finally:
-                container._in_loop -= 1
-
-            # Single explicit sync, now that the pre-bump is released so it runs
-            # at the baseline _in_loop and actually flushes. Wrapped so a CTRL+C
-            # that aborts the sync's own GAMS job is finalized too.
-            if not interrupted:
-                try:
-                    container._synch_with_gams()
-                except GamspyException:
-                    if self._stop_requested:
-                        result.stop_reason = "interrupted"
-                        interrupted = True
-                    else:
-                        _restore_sigint()
-                        raise
-
             if interrupted:
                 break
 
@@ -1835,7 +1806,7 @@ class SDDP:
             # policy()/simulate() solves see the set empty,
             # the Benders cuts deactivate, alpha collapses to its zero bound,
             # and decisions are silently wrong. Catches breakage of the
-            # end-of-iteration sync at the moment it happens, not three steps
+            # active-cut round-trip at the moment it happens, not three steps
             # downstream when a user sees a nonsense policy result.
             active_labels = (
                 0
@@ -1853,8 +1824,8 @@ class SDDP:
                     f"active-cut iteration set out of step after "
                     f"{iteration_label}: expected "
                     f"{expected_labels} active cut iteration(s), got "
-                    f"{active_labels}. Either the end-of-iteration sync did not "
-                    f"bring the active-cut iteration set back to Python, or "
+                    f"{active_labels}. Either the active-cut iteration set did not "
+                    f"round-trip to Python, or "
                     f"cut selection retired the wrong label."
                 )
 
@@ -2315,99 +2286,85 @@ class SDDP:
             sim_dict.add_level(variable, sim_var_level[variable.name])
 
         # Forward simulation: one GUSS batch per stage
-        container._in_loop += 1
-        try:
-            for stage_index, stage_label in enumerate(stage_labels):
-                # Activate this stage
-                active_stage_set[stage_set] = False
-                active_stage_set[stage_label] = True
+        for stage_index, stage_label in enumerate(stage_labels):
+            # Activate this stage
+            active_stage_set[stage_set] = False
+            active_stage_set[stage_label] = True
 
-                # Build active (path, scenario) set for this stage
-                sim_active[sim_paths, scenario_set] = sim_sample[
-                    sim_paths, stage_label, scenario_set
-                ]
+            # Build active (path, scenario) set for this stage
+            sim_active[sim_paths, scenario_set] = sim_sample[
+                sim_paths, stage_label, scenario_set
+            ]
 
-                # Scatter noise: only the sampled scenario per path is non-zero
-                sim_noise[sim_paths, scenario_set] = 0
-                sim_noise[sim_paths, scenario_set].where[
-                    sim_active[sim_paths, scenario_set]
-                ] = stage_scenario_noise[stage_label, scenario_set]
+            # Scatter noise: only the sampled scenario per path is non-zero
+            sim_noise[sim_paths, scenario_set] = 0
+            sim_noise[sim_paths, scenario_set].where[
+                sim_active[sim_paths, scenario_set]
+            ] = stage_scenario_noise[stage_label, scenario_set]
 
-                # Per state: restore bounds and fix the incoming state.
+            # Per state: restore bounds and fix the incoming state.
+            for state_var in self._states:
+                assert state_var.orig_lo_param is not None
+                assert state_var.orig_up_param is not None
+                state_var.variable.lo[time_set] = state_var.orig_lo_param[time_set]
+                state_var.variable.up[time_set] = state_var.orig_up_param[time_set]
+
+                state_param = sim_state[state_var.variable.name]
+                state_param[sim_paths, scenario_set, time_set] = 0
+                if stage_index == 0:
+                    initial = (
+                        state_var.initial_state
+                        if state_var.initial_state is not None
+                        else state_var.lower_bound
+                    )
+                    state_param[sim_paths, scenario_set, initial_state_time].where[
+                        sim_active[sim_paths, scenario_set]
+                    ] = max(initial, self._EPS)
+                else:
+                    state_param[sim_paths, scenario_set, time_alias].where[
+                        sim_active[sim_paths, scenario_set]
+                        & previous_stage_end_map[stage_label, time_alias]
+                    ] = sim_fwd_state[state_var.variable.name][sim_paths]
+
+            # Reset extracts
+            sim_approx_cost[sim_paths, scenario_set] = 0
+            sim_cost[sim_paths, scenario_set] = 0
+            for variable in extract_vars:
+                sim_var_level[variable.name][sim_paths, scenario_set, time_set] = 0
+
+            # GUSS solve: n_paths LPs in one batch
+            self._gp_model.solve(options=self._solve_opts, scenario=sim_dict)
+
+            # Record per-stage history
+            sim_cost_hist[sim_paths, stage_label] = gp.Sum(
+                scenario_set.where[sim_active[sim_paths, scenario_set]],
+                sim_cost[sim_paths, scenario_set],
+            )
+            sim_noise_hist[sim_paths, stage_label] = gp.Sum(
+                scenario_set.where[sim_active[sim_paths, scenario_set]],
+                sim_noise[sim_paths, scenario_set],
+            )
+            for variable in report:
+                sim_var_hist[variable.name][sim_paths, stage_label] = gp.Sum(
+                    gp.Domain(scenario_set, time_alias).where[
+                        sim_active[sim_paths, scenario_set]
+                        & stage_end_map[stage_label, time_alias]
+                    ],
+                    sim_var_level[variable.name][sim_paths, scenario_set, time_alias],
+                )
+
+            # Advance each state's forward value for the next stage.
+            if stage_index < len(stage_labels) - 1:
                 for state_var in self._states:
-                    assert state_var.orig_lo_param is not None
-                    assert state_var.orig_up_param is not None
-                    state_var.variable.lo[time_set] = state_var.orig_lo_param[time_set]
-                    state_var.variable.up[time_set] = state_var.orig_up_param[time_set]
-
-                    state_param = sim_state[state_var.variable.name]
-                    state_param[sim_paths, scenario_set, time_set] = 0
-                    if stage_index == 0:
-                        initial = (
-                            state_var.initial_state
-                            if state_var.initial_state is not None
-                            else state_var.lower_bound
-                        )
-                        state_param[sim_paths, scenario_set, initial_state_time].where[
-                            sim_active[sim_paths, scenario_set]
-                        ] = max(initial, self._EPS)
-                    else:
-                        state_param[sim_paths, scenario_set, time_alias].where[
-                            sim_active[sim_paths, scenario_set]
-                            & previous_stage_end_map[stage_label, time_alias]
-                        ] = sim_fwd_state[state_var.variable.name][sim_paths]
-
-                # Reset extracts
-                sim_approx_cost[sim_paths, scenario_set] = 0
-                sim_cost[sim_paths, scenario_set] = 0
-                for variable in extract_vars:
-                    sim_var_level[variable.name][sim_paths, scenario_set, time_set] = 0
-
-                # GUSS solve: n_paths LPs in one batch
-                self._gp_model.solve(options=self._solve_opts, scenario=sim_dict)
-
-                # Record per-stage history
-                sim_cost_hist[sim_paths, stage_label] = gp.Sum(
-                    scenario_set.where[sim_active[sim_paths, scenario_set]],
-                    sim_cost[sim_paths, scenario_set],
-                )
-                sim_noise_hist[sim_paths, stage_label] = gp.Sum(
-                    scenario_set.where[sim_active[sim_paths, scenario_set]],
-                    sim_noise[sim_paths, scenario_set],
-                )
-                for variable in report:
-                    sim_var_hist[variable.name][sim_paths, stage_label] = gp.Sum(
+                    sim_fwd_state[state_var.variable.name][sim_paths] = gp.Sum(
                         gp.Domain(scenario_set, time_alias).where[
                             sim_active[sim_paths, scenario_set]
                             & stage_end_map[stage_label, time_alias]
                         ],
-                        sim_var_level[variable.name][
+                        sim_var_level[state_var.variable.name][
                             sim_paths, scenario_set, time_alias
                         ],
                     )
-
-                # Advance each state's forward value for the next stage.
-                if stage_index < len(stage_labels) - 1:
-                    for state_var in self._states:
-                        sim_fwd_state[state_var.variable.name][sim_paths] = gp.Sum(
-                            gp.Domain(scenario_set, time_alias).where[
-                                sim_active[sim_paths, scenario_set]
-                                & stage_end_map[stage_label, time_alias]
-                            ],
-                            sim_var_level[state_var.variable.name][
-                                sim_paths, scenario_set, time_alias
-                            ],
-                        )
-
-        except Exception:
-            container._in_loop -= 1
-            raise
-        container._in_loop -= 1
-
-        # Single sync flushes the loop. The per-stage history params assigned
-        # above flag themselves for load-back, so the container loads them
-        # automatically.
-        container._synch_with_gams()
 
         # Aggregate into DataFrames
         cost_df = self._pivot_history(sim_cost_hist, path_labels, stage_labels)
