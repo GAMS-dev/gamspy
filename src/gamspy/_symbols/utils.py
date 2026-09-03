@@ -51,7 +51,7 @@ def _assert_axes_no_nans(records):
                 )
 
 
-def _flatten_and_convert(records):
+def _flatten_and_convert(records: pd.DataFrame | pd.Series) -> pd.DataFrame:
     AXES = ["index", "columns"]
     drop_needed = False
     for axis_name, axis in zip(AXES, records.axes, strict=False):
@@ -60,7 +60,7 @@ def _flatten_and_convert(records):
         # go through axis
         axis_as_frame = pd.DataFrame(np.array(axis.tolist(), dtype=object))
         for n in range(axis.nlevels):
-            level = axis.levels[n] if hasattr(axis, "levels") else axis
+            level = axis.levels[n] if isinstance(axis, pd.MultiIndex) else axis
 
             # factorize
             # preserve order of appearance, not lexicographical order + str/rstrip
@@ -76,7 +76,7 @@ def _flatten_and_convert(records):
             # preserve user order if CategoricalDtype
             if isinstance(level.dtype, pd.CategoricalDtype):
                 categorical = categorical.reorder_categories(
-                    dict.fromkeys(map(str.rstrip, level.categories)),
+                    dict.fromkeys(map(str.rstrip, level.dtype.categories)),
                     ordered=True,
                 )
 

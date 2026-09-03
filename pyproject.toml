@@ -68,10 +68,6 @@ explicit = true
 
 [tool.ty.src]
 exclude = [
-    "src/gamspy/_backend/neos.py", 
-    "src/gamspy/_backend/engine.py", 
-    "src/gamspy/_gmd.py",
-    "src/gamspy/_records_ingestion.py", 
     "src/gamspy/formulations/nn",
     "src/gamspy/formulations/ml",
     "src/gamspy/formulations/shape.py",

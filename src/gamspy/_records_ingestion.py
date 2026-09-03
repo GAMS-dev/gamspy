@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,7 @@ from gamspy._symbols.utils import (
 )
 
 if TYPE_CHECKING:
-    from gamspy._symbols import Equation, Parameter, Variable
+    from gamspy._symbols import Alias, Equation, Parameter, Set, UniverseAlias, Variable
     from gamspy._types import (
         ParameterRecordsType,
         SetRecordsType,
@@ -250,19 +250,20 @@ class ParameterIngestor(BaseIngestor):
         if self.symbol.is_scalar:
             df = pd.DataFrame(index=[0])
         else:
-            codes = [
-                np.arange(len(d._getUELs(ignore_unused=True)))
-                for d in self.symbol.domain
-            ]
+            # A regular domain status implies that every domain is a symbol.
+            domain = cast("list[Set | Alias | UniverseAlias]", self.symbol.domain)
+            codes = [np.arange(len(d._getUELs(ignore_unused=True))) for d in domain]
             df = pd.DataFrame(dict(enumerate(cartesian_product(*tuple(codes)))))
 
-            for n, d in enumerate(self.symbol.domain):
+            for n, d in enumerate(domain):
+                domain_records = d.records
+                assert domain_records is not None
                 # Codes come from a cartesian product of arange(...) over each
                 # domain's UELs, so they are in-bounds by construction: skip the
                 # redundant validation pandas would otherwise run.
                 dtype = pd.CategoricalDtype._from_fastpath(
-                    categories=d.records.iloc[:, 0].cat.categories,
-                    ordered=d.records.iloc[:, 0].cat.ordered,
+                    categories=domain_records.iloc[:, 0].cat.categories,
+                    ordered=domain_records.iloc[:, 0].cat.ordered,
                 )
                 df.isetitem(
                     n,
@@ -342,8 +343,7 @@ class ParameterIngestor(BaseIngestor):
                     "Dimensionality of data is inconsistent with domain specification."
                 )
 
-            records = _flatten_and_convert(records)
-            self._finalize_records(records)
+            self._finalize_records(_flatten_and_convert(records))
 
     def _from_dict(self, records: dict) -> None:
         self._from_else(records)
@@ -375,6 +375,8 @@ class ParameterIngestor(BaseIngestor):
 
 
 class SetIngestor(BaseIngestor):
+    symbol: Set
+
     def _finalize_records(
         self, records: pd.DataFrame, col_labels: list[str] | None = None
     ) -> None:
@@ -449,8 +451,7 @@ class SetIngestor(BaseIngestor):
                     "Dimensionality of data is inconsistent with domain specification."
                 )
 
-            records = _flatten_and_convert(records)
-            self._finalize_records(records)
+            self._finalize_records(_flatten_and_convert(records))
         else:
             if self.symbol.dimension != 1:
                 raise ValueError(
@@ -567,19 +568,20 @@ class VarEquIngestor(BaseIngestor):
         if self.symbol.is_scalar:
             df = pd.DataFrame(index=[0], columns=list(records.keys()))
         else:
-            codes = [
-                np.arange(len(d._getUELs(ignore_unused=True)))
-                for d in self.symbol.domain
-            ]
+            # A regular domain status implies that every domain is a symbol.
+            domain = cast("list[Set | Alias | UniverseAlias]", self.symbol.domain)
+            codes = [np.arange(len(d._getUELs(ignore_unused=True))) for d in domain]
             df = pd.DataFrame(dict(enumerate(cartesian_product(*tuple(codes)))))
 
-            for n, d in enumerate(self.symbol.domain):
+            for n, d in enumerate(domain):
+                domain_records = d.records
+                assert domain_records is not None
                 # Codes come from a cartesian product of arange(...) over each
                 # domain's UELs, so they are in-bounds by construction: skip the
                 # redundant validation pandas would otherwise run.
                 dtype = pd.CategoricalDtype._from_fastpath(
-                    categories=d.records.iloc[:, 0].cat.categories,
-                    ordered=d.records.iloc[:, 0].cat.ordered,
+                    categories=domain_records.iloc[:, 0].cat.categories,
+                    ordered=domain_records.iloc[:, 0].cat.ordered,
                 )
                 df.isetitem(
                     n,
@@ -746,23 +748,23 @@ class VarEquIngestor(BaseIngestor):
                     "Dimensionality of table is inconsistent with domain specification."
                 )
 
-            records = _flatten_and_convert(records)
-            records = self._remap_str_special_values(
-                records, start_idx=self.symbol.dimension + sum(n_idx)
+            frame = self._remap_str_special_values(
+                _flatten_and_convert(records),
+                start_idx=self.symbol.dimension + sum(n_idx),
             )
 
             if any(n_idx):
-                attr = records.iloc[:, n_idx.index(True)].cat.categories.tolist()
-                records = (
-                    records.set_index(records.columns.tolist()[:-1])
+                attr = frame.iloc[:, n_idx.index(True)].cat.categories.tolist()
+                frame = (
+                    frame.set_index(frame.columns.tolist()[:-1])
                     .unstack(n_idx.index(True))
                     .reset_index(drop=False)
                 )
-                records.columns = ["*"] * self.symbol.dimension + attr
+                frame.columns = ["*"] * self.symbol.dimension + attr
             else:
-                records.columns = ["*"] * self.symbol.dimension + ["level"]
+                frame.columns = ["*"] * self.symbol.dimension + ["level"]
 
-            self._from_dataframe(records, False)
+            self._from_dataframe(frame, False)
 
     def _from_else(self, records: VarEquRecordsType) -> None:
         try:
