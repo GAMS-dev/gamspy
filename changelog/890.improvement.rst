@@ -1,0 +1,1 @@
+Every GAMSPy exception now derives from the new ``GamspyBaseException``, so a single ``except`` clause can handle any GAMSPy failure. ``GamspyException`` keeps covering only GAMS execution errors.
