@@ -87,41 +87,13 @@ class UniverseAlias(BaseSymbol):
 
         return obj
 
-    def __new__(cls, container: Container | None = None, name: str = "universe"):
-        if container is not None and not isinstance(container, gp.Container):
-            raise TypeError(
-                f"Container must of type `Container` but found {type(container)}"
-            )
-
-        if not isinstance(name, str):
-            raise TypeError(f"Name must of type `str` but found {type(name)}")
-
-        try:
-            if container is None:
-                container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
-
-            symbol = container._data[name]
-        except KeyError:
-            return object.__new__(cls)
-
-        if isinstance(symbol, cls):
-            return symbol
-
-        raise TypeError(
-            f"Cannot overwrite symbol `{name}` in container"
-            " because it is not a UniverseAlias object)"
-        )
+    def _redefine(
+        self, container: Container | None = None, name: str = "universe"
+    ) -> None:
+        return
 
     def __init__(self, container: Container | None = None, name: str = "universe"):
-        if isinstance(getattr(self, "container", None), gp.Container):
-            return
-
-        if name is not None:
-            name = validation.validate_name(name)
-        else:
-            name = container._get_symbol_name(prefix="u")
-
-        self.name = name
+        self.name = validation.validate_name(name)
 
         if container is None:
             try:

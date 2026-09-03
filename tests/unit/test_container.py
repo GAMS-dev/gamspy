@@ -2574,3 +2574,23 @@ def test_explicit_empty_container_keeps_records_separate():
         assert i_ctx.toList() == ["from_ctx"]
         assert i_other.toList() == ["from_other"]
         other.close()
+
+
+@pytest.mark.unit
+def test_python_name_retrieval_across_construction_paths(set_options):
+    with gp.Container() as m:
+        set_options({"USE_PY_VAR_NAME": "yes"})
+
+        direct_set = gp.Set()
+        added_set = m.addSet()
+        direct_parameter = gp.Parameter()
+        added_parameter = m.addParameter()
+        direct_alias = gp.Alias(alias_with=direct_set)
+        my_model = gp.Model(m, equations=[])
+
+        assert direct_set.name == "direct_set"
+        assert added_set.name == "added_set"
+        assert direct_parameter.name == "direct_parameter"
+        assert added_parameter.name == "added_parameter"
+        assert direct_alias.name == "direct_alias"
+        assert my_model.name == "my_model"

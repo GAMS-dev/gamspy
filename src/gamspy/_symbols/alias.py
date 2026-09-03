@@ -96,45 +96,18 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
 
         return obj
 
-    def __new__(
-        cls,
+    def _redefine(
+        self,
         container: Container | None = None,
         name: str | None = None,
         alias_with: Set | Alias | None = None,
-    ):
-        if container is not None and not isinstance(container, gp.Container):
-            raise TypeError(
-                f"Container must of type `Container` but found {type(container)}"
-            )
+    ) -> None:
+        if alias_with is self:
+            raise ValueError(f"Alias `{self.name}` cannot be an alias of itself.")
 
-        if name is None:
-            return object.__new__(cls)
-        else:
-            if not isinstance(name, str):
-                raise TypeError(f"Name must of type `str` but found {type(name)}")
-            try:
-                if container is None:
-                    container = gp._ctx_managers[
-                        (os.getpid(), threading.get_native_id())
-                    ]
-
-                symbol = container._data[name]
-            except KeyError:
-                return object.__new__(cls)
-
-            if isinstance(symbol, cls):
-                if alias_with is symbol:
-                    raise ValueError(f"Alias `{name}` cannot be an alias of itself.")
-
-                if cls._resolve_target(alias_with) is not symbol.alias_with:
-                    raise ValueError(
-                        "Redefinition of an Alias symbol with a different `alias_with` object is not allowed!"
-                    )
-                return symbol
-
-            raise TypeError(
-                f"Cannot overwrite symbol `{name}` in container"
-                " because it is not an Alias object)"
+        if self._resolve_target(alias_with) is not self.alias_with:
+            raise ValueError(
+                "Redefinition of an Alias symbol with a different `alias_with` object is not allowed!"
             )
 
     def __init__(
@@ -143,9 +116,6 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         name: str | None = None,
         alias_with: Set | Alias = None,  # type: ignore
     ):
-        if isinstance(getattr(self, "container", None), gp.Container):
-            return
-
         self._metadata: dict[str, Any] = {}
         self._assignment: Expression | None = None
 
