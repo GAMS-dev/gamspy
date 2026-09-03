@@ -1,0 +1,1 @@
+Add the package wide option ``STRICT_POWER_OPERATOR`` which makes ``**`` generate ``rPower`` for every exponent, matching the GAMS ``**`` operator exactly.
