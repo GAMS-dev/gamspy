@@ -1,0 +1,1 @@
+Add typed symbol accessors to ``Container``: ``getSet``, ``getAlias``, ``getUniverseAlias``, ``getParameter``, ``getVariable``, ``getEquation``, and ``getSymbol(name, type)`` which narrows its return type to the requested symbol type.
