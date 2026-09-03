@@ -576,7 +576,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
             if not isinstance(name, str):
                 raise TypeError(f"Name must of type `str` but found {type(name)}")
             try:
-                if not container:
+                if container is None:
                     container = gp._ctx_managers[
                         (os.getpid(), threading.get_native_id())
                     ]

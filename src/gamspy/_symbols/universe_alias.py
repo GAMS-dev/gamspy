@@ -97,7 +97,7 @@ class UniverseAlias(BaseSymbol):
             raise TypeError(f"Name must of type `str` but found {type(name)}")
 
         try:
-            if not container:
+            if container is None:
                 container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
 
             symbol = container._data[name]
@@ -113,6 +113,9 @@ class UniverseAlias(BaseSymbol):
         )
 
     def __init__(self, container: Container | None = None, name: str = "universe"):
+        if isinstance(getattr(self, "container", None), gp.Container):
+            return
+
         if name is not None:
             name = validation.validate_name(name)
         else:

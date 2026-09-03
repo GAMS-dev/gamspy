@@ -261,7 +261,7 @@ class Variable(operable.Operable, VarEquSymbol):
                     f"Name must of type `str` but found {builtins.type(name)}"
                 )
             try:
-                if not container:
+                if container is None:
                     container = gp._ctx_managers[
                         (os.getpid(), threading.get_native_id())
                     ]

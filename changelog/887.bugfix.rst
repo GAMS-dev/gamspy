@@ -1,0 +1,1 @@
+An explicitly passed empty ``Container`` is no longer ignored inside a ``Container`` context manager and ``Alias``/``UniverseAlias`` redeclarations no longer emit a duplicate declaration.

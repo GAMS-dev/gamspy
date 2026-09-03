@@ -357,3 +357,106 @@ def test_universe_alias_addElements():
     uni.addElements(["i5", "i6"])
     assert uni.toList() == ["i1", "i2", "i3", "i4", "i5", "i6"]
     assert list(m.data.keys()) == ["i", "uni"]
+
+
+@pytest.mark.unit
+def test_alias_redeclaration_does_not_duplicate_declaration(container):
+    i = Set(container, "i", records=["i1"])
+    j = Alias(container, "j", alias_with=i)
+
+    assert Alias(container, "j", alias_with=i) is j
+    assert [s for s in container._unsaved_statements if s is j] == [j]
+
+
+@pytest.mark.unit
+def test_universe_alias_redeclaration_does_not_duplicate_declaration(container):
+    u = UniverseAlias(container, "u")
+
+    assert UniverseAlias(container, "u") is u
+    assert [s for s in container._unsaved_statements if s is u] == [u]
+
+
+@pytest.mark.unit
+def test_alias_redeclaration_preserves_state(container):
+    i = Set(container, "i", records=["i1"])
+    j = Alias(container, "j", alias_with=i)
+    j._metadata["origin"] = "first declaration"
+
+    _ = Alias(container, "j", alias_with=i)
+
+    assert j._metadata == {"origin": "first declaration"}
+    assert j.alias_with is i
+
+
+@pytest.mark.unit
+def test_alias_with_must_be_in_same_container(container):
+    other = Container()
+    i = Set(other, "i", records=["i1"])
+
+    with pytest.raises(ValidationError):
+        _ = Alias(container, "j", alias_with=i)
+
+    with pytest.raises(ValidationError):
+        _ = container.addAlias("j", alias_with=i)
+
+    # an Alias in another container is rejected on the symbol that was passed,
+    # not on the root set it resolves to
+    j = Alias(other, "j", alias_with=i)
+    with pytest.raises(ValidationError, match="`j`"):
+        _ = Alias(container, "k", alias_with=j)
+
+    other.close()
+
+
+@pytest.mark.unit
+def test_alias_chain_in_same_container_is_allowed(container):
+    i = Set(container, "i", records=["i1"])
+    a = Alias(container, "a", alias_with=i)
+    b = Alias(container, "b", alias_with=a)
+
+    assert a.alias_with is i
+    assert b.alias_with is i  # chains resolve to the root Set
+
+
+@pytest.mark.unit
+def test_alias_of_alias_redeclaration_is_idempotent(container):
+    i = Set(container, "i", records=["i1"])
+    a = Alias(container, "a", alias_with=i)
+    b = Alias(container, "b", alias_with=a)
+
+    assert Alias(container, "b", alias_with=a) is b
+    # the root Set produces the same `Alias(i,b);` statement, so it is accepted too
+    assert Alias(container, "b", alias_with=i) is b
+    assert [s for s in container._unsaved_statements if s is b] == [b]
+
+
+@pytest.mark.unit
+def test_alias_redeclaration_rejects_a_different_target(container):
+    i = Set(container, "i", records=["i1"])
+    k = Set(container, "k", records=["k1"])
+    b = Alias(container, "b", alias_with=i)
+    c = Alias(container, "c", alias_with=k)
+
+    with pytest.raises(ValueError):
+        _ = Alias(container, "b", alias_with=k)
+
+    # an alias resolving to a different root is still a different target
+    with pytest.raises(ValueError):
+        _ = Alias(container, "b", alias_with=c)
+
+    with pytest.raises(ValueError):
+        _ = Alias(container, "b")
+
+    assert b.alias_with is i
+
+
+@pytest.mark.unit
+def test_alias_cannot_alias_itself(container):
+    i = Set(container, "i", records=["i1"])
+    j = Alias(container, "j", alias_with=i)
+
+    with pytest.raises(ValueError, match="itself"):
+        _ = Alias(container, "j", alias_with=j)
+
+    with pytest.raises(ValueError, match="itself"):
+        _ = container.addAlias("j", j)
