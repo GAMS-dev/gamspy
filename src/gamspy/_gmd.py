@@ -148,6 +148,7 @@ def get_records(
                 ) from err
 
             df = convert_to_categoricals_cat(arrkeys, arrvals, unique_uels)
+            assert df is not None  # symbol has records, hence keys and/or values
             df.columns = generate_unique_labels(md.domain) + attributes
             records_dict[md.name] = df
 
