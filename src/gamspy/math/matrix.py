@@ -110,7 +110,7 @@ def vector_norm(
         )
     elif even:
         return gamspy.math.rpower(
-            operation.Sum(sum_domain, x[domain] ** ord),  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
+            operation.Sum(sum_domain, gamspy.math.power(x[domain], ord)),  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
             (1 / ord),
         )
     elif ord == 1:

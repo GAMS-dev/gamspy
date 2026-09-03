@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-import math
 import typing
 from abc import abstractmethod
 
+import numpy as np
+
 import gamspy._algebra.expression as expression
 import gamspy.math as gamspy_math
+from gamspy._config import get_option
 from gamspy.exceptions import ValidationError
 
 if typing.TYPE_CHECKING:
@@ -111,6 +113,16 @@ class Operable:
 
     @typing.no_type_check
     def __pow__(self, other: OperableType) -> Expression:
+        # The operation x**y is equivalent to the function rPower(x,y) and is calculated
+        # internally as e^(y x log(x)). This operation is not defined if x is negative.
+        # If the possibility of negative values for x is to be admitted and the exponent
+        # is known to be an integer, then the function power(x,n) may be used.
+        # https://gams.com/latest/docs/UG_Parameters.html#UG_Parameters_Expressions
+        if isinstance(other, (bool, np.integer)) or (
+            isinstance(other, float) and other.is_integer()
+        ):
+            other = int(other)
+
         if (
             isinstance(other, int)
             and other == 2
@@ -121,13 +133,13 @@ class Operable:
         ):
             return self.left.elements[0]
 
+        if get_option("STRICT_POWER_OPERATOR"):
+            return gamspy_math.rpower(self, other)
+
         if isinstance(other, int):
             return gamspy_math.power(self, other)
-        elif isinstance(other, float):
-            if other == 0.5:
-                return gamspy_math.sqrt(self)
-            elif math.isclose(other, round(other), rel_tol=1e-4):
-                return gamspy_math.power(self, other)
+        elif isinstance(other, float) and other == 0.5:
+            return gamspy_math.sqrt(self)
 
         return gamspy_math.rpower(self, other)
 

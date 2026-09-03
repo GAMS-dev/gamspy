@@ -57,6 +57,10 @@ def _set_default_options() -> None:
     ambiguity = os.getenv("GAMSPY_ALLOW_AMBIGUOUS_EQUATIONS", "auto")
     configuration["ALLOW_AMBIGUOUS_EQUATIONS"] = ambiguity
 
+    # Map ** to power/sqrt instead of GAMS' rPower where possible by default.
+    strict_power = int(os.getenv("GAMSPY_STRICT_POWER_OPERATOR", 0))
+    configuration["STRICT_POWER_OPERATOR"] = strict_power
+
 
 def set_options(
     options: dict[
@@ -70,6 +74,7 @@ def set_options(
             "USE_PY_VAR_NAME",
             "DROP_DOMAIN_VIOLATIONS",
             "ALLOW_AMBIGUOUS_EQUATIONS",
+            "STRICT_POWER_OPERATOR",
         ],
         Any,
     ],
