@@ -160,7 +160,7 @@ class Parameter(operable.Operable, RecordSymbol):
                 raise TypeError(f"Name must of type `str` but found {type(name)}")
 
             try:
-                if not container:
+                if container is None:
                     container = gp._ctx_managers[
                         (os.getpid(), threading.get_native_id())
                     ]

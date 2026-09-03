@@ -2528,3 +2528,49 @@ def test_case_insensitivity(tmp_path):
     m.loadRecordsFromGdx(gdx_path)
     m["j"]  # should work even though the casing is wrong
     assert m["j"].toList() == ["0", "1", "2"]
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "symbol_type", [gp.Set, gp.Parameter, gp.Variable, gp.Equation]
+)
+def test_explicit_empty_container_is_honored(symbol_type):
+    with gp.Container() as ctx:
+        in_ctx = symbol_type(ctx, "i")
+        other = gp.Container()
+        assert not other, "an empty container is falsy; that is what this guards"
+
+        in_other = symbol_type(other, "i")
+
+        assert in_other is not in_ctx
+        assert other["i"] is in_other
+        assert ctx["i"] is in_ctx
+        other.close()
+
+
+@pytest.mark.unit
+def test_explicit_empty_container_is_honored_for_universe_alias():
+    with gp.Container() as ctx:
+        in_ctx = gp.UniverseAlias(ctx, "u")
+        other = gp.Container()
+        assert not other
+
+        in_other = gp.UniverseAlias(other, "u")
+
+        assert in_other is not in_ctx
+        assert other["u"] is in_other
+        assert ctx["u"] is in_ctx
+        other.close()
+
+
+@pytest.mark.unit
+def test_explicit_empty_container_keeps_records_separate():
+    with gp.Container() as ctx:
+        i_ctx = gp.Set(ctx, "i", records=["from_ctx"])
+        other = gp.Container()
+
+        i_other = gp.Set(other, "i", records=["from_other"])
+
+        assert i_ctx.toList() == ["from_ctx"]
+        assert i_other.toList() == ["from_other"]
+        other.close()
