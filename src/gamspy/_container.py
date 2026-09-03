@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import atexit
+import builtins
 import os
 import platform
 import re
@@ -14,7 +15,7 @@ import weakref
 from collections.abc import Iterable
 from difflib import get_close_matches
 from pathlib import Path
-from typing import TYPE_CHECKING, TextIO, cast, no_type_check
+from typing import TYPE_CHECKING, TextIO, TypeVar, cast, no_type_check, overload
 
 import gams.transfer as gt
 import pandas as pd
@@ -40,6 +41,7 @@ from gamspy._internals import (
 from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem, Sense
 from gamspy._options import write_solver_options
+from gamspy._symbols.base import BaseSymbol
 from gamspy._workspace import Workspace
 from gamspy.exceptions import ValidationError
 
@@ -76,6 +78,8 @@ IS_MIRO_INIT = int(os.getenv("MIRO", 0))
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
 is_windows = platform.system() == "Windows"
+
+_SymbolT = TypeVar("_SymbolT", bound="SymbolType")
 
 
 def add_sysdir_to_path(system_directory: str) -> None:
@@ -875,6 +879,38 @@ class Container:
 
         return self._build_describe_dataframe(symbols, self.listEquations(), extractor)
 
+    def getSet(self, name: str) -> Set:
+        """
+        Retrieves the Set with the given name from the Container.
+
+        Parameters
+        ----------
+        name : str
+            Name of the set.
+
+        Returns
+        -------
+        Set
+
+        Raises
+        ------
+        KeyError
+            If there is no symbol with the given name in the Container.
+        ValidationError
+            If the symbol with the given name is not a Set.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> _ = gp.Set(m, "i", records=["seattle", "san-diego"])
+        >>> i = m.getSet("i")
+        >>> i.toList()
+        ['seattle', 'san-diego']
+
+        """
+        return self.getSymbol(name, gp.Set)
+
     def getSets(self) -> list[Set]:
         """
         Retrieves all Set symbols present in the Container.
@@ -893,6 +929,71 @@ class Container:
 
         """
         return cast("list[Set]", self.getSymbols(self.listSets()))
+
+    def getAlias(self, name: str) -> Alias:
+        """
+        Retrieves the Alias with the given name from the Container.
+
+        Parameters
+        ----------
+        name : str
+            Name of the alias.
+
+        Returns
+        -------
+        Alias
+
+        Raises
+        ------
+        KeyError
+            If there is no symbol with the given name in the Container.
+        ValidationError
+            If the symbol with the given name is not an Alias.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["seattle", "san-diego"])
+        >>> _ = gp.Alias(m, "ip", alias_with=i)
+        >>> ip = m.getAlias("ip")
+        >>> ip.toList()
+        ['seattle', 'san-diego']
+
+        """
+        return self.getSymbol(name, gp.Alias)
+
+    def getUniverseAlias(self, name: str) -> UniverseAlias:
+        """
+        Retrieves the UniverseAlias with the given name from the Container.
+
+        Parameters
+        ----------
+        name : str
+            Name of the universe alias.
+
+        Returns
+        -------
+        UniverseAlias
+
+        Raises
+        ------
+        KeyError
+            If there is no symbol with the given name in the Container.
+        ValidationError
+            If the symbol with the given name is not a UniverseAlias.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> _ = gp.UniverseAlias(m, "h")
+        >>> h = m.getUniverseAlias("h")
+        >>> h.name
+        'h'
+
+        """
+        return self.getSymbol(name, gp.UniverseAlias)
 
     def getAliases(self) -> list[Alias | UniverseAlias]:
         """
@@ -914,6 +1015,38 @@ class Container:
         """
         return cast("list[Alias | UniverseAlias]", self.getSymbols(self.listAliases()))
 
+    def getParameter(self, name: str) -> Parameter:
+        """
+        Retrieves the Parameter with the given name from the Container.
+
+        Parameters
+        ----------
+        name : str
+            Name of the parameter.
+
+        Returns
+        -------
+        Parameter
+
+        Raises
+        ------
+        KeyError
+            If there is no symbol with the given name in the Container.
+        ValidationError
+            If the symbol with the given name is not a Parameter.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> _ = gp.Parameter(m, "f", records=90)
+        >>> f = m.getParameter("f")
+        >>> float(f.toValue())
+        90.0
+
+        """
+        return self.getSymbol(name, gp.Parameter)
+
     def getParameters(self) -> list[Parameter]:
         """
         Retrieves all Parameter symbols present in the Container.
@@ -932,6 +1065,38 @@ class Container:
 
         """
         return cast("list[Parameter]", self.getSymbols(self.listParameters()))
+
+    def getVariable(self, name: str) -> Variable:
+        """
+        Retrieves the Variable with the given name from the Container.
+
+        Parameters
+        ----------
+        name : str
+            Name of the variable.
+
+        Returns
+        -------
+        Variable
+
+        Raises
+        ------
+        KeyError
+            If there is no symbol with the given name in the Container.
+        ValidationError
+            If the symbol with the given name is not a Variable.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> _ = gp.Variable(m, "x", records={"level": 5})
+        >>> x = m.getVariable("x")
+        >>> float(x.toValue())
+        5.0
+
+        """
+        return self.getSymbol(name, gp.Variable)
 
     def getVariables(self, types: str | list[str] | None = None) -> list[Variable]:
         """
@@ -965,6 +1130,38 @@ class Container:
         """
         return cast("list[Variable]", self.getSymbols(self.listVariables(types=types)))
 
+    def getEquation(self, name: str) -> Equation:
+        """
+        Retrieves the Equation with the given name from the Container.
+
+        Parameters
+        ----------
+        name : str
+            Name of the equation.
+
+        Returns
+        -------
+        Equation
+
+        Raises
+        ------
+        KeyError
+            If there is no symbol with the given name in the Container.
+        ValidationError
+            If the symbol with the given name is not an Equation.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> _ = gp.Equation(m, "cost")
+        >>> cost = m.getEquation("cost")
+        >>> cost.name
+        'cost'
+
+        """
+        return self.getSymbol(name, gp.Equation)
+
     def getEquations(self) -> list[Equation]:
         """
         Returns all equation symbols in the Container.
@@ -988,6 +1185,69 @@ class Container:
             if not equation.startswith(ATTR_PREFIX)
         ]
         return cast("list[Equation]", self.getSymbols(equations))
+
+    @overload
+    def getSymbol(self, name: str) -> SymbolType: ...
+
+    @overload
+    def getSymbol(self, name: str, type: type[_SymbolT]) -> _SymbolT: ...
+
+    def getSymbol(
+        self, name: str, type: type[_SymbolT] | None = None
+    ) -> SymbolType | _SymbolT:
+        """
+        Retrieves the symbol with the given name from the Container.
+
+        Giving the expected symbol type narrows down the return type, which
+        allows editors and type checkers to know which attributes are
+        available on the returned symbol. Without it, the return type is the
+        union of all symbol types, exactly as in ``container[name]``.
+
+        Parameters
+        ----------
+        name : str
+            Name of the symbol.
+        type : type[Set] | type[Alias] | type[UniverseAlias] | type[Parameter] | type[Variable] | type[Equation] | None, optional
+            Expected type of the symbol. If given, the symbol is verified to
+            be of that type and the return type is narrowed accordingly.
+
+        Returns
+        -------
+        Set | Alias | UniverseAlias | Parameter | Variable | Equation
+            The requested symbol. Its static type is `type` if one was given.
+
+        Raises
+        ------
+        KeyError
+            If there is no symbol with the given name in the Container.
+        ValidationError
+            If the symbol with the given name is not of the expected type.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> _ = gp.Variable(m, "x", records={"level": 5})
+        >>> x = m.getSymbol("x", gp.Variable)
+        >>> float(x.toValue())
+        5.0
+
+        """
+        symbol = self[name]
+        if type is None:
+            return symbol
+
+        if not isinstance(type, builtins.type) or not issubclass(type, BaseSymbol):
+            raise ValidationError(
+                f"Argument 'type' must be a GAMSPy symbol type such as `gamspy.Set`, but `{type!r}` was given."
+            )
+
+        if not isinstance(symbol, type):
+            raise ValidationError(
+                f"Symbol `{name}` is of type `{symbol.__class__.__name__}`, not `{type.__name__}`."
+            )
+
+        return symbol
 
     def getSymbols(
         self, symbols: str | Iterable[str] | None = None

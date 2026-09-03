@@ -200,6 +200,56 @@ def test_container(transport, tmp_path):
 
 
 @pytest.mark.unit
+def test_typed_getters():
+    m = Container()
+    i = Set(m, "i")
+    j = Alias(m, "j", i)
+    h = UniverseAlias(m, "h")
+    a = Parameter(m, "a")
+    v = Variable(m, "v")
+    e = Equation(m, "e")
+
+    assert m.getSet("i") is i
+    assert m.getAlias("j") is j
+    assert m.getUniverseAlias("h") is h
+    assert m.getParameter("a") is a
+    assert m.getVariable("v") is v
+    assert m.getEquation("e") is e
+
+    for symbol in (i, j, h, a, v, e):
+        assert m.getSymbol(symbol.name) is symbol
+        assert m.getSymbol(symbol.name, type(symbol)) is symbol
+
+    # A UniverseAlias is not an Alias and vice versa.
+    with pytest.raises(ValidationError):
+        m.getAlias("h")
+
+    with pytest.raises(ValidationError):
+        m.getUniverseAlias("j")
+
+    # Asking for the wrong type is an error, not a silent cast.
+    with pytest.raises(ValidationError):
+        m.getSet("v")
+
+    with pytest.raises(ValidationError):
+        m.getSymbol("i", Variable)
+
+    # `type` must be a symbol type.
+    with pytest.raises(ValidationError):
+        m.getSymbol("i", int)
+
+    with pytest.raises(ValidationError):
+        m.getSymbol("i", "Set")
+
+    # Missing symbols still raise KeyError, as in `m[name]`.
+    with pytest.raises(KeyError):
+        m.getSet("k")
+
+    with pytest.raises(KeyError):
+        m.getSymbol("k")
+
+
+@pytest.mark.unit
 def test_str(transport):
     m = transport.container
     assert str(m) == f"<Empty Container ({hex(id(m))})>"
