@@ -135,8 +135,8 @@ class Parameter(operable.Operable, RecordSymbol):
 
         return obj
 
-    def __new__(
-        cls,
+    def _redefine(
+        self,
         container: Container | None = None,
         name: str | None = None,
         domain: DomainType | None = None,
@@ -148,34 +148,37 @@ class Parameter(operable.Operable, RecordSymbol):
         is_miro_output: bool = False,
         is_miro_table: bool = False,
     ):
-        if container is not None and not isinstance(container, gp.Container):
-            raise TypeError(
-                f"Container must of type `Container` but found {type(container)}"
+        self._metadata: dict[str, Any] = {}
+        # miro support
+        self._is_miro_input = is_miro_input
+        self._is_miro_output = is_miro_output
+        self._is_miro_table = is_miro_table
+        self._is_miro_symbol = is_miro_input or is_miro_output or is_miro_table
+        self._domain_violations = None
+
+        domain = self._normalize_domain(self.container, domain)
+        if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
+            raise ValueError(
+                "Cannot overwrite symbol in container unless symbol domains are equal"
             )
 
-        if name is None:
-            return object.__new__(cls)
-        else:
-            if not isinstance(name, str):
-                raise TypeError(f"Name must of type `str` but found {type(name)}")
+        if self._domain_forwarding != domain_forwarding:
+            raise ValueError(
+                "Cannot overwrite symbol in container unless"
+                " 'domain_forwarding' is left unchanged"
+            )
 
-            try:
-                if container is None:
-                    container = gp._ctx_managers[
-                        (os.getpid(), threading.get_native_id())
-                    ]
+        # reset some properties
+        if description != "":
+            self._description = description
 
-                symbol = container._data[name]
-            except KeyError:
-                return object.__new__(cls)
+        self._records: pd.DataFrame | None = None
 
-        if isinstance(symbol, cls):
-            return symbol
-
-        raise TypeError(
-            f"Cannot overwrite symbol `{name}` in container"
-            " because it is not a Parameter object"
-        )
+        previous_state = self._container._options.miro_protect
+        self._container._options.miro_protect = False
+        if records is not None:
+            self.setRecords(records, uels_on_axes=uels_on_axes)
+        self._container._options.miro_protect = previous_state
 
     def __init__(
         self,
@@ -201,94 +204,61 @@ class Parameter(operable.Operable, RecordSymbol):
         self._is_miro_symbol = is_miro_input or is_miro_output or is_miro_table
         self._domain_violations = None
 
-        # does symbol exist
-        has_symbol = False
-        if isinstance(getattr(self, "container", None), gp.Container):
-            has_symbol = True
+        if container is None:
+            try:
+                container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
+            except KeyError as e:
+                raise ValidationError("Parameter requires a container.") from e
 
-        if has_symbol:
-            domain = self._normalize_domain(self.container, domain)
-            if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
-                raise ValueError(
-                    "Cannot overwrite symbol in container unless symbol"
-                    " domains are equal"
-                )
+        self._container = cast("Container", weakref.proxy(container))
 
-            if self._domain_forwarding != domain_forwarding:
-                raise ValueError(
-                    "Cannot overwrite symbol in container unless"
-                    " 'domain_forwarding' is left unchanged"
-                )
+        if name is not None:
+            name = validation.validate_name(name)
 
-            # reset some properties
-            if description != "":
-                self._description = description
-
-            self._records: pd.DataFrame | None = None
-
-            previous_state = self._container._options.miro_protect
-            self._container._options.miro_protect = False
-            if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
-            self._container._options.miro_protect = previous_state
+            if is_miro_input or is_miro_output:
+                name = name.lower()
         else:
-            if container is None:
-                try:
-                    container = gp._ctx_managers[
-                        (os.getpid(), threading.get_native_id())
-                    ]
-                except KeyError as e:
-                    raise ValidationError("Parameter requires a container.") from e
+            name = self._container._get_symbol_name(prefix="p")
 
-            self._container = cast("Container", weakref.proxy(container))
+        self.name = name
+        domain = self._normalize_domain(self.container, domain)
+        self._domain = self._validate_domain(domain)
+        self._domain_forwarding = domain_forwarding
+        self._description = description
+        self._records = None
+        self._gams_type = GMS_DT_PAR
+        self._gams_subtype = 0
+        self._latex_name = self.name.replace("_", r"\_")
+        self._should_load_from = DataSource.NONE
+        self._should_unload_to_gams = False
+        self._container._data.update({name: self})
 
-            if name is not None:
-                name = validation.validate_name(name)
+        if is_miro_input:
+            self._already_loaded = False
+            self._container._miro_input_symbols.append(self.name)
 
-                if is_miro_input or is_miro_output:
-                    name = name.lower()
-            else:
-                name = self._container._get_symbol_name(prefix="p")
+        if is_miro_output:
+            self._container._miro_output_symbols.append(self.name)
 
-            self.name = name
-            domain = self._normalize_domain(self.container, domain)
-            self._domain = self._validate_domain(domain)
-            self._domain_forwarding = domain_forwarding
-            self._description = description
-            self._records = None
-            self._gams_type = GMS_DT_PAR
-            self._gams_subtype = 0
-            self._latex_name = self.name.replace("_", r"\_")
-            self._should_load_from = DataSource.NONE
-            self._should_unload_to_gams = False
-            self._container._data.update({name: self})
+        validation.validate_container(self, self._domain)
+        self.where = condition.Condition(self)
+        self._assignment: Expression | None = None
+        self._container._add_statement(self)
 
-            if is_miro_input:
-                self._already_loaded = False
-                self._container._miro_input_symbols.append(self.name)
+        previous_state = self._container._options.miro_protect
+        self._container._options.miro_protect = False
+        if records is not None:
+            self._setRecords(records, uels_on_axes=uels_on_axes)
+            if self.dimension == 0 and not self._is_miro_symbol:
+                self._should_unload_to_gams = False
+            self._container._synch_with_gams()
+        elif self._is_miro_symbol:
+            # miro symbols must sync at declaration so their records are
+            # loaded from the miro input gdx.
+            self._should_unload_to_gams = True
+            self._container._synch_with_gams()
 
-            if is_miro_output:
-                self._container._miro_output_symbols.append(self.name)
-
-            validation.validate_container(self, self._domain)
-            self.where = condition.Condition(self)
-            self._assignment: Expression | None = None
-            self._container._add_statement(self)
-
-            previous_state = self._container._options.miro_protect
-            self._container._options.miro_protect = False
-            if records is not None:
-                self._setRecords(records, uels_on_axes=uels_on_axes)
-                if self.dimension == 0 and not self._is_miro_symbol:
-                    self._should_unload_to_gams = False
-                self._container._synch_with_gams()
-            elif self._is_miro_symbol:
-                # miro symbols must sync at declaration so their records are
-                # loaded from the miro input gdx.
-                self._should_unload_to_gams = True
-                self._container._synch_with_gams()
-
-            self._container._options.miro_protect = previous_state
+        self._container._options.miro_protect = previous_state
 
     def _serialize(self) -> dict:
         info: dict[str, Any] = {

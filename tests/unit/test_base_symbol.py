@@ -5,10 +5,12 @@ import pandas as pd
 import pytest
 
 from gamspy import (
+    Alias,
     Equation,
     Parameter,
     Set,
     SpecialValues,
+    UniverseAlias,
     Variable,
 )
 from gamspy._internals import GAMS_MAX_INDEX_DIM, DomainStatus
@@ -501,3 +503,35 @@ def test_to_dense_relaxed_domain_with_unordered_uels(container):
 
     with pytest.raises(ValidationError):
         v.toDense()
+
+
+def test_redeclaration_is_idempotent_for_every_symbol_type(container):
+    # SymbolConstructor must hand a repeated declaration to _redefine instead of
+    # re-running __init__, so no symbol type can queue a second declaration.
+    i = Set(container, "i", records=["i1"])
+    factories = {
+        "s": lambda: Set(container, "s"),
+        "p": lambda: Parameter(container, "p"),
+        "v": lambda: Variable(container, "v"),
+        "e": lambda: Equation(container, "e"),
+        "a": lambda: Alias(container, "a", alias_with=i),
+        "u": lambda: UniverseAlias(container, "u"),
+    }
+
+    for name, make in factories.items():
+        first = make()
+        assert make() is first, name
+        assert [s for s in container._unsaved_statements if s is first] == [first], name
+
+
+def test_redeclaration_with_a_different_symbol_type_is_rejected(container):
+    _ = Set(container, "i")
+
+    with pytest.raises(TypeError):
+        _ = Parameter(container, "i")
+
+    with pytest.raises(TypeError):
+        _ = Variable(container, "i")
+
+    with pytest.raises(TypeError):
+        _ = Alias(container, "i", alias_with=Set(container, "j"))

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import os
+import threading
 import warnings
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal, cast, no_type_check
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast, no_type_check
 
 import numpy as np
 import pandas as pd
@@ -62,7 +63,45 @@ class DomainViolation:
     violations: Any
 
 
-class BaseSymbol:
+T = TypeVar("T")
+
+
+class SymbolConstructor(type):
+    """Resolves Symbol(container, name) to an already-declared symbol."""
+
+    def __call__(cls: type[T], *args: Any, **kwargs: Any) -> T:
+        container = args[0] if args else kwargs.get("container")
+        name = args[1] if len(args) > 1 else kwargs.get("name")
+
+        if container is not None and not isinstance(container, gp.Container):
+            raise TypeError(
+                f"Container must of type `Container` but found {type(container)}"
+            )
+
+        if name is not None:
+            if not isinstance(name, str):
+                raise TypeError(f"Name must of type `str` but found {type(name)}")
+
+            if container is None:
+                container = gp._ctx_managers.get(
+                    (os.getpid(), threading.get_native_id())
+                )
+
+            existing = None if container is None else container._data.get(name)
+            if existing is not None:
+                if not isinstance(existing, cls):
+                    raise TypeError(
+                        f"Cannot overwrite symbol `{name}` in container"
+                        f" because it is not a(n) {cls.__name__} object"
+                    )
+
+                existing._redefine(*args, **kwargs)
+                return existing
+
+        return type.__call__(cls, *args, **kwargs)
+
+
+class BaseSymbol(metaclass=SymbolConstructor):
     is_universe: bool = False
 
     def __bool__(self):

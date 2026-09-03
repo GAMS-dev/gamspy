@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import builtins
 import itertools
 import os
 import threading
@@ -235,8 +234,8 @@ class Variable(operable.Operable, VarEquSymbol):
 
         return obj
 
-    def __new__(
-        cls,
+    def _redefine(
+        self,
         container: Container | None = None,
         name: str | None = None,
         type: str | VariableType = "free",
@@ -247,36 +246,45 @@ class Variable(operable.Operable, VarEquSymbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
     ):
-        if container is not None and not isinstance(container, gp.Container):
-            invalid_type = builtins.type(container)
+        self._metadata: dict[str, Any] = {}
+        self._assignment: Expression | None = None
+        # miro support
+        self._is_miro_output = is_miro_output
+        self._domain_violations = None
+
+        self._column_listing: list[str] | None = None
+
+        if self.type != cast_type(type):
             raise TypeError(
-                f"Container must of type `Container` but found {invalid_type}"
+                "Cannot overwrite symbol in container unless variable"
+                f" types are equal: `{self.type}` !="
+                f" `{type}`"
             )
 
-        if name is None:
-            return object.__new__(cls)
-        else:
-            if not isinstance(name, str):
-                raise TypeError(
-                    f"Name must of type `str` but found {builtins.type(name)}"
-                )
-            try:
-                if container is None:
-                    container = gp._ctx_managers[
-                        (os.getpid(), threading.get_native_id())
-                    ]
+        domain = self._normalize_domain(self.container, domain)
+        if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
+            raise ValueError(
+                "Cannot overwrite symbol in container unless symbol domains are equal"
+            )
 
-                symbol = container._data[name]
-            except KeyError:
-                return object.__new__(cls)
+        if self._domain_forwarding != domain_forwarding:
+            raise ValueError(
+                "Cannot overwrite symbol in container unless"
+                " 'domain_forwarding' is left unchanged"
+            )
 
-        if isinstance(symbol, cls):
-            return symbol
+        # reset some properties
+        if description != "":
+            self._description = description
 
-        raise TypeError(
-            f"Cannot overwrite symbol `{symbol.name}` in container"
-            " because it is not a Variable object)"
-        )
+        previous_state = self._container._options.miro_protect
+        self._container._options.miro_protect = False
+        self._records: pd.DataFrame | None = None
+
+        # only set records if records are provided
+        if records is not None:
+            self.setRecords(records, uels_on_axes=uels_on_axes)
+        self._container._options.miro_protect = previous_state
 
     def __init__(
         self,
@@ -301,105 +309,63 @@ class Variable(operable.Operable, VarEquSymbol):
 
         self._column_listing: list[str] | None = None
 
-        # does symbol exist
-        has_symbol = False
-        if isinstance(getattr(self, "container", None), gp.Container):
-            has_symbol = True
+        if container is None:
+            try:
+                container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
+            except KeyError as e:
+                raise ValidationError("Variable requires a container.") from e
 
-        if has_symbol:
-            if self.type != cast_type(type):
-                raise TypeError(
-                    "Cannot overwrite symbol in container unless variable"
-                    f" types are equal: `{self.type}` !="
-                    f" `{type}`"
-                )
+        self._container = cast("Container", weakref.proxy(container))
 
-            domain = self._normalize_domain(self.container, domain)
-            if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
-                raise ValueError(
-                    "Cannot overwrite symbol in container unless symbol"
-                    " domains are equal"
-                )
+        type = cast_type(type)
 
-            if self._domain_forwarding != domain_forwarding:
-                raise ValueError(
-                    "Cannot overwrite symbol in container unless"
-                    " 'domain_forwarding' is left unchanged"
-                )
-
-            # reset some properties
-            if description != "":
-                self._description = description
-
-            previous_state = self._container._options.miro_protect
-            self._container._options.miro_protect = False
-            self._records: pd.DataFrame | None = None
-
-            # only set records if records are provided
-            if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
-            self._container._options.miro_protect = previous_state
-
-        else:
-            if container is None:
-                try:
-                    container = gp._ctx_managers[
-                        (os.getpid(), threading.get_native_id())
-                    ]
-                except KeyError as e:
-                    raise ValidationError("Variable requires a container.") from e
-
-            self._container = cast("Container", weakref.proxy(container))
-
-            type = cast_type(type)
-
-            if name is not None:
-                name = validation.validate_name(name)
-
-                if is_miro_output:
-                    name = name.lower()
-            else:
-                name = self._container._get_symbol_name(prefix="v")
-
-            self.name = name
-
-            domain = self._normalize_domain(self._container, domain)
-            self._domain = self._validate_domain(domain)
-            self._domain_forwarding = domain_forwarding
-            self.type = type
-            self._description = description
-            self._records = None
-            self._gams_type = GMS_DT_VAR
-            self._gams_subtype = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[self._type]
-            self._latex_name = self.name.replace("_", r"\_")
-            self._should_load_from = DataSource.NONE
-            self._should_unload_to_gams = False
-            self._container._data.update({name: self})
+        if name is not None:
+            name = validation.validate_name(name)
 
             if is_miro_output:
-                self._container._miro_output_symbols.append(self.name)
+                name = name.lower()
+        else:
+            name = self._container._get_symbol_name(prefix="v")
 
-            validation.validate_container(self, self._domain)
-            self.where = condition.Condition(self)
-            self._container._add_statement(self)
+        self.name = name
 
-            # create attributes
-            self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
-            self._fx = self._create_attr("fx")
-            self._prior = self._create_attr("prior")
-            self._stage = self._create_attr("stage")
+        domain = self._normalize_domain(self._container, domain)
+        self._domain = self._validate_domain(domain)
+        self._domain_forwarding = domain_forwarding
+        self.type = type
+        self._description = description
+        self._records = None
+        self._gams_type = GMS_DT_VAR
+        self._gams_subtype = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[self._type]
+        self._latex_name = self.name.replace("_", r"\_")
+        self._should_load_from = DataSource.NONE
+        self._should_unload_to_gams = False
+        self._container._data.update({name: self})
 
-            previous_state = self._container._options.miro_protect
-            self._container._options.miro_protect = False
-            if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
-            elif self._is_miro_output:
-                # miro symbols must sync at declaration so their records are
-                # loaded from the miro gdx.
-                self._should_unload_to_gams = True
-                self._container._synch_with_gams()
+        if is_miro_output:
+            self._container._miro_output_symbols.append(self.name)
 
-            self._container._options.miro_protect = previous_state
+        validation.validate_container(self, self._domain)
+        self.where = condition.Condition(self)
+        self._container._add_statement(self)
+
+        # create attributes
+        self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
+        self._fx = self._create_attr("fx")
+        self._prior = self._create_attr("prior")
+        self._stage = self._create_attr("stage")
+
+        previous_state = self._container._options.miro_protect
+        self._container._options.miro_protect = False
+        if records is not None:
+            self.setRecords(records, uels_on_axes=uels_on_axes)
+        elif self._is_miro_output:
+            # miro symbols must sync at declaration so their records are
+            # loaded from the miro gdx.
+            self._should_unload_to_gams = True
+            self._container._synch_with_gams()
+
+        self._container._options.miro_protect = previous_state
 
     def _serialize(self) -> dict:
         info: dict[str, Any] = {
