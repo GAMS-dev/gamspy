@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import os
 import threading
 import warnings
@@ -466,6 +467,16 @@ class DomainSymbol(BaseSymbol):
     """Base class for Set, Parameter, Variable, and Equation."""
 
     _should_load_from: RecordsSourceType
+
+    @contextlib.contextmanager
+    def _miro_unprotected(self: Set | Parameter | Variable | Equation):
+        options = self._container._options
+        previous_state = options.miro_protect
+        options.miro_protect = False
+        try:
+            yield
+        finally:
+            options.miro_protect = previous_state
 
     def _load_records(self: Set | Parameter | Variable | Equation) -> None:
         source = self._should_load_from

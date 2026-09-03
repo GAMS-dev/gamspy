@@ -535,3 +535,59 @@ def test_redeclaration_with_a_different_symbol_type_is_rejected(container):
 
     with pytest.raises(TypeError):
         _ = Alias(container, "i", alias_with=Set(container, "j"))
+
+
+def test_redeclaration_updates_description(container):
+    factories = {
+        "s": lambda description: Set(container, "s", description=description),
+        "p": lambda description: Parameter(container, "p", description=description),
+        "v": lambda description: Variable(container, "v", description=description),
+        "e": lambda description: Equation(container, "e", description=description),
+    }
+
+    for name, make in factories.items():
+        make("original")
+        assert make("updated").description == "updated", name
+
+
+def test_redeclaration_without_description(container):
+    factories = {
+        "s": lambda **kwargs: Set(container, "s", **kwargs),
+        "p": lambda **kwargs: Parameter(container, "p", **kwargs),
+        "v": lambda **kwargs: Variable(container, "v", **kwargs),
+        "e": lambda **kwargs: Equation(container, "e", **kwargs),
+    }
+
+    for name, make in factories.items():
+        make(description="keep me")
+        assert make().description == "keep me", name
+
+
+def test_failed_declaration_restores_miro_protect(container):
+    i = Set(container, "i", records=["i1"])
+    classes = {"s": Set, "p": Parameter, "v": Variable, "e": Equation}
+
+    for name, cls in classes.items():
+        # first declaration, which goes through __init__
+        with pytest.raises(TypeError):
+            cls(container, f"{name}_new", domain=i, records="invalid_records")
+
+        assert container._options.miro_protect is True, name
+
+        # redeclaration of an existing symbol, which goes through _redefine
+        existing = f"{name}_existing"
+        cls(container, existing, domain=i)
+        with pytest.raises(TypeError):
+            cls(container, existing, domain=i, records="invalid_records")
+
+        assert container._options.miro_protect is True, name
+
+
+def test_failed_declaration_restores_a_disabled_miro_protect(container):
+    i = Set(container, "i", records=["i1"])
+    container._options.miro_protect = False
+
+    with pytest.raises(TypeError):
+        Parameter(container, "p", domain=i, records="invalid_records")
+
+    assert container._options.miro_protect is False

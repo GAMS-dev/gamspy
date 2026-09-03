@@ -590,14 +590,15 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
             )
 
         # reset some properties
+        if description != "":
+            self._description = description
+
         self._records: pd.DataFrame | None = None
 
         # only set records if records are provided
-        previous_state = self._container._options.miro_protect
-        self._container._options.miro_protect = False
-        if records is not None:
-            self.setRecords(records, uels_on_axes=uels_on_axes)
-        self._container._options.miro_protect = previous_state
+        with self._miro_unprotected():
+            if records is not None:
+                self.setRecords(records, uels_on_axes=uels_on_axes)
 
     def __init__(
         self,
@@ -664,17 +665,14 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         validation.validate_container(self, self._domain)
         self._container._add_statement(self)
 
-        previous_state = self._container._options.miro_protect
-        self._container._options.miro_protect = False
-        if records is not None:
-            self.setRecords(records, uels_on_axes=uels_on_axes)
-        elif self._is_miro_symbol:
-            # miro symbols must sync at declaration so their records are
-            # loaded from the miro input gdx.
-            self._should_unload_to_gams = True
-            self._container._synch_with_gams()
-
-        self._container._options.miro_protect = previous_state
+        with self._miro_unprotected():
+            if records is not None:
+                self.setRecords(records, uels_on_axes=uels_on_axes)
+            elif self._is_miro_symbol:
+                # miro symbols must sync at declaration so their records are
+                # loaded from the miro input gdx.
+                self._should_unload_to_gams = True
+                self._container._synch_with_gams()
 
     def _serialize(self) -> dict:
         info: dict[str, Any] = {

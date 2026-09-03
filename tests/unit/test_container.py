@@ -135,6 +135,8 @@ def test_container(transport, tmp_path):
     assert id(i1) == id(i2)
     i3 = m.addSet("i", records=["new_record"], description="new desc")
     assert id(i1) == id(i3)
+    assert i3.description == "new desc"
+    assert i3.records["uni"].tolist() == ["new_record"]
     with pytest.raises(ValueError):
         m.addSet("i", [j])
     with pytest.raises(ValueError):

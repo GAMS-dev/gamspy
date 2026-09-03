@@ -174,11 +174,9 @@ class Parameter(operable.Operable, RecordSymbol):
 
         self._records: pd.DataFrame | None = None
 
-        previous_state = self._container._options.miro_protect
-        self._container._options.miro_protect = False
-        if records is not None:
-            self.setRecords(records, uels_on_axes=uels_on_axes)
-        self._container._options.miro_protect = previous_state
+        with self._miro_unprotected():
+            if records is not None:
+                self.setRecords(records, uels_on_axes=uels_on_axes)
 
     def __init__(
         self,
@@ -245,20 +243,17 @@ class Parameter(operable.Operable, RecordSymbol):
         self._assignment: Expression | None = None
         self._container._add_statement(self)
 
-        previous_state = self._container._options.miro_protect
-        self._container._options.miro_protect = False
-        if records is not None:
-            self._setRecords(records, uels_on_axes=uels_on_axes)
-            if self.dimension == 0 and not self._is_miro_symbol:
-                self._should_unload_to_gams = False
-            self._container._synch_with_gams()
-        elif self._is_miro_symbol:
-            # miro symbols must sync at declaration so their records are
-            # loaded from the miro input gdx.
-            self._should_unload_to_gams = True
-            self._container._synch_with_gams()
-
-        self._container._options.miro_protect = previous_state
+        with self._miro_unprotected():
+            if records is not None:
+                self._setRecords(records, uels_on_axes=uels_on_axes)
+                if self.dimension == 0 and not self._is_miro_symbol:
+                    self._should_unload_to_gams = False
+                self._container._synch_with_gams()
+            elif self._is_miro_symbol:
+                # miro symbols must sync at declaration so their records are
+                # loaded from the miro input gdx.
+                self._should_unload_to_gams = True
+                self._container._synch_with_gams()
 
     def _serialize(self) -> dict:
         info: dict[str, Any] = {

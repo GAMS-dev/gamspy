@@ -277,14 +277,12 @@ class Variable(operable.Operable, VarEquSymbol):
         if description != "":
             self._description = description
 
-        previous_state = self._container._options.miro_protect
-        self._container._options.miro_protect = False
         self._records: pd.DataFrame | None = None
 
         # only set records if records are provided
-        if records is not None:
-            self.setRecords(records, uels_on_axes=uels_on_axes)
-        self._container._options.miro_protect = previous_state
+        with self._miro_unprotected():
+            if records is not None:
+                self.setRecords(records, uels_on_axes=uels_on_axes)
 
     def __init__(
         self,
@@ -355,17 +353,14 @@ class Variable(operable.Operable, VarEquSymbol):
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
 
-        previous_state = self._container._options.miro_protect
-        self._container._options.miro_protect = False
-        if records is not None:
-            self.setRecords(records, uels_on_axes=uels_on_axes)
-        elif self._is_miro_output:
-            # miro symbols must sync at declaration so their records are
-            # loaded from the miro gdx.
-            self._should_unload_to_gams = True
-            self._container._synch_with_gams()
-
-        self._container._options.miro_protect = previous_state
+        with self._miro_unprotected():
+            if records is not None:
+                self.setRecords(records, uels_on_axes=uels_on_axes)
+            elif self._is_miro_output:
+                # miro symbols must sync at declaration so their records are
+                # loaded from the miro gdx.
+                self._should_unload_to_gams = True
+                self._container._synch_with_gams()
 
     def _serialize(self) -> dict:
         info: dict[str, Any] = {
