@@ -570,7 +570,7 @@ def test_failed_declaration_restores_miro_protect(container):
     for name, cls in classes.items():
         # first declaration, which goes through __init__
         with pytest.raises(TypeError):
-            cls(container, f"{name}_new", domain=i, records="invalid_records")
+            cls(container, f"{name}_new", domain=i, records=object())
 
         assert container._options.miro_protect is True, name
 
@@ -578,16 +578,17 @@ def test_failed_declaration_restores_miro_protect(container):
         existing = f"{name}_existing"
         cls(container, existing, domain=i)
         with pytest.raises(TypeError):
-            cls(container, existing, domain=i, records="invalid_records")
+            cls(container, existing, domain=i, records=object())
 
         assert container._options.miro_protect is True, name
 
 
 def test_failed_declaration_restores_a_disabled_miro_protect(container):
+    # The previous value is restored, not hardcoded back to True.
     i = Set(container, "i", records=["i1"])
     container._options.miro_protect = False
 
     with pytest.raises(TypeError):
-        Parameter(container, "p", domain=i, records="invalid_records")
+        Parameter(container, "p", domain=i, records=object())
 
     assert container._options.miro_protect is False
