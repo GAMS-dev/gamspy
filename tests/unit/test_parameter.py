@@ -789,7 +789,7 @@ def test_toSparseCoo():
     p_3d = gp.Parameter(m, "p_3d", domain=[i, j, k])
     p_3d.setRecords(np.zeros((3, 2, 1)))
     with pytest.raises(
-        ValueError, match="only available for data that has dimension <= 2"
+        ValidationError, match="only available for data that has dimension <= 2"
     ):
         p_3d.toSparseCoo()
 

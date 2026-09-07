@@ -378,7 +378,9 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         """
         return self.alias_with.is_singleton
 
-    def _getUELCodes(self, dimension, ignore_unused=False):
+    def _getUELCodes(
+        self, dimension: int, *, ignore_unused: bool = False
+    ) -> dict[str, int]:
         return self.alias_with._getUELCodes(dimension, ignore_unused=ignore_unused)
 
     def _getUELs(

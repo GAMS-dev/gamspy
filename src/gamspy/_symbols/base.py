@@ -5,7 +5,7 @@ import os
 import threading
 import warnings
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast, no_type_check
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast
 
 import numpy as np
 import pandas as pd
@@ -648,24 +648,15 @@ class DomainSymbol(BaseSymbol):
 
         return len(self.records)
 
-    # TODO: Legacy function from GTP. Pay the technical debt.
-    @no_type_check
-    def _getUELCodes(self, dimension, ignore_unused=False):
-        if not isinstance(dimension, int):
-            raise TypeError("Argument 'dimension' must be type int")
-
-        if dimension >= self.dimension:
-            raise ValueError(
-                f"Argument 'dimension' (`{dimension}`) must be < symbol "
-                f"dimension (`{self.dimension}`). (NOTE: 'dimension' is indexed from zero)"
-            )
-
-        if not isinstance(ignore_unused, bool):
-            raise TypeError("Argument 'ignore_unused' must be type bool")
-
-        cats = self._getUELs(dimension, ignore_unused=ignore_unused)
-        codes = list(range(len(cats)))
-        return dict(zip(cats, codes, strict=True))
+    def _getUELCodes(
+        self: Set | Parameter | Variable | Equation,
+        dimension: int,
+        *,
+        ignore_unused: bool = False,
+    ) -> dict[str, int]:
+        """Position of every UEL of `dimension` within that dimension."""
+        uels = self._getUELs(dimension, ignore_unused=ignore_unused)
+        return {uel: code for code, uel in enumerate(uels)}
 
     @staticmethod
     def _getDimensionUELs(
@@ -1036,6 +1027,61 @@ class RecordSymbol(DomainSymbol):
             )
 
         return columns
+
+    def _getDimensionCodes(
+        self: Parameter | Variable | Equation, records: pd.DataFrame, dimension: int
+    ) -> np.ndarray:
+        if self._domain_status is DomainStatus.regular:
+            domain = cast("list[Set | Alias]", self.domain)
+            return (
+                records.iloc[:, dimension]
+                .map(domain[dimension]._getUELCodes(0, ignore_unused=True))
+                .to_numpy(dtype=int)
+            )
+
+        return records.iloc[:, dimension].cat.codes.to_numpy(dtype=int)
+
+    def _getCooIndices(
+        self: Parameter | Variable | Equation, records: pd.DataFrame
+    ) -> tuple[np.ndarray, np.ndarray, tuple[int, int]]:
+        """Row and column position of every record, together with the matrix shape."""
+        if self.is_scalar:
+            origin = np.zeros(1, dtype=int)
+            return origin, origin, (1, 1)
+
+        if self.dimension == 1:
+            # A one dimensional symbol becomes a single row matrix.
+            columns = self._getDimensionCodes(records, 0)
+            (n,) = self.shape
+            return np.zeros(len(columns), dtype=int), columns, (1, n)
+
+        rows = self._getDimensionCodes(records, 0)
+        columns = self._getDimensionCodes(records, 1)
+        m, n = self.shape
+        return rows, columns, (m, n)
+
+    def _toSparseCoo(
+        self: Parameter | Variable | Equation, column: str
+    ) -> coo_matrix | None:
+        from scipy.sparse import coo_matrix
+
+        records = self.records
+        if records is None:
+            return None
+
+        if self.dimension > 2:
+            raise ValidationError(
+                "Sparse coo_matrix formats are only "
+                "available for data that has dimension <= 2"
+            )
+
+        rows, columns, shape = self._getCooIndices(records)
+
+        return coo_matrix(
+            (records.loc[:, column].to_numpy(dtype=float), (rows, columns)),
+            shape=shape,
+            dtype=float,
+        )
 
     def findEps(
         self: Parameter | Variable | Equation, column: str | None = None
@@ -2077,76 +2123,10 @@ class VarEquSymbol(RecordSymbol):
         >>> j = gp.Set(m, name="j", records=["X", "Y"])
         >>> v = gp.Variable(m, name="v", domain=[i, j])
         >>> v.setRecords(np.array([[1.5, 0], [0, 2.5]]))
-        >>> sparse_mat = v.toSparseCoo(column="level")  # doctest +SKIP
+        >>> sparse_mat = v.toSparseCoo(column="level")  # doctest: +SKIP
 
         """
-        from scipy.sparse import coo_matrix
-
-        if not isinstance(column, str):
-            raise TypeError("Argument 'column' must be type str")
-
-        if column not in self._attributes:
-            raise TypeError(
-                f"Argument 'column' must be one of the following: {self._attributes}"
-            )
-
-        if self.records is None:
-            return None
-
-        if self.is_scalar:
-            row = [0]
-            col = [0]
-            m = 1
-            n = 1
-
-        elif self.dimension == 1:
-            if self._domain_status is DomainStatus.regular:
-                col = (
-                    self.records.iloc[:, 0]
-                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))  # ty: ignore[unresolved-attribute]
-                    .to_numpy(dtype=int)
-                )
-            else:
-                col = self.records.iloc[:, 0].cat.codes.to_numpy(dtype=int)
-
-            row = np.zeros(len(col), dtype=int)
-            m, *n = self.shape
-            assert n == []
-            n = m
-            m = 1
-
-        elif self.dimension == 2:
-            if self._domain_status is DomainStatus.regular:
-                row = (
-                    self.records.iloc[:, 0]
-                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))  # ty: ignore[unresolved-attribute]
-                    .to_numpy(dtype=int)
-                )
-                col = (
-                    self.records.iloc[:, 1]
-                    .map(self.domain[1]._getUELCodes(0, ignore_unused=True))  # ty: ignore[unresolved-attribute]
-                    .to_numpy(dtype=int)
-                )
-            else:
-                row = self.records.iloc[:, 0].cat.codes.to_numpy(dtype=int)
-                col = self.records.iloc[:, 1].cat.codes.to_numpy(dtype=int)
-
-            m, n = self.shape
-
-        else:
-            raise ValidationError(
-                "Sparse coo_matrix formats are only "
-                "available for data that has dimension <= 2"
-            )
-
-        return coo_matrix(
-            (
-                self.records.loc[:, column].to_numpy(dtype=float),
-                (row, col),
-            ),
-            shape=(m, n),
-            dtype=float,
-        )
+        return self._toSparseCoo(self._validate_column(column))
 
     def toDense(self: Variable | Equation, column: str = "level") -> np.ndarray:
         """
@@ -2214,19 +2194,10 @@ class VarEquSymbol(RecordSymbol):
                     )
 
         # create indexing scheme
-        if self.domain_type == "regular":
-            idx = [
-                self.records.iloc[:, n]
-                .map(domainobj._getUELCodes(0, ignore_unused=True))
-                .to_numpy(dtype=int)
-                for n, domainobj in enumerate(cast("list[Set | Alias]", self.domain))
-            ]
-
-        else:
-            idx = [
-                self.records.iloc[:, n].cat.codes.to_numpy(dtype=int)
-                for n, domainobj in enumerate(self.domain)
-            ]
+        idx = [
+            self._getDimensionCodes(self.records, dimension)
+            for dimension in range(self.dimension)
+        ]
 
         # fill the dense array
         a = np.zeros(self.shape)

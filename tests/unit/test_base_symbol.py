@@ -639,6 +639,18 @@ def test_get_uels_validations(container):
         p._getUELs(1)
 
 
+def test_get_uel_codes(container):
+    i = Set(container, "i", records=["b", "a", "c"])
+    p = Parameter(container, "p", domain=[i], records=[("a", 1.0)])
+
+    # the codes follow the declaration order of the set, not the data order
+    assert i._getUELCodes(0) == {"b": 0, "a": 1, "c": 2}
+    assert p._getUELCodes(0) == {"a": 0}
+
+    ii = Alias(container, "ii", alias_with=i)
+    assert ii._getUELCodes(0) == i._getUELCodes(0)
+
+
 def test_shape_counts_used_uels(container):
     i = Set(container, "i", records=["a", "b", "c"])
     j = Set(container, "j", records=["x", "y"])
@@ -689,6 +701,89 @@ def test_to_sparse_coo_relaxed_domain_two_dimensional(container):
 
     assert v._domain_status is not DomainStatus.regular
     assert np.allclose(v.toSparseCoo().toarray(), [[1.0, 0.0], [0.0, 2.0]])
+
+
+def test_to_sparse_coo_parameter(container):
+    i = Set(container, "i", records=["a", "b"])
+    j = Set(container, "j", records=["x", "y"])
+
+    zero_dimensional = Parameter(container, "s", records=42.5)
+    assert np.allclose(zero_dimensional.toSparseCoo().toarray(), [[42.5]])
+
+    one_dimensional = Parameter(container, "p", domain=[i], records=[("b", 2.0)])
+    assert np.allclose(one_dimensional.toSparseCoo().toarray(), [[0.0, 2.0]])
+
+    two_dimensional = Parameter(
+        container, "q", domain=[i, j], records=[("a", "x", 1.0), ("b", "y", 2.0)]
+    )
+    assert np.allclose(
+        two_dimensional.toSparseCoo().toarray(), [[1.0, 0.0], [0.0, 2.0]]
+    )
+
+    assert Parameter(container, "empty", domain=[i]).toSparseCoo() is None
+
+
+def test_to_sparse_coo_parameter_relaxed_domain(container):
+    p = Parameter(container, "p", domain=["*", "*"])
+    p.setRecords(
+        pd.DataFrame(
+            [["a", "x", 1.0], ["b", "y", 2.0]],
+            columns=["uni_0", "uni_1", "value"],
+        )
+    )
+
+    assert p._domain_status is not DomainStatus.regular
+    assert np.allclose(p.toSparseCoo().toarray(), [[1.0, 0.0], [0.0, 2.0]])
+
+
+def test_to_sparse_coo_rejects_more_than_two_dimensions(container):
+    i = Set(container, "i", records=["a"])
+    j = Set(container, "j", records=["x"])
+    k = Set(container, "k", records=["1"])
+    p = Parameter(container, "p", domain=[i, j, k], records=[("a", "x", "1", 1.0)])
+
+    with pytest.raises(ValidationError, match="dimension <= 2"):
+        p.toSparseCoo()
+
+
+def test_equals_compares_symbol_attributes(container):
+    i = Set(container, "i", records=["a", "b"])
+    j = Set(container, "j", records=["x", "y"])
+
+    p = Parameter(container, "p", domain=[i], records=[("a", 1.0), ("b", 2.0)])
+
+    # dimension mismatch
+    assert not p.equals(
+        Parameter(container, "two_dimensional", domain=[i, j]), check_meta_data=False
+    )
+
+    # domain_type mismatch
+    assert not p.equals(
+        Parameter(container, "relaxed", domain=["*"], records=[("a", 1.0), ("b", 2.0)]),
+        check_meta_data=False,
+    )
+
+    # number of records mismatch
+    assert not p.equals(
+        Parameter(container, "shorter", domain=[i], records=[("a", 1.0)]),
+        check_meta_data=False,
+    )
+
+    # records type mismatch, one symbol has no records at all
+    assert not p.equals(
+        Parameter(container, "without_records", domain=[i]), check_meta_data=False
+    )
+
+    # name and description are only compared when asked for
+    same = Parameter(
+        container,
+        "same",
+        domain=[i],
+        records=[("a", 1.0), ("b", 2.0)],
+        description="a description",
+    )
+    assert same.equals(p, check_meta_data=False)
+    assert not same.equals(p)
 
 
 def test_to_dense_relaxed_domain(container):

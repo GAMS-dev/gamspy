@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-from typing import cast, no_type_check
+from typing import TypeAlias, cast
 
 import numpy as np
 import pandas as pd
@@ -12,6 +12,8 @@ from gamspy.exceptions import ValidationError
 if typing.TYPE_CHECKING:
     from gamspy._symbols import Alias, Equation, Parameter, Set, Variable
     from gamspy._types import SymbolType
+
+    ComparableSymbolType: TypeAlias = Set | Alias | Parameter | Variable | Equation
 
 
 def _validate_symbols(
@@ -41,14 +43,12 @@ def _validate_symbols(
     return other
 
 
-# TODO: Legacy function from GTP. Pay the technical debt.
-@no_type_check
 def _assert_symbol_attributes(
-    symbol: SymbolType,
-    other: SymbolType,
+    symbol: ComparableSymbolType,
+    other: ComparableSymbolType,
     check_meta_data: bool,
 ) -> None:
-    # Mandatory checks
+    """Assert that both symbols are shaped alike, their record count included."""
     if symbol.dimension != other.dimension:
         raise ValidationError(
             f"Symbol dimensions do not match (`{symbol.dimension}` != `{other.dimension}`)"
@@ -74,7 +74,6 @@ def _assert_symbol_attributes(
             f"Symbol records type do not match (`{type(symbol.records)}` != `{type(other.records)}`)"
         )
 
-    # Check metadata (optional)
     if check_meta_data:
         if symbol.name != other.name:
             raise ValidationError(

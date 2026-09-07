@@ -109,6 +109,28 @@ def get_system_directory(system_directory: str | Path | None) -> str:
     return get_option("GAMS_SYSDIR")
 
 
+def _describe_domain(symbol: SymbolType) -> dict[str, Any]:
+    return {
+        "domain": symbol.domain_names,
+        "domain_type": symbol.domain_type,
+        "dimension": symbol.dimension,
+        "number_records": symbol.number_records,
+    }
+
+
+def _describe_var_equ(symbol: Variable | Equation) -> dict[str, Any]:
+    return {
+        "name": symbol.name,
+        "type": symbol.type,
+        **_describe_domain(symbol),
+        "sparsity": symbol.getSparsity(),
+        "min_level": symbol.getMinValue("level"),
+        "mean_level": symbol.getMeanValue("level"),
+        "max_level": symbol.getMaxValue("level"),
+        "where_max_abs_level": symbol.whereMaxAbs("level"),
+    }
+
+
 class Container:
     """
     Central workspace for building, modifying, executing, and exchanging data
@@ -349,7 +371,6 @@ class Container:
         return self._data
 
     def _resolve_symbols(self, symbols: str | list[str] | None = None) -> list[str]:
-        """Validates and sanitizes the `symbols` argument to avoid repetitive logic."""
         if not isinstance(symbols, (str, list, type(None))):
             raise TypeError("Argument 'symbols' must be type list, str or NoneType")
 
@@ -370,8 +391,6 @@ class Container:
         default_symbols: list[str],
         row_extractor: Callable,
     ) -> DataFrame | None:
-        """Helper to simplify DataFrame construction for describe() methods."""
-        # Override None behavior for describe functions (they default to specific typed symbol lists, not all container keys)
         resolved_symbols = (
             self._resolve_symbols(symbols) if symbols is not None else default_symbols
         )
@@ -386,6 +405,64 @@ class Container:
 
         df = pd.DataFrame(rows)
         return df.round(3).sort_values(by="name", ignore_index=True)
+
+    def _symbols_of_type(
+        self, symbol_type: type | tuple[type, ...]
+    ) -> list[SymbolType]:
+        return [
+            symbol for symbol in self._data.values() if isinstance(symbol, symbol_type)
+        ]
+
+    def _symbols_of_subtype(
+        self,
+        symbol_type: type[Variable] | type[Equation],
+        types: str | list[str] | None,
+        subtypes: dict,
+        label: str,
+        canonicalize: dict[str, str] | None = None,
+    ) -> list[Variable | Equation]:
+        if not isinstance(types, (str, list, type(None))):
+            raise TypeError("Argument 'types' must be type str, list, or NoneType")
+
+        symbols = cast("list[Variable | Equation]", self._symbols_of_type(symbol_type))
+        if types is None:
+            return symbols
+
+        requested = [types] if isinstance(types, str) else types
+        requested = [
+            canonicalize.get(entry.casefold(), entry.casefold())
+            if canonicalize is not None
+            else entry.casefold()
+            for entry in requested
+        ]
+
+        if any(entry not in subtypes for entry in requested):
+            raise ValueError(
+                f"User input unrecognized {label} type, "
+                f"{label} types can only take: {list(subtypes.keys())}"
+            )
+
+        return [symbol for symbol in symbols if symbol.type in requested]
+
+    def _variables(self, types: str | list[str] | None = None) -> list[Variable]:
+        return cast(
+            "list[Variable]",
+            self._symbols_of_subtype(
+                gp.Variable, types, TRANSFER_TO_GAMS_VARIABLE_SUBTYPES, "variable"
+            ),
+        )
+
+    def _equations(self, types: str | list[str] | None = None) -> list[Equation]:
+        return cast(
+            "list[Equation]",
+            self._symbols_of_subtype(
+                gp.Equation,
+                types,
+                TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
+                "equation",
+                canonicalize=EQU_TYPE,
+            ),
+        )
 
     def _getUELs(
         self,
@@ -492,11 +569,7 @@ class Container:
         ['p']
 
         """
-        return [
-            s.name
-            for s in self.getSymbols(self.listSymbols())
-            if isinstance(s, gp.Parameter)
-        ]
+        return [symbol.name for symbol in self._symbols_of_type(gp.Parameter)]
 
     def listSets(self) -> list[str]:
         """
@@ -516,9 +589,7 @@ class Container:
         ['i']
 
         """
-        return [
-            s.name for s in self.getSymbols(self.listSymbols()) if isinstance(s, gp.Set)
-        ]
+        return [symbol.name for symbol in self._symbols_of_type(gp.Set)]
 
     def listAliases(self) -> list[str]:
         """
@@ -540,9 +611,8 @@ class Container:
 
         """
         return [
-            s.name
-            for s in self.getSymbols(self.listSymbols())
-            if isinstance(s, (gp.Alias, gp.UniverseAlias))
+            symbol.name
+            for symbol in self._symbols_of_type((gp.Alias, gp.UniverseAlias))
         ]
 
     def listVariables(self, types: str | list[str] | None = None) -> list[str]:
@@ -577,25 +647,7 @@ class Container:
         ['v2']
 
         """
-        if not isinstance(types, (str, list, type(None))):
-            raise TypeError("Argument 'types' must be type str, list, or NoneType")
-
-        syms = [
-            s for s in self.getSymbols(self.listSymbols()) if isinstance(s, gp.Variable)
-        ]
-        if types is None:
-            return [s.name for s in syms]
-
-        types = [types] if isinstance(types, str) else types
-        types = [i.casefold() for i in types]
-
-        if any(i not in TRANSFER_TO_GAMS_VARIABLE_SUBTYPES for i in types):
-            raise ValueError(
-                "User input unrecognized variable type, "
-                f"variable types can only take: {list(TRANSFER_TO_GAMS_VARIABLE_SUBTYPES.keys())}"
-            )
-
-        return [s.name for s in syms if s.type in types]
+        return [symbol.name for symbol in self._variables(types)]
 
     def listEquations(self, types: str | list[str] | None = None) -> list[str]:
         """
@@ -628,25 +680,7 @@ class Container:
         ['e']
 
         """
-        if not isinstance(types, (str, list, type(None))):
-            raise TypeError("Argument 'types' must be type str, list, or NoneType")
-
-        syms = [
-            s for s in self.getSymbols(self.listSymbols()) if isinstance(s, gp.Equation)
-        ]
-        if types is None:
-            return [s.name for s in syms]
-
-        types = [types] if isinstance(types, str) else types
-        types = [EQU_TYPE[i.casefold()] for i in types]
-
-        if any(i not in TRANSFER_TO_GAMS_EQUATION_SUBTYPES for i in types):
-            raise ValueError(
-                "User input unrecognized variable type, "
-                f"variable types can only take: {list(TRANSFER_TO_GAMS_EQUATION_SUBTYPES.keys())}"
-            )
-
-        return [s.name for s in syms if s.type in types]
+        return [symbol.name for symbol in self._equations(types)]
 
     def describeSets(self, symbols: str | list[str] | None = None) -> DataFrame | None:
         """
@@ -673,32 +707,15 @@ class Container:
 
         """
 
-        def extractor(sym):
-            is_alias = isinstance(sym, (gp.Alias, gp.UniverseAlias))
-            alias_with = None
-            if is_alias:
-                alias_with = (
-                    sym.alias_with.name
-                    if hasattr(sym.alias_with, "name")
-                    else sym.alias_with
-                )
-
+        def extractor(sym: Set) -> dict[str, Any]:
             return {
                 "name": sym.name,
                 "is_singleton": sym.is_singleton,
-                "is_alias": is_alias,
-                "alias_with": alias_with,
-                "domain": sym.domain_names,
-                "domain_type": sym.domain_type,
-                "dimension": sym.dimension,
-                "number_records": sym.number_records,
+                **_describe_domain(sym),
                 "sparsity": sym.getSparsity(),
             }
 
-        df = self._build_describe_dataframe(symbols, self.listSets(), extractor)
-        if df is not None and not df["is_alias"].any():
-            df = df.drop(columns=["is_alias", "alias_with"])
-        return df
+        return self._build_describe_dataframe(symbols, self.listSets(), extractor)
 
     def describeAliases(
         self, symbols: str | list[str] | None = None
@@ -728,7 +745,7 @@ class Container:
 
         """
 
-        def extractor(sym):
+        def extractor(sym: Alias | UniverseAlias) -> dict[str, Any]:
             if isinstance(sym, gp.Alias):
                 alias_parent = sym.alias_with.name
             elif isinstance(sym, gp.UniverseAlias):
@@ -738,10 +755,7 @@ class Container:
                 "name": sym.name,
                 "alias_with": alias_parent,
                 "is_singleton": sym.is_singleton,
-                "domain": sym.domain_names,
-                "domain_type": sym.domain_type,
-                "dimension": sym.dimension,
-                "number_records": sym.number_records,
+                **_describe_domain(sym),
                 "sparsity": sym.getSparsity(),
             }
 
@@ -774,13 +788,10 @@ class Container:
 
         """
 
-        def extractor(sym):
+        def extractor(sym: Parameter) -> dict[str, Any]:
             return {
                 "name": sym.name,
-                "domain": sym.domain_names,
-                "domain_type": sym.domain_type,
-                "dimension": sym.dimension,
-                "number_records": sym.number_records,
+                **_describe_domain(sym),
                 "min": sym.getMinValue(),
                 "mean": sym.getMeanValue(),
                 "max": sym.getMaxValue(),
@@ -818,22 +829,9 @@ class Container:
 
         """
 
-        def extractor(sym):
-            return {
-                "name": sym.name,
-                "type": sym.type,
-                "domain": sym.domain_names,
-                "domain_type": sym.domain_type,
-                "dimension": sym.dimension,
-                "number_records": sym.number_records,
-                "sparsity": sym.getSparsity(),
-                "min_level": sym.getMinValue("level"),
-                "mean_level": sym.getMeanValue("level"),
-                "max_level": sym.getMaxValue("level"),
-                "where_max_abs_level": sym.whereMaxAbs("level"),
-            }
-
-        return self._build_describe_dataframe(symbols, self.listVariables(), extractor)
+        return self._build_describe_dataframe(
+            symbols, self.listVariables(), _describe_var_equ
+        )
 
     def describeEquations(
         self, symbols: str | list[str] | None = None
@@ -862,22 +860,9 @@ class Container:
 
         """
 
-        def extractor(sym):
-            return {
-                "name": sym.name,
-                "type": sym.type,
-                "domain": sym.domain_names,
-                "domain_type": sym.domain_type,
-                "dimension": sym.dimension,
-                "number_records": sym.number_records,
-                "sparsity": sym.getSparsity(),
-                "min_level": sym.getMinValue("level"),
-                "mean_level": sym.getMeanValue("level"),
-                "max_level": sym.getMaxValue("level"),
-                "where_max_abs_level": sym.whereMaxAbs("level"),
-            }
-
-        return self._build_describe_dataframe(symbols, self.listEquations(), extractor)
+        return self._build_describe_dataframe(
+            symbols, self.listEquations(), _describe_var_equ
+        )
 
     def getSet(self, name: str) -> Set:
         """
@@ -928,7 +913,7 @@ class Container:
         >>> sets = m.getSets()
 
         """
-        return cast("list[Set]", self.getSymbols(self.listSets()))
+        return cast("list[Set]", self._symbols_of_type(gp.Set))
 
     def getAlias(self, name: str) -> Alias:
         """
@@ -1013,7 +998,10 @@ class Container:
         >>> aliases = m.getAliases()
 
         """
-        return cast("list[Alias | UniverseAlias]", self.getSymbols(self.listAliases()))
+        return cast(
+            "list[Alias | UniverseAlias]",
+            self._symbols_of_type((gp.Alias, gp.UniverseAlias)),
+        )
 
     def getParameter(self, name: str) -> Parameter:
         """
@@ -1064,7 +1052,7 @@ class Container:
         >>> parameters = m.getParameters()
 
         """
-        return cast("list[Parameter]", self.getSymbols(self.listParameters()))
+        return cast("list[Parameter]", self._symbols_of_type(gp.Parameter))
 
     def getVariable(self, name: str) -> Variable:
         """
@@ -1128,7 +1116,7 @@ class Container:
         >>> variables = m.getVariables()
 
         """
-        return cast("list[Variable]", self.getSymbols(self.listVariables(types=types)))
+        return self._variables(types)
 
     def getEquation(self, name: str) -> Equation:
         """
@@ -1179,12 +1167,11 @@ class Container:
         >>> equation_objects = m.getEquations()
 
         """
-        equations = [
+        return [
             equation
-            for equation in self.listEquations()
-            if not equation.startswith(ATTR_PREFIX)
+            for equation in self._equations()
+            if not equation.name.startswith(ATTR_PREFIX)
         ]
-        return cast("list[Equation]", self.getSymbols(equations))
 
     @overload
     def getSymbol(self, name: str) -> SymbolType: ...
