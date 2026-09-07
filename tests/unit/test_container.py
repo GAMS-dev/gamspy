@@ -2160,6 +2160,90 @@ def test_describe_symbols():
 
 
 @pytest.mark.unit
+def test_list_and_get_symbols_by_type():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a"])
+    _ = gp.Alias(m, "al", i)
+    _ = gp.UniverseAlias(m, "uni")
+    _ = gp.Parameter(m, "p")
+    _ = gp.Variable(m, "v_free", type="free")
+    _ = gp.Variable(m, "v_binary", type="binary")
+    _ = gp.Equation(m, "e_eq", type="eq")
+    _ = gp.Equation(m, "e_leq", type="leq")
+
+    assert m.listSets() == ["i"]
+    assert m.listAliases() == ["al", "uni"]
+    assert m.listParameters() == ["p"]
+    assert m.listVariables() == ["v_free", "v_binary"]
+    assert m.listEquations() == ["e_eq", "e_leq"]
+
+    # the get* forms return the very same objects, in the same order
+    assert [s.name for s in m.getSets()] == m.listSets()
+    assert [s.name for s in m.getAliases()] == m.listAliases()
+    assert [s.name for s in m.getParameters()] == m.listParameters()
+    assert [s.name for s in m.getVariables()] == m.listVariables()
+    assert [s.name for s in m.getEquations()] == m.listEquations()
+    assert m.getSets()[0] is i
+
+
+@pytest.mark.unit
+def test_list_variables_by_type():
+    m = gp.Container()
+    _ = gp.Variable(m, "v_free", type="free")
+    _ = gp.Variable(m, "v_binary", type="binary")
+    _ = gp.Variable(m, "v_positive", type="positive")
+
+    assert m.listVariables("binary") == ["v_binary"]
+    assert m.listVariables(["free", "positive"]) == ["v_free", "v_positive"]
+    assert m.listVariables("BINARY") == ["v_binary"]
+    assert [s.name for s in m.getVariables("binary")] == ["v_binary"]
+
+    with pytest.raises(TypeError):
+        m.listVariables(5)
+
+    with pytest.raises(ValueError):
+        m.listVariables("nonsense")
+
+
+@pytest.mark.unit
+def test_list_equations_by_type():
+    m = gp.Container()
+    _ = gp.Equation(m, "e_eq", type="eq")
+    _ = gp.Equation(m, "e_geq", type="geq")
+    _ = gp.Equation(m, "e_leq", type="leq")
+
+    assert m.listEquations("eq") == ["e_eq"]
+    assert m.listEquations(["eq", "geq"]) == ["e_eq", "e_geq"]
+    assert m.listEquations("EQ") == ["e_eq"]
+    # the operator spellings are accepted as well
+    assert m.listEquations("=e=") == ["e_eq"]
+    assert m.listEquations("e") == ["e_eq"]
+
+    with pytest.raises(TypeError):
+        m.listEquations(5)
+
+    # an unknown type is reported as documented, not as a bare KeyError
+    with pytest.raises(ValueError):
+        m.listEquations("nonsense")
+
+
+@pytest.mark.unit
+def test_describe_variables_and_equations_share_their_columns():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    v = gp.Variable(m, "v", domain=[i])
+    v.setRecords(pd.DataFrame([["a", -9.0], ["b", 2.0]], columns=["i", "level"]))
+    _ = gp.Equation(m, "e", domain=[i], type="eq")
+
+    variables = m.describeVariables()
+    equations = m.describeEquations()
+
+    assert list(variables.columns) == list(equations.columns)
+    assert variables.loc[0, "where_max_abs_level"] == ["a"]
+    assert variables.loc[0, "min_level"] == -9.0
+
+
+@pytest.mark.unit
 def test_generateRecords():
     m = gp.Container()
     i = gp.Set(m, "i", records=range(10))

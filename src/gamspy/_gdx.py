@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import contextlib
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast, no_type_check
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pandas as pd
@@ -362,11 +362,10 @@ def read(
     container._should_load_from(load_symbols, source=DataSource.GAMS)
 
 
-# TODO: fix typing here.
-@no_type_check
 def create_symbol_from_metadata(
     container: Container, metadata: GDXSymbolMetadata, *, declare_in_gams: bool = True
 ) -> None:
+    """Declare the symbol that `metadata` describes in `container`."""
     from gamspy._symbols import (
         Alias,
         Equation,
@@ -377,31 +376,28 @@ def create_symbol_from_metadata(
     )
 
     if metadata.type == gdx.GMS_DT_ALIAS:
-        # test for universe alias
-        if metadata.userinfo != 0:
-            Alias._constructor_bypass(
-                container,
-                metadata.name,
-                container._data[metadata.parent_set],
-            )
-        else:
+        if metadata.userinfo == 0:
             UniverseAlias._constructor_bypass(container, metadata.name)
-    # regular set
-    elif metadata.type == gdx.GMS_DT_SET and metadata.userinfo == 0:
+        else:
+            parent_set = (
+                container._data.get(metadata.parent_set)
+                if metadata.parent_set is not None
+                else None
+            )
+
+            if not isinstance(parent_set, (Set, Alias)):
+                raise GdxException(
+                    f"Cannot load alias `{metadata.name}` because the set it aliases "
+                    f"(`{metadata.parent_set}`) is not in the container."
+                )
+
+            Alias._constructor_bypass(container, metadata.name, parent_set)
+    elif metadata.type == gdx.GMS_DT_SET and metadata.userinfo in (0, 1):
         Set._constructor_bypass(
             container,
             metadata.name,
             metadata.domain,
-            is_singleton=False,
-            description=metadata.description,
-        )
-    # singleton set
-    elif metadata.type == gdx.GMS_DT_SET and metadata.userinfo == 1:
-        Set._constructor_bypass(
-            container,
-            metadata.name,
-            metadata.domain,
-            is_singleton=True,
+            is_singleton=metadata.userinfo == 1,
             description=metadata.description,
         )
     elif metadata.type == gdx.GMS_DT_PAR:
@@ -430,8 +426,8 @@ def create_symbol_from_metadata(
     else:
         raise GdxException(
             f"Unknown GDX symbol classification (GAMS Type= {metadata.type}, "
-            f"GAMS Subtype= {metadata.userinfo}). ",
-            f"Cannot load symbol `{metadata.name}`",
+            f"GAMS Subtype= {metadata.userinfo}). "
+            f"Cannot load symbol `{metadata.name}`"
         )
 
     if not declare_in_gams:

@@ -4,7 +4,7 @@ import itertools
 import os
 import threading
 import weakref
-from typing import TYPE_CHECKING, Any, cast, no_type_check
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
@@ -512,8 +512,6 @@ class Parameter(operable.Operable, RecordSymbol):
 
         return toDictParameter(self, orient=orient)
 
-    # TODO: Legacy function from GTP. Pay the technical debt.
-    @no_type_check
     def toSparseCoo(self) -> coo_matrix | None:
         """
         Converts the parameter records to a SciPy sparse COOrdinate format (coo_matrix).
@@ -530,7 +528,7 @@ class Parameter(operable.Operable, RecordSymbol):
 
         Raises
         ------
-        ValueError
+        ValidationError
             If the parameter has a dimension greater than 2.
 
         Examples
@@ -542,56 +540,10 @@ class Parameter(operable.Operable, RecordSymbol):
         >>> j = gp.Set(m, name="j", records=["X", "Y"])
         >>> p = gp.Parameter(m, name="p", domain=[i, j])
         >>> p.setRecords(np.array([[1, 0], [0, 2]]))
-        >>> sparse_mat = p.toSparseCoo()  # doctest +SKIP
+        >>> sparse_mat = p.toSparseCoo()  # doctest: +SKIP
 
         """
-        from scipy.sparse import coo_matrix
-
-        if self.records is None:
-            return None
-
-        if self.is_scalar:
-            row, col, m, n = [0], [0], 1, 1
-        elif self.dimension == 1:
-            if self.domain_type == "regular":
-                col = (
-                    self.records.iloc[:, 0]
-                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))
-                    .to_numpy(dtype=int)
-                )
-            else:
-                col = self.records.iloc[:, 0].cat.codes.to_numpy(dtype=int)
-
-            row = np.zeros(len(col), dtype=int)
-            m, *n_arr = self.shape
-            assert not n_arr
-            n, m = m, 1
-        elif self.dimension == 2:
-            if self.domain_type == "regular":
-                row = (
-                    self.records.iloc[:, 0]
-                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))
-                    .to_numpy(dtype=int)
-                )
-                col = (
-                    self.records.iloc[:, 1]
-                    .map(self.domain[1]._getUELCodes(0, ignore_unused=True))
-                    .to_numpy(dtype=int)
-                )
-            else:
-                row = self.records.iloc[:, 0].cat.codes.to_numpy(dtype=int)
-                col = self.records.iloc[:, 1].cat.codes.to_numpy(dtype=int)
-            m, n = self.shape
-        else:
-            raise ValueError(
-                "Sparse coo_matrix formats are only available for data that has dimension <= 2"
-            )
-
-        return coo_matrix(
-            (self.records.iloc[:, -1].to_numpy(dtype=float), (row, col)),
-            shape=(m, n),
-            dtype=float,
-        )
+        return self._toSparseCoo(self._default_attribute)
 
     def toDense(self) -> np.ndarray:
         """
@@ -653,18 +605,10 @@ class Parameter(operable.Operable, RecordSymbol):
                         "appear in rows of the dataframe and the order set elements are specified by the categorical). "
                     )
 
-        if self.domain_type == "regular":
-            idx = [
-                self.records.iloc[:, n]
-                .map(domainobj._getUELCodes(0, ignore_unused=True))
-                .to_numpy(dtype=int)
-                for n, domainobj in enumerate(cast("list[Set | Alias]", self.domain))
-            ]
-        else:
-            idx = [
-                self.records.iloc[:, n].cat.codes.to_numpy(dtype=int)
-                for n, domainobj in enumerate(self.domain)
-            ]
+        idx = [
+            self._getDimensionCodes(self.records, dimension)
+            for dimension in range(self.dimension)
+        ]
 
         a = np.zeros(self.shape)
         val = self.records.iloc[:, -1].to_numpy(dtype=float)
