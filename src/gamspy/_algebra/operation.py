@@ -59,7 +59,7 @@ class Operation(operable.Operable):
     """
 
     def __init__(self, domain: OperationIndexType, rhs: OperationRhsType, op_name: str):
-        self.op_domain = utils._to_list(domain)  # type: ignore
+        self.op_domain = utils._to_list(domain)  # ty: ignore[invalid-argument-type]
         if len(self.op_domain) < 1:
             raise ValidationError("Operation requires at least one index.")
 
@@ -73,7 +73,7 @@ class Operation(operable.Operable):
 
         self._operation_indices = []
         if isinstance(rhs, condition.Condition):
-            rhs = rhs.conditioning_on  # type: ignore
+            rhs = rhs.conditioning_on  # ty: ignore[invalid-assignment]
 
         if not isinstance(rhs, (bool, float, int)):
             for i, x in enumerate(rhs.domain):  # ty: ignore[invalid-argument-type]
@@ -103,7 +103,7 @@ class Operation(operable.Operable):
         if isinstance(self.rhs, (bool, float, int)):
             return Operation(self.op_domain, self.rhs, self._op_name)
 
-        return Operation(self.op_domain, self.rhs[domain], self._op_name)  # type: ignore
+        return Operation(self.op_domain, self.rhs[domain], self._op_name)  # ty: ignore[invalid-argument-type, not-subscriptable]
 
     def __len__(self) -> int:
         if self.records is not None:

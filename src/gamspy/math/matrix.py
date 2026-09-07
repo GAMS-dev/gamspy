@@ -210,7 +210,7 @@ def dim(dims: list[int] | tuple[int, ...]) -> Dim:
         if not isinstance(x, int):
             raise ValidationError("Dimensions must be integers")
 
-    return Dim(dims=dims)  # type: ignore
+    return Dim(dims=dims)  # ty: ignore[invalid-argument-type]
 
 
 def _generate_dims(m: Container, dims: Sequence[int]) -> list[Alias | Set]:

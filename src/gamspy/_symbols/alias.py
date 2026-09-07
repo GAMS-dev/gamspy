@@ -114,7 +114,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         self,
         container: Container | None = None,
         name: str | None = None,
-        alias_with: Set | Alias = None,  # type: ignore
+        alias_with: Set | Alias = None,  # ty: ignore[invalid-parameter-default]
     ):
         self._metadata: dict[str, Any] = {}
         self._assignment: Expression | None = None

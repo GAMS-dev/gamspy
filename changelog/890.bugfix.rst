@@ -1,0 +1,1 @@
+whereMaxAbs now reports the record with the largest magnitude instead of None when that record holds a negative value.

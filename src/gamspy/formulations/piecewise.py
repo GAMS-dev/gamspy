@@ -285,12 +285,12 @@ def _indicator(
         eqs1 = _indicator(
             indicator_var,
             indicator_val,
-            expr.left <= expr.right,  # type: ignore
+            expr.left <= expr.right,  # ty: ignore[unsupported-operator]
         )
         eqs2 = _indicator(
             indicator_var,
             indicator_val,
-            -expr.left <= -expr.right,  # type: ignore
+            -expr.left <= -expr.right,  # ty: ignore[invalid-argument-type, unsupported-operator]
         )
         return [*eqs1, *eqs2]
 
@@ -298,7 +298,7 @@ def _indicator(
         return _indicator(
             indicator_var,
             indicator_val,
-            -expr.left <= -expr.right,  # type: ignore
+            -expr.left <= -expr.right,  # ty: ignore[invalid-argument-type, unsupported-operator]
         )
 
     equations = []

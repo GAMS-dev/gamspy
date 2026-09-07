@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import infer_dtype, is_bool_dtype
 
 from gamspy._algorithms import cartesian_product, generate_unique_labels
 from gamspy._internals import EPS, NA, UNDEF, DomainStatus
@@ -111,8 +112,6 @@ class BaseIngestor:
         Columns before start_idx are label columns and are left alone. It
         defaults to the symbol dimension.
         """
-        from pandas.api.types import infer_dtype
-
         if start_idx is None:
             start_idx = self.symbol.dimension
 
@@ -400,8 +399,6 @@ class SetIngestor(BaseIngestor):
         self._from_else(records)
 
     def _from_dataframe(self, records: pd.DataFrame, uels_on_axes: bool) -> None:
-        from pandas.api.types import is_bool_dtype
-
         if not uels_on_axes:
             self._from_else(records)
             return

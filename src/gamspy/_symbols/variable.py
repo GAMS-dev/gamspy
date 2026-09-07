@@ -455,7 +455,7 @@ class Variable(operable.Operable, VarEquSymbol):
         x = dims[-1]
         dims[-1] = dims[-2]
         dims[-2] = x
-        return permute(self, dims)  # type: ignore
+        return permute(self, dims)  # ty: ignore[invalid-return-type]
 
     def _init_attributes(
         self,
@@ -876,7 +876,6 @@ class Variable(operable.Operable, VarEquSymbol):
                     if set in user_filter or user_filter == []:
                         matches += 1
 
-                # infeasibility = float(listing.split("INFES = ")[-1][:-6])
                 if matches == len(sets):
                     listings.append(listing)
 

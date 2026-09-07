@@ -24,3 +24,7 @@ miro.log
 trace.txt
 data
 results
+.venv
+.mypy_cache
+.pytest_cache
+.ruff_cache
