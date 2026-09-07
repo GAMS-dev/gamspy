@@ -73,7 +73,6 @@ __all__ = [
     "Card",
     "Options",
     "FreezeOptions",
-    "ModelInstanceOptions",
     "ConvertOptions",
     "FileFormat",
     "Expression",
