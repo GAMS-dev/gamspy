@@ -74,8 +74,6 @@ def _validate_density_and_domain(
 
 def _set_empty_records(symbol: Any) -> None:
     """Helper function to initialize empty records for a symbol."""
-    from pandas.api.types import CategoricalDtype
-
     attributes = getattr(symbol, "_attributes", [])
     symbol.records = pd.DataFrame(
         columns=[list(range(symbol.dimension + len(attributes)))]

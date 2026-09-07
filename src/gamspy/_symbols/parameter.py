@@ -405,7 +405,7 @@ class Parameter(operable.Operable, RecordSymbol):
         x = dims[-1]
         dims[-1] = dims[-2]
         dims[-2] = x
-        return permute(self, dims)  # type: ignore
+        return permute(self, dims)  # ty: ignore[invalid-return-type]
 
     @property
     def _attributes(self):

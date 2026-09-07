@@ -179,13 +179,13 @@ class GradientBoosting:
         out = gp.Variable._constructor_bypass(
             self.container,
             name=utils._generate_name("v", self._name_prefix, "real_output"),
-            domain=[set_of_samples, set_of_output_dim],  # type: ignore
+            domain=[set_of_samples, set_of_output_dim],  # ty: ignore[invalid-argument-type]
         )
 
         gb_eqn = gp.Equation._constructor_bypass(
             self.container,
             name=utils._generate_name("e", self._name_prefix, "gb_eqn"),
-            domain=[set_of_samples, set_of_output_dim],  # type: ignore
+            domain=[set_of_samples, set_of_output_dim],  # ty: ignore[invalid-argument-type]
             description="predicted out should be equal to the sum of gradient descent out times the learning rate.",
         )
 

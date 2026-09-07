@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -265,7 +267,12 @@ def test_count_special_values_without_records(container):
     i = Set(container, "i", records=["a"])
     p = Parameter(container, "p", domain=[i])
 
-    assert p.countNA() is None
+    assert p.countNA() == 0
+    assert type(p.countNA()) is int
+    assert p.countEps() == 0
+    assert p.countUndef() == 0
+    assert p.countPosInf() == 0
+    assert p.countNegInf() == 0
 
 
 def test_count_special_values_validations(special_parameter):
@@ -310,8 +317,45 @@ def test_where_max_abs_of_negative_value(container):
     i = Set(container, "i", records=["a", "b"])
     p = Parameter(container, "p", domain=[i], records=[("a", -7.0), ("b", 1.0)])
 
-    # the largest magnitude belongs to a negative record, so no row matches
+    # the largest magnitude belongs to a negative record
+    assert p.whereMaxAbs() == ["a"]
+    assert p.getMaxAbsValue() == 7.0
+
+
+def test_where_max_abs_ties_report_the_first_record(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(container, "p", domain=[i], records=[("a", -4.0), ("b", 4.0)])
+
+    assert p.whereMaxAbs() == ["a"]
+
+
+def test_where_metrics_on_all_na_column(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(
+        container,
+        "p",
+        domain=[i],
+        records=[("a", SpecialValues.NA), ("b", SpecialValues.UNDEF)],
+    )
+
+    assert p.whereMax() is None
+    assert p.whereMin() is None
     assert p.whereMaxAbs() is None
+
+
+def test_where_metrics_on_multi_dimensional_symbol(container):
+    i = Set(container, "i", records=["a", "b"])
+    j = Set(container, "j", records=["x", "y"])
+    p = Parameter(
+        container,
+        "p",
+        domain=[i, j],
+        records=[("a", "x", 1.0), ("b", "y", -9.0)],
+    )
+
+    assert p.whereMax() == ["a", "x"]
+    assert p.whereMin() == ["b", "y"]
+    assert p.whereMaxAbs() == ["b", "y"]
 
 
 def test_where_metrics_on_scalar(container):
@@ -420,6 +464,192 @@ def test_get_metrics_on_variable(container):
     assert v.getMinValue() == -4.0
     assert v.getMeanValue() == -1.0
     assert v.getMaxAbsValue() == 4.0
+
+
+def test_find_special_values_with_an_empty_sequence(special_parameter):
+    assert special_parameter.findSpecialValues([]).empty
+
+
+def test_find_special_values_accepts_a_tuple(special_parameter):
+    found = special_parameter.findSpecialValues((SpecialValues.NA, SpecialValues.EPS))
+
+    assert found["i"].tolist() == ["i0", "i1"]
+
+
+def test_find_special_values_rejects_a_bool(special_parameter):
+    with pytest.raises(TypeError):
+        special_parameter.findSpecialValues(True)
+
+
+def test_find_special_values_reports_an_unknown_value_without_records(container):
+    i = Set(container, "i", records=["a"])
+    p = Parameter(container, "p", domain=[i])
+
+    with pytest.raises(ValidationError):
+        p.findSpecialValues(1.0)
+
+
+def test_count_special_values_returns_a_builtin_int(special_parameter):
+    count = special_parameter.countNA()
+
+    assert type(count) is int
+
+
+def test_count_special_values_across_multiple_columns(container):
+    i = Set(container, "i", records=["a", "b"])
+    v = Variable(container, "v", domain=[i])
+    v.records = variable_records(
+        [
+            ["a", SpecialValues.EPS, SpecialValues.EPS, 0.0, 0.0, 1.0],
+            ["b", 1.0, SpecialValues.EPS, 0.0, 0.0, 1.0],
+        ],
+        ["i"],
+    )
+
+    assert v.countEps() == 1
+    assert v.countEps(columns=["level", "marginal"]) == 3
+
+
+def test_count_special_values_rejects_empty_columns(special_parameter):
+    with pytest.raises(ValidationError):
+        special_parameter.countNA(columns=[])
+
+
+def test_get_metrics_return_builtin_floats(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(container, "p", domain=[i], records=[("a", -5.0), ("b", 3.0)])
+
+    for value in (
+        p.getMaxValue(),
+        p.getMinValue(),
+        p.getMeanValue(),
+        p.getMaxAbsValue(),
+    ):
+        assert type(value) is float
+
+
+def test_get_metrics_reject_empty_columns(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(container, "p", domain=[i], records=[("a", 1.0)])
+
+    with pytest.raises(ValidationError):
+        p.getMaxValue(columns=[])
+
+
+def test_get_metrics_on_an_all_na_column(container):
+    i = Set(container, "i", records=["a"])
+    p = Parameter(container, "p", domain=[i], records=[("a", SpecialValues.NA)])
+
+    assert np.isnan(p.getMaxValue())
+    assert np.isnan(p.getMinValue())
+    assert np.isnan(p.getMeanValue())
+    assert np.isnan(p.getMaxAbsValue())
+
+
+def test_get_mean_value_does_not_warn_on_infinities(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(
+        container,
+        "p",
+        domain=[i],
+        records=[("a", SpecialValues.NEGINF), ("b", SpecialValues.POSINF)],
+    )
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        assert np.isnan(p.getMeanValue())
+
+
+def test_get_metrics_across_multiple_columns(container):
+    i = Set(container, "i", records=["a", "b"])
+    v = Variable(container, "v", domain=[i])
+    v.records = variable_records(
+        [
+            ["a", -8.0, 2.0, 0.0, 0.0, 1.0],
+            ["b", 1.0, 4.0, 0.0, 0.0, 1.0],
+        ],
+        ["i"],
+    )
+
+    assert v.getMaxValue(columns=["level", "marginal"]) == 4.0
+    assert v.getMinValue(columns=["level", "marginal"]) == -8.0
+    assert v.getMaxAbsValue(columns=["level", "marginal"]) == 8.0
+
+
+def test_get_uels_distinguishes_used_from_declared_categories(container):
+    i = Set(container, "i", records=["a", "b", "c"])
+    p = Parameter(container, "p", domain=[i])
+    p.records = pd.DataFrame(
+        {
+            "i": pd.Categorical(["c", "a"], categories=["a", "b", "c"], ordered=True),
+            "value": [1.0, 2.0],
+        }
+    )
+
+    # both are reported in category order, not in record order
+    assert p._getUELs(0) == ["a", "b", "c"]
+    assert p._getUELs(0, ignore_unused=True) == ["a", "c"]
+
+
+def test_get_uels_ignores_missing_domain_entries(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(container, "p", domain=[i])
+    p.records = pd.DataFrame(
+        {
+            "i": pd.Categorical(["a", None], categories=["a", "b"], ordered=True),
+            "value": [1.0, 2.0],
+        }
+    )
+
+    # the missing entry has code -1, which refers to no category at all
+    assert p.records["i"].cat.codes.tolist() == [0, -1]
+    assert p._getUELs(0, ignore_unused=True) == ["a"]
+
+
+def test_get_uels_across_dimensions_keeps_first_seen_order(container):
+    i = Set(container, "i", records=["b", "a"])
+    j = Set(container, "j", records=["a", "c"])
+    p = Parameter(container, "p", domain=[i, j])
+    p.records = pd.DataFrame(
+        {
+            "i": pd.Categorical(["b"], categories=["b", "a"], ordered=True),
+            "j": pd.Categorical(["c"], categories=["a", "c"], ordered=True),
+            "value": [1.0],
+        }
+    )
+
+    # "a" is declared in both dimensions and must be reported once, where it
+    # was first seen
+    assert p._getUELs() == ["b", "a", "c"]
+    assert p._getUELs(ignore_unused=True) == ["b", "c"]
+    assert p._getUELs([0, 1]) == p._getUELs()
+
+
+def test_get_uels_validations(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(container, "p", domain=[i], records=[("a", 1.0)])
+
+    with pytest.raises(TypeError):
+        p._getUELs("0")
+
+    with pytest.raises(TypeError):
+        p._getUELs(["0"])
+
+    with pytest.raises(ValueError):
+        p._getUELs(1)
+
+
+def test_shape_counts_used_uels(container):
+    i = Set(container, "i", records=["a", "b", "c"])
+    j = Set(container, "j", records=["x", "y"])
+    p = Parameter(container, "p", domain=[i, j], records=[("a", "x", 1.0)])
+
+    assert p.shape == (3, 2)
+
+    relaxed = Parameter(
+        container, "relaxed", domain=["*"], records=[("a", 1.0), ("b", 2.0)]
+    )
+    assert relaxed.shape == (2,)
 
 
 def test_to_sparse_coo_without_records(container):

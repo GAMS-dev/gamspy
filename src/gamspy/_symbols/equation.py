@@ -1041,7 +1041,6 @@ class Equation(VarEquSymbol):
                     if set in user_filter or user_filter == []:
                         matches += 1
 
-                # infeasibility = float(listing.split("INFES = ")[-1][:-6])
                 if matches == len(sets):
                     listings.append(listing)
 
@@ -1262,14 +1261,14 @@ class Equation(VarEquSymbol):
             domain_str = f"\\forall {domain_str}"
 
             if hasattr(self._definition.left.condition, "latexRepr"):
-                constraint_str = self._definition.left.condition.latexRepr()  # ty: ignore
+                constraint_str = self._definition.left.condition.latexRepr()  # ty: ignore[call-non-callable]
             else:
                 constraint_str = str(self._definition.left.condition)
 
             right_side = f"\\hfill {domain_str} ~ | ~ {constraint_str}"
 
         assert self._definition.right is not None
-        definition_str = self._definition.right.latexRepr()  # type: ignore
+        definition_str = self._definition.right.latexRepr()  # ty: ignore[unresolved-attribute]
         if definition_str[0] == "(":
             definition_str = definition_str[1:-1]
 

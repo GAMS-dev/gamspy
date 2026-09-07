@@ -2271,7 +2271,7 @@ $endIf
     def addAlias(
         self,
         name: str | None = None,
-        alias_with: Set | Alias = None,  # type: ignore
+        alias_with: Set | Alias = None,  # ty: ignore[invalid-parameter-default]
     ) -> Alias:
         """
         Creates a new Alias and adds it to the container

@@ -218,7 +218,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         x = dims[-1]
         dims[-1] = dims[-2]
         dims[-2] = x
-        return permute(self, dims)  # type: ignore
+        return permute(self, dims)  # ty: ignore[invalid-return-type]
 
     @property
     def records(self) -> pd.DataFrame | None:

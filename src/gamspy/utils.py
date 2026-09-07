@@ -739,7 +739,7 @@ def _get_set(domain: list[Set | Alias | Domain | Expression]):
             res.append(el)
         elif hasattr(el, "left"):
             if hasattr(el.left, "sets"):
-                res.extend(el.left.sets)  # type: ignore
+                res.extend(el.left.sets)  # ty: ignore[invalid-argument-type]
             else:
                 res.append(el.left)
         elif isinstance(el, Domain):

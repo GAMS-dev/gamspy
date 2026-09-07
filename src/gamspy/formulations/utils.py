@@ -60,10 +60,10 @@ def _check_tuple_int(
     if not (isinstance(value[0], int) and cmp(value[0])):
         raise ValidationError(f"{name} must be greater than {text}0")
 
-    if not (isinstance(value[1], int) and cmp(value[1])):  # type: ignore
+    if not (isinstance(value[1], int) and cmp(value[1])):
         raise ValidationError(f"{name} must be a greater than {text}0")
 
-    return value  # type: ignore
+    return value
 
 
 def _check_padding(value: int | tuple[int, int]) -> tuple[int, int, int, int]:

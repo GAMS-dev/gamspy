@@ -236,7 +236,7 @@ class Condition(operable.Operable):
             temp_sym = syms.Set._constructor_bypass(
                 self.container,
                 temp_name,
-                self.domain,  # type: ignore
+                self.domain,  # ty: ignore[invalid-argument-type]
             )
             temp_sym[...] = self
             del self.container._data[temp_name]
@@ -245,7 +245,7 @@ class Condition(operable.Operable):
             temp_sym = syms.Set._constructor_bypass(
                 self.container,
                 temp_name,
-                self.domain,  # type: ignore
+                self.domain,  # ty: ignore[invalid-argument-type]
             )
             temp_sym[...].where[self.condition] = True  # ty: ignore[invalid-assignment]
             del self.container._data[temp_name]
@@ -254,7 +254,7 @@ class Condition(operable.Operable):
             temp_sym = syms.Parameter._constructor_bypass(
                 self.container,
                 temp_name,
-                self.domain,  # type: ignore
+                self.domain,  # ty: ignore[invalid-argument-type]
             )
             temp_sym[...] = self
             del self.container._data[temp_name]
@@ -281,7 +281,7 @@ class Condition(operable.Operable):
 
         """
         condition_str = (
-            self.condition.gamsRepr()  # type: ignore
+            self.condition.gamsRepr()  # ty: ignore[call-non-callable]
             if hasattr(self.condition, "gamsRepr")
             else str(self.condition)
         )
@@ -336,7 +336,7 @@ class Condition(operable.Operable):
 
         """
         condition_str = (
-            self.condition.latexRepr()  # type: ignore
+            self.condition.latexRepr()  # ty: ignore[call-non-callable]
             if hasattr(self.condition, "latexRepr")
             else str(self.condition)
         )

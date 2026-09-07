@@ -524,7 +524,7 @@ class Expression(operable.Operable):
                     right_domain[pos] = s
 
         left = self.left[left_domain] if left_domain else self.left  # ty: ignore[not-subscriptable, invalid-argument-type]
-        right = self.right[right_domain] if right_domain else self.right  # ty: ignore
+        right = self.right[right_domain] if right_domain else self.right  # ty: ignore[invalid-argument-type, not-subscriptable]
 
         return Expression(left, self.operator, right)
 

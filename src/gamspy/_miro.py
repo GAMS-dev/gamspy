@@ -235,7 +235,7 @@ class MiroJSONEncoder:
                 last_item = symbol.domain[-1]
                 self.validate_table(symbol, last_item)
 
-                set_values = last_item.records["uni"].values.tolist()  # ty: ignore
+                set_values = last_item.records["uni"].values.tolist()  # ty: ignore[not-subscriptable, unresolved-attribute]
 
                 domain_keys = domain_keys[:-2]
                 types = ["string"] * len(domain_keys) + ["numeric"] * len(set_values)
@@ -290,7 +290,7 @@ class MiroJSONEncoder:
                     "alias": (
                         symbol.description if symbol.description else symbol.name
                     ),
-                    "symtype": type_map[type(symbol)],  # type: ignore
+                    "symtype": type_map[type(symbol)],  # ty: ignore[invalid-argument-type]
                     "headers": headers_dict,
                 }
             )

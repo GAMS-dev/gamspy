@@ -667,11 +667,23 @@ class DomainSymbol(BaseSymbol):
         codes = list(range(len(cats)))
         return dict(zip(cats, codes, strict=True))
 
-    # TODO: Legacy function from GTP. Pay the technical debt.
-    @no_type_check
+    @staticmethod
+    def _getDimensionUELs(
+        records: pd.DataFrame, dimension: int, ignore_unused: bool
+    ) -> list[str]:
+        column = records.iloc[:, dimension].cat
+        if not ignore_unused:
+            return column.categories.tolist()
+
+        used_codes = np.sort(column.codes.unique())
+        # A record with a missing domain entry carries code -1, which points at
+        # no category at all; indexing with it would wrap around to the last one.
+        used_codes = used_codes[used_codes >= 0]
+        return column.categories.take(used_codes).tolist()
+
     def _getUELs(
         self: Set | Parameter | Variable | Equation,
-        dimensions: int | list | None = None,
+        dimensions: int | list[int] | None = None,
         *,
         ignore_unused: bool = False,
     ) -> list[str]:
@@ -681,7 +693,7 @@ class DomainSymbol(BaseSymbol):
 
         Parameters
         ----------
-        dimensions : int | list, optional
+        dimensions : int | list[int], optional
             Symbols' dimensions, by default None
         ignore_unused : bool, optional
             Flag to ignore unused UELs, by default False
@@ -691,10 +703,8 @@ class DomainSymbol(BaseSymbol):
         list[str]
             Only UELs in the data if ignore_unused=True, otherwise return all UELs.
         """
-        if self.records is None:
-            return []
-
-        if self.dimension == 0:
+        records = self.records
+        if records is None or self.dimension == 0:
             return []
 
         if not isinstance(dimensions, (list, int, type(None))):
@@ -702,41 +712,30 @@ class DomainSymbol(BaseSymbol):
 
         if dimensions is None:
             dimensions = list(range(self.dimension))
-
-        if isinstance(dimensions, int):
+        elif isinstance(dimensions, int):
             dimensions = [dimensions]
 
-        if any(not isinstance(i, int) for i in dimensions):
+        if any(not isinstance(dimension, int) for dimension in dimensions):
             raise TypeError("Argument 'dimensions' must only contain type int")
 
-        for n in dimensions:
-            if n >= self.dimension:
+        for dimension in dimensions:
+            if dimension >= self.dimension:
                 raise ValueError(
-                    f"Cannot access symbol 'dimension' `{n}`, because `{n}` is >= symbol "
+                    f"Cannot access symbol 'dimension' `{dimension}`, because `{dimension}` is >= symbol "
                     f"dimension (`{self.dimension}`). (NOTE: symbol 'dimension' is indexed from zero)"
                 )
 
         if len(dimensions) == 1:
-            n = dimensions[0]
-            if not ignore_unused:
-                cats = self.records.iloc[:, n].cat.categories.tolist()
-            else:
-                used_codes = np.sort(self.records.iloc[:, n].cat.codes.unique())
-                all_cats = self.records.iloc[:, n].cat.categories.tolist()
-                cats = [all_cats[i] for i in used_codes]
-        elif len(dimensions) > 1:
-            cats = {}
-            for n in dimensions:
-                if not ignore_unused:
-                    cats.update(dict.fromkeys(self.records.iloc[:, n].cat.categories))
-                else:
-                    used_codes = np.sort(self.records.iloc[:, n].cat.codes.unique())
-                    all_cats = self.records.iloc[:, n].cat.categories.tolist()
-                    cats.update(dict.fromkeys([all_cats[i] for i in used_codes]))
+            return self._getDimensionUELs(records, dimensions[0], ignore_unused)
 
-            cats = list(cats.keys())
+        # Across dimensions the UELs are deduplicated while keeping first-seen order.
+        uels: dict[str, None] = {}
+        for dimension in dimensions:
+            uels.update(
+                dict.fromkeys(self._getDimensionUELs(records, dimension, ignore_unused))
+            )
 
-        return cats
+        return list(uels)
 
     def _removeUELs(
         self: Set | Parameter | Variable | Equation,
@@ -919,36 +918,61 @@ class DomainSymbol(BaseSymbol):
             return 1 - self.number_records / dense
 
 
+_METRIC_REDUCTIONS: dict[str, str] = {
+    "max": "max",
+    "absmax": "max",
+    "min": "min",
+    "mean": "mean",
+}
+
+_SPECIAL_VALUE_PREDICATES: tuple[Callable[[Any], np.ndarray | np.bool], ...] = (
+    SpecialValues.isEps,
+    SpecialValues.isNA,
+    SpecialValues.isUndef,
+    SpecialValues.isPosInf,
+    SpecialValues.isNegInf,
+)
+
+
+def _special_value_predicate(value: float) -> Callable[[Any], np.ndarray | np.bool]:
+    for predicate in _SPECIAL_VALUE_PREDICATES:
+        if predicate(value):
+            return predicate
+
+    raise ValidationError("Unknown special value detected")
+
+
 class RecordSymbol(DomainSymbol):
     """Base class for Parameter, Variable, and Equation."""
 
-    # TODO: Legacy function from GTP. Pay the technical debt.
     @property
-    @no_type_check
-    def shape(self: Parameter | Variable | Equation) -> tuple:
+    def shape(self: Parameter | Variable | Equation) -> tuple[int, ...]:
+        """
+        Number of UELs that are actually used in every dimension of the symbol.
+
+        Returns
+        -------
+        tuple[int, ...]
+            One entry per dimension. Empty tuple for scalar symbols.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["seattle", "san-diego"])
+        >>> d = gp.Parameter(m, "d", domain=[i], records=[("seattle", 1.0)])
+        >>> d.shape
+        (2,)
+
+        """
         if self.domain_type == "regular":
-            domain = cast("Sequence[Set | Alias | UniverseAlias]", self.domain)
-            return tuple(
-                [
-                    (
-                        0
-                        if i._getUELs(0, ignore_unused=True) is None
-                        else len(i._getUELs(0, ignore_unused=True))
-                    )
-                    for i in domain
-                ]
-            )
-        else:
-            return tuple(
-                [
-                    (
-                        0
-                        if self._getUELs(i, ignore_unused=True) is None
-                        else len(self._getUELs(i, ignore_unused=True))
-                    )
-                    for i in range(self.dimension)
-                ]
-            )
+            domain = cast("Sequence[Set | Alias]", self.domain)
+            return tuple(len(entry._getUELs(0, ignore_unused=True)) for entry in domain)
+
+        return tuple(
+            len(self._getUELs(dimension, ignore_unused=True))
+            for dimension in range(self.dimension)
+        )
 
     @property
     def is_scalar(self: Parameter | Variable | Equation) -> bool:
@@ -962,278 +986,715 @@ class RecordSymbol(DomainSymbol):
         """
         return self.dimension == 0
 
+    @property
+    def _default_attribute(self: Parameter | Variable | Equation) -> str:
+        return self._attributes[0]
+
+    def _validate_column(
+        self: Parameter | Variable | Equation, column: str | None
+    ) -> str:
+        if column is None:
+            return self._default_attribute
+
+        if not isinstance(column, str):
+            raise TypeError(
+                f"Argument 'column' must be type str. User passed {type(column)}."
+            )
+
+        if column not in self._attributes:
+            raise TypeError(
+                f"Argument 'column' must be one of the following: {self._attributes}"
+            )
+
+        return column
+
+    def _validate_columns(
+        self: Parameter | Variable | Equation, columns: str | list[str] | None
+    ) -> list[str]:
+        """Resolve ``columns`` to a non-empty list of existing attribute columns."""
+        if columns is None:
+            return [self._default_attribute]
+
+        if not isinstance(columns, (str, list)):
+            raise TypeError(
+                f"Argument 'columns' must be type str or list. User passed {type(columns)}."
+            )
+
+        if isinstance(columns, str):
+            return [self._validate_column(columns)]
+
+        if not columns:
+            raise ValidationError("Argument 'columns' must not be empty.")
+
+        if any(not isinstance(column, str) for column in columns):
+            raise TypeError("Argument 'columns' must contain only type str.")
+
+        attributes = self._attributes
+        if any(column not in attributes for column in columns):
+            raise TypeError(
+                f"Argument 'columns' must be a subset of the following: {attributes}"
+            )
+
+        return columns
+
     def findEps(
         self: Parameter | Variable | Equation, column: str | None = None
     ) -> pd.DataFrame | None:
+        """
+        Records whose ``column`` holds the GAMS special value EPS.
+
+        Parameters
+        ----------
+        column : str | None, optional
+            Attribute column to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        pd.DataFrame | None
+            Matching records, or None if the symbol has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", gp.SpecialValues.EPS), ("b", 1.0)])
+        >>> p.findEps()["i"].tolist()
+        ['a']
+
+        """
         return self.findSpecialValues(SpecialValues.EPS, column=column)
 
     def findNA(
         self: Parameter | Variable | Equation, column: str | None = None
     ) -> pd.DataFrame | None:
+        """
+        Records whose ``column`` holds the GAMS special value NA.
+
+        Parameters
+        ----------
+        column : str | None, optional
+            Attribute column to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        pd.DataFrame | None
+            Matching records, or None if the symbol has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", gp.SpecialValues.NA), ("b", 1.0)])
+        >>> p.findNA()["i"].tolist()
+        ['a']
+
+        """
         return self.findSpecialValues(SpecialValues.NA, column=column)
 
     def findUndef(
         self: Parameter | Variable | Equation, column: str | None = None
     ) -> pd.DataFrame | None:
+        """
+        Records whose ``column`` holds the GAMS special value UNDEF.
+
+        Parameters
+        ----------
+        column : str | None, optional
+            Attribute column to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        pd.DataFrame | None
+            Matching records, or None if the symbol has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", gp.SpecialValues.UNDEF), ("b", 1.0)])
+        >>> p.findUndef()["i"].tolist()
+        ['a']
+
+        """
         return self.findSpecialValues(SpecialValues.UNDEF, column=column)
 
     def findPosInf(
         self: Parameter | Variable | Equation, column: str | None = None
     ) -> pd.DataFrame | None:
+        """
+        Records whose ``column`` holds positive infinity.
+
+        Parameters
+        ----------
+        column : str | None, optional
+            Attribute column to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        pd.DataFrame | None
+            Matching records, or None if the symbol has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", gp.SpecialValues.POSINF), ("b", 1.0)])
+        >>> p.findPosInf()["i"].tolist()
+        ['a']
+
+        """
         return self.findSpecialValues(SpecialValues.POSINF, column=column)
 
     def findNegInf(
         self: Parameter | Variable | Equation, column: str | None = None
     ) -> pd.DataFrame | None:
+        """
+        Records whose ``column`` holds negative infinity.
+
+        Parameters
+        ----------
+        column : str | None, optional
+            Attribute column to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        pd.DataFrame | None
+            Matching records, or None if the symbol has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", gp.SpecialValues.NEGINF), ("b", 1.0)])
+        >>> p.findNegInf()["i"].tolist()
+        ['a']
+
+        """
         return self.findSpecialValues(SpecialValues.NEGINF, column=column)
 
     def findSpecialValues(
         self: Parameter | Variable | Equation,
-        values: float | list[float],
+        values: float | Sequence[float],
         column: str | None = None,
     ) -> pd.DataFrame | None:
-        from gamspy._symbols import Equation, Parameter, Variable
+        """
+        Records whose ``column`` holds any of the given GAMS special values.
 
-        if self.records is None:
-            return None
+        Parameters
+        ----------
+        values : float | Sequence[float]
+            One or more GAMS special values (see :class:`gamspy.SpecialValues`).
+        column : str | None, optional
+            Attribute column to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
 
-        if not isinstance(values, (float, list)):
-            raise TypeError("Argument 'values' must be type float or list")
+        Returns
+        -------
+        pd.DataFrame | None
+            Matching records, or None if the symbol has no records. An empty
+            ``values`` sequence matches nothing.
 
-        if isinstance(values, float):
+        Raises
+        ------
+        TypeError
+            If ``values`` or ``column`` has an unsupported type, or if ``column``
+            is not an attribute of this symbol.
+        ValidationError
+            If any entry of ``values`` is not a GAMS special value.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b", "c"])
+        >>> p = gp.Parameter(
+        ...     m,
+        ...     "p",
+        ...     domain=[i],
+        ...     records=[("a", gp.SpecialValues.NA), ("b", 1.0), ("c", gp.SpecialValues.EPS)],
+        ... )
+        >>> p.findSpecialValues([gp.SpecialValues.NA, gp.SpecialValues.EPS])["i"].tolist()
+        ['a', 'c']
+
+        """
+        column = self._validate_column(column)
+
+        if isinstance(values, bool) or not isinstance(
+            values, (int, float, list, tuple)
+        ):
+            raise TypeError(
+                "Argument 'values' must be type float or a sequence of floats. "
+                f"User passed {type(values)}."
+            )
+
+        if isinstance(values, (int, float)):
             values = [values]
 
-        if column is None:
-            if isinstance(self, Parameter):
-                column = "value"
-            elif isinstance(self, (Variable, Equation)):
-                column = "level"
+        predicates = [_special_value_predicate(value) for value in values]
 
-        if not isinstance(column, str):
-            raise TypeError(
-                f"Argument 'column' must be type str. User passed {type(column)}."
-            )
+        records = self.records
+        if records is None:
+            return None
 
-        if column not in self._attributes:
-            raise TypeError(
-                f"Argument 'column' must be a one of the following: {self._attributes}"
-            )
+        # Convert once: every predicate re-converts whatever it is handed, and a
+        # float64 column can be handed over without a copy.
+        column_values = records[column].to_numpy(dtype=np.float64, copy=False)
+        mask = np.zeros(len(column_values), dtype=bool)
+        for predicate in predicates:
+            mask |= predicate(column_values)
 
-        for n, i in enumerate(values):
-            if n == 0:
-                if SpecialValues.isEps(i):
-                    idx = SpecialValues.isEps(self.records[column])
-                elif SpecialValues.isNA(i):
-                    idx = SpecialValues.isNA(self.records[column])
-                elif SpecialValues.isUndef(i):
-                    idx = SpecialValues.isUndef(self.records[column])
-                elif SpecialValues.isPosInf(i):
-                    idx = SpecialValues.isPosInf(self.records[column])
-                elif SpecialValues.isNegInf(i):
-                    idx = SpecialValues.isNegInf(self.records[column])
-                else:
-                    raise ValidationError("Unknown special value detected")
-            else:
-                if SpecialValues.isEps(i):
-                    idx = (idx) | (SpecialValues.isEps(self.records[column]))
-                elif SpecialValues.isNA(i):
-                    idx = (idx) | (SpecialValues.isNA(self.records[column]))
-                elif SpecialValues.isUndef(i):
-                    idx = (idx) | (SpecialValues.isUndef(self.records[column]))
-                elif SpecialValues.isPosInf(i):
-                    idx = (idx) | (SpecialValues.isPosInf(self.records[column]))
-                elif SpecialValues.isNegInf(i):
-                    idx = (idx) | (SpecialValues.isNegInf(self.records[column]))
-                else:
-                    raise ValidationError("Unknown special value detected")
-
-        return self.records.loc[idx, :]
+        return records.loc[mask]
 
     def countNA(
         self: Parameter | Variable | Equation, columns: str | list[str] | None = None
     ) -> int:
+        """
+        Number of GAMS NA values across ``columns``.
+
+        Parameters
+        ----------
+        columns : str | list[str] | None, optional
+            Attribute column(s) to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        int
+            The count. Zero if the symbol has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", gp.SpecialValues.NA), ("b", 1.0)])
+        >>> p.countNA()
+        1
+
+        """
         return self._countSpecialValues(SpecialValues.NA, columns=columns)
 
     def countEps(
         self: Parameter | Variable | Equation, columns: str | list[str] | None = None
     ) -> int:
+        """
+        Number of GAMS EPS values across ``columns``.
+
+        Parameters
+        ----------
+        columns : str | list[str] | None, optional
+            Attribute column(s) to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        int
+            The count. Zero if the symbol has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", gp.SpecialValues.EPS), ("b", 1.0)])
+        >>> p.countEps()
+        1
+
+        """
         return self._countSpecialValues(SpecialValues.EPS, columns=columns)
 
     def countUndef(
         self: Parameter | Variable | Equation, columns: str | list[str] | None = None
     ) -> int:
+        """
+        Number of GAMS UNDEF values across ``columns``.
+
+        Parameters
+        ----------
+        columns : str | list[str] | None, optional
+            Attribute column(s) to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        int
+            The count. Zero if the symbol has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", gp.SpecialValues.UNDEF), ("b", 1.0)])
+        >>> p.countUndef()
+        1
+
+        """
         return self._countSpecialValues(SpecialValues.UNDEF, columns=columns)
 
     def countPosInf(
         self: Parameter | Variable | Equation, columns: str | list[str] | None = None
     ) -> int:
+        """
+        Number of positive infinities across ``columns``.
+
+        Parameters
+        ----------
+        columns : str | list[str] | None, optional
+            Attribute column(s) to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        int
+            The count. Zero if the symbol has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", gp.SpecialValues.POSINF), ("b", 1.0)])
+        >>> p.countPosInf()
+        1
+
+        """
         return self._countSpecialValues(SpecialValues.POSINF, columns=columns)
 
     def countNegInf(
         self: Parameter | Variable | Equation, columns: str | list[str] | None = None
     ) -> int:
+        """
+        Number of negative infinities across ``columns``.
+
+        Parameters
+        ----------
+        columns : str | list[str] | None, optional
+            Attribute column(s) to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        int
+            The count. Zero if the symbol has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", gp.SpecialValues.NEGINF), ("b", 1.0)])
+        >>> p.countNegInf()
+        1
+
+        """
         return self._countSpecialValues(SpecialValues.NEGINF, columns=columns)
 
     def _countSpecialValues(
-        self: Parameter | Variable | Equation, special_value, columns
-    ):
-        from gamspy._symbols import Equation, Parameter, Variable
+        self: Parameter | Variable | Equation,
+        special_value: float,
+        columns: str | list[str] | None,
+    ) -> int:
+        validated = self._validate_columns(columns)
+        predicate = _special_value_predicate(special_value)
 
-        if columns is None:
-            if isinstance(self, Parameter):
-                columns = "value"
-            elif isinstance(self, (Variable, Equation)):
-                columns = "level"
+        records = self.records
+        if records is None:
+            return 0
 
-        # checks
-        if not isinstance(columns, (str, list)):
-            raise TypeError(
-                f"Argument 'columns' must be type str or list. User passed {type(columns)}."
+        # Counting column by column keeps every pass on a contiguous float64
+        # array; selecting a sub-frame would materialize a copy first.
+        return sum(
+            int(
+                np.count_nonzero(
+                    predicate(records[column].to_numpy(dtype=np.float64, copy=False))
+                )
             )
-
-        if isinstance(columns, str):
-            columns = [columns]
-
-        if any(not isinstance(i, str) for i in columns):
-            raise TypeError("Argument 'columns' must contain only type str.")
-
-        if any(i not in self._attributes for i in columns):
-            raise TypeError(
-                f"Argument 'columns' must be a subset of the following: {self._attributes}"
-            )
-
-        if self.records is not None:
-            if SpecialValues.isEps(special_value):
-                return np.sum(SpecialValues.isEps(self.records[columns]))
-            elif SpecialValues.isNA(special_value):
-                return np.sum(SpecialValues.isNA(self.records[columns]))
-            elif SpecialValues.isUndef(special_value):
-                return np.sum(SpecialValues.isUndef(self.records[columns]))
-            elif SpecialValues.isPosInf(special_value):
-                return np.sum(SpecialValues.isPosInf(self.records[columns]))
-            elif SpecialValues.isNegInf(special_value):
-                return np.sum(SpecialValues.isNegInf(self.records[columns]))
-            else:
-                raise ValidationError("Unknown special value detected")
+            for column in validated
+        )
 
     def whereMax(
         self: Parameter | Variable | Equation, column: str | None = None
-    ) -> list[str]:
+    ) -> list[str] | None:
+        """
+        Domain of the record holding the largest value of ``column``.
+
+        Parameters
+        ----------
+        column : str | None, optional
+            Attribute column to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        list[str] | None
+            The domain labels of the first maximal record, or None if the symbol
+            is scalar, has no records, or holds nothing but NA values.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", 5.0), ("b", 1.0)])
+        >>> p.whereMax()
+        ['a']
+
+        """
         return self._whereMetric("max", column=column)
 
     def whereMaxAbs(
         self: Parameter | Variable | Equation, column: str | None = None
-    ) -> list[str]:
+    ) -> list[str] | None:
+        """
+        Domain of the record holding the largest magnitude of ``column``.
+
+        Parameters
+        ----------
+        column : str | None, optional
+            Attribute column to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        list[str] | None
+            The domain labels of the first record with maximal absolute value, or
+            None if the symbol is scalar, has no records, or holds nothing but NA
+            values.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", -7.0), ("b", 1.0)])
+        >>> p.whereMaxAbs()
+        ['a']
+
+        """
         return self._whereMetric("absmax", column=column)
 
     def whereMin(
         self: Parameter | Variable | Equation, column: str | None = None
-    ) -> list[str]:
+    ) -> list[str] | None:
+        """
+        Domain of the record holding the smallest value of ``column``.
+
+        Parameters
+        ----------
+        column : str | None, optional
+            Attribute column to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        list[str] | None
+            The domain labels of the first minimal record, or None if the symbol
+            is scalar, has no records, or holds nothing but NA values.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", 5.0), ("b", 1.0)])
+        >>> p.whereMin()
+        ['b']
+
+        """
         return self._whereMetric("min", column=column)
 
-    def _whereMetric(self: Parameter | Variable | Equation, metric, column):
-        if column is None:
-            if isinstance(self, gp.Parameter):
-                column = "value"
-            elif isinstance(self, (gp.Variable, gp.Equation)):
-                column = "level"
+    def _whereMetric(
+        self: Parameter | Variable | Equation,
+        metric: Literal["max", "min", "absmax"],
+        column: str | None,
+    ) -> list[str] | None:
+        validated = self._validate_column(column)
 
-        if not isinstance(column, str):
-            raise TypeError(
-                f"Argument 'column' must be type str. User passed {type(column)}."
+        records = self.records
+        dimension = self.dimension
+        if records is None or dimension == 0:
+            return None
+
+        values = records[validated].to_numpy(dtype=np.float64, copy=False)
+        if metric == "absmax":
+            values = np.abs(values)
+
+        try:
+            position = int(
+                np.nanargmin(values) if metric == "min" else np.nanargmax(values)
             )
+        except ValueError:
+            # No records at all, or a column that holds nothing but NA values.
+            return None
 
-        if column not in self._attributes:
-            raise TypeError(
-                f"Argument 'column' must be a one of the following: {self._attributes}"
-            )
-
-        if self.records is not None:
-            if metric == "max" and self.dimension > 0:
-                try:
-                    row_idx = self.records[column].argmax()
-                    return self.records.iloc[row_idx, : self.dimension].tolist()
-                except Exception:
-                    return None
-
-            if metric == "min" and self.dimension > 0:
-                try:
-                    row_idx = self.records[column].argmin()
-                    return self.records.iloc[row_idx, : self.dimension].tolist()
-                except Exception:
-                    return None
-
-            if metric == "absmax" and self.dimension > 0:
-                try:
-                    dom = list(
-                        self.records[
-                            self.records[column] == self.getMaxAbsValue(column)
-                        ].to_numpy()[0][: self.dimension]
-                    )
-                    return dom
-                except Exception:
-                    return None
+        # Reading the domain cell by cell avoids building the mixed dtype Series
+        # that `records.iloc[position, :dimension]` would need first.
+        return [records.iat[position, dim] for dim in range(dimension)]
 
     def getMaxValue(
         self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> float:
-        return self._getMetric(metric="max", columns=columns)
+    ) -> float | None:
+        """
+        Largest value found in ``columns``.
+
+        Parameters
+        ----------
+        columns : str | list[str] | None, optional
+            Attribute column(s) to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        float | None
+            The maximum, NaN if every inspected value is NA, or None if the symbol
+            has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", -5.0), ("b", 3.0)])
+        >>> p.getMaxValue()
+        3.0
+
+        """
+        return self._getMetric("max", columns=columns)
 
     def getMinValue(
         self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> float:
-        return self._getMetric(metric="min", columns=columns)
+    ) -> float | None:
+        """
+        Smallest value found in ``columns``.
+
+        Parameters
+        ----------
+        columns : str | list[str] | None, optional
+            Attribute column(s) to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        float | None
+            The minimum, NaN if every inspected value is NA, or None if the symbol
+            has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", -5.0), ("b", 3.0)])
+        >>> p.getMinValue()
+        -5.0
+
+        """
+        return self._getMetric("min", columns=columns)
 
     def getMeanValue(
         self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> float:
-        return self._getMetric(metric="mean", columns=columns)
+    ) -> float | None:
+        """
+        Mean of the values found in ``columns``.
+
+        With more than one column this is the mean of the per-column means, which
+        differs from the mean over all values whenever the columns do not hold the
+        same number of NA values.
+
+        Parameters
+        ----------
+        columns : str | list[str] | None, optional
+            Attribute column(s) to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
+
+        Returns
+        -------
+        float | None
+            The mean, NaN if the values span both infinities or are all NA, or
+            None if the symbol has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", -5.0), ("b", 3.0)])
+        >>> p.getMeanValue()
+        -1.0
+
+        """
+        return self._getMetric("mean", columns=columns)
 
     def getMaxAbsValue(
         self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> float:
-        return self._getMetric(metric="absmax", columns=columns)
+    ) -> float | None:
+        """
+        Largest magnitude found in ``columns``.
 
-    def _getMetric(self: Parameter | Variable | Equation, metric, columns):
-        from gamspy._symbols import Equation, Parameter, Variable
+        Parameters
+        ----------
+        columns : str | list[str] | None, optional
+            Attribute column(s) to inspect. Defaults to ``value`` for a Parameter
+            and ``level`` for a Variable or an Equation.
 
-        if columns is None:
-            if isinstance(self, Parameter):
-                columns = "value"
-            elif isinstance(self, (Variable, Equation)):
-                columns = "level"
+        Returns
+        -------
+        float | None
+            The maximum absolute value, NaN if every inspected value is NA, or
+            None if the symbol has no records.
 
-        if not isinstance(columns, (str, list)):
-            raise TypeError(
-                f"Argument 'columns' must be type str or list. User passed {type(columns)}."
-            )
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=[i], records=[("a", -5.0), ("b", 3.0)])
+        >>> p.getMaxAbsValue()
+        5.0
 
-        if isinstance(columns, str):
-            columns = [columns]
+        """
+        return self._getMetric("absmax", columns=columns)
 
-        if any(not isinstance(i, str) for i in columns):
-            raise TypeError("Argument 'columns' must contain only type str.")
+    def _getMetric(
+        self: Parameter | Variable | Equation,
+        metric: Literal["max", "min", "mean", "absmax"],
+        columns: str | list[str] | None,
+    ) -> float | None:
+        validated = self._validate_columns(columns)
 
-        if any(i not in self._attributes for i in columns):
-            raise TypeError(
-                f"Argument 'columns' must be a subset of the following: {self._attributes}"
-            )
+        records = self.records
+        if records is None:
+            return None
 
-        if self.records is not None:
-            if metric == "max":
-                return self.records[columns].max().max()
-            elif metric == "min":
-                return self.records[columns].min().min()
-            elif metric == "mean":
-                if not (
-                    self.records[columns].min().min() == float("-inf")
-                    and self.records[columns].max().max() == float("inf")
-                ):
-                    return self.records[columns].mean().mean()
-                else:
-                    return float("nan")
-            elif metric == "absmax":
-                return self.records[columns].abs().max().max()
+        # Reducing a Series is markedly cheaper than reducing a one column frame,
+        # and a single attribute is by far the most common request.
+        values: pd.Series | pd.DataFrame = (
+            records[validated[0]] if len(validated) == 1 else records[validated]
+        )
+
+        if metric == "absmax":
+            values = values.abs()
+
+        reduction = _METRIC_REDUCTIONS[metric]
+        # A column that spans both infinities reduces to NaN and numpy warns on
+        # the way there; the result is intended, the warning is not.
+        with np.errstate(invalid="ignore"):
+            result = getattr(values, reduction)()
+            if isinstance(result, pd.Series):
+                result = getattr(result, reduction)()
+
+        return float("nan") if pd.isna(result) else float(result)
 
 
 class VarEquSymbol(RecordSymbol):

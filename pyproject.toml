@@ -249,6 +249,7 @@ select = [
     "PLC0207",  # missing-maxsplit-arg
     "PLC0208",  # iteration-over-set
     "PLE",      # Pylint error rules
+    "PGH003",   # blanket-type-ignore
 ]
 ignore = [
     "E501",   # line-too-long

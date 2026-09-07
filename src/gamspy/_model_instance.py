@@ -427,7 +427,7 @@ class ModelInstance:
                     self.sync_db.gmd,
                     modifier.gams_symbol.sym_ptr,
                     modifier.update_action,
-                    modifier.data_symbol.sym_ptr,  # type: ignore
+                    modifier.data_symbol.sym_ptr,  # ty: ignore[unresolved-attribute]
                     update_type,
                     no_match_cnt,
                 )
