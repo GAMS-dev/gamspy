@@ -14,6 +14,7 @@ if typing.TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Sum
     from gamspy._symbols import Parameter, Variable
+    from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
     from gamspy._types import OperableType
     from gamspy.math.misc import MathOp
 
@@ -191,7 +192,10 @@ class Operable:
         return expression.Expression(None, "not", self)
 
     # a @ b
-    def __matmul__(self: Parameter | Variable, other: Parameter | Variable) -> Sum:
+    def __matmul__(
+        self: Parameter | Variable | ImplicitParameter | ImplicitVariable,
+        other: Parameter | Variable | ImplicitParameter | ImplicitVariable,
+    ) -> Sum:
         import gamspy._algebra.operation as operation
         from gamspy.math.matrix import _validate_matrix_mult_dims
 

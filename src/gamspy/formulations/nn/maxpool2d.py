@@ -48,8 +48,8 @@ class MaxPool2d(_MPool2d):
         self,
         container: gp.Container,
         kernel_size: int | tuple[int, int],
-        stride: int | None = None,
-        padding: int = 0,
+        stride: int | tuple[int, int] | None = None,
+        padding: int | tuple[int, int] = 0,
         name_prefix: str | None = None,
     ):
         self._init_kwargs = {

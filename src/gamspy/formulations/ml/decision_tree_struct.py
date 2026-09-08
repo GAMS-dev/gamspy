@@ -5,6 +5,10 @@ from dataclasses import dataclass, field
 import numpy as np
 
 
+def _empty_array() -> np.ndarray:
+    return np.array([])
+
+
 @dataclass(frozen=True)
 class DecisionTreeStruct:
     """
@@ -44,11 +48,11 @@ class DecisionTreeStruct:
         or expects as input. Defaults to 0.
     """
 
-    children_left: np.ndarray | None = field(default=None, repr=False)
-    children_right: np.ndarray | None = field(default=None, repr=False)
-    feature: np.ndarray | None = field(default=None, repr=False)
-    threshold: np.ndarray | None = field(default=None, repr=False)
-    value: np.ndarray | None = field(default=None, repr=False)
+    children_left: np.ndarray = field(default_factory=_empty_array, repr=False)
+    children_right: np.ndarray = field(default_factory=_empty_array, repr=False)
+    feature: np.ndarray = field(default_factory=_empty_array, repr=False)
+    threshold: np.ndarray = field(default_factory=_empty_array, repr=False)
+    value: np.ndarray = field(default_factory=_empty_array, repr=False)
     capacity: int = 0
     n_features: int = 0
 

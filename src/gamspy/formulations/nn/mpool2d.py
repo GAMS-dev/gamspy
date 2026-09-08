@@ -16,7 +16,7 @@ class _MPool2d:
         container: gp.Container,
         kernel_size: int | tuple[int, int],
         stride: int | tuple[int, int] | None = None,
-        padding: int = 0,
+        padding: int | tuple[int, int] = 0,
         name_prefix: str | None = None,
     ):
         # Validate pooling type
@@ -52,8 +52,8 @@ class _MPool2d:
         result: FormulationResult,
     ) -> gp.Parameter:
         # Extract batch and channel dimensions from input domain
-        N, C = input.domain[:2]
-        H_out, W_out, Hf, Wf, H_in, W_in = subset.domain
+        N, C = utils._get_domain(input)[:2]
+        H_out, W_out, Hf, Wf, H_in, W_in = utils._get_domain(subset)
 
         # Create subset2 mapping output positions to input positions
         subset2 = gp.Set(
@@ -62,7 +62,7 @@ class _MPool2d:
             domain=[H_out, W_out, H_in, W_in],
         )
         subset2[H_out, W_out, H_in, W_in] = gp.Sum(
-            [Hf, Wf],  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
+            [Hf, Wf],
             subset[H_out, W_out, Hf, Wf, H_in, W_in],
         )
 
@@ -87,21 +87,21 @@ class _MPool2d:
         if isinstance(input, gp.Variable):
             # Use variable bounds if input is a variable
             ub[...] = gp.Smax(
-                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
                 input.up[N, C, H_in, W_in],
             )
             lb[...] = gp.Smin(
-                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
                 input.lo[N, C, H_in, W_in],
             )
         else:
             # Use parameter values directly if input is a parameter
             ub[...] = gp.Smax(
-                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
                 input[N, C, H_in, W_in],
             )
             lb[...] = gp.Smin(
-                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
                 input[N, C, H_in, W_in],
             )
 
@@ -142,7 +142,7 @@ class _MPool2d:
             raise ValidationError(f"expected 4D input (got {len(input.domain)}D input)")
 
         # Extract dimensions from input (Batch, Channel, Height, Width)
-        N, C, H_in, W_in = input.domain
+        N, C, H_in, W_in = utils._get_domain(input)
         h_in = len(H_in)
         w_in = len(W_in)
 
@@ -159,7 +159,7 @@ class _MPool2d:
             name=utils._generate_name("v", self._name_prefix, "output"),
             domain=dim([len(N), len(C), h_out, w_out]),
         )
-        N, C, H_out, W_out = out_var.domain
+        N, C, H_out, W_out = utils._get_domain(out_var)
 
         # Calculate input window positions (top - left)
         # These indices determine where pooling windows start in the input tensor
@@ -169,7 +169,9 @@ class _MPool2d:
 
         # Create filter dimensions and domain relationships
         Hf, Wf = gp.math._generate_dims(self.container, self.kernel_size)
-        Hf, Wf, H_in, W_in = utils._next_domains([Hf, Wf, H_in, W_in], out_var.domain)
+        Hf, Wf, H_in, W_in = utils._next_domains(
+            [Hf, Wf, H_in, W_in], utils._get_domain(out_var)
+        )
 
         # Create mapping between input/output positions
         subset = gp.Set(

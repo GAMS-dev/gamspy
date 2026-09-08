@@ -427,7 +427,7 @@ class Conv1d:
                     name=utils._generate_name("p", self._name_prefix, "bias"),
                 )
             else:
-                self.bias.setRecords(bias)  # ty: ignore[invalid-argument-type] ty cannot narrow bias down here.
+                self.bias.setRecords(bias)
 
             self.bias_array = bias
 
@@ -484,7 +484,7 @@ class Conv1d:
         if len(input.domain) != 3:
             raise ValidationError(f"expected 3D input (got {len(input.domain)}D input)")
 
-        N, C_in, W_in = input.domain
+        N, C_in, W_in = utils._get_domain(input)
 
         if len(C_in) != self.in_channels:
             raise ValidationError("in_channels does not match")
@@ -499,7 +499,7 @@ class Conv1d:
             name=utils._generate_name("v", self._name_prefix, "output"),
         )
 
-        N, C_out, W_out = out.domain
+        N, C_out, W_out = utils._get_domain(out)
 
         set_out = gp.Equation(
             self.container,
@@ -514,10 +514,10 @@ class Conv1d:
 
         left_index = (self.stride * (gp.Ord(W_out) - 1)) - padding[0] + 1
 
-        _, _, Wf = self.weight.domain
+        _, _, Wf = utils._get_domain(self.weight)
         C_in, Wf, W_in = utils._next_domains(
             [C_in, Wf, W_in],
-            out.domain,
+            utils._get_domain(out),
         )
 
         subset = gp.Set(

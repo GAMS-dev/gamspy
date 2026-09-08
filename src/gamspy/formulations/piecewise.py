@@ -103,7 +103,8 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
     """
     equations: list[gp.Equation] = []
     m = lambda_var.container
-    count_x = len(lambda_var.domain[-1])
+    lambda_domain = gp.formulations.utils._get_domain(lambda_var)
+    count_x = len(lambda_domain[-1])
     # edge case
     lambda_var.lo[...] = 0
     lambda_var.up[...] = 1
@@ -111,8 +112,8 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
         # if there are only 2 elements, it is already sos2
         return equations
 
-    J = lambda_var.domain[-1]
-    previous_domains = lambda_var.domain[:-1]
+    J = lambda_domain[-1]
+    previous_domains = lambda_domain[:-1]
 
     l_len = math.ceil(math.log2(count_x - 1))
     I, L = gp.math._generate_dims(
@@ -161,8 +162,9 @@ def _enforce_discontinuity(
 ) -> list[gp.Equation]:
     equations: list[gp.Equation] = []
 
-    len_x_points = len(lambda_var.domain[-1])
-    previous_domains = lambda_var.domain[:-1]
+    lambda_domain = gp.formulations.utils._get_domain(lambda_var)
+    len_x_points = len(lambda_domain[-1])
+    previous_domains = lambda_domain[:-1]
 
     m = lambda_var.container
     J, J2, SB = gp.math._generate_dims(
@@ -276,8 +278,10 @@ def _indicator(
     if len(expr.domain) != len(indicator_var.domain):
         raise ValidationError("indicator_var and expr must have the same domain")
 
-    for i in range(len(expr.domain)):
-        if expr.domain[i].name != indicator_var.domain[i].name:
+    for expr_domain, var_domain in zip(expr.domain, indicator_var.domain, strict=True):
+        expr_domain_name = gp.formulations.utils._domain_name(expr_domain)
+        var_domain_name = gp.formulations.utils._domain_name(var_domain)
+        if expr_domain_name != var_domain_name:
             raise ValidationError("indicator_var and expr must have the same domain")
 
     if expr.operator == "=e=":
@@ -306,7 +310,8 @@ def _indicator(
 
     slack_var = m.addVariable(domain=expr.domain, type="positive")
     slack_eq = m.addEquation(
-        domain=expr.domain, definition=(expr.left - slack_var <= expr.right)
+        domain=expr.domain,
+        definition=(expr.left - slack_var <= expr.right),  # ty: ignore[unsupported-operator]
     )
     equations.append(slack_eq)
 
@@ -1653,9 +1658,7 @@ def pwlinear(
         raise ValidationError("allow_multivalued is expected to be a boolean")
 
     if method == "convexity":
-        if using is None:
-            using = "binary"
-        elif using not in {"binary", "sos2"}:
+        if using is not None and using not in {"binary", "sos2"}:
             raise ValidationError(
                 "Invalid value for the using argument. "
                 "Possible values are 'binary' and 'sos2'"
@@ -1676,7 +1679,7 @@ def pwlinear(
         return _build_convexity_formulation(
             input_x,
             data,
-            using,
+            using if using is not None else "binary",
         )
     elif method == "dlog":
         return _build_dlog_formulation(input_x, data)

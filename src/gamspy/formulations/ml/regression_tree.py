@@ -193,19 +193,20 @@ class RegressionTree:
                 "Input must be of either type gp.Parameter | gp.Variable"
             )
 
-        if len(input.domain) != 2:
+        input_domain = utils._get_domain(input)
+        if len(input_domain) != 2:
             raise ValidationError(
                 f"input expected to be in shape (n_samples, {self.n_features})"
             )
 
-        if len(input.domain[-1]) != self.n_features:
+        if len(input_domain[-1]) != self.n_features:
             raise ValidationError("number of features do not match")
 
         if M is not None and not isinstance(M, (float, int)):
             raise ValidationError("M can either be of type float or int")
 
-        set_of_samples: gp.Set = input.domain[0]
-        set_of_features: gp.Set = input.domain[-1]
+        set_of_samples = input_domain[0]
+        set_of_features = input_domain[-1]
 
         [
             set_of_output_dim,
