@@ -379,6 +379,9 @@ Here is a list of package wide options:
 |                              |       | "no": Do not allow ambiguous equations in any model types.                                                                               |
 |                              |       | "yes": Allow ambiguous equations in all model types.                                                                                     |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| STRICT_POWER_OPERATOR        | int   | Whether ``**`` always maps to GAMS' ``rPower``. Set to 0 by default, which maps an integer exponent to                                   |
+|                              |       | ``power`` or ``sqr`` so that a negative base does not become UNDF. 1: always use ``rPower``.                                             |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. warning::
     GAMSPy validations are essential during development. Setting `VALIDATION` to 0 should only be done to improve the performance by skipping the validation steps after you are 
