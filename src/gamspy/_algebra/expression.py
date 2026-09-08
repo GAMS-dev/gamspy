@@ -22,7 +22,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Sequence
 
     import numpy as np
     import pandas as pd
@@ -439,8 +439,8 @@ class Expression(operable.Operable):
             right._fix_equalities()
 
         self._representation: str | None = None
-        self._left_domain: list = []
-        self._right_domain: list = []
+        self._left_domain: Sequence = []
+        self._right_domain: Sequence = []
         self._create_domain()
         left_control = getattr(left, "controlled_domain", [])
         right_control = getattr(right, "controlled_domain", [])
@@ -463,27 +463,38 @@ class Expression(operable.Operable):
         return self._representation
 
     def _create_domain(self):
-        for loc, result in (
-            (self.left, "_left_domain"),
-            (self.right, "_right_domain"),
-        ):
-            if isinstance(loc, condition.Condition):
-                loc = loc.conditioning_on
+        left = self.left
+        if isinstance(left, condition.Condition):
+            left = left.conditioning_on
 
-            if loc is None or isinstance(loc, (int, float, str)):
-                result_domain = []  # left is a scalar
-            elif isinstance(loc, domain.Domain):
-                result_domain = loc.sets
-            else:
-                result_domain = loc.domain  # ty: ignore[unresolved-attribute]
+        if left is None or isinstance(left, (int, float, str)):
+            left_domain = []  # left is a scalar
+        elif isinstance(left, domain.Domain):
+            left_domain = left.sets
+        else:
+            left_domain = left.domain  # ty: ignore[unresolved-attribute]
 
-            setattr(self, result, result_domain)
+        right = self.right
+        if isinstance(right, condition.Condition):
+            right = right.conditioning_on
 
-        left_domain = self._left_domain
-        right_domain = self._right_domain
+        if right is None or isinstance(right, (int, float, str)):
+            right_domain = []  # right is a scalar
+        elif isinstance(right, domain.Domain):
+            right_domain = right.sets
+        else:
+            right_domain = right.domain  # ty: ignore[unresolved-attribute]
 
-        set_to_index = {}
+        self._left_domain = left_domain
+        self._right_domain = right_domain
 
+        if not left_domain and not right_domain:
+            self._shadow_domain = []
+            self.domain = []
+            self.dimension = 0
+            return
+
+        set_to_index: dict = {}
         for domain_char, domain_ptr in (
             ("l", left_domain),
             ("r", right_domain),
@@ -492,24 +503,16 @@ class Expression(operable.Operable):
                 if isinstance(d, str) or is_universe(d):
                     continue
 
-                if d not in set_to_index:
-                    set_to_index[d] = []
+                indices = set_to_index.get(d)
+                if indices is None:
+                    set_to_index[d] = [(domain_char, i)]
+                else:
+                    indices.append((domain_char, i))
 
-                set_to_index[d].append((domain_char, i))
-
-        shadow_domain = []
-        result_domain = []
-        for d in (*left_domain, *right_domain):
-            if isinstance(d, str) or is_universe(d):
-                continue
-
-            if d not in result_domain:
-                result_domain.append(d)
-                indices = set_to_index[d]
-                shadow_domain.append(DomainPlaceHolder(indices=indices))
-
-        self._shadow_domain = shadow_domain
-        self.domain = result_domain
+        self._shadow_domain = [
+            DomainPlaceHolder(indices=indices) for indices in set_to_index.values()
+        ]
+        self.domain = list(set_to_index)
         self.dimension = validation.get_dimension(self.domain)
 
     def __getitem__(self, indices):
