@@ -66,15 +66,6 @@ name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
-[tool.ty.src]
-exclude = [
-    "src/gamspy/formulations/nn",
-    "src/gamspy/formulations/ml",
-    "src/gamspy/formulations/shape.py",
-    "src/gamspy/formulations/piecewise.py",
-    "src/gamspy/formulations/utils.py",
-]
-
 [tool.ty.rules]
 invalid-method-override = "ignore"  # Some overrides do not match the signature of equivalent gtp functions.
 unresolved-import = "ignore"  # Needed for optional torch dependency

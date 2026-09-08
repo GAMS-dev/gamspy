@@ -47,7 +47,7 @@ class AvgPool2d:
         container: gp.Container,
         kernel_size: int | tuple[int, int],
         stride: int | tuple[int, int] | None = None,
-        padding: int = 0,
+        padding: int | tuple[int, int] = 0,
         name_prefix: str | None = None,
     ):
         _kernel_size = utils._check_tuple_int(kernel_size, "kernel_size")
@@ -74,8 +74,8 @@ class AvgPool2d:
         result: FormulationResult,
     ) -> tuple[gp.Parameter, gp.Parameter]:
         # Extract batch and channel dimensions from input domain
-        N, C = input.domain[:2]
-        H_out, W_out, Hf, Wf, H_in, W_in = subset.domain
+        N, C = utils._get_domain(input)[:2]
+        H_out, W_out, Hf, Wf, H_in, W_in = utils._get_domain(subset)
 
         # Create subset2 mapping output positions to input positions
         subset2 = gp.Set(
@@ -190,7 +190,7 @@ class AvgPool2d:
         if len(input.domain) != 4:
             raise ValidationError(f"expected 4D input (got {len(input.domain)}D input)")
 
-        N, C_in, H_in, W_in = input.domain
+        N, C_in, H_in, W_in = utils._get_domain(input)
 
         h_in = len(H_in)
         w_in = len(W_in)
@@ -205,7 +205,7 @@ class AvgPool2d:
             name=utils._generate_name("v", self._name_prefix, "output"),
         )
 
-        N, C, H_out, W_out = out_var.domain
+        N, C, H_out, W_out = utils._get_domain(out_var)
 
         set_out = gp.Equation(
             self.container,
@@ -219,7 +219,9 @@ class AvgPool2d:
         coeff = 1 / (self.kernel_size[0] * self.kernel_size[1])
 
         Hf, Wf = gp.math._generate_dims(self.container, self.kernel_size)
-        Hf, Wf, H_in, W_in = utils._next_domains([Hf, Wf, H_in, W_in], out_var.domain)
+        Hf, Wf, H_in, W_in = utils._next_domains(
+            [Hf, Wf, H_in, W_in], utils._get_domain(out_var)
+        )
 
         subset = gp.Set(
             self.container,

@@ -128,7 +128,7 @@ class RNN:
         )
 
         assert self.weight_ih is not None
-        H_set = self.weight_ih.domain[0]
+        H_set = utils._get_domain(self.weight_ih)[0]
         H_prev = gp.Alias(
             self.container,
             alias_with=H_set,
@@ -179,7 +179,7 @@ class RNN:
         result: FormulationResult,
         h_out_shape: tuple,
         h0: gp.Parameter | None = None,
-    ) -> tuple[np.ndarray | None, np.ndarray]:
+    ) -> tuple[gp.Parameter | None, gp.Parameter]:
         """
         Sequentially calculates the tight lower and upper bounds for the RNN hidden state.
         """
@@ -360,19 +360,20 @@ class RNN:
         assert self.bias_ih is not None
         assert self.bias_hh is not None
 
-        if len(input_seq.domain) != 3:
+        input_domain = utils._get_domain(input_seq)
+        if len(input_domain) != 3:
             raise ValidationError(
-                f"Expected 3D input (batch, time_step, feature), got {len(input_seq.domain)}"
+                f"Expected 3D input (batch, time_step, feature), got {len(input_domain)}"
             )
 
-        if len(input_seq.domain[-1]) != self.weight_ih.shape[-1]:
+        if len(input_domain[-1]) != self.weight_ih.shape[-1]:
             raise ValidationError(
-                f"Last dimension of Input sequence does not match. Expected {self.weight_ih.shape[-1]}, got {len(input_seq.domain[-1])}."
+                f"Last dimension of Input sequence does not match. Expected {self.weight_ih.shape[-1]}, got {len(input_domain[-1])}."
             )
 
         if h0 is not None:
-            expected = (len(input_seq.domain[0]), self.weight_hh.shape[-1])
-            actual = tuple(len(i) for i in h0.domain)
+            expected = (len(input_domain[0]), self.weight_hh.shape[-1])
+            actual = tuple(len(i) for i in utils._get_domain(h0))
             if expected != actual:
                 raise ValidationError(
                     f"h0 shape mismatch: expected {expected}, got {actual}"
@@ -386,8 +387,8 @@ class RNN:
             domain=linear_input.domain,
         )
 
-        N_set, T_set, H_set = h_out.domain
-        _, H_prev = self.weight_hh.domain
+        N_set, T_set, H_set = utils._get_domain(h_out)
+        _, H_prev = utils._get_domain(self.weight_hh)
 
         if len(T_set) == 1:
             linear_hidden = self.bias_hh[H_set]
