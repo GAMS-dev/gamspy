@@ -97,11 +97,15 @@ Usage
      - False
      - Installs all available add-on solvers.
    * - -\-existing-solvers
-     - 
+     -
      - False
      - Reinstalls previously installed add-on solvers.
-   * - -\-use-uv 
-     - 
+   * - -\-licensed
+     -
+     - False
+     - Installs all add-on solvers permitted by the active license that are not yet installed.
+   * - -\-use-uv
+     -
      - False
      - Use uv instead of pip to install solvers.
 
@@ -146,3 +150,7 @@ Skip pip installation::
 Install a specific ``cuopt`` version for CUDA 12 without the CUDA runtime libraries::
 
   $ GAMSPY_CUOPT_VERSION=0.0.8b GAMSPY_CUDA_VERSION=12 GAMSPY_CUDA_RUNTIME=0 gamspy install solver cuopt
+
+Install every add-on solver permitted by the active license that is not already installed::
+
+  $ gamspy install solver --licensed
