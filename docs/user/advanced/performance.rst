@@ -365,6 +365,9 @@ Here is a list of package wide options:
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | GAMS_SYSDIR                  | str   | Path to the GAMS system directory. Set to gamspy_base directory by default.                                                              |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| LICENSE_PATH                 | str   | Path to the license file. Empty by default, which means that GAMSPy looks for an installed license and falls back to the demo license.   |
+|                              |       | A license given in the constructor of the ``Container`` (``Options(license=...)``) overrides this option.                                |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | MAP_SPECIAL_VALUES           | int   | Map special values. Can be disabled for performance if there are no special values in the records. Set to 1 by default.                  |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | ASSUME_VARIABLE_SUFFIX       | int   | Activates or deactivates the automatic addition of .l or .scale attribute to variables on the right-hand side of assignments. Set to 1   |

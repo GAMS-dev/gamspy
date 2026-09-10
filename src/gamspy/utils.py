@@ -570,6 +570,15 @@ def _get_gamspy_base_directory() -> str:
 
 
 def _get_license_path(system_directory: str) -> str:
+    license_path = get_option("LICENSE_PATH")
+    if license_path:
+        if not os.path.isfile(license_path):
+            raise ValidationError(
+                f"`{license_path}` given by the `LICENSE_PATH` option is not a valid license path."
+            )
+
+        return license_path
+
     # Check ci license
     ci_license_path = os.path.join(system_directory, "ci_license.txt")
     if os.path.exists(ci_license_path):

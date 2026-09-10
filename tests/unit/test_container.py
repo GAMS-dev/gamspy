@@ -1633,6 +1633,43 @@ def test_explicit_license_path():
 
 
 @pytest.mark.unit
+def test_license_path_option(set_options, tmp_path):
+    demo_license_path = os.path.join(gamspy_base.directory, "gamslice.txt")
+    license_path = str(tmp_path / "my_license.txt")
+    shutil.copy(demo_license_path, license_path)
+
+    set_options({"LICENSE_PATH": license_path})
+    assert Container()._license_path == license_path
+
+    # A license given at Container creation time overrides the option.
+    m = Container(options=gp.Options(license=demo_license_path))
+    assert m._license_path == demo_license_path
+
+    set_options({"LICENSE_PATH": str(tmp_path / "no_such_license.txt")})
+    with pytest.raises(ValidationError):
+        Container()
+
+
+@pytest.mark.unit
+def test_license_path_environment_variable(tmp_path):
+    license_path = str(tmp_path / "my_license.txt")
+    shutil.copy(os.path.join(gamspy_base.directory, "gamslice.txt"), license_path)
+
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import gamspy as gp; print(gp.Container()._license_path)",
+        ],
+        env={**os.environ, "GAMSPY_LICENSE_PATH": license_path},
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert process.stdout.splitlines()[-1] == license_path
+
+
+@pytest.mark.unit
 def test_writeSolverOptions():
     m = Container()
     m.writeSolverOptions(

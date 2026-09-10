@@ -69,6 +69,16 @@ You can run: ::
 
 to verify the installation of the license.
 
+Instead of installing a license, you can also point GAMSPy to an existing license file with the
+``LICENSE_PATH`` option or the ``GAMSPY_LICENSE_PATH`` environment variable: ::
+
+    GAMSPY_LICENSE_PATH=<path_to_ascii_file> python my_model.py
+
+.. code-block:: python
+
+    import gamspy as gp
+    gp.set_options({"LICENSE_PATH": "<path_to_ascii_file>"})
+
 For machines that are not connected to the internet and a license specified by an access code, you can probe the node's data
 and get a license via a machine connected to the internet. Details about this can be found below and in :ref:`gamspy_retrieve`.
 
