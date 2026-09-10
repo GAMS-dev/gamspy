@@ -1,0 +1,1 @@
+Added ``gamspy install solver --licensed`` to install every add-on solver permitted by the active license, and ``gamspy uninstall solver --unlicensed`` to uninstall installed add-on solvers no longer permitted by it.

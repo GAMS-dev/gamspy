@@ -404,6 +404,93 @@ def test_install_solver():
         assert process.returncode == 0, process.stdout + process.stderr
 
 
+def test_install_licensed_solvers_and_uninstall_unlicensed_solvers():
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "uninstall",
+            "solver",
+            "--uninstall-all-solvers",
+            "--use-uv",
+        ],
+        capture_output=True,
+        encoding="utf-8",
+        text=True,
+    )
+    assert process.returncode == 0, process.stdout + process.stderr
+
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "install",
+            "solver",
+            "--licensed",
+            "--use-uv",
+        ],
+        capture_output=True,
+        encoding="utf-8",
+        text=True,
+    )
+    assert process.returncode == 0, process.stdout + process.stderr
+
+    # Running it again should find nothing left to install.
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "install",
+            "solver",
+            "--licensed",
+            "--use-uv",
+        ],
+        capture_output=True,
+        encoding="utf-8",
+        text=True,
+    )
+    assert process.returncode == 0, process.stdout + process.stderr
+    assert "already installed" in process.stdout
+
+    # Should be a no-op here since everything just installed is permitted by the license.
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "uninstall",
+            "solver",
+            "--unlicensed",
+            "--use-uv",
+        ],
+        capture_output=True,
+        encoding="utf-8",
+        text=True,
+    )
+    assert process.returncode == 0, process.stdout + process.stderr
+    assert "No unlicensed solvers" in process.stdout
+
+    # Restore a clean state for the rest of the suite.
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "uninstall",
+            "solver",
+            "--uninstall-all-solvers",
+            "--use-uv",
+        ],
+        capture_output=True,
+        encoding="utf-8",
+        text=True,
+    )
+    assert process.returncode == 0, process.stdout + process.stderr
+
+
 def test_list_solvers():
     process = subprocess.run(
         [sys.executable, "-Bm", "gamspy", "list", "solvers"],

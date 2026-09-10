@@ -9,6 +9,7 @@ import certifi
 import typer
 
 from . import cuopt
+from .license import get_licensed_solvers
 from .util import has_pip, has_uv, remove_solver_entry
 
 if TYPE_CHECKING:
@@ -80,7 +81,10 @@ def license():
 
 
 @app.command(
-    help="[bold][yellow]Examples[/yellow][/bold]: gamspy uninstall solver <solver_name>",
+    help=(
+        "[bold][yellow]Examples[/yellow][/bold]: gamspy uninstall solver <solver_name> | "
+        "gamspy uninstall solver --unlicensed"
+    ),
     short_help="To uninstall solvers",
 )
 def solver(
@@ -97,6 +101,11 @@ def solver(
         "--all",
         "-a",
         help="Uninstalls all add-on solvers.",
+    ),
+    unlicensed: bool = typer.Option(
+        False,
+        "--unlicensed",
+        help="Uninstalls installed add-on solvers no longer permitted by the active license.",
     ),
     skip_pip_uninstall: bool = typer.Option(
         False,
@@ -185,6 +194,18 @@ def solver(
         remove_addons(sorted(_get_removable_solvers(addons_path)))
 
         # All add-on solvers are gone.
+        return
+
+    if unlicensed:
+        license_path = utils._get_license_path(gamspy_base.directory)
+        licensed_solvers = {s.upper() for s in get_licensed_solvers(license_path)}
+
+        diff = sorted(_get_removable_solvers(addons_path) - licensed_solvers)
+        if not diff:
+            typer.echo("No unlicensed solvers to uninstall.")
+            return
+
+        remove_addons(diff)
         return
 
     if solver is None:

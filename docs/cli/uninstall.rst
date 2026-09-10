@@ -47,8 +47,12 @@ Usage
      - -a
      - False
      - Uninstalls all add-on solvers.
-   * - -\-use-uv 
-     - 
+   * - -\-unlicensed
+     -
+     - False
+     - Uninstalls installed add-on solvers no longer permitted by the active license.
+   * - -\-use-uv
+     -
      - False
      - Use uv instead of pip to uninstall solvers.
 
@@ -66,4 +70,8 @@ Uninstall all add-on solvers::
 Skip pip uninstallation::
 
   $ gamspy uninstall solver mosek -s
+
+Uninstall every installed add-on solver no longer permitted by the active license::
+
+  $ gamspy uninstall solver --unlicensed
 
