@@ -1,0 +1,1 @@
+Add the package wide option ``LICENSE_PATH`` (also settable via the ``GAMSPY_LICENSE_PATH`` environment variable) to use a license file without installing it.

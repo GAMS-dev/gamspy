@@ -8,6 +8,7 @@ from gamspy.exceptions import ValidationError
 
 OptionName = Literal[
     "GAMS_SYSDIR",
+    "LICENSE_PATH",
     "VALIDATION",
     "DOMAIN_VALIDATION",
     "SOLVER_VALIDATION",
@@ -46,6 +47,10 @@ def _set_default_options() -> None:
     sysdir = os.getenv("GAMSPY_GAMS_SYSDIR", None)
     if sysdir is not None:
         configuration["GAMS_SYSDIR"] = sysdir
+
+    # No license path by default. GAMSPy discovers the license in this case.
+    license_path = os.getenv("GAMSPY_LICENSE_PATH", "")
+    configuration["LICENSE_PATH"] = license_path
 
     # Enable all validations by default
     validate = int(os.getenv("GAMSPY_VALIDATION", 1))
