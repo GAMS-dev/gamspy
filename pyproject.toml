@@ -9,10 +9,10 @@ authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
 readme = "README_PYPI.md"
-description = "Python-based algebraic modeling interface to GAMS"
+description = "Algebraic modeling and mathematical optimization in Python"
 requires-python = ">=3.10"
 license-files = ["LICENSE"]
-keywords = ["Optimization", "GAMS"]
+keywords = ["Mathematical Optimization", "Algebraic Modeling", "Python", "GAMS"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
