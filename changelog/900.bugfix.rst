@@ -1,0 +1,1 @@
+``Model.freeze`` now raises a ``ValidationError`` if a variable of the model ends with the reserved ``_var`` suffix instead of letting GAMS fix that variable to zero, and a failed ``freeze`` no longer leaves the model in a frozen state.

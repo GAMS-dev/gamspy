@@ -1540,7 +1540,6 @@ class Model:
         >>> model.unfreeze()
 
         """
-        self._is_frozen = True
         if options is None:
             options = self.container._options
 
@@ -1552,6 +1551,7 @@ class Model:
             self.container.output,
             hibernate=hibernate,
         )
+        self._is_frozen = True
 
         # Records of the modifiables are read from the gmd so they do not have to be
         # sent to GAMS while frozen.

@@ -1084,6 +1084,84 @@ def test_database():
 
 
 @pytest.mark.integration
+def test_reserved_var_suffix():
+    m = gp.Container()
+    x = gp.Variable(m, "x", type="Positive")
+    cost_var = gp.Variable(m, "cost_var", type="Positive")
+    rhs = gp.Parameter(m, "rhs", records=1)
+    cap = gp.Equation(m, "cap", definition=x + cost_var <= 10)
+    demand = gp.Equation(m, "demand", definition=x + cost_var >= rhs)
+    model = gp.Model(
+        m,
+        "reserved",
+        equations=[cap, demand],
+        problem="LP",
+        sense=Sense.MAX,
+        objective=x + cost_var,
+    )
+
+    with pytest.raises(ValidationError, match="reserved by the frozen solve"):
+        model.freeze(modifiables=[rhs])
+
+    assert not model._is_frozen
+    assert model.instance is None
+
+    # The companion variable that the frozen solve creates itself is allowed.
+    m2 = gp.Container()
+    y = gp.Variable(m2, "y", type="Positive")
+    rhs2 = gp.Parameter(m2, "rhs", records=1)
+    cap2 = gp.Equation(m2, "cap", definition=y <= 10)
+    demand2 = gp.Equation(m2, "demand", definition=y >= rhs2)
+    model2 = gp.Model(
+        m2,
+        "companion",
+        equations=[cap2, demand2],
+        problem="LP",
+        sense=Sense.MAX,
+        objective=2 * y,
+    )
+    model2.freeze(modifiables=[rhs2])
+    model2.solve()
+    assert "rhs_var" in m2.data
+    assert math.isclose(y.records["level"].item(), 10)
+    model2.unfreeze()
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("clashing", ["variable", "parameter"])
+def test_companion_name_clash(clashing):
+    m = gp.Container()
+    x = gp.Variable(m, "x", type="Positive")
+    rhs = gp.Parameter(m, "rhs", records=1)
+    if clashing == "variable":
+        _ = gp.Variable(m, "rhs_var", type="Positive")
+    else:
+        _ = gp.Parameter(m, "rhs_var", records=3)
+
+    cap = gp.Equation(m, "cap", definition=x <= 10)
+    demand = gp.Equation(m, "demand", definition=x >= rhs)
+    model = gp.Model(
+        m,
+        "clash",
+        equations=[cap, demand],
+        problem="LP",
+        sense=Sense.MAX,
+        objective=2 * x,
+    )
+
+    with pytest.raises(ValidationError, match="companion of `rhs`"):
+        model.freeze(modifiables=[rhs])
+
+    assert not model._is_frozen
+    assert model.instance is None
+    assert m._frozen_modifiables == set()
+
+    # The container must still be usable, the clash was caught before GAMS ran.
+    model.solve()
+    assert math.isclose(x.records["level"].item(), 10)
+
+
+@pytest.mark.integration
 def test_feasibility():
     m = gp.Container()
     x = gp.Variable(m, "x", records=2)
