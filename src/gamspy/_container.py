@@ -238,6 +238,7 @@ class Container:
         self._unsaved_statements: list = []
 
         self._frozen_modifiables: set[str] = set()
+        self._frozen_companions: set[str] = set()
         self._restart_from: str | None = None
 
         self._data: CasePreservingDict[SymbolType] = CasePreservingDict()

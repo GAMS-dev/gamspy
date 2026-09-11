@@ -203,6 +203,7 @@ class ModelInstance:
         self.output = output
 
         self.modifiables = self._init_modifiables(modifiables)
+        self._validate_companion_names()
 
         self._solution_symbols: list[str] = []
         self._uels: list[str] | None = None
@@ -218,7 +219,11 @@ class ModelInstance:
         self._gmo = new_gmoHandle_tp()
         ret = gmoCreateD(self._gmo, container.system_directory, GMS_SSSIZE)
         if not ret[0]:
+            gevFree(self._gev)
             raise GamspyException(ret[1])
+
+        # Failed instantiation should not leak handles.
+        weakref.finalize(self, self.cleanup, self._gmo, self._gev)
 
         self.modifiers = self._create_modifiers()
         self.instantiate(model, freeze_options, hibernate=hibernate)
@@ -235,8 +240,6 @@ class ModelInstance:
             "Solver Time",
         ]
         self.summary = pd.DataFrame(index=range(1), columns=HEADER)
-
-        weakref.finalize(self, self.cleanup, self._gmo, self._gev)
 
     @staticmethod
     def cleanup(gmo, gev) -> None:
@@ -340,7 +343,56 @@ class ModelInstance:
         self.sync_db._check_for_gmd_error(rc, self.workspace)
 
         self._solution_symbols = get_variable_equation_names(self.sync_db.gmd)
+        self._validate_reserved_suffix()
         self._create_companion_variables()
+
+    def _validate_companion_names(self) -> None:
+        clashes = []
+        for symbol in self.modifiables:
+            if not isinstance(symbol, gp.Parameter):
+                continue
+
+            name = symbol.name + "_var"
+            if (
+                name in self.container._data
+                and name not in self.container._frozen_companions
+            ):
+                clashes.append(f"`{name}` (companion of `{symbol.name}`)")
+
+        if clashes:
+            raise ValidationError(
+                f"A frozen solve of model `{self.model.name}` creates a variable for each"
+                " of its modifiable parameters, and the container already has a symbol"
+                f" under that name: {', '.join(clashes)}. One symbol of each pair must be"
+                " renamed to freeze the model."
+            )
+
+    def _validate_reserved_suffix(self) -> None:
+        """
+        A model instance keeps a modifiable parameter's value in a fixed variable named
+        <parameter>_var. GAMS treats every variable of the model instance with that
+        suffix as such a companion, hence it fixes the ones that do not belong to a
+        modifiable parameter to zero instead of solving for them.
+        """
+        companions = {
+            symbol.name.casefold() + "_var"
+            for symbol in self.modifiables
+            if isinstance(symbol, gp.Parameter)
+        }
+
+        reserved = [
+            name
+            for name in self._solution_symbols
+            if name.casefold().endswith("_var")
+            and name.casefold() not in companions
+            and isinstance(self.container._data.get(name), gp.Variable)
+        ]
+
+        if reserved:
+            raise ValidationError(
+                f"Variable name(s) {reserved} of model `{self.model.name}` end with `_var`"
+                " which is a suffix reserved by the frozen solve. They must be renamed to freeze the model."
+            )
 
     def _create_companion_variables(self) -> None:
         """
@@ -358,6 +410,7 @@ class ModelInstance:
                 continue
 
             _ = gp.Variable(self.container, name, domain=symbol.domain)
+            self.container._frozen_companions.add(name)
 
     def solve(
         self,
