@@ -313,6 +313,7 @@ def test_model_attr_options_reset_across_solves(transport):
 
 
 @pytest.mark.unit
+@pytest.mark.requires_solvers("minos")
 def test_iteration_limit_not_sticky():
     m = Container()
 
@@ -1069,6 +1070,7 @@ def test_extra_options():
 
 
 @pytest.mark.unit
+@pytest.mark.requires_solvers("highs")
 def test_solver_options_highs(transport, tmp_path):
     m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(

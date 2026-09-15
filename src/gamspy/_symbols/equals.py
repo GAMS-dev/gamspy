@@ -16,31 +16,29 @@ if typing.TYPE_CHECKING:
     ComparableSymbolType: TypeAlias = Set | Alias | Parameter | Variable | Equation
 
 
-def _validate_symbols(
-    symbol: SymbolType,
-    other: SymbolType,
-) -> SymbolType:
+def _resolve_other(other: SymbolType) -> SymbolType:
+    """Reject non-symbols; an Alias compares as the symbol it aliases."""
     from gamspy._symbols import Alias
     from gamspy._symbols.base import BaseSymbol
 
     if not isinstance(other, BaseSymbol):
         raise TypeError("Argument 'other' must be a GAMS Symbol object")
 
-    if isinstance(other, Alias):
-        other = other.alias_with
+    return other.alias_with if isinstance(other, Alias) else other
 
+
+def _assert_same_kind(symbol: SymbolType, other: SymbolType) -> None:
+    """Symbols of a different kind are comparable, they are simply never equal."""
     if not isinstance(symbol, type(other)):
-        raise TypeError(
+        raise ValidationError(
             f"Symbol are not of the same type (`{type(symbol)}` != `{type(other)}`)"
         )
 
     # test for equal variable and equation types
     if getattr(symbol, "type", None) != getattr(other, "type", None):
-        raise TypeError(
+        raise ValidationError(
             f"Symbol types do not match (`{getattr(symbol, 'type', None)}` != `{getattr(other, 'type', None)}`)"
         )
-
-    return other
 
 
 def _assert_symbol_attributes(
@@ -228,14 +226,16 @@ def equals_set(
     check_element_text: bool,
     check_meta_data: bool,
 ) -> bool:
+    if not isinstance(check_element_text, bool):
+        raise TypeError("Argument 'check_element_text' must be type bool")
+
+    other = cast("Set | Alias", _resolve_other(other))
+
     try:
-        other = cast("Set | Alias", _validate_symbols(symbol, other))
+        _assert_same_kind(symbol, other)
 
         if symbol.is_singleton != other.is_singleton:
             raise ValidationError("Symbols do not have matching 'is_singleton' state")
-
-        if not isinstance(check_element_text, bool):
-            raise TypeError("Argument 'check_element_text' must be type bool")
 
         _assert_symbol_attributes(symbol, other, check_meta_data)
         merged = _merge_records(symbol, other)
@@ -268,7 +268,7 @@ def equals_set(
                     )
 
         return True
-    except Exception:
+    except ValidationError:
         return False
 
 
@@ -294,20 +294,23 @@ def equals_parameter(
     rtol = 0.0 if rtol is None else rtol
     atol = 0.0 if atol is None else atol
     columns = symbol._attributes
+    other = cast("Parameter", _resolve_other(other))
 
     try:
-        other = cast("Parameter", _validate_symbols(symbol, other))
+        _assert_same_kind(symbol, other)
         _assert_symbol_attributes(symbol, other, check_meta_data)
 
         if symbol.dimension == 0:
             _assert_scalar_values(symbol, other, columns, rtol, atol)
         else:
             merged = _merge_records(symbol, other)
-            _assert_symbol_domains(symbol, other, merged)
-            _assert_symbol_values(symbol, merged, columns, rtol, atol)
+
+            if not merged.empty:
+                _assert_symbol_domains(symbol, other, merged)
+                _assert_symbol_values(symbol, merged, columns, rtol, atol)
 
         return True
-    except Exception:
+    except ValidationError:
         return False
 
 
@@ -322,8 +325,7 @@ def equals_variable(
     if not isinstance(columns, (str, list, type(None))):
         raise TypeError("Argument 'columns' must be type str, list or NoneType")
 
-    if symbol.records is None and other.records is None:
-        return True
+    other = cast("Variable | Equation", _resolve_other(other))
 
     if isinstance(columns, str):
         columns = [columns]
@@ -352,18 +354,20 @@ def equals_variable(
     atol = 0.0 if atol is None else atol
 
     try:
-        other = cast("Variable | Equation", _validate_symbols(symbol, other))
+        _assert_same_kind(symbol, other)
         _assert_symbol_attributes(symbol, other, check_meta_data)
 
         if symbol.dimension == 0:
             _assert_scalar_values(symbol, other, columns, rtol, atol)
         else:
             merged = _merge_records(symbol, other)
-            _assert_symbol_domains(symbol, other, merged)
-            _assert_symbol_values(symbol, merged, columns, rtol, atol)
+
+            if not merged.empty:
+                _assert_symbol_domains(symbol, other, merged)
+                _assert_symbol_values(symbol, merged, columns, rtol, atol)
 
         return True
-    except Exception:
+    except ValidationError:
         return False
 
 

@@ -12,6 +12,8 @@ def pytest_collection_modifyitems(items: list[Function]) -> None:
     - "engine: engine tests"
     - "neos: neos tests"
     - "model_library: run all model library"
+    - "requires_license: tests that require license"
+    - "requires_solvers: tests that require specific solvers to be installed"
 
     We want to run the unit tests first and model_library tests last.
     """

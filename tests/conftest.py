@@ -1,11 +1,42 @@
 from __future__ import annotations
 
+import functools
 from typing import Any, NamedTuple
 
 import pytest
 
 import gamspy as gp
+import gamspy.utils as utils
 from gamspy import Container, _communication
+
+
+@functools.cache
+def installed_solvers() -> frozenset[str]:
+    return frozenset(utils.getInstalledSolvers(utils._get_gamspy_base_directory()))
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line(
+        "markers",
+        "requires_solvers(*names): skip unless every named solver is installed.",
+    )
+
+
+def pytest_runtest_setup(item: pytest.Item) -> None:
+    SOLVER_ALIASES = {"CONOPT": "CONOPT4"}
+    required = {
+        SOLVER_ALIASES.get(name.upper(), name.upper())
+        for marker in item.iter_markers("requires_solvers")
+        for name in marker.args
+    }
+
+    missing = sorted(required - installed_solvers())
+    if missing:
+        pytest.skip(
+            "requires solver(s) that are not installed: "
+            f"{', '.join(missing)}. Install with `gamspy install solver "
+            f"{' '.join(solver.lower() for solver in missing)}`."
+        )
 
 
 class TransportData(NamedTuple):

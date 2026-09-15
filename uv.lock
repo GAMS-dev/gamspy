@@ -1145,7 +1145,7 @@ wheels = [
 
 [[package]]
 name = "gamspy"
-version = "1.27.0"
+version = "1.28.0"
 source = { editable = "." }
 dependencies = [
     { name = "gamsapi" },
@@ -1215,8 +1215,8 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "gamsapi", specifier = ">=54.3.1,<55.0.0" },
-    { name = "gamspy-base", specifier = ">=54.3.1,<55.0.0" },
+    { name = "gamsapi", specifier = ">=54.4.0,<55.0.0" },
+    { name = "gamspy-base", specifier = ">=54.4.0,<55.0.0" },
     { name = "graphviz", marker = "extra == 'graph'", specifier = ">=0.20" },
     { name = "pandas", specifier = ">=2.2.2,<3.1" },
     { name = "pydantic", specifier = ">=2.0" },

@@ -1073,3 +1073,65 @@ def test_failed_declaration_restores_a_disabled_miro_protect(container):
         Parameter(container, "p", domain=i, records=object())
 
     assert container._options.miro_protect is False
+
+
+def test_equals_rejects_non_symbols(container):
+    p = Parameter(container, "p", domain=["*"], records=[("a", 1.0)])
+    i = Set(container, "i", records=["a"])
+
+    for other in (42, "a", None, p.records):
+        with pytest.raises(TypeError, match="must be a GAMS Symbol object"):
+            p.equals(other)
+
+    with pytest.raises(TypeError, match="'check_element_text' must be type bool"):
+        i.equals(i, check_element_text="yes")
+
+
+def test_equals_across_symbol_kinds(container):
+    i = Set(container, "i", records=["a"])
+    p = Parameter(container, "p", domain=[i], records=[("a", 1.0)])
+
+    # comparable, but never equal
+    assert not p.equals(i)
+
+    v_free = Variable(container, "v_free", domain=[i], type="free")
+    v_positive = Variable(container, "v_positive", domain=[i], type="positive")
+    assert not v_free.equals(v_positive, check_meta_data=False)
+
+
+def test_equals_without_records(container):
+    i = Set(container, "i", records=["a"])
+    j = Set(container, "j", records=["x", "y"])
+
+    # identical but record-less symbols are equal
+    assert Parameter(container, "p1", domain=[i]).equals(
+        Parameter(container, "p2", domain=[i]), check_meta_data=False
+    )
+    assert Variable(container, "v1", domain=[i]).equals(
+        Variable(container, "v2", domain=[i]), check_meta_data=False
+    )
+
+    # differing record-less symbols are not
+    assert not Variable(container, "a", domain=[i], type="free").equals(
+        Variable(container, "b", domain=[i, j], type="positive")
+    )
+    assert not Parameter(container, "q1", domain=[i]).equals(
+        Parameter(container, "q2", domain=[i, j]), check_meta_data=False
+    )
+
+
+def test_equals_does_not_swallow_unexpected_errors(container, monkeypatch):
+    """Only a ValidationError means 'not equal'; anything else is a bug."""
+    import gamspy._symbols.equals as equals_module
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("something went wrong inside equals")
+
+    monkeypatch.setattr(equals_module, "_assert_symbol_attributes", boom)
+
+    i = Set(container, "i", records=["a"])
+    p = Parameter(container, "p", domain=[i], records=[("a", 1.0)])
+    q = Parameter(container, "q", domain=[i], records=[("a", 1.0)])
+
+    with pytest.raises(RuntimeError, match="something went wrong inside equals"):
+        p.equals(q, check_meta_data=False)

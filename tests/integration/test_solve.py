@@ -1086,6 +1086,27 @@ def test_interrupt():
     assert xdice.solve_status == SolveStatus.ResourceInterrupt
 
 
+@pytest.mark.requires_solvers(
+    "baron",
+    "cbc",
+    "conopt",
+    "conopt4",
+    "convert",
+    "copt",
+    "cplex",
+    "examiner",
+    "examiner2",
+    "gurobi",
+    "highs",
+    "ipopt",
+    "kestrel",
+    "knitro",
+    "minos",
+    "mosek",
+    "snopt",
+    "soplex",
+    "xpress",
+)
 def test_solver_options(transport, set_options):
     m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
@@ -1853,6 +1874,7 @@ def test_emp(set_options):
         _ = Model(m, name="nash", equations=[defobj, cons], problem="emp")
 
 
+@pytest.mark.requires_solvers("reshop")
 def test_subsolver_options(transport, tmp_path, set_options):
     m = transport.container
     t = Set(m, name="m", records=[0, 1])

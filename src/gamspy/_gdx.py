@@ -78,38 +78,40 @@ def open_gdx(
         raise GdxException(f"Could not properly load GDX DLL: {msg}")
 
     try:
-        if mode == "r":
-            if load_uels:
-                is_successful, error_code = gdx.gdxOpenRead(gdx_handle, file_path)
-            else:
-                is_successful, error_code = gdx.gdxOpenReadEx(
-                    gdx_handle, file_path, SKIP_UEL_TABLE
-                )
-
-            if is_successful != 1:
-                error_str: str = gdx.gdxErrorStr(gdx_handle, error_code)
-                raise GdxException(
-                    f"Could not open GDX file `{file_path}` for reading: {error_str}"
-                )
-            yield gdx_handle
-        elif mode == "w":
-            if not compress:
-                if not gdx.gdxOpenWrite(gdx_handle, file_path, "GAMSPy")[0]:
-                    raise GdxException(f"Error opening GDX `{file_path}` for writing.")
-            else:
-                if not gdx.gdxOpenWriteEx(gdx_handle, file_path, "GAMSPy", 1)[0]:
-                    raise GdxException(
-                        f"Error opening GDX (w/compression) `{file_path}` for writing."
+        try:
+            if mode == "r":
+                if load_uels:
+                    is_successful, error_code = gdx.gdxOpenRead(gdx_handle, file_path)
+                else:
+                    is_successful, error_code = gdx.gdxOpenReadEx(
+                        gdx_handle, file_path, SKIP_UEL_TABLE
                     )
 
-            yield gdx_handle
-    except Exception as e:
-        gdx.gdxClose(gdx_handle)
-        gdx.gdxFree(gdx_handle)
-        raise GdxException(
-            f"There was a problem while opening the gdx file: {e}"
-        ) from e
-    else:
+                if is_successful != 1:
+                    error_str: str = gdx.gdxErrorStr(gdx_handle, error_code)
+                    raise GdxException(
+                        f"Could not open GDX file `{file_path}` for reading: {error_str}"
+                    )
+            elif mode == "w":
+                if not compress:
+                    if not gdx.gdxOpenWrite(gdx_handle, file_path, "GAMSPy")[0]:
+                        raise GdxException(
+                            f"Error opening GDX `{file_path}` for writing."
+                        )
+                else:
+                    if not gdx.gdxOpenWriteEx(gdx_handle, file_path, "GAMSPy", 1)[0]:
+                        raise GdxException(
+                            f"Error opening GDX (w/compression) `{file_path}` for writing."
+                        )
+            else:
+                raise ValueError(f"Invalid mode `{mode}`. Valid modes are 'r' and 'w'.")
+        except Exception as e:
+            raise GdxException(
+                f"There was a problem while opening the gdx file: {e}"
+            ) from e
+
+        yield gdx_handle
+    finally:
         gdx.gdxClose(gdx_handle)
         gdx.gdxFree(gdx_handle)
 
