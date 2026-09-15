@@ -1,0 +1,1 @@
+Setting records, converting them to and from numpy, and looking up UELs are all faster now, especially for symbols with large domains.

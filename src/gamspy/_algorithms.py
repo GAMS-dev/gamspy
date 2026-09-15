@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 import pandas as pd
 
+from gamspy._categoricals import assemble_categorical
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -30,28 +32,20 @@ def get_keys_and_values(
     if dim == 0:
         arrkeys = np.array([[]], dtype=dtype_keys)
     else:
-        arrkeys = np.empty(dim * nrecs, dtype=dtype_keys)
+        arrkeys = np.empty((nrecs, dim), dtype=dtype_keys, order="F")
         for i in range(dim):
-            col_data = records.iloc[:, i]
-            col_data = col_data.cat.codes
-
-            idx_start, idx_end = i * nrecs, (i + 1) * nrecs
-            arrkeys[idx_start:idx_end] = col_data
-
-        arrkeys = arrkeys.reshape((nrecs, dim), order="F")
+            column = cast("pd.Categorical", records.iloc[:, i].array)
+            arrkeys[:, i] = column.codes
 
     if dim == 0:
-        arrvals = records.to_numpy()
+        arrvals = records.to_numpy(dtype=np.float64)
     elif isinstance(symobj, (Set, Parameter)):
-        arrvals = records.iloc[:, -1].to_numpy().reshape((-1, 1))
+        arrvals = np.asarray(records.iloc[:, -1].array).reshape((-1, 1))
     else:
         num_attr = len(symobj._attributes)
-        arrvals = np.empty(num_attr * nrecs, dtype=np.float64)
+        arrvals = np.empty((nrecs, num_attr), dtype=np.float64, order="F")
         for i in range(num_attr):
-            idx_start, idx_end = i * nrecs, (i + 1) * nrecs
-            arrvals[idx_start:idx_end] = records.iloc[:, i + dim].to_numpy()
-
-        arrvals = arrvals.reshape((nrecs, num_attr), order="F")
+            arrvals[:, i] = records.iloc[:, i + dim].array
 
     return arrkeys, arrvals
 
@@ -75,11 +69,8 @@ def convert_to_categoricals_cat(
             # `unique_uels` come straight from GMD and are unique by
             # construction, so skip pandas' redundant uniqueness/bounds checks
             # (`is_unique` on large UEL lists dominates the read-back otherwise).
-            dtype = pd.CategoricalDtype._from_fastpath(
-                categories=unique_uels[i], ordered=True
-            )
-            data[col_idx] = pd.Categorical.from_codes(
-                codes=arrkeys[:, i], dtype=dtype, validate=False
+            data[col_idx] = assemble_categorical(
+                arrkeys[:, i], unique_uels[i], ordered=True, fastpath=True
             )
             col_idx += 1
 
@@ -92,15 +83,20 @@ def convert_to_categoricals_cat(
     return pd.DataFrame(data, copy=False)
 
 
-def generate_unique_labels(labels: list | str) -> list[str]:
-    """Generate unique labels from a list of labels."""
+def generate_unique_labels(
+    labels: list | str, reserved: Sequence[str] | None = None
+) -> list[str]:
+    """Generate unique labels from a list of labels. `reserved` names (e.g.
+    a symbol's attribute columns) are treated as already taken, so a label
+    colliding with one of them gets suffixed too."""
     if not isinstance(labels, list):
         labels = [labels]
 
     labels = [label if label != "*" else "uni" for label in labels]
 
-    # Append suffixes if the list is not entirely unique
-    if len(labels) != len(set(labels)):
+    # Append suffixes if the list is not entirely unique, or collides with a reserved name.
+    reserved_set = set(reserved) if reserved else set()
+    if len(labels) != len(set(labels)) or not reserved_set.isdisjoint(labels):
         labels = [f"{label}_{n}" for n, label in enumerate(labels)]
 
     return labels
@@ -123,47 +119,6 @@ def cartesian_product(*arrays: np.ndarray) -> list[np.ndarray]:
         columns.append(np.tile(np.repeat(np.asarray(a), inner), outer))
 
     return columns
-
-
-def used_category_positions(
-    codes: np.ndarray, num_categories: int
-) -> tuple[np.ndarray, bool]:
-    if codes.size == 0:
-        return np.empty(0, dtype=np.intp), False
-
-    has_na = bool(codes.min() < 0)
-    present = np.zeros(num_categories, dtype=bool)
-    if has_na:
-        present[codes[codes >= 0]] = True
-    else:
-        present[codes] = True
-
-    return np.flatnonzero(present), has_na
-
-
-def drop_unused_categories(column: pd.Series) -> pd.Series:
-    # `.array.codes` reads the Categorical backing array directly
-    codes = cast("pd.Categorical", column.array).codes
-    categories = column.cat.categories
-
-    used, has_na = used_category_positions(codes, categories.size)
-
-    if used.size == categories.size:
-        return column
-
-    remap = np.full(categories.size, -1, dtype=codes.dtype)
-    remap[used] = np.arange(used.size, dtype=codes.dtype)
-    new_codes = remap[codes]
-    if has_na:
-        new_codes[codes < 0] = -1
-
-    dtype = pd.CategoricalDtype._from_fastpath(categories[used], ordered=True)
-
-    return pd.Series(
-        pd.Categorical.from_codes(new_codes, dtype=dtype, validate=False),
-        index=column.index,
-        name=column.name,
-    )
 
 
 def choice_no_replace(

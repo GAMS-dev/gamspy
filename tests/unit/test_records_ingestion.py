@@ -605,3 +605,60 @@ def test_varequ_from_dict_of_columns_attribute_first(container):
 
     assert v.records["i"].tolist() == ["a", "b"]
     assert v.records["level"].tolist() == [1.0, 2.0]
+
+
+def test_parameter_domain_named_like_its_attribute_gets_unique_column(container):
+    value = Set(container, "value", records=["a", "b"])
+    p = Parameter(container, "p", domain=[value], records=[("a", 1.0)])
+
+    assert len(set(p.records.columns)) == len(p.records.columns)
+    assert p.toList() == [("a", 1.0)]
+
+
+def test_variable_domain_named_like_one_of_its_attributes_gets_unique_column(
+    container,
+):
+    level = Set(container, "level", records=["x", "y"])
+    v = Variable(container, "v", domain=[level])
+    v.generateRecords(seed=0)
+
+    assert len(set(v.records.columns)) == len(v.records.columns)
+    assert v.records.columns.tolist()[-1] == "scale"
+    assert v.records[v.records.columns[0]].tolist() == ["x", "y"]
+
+
+def test_equation_domain_named_like_one_of_its_attributes_gets_unique_column(
+    container,
+):
+    level = Set(container, "level", records=["x", "y"])
+    e = Equation(container, "e", domain=[level])
+    e.generateRecords(seed=0)
+
+    assert len(set(e.records.columns)) == len(e.records.columns)
+    assert e.records.columns.tolist()[-1] == "scale"
+    assert e.records[e.records.columns[0]].tolist() == ["x", "y"]
+
+
+def test_set_domain_named_like_its_attribute_gets_unique_column(container):
+    element_text = Set(container, "element_text", records=["a", "b"])
+    s = Set(container, "s", domain=[element_text], records=["a"])
+
+    assert len(set(s.records.columns)) == len(s.records.columns)
+    assert s.toList() == ["a"]
+
+
+def test_multiple_domains_colliding_with_each_other_and_attribute_all_unique(
+    container,
+):
+    value = Set(container, "value", records=["a", "b"])
+    p = Parameter(container, "p", domain=[value, value], records=[("a", "b", 5.0)])
+
+    assert len(set(p.records.columns)) == len(p.records.columns)
+    assert p.toList() == [("a", "b", 5.0)]
+
+
+def test_container_getUELs_with_colliding_domain_name(container):
+    value = Set(container, "value", records=["a", "b"])
+    Parameter(container, "p", domain=[value], records=[("a", 1.0), ("b", 2.0)])
+
+    assert container._getUELs() == ["a", "b"]

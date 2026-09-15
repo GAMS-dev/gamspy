@@ -8,6 +8,12 @@ import pandas as pd
 from pandas.api.types import infer_dtype, is_bool_dtype
 
 from gamspy._algorithms import cartesian_product, generate_unique_labels
+from gamspy._categoricals import (
+    apply_remap,
+    assemble_categorical,
+    codes_and_categories,
+    rstrip_categories,
+)
 from gamspy._internals import EPS, NA, UNDEF, DomainStatus
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.utils import (
@@ -57,50 +63,34 @@ class BaseIngestor:
             col = records.iloc[:, i]
 
             if isinstance(col.dtype, pd.CategoricalDtype):
-                # Already categorical (e.g. coming from GAMS Transfer): operate on
-                # the category list.
-                old_cats = col.cat.categories.tolist()
-                new_cats = list(dict.fromkeys(str(x).rstrip() for x in old_cats))
+                codes, categories = codes_and_categories(col.array)
+                remap, new_categories = rstrip_categories(categories)
 
-                if len(old_cats) != len(new_cats):
-                    # Whitespace stripping collapsed categories: re-encode the column.
-                    records.isetitem(
-                        i,
-                        col.astype(str)
-                        .str.rstrip()
-                        .astype(
-                            pd.CategoricalDtype(
-                                categories=new_cats, ordered=col.cat.ordered
-                            )
-                        ),
-                    )
-                elif new_cats != old_cats:
-                    records.isetitem(i, col.cat.rename_categories(new_cats))
-                # else: categories unchanged, nothing to do.
+                # categories unchanged, nothing to do.
+                if remap is None:
+                    continue
+
+                records.isetitem(
+                    i,
+                    assemble_categorical(
+                        apply_remap(codes, remap),
+                        new_categories,
+                        ordered=col.cat.ordered,
+                        fastpath=True,
+                    ),
+                )
             else:
-                # Single factorize pass yields codes + appearance-ordered uniques,
-                # matching the previous `col.unique()` ordering semantics.
                 codes, uniques = pd.factorize(col, sort=False)
-                stripped = [str(x).rstrip() for x in uniques]
-                new_cats = list(dict.fromkeys(stripped))
+                uniques = np.asarray(uniques)
+                remap, new_categories = rstrip_categories(uniques)
 
-                if len(new_cats) == len(stripped):
-                    # No collisions after stripping: the codes are still valid
-                    # skip pandas validations.
-                    dtype = pd.CategoricalDtype._from_fastpath(
-                        categories=pd.Index(stripped), ordered=True
-                    )
-                    records.isetitem(
-                        i,
-                        pd.Categorical.from_codes(codes, dtype=dtype, validate=False),
-                    )
-                else:
-                    records.isetitem(
-                        i,
-                        col.astype(str)
-                        .str.rstrip()
-                        .astype(pd.CategoricalDtype(categories=new_cats, ordered=True)),
-                    )
+                if remap is not None:
+                    codes, uniques = apply_remap(codes, remap), new_categories
+
+                records.isetitem(
+                    i,
+                    assemble_categorical(codes, uniques, ordered=True, fastpath=True),
+                )
 
         return records
 
@@ -205,7 +195,10 @@ class ParameterIngestor(BaseIngestor):
             if col_labels is not None and not self.symbol._is_miro_symbol
             else self.symbol.domain_names
         )
-        records.columns = generate_unique_labels(labels) + self.symbol._attributes
+        records.columns = (
+            generate_unique_labels(labels, reserved=self.symbol._attributes)
+            + self.symbol._attributes
+        )
         self.symbol.records = records
 
     def _from_int_float(self, records: int | float) -> None:
@@ -274,7 +267,10 @@ class ParameterIngestor(BaseIngestor):
         df["value"] = records.reshape(-1, 1)
         df = self._filter_zero_records(df)
         df.columns = (
-            generate_unique_labels(self.symbol.domain_names) + self.symbol._attributes
+            generate_unique_labels(
+                self.symbol.domain_names, reserved=self.symbol._attributes
+            )
+            + self.symbol._attributes
         )
         self.symbol.records = df
 
@@ -384,7 +380,10 @@ class SetIngestor(BaseIngestor):
             if col_labels is not None and not self.symbol._is_miro_symbol
             else self.symbol.domain_names
         )
-        records.columns = generate_unique_labels(labels) + self.symbol._attributes
+        records.columns = (
+            generate_unique_labels(labels, reserved=self.symbol._attributes)
+            + self.symbol._attributes
+        )
 
         records.isetitem(-1, records.iloc[:, -1].astype(object))
         records.iloc[records.iloc[:, -1].isna(), -1] = ""
@@ -460,7 +459,9 @@ class SetIngestor(BaseIngestor):
                 records = records.assign(element_text="")
 
             records.columns = (
-                generate_unique_labels(self.symbol.domain_names)
+                generate_unique_labels(
+                    self.symbol.domain_names, reserved=self.symbol._attributes
+                )
                 + self.symbol._attributes
             )
             self._from_dataframe(records, False)
@@ -601,7 +602,10 @@ class VarEquIngestor(BaseIngestor):
             [df.iloc[:, : self.symbol.dimension], df[self.symbol._attributes]], axis=1
         )
         df.columns = (
-            generate_unique_labels(self.symbol.domain_names) + self.symbol._attributes
+            generate_unique_labels(
+                self.symbol.domain_names, reserved=self.symbol._attributes
+            )
+            + self.symbol._attributes
         )
         self.symbol.records = df
 
@@ -653,7 +657,10 @@ class VarEquIngestor(BaseIngestor):
             records.isetitem(cols.index(i), records[i].astype(float))
 
         records.columns = (
-            generate_unique_labels(records.columns[: self.symbol.dimension].tolist())
+            generate_unique_labels(
+                records.columns[: self.symbol.dimension].tolist(),
+                reserved=self.symbol._attributes,
+            )
             + self.symbol._attributes
         )
         self.symbol.records = records
@@ -712,7 +719,10 @@ class VarEquIngestor(BaseIngestor):
                 records.isetitem(i, records.iloc[:, i].astype(float))
 
         records.columns = (
-            generate_unique_labels(self.symbol.domain_names) + self.symbol._attributes
+            generate_unique_labels(
+                self.symbol.domain_names, reserved=self.symbol._attributes
+            )
+            + self.symbol._attributes
         )
         self.symbol.records = records
 

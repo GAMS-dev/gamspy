@@ -286,7 +286,10 @@ def get_records(
                 df = convert_to_categoricals_cat(arrkeys, arrvals, unique_uels)
 
                 if df is not None:
-                    df.columns = generate_unique_labels(domain_names) + attributes
+                    df.columns = (
+                        generate_unique_labels(domain_names, reserved=attributes)
+                        + attributes
+                    )
 
                 records_dict[gamspy_name] = df
 

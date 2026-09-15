@@ -7,11 +7,8 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 
-from gamspy._algorithms import (
-    cartesian_product,
-    choice_no_replace,
-    used_category_positions,
-)
+from gamspy._algorithms import cartesian_product, choice_no_replace
+from gamspy._categoricals import used_categories
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -101,15 +98,10 @@ def _get_categories(symobj: Set | Alias | UniverseAlias) -> pd.Index | list[str]
     if not isinstance(column.dtype, CategoricalDtype):
         return symobj._getUELs(ignore_unused=True)
 
-    categories = column.cat.categories
     # `.array.codes` reads the Categorical's own backing array directly --
     # `.cat.codes.to_numpy()` wraps the codes in a brand new `pd.Series`
     # (with its own defensive copy) just to immediately unwrap it again.
-    used, _ = used_category_positions(column.array.codes, categories.size)
-    if used.size == categories.size:
-        return categories
-
-    return categories[used]
+    return used_categories(column.array.codes, column.cat.categories)
 
 
 def _get_categorical_dtype(categories: pd.Index | list[str]) -> CategoricalDtype:
