@@ -12,7 +12,17 @@ import pandas as pd
 
 import gamspy as gp
 import gamspy.utils as utils
-from gamspy._algorithms import drop_unused_categories, generate_unique_labels
+from gamspy._algorithms import generate_unique_labels
+from gamspy._categoricals import (
+    MISSING,
+    assemble_categorical,
+    codes_and_categories,
+    remove_categories,
+    remove_unused_categories,
+    set_categories,
+    union_categories,
+    used_categories,
+)
 from gamspy._internals import (
     GAMS_MAX_INDEX_DIM,
     DataSource,
@@ -566,7 +576,7 @@ class DomainSymbol(BaseSymbol):
             )
 
         # make unique labels if necessary
-        labels = generate_unique_labels(labels)
+        labels = generate_unique_labels(labels, reserved=self._attributes)
 
         # set the domain_labels
         if (
@@ -658,20 +668,6 @@ class DomainSymbol(BaseSymbol):
         uels = self._getUELs(dimension, ignore_unused=ignore_unused)
         return {uel: code for code, uel in enumerate(uels)}
 
-    @staticmethod
-    def _getDimensionUELs(
-        records: pd.DataFrame, dimension: int, ignore_unused: bool
-    ) -> list[str]:
-        column = records.iloc[:, dimension].cat
-        if not ignore_unused:
-            return column.categories.tolist()
-
-        used_codes = np.sort(column.codes.unique())
-        # A record with a missing domain entry carries code -1, which points at
-        # no category at all; indexing with it would wrap around to the last one.
-        used_codes = used_codes[used_codes >= 0]
-        return column.categories.take(used_codes).tolist()
-
     def _getUELs(
         self: Set | Parameter | Variable | Equation,
         dimensions: int | list[int] | None = None,
@@ -716,17 +712,11 @@ class DomainSymbol(BaseSymbol):
                     f"dimension (`{self.dimension}`). (NOTE: symbol 'dimension' is indexed from zero)"
                 )
 
-        if len(dimensions) == 1:
-            return self._getDimensionUELs(records, dimensions[0], ignore_unused)
+        cats_input = [
+            codes_and_categories(records.iloc[:, n].array) for n in dimensions
+        ]
 
-        # Across dimensions the UELs are deduplicated while keeping first-seen order.
-        uels: dict[str, None] = {}
-        for dimension in dimensions:
-            uels.update(
-                dict.fromkeys(self._getDimensionUELs(records, dimension, ignore_unused))
-            )
-
-        return list(uels)
+        return union_categories(cats_input, ignore_unused=ignore_unused).tolist()
 
     def _removeUELs(
         self: Set | Parameter | Variable | Equation,
@@ -751,11 +741,30 @@ class DomainSymbol(BaseSymbol):
                     f"dimension (`{self.dimension}`). (NOTE: symbol 'dimension' is indexed from zero)"
                 )
 
+        # support bare str category removal
+        if isinstance(uels, str):
+            uels = [uels]
+
         if uels is None:
             for n in dimensions:
                 try:
+                    column = cast("pd.Categorical", self.records.iloc[:, n].array)
+                    codes, categories = column.codes, column.categories
+
+                    new_codes, new_categories = remove_unused_categories(
+                        codes, categories
+                    )
+                    if new_codes is codes:  # nothing was unused
+                        continue
+
                     self.records.isetitem(
-                        n, drop_unused_categories(self.records.iloc[:, n])
+                        n,
+                        assemble_categorical(
+                            new_codes,
+                            new_categories,
+                            ordered=bool(column.ordered),
+                            fastpath=True,
+                        ),
                     )
                 except Exception as err:
                     raise GamspyException(
@@ -763,14 +772,32 @@ class DomainSymbol(BaseSymbol):
                         f"dimension `{n}`. Reason: {err}"
                     ) from err
         else:
+            try:
+                # built once here rather than inside `remove_categories` on every dimension
+                removal_set = set(uels)
+            except Exception as err:
+                raise GamspyException(
+                    f"Could not remove unused UELs (categories). Reason: {err}"
+                ) from err
+
             for n in dimensions:
                 try:
+                    column = self.records.iloc[:, n]
+                    intersection = set(column.cat.categories.intersection(removal_set))
+                    if not intersection:
+                        continue
+
+                    codes, categories = codes_and_categories(column.array)
+                    new_codes, new_categories = remove_categories(
+                        codes, categories, intersection
+                    )
                     self.records.isetitem(
                         n,
-                        self.records.iloc[:, n].cat.remove_categories(
-                            self.records.iloc[:, n].cat.categories.intersection(
-                                set(uels)
-                            )
+                        assemble_categorical(
+                            new_codes,
+                            new_categories,
+                            ordered=column.cat.ordered,
+                            fastpath=True,
                         ),
                     )
                 except Exception as err:
@@ -1033,11 +1060,27 @@ class RecordSymbol(DomainSymbol):
     ) -> np.ndarray:
         if self._domain_status is DomainStatus.regular:
             domain = cast("list[Set | Alias]", self.domain)
-            return (
-                records.iloc[:, dimension]
-                .map(domain[dimension]._getUELCodes(0, ignore_unused=True))
-                .to_numpy(dtype=int)
+            domain_records = domain[dimension].records
+            assert domain_records is not None
+            domain_codes, domain_categories = codes_and_categories(
+                domain_records.iloc[:, 0].array
             )
+            new_categories = used_categories(domain_codes, domain_categories)
+
+            codes, categories = codes_and_categories(records.iloc[:, dimension].array)
+            new_codes, _ = set_categories(codes, categories, new_categories)
+
+            # A label that the domain does not carry has no position to map to.
+            if new_codes.size > 0 and new_codes.min() == MISSING:
+                labels = records.iloc[:, dimension].to_numpy()[new_codes == MISSING]
+                raise ValidationError(
+                    f"Symbol `{self.name}` has records whose dimension `{dimension}` "
+                    f"labels are not in its domain `{domain[dimension].name}`: "
+                    f"{pd.unique(labels).tolist()}. A matrix representation cannot be "
+                    "built until the domain violations are resolved."
+                )
+
+            return new_codes.astype(int, copy=False)
 
         return records.iloc[:, dimension].cat.codes.to_numpy(dtype=int)
 

@@ -16,7 +16,7 @@ from gamspy import (
     Variable,
 )
 from gamspy._internals import GAMS_MAX_INDEX_DIM, DomainStatus
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import GamspyException, ValidationError
 
 pytestmark = pytest.mark.unit
 
@@ -154,6 +154,114 @@ def test_assert_valid_records_with_missing_category(container):
 
     with pytest.raises(ValidationError, match="Categories are missing from the data"):
         p._assert_valid_records()
+
+
+def test_remove_uels_then_drop_unused_keeps_missing_row(container):
+    i = Set(container, "i", records=["a", "b", "c", "d"])
+    p = Parameter(
+        container,
+        "p",
+        domain=[i],
+        records=[("a", 1.0), ("b", 2.0), ("c", 3.0), ("d", 4.0)],
+    )
+    p._removeUELs(uels=["c"], dimensions=0)
+    p._removeUELs()  # drop-unused-categories path
+
+    assert p.records["i"].array.codes.tolist() == [0, 1, -1, 2]
+    assert p.records["i"].array.categories.tolist() == ["a", "b", "d"]
+    assert p.records["i"].isna().tolist() == [False, False, True, False]
+
+
+def test_remove_uels_bare_str_removes_the_whole_uel_not_its_characters(container):
+    i = Set(container, "i", records=["a", "b", "c", "abc"])
+    p = Parameter(
+        container,
+        "p",
+        domain=[i],
+        records=[("a", 1.0), ("b", 2.0), ("c", 3.0), ("abc", 4.0)],
+    )
+
+    p._removeUELs(uels="abc", dimensions=0)
+
+    assert p.records["i"].tolist()[:3] == ["a", "b", "c"]
+    assert p.records["i"].isna().tolist() == [False, False, False, True]
+
+
+def test_remove_uels_then_drop_unused_keeps_missing_last_row(container):
+    i = Set(container, "i", records=["a", "b", "c"])
+    p = Parameter(
+        container, "p", domain=[i], records=[("a", 1.0), ("b", 2.0), ("c", 3.0)]
+    )
+    p._removeUELs(uels=["c"], dimensions=0)
+    p._removeUELs()
+
+    assert p.records["i"].array.codes.tolist() == [0, 1, -1]
+    assert p.records["i"].isna().tolist() == [False, False, True]
+
+
+def test_remove_uels_without_records_is_noop(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(container, "p", domain=[i])
+
+    assert p._removeUELs(uels=["a"], dimensions=0) is None
+    assert p.records is None
+
+
+def test_remove_uels_dimension_validations(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(container, "p", domain=[i], records=[("a", 1.0), ("b", 2.0)])
+
+    with pytest.raises(TypeError):
+        p._removeUELs(uels=["a"], dimensions="0")
+
+    with pytest.raises(TypeError):
+        p._removeUELs(uels=["a"], dimensions=[0, "1"])
+
+    with pytest.raises(ValueError):
+        p._removeUELs(uels=["a"], dimensions=1)
+
+
+def test_remove_uels_across_multiple_dimensions_drop_unused(container):
+    i = Set(container, "i", records=["a", "b", "c"])
+    j = Set(container, "j", records=["x", "y", "z"])
+    p = Parameter(
+        container,
+        "p",
+        domain=[i, j],
+        records=[("a", "x", 1.0), ("b", "y", 2.0)],
+    )
+
+    p._removeUELs()  # both dimensions drop their unused categories
+
+    assert p.records["i"].array.categories.tolist() == ["a", "b"]
+    assert p.records["j"].array.categories.tolist() == ["x", "y"]
+
+
+def test_remove_uels_across_multiple_dimensions_with_uels_list(container):
+    i = Set(container, "i", records=["a", "b"])
+    j = Set(container, "j", records=["x", "y"])
+    p = Parameter(
+        container,
+        "p",
+        domain=[i, j],
+        records=[("a", "x", 1.0), ("b", "y", 2.0)],
+    )
+
+    p._removeUELs(uels=["a", "x"])  # applied to both dimensions
+
+    assert p.records["i"].array.categories.tolist() == ["b"]
+    assert p.records["j"].array.categories.tolist() == ["y"]
+    assert p.records["i"].isna().tolist() == [True, False]
+    assert p.records["j"].isna().tolist() == [True, False]
+
+
+def test_remove_uels_wraps_errors_in_gamspy_exception(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(container, "p", domain=[i], records=[("a", 1.0), ("b", 2.0)])
+
+    # A non-iterable uels will blow up
+    with pytest.raises(GamspyException, match="Could not remove unused UELs"):
+        p._removeUELs(uels=5, dimensions=0)
 
 
 @pytest.fixture
@@ -637,6 +745,54 @@ def test_get_uels_validations(container):
 
     with pytest.raises(ValueError):
         p._getUELs(1)
+
+
+def test_get_uels_scalar_symbol_returns_empty(container):
+    p = Parameter(container, "p", records=5.0)
+
+    assert p._getUELs() == []
+
+
+def test_get_uels_without_records_returns_empty(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(container, "p", domain=[i])
+
+    assert p._getUELs() == []
+
+
+def test_get_uels_reads_dimensions_positionally_not_by_label(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(container, "p", domain=[i, i], records=[("a", "b", 1.0)])
+    records = p.records.copy()
+    records.columns = ["i", "i", "value"]
+    p.records = records
+
+    assert p._getUELs() == ["a", "b"]
+    assert p._getUELs(0) == ["a"]
+    assert p._getUELs(1) == ["b"]
+    assert container._getUELs(symbols=["p"]) == ["a", "b"]
+
+
+def test_matrix_representation_rejects_labels_outside_the_domain(container):
+    i = Set(container, "i", records=["a", "b", "c"])
+    p = Parameter(container, "p", domain=[i])
+    p.records = pd.DataFrame(
+        {"i": pd.Categorical(["a", "zzz"]), "value": [1.0, 2.0]},
+    )
+
+    with pytest.raises(ValidationError, match="are not in its domain"):
+        p.toDense()
+
+
+def test_matrix_representation_rejects_missing_domain_entries(container):
+    i = Set(container, "i", records=["a", "b"])
+    p = Parameter(container, "p", domain=[i])
+    p.records = pd.DataFrame(
+        {"i": pd.Categorical(["a", None]), "value": [1.0, 2.0]},
+    )
+
+    with pytest.raises(ValidationError, match="are not in its domain"):
+        p.toDense()
 
 
 def test_get_uel_codes(container):

@@ -27,6 +27,7 @@ import gamspy._miro as miro
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
+from gamspy._categoricals import codes_and_categories, union_categories
 from gamspy._communication import close_connection, get_connection, open_connection
 from gamspy._config import get_option
 from gamspy._extrinsic import ExtrinsicLibrary
@@ -479,12 +480,25 @@ class Container:
             else self.listSymbols()
         )
 
-        uni = {}
+        # Gather each domain column's raw Categorical and union them all in a single pass
+        cats_input = []
         for symobj in self.getSymbols(symbols):
-            if not isinstance(symobj, AnyContainerAlias) and symobj.records is not None:
-                uni.update(dict.fromkeys(symobj._getUELs(ignore_unused=ignore_unused)))
+            if isinstance(symobj, AnyContainerAlias) or symobj.records is None:
+                continue
 
-        return list(uni.keys())
+            if symobj.dimension == 0:
+                continue
+
+            records = symobj.records
+            cats_input.extend(
+                codes_and_categories(records.iloc[:, n].array)
+                for n in range(symobj.dimension)
+            )
+
+        if not cats_input:
+            return []
+
+        return union_categories(cats_input, ignore_unused=ignore_unused).tolist()
 
     def _assert_valid_records(self, symbols=None):
         symbols = self._resolve_symbols(symbols)

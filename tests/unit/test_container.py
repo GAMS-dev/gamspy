@@ -2767,3 +2767,66 @@ def test_python_name_retrieval_across_construction_paths(set_options):
         assert added_parameter.name == "added_parameter"
         assert direct_alias.name == "direct_alias"
         assert my_model.name == "my_model"
+
+
+@pytest.mark.unit
+def test_container_getUELs_respects_symbols_filter():
+    m = gp.Container()
+    gp.Set(m, "i", records=["a", "b"])
+    gp.Set(m, "j", records=["c", "d"])
+
+    assert m._getUELs(symbols=["i"]) == ["a", "b"]
+    assert m._getUELs(symbols=["j"]) == ["c", "d"]
+    assert m._getUELs() == ["a", "b", "c", "d"]
+
+
+@pytest.mark.unit
+def test_container_getUELs_skips_aliases():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    gp.Alias(m, "i_alias", alias_with=i)
+
+    assert m._getUELs() == ["a", "b"]
+
+
+@pytest.mark.unit
+def test_container_getUELs_skips_scalar_symbols():
+    m = gp.Container()
+    gp.Parameter(m, "s", records=5.0)
+    i = gp.Set(m, "i", records=["a", "b"])
+    gp.Parameter(m, "p", domain=[i], records=[("a", 1.0)])
+
+    assert m._getUELs() == ["a", "b"]
+
+
+@pytest.mark.unit
+def test_container_getUELs_skips_symbols_without_records():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    gp.Parameter(m, "empty", domain=[i])
+
+    assert m._getUELs() == ["a", "b"]
+
+
+@pytest.mark.unit
+def test_container_getUELs_ignore_unused():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b", "c"])
+    p = gp.Parameter(m, "p", domain=[i])
+    p.records = pd.DataFrame(
+        {
+            "i": pd.Categorical(["a"], categories=["a", "b", "c"], ordered=True),
+            "value": [1.0],
+        }
+    )
+
+    assert m._getUELs(symbols=["p"]) == ["a", "b", "c"]
+    assert m._getUELs(symbols=["p"], ignore_unused=True) == ["a"]
+
+
+@pytest.mark.unit
+def test_container_getUELs_no_symbols_with_records_returns_empty():
+    m = gp.Container()
+    gp.Set(m, "i")
+
+    assert m._getUELs() == []
