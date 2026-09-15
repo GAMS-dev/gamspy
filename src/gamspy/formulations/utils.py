@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
@@ -10,6 +10,9 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from gamspy._types import SymbolWithRecordsType
+    from gamspy._universe import Universe
 
 
 def _encode_infinity(x: np.ndarray) -> np.ndarray:
@@ -60,10 +63,10 @@ def _check_tuple_int(
     if not (isinstance(value[0], int) and cmp(value[0])):
         raise ValidationError(f"{name} must be greater than {text}0")
 
-    if not (isinstance(value[1], int) and cmp(value[1])):  # type: ignore
+    if not (isinstance(value[1], int) and cmp(value[1])):
         raise ValidationError(f"{name} must be a greater than {text}0")
 
-    return value  # type: ignore
+    return value
 
 
 def _check_padding(value: int | tuple[int, int]) -> tuple[int, int, int, int]:
@@ -163,9 +166,22 @@ def _calc_hw(
     return h_out, w_out
 
 
+def _get_domain(symbol: SymbolWithRecordsType) -> list[gp.Set | gp.Alias]:
+    """
+    Domain of the symbol narrowed down to the sets and aliases that formulations
+    index over. Formulations only operate on symbols indexed over concrete sets/aliases.
+    """
+    return cast("list[gp.Set | gp.Alias]", list(symbol.domain))
+
+
+def _domain_name(symbol: gp.Set | gp.Alias | gp.UniverseAlias | Universe | str) -> str:
+    return symbol if isinstance(symbol, str) else symbol.name
+
+
 def _next_domains(
-    input_domain: list[gp.Alias | gp.Set], check_domains: list[gp.Set]
-) -> list[gp.Set]:
+    input_domain: Sequence[gp.Alias | gp.Set],
+    check_domains: Sequence[gp.Alias | gp.Set],
+) -> list[gp.Set | gp.Alias]:
     names = {x.name for x in check_domains}
     output = []
     for domain in input_domain:

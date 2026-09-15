@@ -175,7 +175,7 @@ class Backend(ABC):
                     model.num_equations,
                     model.num_variables,
                     model.used_model_type,
-                    self.solver.upper(),  # type: ignore
+                    self.solver.upper(),  # ty: ignore[unresolved-attribute]
                     model.total_solver_time,
                 ]
             ],

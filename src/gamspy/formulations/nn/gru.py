@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 import numpy as np
 
 import gamspy as gp
+import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
 from gamspy.formulations.result import FormulationResult
 
@@ -163,12 +164,13 @@ class GRU:
         if self._state != 1:
             raise ValidationError("Call load_weights before generating formulation.")
 
-        if len(input_seq.domain) != 3:
+        input_domain = utils._get_domain(input_seq)
+        if len(input_domain) != 3:
             raise ValidationError(
-                f"Expected 3D input (batch, time, feature), got {len(input_seq.domain)}"
+                f"Expected 3D input (batch, time, feature), got {len(input_domain)}"
             )
 
-        N_set, T_set, I_set = input_seq.domain
+        N_set, T_set, I_set = input_domain
         if len(I_set) != self.input_size:
             raise ValidationError(
                 f"Last dimension of Input sequence does not match. Expected {self.input_size}, got {len(I_set)}."
@@ -179,7 +181,7 @@ class GRU:
         lin_in_n = input_seq @ self.w_ih["n"].t() + self.b_ih["n"]
 
         H_set = lin_in_r.domain[-1]
-        _, H_prev = self.w_hh["r"].domain
+        _, H_prev = utils._get_domain(self.w_hh["r"])
         out_domain = [N_set, T_set, H_set]
 
         r = gp.Variable(self.container, domain=out_domain)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import itertools
+import typing
 import uuid
 from typing import TYPE_CHECKING, Any
 
@@ -12,6 +13,7 @@ from gamspy.formulations.ml.decision_tree_struct import DecisionTreeStruct
 from gamspy.formulations.ml.regression_tree import RegressionTree
 
 if TYPE_CHECKING:
+    from sklearn.dummy import DummyRegressor
     from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.tree import DecisionTreeRegressor
 
@@ -143,8 +145,9 @@ class GradientBoosting:
             self._bias = bias
             self._learning_rate = learning_rate
         else:  # GradientBoostingRegressor
-            self._bias = ensemble.init_.constant_.flatten()[0]
-            self._learning_rate = ensemble.learning_rate
+            init_ = typing.cast("DummyRegressor", ensemble.init_)
+            self._bias = float(init_.constant_.flatten()[0])
+            self._learning_rate = float(ensemble.learning_rate)
 
     def __call__(
         self,
@@ -179,18 +182,19 @@ class GradientBoosting:
         out = gp.Variable._constructor_bypass(
             self.container,
             name=utils._generate_name("v", self._name_prefix, "real_output"),
-            domain=[set_of_samples, set_of_output_dim],  # type: ignore
+            domain=[set_of_samples, set_of_output_dim],  # ty: ignore[invalid-argument-type]
         )
 
         gb_eqn = gp.Equation._constructor_bypass(
             self.container,
             name=utils._generate_name("e", self._name_prefix, "gb_eqn"),
-            domain=[set_of_samples, set_of_output_dim],  # type: ignore
+            domain=[set_of_samples, set_of_output_dim],  # ty: ignore[invalid-argument-type]
             description="predicted out should be equal to the sum of gradient descent out times the learning rate.",
         )
 
         self.container._synch_with_gams()
-        gb_eqn[...] = self._bias + self._learning_rate * sum(gb_out_list) == out
+        trees_sum = sum(gb_out_list[1:], start=gb_out_list[0])
+        gb_eqn[...] = self._bias + self._learning_rate * trees_sum == out
         gb_eqn_list.append(gb_eqn)
 
         return out, gb_eqn_list

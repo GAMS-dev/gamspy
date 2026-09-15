@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import re
 from collections.abc import Iterable, Sequence
+from enum import IntEnum
 from types import EllipsisType
 from typing import TYPE_CHECKING, Literal, TextIO, cast
 
@@ -165,7 +166,7 @@ def get_dimension(
             dimension += elem.parent.dimension
         else:
             if hasattr(elem, "dimension"):
-                dimension += elem.dimension  # type: ignore
+                dimension += elem.dimension  # ty: ignore[unsupported-operator]
             else:
                 dimension += 1
 
@@ -801,6 +802,21 @@ def _get_def_file(system_directory: str, solver: str) -> str:
     return def_file_path
 
 
+class OptMsgType(IntEnum):
+    """Message types reported by the GAMS option API through ``optGetMessage``."""
+
+    INPUT_ECHO = 0
+    HELP = 1
+    DEFINE_ERROR = 2
+    VALUE_ERROR = 3
+    VALUE_WARNING = 4
+    DEPRECATED = 5
+    FILE_ENTER = 6
+    FILE_LEAVE = 7
+    TOO_MANY_MSGS = 8
+    USER_ERROR = 9
+
+
 def validate_solver_options(
     system_directory: str, options_file_name: str, solver: str
 ) -> None:
@@ -821,7 +837,7 @@ def validate_solver_options(
         for i in range(optMessageCount(option_handle)):
             msg = optGetMessage(option_handle, i + 1)
 
-            if msg[1] == 2:
+            if msg[1] == OptMsgType.DEFINE_ERROR:
                 raise ValidationError(
                     f"Provided solver name `{solver}` is not installed on your"
                     f" machine. Install `{solver}` with `gamspy install solver"
@@ -851,17 +867,8 @@ def validate_solver_options(
     if msg_list:
         error_messages = []
         for message in msg_list:
-            # optMsgInputEcho    = 0,
-            # optMsgHelp         = 1,
-            # optMsgDefineError  = 2,
-            # optMsgValueError   = 3,
-            # optMsgValueWarning = 4,
-            # optMsgDeprecated   = 5,
-            # optMsgFileEnter    = 6,
-            # optMsgFileLeave    = 7,
-            # optMsgTooManyMsgs  = 8,
-            # optMsgUserError    = 9
-            if message[1] not in (6, 7):
+            # Entering and leaving an option file is bookkeeping, not a problem.
+            if message[1] not in (OptMsgType.FILE_ENTER, OptMsgType.FILE_LEAVE):
                 error_messages.append(message[0])
 
         if error_messages:

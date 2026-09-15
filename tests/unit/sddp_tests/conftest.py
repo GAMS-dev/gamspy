@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import os
 from types import SimpleNamespace
 
+import gamspy_base
 import numpy as np
 import pytest
 
@@ -24,8 +26,8 @@ SCENARIOS = np.array(
 PROBABILITIES = [0.25, 0.5, 0.25]
 
 
-def _make_clearlake() -> SimpleNamespace:
-    m = Container()
+def _make_clearlake(options: gp.Options | None = None) -> SimpleNamespace:
+    m = Container(options=options)
     t = gp.Set(m, "t", records=["jan", "feb", "mar", "apr"])
     sddp = SDDP(m, stage_set=t, n_trials=2, seed=42, verbose=False)
     stage = sddp.active_stage
@@ -61,6 +63,17 @@ def _make_clearlake() -> SimpleNamespace:
     )
 
 
+def _build_clearlake(clearlake: SimpleNamespace) -> SimpleNamespace:
+    clearlake.sddp.add_state(variable=clearlake.lev, initial_state=100.0)
+    clearlake.sddp.set_noise(
+        parameter=clearlake.precip,
+        scenario_data=clearlake.scenarios,
+        probabilities=clearlake.probabilities,
+    )
+    clearlake.sddp.build(stage_cost=clearlake.cost)
+    return clearlake
+
+
 @pytest.fixture
 def clearlake():
     c = _make_clearlake()
@@ -70,15 +83,20 @@ def clearlake():
 
 @pytest.fixture
 def clearlake_built(clearlake):
-    c = clearlake
-    c.sddp.add_state(variable=c.lev, initial_state=100.0)
-    c.sddp.set_noise(
-        parameter=c.precip,
-        scenario_data=c.scenarios,
-        probabilities=c.probabilities,
-    )
-    c.sddp.build(stage_cost=c.cost)
-    return c
+    return _build_clearlake(clearlake)
+
+
+@pytest.fixture
+def demo_clearlake():
+    demo_license = os.path.join(gamspy_base.directory, "gamslice.txt")
+    c = _make_clearlake(options=gp.Options(license=demo_license))
+    yield c
+    c.m.close()
+
+
+@pytest.fixture
+def demo_clearlake_built(demo_clearlake):
+    return _build_clearlake(demo_clearlake)
 
 
 @pytest.fixture

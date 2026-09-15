@@ -28,28 +28,8 @@ from gamspy.exceptions import ValidationError
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    canning_plants = ["seattle", "san-diego"]
-    markets = ["new-york", "chicago", "topeka"]
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    yield m, canning_plants, markets, distances, capacities, demands
-    m.close()
-
-
-def test_set_creation(data):
-    m, *_ = data
+def test_set_creation(transport):
+    m = transport.container
     # no name is fine now
     i = Set(m)
     m.addSet()
@@ -90,8 +70,8 @@ def test_set_creation(data):
         sum(i)
 
 
-def test_set_override_mismatches(data):
-    m, *_ = data
+def test_set_override_mismatches(transport):
+    m = transport.container
     k = Set(m, name="k", records=["k1"])
     l = Set(m, name="l", records=["l1"])
 
@@ -108,14 +88,14 @@ def test_set_override_mismatches(data):
         Set(m, name="domset", domain=[l])
 
 
-def test_set_is_miro_output(data):
-    m, *_ = data
+def test_set_is_miro_output(transport):
+    m = transport.container
     Set(m, name="out_set", is_miro_output=True)
     assert "out_set" in m._miro_output_symbols
 
 
-def test_set_string(data):
-    m, canning_plants, *_ = data
+def test_set_string(transport):
+    m, canning_plants = transport.container, transport.canning_plants
     # Check if the name is reserved
     with pytest.raises(ValidationError):
         Set(m, "set")
@@ -145,8 +125,8 @@ def test_set_string(data):
     assert a.getDeclaration() == "Set a(m,n);"
 
 
-def test_records_assignment(data):
-    m, *_ = data
+def test_records_assignment(transport):
+    m = transport.container
     new_cont = Container()
     i = Set(m, "i")
     j = Set(m, "j", domain=[i])
@@ -160,8 +140,8 @@ def test_records_assignment(data):
         j[k] = 5
 
 
-def test_set_operators(data):
-    m, canning_plants, *_ = data
+def test_set_operators(transport):
+    m, canning_plants = transport.container, transport.canning_plants
     i = Set(m, "i", records=canning_plants)
     card = Card(i)
     assert card.gamsRepr() == "card(i)"
@@ -170,8 +150,8 @@ def test_set_operators(data):
     assert ord.gamsRepr() == "ord(i)"
 
 
-def test_implicit_sets(data):
-    m, canning_plants, *_ = data
+def test_implicit_sets(transport):
+    m, canning_plants = transport.container, transport.canning_plants
     m = Container()
     j = Set(m, "j", records=["seattle", "san-diego", "california"])
     k = Set(m, "k", domain=[j], records=canning_plants)
@@ -286,8 +266,8 @@ def test_implicit_set_toList():
     assert set(m.data) == {"i", "j", "k", "s", "empty"}
 
 
-def test_set_operations(data):
-    m, canning_plants, *_ = data
+def test_set_operations(transport):
+    m, canning_plants = transport.container, transport.canning_plants
     i = Set(m, "i", records=canning_plants)
     k = Set(m, "k", records=canning_plants)
     union = i + k
@@ -303,8 +283,8 @@ def test_set_operations(data):
     assert difference.gamsRepr() == "i - k"
 
 
-def test_dynamic_sets(data):
-    m, *_ = data
+def test_dynamic_sets(transport):
+    m = transport.container
     m = Container()
     i = Set(m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
     i["i1"] = False
@@ -316,8 +296,8 @@ def test_dynamic_sets(data):
     k["k1"] = False
 
 
-def test_lag_and_lead(data):
-    m, *_ = data
+def test_lag_and_lead(transport):
+    m = transport.container
     set = Set(m, name="S", records=["a", "b", "c"], description="Test text")
     alias = Alias(m, "A", alias_with=set)
 
@@ -524,8 +504,8 @@ def test_lag_and_lead_latex():
     assert a[t.lag(p[t])].latexRepr() == "a_{t - (p_{t})}"
 
 
-def test_set_attributes(data):
-    m, *_ = data
+def test_set_attributes(transport):
+    m = transport.container
     i = Set(m, "i")
     assert i.pos.gamsRepr() == "i.pos"
     assert i.ord.gamsRepr() == "i.ord"
@@ -601,7 +581,6 @@ def test_set_attributes(data):
         ["1", "position", 2.0],
         ["2", "position", 3.0],
     ]
-    m.close()
 
 
 def test_set_assignment():
@@ -746,8 +725,8 @@ def test_set_assignment():
     assert res.getAssignment() == "res = sum(ie,val(ie) * (1 - 2 * xpt(ie)));"
 
 
-def test_sameas(data):
-    m, *_ = data
+def test_sameas(transport):
+    m = transport.container
     i = Set(m, "i")
     j = Alias(m, "j", i)
     assert i.sameAs(j).gamsRepr() == "sameAs(i,j)"
@@ -761,8 +740,8 @@ def test_sameas(data):
     assert p.getAssignment() == 'p(i) = sameAs(i,"2");'
 
 
-def test_sameas_operator(data):
-    m, *_ = data
+def test_sameas_operator(transport):
+    m = transport.container
     i = Set(m, "i", records=["i1", "i2", "i3"])
     j = Alias(m, "j", i)
 
@@ -802,8 +781,8 @@ def test_sameas_operator(data):
     assert p.toList() == [("i2", 10.0)]
 
 
-def test_assignment_dimensionality(data):
-    m, *_ = data
+def test_assignment_dimensionality(transport):
+    m = transport.container
     j1 = Set(m, "j1")
     j2 = Set(m, "j2")
     j3 = Set(m, "j3", domain=[j1, j2])
@@ -822,8 +801,8 @@ def test_assignment_dimensionality(data):
         j6[j1, j2] = j5[j1, j2, j3]
 
 
-def test_uels_on_axes(data):
-    m, *_ = data
+def test_uels_on_axes(transport):
+    m = transport.container
     s = pd.Series(index=["a", "b"])
     i = Set(m, "i", records=s, uels_on_axes=True)
     assert i.records["uni"].tolist() == ["a", "b"]

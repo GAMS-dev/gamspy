@@ -230,6 +230,80 @@ Mapping:
         error01(s1,s2) = rt(s1,s2) and not lfr(s1,s2) or not rt(s1,s2) and lfr(s1,s2);
 
 
+Exponentiation
+--------------
+
+The Python operator ``**`` is not directly translated to the GAMS operator ``**``. In GAMS,
+``x ** y`` is equivalent to ``rPower(x,y)``, which is calculated internally as
+:math:`e^{y \log(x)}` and therefore triggers
+`an error if x is negative <https://www.gams.com/latest/docs/UG_Parameters.html#UG_Parameters_exp_warning>`_.
+GAMSPy instead translates ``**`` to the GAMS function that fits the exponent, so that
+it stays defined wherever it is mathematically defined:
+
+Mapping:
+
+- integral exponent, e.g. ``x ** 3`` or ``x ** 3.0`` -> ``power(x,3)``, which accepts a negative ``x``
+- ``x ** 0.5`` -> ``sqrt(x)``
+- any other exponent, e.g. ``x ** 2.5`, but in particular any GAMSPy symbol, e.g. ``x ** p[i]`` results in ``rPower``
+
+.. tab-set-code::
+
+    .. code-block:: python
+        :name: Python
+
+        import gamspy as gp
+
+        m = gp.Container()
+        x = gp.Parameter(m, "x", records=-2)
+        y = gp.Parameter(m, "y")
+        y[...] = x**2
+        print(y.toValue())  # 4.0
+
+    .. code-block:: text
+        :name: GAMS
+
+        scalar x /-2/, y;
+        y = power(x,2);
+        display y;
+
+Squaring a negative term with ``x ** 2`` is a `well-known pitfall
+<https://www.gams.com/latest/docs/UG_ExecErrPerformance.html>`_ in GAMS: the assignment
+above evaluates to ``UNDF`` if it is written as ``y = x**2;``, and in an equation it
+triggers an evaluation error and most likely aborts the solve as soon as an iterate turns negative. Since the exponent is an integer,
+GAMSPy generates ``power(x,2)`` and the model solves.
+
+.. note::
+    An exponent that is merely close to an integer is not rounded to one. ``x ** 2.9998``
+    translates to ``rPower(x,2.9998)``, matching GAMS ``x ** 2.9998``, and is an error for
+    a negative ``x``.
+
+:meth:`sqr <gamspy.math.sqr>`, :meth:`power <gamspy.math.power>` and
+:meth:`rpower <gamspy.math.rpower>` are available in the
+:meth:`math <gamspy.math>` package if you prefer to be explicit.
+
+If you would rather have no discrepancy at all, the package wide option
+``STRICT_POWER_OPERATOR`` makes ``**`` generate ``rPower`` for every exponent, which is
+exactly what GAMS does:
+
+.. code-block:: python
+
+    import gamspy as gp
+
+    gp.set_options({"STRICT_POWER_OPERATOR": 1})
+
+    m = gp.Container()
+    x = gp.Parameter(m, "x", records=-2)
+    y = gp.Parameter(m, "y")
+    y[...] = x**2   # rPower(x,2) -> the same GAMS error you would get in GAMS
+
+.. note::
+    The option only selects the GAMS function that ``**`` maps to. It does not affect
+    :meth:`sqr <gamspy.math.sqr>`, :meth:`power <gamspy.math.power>` or
+    :meth:`rpower <gamspy.math.rpower>` when you call them yourself, and GAMSPy's own
+    formulations such as :meth:`vector_norm <gamspy.math.vector_norm>` keep generating
+    the same GAMS code either way.
+
+
 Sparse Assignments
 ------------------
 

@@ -29,7 +29,8 @@ The :meth:`solve <gamspy.Model.solve>` method takes the data of the modifiables 
 are applied in a direct manner. Moreover, the data of the modifiable *parameters* is taken from the container symbol and applied to the model instance. Behind the scenes,
 the :meth:`freeze <gamspy.Model.freeze>` method turned these modifiable parameters into fixed *variables* with the name of the parameter plus ``_var`` and mirrored them in the
 container. After a solve these variables hold the solution of the modifiable parameters. The marginal of these variables can provide useful sensitivity information about the
-parameter setting. In addition,
+parameter setting. This makes the ``_var`` suffix reserved: GAMS fixes every variable of the model instance with that suffix, therefore
+:meth:`freeze <gamspy.Model.freeze>` rejects a model that contains one of its own. In addition,
 the container will contain the primal and dual solution with respect to the regular variables and equations of the model instance together with many model attributes including
 :meth:`status <gamspy.Model.status>`, 
 :meth:`solve_status <gamspy.Model.solve_status>`,

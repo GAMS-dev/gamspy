@@ -1,28 +1,25 @@
 from __future__ import annotations
 
+import ast
+import importlib
 import os
+import pathlib
 import platform
 import time
 
 import pytest
 
+import gamspy as gp
 import gamspy._validation as validation
 import gamspy.utils as utils
-from gamspy import Container, Problem, Set
+from gamspy import Problem, Set
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    yield m
-    m.close()
-
-
-def test_utils(data):
-    m = data
+def test_utils(container):
+    m = container
     i = Set(m, "i", records=["i1", "i2"])
     assert utils._get_domain_str([i, "b", "*"]) == '(i,"b",*)'
     with pytest.raises(ValidationError):
@@ -33,8 +30,8 @@ def test_utils(data):
     assert utils.checkAllSame([1, 2], [1, 2])
 
 
-def test_isin(data):
-    m = data
+def test_isin(container):
+    m = container
     i = Set(m, "i")
     j = Set(m, "j")
     k = Set(m, "k")
@@ -44,7 +41,7 @@ def test_isin(data):
     assert not utils.isin(k, symbols)
 
 
-def test_available_solvers(data):
+def test_available_solvers(container):
     available_solvers = utils.getAvailableSolvers()
 
     expected = [
@@ -263,3 +260,77 @@ def test_parse_solver_config():
         "SHOT2": ["MINLP", "MIQCP"],
         "SHOT3": ["LP", "NLP"],
     }
+
+
+def _declaration_plumbing_callers():
+    """Every function in the package that asks for an auto-generated symbol name."""
+    package_root = pathlib.Path(utils.__file__).parent
+    callers = []
+
+    for path in sorted(package_root.rglob("*.py")):
+        tree = ast.parse(path.read_text())
+        module_name = "gamspy." + ".".join(
+            path.relative_to(package_root).with_suffix("").parts
+        )
+
+        stack: list[ast.AST] = []
+
+        def visit(node, stack=stack, module_name=module_name, path=path):
+            enclosing = isinstance(
+                node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+            )
+            if enclosing:
+                stack.append(node)
+
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "_get_symbol_name"
+            ):
+                owners = [n.name for n in stack]
+                callers.append((module_name, tuple(owners), node.lineno, path))
+
+            for child in ast.iter_child_nodes(node):
+                visit(child)
+
+            if enclosing:
+                stack.pop()
+
+        visit(tree)
+
+    resolved = []
+    for module_name, owners, lineno, path in callers:
+        target = importlib.import_module(module_name)
+        for owner in owners:
+            target = getattr(target, owner)
+        resolved.append((f"{path.name}:{lineno} {'.'.join(owners)}", target))
+
+    return resolved
+
+
+def test_declaration_plumbing_is_complete():
+    plumbing, _pinned = utils._declaration_plumbing()
+    callers = _declaration_plumbing_callers()
+
+    assert callers, "found no callers of _get_symbol_name; the AST scan is broken"
+
+    unregistered = [
+        where for where, function in callers if id(function.__code__) not in plumbing
+    ]
+    assert not unregistered, (
+        "these call Container._get_symbol_name but are not registered in "
+        f"gamspy.utils._declaration_plumbing(): {unregistered}"
+    )
+
+
+def test_python_name_is_used_under_the_default_setting(set_options):
+    set_options({"USE_PY_VAR_NAME": "yes-or-autogenerate"})
+
+    with gp.Container() as m:
+        declared_set = gp.Set()
+        added_set = m.addSet()
+        declared_parameter = gp.Parameter()
+
+        assert declared_set.name == "declared_set"
+        assert added_set.name == "added_set"
+        assert declared_parameter.name == "declared_parameter"

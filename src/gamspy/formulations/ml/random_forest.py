@@ -162,13 +162,13 @@ class RandomForest:
         out = gp.Variable._constructor_bypass(
             self.container,
             name=utils._generate_name("v", self._name_prefix, "real_output"),
-            domain=[set_of_samples, set_of_output_dim],  # type: ignore
+            domain=[set_of_samples, set_of_output_dim],  # ty: ignore[invalid-argument-type]
         )
 
         rf_eqn = gp.Equation._constructor_bypass(
             self.container,
             name=utils._generate_name("e", self._name_prefix, "rf_eqn"),
-            domain=[set_of_samples, set_of_output_dim],  # type: ignore
+            domain=[set_of_samples, set_of_output_dim],  # ty: ignore[invalid-argument-type]
             description="predicted out times number of estimators should be equal to the random forest out",
         )
 

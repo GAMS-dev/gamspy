@@ -9,14 +9,14 @@ repos:
     -   id: check-ast
     -   id: check-case-conflict
 -   repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.73
+    rev: v0.0.80
     hooks:
     -   id: ty
         entry: uv run --active ty check src
         language: python
         pass_filenames: false
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.4
+    rev: v0.16.7
     hooks:
     # Run the linter.
     -   id: ruff-check
@@ -27,4 +27,6 @@ repos:
     rev: v1.5.0
     hooks:
     -   id: detect-secrets
-        args: [ --baseline, .secrets.baseline, --exclude-files, ^docs/user/notebooks/]
+        # The separator class keeps the exclusion working on Windows, where
+        # detect-secrets normalises paths to docs\user\notebooks\...
+        args: [ --baseline, .secrets.baseline, --exclude-files, '^docs[/\\]user[/\\]notebooks[/\\]' ]

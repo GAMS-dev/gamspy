@@ -1,9 +1,7 @@
 """
 Installation of the GAMS solver link for the NVIDIA cuOpt solver. cuOpt is not
 distributed as a gamspy-<solver_name> package but as a release archive of
-https://github.com/GAMS-dev/cuoptlink-builder. The archive is unpacked into the
-GAMS system directory where it registers itself with the solverConfig section
-of a gamsconfig.yaml file.
+https://github.com/GAMS-dev/cuoptlink-builder.
 """
 
 from __future__ import annotations
@@ -11,6 +9,7 @@ from __future__ import annotations
 import ctypes
 import os
 import platform
+import re
 import shutil
 import tempfile
 import zipfile
@@ -21,10 +20,15 @@ SOLVER_NAME = "cuopt"
 REPOSITORY = "GAMS-dev/cuoptlink-builder"
 RELEASES_URL = f"https://api.github.com/repos/{REPOSITORY}/releases"
 RELEASES_PAGE = f"https://github.com/{REPOSITORY}/releases"
+DEFAULT_VERSION = "v0.0.8b"
 CUDA_VERSIONS = ("12", "13")
 DEFAULT_CUDA_VERSION = "13"
 CONFIG_FILE = "gamsconfig.yaml"
+SOLVER_CONFIG_FILE = "gamsconfig_cuopt.yaml"
+SOLVER_CONFIG_SECTION = "solverConfig"
 BACKUP_FILE = "gamsconfig.yaml.gamspy_backup"
+MARKER_BEGIN = f"# begin {SOLVER_NAME} solver configuration of GAMSPy"
+MARKER_END = f"# end {SOLVER_NAME} solver configuration of GAMSPy"
 MANIFEST_FILE = "cuopt_files.txt"
 
 CUOPT_VERSION_ENV = "GAMSPY_CUOPT_VERSION"
@@ -32,10 +36,10 @@ CUDA_VERSION_ENV = "GAMSPY_CUDA_VERSION"
 CUDA_RUNTIME_ENV = "GAMSPY_CUDA_RUNTIME"
 
 
-def _get_version() -> str | None:
+def _get_version() -> str:
     version = os.getenv(CUOPT_VERSION_ENV, "").strip()
     if not version:
-        return None
+        return DEFAULT_VERSION
 
     return version if version.startswith("v") else f"v{version}"
 
@@ -123,14 +127,10 @@ def _detect_cuda_version() -> str | None:
     return None
 
 
-def _get_asset_urls(names: list[str], version: str | None) -> list[str]:
+def _get_asset_urls(names: list[str], version: str) -> list[str]:
     import requests
 
-    url = (
-        f"{RELEASES_URL}/latest"
-        if version is None
-        else f"{RELEASES_URL}/tags/{version}"
-    )
+    url = f"{RELEASES_URL}/tags/{version}"
     try:
         response = requests.get(url, timeout=30)
     except requests.RequestException as e:
@@ -140,18 +140,17 @@ def _get_asset_urls(names: list[str], version: str | None) -> list[str]:
         )
         raise typer.Exit(code=1) from e
 
-    if response.status_code == 404 and version is not None:
+    if response.status_code == 404:
         typer.echo(
             f"{REPOSITORY} has no release `{version}`. Set `{CUOPT_VERSION_ENV}` to one of "
-            f"the versions listed on {RELEASES_PAGE} or unset it to install the "
-            "latest release."
+            f"the versions listed on {RELEASES_PAGE} or unset it to install "
+            f"{DEFAULT_VERSION}."
         )
         raise typer.Exit(code=1)
 
     if response.status_code != 200:
-        described = "latest" if version is None else f"`{version}`"
         typer.echo(
-            f"Could not get the {described} `{SOLVER_NAME}` release. Request status: "
+            f"Could not get the `{version}` `{SOLVER_NAME}` release. Request status: "
             f"{response.status_code}. Reason: {response.text}."
         )
         raise typer.Exit(code=1)
@@ -241,11 +240,6 @@ def _extract(path: str, directory: str) -> list[str]:
 
 
 def _backup_config(gamspy_base_directory: str, installed_files: list[str]) -> None:
-    """
-    The release archive brings its own gamsconfig.yaml. If the system directory
-    already contains one that was not unpacked by a previous cuOpt installation,
-    it is backed up so that `gamspy uninstall solver cuopt` can restore it.
-    """
     config_path = os.path.join(gamspy_base_directory, CONFIG_FILE)
     if not os.path.isfile(config_path) or CONFIG_FILE in installed_files:
         return
@@ -253,9 +247,183 @@ def _backup_config(gamspy_base_directory: str, installed_files: list[str]) -> No
     backup_path = os.path.join(gamspy_base_directory, BACKUP_FILE)
     _ = shutil.copy2(config_path, backup_path)
     typer.echo(
-        f"`{config_path}` is overwritten by the `{SOLVER_NAME}` release archive. "
-        f"A backup was written to `{backup_path}`."
+        f"`{config_path}` is extended with the `{SOLVER_NAME}` solver "
+        f"configuration. A backup was written to `{backup_path}`."
     )
+
+
+def _load_config(path: str) -> dict:
+    import yaml
+
+    with open(path, encoding="utf-8") as file:
+        try:
+            config = yaml.safe_load(file)
+        except yaml.YAMLError as e:
+            typer.echo(f"`{path}` is not a valid YAML file. Here is the error: {e}")
+            raise typer.Exit(code=1) from e
+
+    if config is None:
+        return {}
+
+    if not isinstance(config, dict):
+        typer.echo(
+            f"`{path}` must map configuration sections such as "
+            f"`{SOLVER_CONFIG_SECTION}` to their entries."
+        )
+        raise typer.Exit(code=1)
+
+    return config
+
+
+def _find_section(lines: list[str], section: str, path: str) -> int | None:
+    """The index of the line that opens `section` as a block of entries."""
+    for index, line in enumerate(lines):
+        if not re.match(rf"{re.escape(section)}[ \t]*:", line):
+            continue
+
+        if not re.match(rf"{re.escape(section)}[ \t]*:[ \t]*(#.*)?$", line):
+            typer.echo(
+                f"`{section}` of `{path}` is not written as a block of entries, "
+                f"hence GAMSPy cannot add `{SOLVER_NAME}` to it. Please add the "
+                f"entry of `{SOLVER_CONFIG_FILE}` to it by hand."
+            )
+            raise typer.Exit(code=1)
+
+        return index
+
+    return None
+
+
+def _get_section_end(lines: list[str], start: int) -> int:
+    end = start
+    for index in range(start, len(lines)):
+        line = lines[index]
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+
+        # The entries of a block sequence may be indented like their section.
+        is_entry = stripped == "-" or stripped.startswith("- ")
+        if not line[0].isspace() and not is_entry:
+            break
+
+        end = index + 1
+
+    return end
+
+
+def _get_document_end(lines: list[str]) -> int:
+    for index, line in enumerate(lines):
+        if re.match(r"\.\.\.([ \t]|$)", line):
+            return index
+
+    return len(lines)
+
+
+def _get_entry_indent(entries: list[str]) -> str | None:
+    for entry in entries:
+        match = re.match(r"([ \t]*)-([ \t]|$)", entry)
+        if match is not None:
+            return match.group(1)
+
+    return None
+
+
+def _reindent(entries: list[str], indent: str) -> list[str]:
+    base = _get_entry_indent(entries) or ""
+    return [
+        indent + entry[len(base) :] if entry.startswith(base) else entry
+        for entry in entries
+    ]
+
+
+def _get_solver_config(gamspy_base_directory: str) -> list[str]:
+    """The entries that the release archive registers in gamsconfig_cuopt.yaml"""
+    path = os.path.join(gamspy_base_directory, SOLVER_CONFIG_FILE)
+    if list(_load_config(path)) != [SOLVER_CONFIG_SECTION]:
+        typer.echo(
+            f"`{path}` of the release archive holds more than a "
+            f"`{SOLVER_CONFIG_SECTION}` section, which GAMSPy cannot merge into "
+            f"`{CONFIG_FILE}`. Please add its content to `{CONFIG_FILE}` by hand."
+        )
+        raise typer.Exit(code=1)
+
+    with open(path, encoding="utf-8") as file:
+        lines = file.read().splitlines()
+
+    index = _find_section(lines, SOLVER_CONFIG_SECTION, path)
+    if index is None:
+        typer.echo(f"`{path}` of the release archive does not register a solver.")
+        raise typer.Exit(code=1)
+
+    return lines[index + 1 : _get_section_end(lines, index + 1)]
+
+
+def _merge_solver_config(text: str, entries: list[str], path: str) -> str:
+    lines = text.splitlines()
+    index = _find_section(lines, SOLVER_CONFIG_SECTION, path)
+    if index is None:
+        block = [f"{SOLVER_CONFIG_SECTION}:", *entries]
+        end = _get_document_end(lines)
+    else:
+        end = _get_section_end(lines, index + 1)
+        indent = _get_entry_indent(lines[index + 1 : end])
+        block = entries if indent is None else _reindent(entries, indent)
+
+    merged = [*lines[:end], MARKER_BEGIN, *block, MARKER_END, *lines[end:]]
+    return "\n".join(merged) + "\n"
+
+
+def _strip_solver_config(text: str) -> str:
+    """Take the entries of a previous installation of GAMSPy back out of `text`."""
+    remaining = []
+    is_contributed = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped == MARKER_BEGIN:
+            is_contributed = True
+        elif stripped == MARKER_END:
+            is_contributed = False
+        elif not is_contributed:
+            remaining.append(line)
+
+    return "\n".join(remaining) + "\n" if remaining else ""
+
+
+def _register_solver(gamspy_base_directory: str, installed_files: list[str]) -> bool:
+    """Merge the gamsconfig_cuopt.yaml of the release archive into the gamsconfig.yaml"""
+    entries = _get_solver_config(gamspy_base_directory)
+    config_path = os.path.join(gamspy_base_directory, CONFIG_FILE)
+
+    text = ""
+    is_created_by_gamspy = CONFIG_FILE in installed_files
+    try:
+        with open(config_path, encoding="utf-8") as file:
+            text = _strip_solver_config(file.read())
+    except FileNotFoundError:
+        is_created_by_gamspy = True
+
+    with open(config_path, "w", encoding="utf-8") as file:
+        _ = file.write(_merge_solver_config(text, entries, config_path))
+
+    return is_created_by_gamspy
+
+
+def _unregister_solver(gamspy_base_directory: str) -> None:
+    """Take the entries of the release archive back out of the gamsconfig.yaml"""
+    config_path = os.path.join(gamspy_base_directory, CONFIG_FILE)
+    try:
+        with open(config_path, encoding="utf-8") as file:
+            remaining = _strip_solver_config(file.read())
+    except FileNotFoundError:
+        return
+
+    if not remaining.strip():
+        os.unlink(config_path)
+        return
+
+    with open(config_path, "w", encoding="utf-8") as file:
+        _ = file.write(remaining)
 
 
 def install() -> list[str]:
@@ -299,6 +467,11 @@ def install() -> list[str]:
             _download(url, archive_path)
             files.update(_extract(archive_path, gamspy_base_directory))
 
+    if _register_solver(gamspy_base_directory, installed_files):
+        files.add(CONFIG_FILE)
+    else:
+        files.discard(CONFIG_FILE)
+
     _set_installed_files(sorted(files))
     return sorted(files)
 
@@ -315,16 +488,21 @@ def uninstall() -> None:
         )
         raise typer.Exit(code=1)
 
+    # gamsconfig.yaml is an installed file only if GAMSPy created it. One that was
+    # already there may configure more than cuopt, so only its entries are removed.
+    if CONFIG_FILE not in installed_files:
+        _unregister_solver(gamspy_base_directory)
+
     for name in installed_files:
         try:
             os.unlink(os.path.join(gamspy_base_directory, name))
         except FileNotFoundError:
             ...
 
-    # Restore the gamsconfig.yaml that was overwritten by the release archive.
-    backup_path = os.path.join(gamspy_base_directory, BACKUP_FILE)
-    if os.path.isfile(backup_path):
-        _ = shutil.move(backup_path, os.path.join(gamspy_base_directory, CONFIG_FILE))
+    try:
+        os.unlink(os.path.join(gamspy_base_directory, BACKUP_FILE))
+    except FileNotFoundError:
+        ...
 
     try:
         os.unlink(_get_manifest_path())

@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import gamspy as gp
 import gamspy.math as gams_math
 from gamspy import (
     Alias,
@@ -35,7 +34,7 @@ from gamspy._backend.neos import NeosClient
 from gamspy.exceptions import ValidationError
 from gamspy.math import cos, sin
 
-pytestmark = pytest.mark.neos
+pytestmark = [pytest.mark.neos, pytest.mark.usefixtures("cleanup_generated_files")]
 
 try:
     from dotenv import load_dotenv
@@ -51,34 +50,6 @@ def fx(t):
 
 def fy(t):
     return t * sin(t)
-
-
-@pytest.fixture
-def data():
-    # Arrange
-    m = Container()
-    canning_plants = ["seattle", "san-diego"]
-    markets = ["new-york", "chicago", "topeka"]
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    # Act and assert
-    yield m, canning_plants, markets, capacities, demands, distances
-
-    # Cleanup
-    m.close()
-    files = glob.glob("_*")
-    for file in files:
-        if os.path.isfile(file):
-            os.remove(file)
 
 
 @pytest.fixture
@@ -174,8 +145,8 @@ def test_network_license(network_license):
     assert math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
 
 
-def test_neos_blocking(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_neos_blocking(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -225,8 +196,8 @@ def test_neos_blocking(data):
     assert math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
 
 
-def test_no_client(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_no_client(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -256,8 +227,8 @@ def test_no_client(data):
         transport.solve(backend="neos")
 
 
-def test_different_solver(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_different_solver(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -293,8 +264,8 @@ def test_different_solver(data):
     assert math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
 
 
-def test_neos_non_blocking(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_neos_non_blocking(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -342,8 +313,8 @@ def test_neos_non_blocking(data):
     assert x.records.equals(container["x"].records)
 
 
-def test_solver_options(data, tmp_path):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_solver_options(transport, tmp_path, set_options):
+    m, canning_plants, markets, distances, capacities, demands = transport
     # Set
     i = Set(
         m,
@@ -440,7 +411,7 @@ def test_solver_options(data, tmp_path):
 
     # Read solver options from an existing file
     log_path2 = str(tmp_path / "neos2.log")
-    gp.set_options({"SOLVER_OPTION_VALIDATION": 0})
+    set_options({"SOLVER_OPTION_VALIDATION": 0})
     with tempfile.TemporaryDirectory() as tmpdir:
         options_path = os.path.join(tmpdir, "my_solver_options.opt")
         with open(options_path, "w") as file:
@@ -458,10 +429,8 @@ def test_solver_options(data, tmp_path):
         content = file.read()
         assert ">>  aggfill 55" in content
 
-    gp.set_options({"SOLVER_OPTION_VALIDATION": 1})
 
-
-def test_lp(data):
+def test_lp(transport):
     mdl = Container()
     x1 = Variable(mdl)
     x2 = Variable(mdl)
@@ -490,7 +459,7 @@ def test_lp(data):
     assert isinstance(summary, pd.DataFrame)
 
 
-def test_mip(data):
+def test_mip(transport):
     mdl = Container()
     x1 = Variable(mdl, type="integer")
     x2 = Variable(mdl, type="integer")
@@ -519,8 +488,8 @@ def test_mip(data):
     assert isinstance(summary, pd.DataFrame)
 
 
-def test_rmip(data):
-    m, *_ = data
+def test_rmip(transport):
+    m = transport.container
 
     # Sets
     i = Set(
@@ -643,7 +612,7 @@ def test_rmip(data):
     assert math.isclose(master.objective_value, 453.0000, rel_tol=0.001)
 
 
-def test_nlp(data):
+def test_nlp(transport):
     mdl = Container()
     x1 = Variable(mdl)
     x2 = Variable(mdl)
@@ -672,8 +641,8 @@ def test_nlp(data):
     assert isinstance(summary, pd.DataFrame)
 
 
-def test_dnlp(data):
-    m, *_ = data
+def test_dnlp(transport):
+    m = transport.container
 
     # Set
     i = Set(
@@ -1834,8 +1803,8 @@ def test_cns():
     assert isinstance(summary, pd.DataFrame)
 
 
-def test_minlp(data):
-    m, *_ = data
+def test_minlp(transport):
+    m = transport.container
 
     # Set
     t = Set(
@@ -1946,8 +1915,8 @@ def test_minlp(data):
     assert isinstance(summary, pd.DataFrame)
 
 
-def test_qcp(data):
-    m, *_ = data
+def test_qcp(transport):
+    m = transport.container
 
     # Set
     i = Set(m, name="i", records=[str(idx) for idx in range(181)])

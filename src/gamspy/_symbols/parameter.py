@@ -4,7 +4,7 @@ import itertools
 import os
 import threading
 import weakref
-from typing import TYPE_CHECKING, Any, cast, no_type_check
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
@@ -135,8 +135,8 @@ class Parameter(operable.Operable, RecordSymbol):
 
         return obj
 
-    def __new__(
-        cls,
+    def _redefine(
+        self,
         container: Container | None = None,
         name: str | None = None,
         domain: DomainType | None = None,
@@ -148,34 +148,35 @@ class Parameter(operable.Operable, RecordSymbol):
         is_miro_output: bool = False,
         is_miro_table: bool = False,
     ):
-        if container is not None and not isinstance(container, gp.Container):
-            raise TypeError(
-                f"Container must of type `Container` but found {type(container)}"
+        self._metadata: dict[str, Any] = {}
+        # miro support
+        self._is_miro_input = is_miro_input
+        self._is_miro_output = is_miro_output
+        self._is_miro_table = is_miro_table
+        self._is_miro_symbol = is_miro_input or is_miro_output or is_miro_table
+        self._domain_violations = None
+
+        domain = self._normalize_domain(self.container, domain)
+        if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
+            raise ValueError(
+                "Cannot overwrite symbol in container unless symbol domains are equal"
             )
 
-        if name is None:
-            return object.__new__(cls)
-        else:
-            if not isinstance(name, str):
-                raise TypeError(f"Name must of type `str` but found {type(name)}")
+        if self._domain_forwarding != domain_forwarding:
+            raise ValueError(
+                "Cannot overwrite symbol in container unless"
+                " 'domain_forwarding' is left unchanged"
+            )
 
-            try:
-                if not container:
-                    container = gp._ctx_managers[
-                        (os.getpid(), threading.get_native_id())
-                    ]
+        # reset some properties
+        if description != "":
+            self._description = description
 
-                symbol = container._data[name]
-            except KeyError:
-                return object.__new__(cls)
+        self._records: pd.DataFrame | None = None
 
-        if isinstance(symbol, cls):
-            return symbol
-
-        raise TypeError(
-            f"Cannot overwrite symbol `{name}` in container"
-            " because it is not a Parameter object"
-        )
+        with self._miro_unprotected():
+            if records is not None:
+                self.setRecords(records, uels_on_axes=uels_on_axes)
 
     def __init__(
         self,
@@ -201,82 +202,48 @@ class Parameter(operable.Operable, RecordSymbol):
         self._is_miro_symbol = is_miro_input or is_miro_output or is_miro_table
         self._domain_violations = None
 
-        # does symbol exist
-        has_symbol = False
-        if isinstance(getattr(self, "container", None), gp.Container):
-            has_symbol = True
+        if container is None:
+            try:
+                container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
+            except KeyError as e:
+                raise ValidationError("Parameter requires a container.") from e
 
-        if has_symbol:
-            domain = self._normalize_domain(self.container, domain)
-            if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
-                raise ValueError(
-                    "Cannot overwrite symbol in container unless symbol"
-                    " domains are equal"
-                )
+        self._container = cast("Container", weakref.proxy(container))
 
-            if self._domain_forwarding != domain_forwarding:
-                raise ValueError(
-                    "Cannot overwrite symbol in container unless"
-                    " 'domain_forwarding' is left unchanged"
-                )
+        if name is not None:
+            name = validation.validate_name(name)
 
-            # reset some properties
-            if description != "":
-                self._description = description
-
-            self._records: pd.DataFrame | None = None
-
-            previous_state = self._container._options.miro_protect
-            self._container._options.miro_protect = False
-            if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
-            self._container._options.miro_protect = previous_state
+            if is_miro_input or is_miro_output:
+                name = name.lower()
         else:
-            if container is None:
-                try:
-                    container = gp._ctx_managers[
-                        (os.getpid(), threading.get_native_id())
-                    ]
-                except KeyError as e:
-                    raise ValidationError("Parameter requires a container.") from e
+            name = self._container._get_symbol_name(prefix="p")
 
-            self._container = cast("Container", weakref.proxy(container))
+        self.name = name
+        domain = self._normalize_domain(self.container, domain)
+        self._domain = self._validate_domain(domain)
+        self._domain_forwarding = domain_forwarding
+        self._description = description
+        self._records = None
+        self._gams_type = GMS_DT_PAR
+        self._gams_subtype = 0
+        self._latex_name = self.name.replace("_", r"\_")
+        self._should_load_from = DataSource.NONE
+        self._should_unload_to_gams = False
+        self._container._data.update({name: self})
 
-            if name is not None:
-                name = validation.validate_name(name)
+        if is_miro_input:
+            self._already_loaded = False
+            self._container._miro_input_symbols.append(self.name)
 
-                if is_miro_input or is_miro_output:
-                    name = name.lower()
-            else:
-                name = self._container._get_symbol_name(prefix="p")
+        if is_miro_output:
+            self._container._miro_output_symbols.append(self.name)
 
-            self.name = name
-            domain = self._normalize_domain(self.container, domain)
-            self._domain = self._validate_domain(domain)
-            self._domain_forwarding = domain_forwarding
-            self._description = description
-            self._records = None
-            self._gams_type = GMS_DT_PAR
-            self._gams_subtype = 0
-            self._latex_name = self.name.replace("_", r"\_")
-            self._should_load_from = DataSource.NONE
-            self._should_unload_to_gams = False
-            self._container._data.update({name: self})
+        validation.validate_container(self, self._domain)
+        self.where = condition.Condition(self)
+        self._assignment: Expression | None = None
+        self._container._add_statement(self)
 
-            if is_miro_input:
-                self._already_loaded = False
-                self._container._miro_input_symbols.append(self.name)
-
-            if is_miro_output:
-                self._container._miro_output_symbols.append(self.name)
-
-            validation.validate_container(self, self._domain)
-            self.where = condition.Condition(self)
-            self._assignment: Expression | None = None
-            self._container._add_statement(self)
-
-            previous_state = self._container._options.miro_protect
-            self._container._options.miro_protect = False
+        with self._miro_unprotected():
             if records is not None:
                 self._setRecords(records, uels_on_axes=uels_on_axes)
                 if self.dimension == 0 and not self._is_miro_symbol:
@@ -287,8 +254,6 @@ class Parameter(operable.Operable, RecordSymbol):
                 # loaded from the miro input gdx.
                 self._should_unload_to_gams = True
                 self._container._synch_with_gams()
-
-            self._container._options.miro_protect = previous_state
 
     def _serialize(self) -> dict:
         info: dict[str, Any] = {
@@ -440,7 +405,7 @@ class Parameter(operable.Operable, RecordSymbol):
         x = dims[-1]
         dims[-1] = dims[-2]
         dims[-2] = x
-        return permute(self, dims)  # type: ignore
+        return permute(self, dims)  # ty: ignore[invalid-return-type]
 
     @property
     def _attributes(self):
@@ -547,8 +512,6 @@ class Parameter(operable.Operable, RecordSymbol):
 
         return toDictParameter(self, orient=orient)
 
-    # TODO: Legacy function from GTP. Pay the technical debt.
-    @no_type_check
     def toSparseCoo(self) -> coo_matrix | None:
         """
         Converts the parameter records to a SciPy sparse COOrdinate format (coo_matrix).
@@ -565,7 +528,7 @@ class Parameter(operable.Operable, RecordSymbol):
 
         Raises
         ------
-        ValueError
+        ValidationError
             If the parameter has a dimension greater than 2.
 
         Examples
@@ -577,56 +540,10 @@ class Parameter(operable.Operable, RecordSymbol):
         >>> j = gp.Set(m, name="j", records=["X", "Y"])
         >>> p = gp.Parameter(m, name="p", domain=[i, j])
         >>> p.setRecords(np.array([[1, 0], [0, 2]]))
-        >>> sparse_mat = p.toSparseCoo()  # doctest +SKIP
+        >>> sparse_mat = p.toSparseCoo()  # doctest: +SKIP
 
         """
-        from scipy.sparse import coo_matrix
-
-        if self.records is None:
-            return None
-
-        if self.is_scalar:
-            row, col, m, n = [0], [0], 1, 1
-        elif self.dimension == 1:
-            if self.domain_type == "regular":
-                col = (
-                    self.records.iloc[:, 0]
-                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))
-                    .to_numpy(dtype=int)
-                )
-            else:
-                col = self.records.iloc[:, 0].cat.codes.to_numpy(dtype=int)
-
-            row = np.zeros(len(col), dtype=int)
-            m, *n_arr = self.shape
-            assert not n_arr
-            n, m = m, 1
-        elif self.dimension == 2:
-            if self.domain_type == "regular":
-                row = (
-                    self.records.iloc[:, 0]
-                    .map(self.domain[0]._getUELCodes(0, ignore_unused=True))
-                    .to_numpy(dtype=int)
-                )
-                col = (
-                    self.records.iloc[:, 1]
-                    .map(self.domain[1]._getUELCodes(0, ignore_unused=True))
-                    .to_numpy(dtype=int)
-                )
-            else:
-                row = self.records.iloc[:, 0].cat.codes.to_numpy(dtype=int)
-                col = self.records.iloc[:, 1].cat.codes.to_numpy(dtype=int)
-            m, n = self.shape
-        else:
-            raise ValueError(
-                "Sparse coo_matrix formats are only available for data that has dimension <= 2"
-            )
-
-        return coo_matrix(
-            (self.records.iloc[:, -1].to_numpy(dtype=float), (row, col)),
-            shape=(m, n),
-            dtype=float,
-        )
+        return self._toSparseCoo(self._default_attribute)
 
     def toDense(self) -> np.ndarray:
         """
@@ -688,18 +605,10 @@ class Parameter(operable.Operable, RecordSymbol):
                         "appear in rows of the dataframe and the order set elements are specified by the categorical). "
                     )
 
-        if self.domain_type == "regular":
-            idx = [
-                self.records.iloc[:, n]
-                .map(domainobj._getUELCodes(0, ignore_unused=True))
-                .to_numpy(dtype=int)
-                for n, domainobj in enumerate(cast("list[Set | Alias]", self.domain))
-            ]
-        else:
-            idx = [
-                self.records.iloc[:, n].cat.codes.to_numpy(dtype=int)
-                for n, domainobj in enumerate(self.domain)
-            ]
+        idx = [
+            self._getDimensionCodes(self.records, dimension)
+            for dimension in range(self.dimension)
+        ]
 
         a = np.zeros(self.shape)
         val = self.records.iloc[:, -1].to_numpy(dtype=float)

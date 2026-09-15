@@ -51,7 +51,7 @@ def _assert_axes_no_nans(records):
                 )
 
 
-def _flatten_and_convert(records):
+def _flatten_and_convert(records: pd.DataFrame | pd.Series) -> pd.DataFrame:
     AXES = ["index", "columns"]
     drop_needed = False
     for axis_name, axis in zip(AXES, records.axes, strict=False):
@@ -60,7 +60,7 @@ def _flatten_and_convert(records):
         # go through axis
         axis_as_frame = pd.DataFrame(np.array(axis.tolist(), dtype=object))
         for n in range(axis.nlevels):
-            level = axis.levels[n] if hasattr(axis, "levels") else axis
+            level = axis.levels[n] if isinstance(axis, pd.MultiIndex) else axis
 
             # factorize
             # preserve order of appearance, not lexicographical order + str/rstrip
@@ -76,14 +76,14 @@ def _flatten_and_convert(records):
             # preserve user order if CategoricalDtype
             if isinstance(level.dtype, pd.CategoricalDtype):
                 categorical = categorical.reorder_categories(
-                    dict.fromkeys(map(str.rstrip, level.categories)),
+                    dict.fromkeys(map(str.rstrip, level.dtype.categories)),
                     ordered=True,
                 )
 
             # set
             idx.isetitem(n, categorical)
 
-        # TODO: need a workaround here to avoid an error with pandas stack
+        # Append a unique level to make the axis stackable and drop that level again after the stack below.
         if (
             axis_name == "columns"
             and idx.set_index(list(idx.columns)).index.has_duplicates
@@ -98,23 +98,14 @@ def _flatten_and_convert(records):
         getattr(records, axis_name).names = [None] * getattr(records, axis_name).nlevels
 
     if isinstance(records, pd.DataFrame):
-        major, minor, *_ = pd.__version__.split(".")
-        major, minor = (int(major), int(minor))
-
-        # TODO: remove in future... allows support for pandas < 2.1.0
-        if (major, minor) >= (2, 2):
-            to_drop = (records.index.nlevels - 1) + (records.columns.nlevels)
-            records = records.stack(
-                list(range(records.columns.nlevels)),
-                future_stack=True,
-            ).reset_index(drop=False)
-        else:
-            to_drop = (records.index.nlevels - 1) + (records.columns.nlevels)
-            records = records.stack(
-                list(range(records.columns.nlevels)), dropna=False
-            ).reset_index(drop=False)
+        to_drop = (records.index.nlevels - 1) + (records.columns.nlevels)
+        records = records.stack(
+            list(range(records.columns.nlevels)),
+            future_stack=True,
+        ).reset_index(drop=False)
 
         if drop_needed:
+            # drop the uniquifying level that was appended to the columns axis
             records.drop(columns=records.columns[to_drop], inplace=True)
     else:
         records = records.reset_index(drop=False)

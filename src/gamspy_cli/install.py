@@ -15,6 +15,7 @@ import certifi
 import typer
 
 from . import cuopt
+from .license import get_licensed_solvers
 from .util import add_solver_entry, has_pip, has_uv
 
 if TYPE_CHECKING:
@@ -294,7 +295,10 @@ def complete_solver_names(ctx: typer.Context, incomplete: str):
 
 @app.command(
     short_help="To install solvers",
-    help="[bold][yellow]Examples[/yellow][/bold]: gamspy install solver <solver_name>",
+    help=(
+        "[bold][yellow]Examples[/yellow][/bold]: gamspy install solver <solver_name> | "
+        "gamspy install solver --licensed"
+    ),
 )
 def solver(
     solver: list[str] = typer.Argument(  # noqa: B008
@@ -313,6 +317,11 @@ def solver(
         False,
         "--existing-solvers",
         help="Reinstalls previously installed add-on solvers.",
+    ),
+    licensed: bool = typer.Option(
+        False,
+        "--licensed",
+        help="Installs all add-on solvers permitted by the active license that are not yet installed.",
     ),
     skip_pip_install: bool = typer.Option(
         False,
@@ -440,6 +449,20 @@ def solver(
         except FileNotFoundError as e:
             typer.echo("No existing add-on solvers found!")
             raise typer.Exit(code=1) from e
+
+    if licensed:
+        license_path = utils._get_license_path(gamspy_base.directory)
+        licensed_solvers = {s.upper() for s in get_licensed_solvers(license_path)}
+        installable_solvers = set(utils.getInstallableSolvers())
+        installed_solvers = set(utils.getInstalledSolvers(gamspy_base.directory))
+
+        diff = sorted(licensed_solvers & installable_solvers - installed_solvers)
+        if not diff:
+            typer.echo("All licensed solvers are already installed.")
+            return
+
+        install_addons(diff)
+        return
 
     if solver is None:
         typer.echo("Solver name is missing: `gamspy install solver <solver_name>`")

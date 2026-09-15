@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import ctypes
+import functools
 import inspect
 import os
 import platform
@@ -21,6 +22,7 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
+    from types import CodeType
 
     import pandas as pd
 
@@ -442,19 +444,53 @@ def _get_unique_name() -> str:
     return b64.rstrip(b"=").decode("ascii").replace("-", "_")
 
 
+@functools.cache
+def _declaration_plumbing() -> tuple[frozenset[int], tuple[CodeType, ...]]:
+    """Ids of every function that sits between a declaration and _get_name_from_stack."""
+    import gamspy as gp
+    from gamspy._symbols.base import SymbolConstructor
+
+    plumbing = {
+        _get_name_from_stack.__code__,
+        gp.Container._get_symbol_name.__code__,
+        SymbolConstructor.__call__.__code__,
+        gp.Model.__init__.__code__,
+    }
+    plumbing.update(
+        cls.__init__.__code__
+        for cls in (
+            gp.Set,
+            gp.Parameter,
+            gp.Variable,
+            gp.Equation,
+            gp.Alias,
+            gp.UniverseAlias,
+        )
+    )
+    plumbing.update(
+        getattr(gp.Container, attribute).__code__
+        for attribute in dir(gp.Container)
+        if attribute.startswith("add")
+    )
+
+    codes = tuple(plumbing)
+
+    return frozenset(map(id, codes)), codes
+
+
 def _get_name_from_stack() -> str:
     try:
         frame = inspect.currentframe()
         if frame is None:
             raise RuntimeError("Could not get current frame")
 
-        # Current frame is this function. The first f_back takes us to _get_symbol_name.
-        # The second f_back takes us to the __init__ function of the symbol or addX
-        # function of Container. The third f_back takes us to the user code.
-        for _ in range(3):
+        # Walk out of the declaration plumbing to the frame that declared the symbol.
+        plumbing, _pinned = _declaration_plumbing()
+        while frame is not None and id(frame.f_code) in plumbing:
             frame = frame.f_back
-            if frame is None:
-                raise RuntimeError("Call stack is not deep enough")
+
+        if frame is None:
+            raise RuntimeError("Call stack is not deep enough")
 
         info = inspect.getframeinfo(frame)
 
@@ -534,6 +570,15 @@ def _get_gamspy_base_directory() -> str:
 
 
 def _get_license_path(system_directory: str) -> str:
+    license_path = get_option("LICENSE_PATH")
+    if license_path:
+        if not os.path.isfile(license_path):
+            raise ValidationError(
+                f"`{license_path}` given by the `LICENSE_PATH` option is not a valid license path."
+            )
+
+        return license_path
+
     # Check ci license
     ci_license_path = os.path.join(system_directory, "ci_license.txt")
     if os.path.exists(ci_license_path):
@@ -703,7 +748,7 @@ def _get_set(domain: list[Set | Alias | Domain | Expression]):
             res.append(el)
         elif hasattr(el, "left"):
             if hasattr(el.left, "sets"):
-                res.extend(el.left.sets)  # type: ignore
+                res.extend(el.left.sets)  # ty: ignore[invalid-argument-type]
             else:
                 res.append(el.left)
         elif isinstance(el, Domain):

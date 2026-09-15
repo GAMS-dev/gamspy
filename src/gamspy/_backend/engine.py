@@ -140,7 +140,7 @@ class Auth(Endpoint):
         self,
         expires_in: int = 14400,
         scope: list[str] | None = None,
-    ) -> str:  # type: ignore
+    ) -> str:
         """
         Creates a JSON Web Token(JWT) for authentication
 
@@ -247,7 +247,7 @@ class Auth(Endpoint):
                 info = json.loads(response_data)
 
             if r.status_code == 200:
-                return info["token"]  # type: ignore
+                return info["token"]
             elif r.status_code == 400:
                 raise EngineClientException(f"Bad request: {info['message']}")
             elif r.status_code == 401:

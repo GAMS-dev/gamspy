@@ -8,7 +8,7 @@ import ssl
 import xmlrpc.client
 import zipfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TextIO
+from typing import TYPE_CHECKING, Any, TextIO, cast
 
 import certifi
 
@@ -81,7 +81,7 @@ class NeosClient:
         -------
         bool
         """
-        response: str = self.neos.ping()
+        response: str = self.neos.ping()  # ty: ignore[invalid-assignment]
         return bool(response.startswith("NeosServer is alive"))
 
     def get_job_status(self, job_number: int, job_password: str) -> str:
@@ -98,7 +98,7 @@ class NeosClient:
         str
             Either "Done", "Running", "Waiting", "Unknown Job", or "Bad Password"
         """
-        return self.neos.getJobStatus(job_number, job_password)
+        return self.neos.getJobStatus(job_number, job_password)  # ty: ignore[invalid-return-type]
 
     def get_completion_code(self, job_number: int, job_password: str) -> str:
         """
@@ -115,7 +115,7 @@ class NeosClient:
         -------
         str
         """
-        return self.neos.getCompletionCode(job_number, job_password)
+        return self.neos.getCompletionCode(job_number, job_password)  # ty: ignore[invalid-return-type]
 
     def get_job_info(self, job_number: int, job_password: str) -> tuple:
         """
@@ -131,7 +131,7 @@ class NeosClient:
         tuple
             (category, solver_name, input, status, completion_code)
         """
-        return self.neos.getJobInfo(job_number, job_password)
+        return self.neos.getJobInfo(job_number, job_password)  # ty: ignore[invalid-return-type]
 
     def kill_job(self, job_number: int, job_password: str, killmsg="") -> str:
         """
@@ -147,7 +147,7 @@ class NeosClient:
         -------
         str
         """
-        return self.neos.killJob(job_number, job_password, killmsg)
+        return self.neos.killJob(job_number, job_password, killmsg)  # ty: ignore[invalid-return-type]
 
     def get_final_results(
         self, job_number: int, job_password: str, *, is_blocking: bool = True
@@ -168,9 +168,9 @@ class NeosClient:
         xmlrpc.client.Binary
         """
         if is_blocking:
-            return self.neos.getFinalResults(job_number, job_password)
+            return self.neos.getFinalResults(job_number, job_password)  # ty: ignore[invalid-return-type]
 
-        return self.neos.getFinalResultsNonBlocking(job_number, job_password)
+        return self.neos.getFinalResultsNonBlocking(job_number, job_password)  # ty: ignore[invalid-return-type]
 
     def email_job_results(self, job_number: int, job_password: str) -> str:
         """
@@ -188,7 +188,7 @@ class NeosClient:
         -------
         str
         """
-        return self.neos.emailJobResults(job_number, job_password)
+        return self.neos.emailJobResults(job_number, job_password)  # ty: ignore[invalid-return-type]
 
     def get_intermediate_results(
         self,
@@ -216,9 +216,9 @@ class NeosClient:
         xmlrpc.client.Binary
         """
         if is_blocking:
-            return self.neos.getIntermediateResults(job_number, job_password, offset)
+            return self.neos.getIntermediateResults(job_number, job_password, offset)  # ty: ignore[invalid-return-type]
 
-        return self.neos.getIntermediateResultsNonBlocking(job_number, job_password)
+        return self.neos.getIntermediateResultsNonBlocking(job_number, job_password)  # ty: ignore[invalid-return-type]
 
     def download_output(
         self,
@@ -248,7 +248,7 @@ class NeosClient:
             )
 
         with open(os.path.join(working_directory, filename), "wb") as file:
-            file.write(response.data)
+            file.write(response.data)  # ty: ignore[unresolved-attribute]
 
         with zipfile.ZipFile(os.path.join(working_directory, filename), "r") as zip_ref:
             zip_ref.extractall(working_directory)
@@ -362,11 +362,12 @@ class NeosClient:
             raise NeosClientException("NeosServer is not alive. Try again later.")
 
         if self.username is not None and self.password is not None:
-            job_number, job_password = self.neos.authenticatedSubmitJob(
-                xml, self.username, self.password
+            job_number, job_password = cast(
+                "tuple[int, str]",
+                self.neos.authenticatedSubmitJob(xml, self.username, self.password),
             )
         else:
-            job_number, job_password = self.neos.submitJob(xml)
+            job_number, job_password = cast("tuple[int, str]", self.neos.submitJob(xml))
 
         logger.info(f"Job Number: {job_number}, Job Password: {job_password}")
         self.jobs.append((job_number, job_password))

@@ -110,7 +110,7 @@ def vector_norm(
         )
     elif even:
         return gamspy.math.rpower(
-            operation.Sum(sum_domain, x[domain] ** ord),  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
+            operation.Sum(sum_domain, gamspy.math.power(x[domain], ord)),  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
             (1 / ord),
         )
     elif ord == 1:
@@ -210,7 +210,7 @@ def dim(dims: list[int] | tuple[int, ...]) -> Dim:
         if not isinstance(x, int):
             raise ValidationError("Dimensions must be integers")
 
-    return Dim(dims=dims)  # type: ignore
+    return Dim(dims=dims)  # ty: ignore[invalid-argument-type]
 
 
 def _generate_dims(m: Container, dims: Sequence[int]) -> list[Alias | Set]:

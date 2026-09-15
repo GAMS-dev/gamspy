@@ -96,49 +96,25 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
 
         return obj
 
-    def __new__(
-        cls,
+    def _redefine(
+        self,
         container: Container | None = None,
         name: str | None = None,
         alias_with: Set | Alias | None = None,
-    ):
-        if container is not None and not isinstance(container, gp.Container):
-            raise TypeError(
-                f"Container must of type `Container` but found {type(container)}"
-            )
+    ) -> None:
+        if alias_with is self:
+            raise ValueError(f"Alias `{self.name}` cannot be an alias of itself.")
 
-        if name is None:
-            return object.__new__(cls)
-        else:
-            if not isinstance(name, str):
-                raise TypeError(f"Name must of type `str` but found {type(name)}")
-            try:
-                if not container:
-                    container = gp._ctx_managers[
-                        (os.getpid(), threading.get_native_id())
-                    ]
-
-                symbol = container._data[name]
-            except KeyError:
-                return object.__new__(cls)
-
-            if isinstance(symbol, cls):
-                if id(symbol.alias_with) != id(alias_with):
-                    raise ValueError(
-                        "Redefinition of an Alias symbol with a different `alias_with` object is not allowed!"
-                    )
-                return symbol
-
-            raise TypeError(
-                f"Cannot overwrite symbol `{name}` in container"
-                " because it is not an Alias object)"
+        if self._resolve_target(alias_with) is not self.alias_with:
+            raise ValueError(
+                "Redefinition of an Alias symbol with a different `alias_with` object is not allowed!"
             )
 
     def __init__(
         self,
         container: Container | None = None,
         name: str | None = None,
-        alias_with: Set | Alias = None,  # type: ignore
+        alias_with: Set | Alias = None,  # ty: ignore[invalid-parameter-default]
     ):
         self._metadata: dict[str, Any] = {}
         self._assignment: Expression | None = None
@@ -402,7 +378,9 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         """
         return self.alias_with.is_singleton
 
-    def _getUELCodes(self, dimension, ignore_unused=False):
+    def _getUELCodes(
+        self, dimension: int, *, ignore_unused: bool = False
+    ) -> dict[str, int]:
         return self.alias_with._getUELCodes(dimension, ignore_unused=ignore_unused)
 
     def _getUELs(
@@ -436,6 +414,15 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         """
         return self._alias_with
 
+    @staticmethod
+    def _resolve_target(alias_with: Any) -> Set:
+        """Follow an Alias chain down to the root Set it ultimately aliases."""
+        target = alias_with
+        while isinstance(target, Alias):
+            target = target.alias_with
+
+        return target
+
     def _validate_alias_with(self, alias_with: Set | Alias) -> Set:
         from gamspy._symbols import Set, UniverseAlias
 
@@ -449,6 +436,12 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
 
         if not isinstance(alias_with, (Set, Alias)):
             raise TypeError("Symbol 'alias_with' must be type Set or Alias")
+
+        if alias_with.container != self.container:
+            raise ValidationError(
+                f"`alias_with` symbol `{alias_with.name}` must be in the same"
+                f" container as the alias `{self.name}`"
+            )
 
         if isinstance(alias_with, Alias):
             parent = alias_with

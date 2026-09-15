@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.27.0"
+version = "1.28.0"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
 readme = "README_PYPI.md"
-description = "Python-based algebraic modeling interface to GAMS"
+description = "Algebraic modeling and mathematical optimization in Python"
 requires-python = ">=3.10"
 license-files = ["LICENSE"]
-keywords = ["Optimization", "GAMS"]
+keywords = ["Mathematical Optimization", "Algebraic Modeling", "Python", "GAMS"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
@@ -34,8 +34,8 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi >= 54.3.1, < 55.0.0",
-  "gamspy_base >= 54.3.1, < 55.0.0",
+  "gamsapi >= 54.4.0, < 55.0.0",
+  "gamspy_base >= 54.4.0, < 55.0.0",
   "pandas >= 2.2.2, < 3.1",
   "pydantic >= 2.0",
   "pyyaml >= 6.0",
@@ -65,19 +65,6 @@ torch = [{ index = "pytorch-cpu" }]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
-
-[tool.ty.src]
-exclude = [
-    "src/gamspy/_backend/neos.py", 
-    "src/gamspy/_backend/engine.py", 
-    "src/gamspy/_gmd.py",
-    "src/gamspy/_records_ingestion.py", 
-    "src/gamspy/formulations/nn",
-    "src/gamspy/formulations/ml",
-    "src/gamspy/formulations/shape.py",
-    "src/gamspy/formulations/piecewise.py",
-    "src/gamspy/formulations/utils.py",
-]
 
 [tool.ty.rules]
 invalid-method-override = "ignore"  # Some overrides do not match the signature of equivalent gtp functions.
@@ -253,6 +240,7 @@ select = [
     "PLC0207",  # missing-maxsplit-arg
     "PLC0208",  # iteration-over-set
     "PLE",      # Pylint error rules
+    "PGH003",   # blanket-type-ignore
 ]
 ignore = [
     "E501",   # line-too-long
@@ -295,4 +283,5 @@ markers = [
     "neos: neos tests",
     "model_library: run all model library",
     "requires_license: tests that require license",
+    "requires_solvers: tests that require specific solvers to be installed",
 ]

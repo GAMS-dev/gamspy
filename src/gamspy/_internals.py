@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import itertools
 from collections import UserDict
 from enum import Enum
@@ -71,8 +72,6 @@ class CasePreservingDict(UserDict[str, _VT]):
             return default
 
     def copy(self) -> CasePreservingDict[_VT]:
-        import copy
-
         return copy.deepcopy(self)
 
     def setdefault(self, key: str, default: Any) -> Any:

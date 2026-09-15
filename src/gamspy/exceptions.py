@@ -9,13 +9,35 @@ if TYPE_CHECKING:
     from gamspy import Options
 
 
-class FatalError(Exception):
+class GamspyBaseException(Exception):
+    """
+    Base class of every exception GAMSPy raises.
+
+    Catch this to handle any GAMSPy failure without enumerating the
+    individual exception types::
+
+        try:
+            model.solve()
+        except GamspyBaseException as e:
+            ...
+
+    It does not carry any behavior of its own, so no subclass is forced to
+    accept a particular constructor signature. Prefer a narrower type when
+    you know which failure you want to handle.
+    """
+
+
+class FatalError(GamspyBaseException):
     """Indicates an error that cannot be recovered from. This error should never be caught."""
 
 
-class GamspyException(Exception):
+class GamspyException(GamspyBaseException):
     """
-    Plain Gamspy exception. This exception can be caught and GAMSPy should be able to continue.
+    An error raised while GAMS executed the generated model. This exception can
+    be caught and GAMSPy should be able to continue. It deliberately does not
+    cover validation, GDX or client errors; catch
+    :class:`GamspyBaseException <gamspy.exceptions.GamspyBaseException>`
+    for those as well.
 
     Parameters
     ----------
@@ -29,23 +51,23 @@ class GamspyException(Exception):
         self.return_code = return_code
 
 
-class ValidationError(Exception):
+class ValidationError(GamspyBaseException):
     """An error while validating data."""
 
 
-class GdxException(Exception):
+class GdxException(GamspyBaseException):
     """GDX exception"""
 
 
-class GmdException(Exception):
+class GmdException(GamspyBaseException):
     """GMD exception"""
 
 
-class NeosClientException(Exception):
+class NeosClientException(GamspyBaseException):
     """NeosClient exception"""
 
 
-class EngineClientException(Exception):
+class EngineClientException(GamspyBaseException):
     """EngineClient exception"""
 
 

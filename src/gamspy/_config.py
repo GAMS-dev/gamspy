@@ -1,11 +1,38 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Literal
+from difflib import get_close_matches
+from typing import Any, Literal, cast, get_args
 
 from gamspy.exceptions import ValidationError
 
+OptionName = Literal[
+    "GAMS_SYSDIR",
+    "LICENSE_PATH",
+    "VALIDATION",
+    "DOMAIN_VALIDATION",
+    "SOLVER_VALIDATION",
+    "SOLVER_OPTION_VALIDATION",
+    "MAP_SPECIAL_VALUES",
+    "ASSUME_VARIABLE_SUFFIX",
+    "USE_PY_VAR_NAME",
+    "DROP_DOMAIN_VIOLATIONS",
+    "ALLOW_AMBIGUOUS_EQUATIONS",
+    "STRICT_POWER_OPERATOR",
+]
+
+OPTION_NAMES: tuple[str, ...] = get_args(OptionName)
+
 configuration: dict[str, Any] = {}
+
+
+def _unknown_option_message(name: str) -> str:
+    message = f"`{name}` is not a valid GAMSPy option."
+    matches = get_close_matches(word=name, possibilities=OPTION_NAMES, n=1)
+    if matches:
+        message += f" Did you mean `{matches[0]}`?"
+
+    return f"{message} Valid options are: {', '.join(OPTION_NAMES)}."
 
 
 def _set_default_options() -> None:
@@ -20,6 +47,10 @@ def _set_default_options() -> None:
     sysdir = os.getenv("GAMSPY_GAMS_SYSDIR", None)
     if sysdir is not None:
         configuration["GAMS_SYSDIR"] = sysdir
+
+    # No license path by default. GAMSPy discovers the license in this case.
+    license_path = os.getenv("GAMSPY_LICENSE_PATH", "")
+    configuration["LICENSE_PATH"] = license_path
 
     # Enable all validations by default
     validate = int(os.getenv("GAMSPY_VALIDATION", 1))
@@ -57,34 +88,25 @@ def _set_default_options() -> None:
     ambiguity = os.getenv("GAMSPY_ALLOW_AMBIGUOUS_EQUATIONS", "auto")
     configuration["ALLOW_AMBIGUOUS_EQUATIONS"] = ambiguity
 
+    # Map ** to power/sqrt instead of GAMS' rPower where possible by default.
+    strict_power = int(os.getenv("GAMSPY_STRICT_POWER_OPERATOR", 0))
+    configuration["STRICT_POWER_OPERATOR"] = strict_power
 
-def set_options(
-    options: dict[
-        Literal[
-            "GAMS_SYSDIR",
-            "VALIDATION",
-            "DOMAIN_VALIDATION",
-            "SOLVER_OPTION_VALIDATION",
-            "MAP_SPECIAL_VALUES",
-            "ASSUME_VARIABLE_SUFFIX",
-            "USE_PY_VAR_NAME",
-            "DROP_DOMAIN_VIOLATIONS",
-            "ALLOW_AMBIGUOUS_EQUATIONS",
-        ],
-        Any,
-    ],
-) -> None:
+
+def set_options(options: dict[OptionName, Any]) -> None:
     """
     Sets the given configuration options.
 
     Parameters
     ----------
     options : dict[str, Any]
+        Option names mapped to their new values.
 
     Raises
     ------
     ValidationError
-        In case the given options are not in dict type.
+        In case the given options are not in dict type or in case an
+        option name is not recognized.
 
     Examples
     --------
@@ -97,8 +119,15 @@ def set_options(
             f"`options` must be a dictionary but found: `{type(options)}`"
         )
 
-    for key, value in options.items():
-        configuration[key] = value
+    given = cast("dict[str, Any]", options)
+
+    # Validate all up front to avoid partially updated config.
+    for name in given:
+        if name not in OPTION_NAMES:
+            raise ValidationError(_unknown_option_message(name))
+
+    for name, value in given.items():
+        configuration[name] = value
 
 
 def get_option(name: str) -> Any:
@@ -129,4 +158,7 @@ def get_option(name: str) -> Any:
     >>> gp.set_options({"DOMAIN_VALIDATION": 1})
 
     """
-    return configuration[name]
+    try:
+        return configuration[name]
+    except KeyError as e:
+        raise KeyError(_unknown_option_message(name)) from e

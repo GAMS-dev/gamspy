@@ -4,6 +4,8 @@ GAMSPy is built with Python. The codebase is organized into the following layers
 
 ### Root Folders
 - `src/`: Source code
+  - `gamspy/`: GAMSPy library source code.
+  - `gamspy_cli/`: GAMSPy CLI source code.
 - `tests/`: Unit and integration tests.
 - `docs/`: Sphinx documentation. 
 - `scripts/`: Development, build, and performance scripts.
@@ -12,7 +14,6 @@ GAMSPy is built with Python. The codebase is organized into the following layers
 ### Core Architecture (`src/gamspy` folder)
 - `_symbols/` - Implementation of the main symbols in GAMSPy such as Set, Parameter, Variable, Equation and Alias.
 - `_backend/` - Implementation of different backends such as GAMS Engine and NEOS Server to solve models.
-- `_cli/` - GAMSPy CLI implementation.
 - `_algebra/` - Implementation of other structures to help developing models such as Expression, Domain, Number, Sum, Product, Smin, and Smax.
 - `formulations/` - Implementation of different formulations including machine learning and neural network formulations.
 - `math` - Math related expressions.

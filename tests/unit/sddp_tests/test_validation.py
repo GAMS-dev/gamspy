@@ -23,8 +23,6 @@ def test_constructor_validation():
     with pytest.raises(ValidationError):
         SDDP(m, stage_set=t, n_trials=0)
 
-    m.close()
-
 
 def test_lifecycle_ordering(clearlake):
     c = clearlake

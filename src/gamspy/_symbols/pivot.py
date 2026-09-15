@@ -50,12 +50,13 @@ def _validate_axes(
 
 def _fill_missing_values(df: pd.DataFrame, fill_value: Any) -> None:
     """Helper function to fill NA values safely across different Pandas versions."""
-    major, minor, *_ = pd.__version__.split(".")
-    if (int(major), int(minor)) >= (2, 2) and (int(major), int(minor)) < (3, 0):
+    major, *_ = pd.__version__.split(".")
+    if int(major) >= 3:
+        # Silent downcasting is already gone in Pandas 3
+        df.fillna(fill_value, inplace=True)
+    else:
         with pd.option_context("future.no_silent_downcasting", True):
             df.fillna(fill_value, inplace=True)
-    else:
-        df.fillna(fill_value, inplace=True)
 
 
 def _restore_special_values(

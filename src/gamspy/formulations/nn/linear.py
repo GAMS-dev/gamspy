@@ -75,9 +75,9 @@ class Linear:
         self.use_bias = bias
         self._state = 0
         self.weight: Parameter | Variable | None = None
-        self.weight_array = None
+        self.weight_array: np.ndarray | None = None
         self.bias: Parameter | Variable | None = None
-        self.bias_array = None
+        self.bias_array: np.ndarray | None = None
 
         if name_prefix is None:
             name_prefix = gp.utils._get_unique_name()
@@ -155,7 +155,7 @@ class Linear:
                     records=bias,
                 )
             else:
-                self.bias.setRecords(bias)  # ty: ignore[invalid-argument-type] ty cannot narrow bias down here.
+                self.bias.setRecords(bias)
 
             self.bias_array = bias
 
@@ -254,7 +254,7 @@ class Linear:
         if len(input.domain) == 0:
             raise ValidationError("expected an input with at least 1 dimension")
 
-        if len(input.domain[-1]) != self.in_features:
+        if len(utils._get_domain(input)[-1]) != self.in_features:
             raise ValidationError("in_features does not match")
 
         expr = input @ self.weight.t()
@@ -311,7 +311,7 @@ class Linear:
             if x_bounds.records is None:
                 out_bounds_array = np.zeros(out.shape)
 
-                if self.use_bias:
+                if self.bias_array is not None:
                     out_bounds_array = out_bounds_array + self.bias_array
 
                 out_bounds = gp.Parameter(

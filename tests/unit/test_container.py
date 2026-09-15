@@ -41,36 +41,18 @@ from gamspy import (
 from gamspy.exceptions import GamspyException, GdxException, ValidationError
 
 
-@pytest.fixture
-def data():
-    # Arrange
-    m = Container()
-    canning_plants = ["seattle", "san-diego"]
-    markets = ["new-york", "chicago", "topeka"]
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+@pytest.fixture(autouse=True)
+def cleanup_mpsge_file():
+    yield
 
-    # Act and assert
-    yield m, canning_plants, markets, capacities, demands, distances
-
-    # Cleanup
-    m.close()
     mpsge_file_path = os.path.join(os.getcwd(), "HANSEN.GEN")
     if os.path.exists(mpsge_file_path):
         os.remove(mpsge_file_path)
 
 
 @pytest.mark.unit
-def test_container(data, tmp_path):
-    m, *_ = data
+def test_container(transport, tmp_path):
+    m = transport.container
 
     with pytest.raises(ValidationError):
         _ = Container(system_directory="invaliddir")
@@ -153,6 +135,8 @@ def test_container(data, tmp_path):
     assert id(i1) == id(i2)
     i3 = m.addSet("i", records=["new_record"], description="new desc")
     assert id(i1) == id(i3)
+    assert i3.description == "new desc"
+    assert i3.records["uni"].tolist() == ["new_record"]
     with pytest.raises(ValueError):
         m.addSet("i", [j])
     with pytest.raises(ValueError):
@@ -216,8 +200,58 @@ def test_container(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_str(data):
-    m, *_ = data
+def test_typed_getters():
+    m = Container()
+    i = Set(m, "i")
+    j = Alias(m, "j", i)
+    h = UniverseAlias(m, "h")
+    a = Parameter(m, "a")
+    v = Variable(m, "v")
+    e = Equation(m, "e")
+
+    assert m.getSet("i") is i
+    assert m.getAlias("j") is j
+    assert m.getUniverseAlias("h") is h
+    assert m.getParameter("a") is a
+    assert m.getVariable("v") is v
+    assert m.getEquation("e") is e
+
+    for symbol in (i, j, h, a, v, e):
+        assert m.getSymbol(symbol.name) is symbol
+        assert m.getSymbol(symbol.name, type(symbol)) is symbol
+
+    # A UniverseAlias is not an Alias and vice versa.
+    with pytest.raises(ValidationError):
+        m.getAlias("h")
+
+    with pytest.raises(ValidationError):
+        m.getUniverseAlias("j")
+
+    # Asking for the wrong type is an error, not a silent cast.
+    with pytest.raises(ValidationError):
+        m.getSet("v")
+
+    with pytest.raises(ValidationError):
+        m.getSymbol("i", Variable)
+
+    # `type` must be a symbol type.
+    with pytest.raises(ValidationError):
+        m.getSymbol("i", int)
+
+    with pytest.raises(ValidationError):
+        m.getSymbol("i", "Set")
+
+    # Missing symbols still raise KeyError, as in `m[name]`.
+    with pytest.raises(KeyError):
+        m.getSet("k")
+
+    with pytest.raises(KeyError):
+        m.getSymbol("k")
+
+
+@pytest.mark.unit
+def test_str(transport):
+    m = transport.container
     assert str(m) == f"<Empty Container ({hex(id(m))})>"
 
     _ = Set(m, "i")
@@ -227,8 +261,8 @@ def test_str(data):
 
 
 @pytest.mark.unit
-def test_read_write(data, tmp_path):
-    m, *_ = data
+def test_read_write(transport, tmp_path):
+    m = transport.container
     gdx_path = str(tmp_path / "test.gdx")
 
     m2 = Container()
@@ -276,8 +310,8 @@ def test_read_synch(tmp_path):
 
 
 @pytest.mark.unit
-def test_loadRecordsFromGdx(data, tmp_path):
-    m, *_ = data
+def test_loadRecordsFromGdx(transport, tmp_path):
+    m = transport.container
     gdx_path = str(tmp_path / "test.gdx")
 
     i = Set(m, name="i", records=["i1", "i2"])
@@ -436,8 +470,8 @@ def test_enums():
 
 
 @pytest.mark.unit
-def test_add_gams_code_domain_recovery(data):
-    m, *_ = data
+def test_add_gams_code_domain_recovery(transport):
+    m = transport.container
     i = Set(m, name="i", records=range(10))
     m.addGamsCode("positive variable x(i); x.l(i)=1;")
     x = m["x"]
@@ -523,8 +557,8 @@ def test_system_directory():
 
 
 @pytest.mark.unit
-def test_write_load_on_demand(data, tmp_path):
-    m, *_ = data
+def test_write_load_on_demand(transport, tmp_path):
+    m = transport.container
     i = Set(m, name="i", records=["i1"])
     p1 = Parameter(m, name="p1", domain=[i], records=[["i1", 1]])
     p2 = Parameter(m, name="p2", domain=[i])
@@ -539,8 +573,14 @@ def test_write_load_on_demand(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_copy(data, tmp_path):
-    _, canning_plants, markets, capacities, demands, distances = data
+def test_copy(transport, tmp_path):
+    canning_plants, markets, capacities, demands, distances = (
+        transport.canning_plants,
+        transport.markets,
+        transport.capacities,
+        transport.demands,
+        transport.distances,
+    )
 
     copy_dir = str(tmp_path / "copy")
     m = Container(
@@ -624,12 +664,10 @@ Equation e / /;
     with pytest.raises(ValidationError):
         m2.generateGamsString()
 
-    m2.close()
-
 
 @pytest.mark.unit
-def test_removal_of_autogenerated_symbols(data):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_removal_of_autogenerated_symbols(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
 
@@ -672,8 +710,8 @@ def test_removal_of_autogenerated_symbols(data):
 
 
 @pytest.mark.unit
-def test_write(data, tmp_path):
-    m, *_ = data
+def test_write(transport, tmp_path):
+    m = transport.container
     gdx_path = str(tmp_path / "test.gdx")
 
     from gamspy import SpecialValues
@@ -702,12 +740,10 @@ def test_write(data, tmp_path):
     m = gp.Container(load_from=gdx_path)
     assert list(m.data.keys()) == ["c", "d"]
 
-    m.close()
-
 
 @pytest.mark.unit
-def test_read(data, tmp_path):
-    m, *_ = data
+def test_read(transport, tmp_path):
+    m = transport.container
     gdx_path = str(tmp_path / "test.gdx")
 
     _ = Parameter(m, "a", records=5)
@@ -718,8 +754,6 @@ def test_read(data, tmp_path):
         m.read(gdx_path, load_records=False)
 
     assert m["a"]._records is None
-
-    m.close()
 
 
 @pytest.mark.unit
@@ -832,8 +866,8 @@ def test_workspace_cleanup_ignores_missing_directory():
 
 
 @pytest.mark.unit
-def test_read_from_gdx(data, tmp_path):
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_read_from_gdx(transport, tmp_path):
+    m, canning_plants, markets, distances, capacities, demands = transport
     # Set
     i = Set(
         m,
@@ -947,12 +981,11 @@ def test_read_from_gdx(data, tmp_path):
 
     assert i.toList() == ["seattle", "san-diego"]
     assert k.toList() == ["seattle", "san-diego"]
-    m.close()
 
 
 @pytest.mark.unit
-def test_read_rename(data, tmp_path):
-    m, *_ = data
+def test_read_rename(transport, tmp_path):
+    m = transport.container
     gdx_path = str(tmp_path / "rename.gdx")
 
     _ = Parameter(m, "X", records=5)
@@ -965,12 +998,11 @@ def test_read_rename(data, tmp_path):
     assert "A" in m2.data
     assert "X" not in m2.data
     assert m2["A"].toValue() == 5
-    m2.close()
 
 
 @pytest.mark.unit
-def test_read_rename_domain(data, tmp_path):
-    m, *_ = data
+def test_read_rename_domain(transport, tmp_path):
+    m = transport.container
     gdx_path = str(tmp_path / "rename_domain.gdx")
 
     i = Set(m, "i", records=["i1", "i2"])
@@ -986,12 +1018,11 @@ def test_read_rename_domain(data, tmp_path):
     assert m2["q"].domain == [m2["j"]]
     assert m2["j"].toList() == ["i1", "i2"]
     assert m2["q"].toList() == [("i1", 1.0), ("i2", 2.0)]
-    m2.close()
 
 
 @pytest.mark.unit
-def test_read_rename_from_gamspy_container(data):
-    m, *_ = data
+def test_read_rename_from_gamspy_container(transport):
+    m = transport.container
     i = Set(m, "i", records=["i1", "i2"])
     _ = Parameter(m, "p", domain=i, records=[("i1", 1), ("i2", 2)])
 
@@ -1001,7 +1032,6 @@ def test_read_rename_from_gamspy_container(data):
     assert m2["q"].domain == [m2["j"]]
     assert m2["j"].toList() == ["i1", "i2"]
     assert m2["q"].toList() == [("i1", 1.0), ("i2", 2.0)]
-    m2.close()
 
 
 @pytest.mark.unit
@@ -1016,12 +1046,11 @@ def test_read_rename_from_transfer_container():
     assert m2["q"].domain == [m2["j"]]
     assert m2["j"].toList() == ["i1", "i2"]
     assert m2["q"].toList() == [("i1", 1.0), ("i2", 2.0)]
-    m2.close()
 
 
 @pytest.mark.unit
-def test_read_rename_errors(data, tmp_path):
-    m, *_ = data
+def test_read_rename_errors(transport, tmp_path):
+    m = transport.container
     gdx_path = str(tmp_path / "rename_err.gdx")
 
     _ = Parameter(m, "X", records=5)
@@ -1040,7 +1069,6 @@ def test_read_rename_errors(data, tmp_path):
     m3 = Container()
     with pytest.raises(ValidationError):
         m3.read(gdx_path, symbol_names={"X": "A", "Y": "A"})
-    m3.close()
 
 
 @pytest.mark.unit
@@ -1075,12 +1103,11 @@ def test_restart():
     assert m["a"].domain == [m["i"]]
     _ = Set(m, "j", records=range(6))
     assert list(m.data.keys()) == ["i", "a", "j"]
-    m.close()
 
 
 @pytest.mark.unit
-def test_serialization(data) -> None:
-    m, canning_plants, markets, capacities, demands, distances = data
+def test_serialization(transport) -> None:
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
     k = Alias(m, name="k", alias_with=i)
@@ -1168,8 +1195,8 @@ def test_serialization(data) -> None:
 
 
 @pytest.mark.unit
-def test_mcp_serialization(data) -> None:
-    m, _, _, _, _, _ = data
+def test_mcp_serialization(transport) -> None:
+    m = transport.container
     c = Set(m, "c")
     h = Set(m, "h")
     s = Set(m, "s")
@@ -1227,8 +1254,8 @@ def test_mcp_serialization(data) -> None:
 
 
 @pytest.mark.unit
-def test_deserialize_variable_with_universe_domain(data, tmp_path):
-    m, *_ = data
+def test_deserialize_variable_with_universe_domain(transport, tmp_path):
+    m = transport.container
     t = Set(m, "t", records=["a", "b"])
     _ = Variable(m, "v", type="positive", domain=["*", t])
 
@@ -1242,8 +1269,8 @@ def test_deserialize_variable_with_universe_domain(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_deserialize_variable_indexed_bound_write(data, tmp_path):
-    m, *_ = data
+def test_deserialize_variable_indexed_bound_write(transport, tmp_path):
+    m = transport.container
     t = Set(m, "t", records=["a", "b"])
     v = Variable(m, "v", type="positive", domain=t)
     v.lo[t] = 0
@@ -1259,8 +1286,8 @@ def test_deserialize_variable_indexed_bound_write(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_deserialize_variable_level_read(data, tmp_path):
-    m, *_ = data
+def test_deserialize_variable_level_read(transport, tmp_path):
+    m = transport.container
     i = Set(m, "i", records=["i1", "i2"])
     x = Variable(m, "x", type="positive", domain=i)
     e = Equation(m, "e", domain=i)
@@ -1288,8 +1315,8 @@ def test_deserialize_variable_level_read(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_deserialize_equation_indexed_bound_write(data, tmp_path):
-    m, *_ = data
+def test_deserialize_equation_indexed_bound_write(transport, tmp_path):
+    m = transport.container
     t = Set(m, "t", records=["a", "b"])
     v = Variable(m, "v", domain=t)
     eq = Equation(m, "eq", domain=t)
@@ -1306,8 +1333,8 @@ def test_deserialize_equation_indexed_bound_write(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_deserialize_equation_level_read(data, tmp_path):
-    m, *_ = data
+def test_deserialize_equation_level_read(transport, tmp_path):
+    m = transport.container
     i = Set(m, "i", records=["i1", "i2"])
     x = Variable(m, "x", type="positive", domain=i)
     e = Equation(m, "e", domain=i)
@@ -1335,8 +1362,8 @@ def test_deserialize_equation_level_read(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_deserialize_set_alias_subset_regression(data, tmp_path):
-    m, *_ = data
+def test_deserialize_set_alias_subset_regression(transport, tmp_path):
+    m = transport.container
     i = Set(m, "i", records=["i1", "i2", "i3"])
     Set(m, "j", domain=i, records=["i1", "i3"])
     Alias(m, "ii", i)
@@ -1361,8 +1388,8 @@ def test_deserialize_set_alias_subset_regression(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_deserialize_parameter_indexed_regression(data, tmp_path):
-    m, *_ = data
+def test_deserialize_parameter_indexed_regression(transport, tmp_path):
+    m = transport.container
     i = Set(m, "i", records=["i1", "i2"])
     Parameter(m, "a", domain=i, records=[["i1", 10], ["i2", 20]])
 
@@ -1377,16 +1404,16 @@ def test_deserialize_parameter_indexed_regression(data, tmp_path):
 
 
 @pytest.mark.unit
-def test_auto_python_name_retrieval():
+def test_auto_python_name_retrieval(set_options):
     import gamspy as gp
 
     with gp.Container():
-        gp.set_options({"USE_PY_VAR_NAME": "no"})
+        set_options({"USE_PY_VAR_NAME": "no"})
 
         i = gp.Set()
         assert i.name != "i"  # autogen name, will be different every time
 
-        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+        set_options({"USE_PY_VAR_NAME": "yes"})
 
         # Reserved names are not allowed,
         with pytest.raises(ValidationError):
@@ -1395,53 +1422,53 @@ def test_auto_python_name_retrieval():
         i = gp.Set()
         assert i.name == "i"
 
-        gp.set_options({"USE_PY_VAR_NAME": "no"})
+        set_options({"USE_PY_VAR_NAME": "no"})
 
         j = gp.Alias(alias_with=i)
         assert j.name != "j"  # autogen name, will be different every time
 
-        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+        set_options({"USE_PY_VAR_NAME": "yes"})
 
         j = gp.Alias(alias_with=i)
         assert j.name == "j"
 
-        gp.set_options({"USE_PY_VAR_NAME": "no"})
+        set_options({"USE_PY_VAR_NAME": "no"})
 
         k = gp.Parameter()
         assert k.name != "k"  # autogen name, will be different every time
 
-        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+        set_options({"USE_PY_VAR_NAME": "yes"})
 
         k = gp.Parameter()
         assert k.name == "k"
 
-        gp.set_options({"USE_PY_VAR_NAME": "no"})
+        set_options({"USE_PY_VAR_NAME": "no"})
 
         l = gp.Variable()
         assert l.name != "l"  # autogen name, will be different every time
 
-        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+        set_options({"USE_PY_VAR_NAME": "yes"})
 
         l = gp.Variable()
         assert l.name == "l"
 
-        gp.set_options({"USE_PY_VAR_NAME": "no"})
+        set_options({"USE_PY_VAR_NAME": "no"})
 
         n = gp.Equation()
         assert n.name != "n"  # autogen name, will be different every time
 
-        gp.set_options({"USE_PY_VAR_NAME": "yes"})
+        set_options({"USE_PY_VAR_NAME": "yes"})
 
         n = gp.Equation()
         assert n.name == "n"
 
     m = gp.Container()
-    gp.set_options({"USE_PY_VAR_NAME": "no"})
+    set_options({"USE_PY_VAR_NAME": "no"})
 
     i = gp.Set(m)
     assert i.name != "i"  # autogen name, will be different every time
 
-    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+    set_options({"USE_PY_VAR_NAME": "yes"})
 
     i = gp.Set(m)
     assert i.name == "i"
@@ -1450,7 +1477,7 @@ def test_auto_python_name_retrieval():
     with pytest.raises(ValidationError):
         _bla = gp.Set(m)
 
-    gp.set_options({"USE_PY_VAR_NAME": "yes-or-autogenerate"})
+    set_options({"USE_PY_VAR_NAME": "yes-or-autogenerate"})
     _ = gp.Set(m)  # autogen a name
     _ = gp.Alias(m, alias_with=i)
     _ = gp.Parameter(m)  # autogen a name
@@ -1477,50 +1504,48 @@ def test_auto_python_name_retrieval():
     test_equation = gp.Equation(m)
     assert test_equation.name != "test_equation"
 
-    gp.set_options({"USE_PY_VAR_NAME": "no"})
+    set_options({"USE_PY_VAR_NAME": "no"})
 
     j = gp.Alias(m, alias_with=i)
     assert j.name != "j"  # autogen name, will be different every time
 
-    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+    set_options({"USE_PY_VAR_NAME": "yes"})
 
     j = gp.Alias(m, alias_with=i)
     assert j.name == "j"
 
-    gp.set_options({"USE_PY_VAR_NAME": "no"})
+    set_options({"USE_PY_VAR_NAME": "no"})
 
     k = gp.Parameter(m)
     assert k.name != "k"  # autogen name, will be different every time
 
-    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+    set_options({"USE_PY_VAR_NAME": "yes"})
 
     k = gp.Parameter(m)
     assert k.name == "k"
 
-    gp.set_options({"USE_PY_VAR_NAME": "no"})
+    set_options({"USE_PY_VAR_NAME": "no"})
 
     l = gp.Variable(m)
     assert l.name != "l"  # autogen name, will be different every time
 
-    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+    set_options({"USE_PY_VAR_NAME": "yes"})
 
     l = gp.Variable(m)
     assert l.name == "l"
 
-    gp.set_options({"USE_PY_VAR_NAME": "no"})
+    set_options({"USE_PY_VAR_NAME": "no"})
 
     n = gp.Equation(m)
     assert n.name != "n"  # autogen name, will be different every time
 
-    gp.set_options({"USE_PY_VAR_NAME": "yes"})
+    set_options({"USE_PY_VAR_NAME": "yes"})
 
     n = gp.Equation(m)
     assert n.name == "n"
 
     p = gp.Model(m)
     assert p.name == "p"
-
-    gp.set_options({"USE_PY_VAR_NAME": "yes-or-autogenerate"})
 
 
 @pytest.mark.unit
@@ -1608,6 +1633,43 @@ def test_explicit_license_path():
 
 
 @pytest.mark.unit
+def test_license_path_option(set_options, tmp_path):
+    demo_license_path = os.path.join(gamspy_base.directory, "gamslice.txt")
+    license_path = str(tmp_path / "my_license.txt")
+    shutil.copy(demo_license_path, license_path)
+
+    set_options({"LICENSE_PATH": license_path})
+    assert Container()._license_path == license_path
+
+    # A license given at Container creation time overrides the option.
+    m = Container(options=gp.Options(license=demo_license_path))
+    assert m._license_path == demo_license_path
+
+    set_options({"LICENSE_PATH": str(tmp_path / "no_such_license.txt")})
+    with pytest.raises(ValidationError):
+        Container()
+
+
+@pytest.mark.unit
+def test_license_path_environment_variable(tmp_path):
+    license_path = str(tmp_path / "my_license.txt")
+    shutil.copy(os.path.join(gamspy_base.directory, "gamslice.txt"), license_path)
+
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import gamspy as gp; print(gp.Container()._license_path)",
+        ],
+        env={**os.environ, "GAMSPY_LICENSE_PATH": license_path},
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert process.stdout.splitlines()[-1] == license_path
+
+
+@pytest.mark.unit
 def test_writeSolverOptions():
     m = Container()
     m.writeSolverOptions(
@@ -1664,8 +1726,6 @@ def test_writeSolverOptions():
 
         assert original_file_content == copied_file_content
 
-    m.close()
-
 
 @pytest.mark.unit
 def test_writeSolverOptions_scip():
@@ -1706,14 +1766,12 @@ def test_writeSolverOptions_scip():
     with open(os.path.join(m.working_directory, "shot.opt")) as file:
         assert file.read().splitlines() == ["Subsolver.GAMS.NLP.Solver = conopt"]
 
-    m.close()
-
 
 @pytest.mark.unit
-def test_domain_violations():
+def test_domain_violations(set_options):
     import gamspy as gp
 
-    gp.set_options({"DROP_DOMAIN_VIOLATIONS": 1})
+    set_options({"DROP_DOMAIN_VIOLATIONS": 1})
 
     c = gp.Container()
     i = gp.Set(c, "i", records=["i1"])
@@ -1749,8 +1807,6 @@ def test_domain_violations():
     )
     assert e.toList() == [("i1", 10.0)]
     assert e._domain_violations[0].violations == ["i2"]
-
-    gp.set_options({"DROP_DOMAIN_VIOLATIONS": 0})
 
 
 @pytest.mark.unit
@@ -2141,6 +2197,90 @@ def test_describe_symbols():
 
 
 @pytest.mark.unit
+def test_list_and_get_symbols_by_type():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a"])
+    _ = gp.Alias(m, "al", i)
+    _ = gp.UniverseAlias(m, "uni")
+    _ = gp.Parameter(m, "p")
+    _ = gp.Variable(m, "v_free", type="free")
+    _ = gp.Variable(m, "v_binary", type="binary")
+    _ = gp.Equation(m, "e_eq", type="eq")
+    _ = gp.Equation(m, "e_leq", type="leq")
+
+    assert m.listSets() == ["i"]
+    assert m.listAliases() == ["al", "uni"]
+    assert m.listParameters() == ["p"]
+    assert m.listVariables() == ["v_free", "v_binary"]
+    assert m.listEquations() == ["e_eq", "e_leq"]
+
+    # the get* forms return the very same objects, in the same order
+    assert [s.name for s in m.getSets()] == m.listSets()
+    assert [s.name for s in m.getAliases()] == m.listAliases()
+    assert [s.name for s in m.getParameters()] == m.listParameters()
+    assert [s.name for s in m.getVariables()] == m.listVariables()
+    assert [s.name for s in m.getEquations()] == m.listEquations()
+    assert m.getSets()[0] is i
+
+
+@pytest.mark.unit
+def test_list_variables_by_type():
+    m = gp.Container()
+    _ = gp.Variable(m, "v_free", type="free")
+    _ = gp.Variable(m, "v_binary", type="binary")
+    _ = gp.Variable(m, "v_positive", type="positive")
+
+    assert m.listVariables("binary") == ["v_binary"]
+    assert m.listVariables(["free", "positive"]) == ["v_free", "v_positive"]
+    assert m.listVariables("BINARY") == ["v_binary"]
+    assert [s.name for s in m.getVariables("binary")] == ["v_binary"]
+
+    with pytest.raises(TypeError):
+        m.listVariables(5)
+
+    with pytest.raises(ValueError):
+        m.listVariables("nonsense")
+
+
+@pytest.mark.unit
+def test_list_equations_by_type():
+    m = gp.Container()
+    _ = gp.Equation(m, "e_eq", type="eq")
+    _ = gp.Equation(m, "e_geq", type="geq")
+    _ = gp.Equation(m, "e_leq", type="leq")
+
+    assert m.listEquations("eq") == ["e_eq"]
+    assert m.listEquations(["eq", "geq"]) == ["e_eq", "e_geq"]
+    assert m.listEquations("EQ") == ["e_eq"]
+    # the operator spellings are accepted as well
+    assert m.listEquations("=e=") == ["e_eq"]
+    assert m.listEquations("e") == ["e_eq"]
+
+    with pytest.raises(TypeError):
+        m.listEquations(5)
+
+    # an unknown type is reported as documented, not as a bare KeyError
+    with pytest.raises(ValueError):
+        m.listEquations("nonsense")
+
+
+@pytest.mark.unit
+def test_describe_variables_and_equations_share_their_columns():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    v = gp.Variable(m, "v", domain=[i])
+    v.setRecords(pd.DataFrame([["a", -9.0], ["b", 2.0]], columns=["i", "level"]))
+    _ = gp.Equation(m, "e", domain=[i], type="eq")
+
+    variables = m.describeVariables()
+    equations = m.describeEquations()
+
+    assert list(variables.columns) == list(equations.columns)
+    assert variables.loc[0, "where_max_abs_level"] == ["a"]
+    assert variables.loc[0, "min_level"] == -9.0
+
+
+@pytest.mark.unit
 def test_generateRecords():
     m = gp.Container()
     i = gp.Set(m, "i", records=range(10))
@@ -2208,8 +2348,6 @@ def test_generateRecords_sparse_large_domain():
     p2 = gp.Parameter(m, "p2", domain=[i, j])
     p2.generateRecords(density=[0.001, 0.0001], seed=42)
     assert len(p2.records) == 100 * 10
-
-    m.close()
 
 
 @pytest.mark.unit
@@ -2563,3 +2701,132 @@ def test_case_insensitivity(tmp_path):
     m.loadRecordsFromGdx(gdx_path)
     m["j"]  # should work even though the casing is wrong
     assert m["j"].toList() == ["0", "1", "2"]
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "symbol_type", [gp.Set, gp.Parameter, gp.Variable, gp.Equation]
+)
+def test_explicit_empty_container_is_honored(symbol_type):
+    with gp.Container() as ctx:
+        in_ctx = symbol_type(ctx, "i")
+        other = gp.Container()
+        assert not other, "an empty container is falsy; that is what this guards"
+
+        in_other = symbol_type(other, "i")
+
+        assert in_other is not in_ctx
+        assert other["i"] is in_other
+        assert ctx["i"] is in_ctx
+        other.close()
+
+
+@pytest.mark.unit
+def test_explicit_empty_container_is_honored_for_universe_alias():
+    with gp.Container() as ctx:
+        in_ctx = gp.UniverseAlias(ctx, "u")
+        other = gp.Container()
+        assert not other
+
+        in_other = gp.UniverseAlias(other, "u")
+
+        assert in_other is not in_ctx
+        assert other["u"] is in_other
+        assert ctx["u"] is in_ctx
+        other.close()
+
+
+@pytest.mark.unit
+def test_explicit_empty_container_keeps_records_separate():
+    with gp.Container() as ctx:
+        i_ctx = gp.Set(ctx, "i", records=["from_ctx"])
+        other = gp.Container()
+
+        i_other = gp.Set(other, "i", records=["from_other"])
+
+        assert i_ctx.toList() == ["from_ctx"]
+        assert i_other.toList() == ["from_other"]
+        other.close()
+
+
+@pytest.mark.unit
+def test_python_name_retrieval_across_construction_paths(set_options):
+    with gp.Container() as m:
+        set_options({"USE_PY_VAR_NAME": "yes"})
+
+        direct_set = gp.Set()
+        added_set = m.addSet()
+        direct_parameter = gp.Parameter()
+        added_parameter = m.addParameter()
+        direct_alias = gp.Alias(alias_with=direct_set)
+        my_model = gp.Model(m, equations=[])
+
+        assert direct_set.name == "direct_set"
+        assert added_set.name == "added_set"
+        assert direct_parameter.name == "direct_parameter"
+        assert added_parameter.name == "added_parameter"
+        assert direct_alias.name == "direct_alias"
+        assert my_model.name == "my_model"
+
+
+@pytest.mark.unit
+def test_container_getUELs_respects_symbols_filter():
+    m = gp.Container()
+    gp.Set(m, "i", records=["a", "b"])
+    gp.Set(m, "j", records=["c", "d"])
+
+    assert m._getUELs(symbols=["i"]) == ["a", "b"]
+    assert m._getUELs(symbols=["j"]) == ["c", "d"]
+    assert m._getUELs() == ["a", "b", "c", "d"]
+
+
+@pytest.mark.unit
+def test_container_getUELs_skips_aliases():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    gp.Alias(m, "i_alias", alias_with=i)
+
+    assert m._getUELs() == ["a", "b"]
+
+
+@pytest.mark.unit
+def test_container_getUELs_skips_scalar_symbols():
+    m = gp.Container()
+    gp.Parameter(m, "s", records=5.0)
+    i = gp.Set(m, "i", records=["a", "b"])
+    gp.Parameter(m, "p", domain=[i], records=[("a", 1.0)])
+
+    assert m._getUELs() == ["a", "b"]
+
+
+@pytest.mark.unit
+def test_container_getUELs_skips_symbols_without_records():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    gp.Parameter(m, "empty", domain=[i])
+
+    assert m._getUELs() == ["a", "b"]
+
+
+@pytest.mark.unit
+def test_container_getUELs_ignore_unused():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b", "c"])
+    p = gp.Parameter(m, "p", domain=[i])
+    p.records = pd.DataFrame(
+        {
+            "i": pd.Categorical(["a"], categories=["a", "b", "c"], ordered=True),
+            "value": [1.0],
+        }
+    )
+
+    assert m._getUELs(symbols=["p"]) == ["a", "b", "c"]
+    assert m._getUELs(symbols=["p"], ignore_unused=True) == ["a"]
+
+
+@pytest.mark.unit
+def test_container_getUELs_no_symbols_with_records_returns_empty():
+    m = gp.Container()
+    gp.Set(m, "i")
+
+    assert m._getUELs() == []

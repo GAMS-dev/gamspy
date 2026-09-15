@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import gamspy as gp
 from gamspy.exceptions import ValidationError
@@ -38,9 +38,9 @@ def convert_conv1d(m: gp.Container, layer: torch.nn.Conv1d) -> gp.formulations.C
         m,
         in_channels=layer.in_channels,
         out_channels=layer.out_channels,
-        kernel_size=layer.kernel_size,
-        stride=layer.stride,
-        padding=layer.padding,
+        kernel_size=typing.cast("tuple[int]", layer.kernel_size),
+        stride=typing.cast("tuple[int]", layer.stride),
+        padding=typing.cast('tuple[int] | Literal["same", "valid"]', layer.padding),
         bias=has_bias,
     )
 
@@ -63,9 +63,11 @@ def convert_conv2d(m: gp.Container, layer: torch.nn.Conv2d) -> gp.formulations.C
         m,
         in_channels=layer.in_channels,
         out_channels=layer.out_channels,
-        kernel_size=layer.kernel_size,
-        stride=layer.stride,
-        padding=layer.padding,
+        kernel_size=typing.cast("tuple[int, int]", layer.kernel_size),
+        stride=typing.cast("tuple[int, int]", layer.stride),
+        padding=typing.cast(
+            'tuple[int, int] | Literal["same", "valid"]', layer.padding
+        ),
         bias=has_bias,
     )
 
@@ -86,14 +88,15 @@ def convert_leaky_relu(m: gp.Container, layer: torch.nn.LeakyReLU):
 def convert_pool2d(m: gp.Container, layer: torch.nn.MaxPool2d | torch.nn.AvgPool2d):
     clz = layer.__class__.__name__
     if clz == "MaxPool2d":
-        dilation = layer.dilation
+        max_layer = typing.cast("torch.nn.MaxPool2d", layer)
+        dilation = max_layer.dilation
         if isinstance(dilation, int):
             dilation = (dilation,)
 
         if dilation[0] != 1 or dilation[-1] != 1:
             raise ValidationError("Pool2d is not supported when dilation is not 1")
 
-        if layer.return_indices is True:
+        if max_layer.return_indices is True:
             raise ValidationError("Pool2d is not supported when return_indices is True")
 
     if layer.ceil_mode is True:
@@ -138,10 +141,10 @@ def convert_rnn(m: gp.Container, layer: torch.nn.RNN) -> gp.formulations.RNN:
         activation=layer.nonlinearity,  # ["tanh", "relu"]
     )
 
-    w_ih = layer.weight_ih_l0.detach().numpy()
-    w_hh = layer.weight_hh_l0.detach().numpy()
-    b_ih = layer.bias_ih_l0.detach().numpy() if has_bias else None
-    b_hh = layer.bias_hh_l0.detach().numpy() if has_bias else None
+    w_ih = layer.get_parameter("weight_ih_l0").detach().numpy()
+    w_hh = layer.get_parameter("weight_hh_l0").detach().numpy()
+    b_ih = layer.get_parameter("bias_ih_l0").detach().numpy() if has_bias else None
+    b_hh = layer.get_parameter("bias_hh_l0").detach().numpy() if has_bias else None
 
     l.load_weights(w_ih, w_hh, b_ih, b_hh)
     return l
@@ -170,10 +173,10 @@ def convert_gru(m: gp.Container, layer: torch.nn.GRU) -> gp.formulations.GRU:
         hidden_size=layer.hidden_size,
     )
 
-    w_ih = layer.weight_ih_l0.detach().numpy()
-    w_hh = layer.weight_hh_l0.detach().numpy()
-    b_ih = layer.bias_ih_l0.detach().numpy() if has_bias else None
-    b_hh = layer.bias_hh_l0.detach().numpy() if has_bias else None
+    w_ih = layer.get_parameter("weight_ih_l0").detach().numpy()
+    w_hh = layer.get_parameter("weight_hh_l0").detach().numpy()
+    b_ih = layer.get_parameter("bias_ih_l0").detach().numpy() if has_bias else None
+    b_hh = layer.get_parameter("bias_hh_l0").detach().numpy() if has_bias else None
 
     l.load_weights(w_ih, w_hh, b_ih, b_hh)
     return l

@@ -365,6 +365,9 @@ Here is a list of package wide options:
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | GAMS_SYSDIR                  | str   | Path to the GAMS system directory. Set to gamspy_base directory by default.                                                              |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| LICENSE_PATH                 | str   | Path to the license file. Empty by default, which means that GAMSPy looks for an installed license and falls back to the demo license.   |
+|                              |       | A license given in the constructor of the ``Container`` (``Options(license=...)``) overrides this option.                                |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | MAP_SPECIAL_VALUES           | int   | Map special values. Can be disabled for performance if there are no special values in the records. Set to 1 by default.                  |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | ASSUME_VARIABLE_SUFFIX       | int   | Activates or deactivates the automatic addition of .l or .scale attribute to variables on the right-hand side of assignments. Set to 1   |
@@ -378,6 +381,9 @@ Here is a list of package wide options:
 | ALLOW_AMBIGUOUS_EQUATIONS    | str   | "auto": Do not allow ambiguous equations in MCP, EMP, MPEC, and RMPEC models but allow them in other model types.                        |
 |                              |       | "no": Do not allow ambiguous equations in any model types.                                                                               |
 |                              |       | "yes": Allow ambiguous equations in all model types.                                                                                     |
++------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| STRICT_POWER_OPERATOR        | int   | Whether ``**`` always maps to GAMS' ``rPower``. Set to 0 by default, which maps an integer exponent to                                   |
+|                              |       | ``power`` or ``sqr`` so that a negative base does not become UNDF. 1: always use ``rPower``.                                             |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. warning::

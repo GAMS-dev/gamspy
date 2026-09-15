@@ -6,7 +6,7 @@ import math
 import numpy as np
 import pytest
 
-from gamspy import Alias, Container, Equation, Parameter, Set, Sum, Variable
+from gamspy import Alias, Equation, Parameter, Set, Sum, Variable
 from gamspy.exceptions import GamspyException, ValidationError
 from gamspy.math import dim, permute, trace, vector_norm
 from gamspy.math.misc import MathOp
@@ -14,15 +14,8 @@ from gamspy.math.misc import MathOp
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    yield m
-    m.close()
-
-
-def test_matrix_mult_bad(data):
-    m = data
+def test_matrix_mult_bad(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2", "i3"])
     j = Set(m, name="j", records=["j1", "j2", "j3"])
 
@@ -40,8 +33,8 @@ def test_matrix_mult_bad(data):
         (lambda: a @ b)()
 
 
-def test_simple_matrix_matrix(data):
-    m = data
+def test_simple_matrix_matrix(container):
+    m = container
     """Test simple case where domain calculation is trivial
     matrix x matrix"""
     i = Set(m, name="i", records=["i1", "i2", "i3"])
@@ -67,8 +60,8 @@ def test_simple_matrix_matrix(data):
         (lambda: a2 @ b)()
 
 
-def test_simple_matrix_vector(data):
-    m = data
+def test_simple_matrix_vector(container):
+    m = container
     """Test simple case where domain calculation is trivial
     matrix x vector"""
     i = Set(m, name="i", records=["i1", "i2", "i3"])
@@ -91,8 +84,8 @@ def test_simple_matrix_vector(data):
         (lambda: a2 @ b)()
 
 
-def test_simple_vector_vector(data):
-    m = data
+def test_simple_vector_vector(container):
+    m = container
     """Test simple case where domain calculation is trivial
     vector x vector, aka inner product"""
     i = Set(m, name="i", records=["i1", "i2", "i3"])
@@ -109,8 +102,8 @@ def test_simple_vector_vector(data):
     assert np.allclose(c_recs, a_recs @ b_recs)
 
 
-def test_vector_vector_with_conflicting_sum_domain(data):
-    m = data
+def test_vector_vector_with_conflicting_sum_domain(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2", "i3"])
     j = Alias(m, name="j", alias_with=i)
 
@@ -129,8 +122,8 @@ def test_vector_vector_with_conflicting_sum_domain(data):
     assert val.op_domain[0].name == "AliasOfi_2"
 
 
-def test_simple_vector_matrix(data):
-    m = data
+def test_simple_vector_matrix(container):
+    m = container
     """Test simple case where domain calculation is trivial
     vector x matrix"""
     i = Set(m, name="i", records=["i1", "i2", "i3"])
@@ -153,8 +146,8 @@ def test_simple_vector_matrix(data):
         (lambda: a2 @ b)()
 
 
-def test_batched_matrix_matrix(data):
-    m = data
+def test_batched_matrix_matrix(container):
+    m = container
     """Test batched matrix multiplication,
     batched matrix x batched matrix"""
     n = Set(m, name="n", records=["n1", "n2", "n3", "n4"])
@@ -196,8 +189,8 @@ def test_batched_matrix_matrix(data):
         (lambda: a2 @ b)()
 
 
-def test_batched_matrix_vector(data):
-    m = data
+def test_batched_matrix_vector(container):
+    m = container
     """Test batched matrix - vector multiplication,
     batched matrix x vector"""
     n = Set(m, name="n", records=["n1", "n2", "n3", "n4"])
@@ -238,8 +231,8 @@ def test_batched_matrix_vector(data):
         (lambda: a2 @ b)()
 
 
-def test_batched_matrix_matrix_2(data):
-    m = data
+def test_batched_matrix_matrix_2(container):
+    m = container
     """Test batched matrix multiplication,
     batched matrix x matrix"""
     n = Set(m, name="n", records=["n1", "n2", "n3", "n4"])
@@ -265,8 +258,8 @@ def test_batched_matrix_matrix_2(data):
     assert np.allclose(c_recs, a_recs @ b_recs)
 
 
-def test_vector_batched_matrix(data):
-    m = data
+def test_vector_batched_matrix(container):
+    m = container
     """Test vector x batched_matrix"""
     n = Set(m, name="n", records=["n1", "n2", "n3", "n4"])
     i = Set(m, name="i", records=["i1", "i2", "i3"])
@@ -295,8 +288,8 @@ def test_vector_batched_matrix(data):
         (lambda: b2 @ a)()
 
 
-def test_square_matrix_mult(data):
-    m = data
+def test_square_matrix_mult(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2", "i3"])
     j = Alias(m, name="j", alias_with=i)
     k = Alias(m, name="k", alias_with=j)
@@ -315,8 +308,8 @@ def test_square_matrix_mult(data):
     assert np.allclose(c_recs, a_recs @ b_recs)
 
 
-def test_square_matrix_mult_2(data):
-    m = data
+def test_square_matrix_mult_2(container):
+    m = container
     n = Set(m, name="n", records=["n1", "n2", "n3", "n4"])
     i = Set(m, name="i", records=["i1", "i2", "i3"])
     j = Alias(m, name="j", alias_with=i)
@@ -347,8 +340,8 @@ def test_square_matrix_mult_2(data):
     assert np.allclose(c_recs, a_recs @ b_recs)
 
 
-def test_square_matrix_mult_3(data):
-    m = data
+def test_square_matrix_mult_3(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2", "i3"])
     j = Alias(m, name="j", alias_with=i)
 
@@ -376,8 +369,8 @@ def test_square_matrix_mult_3(data):
     assert np.allclose(c_recs, (a_recs @ b_recs) @ (a_recs @ b_recs))
 
 
-def test_square_matrix_mult_4(data):
-    m = data
+def test_square_matrix_mult_4(container):
+    m = container
     a_recs = np.random.randint(1, 11, size=(3, 3))
     b_recs = np.random.randint(1, 11, size=(3, 3))
     a = Parameter(
@@ -402,8 +395,8 @@ def test_square_matrix_mult_4(data):
     assert np.allclose(c_recs, (a_recs @ b_recs) + (a_recs))
 
 
-def test_batch_size_matches(data):
-    m = data
+def test_batch_size_matches(container):
+    m = container
     n = Set(m, name="n", records=["n1", "n2", "n3"])
     z = Set(m, name="z", records=["m1", "m2", "m3"])
     i = Set(m, name="i", records=["i1", "i2", "i3"])
@@ -420,8 +413,8 @@ def test_batch_size_matches(data):
         (lambda: a @ c)()
 
 
-def test_domain_conflict_resolution(data):
-    m = data
+def test_domain_conflict_resolution(container):
+    m = container
     n = Set(m, name="n", records=["n1", "n2", "n3"])
     i = Set(m, name="i", records=["i1", "i2", "i3"])
 
@@ -461,8 +454,8 @@ def test_domain_conflict_resolution(data):
     assert r7.domain[-1] != r7.domain[-2]
 
 
-def test_domain_conflict_resolution_2(data):
-    m = data
+def test_domain_conflict_resolution_2(container):
+    m = container
     vec = Parameter(m, name="vec", domain=dim([3]))
     mat = Parameter(m, name="mat", domain=dim([3, 3]))
     batched_mat = Parameter(m, name="batched_mat", domain=dim([3, 3, 3]))
@@ -508,8 +501,8 @@ def test_domain_conflict_resolution_2(data):
     assert r7.domain[2] == batched_mat.domain[2]
 
 
-def test_trace_on_matrix(data):
-    m = data
+def test_trace_on_matrix(container):
+    m = container
     identity = np.eye(3, 3)
     mat = Parameter(
         m,
@@ -547,15 +540,15 @@ def test_trace_on_matrix(data):
         (lambda: trace(universe_mat))()
 
 
-def test_trace_on_vector(data):
-    m = data
+def test_trace_on_vector(container):
+    m = container
     vec = Parameter(m, name="vec", domain=dim([3]))
     with pytest.raises(ValidationError):
         (lambda: trace(vec))()
 
 
-def test_trace_on_batched_matrix(data):
-    m = data
+def test_trace_on_batched_matrix(container):
+    m = container
     recs = np.random.randint(1, 11, size=(128, 3, 3))
     bm1 = Parameter(
         m,
@@ -574,8 +567,8 @@ def test_trace_on_batched_matrix(data):
     assert np.allclose(sc1_dens, np.trace(recs, axis1=1, axis2=2))
 
 
-def test_domain_relabeling(data):
-    m = data
+def test_domain_relabeling(container):
+    m = container
     n = Set(m, name="n", records=["n1", "n2", "n3", "n4"])
     i = Set(m, name="i", records=["i1", "i2", "i3"])
     i2 = Alias(m, name="i2", alias_with=i)
@@ -613,8 +606,8 @@ def test_domain_relabeling(data):
     assert expr8.gamsRepr() == "sum(j,sum(n,a(n,i,j) + a(n,i,j) + (b(j,k2) + b(j,k2))))"
 
 
-def test_vector_norm_not_implemented(data):
-    m = data
+def test_vector_norm_not_implemented(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2"])
     a = Variable(m, name="a", domain=[i])
     with pytest.raises(ValidationError):
@@ -625,8 +618,8 @@ def test_vector_norm_not_implemented(data):
         (lambda: vector_norm(a, ord=float("-inf")))()
 
 
-def test_vector_norm(data):
-    m = data
+def test_vector_norm(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2"])
     b = Parameter(m, name="b", domain=[i], records=[("i1", 3), ("i2", 4)])
     c = Parameter(m, name="c")
@@ -658,8 +651,8 @@ def test_vector_norm(data):
     assert math.isclose(c_val, 7.0, rel_tol=1e-4)
 
 
-def test_vector_norm_2(data):
-    m = data
+def test_vector_norm_2(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2"])
     n = Set(m, name="n", records=["n1", "n2", "n3"])
     b = Parameter(
@@ -688,8 +681,8 @@ def test_vector_norm_2(data):
     assert math.isclose(c.records.iloc[2, 1], 13, rel_tol=1e-5)
 
 
-def test_vector_norm_3(data):
-    m = data
+def test_vector_norm_3(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2"])
     n = Set(m, name="n", records=["n1", "n2"])
     a = Variable(m, name="a", domain=[n, i])
@@ -700,8 +693,8 @@ def test_vector_norm_3(data):
         (lambda: vector_norm(a["n1", "i1"]))()
 
 
-def test_vector_norm_dim(data):
-    m = data
+def test_vector_norm_dim(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2"])
     a = Variable(m, name="a", domain=[i])
     with pytest.raises(ValidationError):
@@ -716,8 +709,8 @@ def test_vector_norm_dim(data):
         (lambda: vector_norm(a, dim=2))()
 
 
-def test_literal_indexing(data):
-    m = data
+def test_literal_indexing(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2"])
     n = Set(m, name="n", records=["n1", "n2", "n3"])
     a = Variable(m, name="a", domain=[n, i])
@@ -776,8 +769,8 @@ def test_literal_indexing(data):
     assert b_6.gamsRepr() == '(-b("n1",i))'
 
 
-def test_literal_indexing_mix_permute_variable(data):
-    m = data
+def test_literal_indexing_mix_permute_variable(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2"])
     n = Set(m, name="n", records=["n1", "n2", "n3"])
     n2 = Set(m, name="n2", records=["n1", "n2", "n3"])
@@ -856,8 +849,8 @@ def test_literal_indexing_mix_permute_variable(data):
     assert a_6_6.gamsRepr() == '(-a(n,"n1",i))'
 
 
-def test_literal_indexing_mix_permute_parameter(data):
-    m = data
+def test_literal_indexing_mix_permute_parameter(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2"])
     n = Set(m, name="n", records=["n1", "n2", "n3"])
     n2 = Set(m, name="n2", records=["n1", "n2", "n3"])
@@ -936,8 +929,8 @@ def test_literal_indexing_mix_permute_parameter(data):
     assert a_6_6.gamsRepr() == '(-a(n,"n1",i))'
 
 
-def test_shift_permute(data):
-    m = data
+def test_shift_permute(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2", "i3"])
     j = Set(m, name="j", records=["j1", "j2", "j3"])
     k = Set(m, name="k", records=["k1", "k2", "k3"])
@@ -974,8 +967,8 @@ def test_shift_permute(data):
     assert a3["i1", "j1", "k1"].gamsRepr() == 'a("i1","j1","k1")'
 
 
-def test_permute_values(data):
-    m = data
+def test_permute_values(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2"])
     j = Set(m, name="j", records=["j1", "j2", "j3"])
     k = Set(m, name="k", records=["k1", "k2", "k3", "k4"])
@@ -1005,8 +998,8 @@ def test_permute_values(data):
         assert np.allclose(permute(v.l, perm).toDense(), np.transpose(records, perm))
 
 
-def test_permute_records(data):
-    m = data
+def test_permute_records(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2"])
     j = Set(m, name="j", records=["j1", "j2", "j3"])
     k = Set(m, name="k", records=["k1", "k2", "k3", "k4"])
@@ -1050,8 +1043,8 @@ def test_permute_records(data):
     assert (sliced["j"] == "j2").all()
 
 
-def test_permute_bruteforce_var(data):
-    m = data
+def test_permute_bruteforce_var(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2", "i3"])
     j = Set(m, name="j", records=["j1", "j2", "j3"])
     k = Set(m, name="k", records=["k1", "k2", "k3"])
@@ -1065,8 +1058,8 @@ def test_permute_bruteforce_var(data):
     assert ax.domain == [k, l, i, j]
 
 
-def test_permute_bruteforce_par(data):
-    m = data
+def test_permute_bruteforce_par(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2", "i3"])
     j = Set(m, name="j", records=["j1", "j2", "j3"])
     k = Set(m, name="k", records=["k1", "k2", "k3"])
@@ -1080,8 +1073,8 @@ def test_permute_bruteforce_par(data):
     assert ax.domain == [k, l, i, j]
 
 
-def test_permute_bad(data):
-    m = data
+def test_permute_bad(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2", "i3"])
     j = Set(m, name="j", records=["j1", "j2", "j3"])
     k = Set(m, name="k", records=["k1", "k2", "k3"])
@@ -1103,13 +1096,13 @@ def test_permute_bad(data):
         permute(e, [0, 1, 2, 3])
 
 
-def test_invalid_dim(data):
+def test_invalid_dim(container):
     with pytest.raises(ValidationError):
         dim([3, "3"])
 
 
-def test_transpose(data):
-    m = data
+def test_transpose(container):
+    m = container
     i = Set(m, name="i", records=["i1", "i2", "i3"])
     j = Set(m, name="j", records=["j1", "j2", "j3"])
     k = Set(m, name="k", records=["k1", "k2", "k3"])
@@ -1135,8 +1128,8 @@ def test_transpose(data):
         (lambda: a2[i].T)()  # imp var
 
 
-def test_domain_conflict_resolution_3(data):
-    m = data
+def test_domain_conflict_resolution_3(container):
+    m = container
     mat1 = Parameter(m, name="mat1", domain=dim([30, 20, 30, 20]))
     mat2 = Parameter(m, name="mat2", domain=dim([20, 30]))
 
