@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import contextlib
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast, no_type_check
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pandas as pd
@@ -78,38 +78,40 @@ def open_gdx(
         raise GdxException(f"Could not properly load GDX DLL: {msg}")
 
     try:
-        if mode == "r":
-            if load_uels:
-                is_successful, error_code = gdx.gdxOpenRead(gdx_handle, file_path)
-            else:
-                is_successful, error_code = gdx.gdxOpenReadEx(
-                    gdx_handle, file_path, SKIP_UEL_TABLE
-                )
-
-            if is_successful != 1:
-                error_str: str = gdx.gdxErrorStr(gdx_handle, error_code)
-                raise GdxException(
-                    f"Could not open GDX file `{file_path}` for reading: {error_str}"
-                )
-            yield gdx_handle
-        elif mode == "w":
-            if not compress:
-                if not gdx.gdxOpenWrite(gdx_handle, file_path, "GAMSPy")[0]:
-                    raise GdxException(f"Error opening GDX `{file_path}` for writing.")
-            else:
-                if not gdx.gdxOpenWriteEx(gdx_handle, file_path, "GAMSPy", 1)[0]:
-                    raise GdxException(
-                        f"Error opening GDX (w/compression) `{file_path}` for writing."
+        try:
+            if mode == "r":
+                if load_uels:
+                    is_successful, error_code = gdx.gdxOpenRead(gdx_handle, file_path)
+                else:
+                    is_successful, error_code = gdx.gdxOpenReadEx(
+                        gdx_handle, file_path, SKIP_UEL_TABLE
                     )
 
-            yield gdx_handle
-    except Exception as e:
-        gdx.gdxClose(gdx_handle)
-        gdx.gdxFree(gdx_handle)
-        raise GdxException(
-            f"There was a problem while opening the gdx file: {e}"
-        ) from e
-    else:
+                if is_successful != 1:
+                    error_str: str = gdx.gdxErrorStr(gdx_handle, error_code)
+                    raise GdxException(
+                        f"Could not open GDX file `{file_path}` for reading: {error_str}"
+                    )
+            elif mode == "w":
+                if not compress:
+                    if not gdx.gdxOpenWrite(gdx_handle, file_path, "GAMSPy")[0]:
+                        raise GdxException(
+                            f"Error opening GDX `{file_path}` for writing."
+                        )
+                else:
+                    if not gdx.gdxOpenWriteEx(gdx_handle, file_path, "GAMSPy", 1)[0]:
+                        raise GdxException(
+                            f"Error opening GDX (w/compression) `{file_path}` for writing."
+                        )
+            else:
+                raise ValueError(f"Invalid mode `{mode}`. Valid modes are 'r' and 'w'.")
+        except Exception as e:
+            raise GdxException(
+                f"There was a problem while opening the gdx file: {e}"
+            ) from e
+
+        yield gdx_handle
+    finally:
         gdx.gdxClose(gdx_handle)
         gdx.gdxFree(gdx_handle)
 
@@ -286,7 +288,10 @@ def get_records(
                 df = convert_to_categoricals_cat(arrkeys, arrvals, unique_uels)
 
                 if df is not None:
-                    df.columns = generate_unique_labels(domain_names) + attributes
+                    df.columns = (
+                        generate_unique_labels(domain_names, reserved=attributes)
+                        + attributes
+                    )
 
                 records_dict[gamspy_name] = df
 
@@ -362,11 +367,10 @@ def read(
     container._should_load_from(load_symbols, source=DataSource.GAMS)
 
 
-# TODO: fix typing here.
-@no_type_check
 def create_symbol_from_metadata(
     container: Container, metadata: GDXSymbolMetadata, *, declare_in_gams: bool = True
 ) -> None:
+    """Declare the symbol that `metadata` describes in `container`."""
     from gamspy._symbols import (
         Alias,
         Equation,
@@ -377,31 +381,28 @@ def create_symbol_from_metadata(
     )
 
     if metadata.type == gdx.GMS_DT_ALIAS:
-        # test for universe alias
-        if metadata.userinfo != 0:
-            Alias._constructor_bypass(
-                container,
-                metadata.name,
-                container._data[metadata.parent_set],
-            )
-        else:
+        if metadata.userinfo == 0:
             UniverseAlias._constructor_bypass(container, metadata.name)
-    # regular set
-    elif metadata.type == gdx.GMS_DT_SET and metadata.userinfo == 0:
+        else:
+            parent_set = (
+                container._data.get(metadata.parent_set)
+                if metadata.parent_set is not None
+                else None
+            )
+
+            if not isinstance(parent_set, (Set, Alias)):
+                raise GdxException(
+                    f"Cannot load alias `{metadata.name}` because the set it aliases "
+                    f"(`{metadata.parent_set}`) is not in the container."
+                )
+
+            Alias._constructor_bypass(container, metadata.name, parent_set)
+    elif metadata.type == gdx.GMS_DT_SET and metadata.userinfo in (0, 1):
         Set._constructor_bypass(
             container,
             metadata.name,
             metadata.domain,
-            is_singleton=False,
-            description=metadata.description,
-        )
-    # singleton set
-    elif metadata.type == gdx.GMS_DT_SET and metadata.userinfo == 1:
-        Set._constructor_bypass(
-            container,
-            metadata.name,
-            metadata.domain,
-            is_singleton=True,
+            is_singleton=metadata.userinfo == 1,
             description=metadata.description,
         )
     elif metadata.type == gdx.GMS_DT_PAR:
@@ -430,8 +431,8 @@ def create_symbol_from_metadata(
     else:
         raise GdxException(
             f"Unknown GDX symbol classification (GAMS Type= {metadata.type}, "
-            f"GAMS Subtype= {metadata.userinfo}). ",
-            f"Cannot load symbol `{metadata.name}`",
+            f"GAMS Subtype= {metadata.userinfo}). "
+            f"Cannot load symbol `{metadata.name}`"
         )
 
     if not declare_in_gams:

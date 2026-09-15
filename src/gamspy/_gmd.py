@@ -97,7 +97,8 @@ def get_records(
 
         if md.number_records == 0:
             records_dict[md.name] = pd.DataFrame(
-                columns=generate_unique_labels(md.domain) + attributes
+                columns=generate_unique_labels(md.domain, reserved=attributes)
+                + attributes
             )
             continue
 
@@ -148,7 +149,10 @@ def get_records(
                 ) from err
 
             df = convert_to_categoricals_cat(arrkeys, arrvals, unique_uels)
-            df.columns = generate_unique_labels(md.domain) + attributes
+            assert df is not None  # symbol has records, hence keys and/or values
+            df.columns = (
+                generate_unique_labels(md.domain, reserved=attributes) + attributes
+            )
             records_dict[md.name] = df
 
     gmd.delete_intp(rc)

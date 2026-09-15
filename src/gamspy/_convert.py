@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 from collections.abc import Sequence
@@ -14,6 +15,8 @@ from gamspy._options import (
     _format_model_attr_value,
 )
 from gamspy.exceptions import LatexException, ValidationError
+
+logger = logging.getLogger("CONVERT")
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -430,9 +433,9 @@ class GamsConverter:
             em_name = self.model._external_module
             em_file = self.model._external_module_file
             declarations.append(f"File {em_file} /{em_name}/;")
-            print("Converter will not copy external module files")
-            print(
-                f"You need to ensure your external module is accessible from {self.path}"
+            logger.warning(
+                "Converter will not copy external module files. You need to "
+                f"ensure your external module is accessible from {self.path}"
             )
 
         # 2. Load the data from gdx

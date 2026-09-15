@@ -9,20 +9,21 @@ from gamspy.exceptions import ValidationError
 
 def _get_new_domain(
     x: gp.Variable | gp.Parameter, dims: list[int]
-) -> tuple[list[gp.Set | gp.Alias], gp.Set]:
-    lens = [len(x.domain[d]) for d in dims]
+) -> tuple[list[gp.Set | gp.Alias], gp.Set | gp.Alias]:
+    x_domain = utils._get_domain(x)
+    lens = [len(x_domain[d]) for d in dims]
     new_card = math.prod(lens)
 
     # get new domain
     flattened = gp.math._generate_dims(x.container, [new_card])
     # flattened should be unique, this is only for declaration
     flattened = utils._next_domains(
-        flattened, [*x.domain[: min(dims)], *x.domain[max(dims) + 1 :]]
+        flattened, [*x_domain[: min(dims)], *x_domain[max(dims) + 1 :]]
     )[0]
-    new_domain = []
-    new_domain.extend(x.domain[: min(dims)])
+    new_domain: list[gp.Set | gp.Alias] = []
+    new_domain.extend(x_domain[: min(dims)])
     new_domain.append(flattened)
-    new_domain.extend(x.domain[max(dims) + 1 :])
+    new_domain.extend(x_domain[max(dims) + 1 :])
 
     return new_domain, flattened
 
@@ -45,7 +46,9 @@ def _flatten_dims_par(
 
 
 def _generate_index_matching_statement(
-    domains: list[gp.Set], flattened: gp.Set, matching_set: gp.Set
+    domains: list[gp.Set | gp.Alias],
+    flattened: gp.Set | gp.Alias,
+    matching_set: gp.Set,
 ) -> str:
     base_txt = "option {}({}:{})"
     domains_str = ",".join([x.name for x in domains])
@@ -58,8 +61,7 @@ def _propagate_bounds(x, out):
     m = x.container
 
     # set domain for variable
-    x_domain = x.domain
-    x_domain = utils._next_domains(x_domain, [])
+    x_domain = utils._next_domains(utils._get_domain(x), [])
 
     bounds_set = m.addSet(records=["lb", "ub"])
     bounds = m.addParameter(domain=[bounds_set, *x_domain])
@@ -98,7 +100,7 @@ def _flatten_dims_var(
         _propagate_bounds(x, out)
 
     # match the flattened set to correct dims
-    forwarded_domain = utils._next_domains([flattened, *x.domain], [])
+    forwarded_domain = utils._next_domains([flattened, *utils._get_domain(x)], [])
     doms_to_flatten = [forwarded_domain[d + 1] for d in dims]
 
     name = "ds_" + gp.utils._get_unique_name()
@@ -177,7 +179,7 @@ def flatten_dims(
         if i > 0 and dims[i - 1] != d - 1:
             raise ValidationError("Expected consecutive integers in the dim array")
 
-    for domain in x.domain:
+    for domain in utils._get_domain(x):
         if len(domain) == 0:
             raise ValidationError(
                 f"domain {domain} had 0 cardinality, please populate the domain first"

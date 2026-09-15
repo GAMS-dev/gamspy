@@ -15,17 +15,8 @@ from gamspy.math.misc import MathOp
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    markets = ["new-york", "chicago", "topeka"]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    yield m, markets, demands
-
-
-def test_math(data):
-    m, markets, demands = data
+def test_math(transport):
+    m, markets, demands = transport.container, transport.markets, transport.demands
     i = Set(m, name="i", records=markets)
 
     b = Parameter(m, name="b", domain=[i], records=demands)
@@ -281,8 +272,8 @@ def test_math(data):
     assert op2.gamsRepr() == "binomial(b(i),3)"
 
 
-def test_math_2(data):
-    m, _, _ = data
+def test_math_2(transport):
+    m = transport.container
     m = Container()
     i = Set(m, "i", records=["1", "2"])
     a = Parameter(m, "a", domain=[i], records=[("1", 1), ("2", 2)])
@@ -372,11 +363,34 @@ def test_math_2(data):
     op1 = a[i] ** 3
     assert op1.gamsRepr() == "power(a(i),3)"
 
-    op2 = a[i] ** 2.999999
-    assert op2.gamsRepr() == "power(a(i),2.999999)"
+    # An integral exponent is normalized to an int, so ** 3, ** 3.0 and
+    # ** np.int64(3) all generate the same power() call.
+    op2 = a[i] ** 3.0
+    assert op2.gamsRepr() == "power(a(i),3)"
 
-    op3 = a[i] ** 2.5
-    assert op3.gamsRepr() == "rPower(a(i),2.5)"
+    op3 = a[i] ** np.int64(3)
+    assert op3.gamsRepr() == "power(a(i),3)"
+
+    op4 = a[i] ** True
+    assert op4.gamsRepr() == "power(a(i),1)"
+
+    # A non-integral exponent must stay rPower, which is what GAMS' ** is:
+    # power() rounds its exponent to the nearest integer and is a domain error
+    # for anything further than ~1e-5 away from one.
+    op5 = a[i] ** 2.999999
+    assert op5.gamsRepr() == "rPower(a(i),2.999999)"
+
+    op6 = a[i] ** 2.9998
+    assert op6.gamsRepr() == "rPower(a(i),2.9998)"
+
+    op7 = a[i] ** 99.995
+    assert op7.gamsRepr() == "rPower(a(i),99.995)"
+
+    op8 = a[i] ** 2.5
+    assert op8.gamsRepr() == "rPower(a(i),2.5)"
+
+    op9 = a[i] ** 0.5
+    assert op9.gamsRepr() == "sqrt(a(i))"
 
     # rpower
     op1 = 3 ** a[i]
@@ -399,8 +413,8 @@ def test_math_2(data):
     assert attr.getAssignment() == "attr(i,j) = diag(i,j);"
 
 
-def test_logical(data):
-    m, _, _ = data
+def test_logical(transport):
+    m = transport.container
     m = Container()
 
     o = Set(m, "o", records=[f"pos{idx}" for idx in range(1, 11)])
@@ -499,8 +513,8 @@ def test_logical(data):
     assert op2.gamsRepr() == "rel_ne(sumc(o,p),op(o,p))"
 
 
-def test_relu(data, relu_type=gams_math.relu_with_binary_var):
-    m, _, _ = data
+def test_relu(transport, relu_type=gams_math.relu_with_binary_var):
+    m = transport.container
 
     i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
 
@@ -562,8 +576,8 @@ def test_relu(data, relu_type=gams_math.relu_with_binary_var):
     assert np.isclose(budget.objective_value, 200.0)
 
 
-def test_leaky_relu(data):
-    m, _, _ = data
+def test_leaky_relu(transport):
+    m = transport.container
     leaky_relu = gams_math.leaky_relu_with_binary_var
 
     i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
@@ -608,8 +622,8 @@ def test_leaky_relu(data):
         assert b.toDense()[0] in b_val
 
 
-def test_relu_2(data):
-    m, _markets, _demands = data
+def test_relu_2(transport):
+    m = transport.container
     m = Container()
 
     i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
@@ -664,12 +678,12 @@ def test_relu_2(data):
     assert np.isclose(budget.objective_value, 180.0)
 
 
-def test_relu_3(data):
-    test_relu(data, gams_math.relu_with_sos1_var)
+def test_relu_3(transport):
+    test_relu(transport, gams_math.relu_with_sos1_var)
 
 
-def test_relu_with_equilibrium(data):
-    m, _markets, _demands = data
+def test_relu_with_equilibrium(transport):
+    m = transport.container
     m = Container()
 
     i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
@@ -742,8 +756,8 @@ def test_relu_with_equilibrium(data):
     assert np.isclose(budget.objective_value, 200)
 
 
-def test_log_softmax(data):
-    m, _, _ = data
+def test_log_softmax(transport):
+    m = transport.container
     m = Container()
 
     labels = Set(m, name="labels", domain=gams_math.dim([30, 3]))
@@ -789,8 +803,8 @@ def test_log_softmax(data):
     set_loss[...] = nll == Sum(labels[y.domain], -y)
 
 
-def test_softmax(data):
-    m, _markets, _demands = data
+def test_softmax(transport):
+    m = transport.container
     m = Container()
 
     labels = Set(m, name="labels", domain=gams_math.dim([30, 3]))
@@ -822,8 +836,8 @@ def test_softmax(data):
     assert "exp" in equations[0].getDefinition()
 
 
-def test_softplus(data):
-    m, _markets, _demands = data
+def test_softplus(transport):
+    m = transport.container
     m = Container()
 
     x = Variable(m, name="x", domain=gams_math.dim([3]))
@@ -852,8 +866,8 @@ def test_softplus(data):
             assert np.allclose(y.toDense(), expected_vals[i], rtol=rtol)
 
 
-def test_tanh_activation(data):
-    m, *_ = data
+def test_tanh_activation(transport):
+    m = transport.container
     m = Container()
 
     x = Variable(m, name="x", domain=gams_math.dim([30, 3]))
@@ -1102,6 +1116,42 @@ def test_sqrt_cancels_with_power_two():
     squared = (safe_sqrt + 0) ** 2
     assert squared is x
 
+    # An integral float exponent is normalized to an int first, so it cancels
+    # just like ** 2 does.
+    assert (safe_sqrt + 0) ** 2.0 is x
+
     unsafe_sqrt = gams_math.sqrt(x)
     not_cancelled = (unsafe_sqrt + 0) ** 2
     assert not_cancelled is not x
+
+
+def test_strict_power_operator():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    a = Parameter(m, "a", domain=i)
+
+    old = gp.get_option("STRICT_POWER_OPERATOR")
+    assert old == 0
+
+    gp.set_options({"STRICT_POWER_OPERATOR": 1})
+    try:
+        # Every exponent maps to rPower, just like the GAMS ** operator.
+        assert (a[i] ** 3).gamsRepr() == "rPower(a(i),3)"
+        assert (a[i] ** 3.0).gamsRepr() == "rPower(a(i),3)"
+        assert (a[i] ** 0.5).gamsRepr() == "rPower(a(i),0.5)"
+        assert (a[i] ** 2.5).gamsRepr() == "rPower(a(i),2.5)"
+
+        # The sqrt(x) ** 2 simplification is an algebraic identity rather than a
+        # choice of GAMS function, hence it still applies.
+        x = Parameter(m, "x", records=5)
+        assert (gams_math.sqrt(x, safe_cancel=True) + 0) ** 2 is x
+
+        # GAMSPy's own formulations do not depend on the option.
+        assert (
+            gams_math.vector_norm(a, ord=4).gamsRepr()
+            == "rPower(sum(i,power(a(i),4)),0.25)"
+        )
+    finally:
+        gp.set_options({"STRICT_POWER_OPERATOR": old})
+
+    assert (a[i] ** 3).gamsRepr() == "power(a(i),3)"

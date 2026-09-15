@@ -31,28 +31,8 @@ from gamspy.exceptions import ValidationError
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    canning_plants = ["seattle", "san-diego"]
-    markets = ["new-york", "chicago", "topeka"]
-    distances = [
-        ["seattle", "new-york", 2.5],
-        ["seattle", "chicago", 1.7],
-        ["seattle", "topeka", 1.8],
-        ["san-diego", "new-york", 2.5],
-        ["san-diego", "chicago", 1.8],
-        ["san-diego", "topeka", 1.4],
-    ]
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    yield m, canning_plants, markets, distances, capacities, demands
-    m.close()
-
-
-def test_model(data):
-    m, canning_plants, markets, distances, capacities, demands = data
+def test_model(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(
         m,
         name="i",
@@ -383,8 +363,13 @@ def test_model(data):
     )
 
 
-def test_feasibility(data):
-    m, _canning_plants, _markets, distances, capacities, demands = data
+def test_feasibility(transport):
+    m, distances, capacities, demands = (
+        transport.container,
+        transport.distances,
+        transport.capacities,
+        transport.demands,
+    )
     m = Container()
 
     i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -430,8 +415,8 @@ def test_feasibility(data):
         )
 
 
-def test_tuple_equations(data):
-    m, canning_plants, markets, distances, capacities, demands = data
+def test_tuple_equations(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(
         m,
         name="i",
@@ -491,8 +476,8 @@ def test_tuple_equations(data):
     test_model2.solve()
 
 
-def test_computeInfeasibilities(data):
-    m, canning_plants, markets, distances, capacities, demands = data
+def test_computeInfeasibilities(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     m = Container()
 
     i = Set(
@@ -641,8 +626,8 @@ def test_computeInfeasibilities(data):
     ]
 
 
-def test_equations(data):
-    m, _canning_plants, _markets, _distances, _capacities, _demands = data
+def test_equations(transport):
+    m = transport.container
     e = Equation(m, "e")
     e.l[...] = -10
     e.lo[...] = 5
@@ -658,8 +643,8 @@ def test_equations(data):
         model.solve()
 
 
-def test_equation_listing(data):
-    m, _canning_plants, markets, _distances, _capacities, _demands = data
+def test_equation_listing(transport):
+    m, markets = transport.container, transport.markets
     cont = Container()
 
     # Prepare data
@@ -1032,8 +1017,8 @@ def test_equation_listing(data):
     assert len(mexss.getEquationListing(infeasibility_threshold=2.5).split("\n")) == 2
 
 
-def test_jupyter_behaviour(data):
-    m, canning_plants, markets, distances, capacities, demands = data
+def test_jupyter_behaviour(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
@@ -1079,8 +1064,8 @@ def test_jupyter_behaviour(data):
     transport.solve()
 
 
-def test_solve_string_lp(data):
-    m, _canning_plants, _markets, _distances, _capacities, _demands = data
+def test_solve_string_lp(transport):
+    m = transport.container
     i = Set(m, name="i")
     j = Set(m, name="j")
 
@@ -1123,8 +1108,8 @@ def test_solve_string_lp(data):
     assert test_model._generate_solve_string() == "solve test_model using LP MIN z"
 
 
-def test_solve_string_mcp(data):
-    m, _canning_plants, _markets, _distances, _capacities, _demands = data
+def test_solve_string_mcp(transport):
+    m = transport.container
     c = Set(m, "c")
     h = Set(m, "h")
     s = Set(m, "s")
@@ -1204,8 +1189,8 @@ def test_solve_string_mcp(data):
         )
 
 
-def test_solve_string_cns(data):
-    m, _canning_plants, _markets, _distances, _capacities, _demands = data
+def test_solve_string_cns(transport):
+    m = transport.container
     x = Variable(m, "x")
     f = Equation(m, "f")
     f[...] = x * x == 4
@@ -1324,7 +1309,6 @@ def test_models_with_many_equations():
 
     # This should not fail.
     _ = Model(m, "my_model", equations=m.getEquations())
-    m.close()
 
 
 def test_mpsge_equation_definition():

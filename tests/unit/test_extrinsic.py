@@ -5,7 +5,7 @@ import platform
 
 import pytest
 
-from gamspy import Container, Equation, Parameter, Set, Sum, Variable
+from gamspy import Equation, Parameter, Set, Sum, Variable
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
@@ -23,15 +23,8 @@ def get_default_platform():
     return operating_system
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    yield m
-    m.close()
-
-
-def test_extrinsic_functions(data):
-    m = data
+def test_extrinsic_functions(container):
+    m = container
     user_platform = get_default_platform()
 
     if user_platform == "linux_aarch64":
@@ -106,11 +99,9 @@ def test_extrinsic_functions(data):
     f = Equation(m, name="f", definition=trilib.myCos(90) == Sum(i, x[i] * x[i]))
     assert f.getDefinition() == "f .. myCos(90) =e= sum(i,x(i) * x(i));"
 
-    m.close()
 
-
-def test_extrinsic_function_traversal(data):
-    m = data
+def test_extrinsic_function_traversal(container):
+    m = container
     user_platform = get_default_platform()
 
     if user_platform == "linux_aarch64":

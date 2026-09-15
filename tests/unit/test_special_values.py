@@ -3,20 +3,13 @@ from __future__ import annotations
 import pytest
 
 import gamspy as gp
-from gamspy import Container, Parameter, Set, Variable
+from gamspy import Parameter, Set, Variable
 
 pytestmark = pytest.mark.unit
 
 
-@pytest.fixture
-def data():
-    m = Container()
-    yield m
-    m.close()
-
-
-def test_parameter_special_values(data):
-    m = data
+def test_parameter_special_values(container):
+    m = container
     x = Parameter(m, "x", records=5)
     x[...] = x + gp.SpecialValues.EPS
     assert x.getAssignment() == "x = x + EPS;"
@@ -45,8 +38,8 @@ def test_parameter_special_values(data):
     assert b.getAssignment() == "b(i) = -INF;"
 
 
-def test_implicit_parameter_special_values(data):
-    m = data
+def test_implicit_parameter_special_values(container):
+    m = container
     i = Set(m, "i", records=["i1", "i2"])
 
     b = Variable(m, "b", domain=[i])
@@ -67,8 +60,8 @@ def test_implicit_parameter_special_values(data):
     assert b.getAssignment() == "b.l(i) = -INF;"
 
 
-def test_operation_special_values(data):
-    m = data
+def test_operation_special_values(container):
+    m = container
     tax = Set(m, "tax", records=["i1", "i2"])
     bla = Set(m, "bla", records=["x"])
     results = Parameter(m, "results", domain=[tax, bla])
@@ -85,8 +78,8 @@ def test_operation_special_values(data):
     assert dummy.getAssignment() == "dummy = sum(i,EPS);"
 
 
-def test_eps(data):
-    m = data
+def test_eps(container):
+    m = container
     i = Set(m, "i", records=[f"i{i}" for i in range(11)])
     f = Parameter(
         m,

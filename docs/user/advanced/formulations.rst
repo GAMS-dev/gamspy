@@ -240,8 +240,8 @@ The following two examples describe the same graph: the left ray has gradient
 
          curve = gp.formulations.PWLCurve(
              [(0, 1), (2, 4), (4, 3)],
-             left_gradient=2,
-             right_gradient=-1,
+             left_gradient=-1,
+             right_gradient=2,
          )
          y, eqs = gp.formulations.pwlinear(x, curve, method="dlog")
 
@@ -254,7 +254,7 @@ The following two examples describe the same graph: the left ray has gradient
          y, eqs = gp.formulations.pwl_dlog_formulation(
              x,
              x_points=[-math.inf, 0, 2, 4, math.inf],
-             y_points=[2, 1, 4, 3, -1],
+             y_points=[-1, 1, 4, 3, 2],
          )
 
 For paired data, ``-math.inf`` and ``math.inf`` mark the left and right rays,

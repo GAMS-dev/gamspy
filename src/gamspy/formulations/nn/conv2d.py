@@ -4,6 +4,7 @@ import math
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
 
 import gamspy as gp
 import gamspy.formulations.utils as utils
@@ -213,8 +214,6 @@ class Conv2d:
         #
         # This ensures that the windows are processed in a left-to-right, top-to-bottom order,
         # prioritizing horizontal traversal first, which is the desired behavior.
-        from numpy.lib.stride_tricks import sliding_window_view
-
         windows_lower = sliding_window_view(input_lower, (batch, in_channels, h_k, w_k))
         windows_upper = sliding_window_view(input_upper, (batch, in_channels, h_k, w_k))
 
@@ -417,7 +416,7 @@ class Conv2d:
                     name=utils._generate_name("p", self._name_prefix, "bias"),
                 )
             else:
-                self.bias.setRecords(bias)  # ty: ignore[invalid-argument-type] ty cannot narrow bias down here.
+                self.bias.setRecords(bias)
 
             self.bias_array = bias
 
@@ -471,7 +470,7 @@ class Conv2d:
         if len(input.domain) != 4:
             raise ValidationError(f"expected 4D input (got {len(input.domain)}D input)")
 
-        N, C_in, H_in, W_in = input.domain
+        N, C_in, H_in, W_in = utils._get_domain(input)
 
         if len(C_in) != self.in_channels:
             raise ValidationError("in_channels does not match")
@@ -489,7 +488,7 @@ class Conv2d:
             name=utils._generate_name("v", self._name_prefix, "output"),
         )
 
-        N, C_out, H_out, W_out = out.domain
+        N, C_out, H_out, W_out = utils._get_domain(out)
 
         set_out = gp.Equation(
             self.container,
@@ -506,10 +505,10 @@ class Conv2d:
         top_index = (self.stride[0] * (gp.Ord(H_out) - 1)) - padding[0] + 1
         left_index = (self.stride[1] * (gp.Ord(W_out) - 1)) - padding[1] + 1
 
-        _, _, Hf, Wf = self.weight.domain
+        _, _, Hf, Wf = utils._get_domain(self.weight)
         C_in, Hf, Wf, H_in, W_in = utils._next_domains(
             [C_in, Hf, Wf, H_in, W_in],
-            out.domain,
+            utils._get_domain(out),
         )
 
         subset = gp.Set(

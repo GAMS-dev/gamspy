@@ -7,7 +7,8 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 
-from gamspy._algorithms import cartesian_product, choice_no_replace, sorted_unique
+from gamspy._algorithms import cartesian_product, choice_no_replace
+from gamspy._categoricals import used_categories
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -70,8 +71,6 @@ def _validate_density_and_domain(
 
 def _set_empty_records(symbol: Any) -> None:
     """Helper function to initialize empty records for a symbol."""
-    from pandas.api.types import CategoricalDtype
-
     attributes = getattr(symbol, "_attributes", [])
     symbol.records = pd.DataFrame(
         columns=[list(range(symbol.dimension + len(attributes)))]
@@ -99,12 +98,10 @@ def _get_categories(symobj: Set | Alias | UniverseAlias) -> pd.Index | list[str]
     if not isinstance(column.dtype, CategoricalDtype):
         return symobj._getUELs(ignore_unused=True)
 
-    categories = column.cat.categories
-    used = sorted_unique(column.cat.codes.to_numpy())
-    if used.size == categories.size:
-        return categories
-
-    return categories.take(used)
+    # `.array.codes` reads the Categorical's own backing array directly --
+    # `.cat.codes.to_numpy()` wraps the codes in a brand new `pd.Series`
+    # (with its own defensive copy) just to immediately unwrap it again.
+    return used_categories(column.array.codes, column.cat.categories)
 
 
 def _get_categorical_dtype(categories: pd.Index | list[str]) -> CategoricalDtype:
@@ -133,17 +130,8 @@ def _sample_cartesian_rows(
     cardinality = math.prod(shape)
 
     if num_rows == cardinality:
-        # Every row is kept; enumerate them directly instead of drawing indices.
-        codes = []
-        for axis, size in enumerate(shape):
-            codes.append(
-                np.tile(
-                    np.repeat(np.arange(size), math.prod(shape[axis + 1 :])),
-                    math.prod(shape[:axis]),
-                )
-            )
-
-        return codes
+        # Every row is kept; enumerate them directly
+        return list(np.indices(shape).reshape(len(shape), -1))
 
     idx = choice_no_replace(cardinality, num_rows, seed=seed)
 
@@ -174,8 +162,7 @@ def _generate_base_dataframe(
             for cats, dense in zip(categories, density, strict=True)
         ]
         _validate_cardinality(math.prod(len(sel) for sel in selected))
-        arr = cartesian_product(*tuple(selected))
-        codes = [arr[:, x] for x in range(len(domain))]
+        codes = cartesian_product(*tuple(selected))
     else:
         raise TypeError(f"Encountered unsupported 'density' type: {type(density)}")
 

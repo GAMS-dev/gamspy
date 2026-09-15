@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import math
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pandas as pd
+
+from gamspy._categoricals import assemble_categorical
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -29,28 +32,20 @@ def get_keys_and_values(
     if dim == 0:
         arrkeys = np.array([[]], dtype=dtype_keys)
     else:
-        arrkeys = np.empty(dim * nrecs, dtype=dtype_keys)
+        arrkeys = np.empty((nrecs, dim), dtype=dtype_keys, order="F")
         for i in range(dim):
-            col_data = records.iloc[:, i]
-            col_data = col_data.cat.codes
-
-            idx_start, idx_end = i * nrecs, (i + 1) * nrecs
-            arrkeys[idx_start:idx_end] = col_data
-
-        arrkeys = arrkeys.reshape((nrecs, dim), order="F")
+            column = cast("pd.Categorical", records.iloc[:, i].array)
+            arrkeys[:, i] = column.codes
 
     if dim == 0:
-        arrvals = records.to_numpy()
+        arrvals = records.to_numpy(dtype=np.float64)
     elif isinstance(symobj, (Set, Parameter)):
-        arrvals = records.iloc[:, -1].to_numpy().reshape((-1, 1))
+        arrvals = np.asarray(records.iloc[:, -1].array).reshape((-1, 1))
     else:
         num_attr = len(symobj._attributes)
-        arrvals = np.empty(num_attr * nrecs, dtype=np.float64)
+        arrvals = np.empty((nrecs, num_attr), dtype=np.float64, order="F")
         for i in range(num_attr):
-            idx_start, idx_end = i * nrecs, (i + 1) * nrecs
-            arrvals[idx_start:idx_end] = records.iloc[:, i + dim].to_numpy()
-
-        arrvals = arrvals.reshape((nrecs, num_attr), order="F")
+            arrvals[:, i] = records.iloc[:, i + dim].array
 
     return arrkeys, arrvals
 
@@ -74,11 +69,8 @@ def convert_to_categoricals_cat(
             # `unique_uels` come straight from GMD and are unique by
             # construction, so skip pandas' redundant uniqueness/bounds checks
             # (`is_unique` on large UEL lists dominates the read-back otherwise).
-            dtype = pd.CategoricalDtype._from_fastpath(
-                categories=unique_uels[i], ordered=True
-            )
-            data[col_idx] = pd.Categorical.from_codes(
-                codes=arrkeys[:, i], dtype=dtype, validate=False
+            data[col_idx] = assemble_categorical(
+                arrkeys[:, i], unique_uels[i], ordered=True, fastpath=True
             )
             col_idx += 1
 
@@ -91,99 +83,42 @@ def convert_to_categoricals_cat(
     return pd.DataFrame(data, copy=False)
 
 
-def generate_unique_labels(labels: list | str) -> list[str]:
-    """Generate unique labels from a list of labels."""
+def generate_unique_labels(
+    labels: list | str, reserved: Sequence[str] | None = None
+) -> list[str]:
+    """Generate unique labels from a list of labels. `reserved` names (e.g.
+    a symbol's attribute columns) are treated as already taken, so a label
+    colliding with one of them gets suffixed too."""
     if not isinstance(labels, list):
         labels = [labels]
 
     labels = [label if label != "*" else "uni" for label in labels]
 
-    # Append suffixes if the list is not entirely unique
-    if len(labels) != len(set(labels)):
+    # Append suffixes if the list is not entirely unique, or collides with a reserved name.
+    reserved_set = set(reserved) if reserved else set()
+    if len(labels) != len(set(labels)) or not reserved_set.isdisjoint(labels):
         labels = [f"{label}_{n}" for n, label in enumerate(labels)]
 
     return labels
 
 
-def cartesian_product(*arrays: np.ndarray) -> np.ndarray:
-    """Calculate the Cartesian product of multiple input arrays."""
+def cartesian_product(*arrays: np.ndarray) -> list[np.ndarray]:
+    """
+    Calculate the Cartesian product of multiple input arrays, returned as one
+    column per input array (rather than a single combined 2D array).
+    """
     if not arrays:
-        return np.empty((0, 0))
+        return []
 
-    la = len(arrays)
-    dtype = np.result_type(*arrays)
+    shape = tuple(len(a) for a in arrays)
 
-    # Pre-allocate array: (num_arrays, len(arr1), len(arr2), ...)
-    arr = np.empty((la, *map(len, arrays)), dtype=dtype)
-
+    columns = []
     for i, a in enumerate(arrays):
-        # Explicitly build a shape to align 'a' along the i-th dimension.
-        # e.g., for 3 arrays: i=0 -> (-1, 1, 1), i=1 -> (1, -1, 1), i=2 -> (1, 1, -1)
-        broadcast_shape = [1] * la
-        broadcast_shape[i] = -1
+        inner = math.prod(shape[i + 1 :])
+        outer = math.prod(shape[:i])
+        columns.append(np.tile(np.repeat(np.asarray(a), inner), outer))
 
-        # Reshape 'a' so broadcasting explicitly matches the target array
-        arr[i, ...] = np.asarray(a).reshape(broadcast_shape)
-
-    return arr.reshape(la, -1).T
-
-
-def sorted_unique(arr: np.ndarray, *, copy: bool = True) -> np.ndarray:
-    if copy:
-        arr = np.sort(arr)
-    else:
-        arr.sort()
-
-    keep = np.ones(arr.size, dtype=bool)
-    np.not_equal(arr[1:], arr[:-1], out=keep[1:])
-
-    if keep.all():
-        return arr
-
-    return arr[keep]
-
-
-def drop_unused_categories(column: pd.Series) -> pd.Series:
-    codes = column.cat.codes.to_numpy()
-    categories = column.cat.categories
-
-    used = sorted_unique(codes)
-    has_na = used.size > 0 and used[0] == -1  # the NA sentinel is not a category
-    if has_na:
-        used = used[1:]
-
-    if used.size == categories.size:
-        return column
-
-    lookup = np.full(categories.size, -1, dtype=codes.dtype)
-    lookup[used] = np.arange(used.size, dtype=codes.dtype)
-    new_codes = lookup[codes]
-    if has_na:
-        new_codes[codes < 0] = -1
-
-    dtype = pd.CategoricalDtype._from_fastpath(
-        categories.take(used), ordered=column.cat.ordered
-    )
-
-    return pd.Series(
-        pd.Categorical.from_codes(new_codes, dtype=dtype, validate=False),
-        index=column.index,
-        name=column.name,
-    )
-
-
-def _sample_unique(choose_from: int, n_choose: int, seed: int | None) -> np.ndarray:
-    """Select unique items from a huge pool by drawing with replacement and refilling."""
-    rng = np.random.default_rng(seed)
-    idx = rng.integers(0, choose_from, size=n_choose)
-
-    while True:
-        idx = sorted_unique(idx, copy=False)
-        deficit = n_choose - idx.size
-        if deficit == 0:
-            return idx  # already sorted
-
-        idx = np.concatenate((idx, rng.integers(0, choose_from, size=deficit)))
+    return columns
 
 
 def choice_no_replace(
@@ -193,9 +128,6 @@ def choice_no_replace(
 ) -> np.ndarray:
     if not isinstance(seed, (int, type(None))):
         raise TypeError("Argument 'seed' must be type int or NoneType")
-
-    LOW_DENSITY = 0.08
-    MAX_MATERIALIZED_POOL = 10_000_000
 
     choose_from, n_choose = int(choose_from), int(n_choose)
     density = n_choose / choose_from
@@ -208,11 +140,19 @@ def choice_no_replace(
     if density == 1:
         return np.arange(choose_from, dtype=int)
 
-    # rng.choice allocates a pool O(choose_from). So 10M is the point where the pool
-    # is ~80 MB. _sample_unique holds O(n_choose).
-    if density <= LOW_DENSITY and choose_from > MAX_MATERIALIZED_POOL:
-        return _sample_unique(choose_from, n_choose, seed)
+    _DENSITY_THRESHOLD = 0.3
 
     rng = np.random.default_rng(seed)
-    idx = rng.choice(choose_from, replace=False, size=n_choose)
-    return np.sort(idx)
+
+    if density <= _DENSITY_THRESHOLD:
+        # directly draw the set of indices to keep, then sort
+        idx = rng.choice(choose_from, replace=False, size=n_choose)
+        idx.sort()
+        return idx
+
+    # draw the excluded complement instead, then invert
+    # np.flatnonzero is ascending for free -- no sort needed
+    excluded = rng.choice(choose_from, replace=False, size=choose_from - n_choose)
+    mask = np.ones(choose_from, dtype=bool)
+    mask[excluded] = False
+    return np.flatnonzero(mask)
