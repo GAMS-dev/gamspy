@@ -1,1 +1,0 @@
-Add examples in the docstrings of ``find*``, ``count*``, ``where*``, and ``shape`` functions.

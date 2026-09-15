@@ -1,1 +1,0 @@
-Make SDDP training, simulation, and cut-selection bound evaluation work with the bundled demo license.
