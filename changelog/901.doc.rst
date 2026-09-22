@@ -1,0 +1,1 @@
+Rewrite the section on logical operators for better readability.
