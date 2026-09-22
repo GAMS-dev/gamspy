@@ -463,3 +463,28 @@ def test_superset_index():
 
     gg_klp = gp.Parameter(m, name="gg_klp", domain=[r, t])
     gg_klp[Rtpc[r, sub_t]].where[~GgRtpc[Rtpc]] = 0.0
+
+
+def test_literal_bound_operation_index():
+    m = gp.Container()
+
+    COM_GRP = gp.Set(m, name="COM_GRP", records=["DEM", "NRG", "ACT", "AKL", "LAB"])
+    CG = gp.Alias(m, name="CG", alias_with=COM_GRP)
+    COM = gp.Set(m, name="COM", domain=[COM_GRP], records=["ACT", "AKL", "LAB"])
+    C = gp.Alias(m, name="C", alias_with=COM)
+    MAG = gp.Set(m, name="MAG", domain=[CG], records=["ACT", "AKL", "LAB"])
+
+    VAR_DEM = gp.Variable(m, name="VAR_DEM", domain=[C])
+    VAR_DEM.l[C] = 1
+    RESULT = gp.Parameter(m, name="RESULT")
+
+    RESULT[...] = gp.Sum(MAG["ACT"], VAR_DEM.l[MAG])
+    assert RESULT.toValue() == 1.0
+
+    # Without the literal binding, MAG and C are unrelated subsets of COM_GRP.
+    with pytest.raises(ValidationError):
+        RESULT[...] = gp.Sum(MAG, VAR_DEM.l[MAG])
+
+    # The binding must not leak into the following statements.
+    with pytest.raises(ValidationError):
+        RESULT[...] = gp.Sum(C, VAR_DEM.l[MAG])

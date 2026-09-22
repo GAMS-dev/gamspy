@@ -1,0 +1,1 @@
+Indexing a symbol with a set that an enclosing operation binds to a literal element, e.g. ``Sum(i["label"], p[i])``, no longer raises a false domain violation.
