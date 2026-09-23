@@ -87,11 +87,6 @@ html_theme_options = {
             "type": "fontawesome",
         },
         {
-            "name": "X",
-            "url": "https://twitter.com/GamsSoftware",
-            "icon": "fa-brands fa-x-twitter",
-        },
-        {
             "name": "GAMS",
             "url": "https://www.gams.com",
             "icon": "_static/gams.svg",
