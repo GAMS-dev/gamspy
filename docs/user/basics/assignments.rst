@@ -129,15 +129,30 @@ The assignment ``u[i].where[s[i] >= 5] = s[i] + 10`` depends on whether ``s[i]``
 equal to 5. If this is the case, an assignment is made, otherwise not.
 
 .. _bitwise-operators:
+.. _logical-operators:
 
-Bitwise Operators
+Logical Operators
 -----------------
 
-Logical operators can be used to combine two or more logical conditions to build complex logical 
-expressions. For example, if several expressions are required to be True simultaneously, they may 
-be connected with the Python bitwise operator ``&``. For all available bitwise operators in Python 
-read more `here <https://docs.python.org/3/library/operator.html#mapping-operators-to-functions>`_. 
-Another way to construct complex logical conditions is by nesting them. For details, see subsection 
+Logical operators allow you to combine multiple conditions to build complex conditional logic.
+
+Because the standard Python logical keywords (``and``, ``or``, ``not``) cannot be overloaded for
+symbolic expressions, GAMSPy uses Python's bitwise operators instead. In GAMSPy, these operators
+perform **logical**, not bitwise, operations:
+
+- ``&`` (**and**): requires all conditions to be true simultaneously, e.g. ``(p[i] > 0) & (q[i] > 0)``.
+- ``|`` (**or**): requires at least one condition to be true.
+- ``^`` (**xor**): evaluates to true if exactly one of the two conditions is true, but not both.
+- ``~`` (**not**): negates a condition.
+
+.. note::
+    Always enclose the individual conditions in parentheses. In Python, ``&``, ``|`` and ``^`` bind
+    more tightly than the relational operators (``>``, ``<``, ``==``, ...), so an expression such as
+    ``p[i] > 0 & q[i] > 0`` is parsed as ``p[i] > (0 & q[i]) > 0`` and does not express what you
+    intended. For more details, see `Python's operator precedence
+    <https://docs.python.org/3/reference/expressions.html#operator-precedence>`_.
+
+Another way to construct complex logical conditions is by nesting them. For details, see subsection
 :ref:`nested-conditions` below.
 
 The following somewhat artificial examples serve as illustrations. ::
@@ -195,7 +210,7 @@ parameters ``s``, ``v`` and ``t``. This holds for all labels except for ``i5``. 
     2	i3	  4.0
     3	i4	  4.0
 
-These examples demonstrate the power of the ``where`` operator combined with bitwise operators. 
+These examples demonstrate the power of the ``where`` operator combined with logical operators. 
 Even more complex logical conditions are possible; see subsection 
 :ref:`Mixed Logical Conditions <mixed-logical-conditions>` below for details.
 
@@ -317,7 +332,7 @@ Mixed Logical Conditions
 The building blocks introduced in the subsections above may be combined to generate more complex 
 logical conditions. These may contain standard arithmetic operations, 
 :ref:`numerical-relational-operators` and 
-:ref:`bitwise-operators`. The operator precedence is the same with `Python's operator precedence <https://docs.python.org/3/reference/expressions.html#operator-precedence>`_.
+:ref:`logical-operators`. The operator precedence is the same with `Python's operator precedence <https://docs.python.org/3/reference/expressions.html#operator-precedence>`_.
 
 .. note::
     We recommend to use parentheses rather than relying on the order of precedence of operators. 
