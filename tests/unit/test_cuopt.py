@@ -496,3 +496,15 @@ def test_install_merges_into_config_of_user(release, system_directory):
     cuopt.uninstall()
     assert config_path.read_text() == config
     assert not os.path.exists(system_directory / cuopt.BACKUP_FILE)
+
+
+def test_list_solvers_shows_capabilities_of_uninstalled_cuopt(monkeypatch):
+    from gamspy_cli import list as list_cli
+
+    # cuOpt is only listed on Linux and registers its capabilities on installation.
+    monkeypatch.setattr(platform, "system", lambda: "Linux")
+    solver_rows, _, all_types = list_cli._collect_solver_data(all=True)
+
+    row = next(row for row in solver_rows if row["name"] == "CUOPT")
+    assert row["capabilities"] == cuopt.MODEL_TYPES
+    assert set(cuopt.MODEL_TYPES) <= set(all_types)
