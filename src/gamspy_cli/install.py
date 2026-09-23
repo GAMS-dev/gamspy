@@ -379,6 +379,12 @@ def solver(
                 )
                 raise typer.Exit(code=1)
 
+            if solver_name == "examiner2":
+                typer.echo(
+                    "Warning: `examiner2` solver is deprecated and will be removed in a future release. Use `examiner` instead.",
+                    err=True,
+                )
+
             if not skip_pip_install:
                 solver_version = gamspy_base.__version__
                 # install specified solver

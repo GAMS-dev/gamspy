@@ -1,0 +1,1 @@
+``gamspy list solvers`` now shows a reduced, more readable table of solvers and tools, with a status column (licensed/installed) and one column per supported problem type, instead of a plain solver-to-problem-type listing.
