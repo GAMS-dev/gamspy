@@ -1,0 +1,2 @@
+The ``examiner2`` solver is deprecated and will be removed in a future release. ``Model.solve(solver="examiner2")`` now emits a ``DeprecationWarning`` and ``gamspy install solver examiner2`` prints a deprecation warning; use ``examiner`` instead.
+``gamspy list solvers --installables`` (``-i``) is deprecated and will be removed in a future release; it now prints a deprecation warning. Use ``gamspy list solvers --all`` instead.

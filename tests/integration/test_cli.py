@@ -294,6 +294,23 @@ def test_install_solver():
     )
     assert process.returncode == 0, process.stdout + process.stderr
 
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-Bm",
+            "gamspy",
+            "install",
+            "solver",
+            "examiner2",
+            "--skip-pip-install",
+            "--use-uv",
+        ],
+        capture_output=True,
+        encoding="utf-8",
+        text=True,
+    )
+    assert "`examiner2` solver is deprecated" in process.stderr, process.stderr
+
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
             [sys.executable, "-Bm", "gamspy", "uninstall", "solver", "bla"],

@@ -1770,6 +1770,13 @@ class Model:
         if solver == "conopt":
             solver = "conopt4"
 
+        if solver == "examiner2":
+            warnings.warn(
+                "`examiner2` solver is deprecated and will be removed in a future release. Use `examiner` instead.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
+
         self._validate_scenario(scenario, freeze_options)
 
         validation.validate_solver_args(
