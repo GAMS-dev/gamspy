@@ -579,11 +579,6 @@ def _get_license_path(system_directory: str) -> str:
 
         return license_path
 
-    # Check ci license
-    ci_license_path = os.path.join(system_directory, "ci_license.txt")
-    if os.path.exists(ci_license_path):
-        return ci_license_path
-
     # Check if a new license was installed.
     gamspy_license_path = os.path.join(DEFAULT_DIR, "gamspy_license.txt")
     if os.path.exists(gamspy_license_path):
