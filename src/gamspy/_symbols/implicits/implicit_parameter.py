@@ -72,7 +72,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         name: str,
         domain: IndexType | None = None,
         permutation: list[int] | None = None,
-        scalar_domains: list[tuple[int, Set]] | None = None,
+        scalar_domains: list[tuple[int, str]] | None = None,
     ) -> None:
         """Implicit Parameter
 

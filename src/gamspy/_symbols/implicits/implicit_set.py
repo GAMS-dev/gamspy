@@ -37,7 +37,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         parent: Set | Alias,
         name: str,
         domain: list[Set | Universe | str] | None = None,
-        scalar_domains: list[tuple[int, Set]] | None = None,
+        scalar_domains: list[tuple[int, str]] | None = None,
     ) -> None:
         self.parent = parent
         if domain is None:

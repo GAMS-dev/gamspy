@@ -36,7 +36,7 @@ class ImplicitSymbol(ABC):
         name,
         domain,
         permutation=None,
-        parent_scalar_domains=None,
+        parent_scalar_domains: list[tuple[int, str]] | None = None,
     ) -> None:
         self.container = self.parent.container
         self.name = name
@@ -70,14 +70,14 @@ class ImplicitSymbol(ABC):
 
         return 0
 
-    def fix_domain_scalars(self, parent_scalar_domains):
+    def fix_domain_scalars(self, parent_scalar_domains: list[tuple[int, str]]) -> None:
         if is_universe_domain(self.domain):
             self._scalar_domains = []
             return
 
         bare_domain = utils._get_set(self.domain)
         domain = []
-        scalars = []
+        scalars: list[tuple[int, str]] = []
         permutation_indices_to_del = []
         for i, d in enumerate(bare_domain):
             if isinstance(d, str):

@@ -29,7 +29,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         name: str,
         domain: list[Set | str],
         permutation: list[int] | None = None,
-        scalar_domains: list[tuple[int | Set]] | None = None,
+        scalar_domains: list[tuple[int, str]] | None = None,
     ):
         """
         Implicit Variable
@@ -55,7 +55,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             name=self.name,
             domain=domain,
             permutation=self.permutation,
-            scalar_domains=self._scalar_domains,  # ty: ignore[invalid-argument-type]
+            scalar_domains=self._scalar_domains,
         )
 
     @property
