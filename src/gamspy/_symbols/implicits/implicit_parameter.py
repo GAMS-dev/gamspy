@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
@@ -18,6 +18,8 @@ from gamspy.exceptions import ValidationError
 from gamspy.math.matrix import permute
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     import numpy as np
     import pandas as pd
 
@@ -70,7 +72,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self,
         parent: Set | Alias | Parameter | Variable | Equation,
         name: str,
-        domain: IndexType | None = None,
+        domain: Sequence[Any] | None = None,
         permutation: list[int] | None = None,
         scalar_domains: list[tuple[int, str]] | None = None,
     ) -> None:

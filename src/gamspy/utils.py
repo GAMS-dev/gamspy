@@ -731,7 +731,7 @@ def _invert_permutation(dims: list[int]) -> list[int]:
     return inverse
 
 
-def _get_set(domain: list[Set | Alias | Domain | Expression]):
+def _get_set(domain: Sequence[Set | Alias | Domain | Expression]):
     from gamspy import Domain
     from gamspy._algebra.expression import ShiftExpression
 
@@ -754,7 +754,7 @@ def _get_set(domain: list[Set | Alias | Domain | Expression]):
     return res
 
 
-def _unpack(domain: list[Set | Alias | ImplicitSet]):
+def _unpack(domain: Sequence[Set | Alias | ImplicitSet]):
     """Flatten a domain into the sets it puts under control."""
     from gamspy._algebra.expression import ShiftExpression
 
