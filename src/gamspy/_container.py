@@ -5,7 +5,6 @@ import builtins
 import os
 import platform
 import re
-import signal
 import sys
 import tempfile
 import threading
@@ -15,7 +14,7 @@ import weakref
 from collections.abc import Iterable
 from difflib import get_close_matches
 from pathlib import Path
-from typing import TYPE_CHECKING, TextIO, TypeVar, cast, no_type_check, overload
+from typing import TYPE_CHECKING, TextIO, TypeVar, cast, overload
 
 import gams.transfer as gt
 import pandas as pd
@@ -28,8 +27,8 @@ import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._categoricals import codes_and_categories, union_categories
-from gamspy._communication import close_connection, get_connection, open_connection
 from gamspy._config import get_option
+from gamspy._execution import create_execution_engine
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._internals import (
     ATTR_PREFIX,
@@ -218,7 +217,6 @@ class Container:
     ):
         import gams.core.numpy as gnp
 
-        self._comm_pair_id = utils._get_unique_name()
         self.output = output
         self._gams_string = ""
         self._in_loop: int = 0
@@ -264,8 +262,9 @@ class Container:
         self._miro_input_symbols: list[str] = []
         self._miro_output_symbols: list[str] = []
 
-        open_connection(self)
-        weakref.finalize(self, close_connection, self._comm_pair_id)
+        self._execution_engine = create_execution_engine(self)
+        self._execution_engine.start()
+        weakref.finalize(self, self._execution_engine.stop)
 
         self._is_restarted = False
         if load_from is not None:
@@ -1376,13 +1375,8 @@ class Container:
 
         return name
 
-    @no_type_check
     def _interrupt(self) -> None:
-        _, process = get_connection(self._comm_pair_id)
-        if platform.system() == "Windows":
-            os.kill(process.pid, signal.CTRL_C_EVENT)
-        else:
-            os.kill(process.pid, signal.SIGINT)
+        self._execution_engine.interrupt()
 
     def _write_miro_files(self):
         # create conf_<model>/<model>_io.json
@@ -1390,7 +1384,7 @@ class Container:
             encoder = MiroJSONEncoder(self)
             encoder.write_json()
         except Exception:
-            close_connection(self._comm_pair_id)
+            self._execution_engine.stop()
             traceback.print_exc(file=sys.stderr)
             os._exit(1)
 
@@ -2251,7 +2245,7 @@ $endIf
         self._synch_with_gams()
         self._options._set_extra_options({})
 
-        close_connection(self._comm_pair_id)
+        self._execution_engine.stop()
         self._restart_from = save_file
 
     def close(self) -> None:
@@ -2271,7 +2265,7 @@ $endIf
 
         """
         self._restart_from = None
-        close_connection(self._comm_pair_id)
+        self._execution_engine.stop()
 
     def addAlias(
         self,

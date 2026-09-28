@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import os
 from typing import TYPE_CHECKING, TextIO
 
 import gamspy._backend.backend as backend
 import gamspy._miro as miro
-from gamspy._communication import is_connected, open_connection, send_job
 from gamspy.exceptions import GamspyException, _customize_exception
 
 if TYPE_CHECKING:
@@ -34,31 +32,6 @@ class Local(backend.Backend):
         )
         self.model = model
 
-    def _prepare_hidden_options(self) -> dict:
-        scrdir = self.container._process_directory
-
-        hidden_options = {
-            "input": self.gms_file,
-            "output": self.lst_file,
-            "optdir": self.container.working_directory,
-            "sysdir": self.container.system_directory,
-            "scrdir": scrdir,
-            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
-            "license": self.container._license_path,
-        }
-
-        if self.model is not None:
-            hidden_options["gdx"] = self.container._gdx_out
-            hidden_options["gdxSymbols"] = "newOrChangedNoData"
-
-        if self.container._network_license:
-            hidden_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
-
-        if self.container._restart_from is not None:
-            hidden_options["restart"] = self.container._restart_from
-
-        return hidden_options
-
     def is_async(self):
         return False
 
@@ -78,27 +51,10 @@ class Local(backend.Backend):
         return summary
 
     def execute_gams(self, gams_string: str):
-        # Write gms file
-        with open(self.gms_file, "w", encoding="utf-8") as gams_file:
-            gams_file.write(gams_string)
-
-        # A hibernating container has no engine running, so start one.
-        is_waking_up = self.container._restart_from is not None
-        if is_waking_up and not is_connected(self.container._comm_pair_id):
-            open_connection(self.container)
-
-        # Write pf file
-        hidden_options = self._prepare_hidden_options()
-        self.options._set_hidden_options(hidden_options)
-        self.options._export(self.pf_file, self.output)
-
         try:
-            send_job(
-                self.container._comm_pair_id, self.job_name, self.pf_file, self.output
+            self.container._execution_engine.execute(
+                gams_string, self.options, self.job_name, self.model, self.output
             )
-
-            if is_waking_up:
-                self.container._restart_from = None
 
             if self.model:
                 self.model._update_model_attributes()

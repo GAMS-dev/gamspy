@@ -402,22 +402,20 @@ def test_loadRecordsFromGdx_with_missing_symbols(tmp_path):
 
 @pytest.mark.unit
 def test_hibernate():
-    from gamspy._communication import is_connected
-
     m = gp.Container()
     i = gp.Set(m, "i", records=range(5))
     p = gp.Parameter(m, "p", domain=i)
     p[i] = 3
-    assert is_connected(m._comm_pair_id)
+    assert m._execution_engine.is_running
 
     m.hibernate()
-    assert not is_connected(m._comm_pair_id)
+    assert not m._execution_engine.is_running
     m.hibernate()  # idempotent
 
     # the next statement that needs GAMS restarts it from the saved state
     p[i] = p[i] + 1
     assert (p.toDense() == [4.0] * 5).all()
-    assert is_connected(m._comm_pair_id)
+    assert m._execution_engine.is_running
     assert m._restart_from is None
 
     # the sets are still known to GAMS, not just to python
@@ -432,7 +430,7 @@ def test_hibernate():
         with pytest.raises(ValidationError, match="Cannot hibernate while a loop"):
             m.hibernate()
 
-    assert is_connected(m._comm_pair_id)
+    assert m._execution_engine.is_running
     assert (p.toDense() == [1.0] * 5).all()
 
     # a closed container does not come back from hibernation
