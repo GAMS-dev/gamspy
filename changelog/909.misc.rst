@@ -1,0 +1,1 @@
+Move the socket connection to the GAMS process behind an execution engine abstraction to prepare the way for adding alternative local execution engines in the future.

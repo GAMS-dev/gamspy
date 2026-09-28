@@ -14,12 +14,13 @@ import certifi
 
 import gamspy._backend.backend as backend
 import gamspy._gdx as gdxio
-from gamspy._communication import send_job
+from gamspy._execution import SocketEngine
 from gamspy._internals import DataSource
 from gamspy._options import Options
 from gamspy.exceptions import (
     GamspyException,
     NeosClientException,
+    ValidationError,
 )
 
 logger = logging.getLogger("NEOS")
@@ -518,7 +519,13 @@ class NEOSServer(backend.Backend):
         options._set_hidden_options(hidden_options)
         options._export(self.pf_file)
 
-        send_job(self.container._comm_pair_id, self.job_name, self.pf_file)
+        engine = self.container._execution_engine
+        if not isinstance(engine, SocketEngine):  # pragma: no cover
+            raise ValidationError(
+                f"The {self.backend_type} backend requires the socket execution engine."
+            )
+
+        engine.send_job(self.job_name, self.pf_file)
 
     def _sync(self):
         symbols = gdxio._get_symbol_names_from_gdx(
