@@ -10,6 +10,7 @@ import gamspy.formulations.piecewise as piecewise
 from gamspy.exceptions import ValidationError
 from gamspy.formulations import (
     PWLCurve,
+    indicator,
     pwl_convexity_formulation,
     pwl_dlog_formulation,
     pwl_interval_formulation,
@@ -79,7 +80,7 @@ def test_pwl_enforce_sos2_log_binary_2():
     assert "binary" not in var_count
 
 
-def test_pwl_indicator():
+def test_indicator():
     m = gp.Container()
     i = gp.Set(m, name="i", records=["1", "2"])
     j = gp.Set(m, name="j", records=["1", "2", "3"])
@@ -91,43 +92,134 @@ def test_pwl_indicator():
     x2 = gp.Variable(m, name="x2", domain=[j])
     x3 = gp.Variable(m, name="x3", domain=[k])
     x4 = gp.Variable(m, name="x4", domain=[i, k])
+    p = gp.Parameter(m, name="p", domain=[j])
 
     b3 = gp.Variable(m, name="b3", type="binary")
     x5 = gp.Variable(m, name="x5")
 
     with pytest.raises(ValidationError):
-        piecewise._indicator("indicator_var", 0, x <= 10)
+        indicator("indicator_var", 0, x <= 10)
+    with pytest.raises(ValidationError):
+        indicator(b2, 0, x <= 10)
+    with pytest.raises(ValidationError):
+        indicator(b, -1, x <= 10)
+    with pytest.raises(ValidationError):
+        indicator(b, True, x <= 10)
+    with pytest.raises(ValidationError):
+        indicator(b, 0, x)
+    with pytest.raises(ValidationError):
+        indicator(b, 0, x + 10)
+    with pytest.raises(ValidationError):
+        indicator(b, 0, x3 >= 10)
+    with pytest.raises(ValidationError):
+        indicator(b, 0, x2 >= 10)
+    for big_m in (0, -1, math.inf, "10", True, p, 2 * p, x, x <= 1):
+        with pytest.raises(ValidationError):
+            indicator(b, 0, x <= 10, big_m=big_m)
+    with pytest.raises(ValidationError):
+        indicator(b, 0, (x <= 10).where[p > 0])
 
-    with pytest.raises(ValidationError):
-        piecewise._indicator(b2, 0, x <= 10)
-    with pytest.raises(ValidationError):
-        piecewise._indicator(b, -1, x <= 10)
-    with pytest.raises(ValidationError):
-        piecewise._indicator(b, 0, x)
-    with pytest.raises(ValidationError):
-        piecewise._indicator(b, 0, x + 10)
-    with pytest.raises(ValidationError):
-        piecewise._indicator(b, 0, x3 >= 10)
-    with pytest.raises(ValidationError):
-        piecewise._indicator(b, 0, x2 >= 10)
-    with pytest.raises(ValidationError):
-        piecewise._indicator(b, 0, x4 >= 10)
+    res1 = indicator(b, 0, x >= 10)
+    res2 = indicator(b, 0, x <= 10)
+    res3 = indicator(b, 0, x == 10)
+    assert res1.result is None
+    assert list(res1.equations_created) == ["slack", "link"]
+    assert list(res1.variables_created) == ["sos1"]
+    assert list(res2.equations_created) == ["slack", "link"]
+    assert list(res3.equations_created) == ["le_slack", "ge_slack", "link"]
+    assert list(res3.variables_created) == ["sos1"]
 
-    eqs1 = piecewise._indicator(b, 0, x >= 10)
-    eqs2 = piecewise._indicator(b, 0, x <= 10)
-    eqs3 = piecewise._indicator(b, 0, x == 10)
-    assert len(eqs1) == len(eqs2)
-    assert len(eqs3) == len(eqs1) * 2
+    # indicator variable is broadcast over the extra domains of the constraint
+    res4 = indicator(b[i], 1, x4[i, k] >= 10)
+    sos1_domain = res4.variables_created["sos1"].domain
+    assert [d.name for d in sos1_domain[:2]] == ["i", "k"]
 
-    eqs4 = piecewise._indicator(b3, 1, x5 >= 10)
-    assert len(eqs4) == len(eqs1)
+    _, eqs5 = indicator(b3, 1, x5 >= 10)
+    assert len(eqs5) == 2
+
+    res6 = indicator(b, 1, x == 10, big_m=100)
+    assert list(res6.equations_created) == ["le_big_m", "ge_big_m"]
+    assert res6.variables_created == {}
+
+    big_m = gp.Parameter(m, name="big_m", domain=[i], records=[("1", 5), ("2", 6)])
+    res7 = indicator(b, 1, x <= 10, big_m=big_m)
+    assert list(res7.equations_created) == ["big_m"]
 
     var_count = get_var_count_by_type(m)
-    assert "sos1" in var_count
+    assert var_count["sos1"] == 5
 
-    piecewise._indicator(b, 1, x >= 10)
-    piecewise._indicator(b, 1, x <= 10)
-    piecewise._indicator(b, 1, x == 10)
+
+@pytest.mark.parametrize("use_big_m", [False, True])
+def test_indicator_condition(use_big_m):
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b", "c"])
+    p = gp.Parameter(m, name="p", domain=i, records=[("a", 1), ("c", 1)])
+    x = gp.Variable(m, name="x", domain=i)
+    x.lo[i] = 0
+    x.up[i] = 10
+    b = gp.Variable(m, name="b", type="binary", domain=i)
+    b.fx[i] = 1
+
+    big_m = x.up - 2 if use_big_m else None
+    for constraint, expected in ((x <= 2, [2, 10, 2]), (x == 3, [3, 10, 3])):
+        _, eqs = indicator(b, 1, constraint.where[p > 0], big_m=big_m)
+        assert all("$ (p(i) > 0)" in eq.getDefinition() for eq in eqs)
+
+        model = gp.Model(
+            m,
+            equations=eqs,
+            problem="mip",
+            sense="max",
+            objective=gp.Sum(i, x),
+        )
+        model.solve()
+        assert np.allclose(x.toDense(), expected)
+
+
+@pytest.mark.parametrize("big_m", [None, 100])
+def test_indicator_solve(big_m):
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b"])
+    j = gp.Set(m, name="j", records=["1", "2"])
+    b = gp.Variable(m, name="b", type="binary", domain=i)
+    x = gp.Variable(m, name="x", domain=[i, j])
+    x.lo[i, j] = 0
+    x.up[i, j] = 10
+    b.fx["a"] = 0
+    b.fx["b"] = 1
+
+    _, eqs1 = indicator(b, 1, x <= 2, big_m=big_m)
+    _, eqs2 = indicator(b, 0, x >= 5, big_m=big_m)
+    model = gp.Model(
+        m,
+        equations=[*eqs1, *eqs2],
+        problem="mip",
+        sense="max",
+        objective=gp.Sum([i, j], x),
+    )
+    model.solve()
+    assert math.isclose(model.objective_value, 24)
+
+    model = gp.Model(
+        m,
+        equations=[*eqs1, *eqs2],
+        problem="mip",
+        sense="min",
+        objective=gp.Sum([i, j], x),
+    )
+    model.solve()
+    assert math.isclose(model.objective_value, 10)
+
+    _, eqs3 = indicator(b, 1, x == 1, big_m=big_m)
+    model = gp.Model(
+        m,
+        equations=eqs3,
+        problem="mip",
+        sense="max",
+        objective=gp.Sum([i, j], x),
+    )
+    model.solve()
+    assert math.isclose(model.objective_value, 22)
 
 
 def test_pwl_enforce_sos2_log_binary_with_domain():

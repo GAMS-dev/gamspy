@@ -365,7 +365,7 @@ def indicator_suite():
     x = gp.Variable(m, name="x")
     b = gp.Variable(m, name="b", type="binary")
 
-    eqs1 = piecewise._indicator(b, 1, x <= 50)
+    _, eqs1 = gp.formulations.indicator(b, 1, x <= 50)
     model = gp.Model(
         m,
         equations=eqs1,
@@ -378,7 +378,7 @@ def indicator_suite():
     assert x.toDense() == 50, "Case 1 failed !"
     print("Case 1 passed !")
 
-    eqs2 = piecewise._indicator(b, 0, x <= 500)
+    _, eqs2 = gp.formulations.indicator(b, 0, x <= 500)
     b.lo = 0
     b.up = 1
 
@@ -395,7 +395,7 @@ def indicator_suite():
     assert b.toDense() == 0, "Case 2 failed !"
     print("Case 2 passed !")
 
-    eqs3 = piecewise._indicator(b, 1, x <= 50)
+    _, eqs3 = gp.formulations.indicator(b, 1, x <= 50)
     model = gp.Model(
         m,
         equations=eqs3,
@@ -410,7 +410,7 @@ def indicator_suite():
     assert x.toDense() == 20, "Case 3 failed !"
     print("Case 3 passed !")
 
-    eqs4 = piecewise._indicator(b, 1, x == 120)
+    _, eqs4 = gp.formulations.indicator(b, 1, x == 120)
     model = gp.Model(
         m,
         equations=eqs4,
@@ -425,7 +425,7 @@ def indicator_suite():
     assert x.toDense() == 120, "Case 4 failed !"
     print("Case 4 passed !")
 
-    eqs5 = piecewise._indicator(b, 1, x >= 99)
+    _, eqs5 = gp.formulations.indicator(b, 1, x >= 99)
     model = gp.Model(
         m,
         equations=eqs5,
