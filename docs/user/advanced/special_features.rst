@@ -371,7 +371,7 @@ The GAMSPy formulation using conic equations is as follows: ::
     coneperfect[n] = 2 * x[n] * t[n] >= gp.math.sqr(z[n])
 
     cperfect = Model(
-        m, equations=[e1, e2, coneqcp], problem=Problem.QCP, sense=Sense.MIN, objective=obj
+        m, equations=[e1, e2, coneperfect], problem=Problem.QCP, sense=Sense.MIN, objective=obj
     )
 
     t.lo[n] = 0
@@ -433,7 +433,7 @@ The complete model is listed below::
     )
 
     cperfect = Model(
-        m, equations=[e1, e2, coneqcp], problem=Problem.QCP, sense=Sense.MIN, objective=objc
+        m, equations=[e1, e2, coneperfect], problem=Problem.QCP, sense=Sense.MIN, objective=objc
     )
 
     orig = Model(m, equations=[e1], problem=Problem.NLP, sense=Sense.MIN, objective=obj)
@@ -486,7 +486,7 @@ cone types: ::
 
 ::
 
-    import gamspy as program
+    import gamspy as gp
 
     m = gp.Container()
     i = gp.Set(m, name="i", records=range(5))
@@ -508,7 +508,7 @@ cone types: ::
 
 ::
 
-    import gamspy as program
+    import gamspy as gp
 
     m = gp.Container()
 
