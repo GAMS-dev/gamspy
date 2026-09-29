@@ -1,0 +1,1 @@
+Added ``indicator`` formulation to ``gamspy.formulations`` for modeling indicator constraints.

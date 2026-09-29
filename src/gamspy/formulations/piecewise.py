@@ -7,9 +7,6 @@ import warnings
 import numpy as np
 
 import gamspy as gp
-from gamspy._symbols.implicits import (
-    ImplicitVariable,
-)
 from gamspy.exceptions import ValidationError
 from gamspy.formulations._piecewise_data import (
     _classify_multivalued_rows,
@@ -17,6 +14,7 @@ from gamspy.formulations._piecewise_data import (
     _PwlData,
     _PwlRow,
 )
+from gamspy.formulations.general_constraints import indicator
 from gamspy.formulations.pwl_curve import PWLCurve, _normalize_curve_data
 
 if typing.TYPE_CHECKING:
@@ -254,85 +252,6 @@ def _enforce_indexed_discontinuity(
     return [select_equation, select_equation_2]
 
 
-def _indicator(
-    indicator_var: gp.Variable,
-    indicator_val: typing.Literal[0, 1],
-    expr: gp.Expression,
-) -> list[gp.Equation]:
-    # We will make this generic and public
-    if not isinstance(indicator_var, (gp.Variable, ImplicitVariable)):
-        raise ValidationError("indicator_var needs to be a variable")
-
-    if indicator_var.type != "binary":
-        raise ValidationError("indicator_var needs to be a binary variable")
-
-    if indicator_val not in (0, 1):
-        raise ValidationError("indicator_val needs to be 1 or 0")
-
-    if not isinstance(expr, gp.Expression):
-        raise ValidationError("expr needs to be an expression")
-
-    if expr.operator not in {"=l=", "=e=", "=g="}:
-        raise ValidationError("expr needs to be inequality or equality")
-
-    if len(expr.domain) != len(indicator_var.domain):
-        raise ValidationError("indicator_var and expr must have the same domain")
-
-    for expr_domain, var_domain in zip(expr.domain, indicator_var.domain, strict=True):
-        expr_domain_name = gp.formulations.utils._domain_name(expr_domain)
-        var_domain_name = gp.formulations.utils._domain_name(var_domain)
-        if expr_domain_name != var_domain_name:
-            raise ValidationError("indicator_var and expr must have the same domain")
-
-    if expr.operator == "=e=":
-        # sos1(bin_var, lhs - rhs) might be better
-        eqs1 = _indicator(
-            indicator_var,
-            indicator_val,
-            expr.left <= expr.right,  # ty: ignore[unsupported-operator]
-        )
-        eqs2 = _indicator(
-            indicator_var,
-            indicator_val,
-            -expr.left <= -expr.right,  # ty: ignore[invalid-argument-type, unsupported-operator]
-        )
-        return [*eqs1, *eqs2]
-
-    if expr.operator == "=g=":
-        return _indicator(
-            indicator_var,
-            indicator_val,
-            -expr.left <= -expr.right,  # ty: ignore[invalid-argument-type, unsupported-operator]
-        )
-
-    equations = []
-    m = indicator_var.container
-
-    slack_var = m.addVariable(domain=expr.domain, type="positive")
-    slack_eq = m.addEquation(
-        domain=expr.domain,
-        definition=(expr.left - slack_var <= expr.right),  # ty: ignore[unsupported-operator]
-    )
-    equations.append(slack_eq)
-
-    expr_domain = ... if len(expr.domain) == 0 else [*expr.domain]
-
-    sos_dim = gp.math._generate_dims(m, [2])[0]
-    sos1_var = m.addVariable(domain=[*expr.domain, sos_dim], type="sos1")
-    sos1_eq_1 = m.addEquation(domain=expr.domain)
-    if indicator_val == 1:
-        sos1_eq_1[...] = sos1_var[[*expr.domain, "0"]] == indicator_var[expr_domain]
-    else:
-        sos1_eq_1[...] = sos1_var[[*expr.domain, "0"]] == 1 - indicator_var[expr_domain]
-    equations.append(sos1_eq_1)
-
-    sos1_eq_2 = m.addEquation(domain=expr.domain)
-    sos1_eq_2[...] = sos1_var[[*expr.domain, "1"]] == slack_var[expr_domain]
-    equations.append(sos1_eq_2)
-
-    return equations
-
-
 def _generate_ray(
     container: gp.Container, domain: typing.Sequence[gp.Set | gp.Alias]
 ) -> tuple[gp.Variable, gp.Variable, list[gp.Equation]]:
@@ -340,8 +259,8 @@ def _generate_ray(
     # effectively x_var <= bigM * b_var without bigM
     x_var = container.addVariable(domain=domain, type="positive")
     b_var = container.addVariable(domain=domain, type="binary")
-    eqs = _indicator(b_var, 0, x_var <= 0)
-    return x_var, b_var, eqs
+    eqs = indicator(b_var, 0, x_var <= 0).equations_created
+    return x_var, b_var, list(eqs.values())
 
 
 def _get_interval_segment_data(
