@@ -225,6 +225,7 @@ class Container:
         ) = None
         self._arbitrary_code_executed: bool = False
         self.models: dict[str, Model] = {}
+        self._models_solved_in_loop: dict[str, Model] = {}
         self._mpsge_models: list[str] = []
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)

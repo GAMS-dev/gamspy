@@ -1820,6 +1820,7 @@ class Model:
         )
         if self.container._in_loop:
             self._assign_model_attributes()
+            self.container._models_solved_in_loop[self.name] = self
         options._set_model_info(solver, self.problem, solver_options)
 
         if self.container._in_loop:
