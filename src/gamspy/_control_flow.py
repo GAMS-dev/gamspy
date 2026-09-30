@@ -25,6 +25,26 @@ if TYPE_CHECKING:
 _last_containers: dict[tuple[int, int], Container] = {}
 
 
+def _synch_loop_with_gams(container: Container) -> None:
+    """Runs the statements of the outermost loop and loads the results back."""
+    models = list(container._models_solved_in_loop.values())
+    container._models_solved_in_loop.clear()
+
+    gdx_out = container._gdx_out
+    container._options._set_extra_options(
+        {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
+    )
+    container._synch_with_gams()
+    container._options._set_extra_options({})
+    symbol_names = gdxio._get_symbol_names_from_gdx(container.system_directory, gdx_out)
+    container._should_load_from(symbol_names, source=DataSource.GAMS)
+
+    for model in models:
+        # A solve under a condition that never held writes no attribute file.
+        if os.path.exists(model._attr_gdx_file):
+            model._update_model_attributes()
+
+
 class Loop:
     """
     A context manager to execute a group of statements iteratively for each member of a set or domain.
@@ -185,21 +205,14 @@ class Loop:
         # An exception occurred inside the with block.
         # Don't do synchronization that may raise another exception.
         if exc_type is not None:
+            if self.container._in_loop == 0:
+                self.container._models_solved_in_loop.clear()
             return False
 
         # Run only in the most outer loop
         if self.container._in_loop == 0:
             self.container._last_control_flow = "loop"
-            gdx_out = self.container._gdx_out
-            self.container._options._set_extra_options(
-                {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
-            )
-            self.container._synch_with_gams()
-            self.container._options._set_extra_options({})
-            symbol_names = gdxio._get_symbol_names_from_gdx(
-                self.container.system_directory, gdx_out
-            )
-            self.container._should_load_from(symbol_names, source=DataSource.GAMS)
+            _synch_loop_with_gams(self.container)
 
 
 class For:
@@ -390,20 +403,13 @@ class For:
         # An exception occurred inside the with block.
         # Don't do synchronization that may raise another exception.
         if exc_type is not None:
+            if self.container._in_loop == 0:
+                self.container._models_solved_in_loop.clear()
             return False
 
         if self.container._in_loop == 0:  # Run only in the most outer loop
             self.container._last_control_flow = "for"
-            gdx_out = self.container._gdx_out
-            self.container._options._set_extra_options(
-                {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
-            )
-            self.container._synch_with_gams()
-            self.container._options._set_extra_options({})
-            symbol_names = gdxio._get_symbol_names_from_gdx(
-                self.container.system_directory, gdx_out
-            )
-            self.container._should_load_from(symbol_names, source=DataSource.GAMS)
+            _synch_loop_with_gams(self.container)
 
 
 class While:
@@ -490,20 +496,13 @@ class While:
         # An exception occurred inside the with block.
         # Don't do synchronization that may raise another exception.
         if exc_type is not None:
+            if self.container._in_loop == 0:
+                self.container._models_solved_in_loop.clear()
             return False
 
         if self.container._in_loop == 0:  # Run only in the most outer loop
             self.container._last_control_flow = "while"
-            gdx_out = self.container._gdx_out
-            self.container._options._set_extra_options(
-                {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
-            )
-            self.container._synch_with_gams()
-            self.container._options._set_extra_options({})
-            symbol_names = gdxio._get_symbol_names_from_gdx(
-                self.container.system_directory, gdx_out
-            )
-            self.container._should_load_from(symbol_names, source=DataSource.GAMS)
+            _synch_loop_with_gams(self.container)
 
 
 class If:

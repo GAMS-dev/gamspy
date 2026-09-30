@@ -191,6 +191,48 @@ def test_loop_with_solve():
         ("san-diego", "topeka"),
     ]
 
+    # The attributes of the last solve in the loop must be loaded back.
+    assert transport.objective_value == pytest.approx(153.675 * 1.1**5)
+    assert transport.status == gp.ModelStatus.OptimalGlobal
+
+
+def test_model_attributes_after_loops():
+    m = gp.Container()
+    i = gp.Set(m, records=["i1", "i2", "i3"])
+    p = gp.Parameter(m, records=0)
+    x = gp.Variable(m)
+    e = gp.Equation(m, definition=x >= p)
+    model = gp.Model(m, equations=[e], problem="LP", sense="min", objective=x)
+
+    with gp.Loop(i):
+        p[...] = gp.Ord(i)
+        model.solve()
+
+    assert model.objective_value == 3
+    assert model.status == gp.ModelStatus.OptimalGlobal
+
+    idx = gp.Parameter(m)
+    with gp.For(idx, 1, 5):
+        p[...] = idx
+        model.solve()
+
+    assert model.objective_value == 5
+
+    with gp.While(p < 8):
+        p[...] = p + 1
+        model.solve()
+
+    assert model.objective_value == 8
+
+    # A solve that never executes must not produce model attributes.
+    model2 = gp.Model(m, equations=[e], problem="LP", sense="min", objective=x)
+    with gp.Loop(i):
+        with gp.If(p < 0):
+            model2.solve()
+
+    with pytest.raises(ValidationError):
+        _ = model2.objective_value
+
 
 def test_loop_domain_tree():
     m = gp.Container()
