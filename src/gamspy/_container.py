@@ -2762,6 +2762,16 @@ $endIf
                 symbol = cast("Equation", m[equation.name])
                 symbol._definition = equation._definition
 
+            if equation._indicator is not None:
+                binary, positions, value, generation = equation._indicator
+                symbol = cast("Equation", m[equation.name])
+                symbol._indicator = (
+                    cast("Variable", m[binary.name]),
+                    positions,
+                    value,
+                    cast("Equation", m[generation.name]),
+                )
+
         m._synch_with_gams()
 
         return m

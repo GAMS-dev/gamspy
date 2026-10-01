@@ -953,6 +953,9 @@ class GAMSEngine(backend.Backend):
                 )
             )
 
+            if self.model._indicator_file is not None:
+                extra_model_files.append(self.model._indicator_file)
+
         if self.options.loadpoint is not None:
             extra_model_files.append(self.options.loadpoint)
 

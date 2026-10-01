@@ -13,6 +13,7 @@ from gamspy._config import get_option
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from types import FrameType
 
     from gamspy._container import Container
@@ -908,6 +909,13 @@ class ConvertOptions(BaseModel):
     Pyomo: str = "pyomo.py"
 
 
+INDICATOR_SOLVERS = ("COPT", "CPLEX", "GUROBI", "SCIP", "XPRESS")
+
+
+def get_indicator_file_name(solver: str, model_name: str) -> str | None:
+    return f"{model_name}.indic" if solver.upper() == "SCIP" else None
+
+
 def get_options_file_name(solver: str, file_number: int) -> str:
     """
     Generates the option file name according to the `optfile` rules of GAMS.
@@ -954,9 +962,13 @@ def _format_scip_value(value: Any) -> Any:
 def write_solver_options(
     container: Container,
     solver: str,
-    solver_options: dict | str | Path,
+    solver_options: dict | str | Path | None,
     file_number: int = 1,
-) -> None:
+    indicators: Sequence[str] = (),
+    *,
+    indicator_file: str | None = None,
+    absolute_paths: bool = True,
+) -> str:
     if file_number < 1:
         raise ValidationError(
             f"The smallest number `file_number` can get is 1 but received {file_number}"
@@ -972,10 +984,16 @@ def write_solver_options(
     if isinstance(solver_options, (str, Path)):
         path = Path(solver_options)
         shutil.copy2(path, options_file_name)
+
+        # the indicators are appended to the copied file
+        content = path.read_text(encoding="utf-8")
+        if indicators and content and not content.endswith("\n"):
+            with open(options_file_name, "a", encoding="utf-8") as solver_file:
+                solver_file.write("\n")
     else:
         is_scip = solver.upper() == "SCIP"
         with open(options_file_name, "w", encoding="utf-8") as solver_file:
-            for key, value in solver_options.items():
+            for key, value in (solver_options or {}).items():
                 if is_scip:
                     value = _format_scip_value(value)
 
@@ -984,6 +1002,11 @@ def write_solver_options(
                     row = f"{key} = {value}\n"
 
                 solver_file.write(row)
+
+    if indicators:
+        _append_indicators(
+            options_file_name, indicators, indicator_file, absolute_paths
+        )
 
     # The following solvers do not use the opt<solver>.def file
     if solver.upper() in (
@@ -994,9 +1017,30 @@ def write_solver_options(
         "SHOT",
         "SOPLEX",
     ):
-        return
+        return options_file_name
 
     if get_option("VALIDATION") and get_option("SOLVER_OPTION_VALIDATION"):
         validation.validate_solver_options(
             container.system_directory, options_file_name, solver
         )
+
+    return options_file_name
+
+
+def _append_indicators(
+    options_file_name: str,
+    indicators: Sequence[str],
+    indicator_file: str | None,
+    absolute_path: bool,
+) -> None:
+    rows = "".join(f"{indicator}\n" for indicator in indicators)
+
+    if indicator_file is not None:
+        with open(indicator_file, "w", encoding="utf-8") as file:
+            file.write(rows)
+
+        path = indicator_file if absolute_path else os.path.basename(indicator_file)
+        rows = f'gams/indicatorfile = "{path}"\n'
+
+    with open(options_file_name, "a", encoding="utf-8") as solver_file:
+        solver_file.write(rows)

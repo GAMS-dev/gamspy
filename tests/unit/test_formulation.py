@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import math
+import os
 
 import numpy as np
 import pytest
 
 import gamspy as gp
 import gamspy.formulations.piecewise as piecewise
+from gamspy._options import get_indicator_file_name, write_solver_options
 from gamspy.exceptions import ValidationError
 from gamspy.formulations import (
     PWLCurve,
@@ -97,26 +99,36 @@ def test_indicator():
     b3 = gp.Variable(m, name="b3", type="binary")
     x5 = gp.Variable(m, name="x5")
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="needs to be a binary variable"):
         indicator("indicator_var", 0, x <= 10)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="needs to be a binary variable"):
         indicator(b2, 0, x <= 10)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="needs to be 1 or 0"):
         indicator(b, -1, x <= 10)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="needs to be 1 or 0"):
         indicator(b, True, x <= 10)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="needs to be inequality or equality"):
         indicator(b, 0, x)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="needs to be inequality or equality"):
         indicator(b, 0, x + 10)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="domain of indicator_var must be"):
         indicator(b, 0, x3 >= 10)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="domain of indicator_var must be"):
         indicator(b, 0, x2 >= 10)
-    for big_m in (0, -1, math.inf, "10", True, p, 2 * p, x, x <= 1):
-        with pytest.raises(ValidationError):
+    for big_m, match in (
+        (0, "positive finite number"),
+        (-1, "positive finite number"),
+        (math.inf, "positive finite number"),
+        ("10", "positive finite number"),
+        (True, "positive finite number"),
+        (p, "domain of big_m must be"),
+        (2 * p, "domain of big_m must be"),
+        (x, "cannot be a variable or a set"),
+        (x <= 1, "cannot be an inequality or equality"),
+    ):
+        with pytest.raises(ValidationError, match=match):
             indicator(b, 0, x <= 10, big_m=big_m)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="domain of the condition must be"):
         indicator(b, 0, (x <= 10).where[p > 0])
 
     res1 = indicator(b, 0, x >= 10)
@@ -174,6 +186,249 @@ def test_indicator_condition(use_big_m):
         )
         model.solve()
         assert np.allclose(x.toDense(), expected)
+
+
+@pytest.mark.parametrize("big_m", [None, 100])
+def test_indicator_subset(big_m):
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b"])
+    j = gp.Set(m, name="j", records=["1", "2"])
+    k = gp.Set(m, name="k", records=["x", "y"])
+    ij = gp.Set(m, name="ij", domain=[i, j], records=[("a", "2"), ("b", "1")])
+    x = gp.Variable(m, name="x", domain=[i, j, k])
+    x.lo[...] = 0
+    x.up[...] = 10
+    b = gp.Variable(m, name="b", type="binary", domain=[i, j])
+    b.fx[...] = 1
+
+    res = indicator(b[ij], 1, x[ij, k] <= 2, big_m=big_m)
+    for eq in res.equations_created.values():
+        assert eq.domain_names == ["i", "j", "k"]
+        assert eq.getDefinition().startswith(f"{eq.name}(ij(i,j),k) ..")
+    for var in res.variables_created.values():
+        assert var.domain_names[:3] == ["i", "j", "k"]
+
+    model = gp.Model(
+        m,
+        equations=list(res.equations_created.values()),
+        problem="mip",
+        sense="max",
+        objective=gp.Sum([i, j, k], x[i, j, k]),
+    )
+    model.solve()
+    assert math.isclose(model.objective_value, 4 * 2 + 4 * 10)
+    for eq in res.equations_created.values():
+        assert len(eq.records) == 4
+
+
+@pytest.mark.parametrize("kwargs", [{}, {"big_m": 100}, {"native": True}])
+def test_indicator_subset_components(kwargs):
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b"])
+    j = gp.Set(m, name="j", records=["1", "2"])
+    ij = gp.Set(
+        m, name="ij", domain=[i, j], records=[("a", "1"), ("a", "2"), ("b", "2")]
+    )
+    cap = gp.Parameter(m, name="cap", domain=i, records=[("a", 3), ("b", 4)])
+    x = gp.Variable(m, name="x", domain=[i, j])
+    x.lo[...] = 0
+    x.up[...] = 10
+    b = gp.Variable(m, name="b", type="binary", domain=i)
+    b.fx["a"] = 1
+    b.fx["b"] = 0
+
+    # binaries and parameters over the components of ij
+    res1 = indicator(b, 1, x[ij] <= cap[i], **kwargs)
+    res2 = indicator(b[i], 0, (x[i, j] <= 1).where[ij], **kwargs)
+    res3 = indicator(b, 1, (x[ij] <= 2).where[ij], **kwargs)
+    eqs = [
+        eq
+        for res in (res1, res2, res3)
+        for key, eq in res.equations_created.items()
+        if key != "binary"
+    ]
+    for eq in eqs:
+        assert eq.domain_names == ["i", "j"]
+        definition = eq.getDefinition()
+        assert definition.startswith(
+            (f"{eq.name}(ij(i,j)) ", f"{eq.name}(i,j) $ (ij(i,j)) ")
+        )
+
+    model = gp.Model(
+        m,
+        equations=eqs,
+        problem="mip",
+        sense="max",
+        objective=gp.Sum([i, j], x[i, j]),
+    )
+    model.solve()
+    assert np.allclose(x.toDense(), [[2, 2], [10, 1]])
+    if kwargs.get("native"):
+        assert all(
+            line.endswith(("$b(d0) 1", "$b(d0) 0")) for line in model._get_indicators()
+        )
+
+
+@pytest.mark.parametrize("kwargs", [{}, {"big_m": 100}, {"native": True}])
+def test_indicator_overlapping_subsets(kwargs):
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b"])
+    j = gp.Set(m, name="j", records=["1", "2"])
+    k = gp.Set(m, name="k", records=["x", "y"])
+    ij = gp.Set(m, name="ij", domain=[i, j], records=[("a", "1"), ("b", "2")])
+    jk = gp.Set(m, name="jk", domain=[j, k], records=[("1", "x"), ("2", "y")])
+    p = gp.Parameter(m, name="p", domain=k, records=[("x", 2), ("y", 3)])
+    x = gp.Variable(m, name="x", domain=[i, j])
+    y = gp.Variable(m, name="y", domain=[j, k])
+    x.lo[...] = 0
+    x.up[...] = 10
+    y.lo[...] = 0
+    y.up[...] = 10
+    b = gp.Variable(m, name="b", type="binary", domain=i)
+    b.fx[...] = 1
+
+    # ij(i,j) controls j, so jk and k stay independent of it
+    res = indicator(b, 1, x[ij] + y[jk] <= p[k], **kwargs)
+    eqs = [eq for key, eq in res.equations_created.items() if key != "binary"]
+    for eq in eqs:
+        assert eq.getDefinition().startswith(f"{eq.name}(ij(i,j),jk,k) ")
+
+    model = gp.Model(
+        m,
+        equations=eqs,
+        problem="mip",
+        sense="max",
+        objective=gp.Sum(ij, x[ij]) + gp.Sum(jk, y[jk]),
+    )
+    model.solve()
+    # every x[ij] + y[jk] is bounded by the smallest p
+    assert math.isclose(model.objective_value, 4)
+
+
+def test_indicator_native(tmp_path):
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b", "c"])
+    j = gp.Set(m, name="j", records=["1", "2"])
+    ij = gp.Set(m, name="ij", domain=[i, j], records=[("a", "1"), ("b", "2")])
+    p = gp.Parameter(m, name="p", domain=i, records=[("a", 1), ("c", 1)])
+    x = gp.Variable(m, name="x", domain=[i, j])
+    x.lo[...] = 0
+    x.up[...] = 10
+    b = gp.Variable(m, name="b", type="binary", domain=i)
+    b2 = gp.Variable(m, name="b2", type="binary", domain=[i, j])
+    b3 = gp.Variable(m, name="b3", type="binary")
+    y = gp.Variable(m, name="y")
+    y.lo = 0
+    y.up = 10
+
+    with pytest.raises(ValidationError, match="big_m cannot be used with native"):
+        indicator(b, 1, x <= 2, big_m=100, native=True)
+    for binary in (b["a"], b2.t()[j, i], b2["a", j]):
+        with pytest.raises(ValidationError, match="indexed with sets only"):
+            indicator(binary, 1, x[i, j] <= 2, native=True)
+
+    res1 = indicator(b, 1, x[i, j] <= 2, native=True)
+    res2 = indicator(b, 0, (x[i, j] >= 5).where[p[i] > 0], native=True)
+    res3 = indicator(b2[ij], 1, x[ij] == 1, native=True)
+    res4 = indicator(b3, 0, y <= 3, native=True)
+    results = (res1, res2, res3, res4)
+    for res in results:
+        assert list(res.equations_created) == ["indicator", "binary"]
+        assert res.variables_created == {}
+
+    eqs = [res.equations_created["indicator"] for res in results]
+    names = [eq.name for eq in eqs]
+    assert "$ (p(i) > 0)" in res2.equations_created["indicator"].getDefinition()
+    assert (
+        res3.equations_created["indicator"]
+        .getDefinition()
+        .startswith(f"{names[2]}(ij(i,j)) .. x(ij) =e= 1")
+    )
+
+    model = gp.Model(
+        m,
+        equations=eqs,
+        problem="mip",
+        sense="max",
+        objective=gp.Sum([i, j], x[i, j]) + y,
+    )
+    # the equations that generate the binary variables are added by the model
+    generations = [res.equations_created["binary"] for res in results]
+    assert all(eq in model.equations for eq in generations)
+    assert model._get_indicators() == [
+        f"indic {names[0]}(d0,d1)$b(d0) 1",
+        f"indic {names[1]}(d0,d1)$b(d0) 0",
+        f"indic {names[2]}(d0,d1)$b2(d0,d1) 1",
+        f"indic {names[3]}$b3 0",
+    ]
+
+    # b = 1 bounds x by 2, b = 0 forces x >= 5 where p > 0
+    b.fx["a"] = 1
+    b.fx["b"] = 0
+    b.fx["c"] = 0
+    b2.fx[...] = 1
+    b3.fx = 1
+    model.solve(solver_options={"threads": 1})
+    assert np.allclose(x.toDense(), [[1, 2], [10, 1], [10, 10]])
+    assert math.isclose(y.toValue(), 10)
+    with open(os.path.join(m.working_directory, "cplex.opt")) as file:
+        assert file.read().startswith("threads 1\nindic ")
+
+    b3.fx = 0
+    option_file = tmp_path / "cplex.opt"
+    option_file.write_text("threads 1")
+    model.solve(solver_options=option_file)
+    assert math.isclose(y.toValue(), 3)
+
+    m2 = m.copy(working_directory=str(tmp_path / "copy"))
+    assert m2[names[3]]._indicator == (m2["b3"], (), 0, m2[generations[3].name])
+    m.serialize(str(tmp_path / "model.zip"))
+    m3 = gp.deserialize(str(tmp_path / "model.zip"))
+    assert m3[names[2]]._indicator == (m3["b2"], (0, 1), 1, m3[generations[2].name])
+
+    with pytest.raises(ValidationError, match="`highs` does not support native"):
+        model.solve(solver="highs")
+    with pytest.raises(ValidationError, match="not supported on NEOS Server"):
+        model._validate_indicators("cplex", "neos", gp.Options())
+    # holdfixed removes the fixed binaries that the indicators refer to
+    with pytest.raises(ValidationError, match="hold_fixed_variables"):
+        model.solve(options=gp.Options(hold_fixed_variables=True))
+
+    # equations appended after the declaration of the model are not solved
+    indicators = model._get_indicators()
+    res5 = indicator(b3, 1, y >= 1, native=True)
+    model.equations.append(res5.equations_created["indicator"])
+    assert model._get_indicators() == indicators
+    with pytest.raises(ValidationError, match="cannot represent native indicator"):
+        model.solve(solver="convert")
+    with pytest.raises(ValidationError, match="cannot represent native indicator"):
+        model.convert(str(tmp_path / "convert"), gp.FileFormat.GAMS)
+
+    model.toGams(str(tmp_path / "gams"))
+    with open(tmp_path / "gams" / f"{model.name}.gms") as file:
+        content = file.read()
+    indicators = "\n".join(model._get_indicators())
+    assert f"$onEcho > %GP_INDICATOR_FILE%\n{indicators}\n$offEcho" in content
+    assert f"{model.name}.optFile = 1;" in content
+
+    assert get_indicator_file_name("cplex", model.name) is None
+    indicator_file = os.path.join(
+        m.working_directory, get_indicator_file_name("scip", model.name)
+    )
+    options_file = write_solver_options(
+        m,
+        "scip",
+        {"limits/time": 10},
+        indicators=model._get_indicators(),
+        indicator_file=indicator_file,
+    )
+    with open(options_file) as file:
+        assert file.read().splitlines() == [
+            "limits/time = 10",
+            f'gams/indicatorfile = "{indicator_file}"',
+        ]
+    with open(indicator_file) as file:
+        assert file.read().splitlines() == model._get_indicators()
 
 
 @pytest.mark.parametrize("big_m", [None, 100])
