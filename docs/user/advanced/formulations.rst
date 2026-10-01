@@ -773,3 +773,30 @@ the condition holds:
    _, eqs = gp.formulations.indicator(
        is_open, 1, (ship[i, j] >= min_ship[j]).where[min_ship[j] > 0]
    )
+
+Alternatively, index the constraint with a multidimensional subset. The
+generated symbols are then limited to the elements of the subset:
+
+.. code-block:: python
+
+   routes = gp.Set(
+       m,
+       "routes",
+       domain=[i, j],
+       records=[("seattle", "chicago"), ("san-diego", "topeka")],
+   )
+   use = gp.Variable(m, "use", type="binary", domain=[i, j])
+
+   # use[routes] == 0  =>  ship[routes] <= 0
+   _, eqs = gp.formulations.indicator(use[routes], 0, ship[routes] <= 0)
+
+Some MIP solvers handle indicator constraints directly in their branch-and-cut
+algorithm instead of relying on a reformulation. Pass ``native=True`` to keep
+the constraint as it is and let :meth:`solve <gamspy.Model.solve>` hand the
+indicator to the solver through the solver options file. Native indicator
+constraints are supported by COPT, CPLEX, GUROBI, SCIP and XPRESS. Solving the
+model with any other solver raises an error:
+
+.. code-block:: python
+
+   _, eqs = gp.formulations.indicator(is_open, 0, ship[i, j] <= 0, native=True)

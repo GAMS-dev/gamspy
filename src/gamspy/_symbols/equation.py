@@ -194,6 +194,7 @@ class Equation(VarEquSymbol):
         # gamspy attributes
         obj._domain_violations = None
         obj._definition = None
+        obj._indicator = None
         obj.where = condition.Condition(obj)
         obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
@@ -263,6 +264,7 @@ class Equation(VarEquSymbol):
             self._description = description
 
         self._records: pd.DataFrame | None = None
+        self._indicator = None
 
         with self._miro_unprotected():
             self._init_definition(definition)
@@ -337,6 +339,9 @@ class Equation(VarEquSymbol):
         self.where = condition.Condition(self)
         self._container._add_statement(self)
         self._definition: Expression | None = None
+        # (binary variable, positions of its indices in the equation domain, value,
+        # equation that makes GAMS generate the binary) of a native indicator
+        self._indicator: tuple[Variable, tuple[int, ...], int, Equation] | None = None
         self._definition_domain = definition_domain
         self._init_definition(definition)
 
@@ -370,6 +375,10 @@ class Equation(VarEquSymbol):
         if self._definition is not None:
             info["_definition"] = self._definition.getDeclaration()
 
+        if self._indicator is not None:
+            binary, positions, value, generation = self._indicator
+            info["_indicator"] = [binary.name, list(positions), value, generation.name]
+
         return info
 
     def _deserialize(self, info: dict) -> None:
@@ -380,6 +389,14 @@ class Equation(VarEquSymbol):
             elif key == "_definition":
                 left, right = value.split(" .. ")
                 value = expression.Expression(left, "..", right[:-1])
+            elif key == "_indicator":
+                binary_name, positions, indicator_value, generation_name = value
+                value = (
+                    self._container[binary_name],
+                    tuple(positions),
+                    indicator_value,
+                    self._container[generation_name],
+                )
 
             setattr(self, key, value)
 

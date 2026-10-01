@@ -31,11 +31,13 @@ from gamspy._internals import ATTR_PREFIX, MODEL_ATTRIBUTE_MAP, DataSource
 from gamspy._model_instance import ModelInstance
 from gamspy._options import (
     EXECUTION_OPTIONS,
+    INDICATOR_SOLVERS,
     MODEL_ATTR_OPTION_MAP,
     ConvertOptions,
     FreezeOptions,
     Options,
     _format_model_attr_value,
+    get_indicator_file_name,
     write_solver_options,
 )
 from gamspy.exceptions import GamspyException, ValidationError
@@ -456,6 +458,7 @@ class Model:
             equations, matches, problem, sense
         )
         self.equations: list[Equation] = list(equations)
+        self._init_indicators()
         self._variable_names: list[str] | None = None
         self._objective = objective
         self._objective_variable = self._set_objective_variable(objective)
@@ -1616,6 +1619,74 @@ class Model:
         gc.collect()
         utils._return_freed_memory_to_os()
 
+    def _init_indicators(self) -> None:
+        self._indicator_equations = [
+            equation for equation in self.equations if equation._indicator is not None
+        ]
+        self._indicator_file: str | None = None
+
+        # GAMS does not generate the binary variables of native indicators if
+        # they appear nowhere else in the model
+        names = {equation.name for equation in self.equations}
+        for equation in self._indicator_equations:
+            assert equation._indicator is not None
+            generation = equation._indicator[3]
+            if generation.name not in names:
+                self.equations.append(generation)
+                names.add(generation.name)
+
+    def _get_indicators(self) -> list[str]:
+        indicators = []
+        for equation in self._indicator_equations:
+            assert equation._indicator is not None
+            binary, positions, value, _ = equation._indicator
+            # indices of the option file are dummies that map the equation
+            # domain to the binary variable domain
+            indices = [f"d{position}" for position in range(equation.dimension)]
+            equation_ref = equation.name
+            if indices:
+                equation_ref += f"({','.join(indices)})"
+
+            binary_ref = binary.name
+            if positions:
+                binary_ref += f"({','.join(indices[p] for p in positions)})"
+
+            indicators.append(f"indic {equation_ref}${binary_ref} {value}")
+
+        return indicators
+
+    def _validate_indicators(self, solver: str, backend: str, options: Options) -> None:
+        if solver.upper() == "CONVERT":
+            raise ValidationError(
+                "The file formats of `convert` cannot represent native indicator"
+                " constraints. Use `toGams` or create the indicator constraints"
+                " with `native=False`."
+            )
+
+        if solver.upper() not in INDICATOR_SOLVERS:
+            raise ValidationError(
+                f"`{solver}` does not support native indicator constraints. Use"
+                f" one of {', '.join(INDICATOR_SOLVERS)} or create the indicator"
+                " constraints with `native=False`."
+            )
+
+        if backend == "neos":
+            raise ValidationError(
+                "Native indicator constraints are not supported on NEOS Server."
+            )
+
+        if options.hold_fixed_variables:
+            for equation in self._indicator_equations:
+                assert equation._indicator is not None
+                binary = equation._indicator[0]
+                records = binary.records
+                if records is not None and (records["lower"] == records["upper"]).any():
+                    raise ValidationError(
+                        f"`hold_fixed_variables` removes the fixed values of `{binary.name}`"
+                        " from the model but native indicator constraints refer to them."
+                        " Unfix them or set `hold_fixed_variables=False`."
+                    )
+
     def solve(
         self,
         solver: str | None = None,
@@ -1800,8 +1871,27 @@ class Model:
             frame = inspect.currentframe()
             options._frame = frame.f_back if frame is not None else None
 
-        if solver_options is not None:
-            write_solver_options(self.container, solver, solver_options)
+        indicators = self._get_indicators()
+        self._indicator_file = None
+        if indicators:
+            self._validate_indicators(solver, backend, options)
+            indicator_file = get_indicator_file_name(solver, self.name)
+            if indicator_file is not None:
+                self._indicator_file = os.path.join(
+                    self.container.working_directory, indicator_file
+                )
+
+        if solver_options is not None or indicators:
+            options_file_name = write_solver_options(
+                self.container,
+                solver,
+                solver_options,
+                indicators=indicators,
+                indicator_file=self._indicator_file,
+                absolute_paths=backend == "local",
+            )
+            if indicators:
+                solver_options = Path(options_file_name)
 
         if self._is_frozen:
             instance_options = FreezeOptions()
