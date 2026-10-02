@@ -305,6 +305,36 @@ def test_indicator_overlapping_subsets(kwargs):
     assert math.isclose(model.objective_value, 4)
 
 
+@pytest.mark.parametrize("kwargs", [{}, {"big_m": 100}, {"native": True}])
+def test_indicator_set_condition(kwargs):
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b", "c"])
+    s = gp.Set(m, name="s", domain=i, records=["a", "c"])
+    x = gp.Variable(m, name="x", domain=i)
+    x.lo[...] = 0
+    x.up[...] = 10
+    b = gp.Variable(m, name="b", type="binary", domain=i)
+    b.fx[...] = 1
+
+    # a bare set condition is indexed with its domain or with itself
+    res1 = indicator(b, 1, (x <= 2).where[s], **kwargs)
+    res2 = indicator(b[s], 1, (x[s] <= 3).where[s], **kwargs)
+    eqs1 = [eq for key, eq in res1.equations_created.items() if key != "binary"]
+    eqs2 = [eq for key, eq in res2.equations_created.items() if key != "binary"]
+    assert all(" $ (s(i)) .." in eq.getDefinition() for eq in eqs1)
+    assert all(" $ (s(s)) .." in eq.getDefinition() for eq in eqs2)
+
+    model = gp.Model(
+        m,
+        equations=eqs1 + eqs2,
+        problem="mip",
+        sense="max",
+        objective=gp.Sum(i, x),
+    )
+    model.solve()
+    assert np.allclose(x.toDense(), [2, 10, 2])
+
+
 def test_indicator_native(tmp_path):
     m = gp.Container()
     i = gp.Set(m, name="i", records=["a", "b", "c"])

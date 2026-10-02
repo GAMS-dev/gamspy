@@ -337,9 +337,12 @@ def indicator(
             "The domain of indicator_var must be a subset of the domain of expr"
         )
 
-    if _is_multidimensional(condition):
-        # a bare ij in $(ij) does not compile, ij(i,j) does
-        condition = condition[tuple(condition.domain)]
+    if isinstance(condition, (gp.Set, gp.Alias)):
+        # a bare s in $(s) does not compile, s(s) or s(i) does
+        if condition.name in controlled:
+            condition = condition[condition]
+        elif _domain_names(condition.domain) <= controlled:
+            condition = condition[tuple(condition.domain)]
 
     if isinstance(condition, (gp.Set, gp.Alias)):
         condition_domain = [condition]
