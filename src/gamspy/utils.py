@@ -52,17 +52,23 @@ _defaults: dict[str, dict[str, str]] = {}
 _capabilities: dict[str, dict[str, list[str]]] = {}
 _installed_solvers: dict[str, list[str]] = {}
 _config_solvers: dict[str, dict[str, list[str]]] = {}
+_personal_defaults: dict[str, dict[str, str]] = {}
 
 _cached_system_directory = None
 
 
-def getDefaultSolvers(system_directory: str) -> dict[str, str]:
+def getDefaultSolvers(
+    system_directory: str, license_path: str | None = None
+) -> dict[str, str]:
     """
     Returns the default solver for each problem type.
 
     Parameters
     ----------
     system_directory : str
+    license_path : str | None, optional
+        Path of the license file. A free personal license has its own default
+        solvers, by default None.
 
     Returns
     -------
@@ -75,6 +81,9 @@ def getDefaultSolvers(system_directory: str) -> dict[str, str]:
     >>> default_solvers = gp.utils.getDefaultSolvers(gamspy_base.directory)
 
     """
+    if license_path is not None and _is_free_personal_license(license_path):
+        return _get_personal_default_solvers(system_directory)
+
     global _defaults
     try:
         return _defaults[system_directory]
@@ -91,6 +100,45 @@ def getDefaultSolvers(system_directory: str) -> dict[str, str]:
         defaults[problem] = solver
 
     _defaults[system_directory] = defaults
+    return defaults
+
+
+def _is_free_personal_license(license_path: str) -> bool:
+    with open(license_path, encoding="utf-8") as file:
+        lines = file.readlines()
+
+    return len(lines) > 4 and "FREEPERSONAL" in lines[4]
+
+
+def _get_personal_default_solvers(system_directory: str) -> dict[str, str]:
+    """
+    GAMS applies the commandLineParameters of gamsconfig_personal.yaml for a
+    free personal license, which selects different default solvers.
+    """
+    global _personal_defaults
+    try:
+        return _personal_defaults[system_directory]
+    except KeyError:
+        ...
+
+    defaults = dict(getDefaultSolvers(system_directory))
+    config_path = os.path.join(system_directory, "gamsconfig_personal.yaml")
+    try:
+        with open(config_path, encoding="utf-8") as file:
+            # the trailer after the end of the document is not YAML
+            config = yaml.safe_load(file.read().split("\n...", 1)[0])
+    except OSError:
+        config = None
+    except yaml.YAMLError as e:
+        raise ValidationError(f"`{config_path}` is not a valid YAML file: {e}") from e
+
+    if isinstance(config, dict):
+        for entry in config.get("commandLineParameters") or []:
+            for name, attributes in entry.items():
+                if name.upper() in defaults:
+                    defaults[name.upper()] = str(attributes["value"]).upper()
+
+    _personal_defaults[system_directory] = defaults
     return defaults
 
 

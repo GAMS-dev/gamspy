@@ -254,6 +254,9 @@ class Container:
             self._license_path = utils._get_license_path(self.system_directory)
 
         self._network_license = self._is_network_license()
+        self._default_solvers = utils.getDefaultSolvers(
+            self.system_directory, self._license_path
+        )
 
         self._debugging_level = debugging_level
         self._workspace = Workspace(debugging_level, working_directory)

@@ -197,7 +197,9 @@ def solvers(
         installable_solvers = utils.getInstallableSolvers()
         console.print(", ".join(installable_solvers))
     elif defaults:
-        default_solvers = utils.getDefaultSolvers(gamspy_base.directory)
+        default_solvers = utils.getDefaultSolvers(
+            gamspy_base.directory, utils._get_license_path(gamspy_base.directory)
+        )
         table = Table("Problem", "Solver")
         for problem in default_solvers:
             try:

@@ -115,6 +115,42 @@ def test_default_solvers():
     assert default_solvers == expected
 
 
+def test_free_personal_default_solvers(tmp_path):
+    import gamspy_base
+
+    license_path = tmp_path / "gamspy_license.txt"
+    lines = ["_" * 65] * 8
+    lines[4] = "FREEPERSONAL".ljust(65, "_")
+    license_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    default_solvers = utils.getDefaultSolvers(gamspy_base.directory, str(license_path))
+
+    expected = {
+        "CNS": "IPOPT",
+        "DNLP": "IPOPT",
+        "EMP": "RESHOP",
+        "LP": "HIGHS",
+        "MCP": "MILES",
+        "MINLP": "SHOT",
+        "MIP": "SCIP",
+        "MIQCP": "SHOT",
+        "MPEC": "NLPEC",
+        "NLP": "IPOPT",
+        "QCP": "IPOPT",
+        "RMINLP": "IPOPT",
+        "RMIP": "HIGHS",
+        "RMIQCP": "IPOPT",
+    }
+    assert default_solvers == expected
+
+    # Other licenses keep the defaults of the capabilities file.
+    lines[4] = "EVALUATION".ljust(65, "_")
+    license_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    default_solvers = utils.getDefaultSolvers(gamspy_base.directory, str(license_path))
+    assert default_solvers["LP"] == "CPLEX"
+    assert utils.getDefaultSolvers(gamspy_base.directory)["LP"] == "CPLEX"
+
+
 def test_solver_and_capability_caching():
     import gamspy_base
 
@@ -182,6 +218,7 @@ def config_solver():
         utils._capabilities,
         utils._installed_solvers,
         utils._config_solvers,
+        utils._personal_defaults,
     )
     for cache in caches:
         cache.clear()

@@ -528,7 +528,7 @@ class Model:
         self._solve_status: SolveStatus | None = None
         self._solver_version: float | None = None
 
-        self._default_solver = utils.getDefaultSolvers(self.container.system_directory)[
+        self._default_solver = self.container._default_solvers[
             str(self.problem).upper()
         ].lower()
 
