@@ -223,6 +223,9 @@ class Container:
         self._last_control_flow: (
             Literal["loop", "for", "while", "if", "elseif", "else"] | None
         ) = None
+        self._open_if_chain: bool = (
+            False  # required for outermost gp.If/gp.ElseIf block
+        )
         self._arbitrary_code_executed: bool = False
         self.models: dict[str, Model] = {}
         self._models_solved_in_loop: dict[str, Model] = {}
@@ -1391,6 +1394,7 @@ class Container:
 
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
+        self._open_if_chain = False
         if self._literal_bound_sets:
             self._literal_bound_sets.clear()
 
@@ -2237,7 +2241,7 @@ $endIf
         if self._in_loop:
             raise ValidationError(
                 "Cannot hibernate while a loop context manager (e.g. with gp.For, "
-                "gp.While, gp.Loop) is active, because the state of the execution "
+                "gp.While, gp.Loop, gp.If) is active, because the state of the execution "
                 "engine cannot be saved before the loop is closed."
             )
 

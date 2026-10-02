@@ -145,8 +145,10 @@ The :meth:`If <gamspy.If>`, :meth:`ElseIf <gamspy.ElseIf>`, and :meth:`Else <gam
 GAMS ``if``, ``elseif``, and ``else`` statements. They allow you to branch conditionally around a group of execution 
 statements within control flow constructs like loops.
 
-Currently, their use is restricted within a :meth:`Loop <gamspy.Loop>` or :meth:`For <gamspy.For>` statement. Like loops, 
-they are implemented as Python context managers.
+They can be used within loops as well as on the outermost level, where the statements of each block are executed 
+when the block is closed. Like loops, they are implemented as Python context managers. If the container cannot be 
+deduced from the condition (e.g. ``gp.Number(1) == 1``), provide it with the ``container`` argument of 
+:meth:`If <gamspy.If>` or :meth:`ElseIf <gamspy.ElseIf>`.
 
 Note that an ``ElseIf`` or ``Else`` block must **immediately** follow a preceding ``If`` or ``ElseIf`` block without 
 any intervening statements.

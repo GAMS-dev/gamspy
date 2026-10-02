@@ -497,7 +497,7 @@ class DomainSymbol(BaseSymbol):
 
         if self._container._in_loop:
             raise ValidationError(
-                "Cannot load symbol records while a loop context manager (e.g. with gp.For, gp.While, gp.Loop) is active."
+                "Cannot load symbol records while a loop context manager (e.g. with gp.For, gp.While, gp.Loop, gp.If) is active."
             )
 
         from gamspy._gdx import get_records
