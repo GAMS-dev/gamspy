@@ -12,6 +12,12 @@ To solve this, GAMSPy uses specialized constructs like context managers (``with`
 to generate the underlying GAMS execution statements dynamically, executing the entire 
 block directly within the highly optimized GAMS engine.
 
+Keep in mind that the Python code inside these blocks runs only once, when the block is built.
+Because GAMSPy translates the block into GAMS statements and executes the entire loop natively
+in GAMS, plain Python statements such as ``print()`` will not run on every iteration. If you
+need per-iteration Python debugging, use a standard Python loop instead, trading performance
+for flexibility.
+
 Vectorized Assignment vs. The Loop Statement
 --------------------------------------------
 Before using a loop, consider whether your logic can be expressed as a standard parallel 
