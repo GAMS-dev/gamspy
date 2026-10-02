@@ -1,1 +1,0 @@
-``gp.If``, ``gp.ElseIf`` and ``gp.Else`` can now be used on the outermost level, and ``gp.If`` and ``gp.ElseIf`` accept an optional ``container`` argument.

@@ -1,1 +1,0 @@
-Model attributes are now set after solving a model inside ``gp.Loop``, ``gp.For`` or ``gp.While``.
