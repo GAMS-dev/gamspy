@@ -310,10 +310,14 @@ def test_if():
     m = gp.Container()
     i = gp.Set(m, records=[f"i{idx}" for idx in range(1, 11)])
     cnt = gp.Parameter(m, records=0)
+    p = gp.Parameter(m, domain=i)
 
-    with pytest.raises(ValidationError):
-        with gp.If(gp.Ord(i) == 2):
+    # No index is controlled on the outermost level.
+    with pytest.raises(ValidationError, match="Uncontrolled set"):
+        with gp.If(p[i] > 0):
             ...
+
+    assert m._in_loop == 0
 
     with gp.Loop(i) as loop:
         with gp.If(gp.Ord(i) == 2):
@@ -615,14 +619,14 @@ def test_elseif_else():
     # Test ValidationErrors for orphaned control structures
     with pytest.raises(
         ValidationError,
-        match=r"`gp.ElseIf` context manager can only be used in `gp.Loop` context managers.",
+        match=r"`gp.ElseIf` must follow a `gp.If` or `gp.ElseIf` block.",
     ):
         with gp.ElseIf(gp.Ord(i) == 1):
             pass
 
     with pytest.raises(
         ValidationError,
-        match=r"`gp.Else` context manager can only be used in `gp.Loop` context managers.",
+        match=r"`gp.Else` must follow a `gp.If` or `gp.ElseIf` block.",
     ):
         with gp.Else():
             pass
@@ -650,6 +654,123 @@ def test_elseif_else():
         ):
             with gp.Else():
                 pass
+
+
+def test_outermost_if():
+    m = gp.Container()
+    x = gp.Parameter(m, records=5)
+    res = gp.Parameter(m, records=0)
+
+    def branch() -> None:
+        with gp.If(x > 3):
+            # Changing the condition must not trigger the succeeding blocks.
+            x[...] = 0
+            res[...] = 1
+        with gp.ElseIf(x > 1):
+            res[...] = 2
+        with gp.Else():
+            res[...] = 3
+
+    for start, expected in [(5, 1), (2, 2), (0, 3)]:
+        x.setRecords(start)
+        branch()
+        assert res.toValue() == expected
+        assert m._in_loop == 0
+
+    # The same function can be called in a loop.
+    i = gp.Set(m, records=["i1", "i2", "i3"])
+    start = gp.Parameter(m, domain=i, records=[("i1", 5), ("i2", 2), ("i3", 0)])
+    out = gp.Parameter(m, domain=i)
+    with gp.Loop(i):
+        x[...] = start[i]
+        branch()
+        out[i] = res
+
+    assert out.toList() == [("i1", 1.0), ("i2", 2.0), ("i3", 3.0)]
+
+    # Loops can be nested in an outermost If.
+    cnt = gp.Parameter(m, records=0)
+    with gp.If(x < 1):
+        with gp.Loop(i) as loop:
+            cnt[...] += 1
+            with gp.If(i.sameAs("i2")):
+                loop.Break  # noqa: B018
+
+    assert cnt.toValue() == 2
+
+    with gp.If(x < 1):
+        with pytest.raises(ValidationError, match="Cannot load symbol records"):
+            _ = x.records
+
+    # Model attributes are available after a solve in an outermost If.
+    v = gp.Variable(m)
+    e = gp.Equation(m, definition=v >= x + 1)
+    model = gp.Model(m, equations=[e], problem="LP", sense="min", objective=v)
+    with gp.If(x < 1):
+        model.solve()
+
+    assert model.objective_value == 1
+
+    with gp.If(x > 1):
+        res[...] = 4
+    res[...] = 5
+    with pytest.raises(
+        ValidationError,
+        match=r"`gp.Else` must immediately follow a `gp.If` or `gp.ElseIf` block without any intervening statements.",
+    ):
+        with gp.Else():
+            res[...] = 6
+
+    assert res.toValue() == 5
+
+    with gp.If(x > 1):
+        res[...] = 4
+    with gp.Else():
+        res[...] = 6
+    with pytest.raises(
+        ValidationError, match=r"`gp.Else` must follow a `gp.If` or `gp.ElseIf` block."
+    ):
+        with gp.Else():
+            pass
+
+    assert res.toValue() == 6
+
+    # The condition of an ElseIf is not evaluated once a preceding block is taken.
+    zero = gp.Parameter(m, records=0)
+    with gp.If(x < 1):
+        res[...] = 7
+    with gp.ElseIf(1 / zero > 0):
+        res[...] = 8
+
+    assert res.toValue() == 7
+
+
+def test_if_container_argument():
+    m = gp.Container()
+    res = gp.Parameter(m, records=0)
+
+    with pytest.raises(ValidationError, match="Provide it with the `container`"):
+        gp.If(gp.Number(1) == 1)
+
+    with gp.If(gp.Number(1) == 2, container=m):
+        res[...] = 1
+    with gp.ElseIf(gp.Number(1) == 1, container=m):
+        res[...] = 2
+
+    assert res.toValue() == 2
+
+    i = gp.Set(m, records=["i1", "i2"])
+    with gp.Loop(i):
+        with gp.If(gp.Number(1) == 1, container=m):
+            res[...] += 1
+
+    assert res.toValue() == 4
+
+    with pytest.raises(ValidationError, match="is different than the `container`"):
+        gp.If(res > 1, container=gp.Container())
+
+    with pytest.raises(TypeError, match="`container` must be a Container"):
+        gp.ElseIf(res > 1, container=res)  # ty: ignore[invalid-argument-type]
 
 
 def test_loading_records_in_a_loop():
