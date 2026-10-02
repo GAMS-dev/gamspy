@@ -1173,7 +1173,10 @@ def test_solver_options(transport, set_options):
         transport.solve(solver="examiner", solver_options={"blabla": "1.e12"})
 
     ## Examiner2
-    with pytest.raises(ValidationError):
+    with (
+        pytest.warns(DeprecationWarning, match="examiner2"),
+        pytest.raises(ValidationError),
+    ):
         transport.solve(solver="examiner2", solver_options={"blabla": "1.e12"})
 
     ## gurobi

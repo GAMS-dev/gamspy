@@ -30,6 +30,7 @@ BACKUP_FILE = "gamsconfig.yaml.gamspy_backup"
 MARKER_BEGIN = f"# begin {SOLVER_NAME} solver configuration of GAMSPy"
 MARKER_END = f"# end {SOLVER_NAME} solver configuration of GAMSPy"
 MANIFEST_FILE = "cuopt_files.txt"
+MODEL_TYPES = ["LP", "RMIP", "MIP", "QCP", "MIQCP", "RMIQCP"]
 
 CUOPT_VERSION_ENV = "GAMSPY_CUOPT_VERSION"
 CUDA_VERSION_ENV = "GAMSPY_CUDA_VERSION"

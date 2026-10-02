@@ -17,7 +17,7 @@ At the moment, GAMSPy supports 30 solvers:
 - CPLEX
 - DICOPT
 - EXAMINER
-- EXAMINER2
+- EXAMINER2 (deprecated, will be removed in a future release)
 - GUROBI
 - HIGHS
 - IPOPT

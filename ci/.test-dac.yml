@@ -10,7 +10,8 @@
     - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
-    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
+    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > "$CI_PROJECT_DIR/ci_license.txt"
+    - export GAMSPY_LICENSE_PATH="$CI_PROJECT_DIR/ci_license.txt"
     - UV_NO_CONFIG=1 gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
     - python -B -m pytest -n $NUM_PROCESS -x -ra -m 'unit or integration or model_library or requires_license' tests
@@ -24,7 +25,8 @@ dac-test-3.14:
     - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
     - uv sync --group test
-    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
+    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > "$CI_PROJECT_DIR/ci_license.txt"
+    - export GAMSPY_LICENSE_PATH="$CI_PROJECT_DIR/ci_license.txt"
     - UV_NO_CONFIG=1 gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
     - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -n $NUM_PROCESS -x -ra -m 'unit or integration or model_library or requires_license or doc' tests

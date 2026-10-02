@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import csv
 import importlib
 import importlib.util
-import json
 import os
+import pathlib
 import platform
 import shutil
 import subprocess
@@ -230,42 +231,42 @@ def license(
         subprocess.run(command)
 
 
-def is_editable(package_name: str) -> bool:
-    dist = distribution(package_name)
-    text = dist.read_text("direct_url.json")
-    if not text:
-        return False
-    data = json.loads(text)
-    return data.get("dir_info", {}).get("editable", False)
-
-
-def append_dist_info(files, gamspy_base_dir: str):
-    """Updates dist-info/RECORD in site-packages for pip uninstall"""
-    if is_editable("gamspy"):
+def append_dist_info(files: Iterable[str], gamspy_base_dir: str) -> None:
+    dist = distribution("gamspy_base")
+    record = next(
+        (
+            path
+            for path in dist.files or []
+            if path.name == "RECORD" and path.parent.name.endswith(".dist-info")
+        ),
+        None,
+    )
+    if record is None:
         return
 
-    import gamspy as gp
+    record_path = str(dist.locate_file(record))
+    location = str(dist.locate_file(""))
 
-    gamspy_path: str = gp.__path__[0]
-    dist_info_path = f"{gamspy_path}-{gp.__version__}.dist-info"
-    record_file_path = os.path.join(dist_info_path, "RECORD")
-
-    with open(record_file_path) as file:
+    with open(record_path, encoding="utf-8", newline="") as file:
         content = file.read()
 
-    with open(dist_info_path + os.sep + "RECORD", "a", encoding="utf-8") as record:
-        gamspy_base_relative_path = os.sep.join(gamspy_base_dir.split(os.sep)[-3:])
+    recorded = {row[0] for row in csv.reader(content.splitlines()) if row}
+    rows = []
+    for file in files:
+        path = pathlib.Path(
+            os.path.relpath(os.path.join(gamspy_base_dir, file), location)
+        ).as_posix()
+        if path not in recorded:
+            recorded.add(path)
+            rows.append([path, "", ""])
 
-        lines = []
-        for file in files:
-            file_path = os.path.join(gamspy_base_relative_path, file)
-            line = f"{file_path},,"
+    if not rows:
+        return
 
-            if file_path not in content:
-                lines.append(line)
-
-        if lines:
-            record.write("\n".join(lines) + "\n")
+    with open(record_path, "a", encoding="utf-8", newline="") as file:
+        if content and not content.endswith("\n"):
+            file.write("\n")
+        csv.writer(file, lineterminator="\n").writerows(rows)
 
 
 def _add_installed_addon(addons_path: str, solver_name: str) -> None:
@@ -378,6 +379,12 @@ def solver(
                     f" solvers that can be installed: {installable_solvers}"
                 )
                 raise typer.Exit(code=1)
+
+            if solver_name == "examiner2":
+                typer.echo(
+                    "Warning: `examiner2` solver is deprecated and will be removed in a future release. Use `examiner` instead.",
+                    err=True,
+                )
 
             if not skip_pip_install:
                 solver_version = gamspy_base.__version__

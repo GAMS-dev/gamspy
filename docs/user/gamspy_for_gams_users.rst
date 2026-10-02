@@ -209,12 +209,13 @@ This package is for the mathematical operations of GAMS.
 Logical Operations
 ------------------
 
-Since it is not possible in Python to overload keywords such as **and**, **or**, and **not**, you need to use bitwise operatiors **&**, **|**, and **~**.
+Since it is not possible in Python to overload keywords such as **and**, **or**, **xor**, and **not**, you need to use the bitwise operators **&**, **|**, **^**, and **~**. In GAMSPy these operators perform logical, not bitwise, operations.
 
 Mapping:
 
 - **and** -> &
 - **or**  -> |
+- **xor** -> ^
 - **not** -> ~
 
 .. tab-set-code::

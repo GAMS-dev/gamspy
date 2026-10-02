@@ -7,7 +7,8 @@ import pytest
 
 import gamspy as gp
 import gamspy.utils as utils
-from gamspy import Container, _communication
+from gamspy import Container
+from gamspy._execution import socket_engine
 
 
 @functools.cache
@@ -50,12 +51,12 @@ class TransportData(NamedTuple):
 
 @pytest.fixture(autouse=True)
 def close_containers():
-    before = set(_communication._comm_pairs)
+    before = set(socket_engine._running_engines)
 
     yield
 
-    for pair_id in set(_communication._comm_pairs) - before:
-        _communication.close_connection(pair_id)
+    for engine in set(socket_engine._running_engines) - before:
+        engine.stop()
 
 
 @pytest.fixture

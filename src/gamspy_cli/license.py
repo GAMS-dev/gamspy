@@ -107,3 +107,11 @@ def get_licensed_solvers(license_path: str) -> list[str]:
         for solver, is_licensed in EVALUATIONS.items()
         if is_licensed(component_map, is_academic)
     )
+
+
+def is_size_limited_license(license_path: str) -> bool:
+    with open(license_path, encoding="utf-8") as license_file:
+        lines = [line.strip() for line in license_file.readlines()]
+
+    license_number = lines[2][0:2]
+    return license_number in _UNRESTRICTED_LICENSE_NUMBERS

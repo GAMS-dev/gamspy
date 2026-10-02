@@ -10,9 +10,11 @@ import gamspy._symbols as syms
 import gamspy.utils as utils
 from gamspy._options import (
     EXECUTION_OPTIONS,
+    INDICATOR_SOLVERS,
     MODEL_ATTR_OPTION_MAP,
     Options,
     _format_model_attr_value,
+    get_indicator_file_name,
 )
 from gamspy.exceptions import LatexException, ValidationError
 
@@ -405,6 +407,40 @@ class GamsConverter:
 
         return definitions
 
+    def get_indicator_options(self) -> list[str]:
+        indicators = self.model._get_indicators()
+        if not indicators:
+            return []
+
+        # the solver is only known when the .gms file runs
+        solver = f"%system.{str(self.model.problem).lower()}%"
+        strings = []
+        for position, name in enumerate(INDICATOR_SOLVERS):
+            directive = "$ifThenI" if position == 0 else "$elseIfI"
+            strings.append(f"{directive} {solver}=={name}")
+            options_file = f"{name.lower()}.opt"
+            indicator_file = get_indicator_file_name(name, self.model.name)
+            if indicator_file is None:
+                strings.append(f"$  set GP_INDICATOR_FILE {options_file}")
+            else:
+                strings.append(
+                    f'$  echo gams/indicatorfile = "{indicator_file}" > {options_file}'
+                )
+                strings.append(f"$  set GP_INDICATOR_FILE {indicator_file}")
+
+        strings += [
+            "$else",
+            f"$  abort {solver} does not support native indicator constraints."
+            f" Use one of {', '.join(INDICATOR_SOLVERS)}.",
+            "$endIf",
+            "$onEcho > %GP_INDICATOR_FILE%",
+            *indicators,
+            "$offEcho",
+            f"{self.model.name}.optFile = 1;",
+        ]
+
+        return strings
+
     def get_all_symbols(self) -> list[str]:
         all_symbols = get_symbols(self.model)
 
@@ -458,13 +494,17 @@ class GamsConverter:
                 elif key in EXECUTION_OPTIONS:
                     options_strs.append(f"{EXECUTION_OPTIONS[key]} '{value}'")
 
-        # 5. Solve string
+        # 5. Native indicator constraints
+        indicator_strs = self.get_indicator_options()
+
+        # 6. Solve string
         solve_string = self.model._generate_solve_string() + ";"
         strings = [
             *declarations,
             load_str,
             *definitions,
             *options_strs,
+            *indicator_strs,
             solve_string,
         ]
 

@@ -709,8 +709,13 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
 
     def __getitem__(self, indices: IndexType) -> ImplicitSet:
         domain = validation.validate_domain(self, indices)
+        implicit_set = implicits.ImplicitSet(self, name=self.name, domain=domain)
 
-        return implicits.ImplicitSet(self, name=self.name, domain=domain)
+        if not implicit_set.domain:
+            # Literal index, e.g. ``i["label"]``.
+            self.container._literal_bound_sets.append(self)
+
+        return implicit_set
 
     def __setitem__(
         self,

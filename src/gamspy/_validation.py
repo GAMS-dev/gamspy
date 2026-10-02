@@ -299,6 +299,11 @@ def _index_components(
     return None
 
 
+def _is_literal_bound(given: Set | Alias | ImplicitSet) -> bool:
+    container = given.container
+    return any(bound is given for bound in container._literal_bound_sets)
+
+
 def validate_one_dimensional_sets(
     given: Set | Alias | ImplicitSet,
     actual: str | Set | Alias,
@@ -324,6 +329,9 @@ def validate_one_dimensional_sets(
     given_name = given.alias_with.name if type(given) is symbols.Alias else given.name
 
     if given_name in actual_path:
+        return
+
+    if _is_literal_bound(given):
         return
 
     raise ValidationError(

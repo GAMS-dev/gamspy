@@ -9,7 +9,9 @@ import gamspy as gp
 import gamspy._gdx as gdxio
 from gamspy._algebra.condition import Condition
 from gamspy._algebra.domain import Domain
-from gamspy._internals import DataSource
+from gamspy._algebra.expression import _validate_controlled
+from gamspy._config import get_option
+from gamspy._internals import ATTR_PREFIX, DataSource
 from gamspy._symbols.implicits import ImplicitSet
 from gamspy.exceptions import ValidationError
 
@@ -23,6 +25,26 @@ if TYPE_CHECKING:
 
 # Dictionary to track the container used in the most recent If/ElseIf block
 _last_containers: dict[tuple[int, int], Container] = {}
+
+
+def _synch_loop_with_gams(container: Container) -> None:
+    """Runs the statements of the outermost loop and loads the results back."""
+    models = list(container._models_solved_in_loop.values())
+    container._models_solved_in_loop.clear()
+
+    gdx_out = container._gdx_out
+    container._options._set_extra_options(
+        {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
+    )
+    container._synch_with_gams()
+    container._options._set_extra_options({})
+    symbol_names = gdxio._get_symbol_names_from_gdx(container.system_directory, gdx_out)
+    container._should_load_from(symbol_names, source=DataSource.GAMS)
+
+    for model in models:
+        # A solve under a condition that never held writes no attribute file.
+        if os.path.exists(model._attr_gdx_file):
+            model._update_model_attributes()
 
 
 class Loop:
@@ -185,21 +207,14 @@ class Loop:
         # An exception occurred inside the with block.
         # Don't do synchronization that may raise another exception.
         if exc_type is not None:
+            if self.container._in_loop == 0:
+                self.container._models_solved_in_loop.clear()
             return False
 
         # Run only in the most outer loop
         if self.container._in_loop == 0:
             self.container._last_control_flow = "loop"
-            gdx_out = self.container._gdx_out
-            self.container._options._set_extra_options(
-                {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
-            )
-            self.container._synch_with_gams()
-            self.container._options._set_extra_options({})
-            symbol_names = gdxio._get_symbol_names_from_gdx(
-                self.container.system_directory, gdx_out
-            )
-            self.container._should_load_from(symbol_names, source=DataSource.GAMS)
+            _synch_loop_with_gams(self.container)
 
 
 class For:
@@ -390,20 +405,13 @@ class For:
         # An exception occurred inside the with block.
         # Don't do synchronization that may raise another exception.
         if exc_type is not None:
+            if self.container._in_loop == 0:
+                self.container._models_solved_in_loop.clear()
             return False
 
         if self.container._in_loop == 0:  # Run only in the most outer loop
             self.container._last_control_flow = "for"
-            gdx_out = self.container._gdx_out
-            self.container._options._set_extra_options(
-                {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
-            )
-            self.container._synch_with_gams()
-            self.container._options._set_extra_options({})
-            symbol_names = gdxio._get_symbol_names_from_gdx(
-                self.container.system_directory, gdx_out
-            )
-            self.container._should_load_from(symbol_names, source=DataSource.GAMS)
+            _synch_loop_with_gams(self.container)
 
 
 class While:
@@ -490,20 +498,119 @@ class While:
         # An exception occurred inside the with block.
         # Don't do synchronization that may raise another exception.
         if exc_type is not None:
+            if self.container._in_loop == 0:
+                self.container._models_solved_in_loop.clear()
             return False
 
         if self.container._in_loop == 0:  # Run only in the most outer loop
             self.container._last_control_flow = "while"
-            gdx_out = self.container._gdx_out
-            self.container._options._set_extra_options(
-                {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
+            _synch_loop_with_gams(self.container)
+
+
+# This flag remembers whether a block of the outermost if chain has already been taken.
+_IF_CHAIN_FLAG = ATTR_PREFIX + "if_flag"
+
+
+def _resolve_if_container(
+    condition: ConditionType, container: Container | None, construct: str
+) -> Container:
+    deduced = getattr(condition, "container", None)
+
+    if container is None:
+        if not isinstance(deduced, gp.Container):
+            raise ValidationError(
+                f"Could not find the container in the given condition `{condition}`. "
+                f"Hence, {construct} operation is not possible. Provide it with the "
+                "`container` argument."
             )
-            self.container._synch_with_gams()
-            self.container._options._set_extra_options({})
-            symbol_names = gdxio._get_symbol_names_from_gdx(
-                self.container.system_directory, gdx_out
-            )
-            self.container._should_load_from(symbol_names, source=DataSource.GAMS)
+
+        container = deduced
+    elif not isinstance(container, gp.Container):
+        raise TypeError(f"`container` must be a Container but given {type(container)}")
+    elif isinstance(deduced, gp.Container) and deduced is not container:
+        raise ValidationError(
+            f"The container of the given condition `{condition}` is different "
+            f"than the `container` argument of {construct}."
+        )
+
+    # Track the container for potential succeeding ElseIf/Else statements
+    _last_containers[(os.getpid(), threading.get_native_id())] = container
+
+    return container
+
+
+def _condition_repr(condition: ConditionType, container: Container) -> str:
+    # On the outermost level, no index of the condition is controlled.
+    if (
+        not container._in_loop
+        and get_option("VALIDATION")
+        and get_option("DOMAIN_VALIDATION")
+    ):
+        _validate_controlled(condition, [])
+
+    return gp.utils._replace_equality_signs(condition.gamsRepr())
+
+
+def _continue_if_chain(container: Container, construct: str) -> bool:
+    """
+    Reopens the preceding If/ElseIf block. Returns True if the chain is at the
+    outermost level, where the preceding block has already been executed.
+    """
+    if container._last_control_flow not in ("if", "elseif"):
+        raise ValidationError(
+            f"`{construct}` must follow a `gp.If` or `gp.ElseIf` block."
+        )
+
+    if container._in_loop:
+        statements = container._unsaved_statements
+        is_chained = (
+            bool(statements)
+            and isinstance(statements[-1], str)
+            and statements[-1] == ");"
+        )
+    else:
+        is_chained = container._open_if_chain
+
+    if not is_chained:
+        raise ValidationError(
+            f"`{construct}` must immediately follow a `gp.If` or `gp.ElseIf` block without any intervening statements."
+        )
+
+    if container._in_loop:
+        # Remove the closing parenthesis of the previous block to continue the chain
+        container._unsaved_statements.pop()
+        return False
+
+    container._in_loop += 1
+    return True
+
+
+def _close_if_block(
+    container: Container,
+    is_outermost: bool,
+    kind: Literal["if", "elseif", "else"],
+    exc_type: type[BaseException] | None,
+) -> None:
+    if is_outermost:
+        container._in_loop -= 1
+
+    container._add_statement(");")
+    if is_outermost and kind == "elseif":
+        container._add_statement(");")
+
+    container._last_control_flow = kind
+
+    if not is_outermost:
+        return
+
+    # An exception occurred inside the with block.
+    # Don't do synchronization that may raise another exception.
+    if exc_type is not None:
+        container._models_solved_in_loop.clear()
+        return
+
+    _synch_loop_with_gams(container)
+    container._open_if_chain = kind != "else"
 
 
 class If:
@@ -511,12 +618,17 @@ class If:
     A context manager to conditionally execute a group of statements.
 
     The If class maps to the GAMS `if` statement. It allows you to branch
-    conditionally around a group of execution statements within a loop.
+    conditionally around a group of execution statements. It can be used within
+    loops as well as on the outermost level. On the outermost level, the statements
+    of the block are executed when the block is closed.
 
     Parameters
     ----------
     condition : ConditionType
         The logical condition that must be satisfied to execute the nested statements.
+    container : Container, optional
+        The container to add the statements to. Required only if the container
+        cannot be deduced from the condition.
 
     Examples
     --------
@@ -540,36 +652,45 @@ class If:
     ...         loop.Break
     ...     cnt[...] += 1
 
+    **3. Branching on the outermost level:**
+
+
+    >>> x = gp.Parameter(m, records=15)
+    >>> with gp.If(x > 10):
+    ...     x[...] = 10
+    >>> with gp.Else():
+    ...     x[...] = 0
+    >>> x.toValue()
+    np.float64(10.0)
+
+    **4. Providing the container explicitly:**
+
+
+    >>> with gp.If(gp.Number(1) == 1, container=m):
+    ...     cnt[...] = 1
+
     """
 
-    def __init__(self, condition: ConditionType):
+    def __init__(self, condition: ConditionType, container: Container | None = None):
         self.condition = condition
-
-        if not isinstance(condition.container, gp.Container):
-            raise ValidationError(
-                f"Could not find the container in the given condition `{condition}`. Hence, gp.If operation is not possible."
-            )
-
-        self.container = condition.container
-
-        # Track the container for potential succeeding ElseIf/Else statements
-        pid = os.getpid()
-        tid = threading.get_native_id()
-        _last_containers[(pid, tid)] = self.container
+        self.container = _resolve_if_container(condition, container, "gp.If")
+        self._is_outermost = False
 
     def __enter__(self) -> None:
-        if not self.container._in_loop:
-            raise ValidationError(
-                "`gp.If` context manager can only be used in `gp.Loop` context managers. Use regular Python if statements instead."
-            )
+        representation = _condition_repr(self.condition, self.container)
 
-        representation = self.condition.gamsRepr()
-        representation = gp.utils._replace_equality_signs(representation)
-        self.container._add_statement(f"if ({representation},")
+        if self.container._in_loop:
+            self.container._add_statement(f"if ({representation},")
+            return
+
+        self._is_outermost = True
+        self.container._in_loop += 1
+        self.container._add_statement(f"Scalar {_IF_CHAIN_FLAG};")
+        self.container._add_statement(f"{_IF_CHAIN_FLAG} = 0;")
+        self.container._add_statement(f"if ({representation}, {_IF_CHAIN_FLAG} = 1;")
 
     def __exit__(self, exc_type, exc, tb):
-        self.container._add_statement(");")
-        self.container._last_control_flow = "if"
+        _close_if_block(self.container, self._is_outermost, "if", exc_type)
 
 
 class ElseIf:
@@ -581,55 +702,33 @@ class ElseIf:
     ----------
     condition : ConditionType
         The logical condition that must be satisfied to execute the nested statements.
+    container : Container, optional
+        The container to add the statements to. Required only if the container
+        cannot be deduced from the condition.
     """
 
-    def __init__(self, condition: ConditionType):
+    def __init__(self, condition: ConditionType, container: Container | None = None):
         self.condition = condition
-
-        if not isinstance(condition.container, gp.Container):
-            raise ValidationError(
-                f"Could not find the container in the given condition `{condition}`. Hence, gp.ElseIf operation is not possible."
-            )
-
-        self.container = condition.container
-
-        # Track the container for potential succeeding ElseIf/Else statements
-        pid = os.getpid()
-        tid = threading.get_native_id()
-        _last_containers[(pid, tid)] = self.container
+        self.container = _resolve_if_container(condition, container, "gp.ElseIf")
+        self._is_outermost = False
 
     def __enter__(self) -> ElseIf:
-        if not self.container._in_loop:
-            raise ValidationError(
-                "`gp.ElseIf` context manager can only be used in `gp.Loop` context managers."
+        representation = _condition_repr(self.condition, self.container)
+        self._is_outermost = _continue_if_chain(self.container, "gp.ElseIf")
+
+        if self._is_outermost:
+            # The condition is nested to avoid evaluating it once a preceding block is taken.
+            self.container._add_statement(f"if (not {_IF_CHAIN_FLAG},")
+            self.container._add_statement(
+                f"if ({representation}, {_IF_CHAIN_FLAG} = 1;"
             )
+        else:
+            self.container._add_statement(f"elseif {representation},")
 
-        if getattr(self.container, "_last_control_flow", None) not in ("if", "elseif"):
-            raise ValidationError(
-                "`gp.ElseIf` must follow a `gp.If` or `gp.ElseIf` block."
-            )
-
-        last_statement = self.container._unsaved_statements[-1]
-        if (
-            not self.container._unsaved_statements
-            or not isinstance(last_statement, str)
-            or self.container._unsaved_statements[-1] != ");"
-        ):
-            raise ValidationError(
-                "`gp.ElseIf` must immediately follow a `gp.If` or `gp.ElseIf` block without any intervening statements."
-            )
-
-        # Remove the closing parenthesis of the previous block to continue the chain
-        self.container._unsaved_statements.pop()
-
-        representation = self.condition.gamsRepr()
-        representation = gp.utils._replace_equality_signs(representation)
-        self.container._add_statement(f"elseif {representation},")
         return self
 
     def __exit__(self, exc_type, exc, tb):
-        self.container._add_statement(");")
-        self.container._last_control_flow = "elseif"
+        _close_if_block(self.container, self._is_outermost, "elseif", exc_type)
 
 
 class Else:
@@ -650,34 +749,17 @@ class Else:
             )
 
         self.container = container
+        self._is_outermost = False
 
     def __enter__(self) -> Else:
-        if not getattr(self.container, "_in_loop", 0):
-            raise ValidationError(
-                "`gp.Else` context manager can only be used in `gp.Loop` context managers."
-            )
+        self._is_outermost = _continue_if_chain(self.container, "gp.Else")
 
-        if getattr(self.container, "_last_control_flow", None) not in ("if", "elseif"):
-            raise ValidationError(
-                "`gp.Else` must follow a `gp.If` or `gp.ElseIf` block."
-            )
+        if self._is_outermost:
+            self.container._add_statement(f"if (not {_IF_CHAIN_FLAG},")
+        else:
+            self.container._add_statement("else")
 
-        last_statement = self.container._unsaved_statements[-1]
-        if (
-            not self.container._unsaved_statements
-            or not isinstance(last_statement, str)
-            or self.container._unsaved_statements[-1] != ");"
-        ):
-            raise ValidationError(
-                "`gp.Else` must immediately follow a `gp.If` or `gp.ElseIf` block without any intervening statements."
-            )
-
-        # Remove the closing parenthesis of the previous block to continue the chain
-        self.container._unsaved_statements.pop()
-
-        self.container._add_statement("else")
         return self
 
     def __exit__(self, exc_type, exc, tb):
-        self.container._add_statement(");")
-        self.container._last_control_flow = "else"
+        _close_if_block(self.container, self._is_outermost, "else", exc_type)

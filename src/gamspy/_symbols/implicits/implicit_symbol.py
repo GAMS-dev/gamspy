@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, no_type_check
+from typing import TYPE_CHECKING, Any, no_type_check
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -10,6 +10,8 @@ from gamspy._universe import is_universe, is_universe_domain
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from gamspy import (
         Alias,
         Product,
@@ -33,10 +35,10 @@ class ImplicitSymbol(ABC):
 
     def __init__(
         self: ImplicitSymbolType,
-        name,
-        domain,
-        permutation=None,
-        parent_scalar_domains=None,
+        name: str,
+        domain: Sequence[Any],
+        permutation: list[int] | None = None,
+        parent_scalar_domains: list[tuple[int, str]] | None = None,
     ) -> None:
         self.container = self.parent.container
         self.name = name
@@ -70,14 +72,14 @@ class ImplicitSymbol(ABC):
 
         return 0
 
-    def fix_domain_scalars(self, parent_scalar_domains):
+    def fix_domain_scalars(self, parent_scalar_domains: list[tuple[int, str]]) -> None:
         if is_universe_domain(self.domain):
             self._scalar_domains = []
             return
 
         bare_domain = utils._get_set(self.domain)
         domain = []
-        scalars = []
+        scalars: list[tuple[int, str]] = []
         permutation_indices_to_del = []
         for i, d in enumerate(bare_domain):
             if isinstance(d, str):

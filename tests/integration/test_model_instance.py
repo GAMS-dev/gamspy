@@ -373,8 +373,6 @@ def test_solve_after_container_close(transport):
 
 @pytest.mark.integration
 def test_freeze_with_hibernation(transport):
-    from gamspy._communication import is_connected
-
     m = transport.container
     labels = ["a", "b", "c"]
     i = Set(m, "i", records=labels)
@@ -392,20 +390,20 @@ def test_freeze_with_hibernation(transport):
     )
 
     model.freeze(modifiables=[c], hibernate=True)
-    assert not is_connected(m._comm_pair_id)
+    assert not m._execution_engine.is_running
 
     for values, expected in (([1, 1, 1], 2.0), ([5, 1, 1], 6.0), ([5, 4, 1], 9.0)):
         c.setRecords(pd.DataFrame({"i": labels, "value": [float(v) for v in values]}))
         model.solve(solver="cplex")
         assert math.isclose(model.objective_value, expected, rel_tol=1e-6), values
 
-    assert not is_connected(m._comm_pair_id)
+    assert not m._execution_engine.is_running
     model.unfreeze()
 
     # the container is still usable, the engine comes back with its state
     c[i] = 7
     assert (c.toDense() == [7.0, 7.0, 7.0]).all()
-    assert is_connected(m._comm_pair_id)
+    assert m._execution_engine.is_running
 
 
 @pytest.mark.integration

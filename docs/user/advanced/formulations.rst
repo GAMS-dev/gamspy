@@ -693,3 +693,110 @@ For complete argument and return-value details, refer to:
 - :meth:`pwl_dlog_formulation <gamspy.formulations.pwl_dlog_formulation>`
 - :class:`PWLCurve <gamspy.formulations.PWLCurve>`
 - :meth:`pwlinear <gamspy.formulations.pwlinear>`
+
+
+Indicator Constraints
+---------------------
+
+Many models need logical relations such as "if a facility is closed, nothing
+can be shipped from it". :meth:`indicator <gamspy.formulations.indicator>`
+turns such relations into mixed-integer constraints, so the model can be solved
+with MIP solvers.
+
+An indicator constraint ``indicator(b, value, constraint)`` enforces
+``constraint`` whenever the binary variable ``b`` equals ``value`` and drops
+it otherwise. The following example forbids shipments from closed plants. The
+binary variable ``is_open`` is defined over ``i`` and controls the constraint
+for every ``j``:
+
+.. code-block:: python
+
+   import gamspy as gp
+
+   m = gp.Container()
+   i = gp.Set(m, "i", records=["seattle", "san-diego"])
+   j = gp.Set(m, "j", records=["new-york", "chicago", "topeka"])
+   ship = gp.Variable(m, "ship", type="positive", domain=[i, j])
+   is_open = gp.Variable(m, "is_open", type="binary", domain=i)
+
+   # is_open[i] == 0  =>  ship[i, j] <= 0
+   _, eqs = gp.formulations.indicator(is_open, 0, ship[i, j] <= 0)
+
+The domain of the binary variable must be a subset of the domain of the
+constraint. The constraint can be an inequality or an equality.
+
+By default, the indicator constraint is modeled with SOS1 variables. This
+formulation does not need any bounds, but requires a solver that supports SOS1
+variables, such as CPLEX, the default MIP solver. Some solvers, e.g. HiGHS and
+MOSEK, do not support SOS1 variables. In that case, or if a big-M formulation
+performs better for your model, pass ``big_m``:
+
+.. code-block:: python
+
+   _, eqs = gp.formulations.indicator(is_open, 0, ship[i, j] <= 0, big_m=1000)
+
+``big_m`` must be at least as large as the largest possible violation of the
+constraint while it is dropped, i.e. the largest value of ``lhs - rhs`` for a
+``<=`` constraint. Here, this is the largest possible shipment. A value that is
+too small cuts off feasible solutions and silently returns wrong results. A
+valid value that is smaller leads to a tighter relaxation and usually to faster
+solves. Besides a number, ``big_m`` can be a parameter or an expression of
+parameters and variable bounds, which lets each constraint have its own
+value:
+
+.. code-block:: python
+
+   capacity = gp.Parameter(
+       m, "capacity", domain=i, records=[("seattle", 350), ("san-diego", 600)]
+   )
+   _, eqs = gp.formulations.indicator(
+       is_open, 0, ship[i, j] <= 0, big_m=capacity[i]
+   )
+
+   # use the bounds of the variable, which must be finite
+   ship.up[i, j] = capacity[i]
+   _, eqs = gp.formulations.indicator(
+       is_open, 0, ship[i, j] <= 0, big_m=ship.up[i, j]
+   )
+
+To enforce the constraint only for some elements of its domain, add a
+condition with ``.where``. The formulation then generates equations only where
+the condition holds:
+
+.. code-block:: python
+
+   min_ship = gp.Parameter(
+       m, "min_ship", domain=j, records=[("new-york", 50), ("topeka", 20)]
+   )
+
+   # is_open[i] == 1  =>  ship[i, j] >= min_ship[j], only where min_ship[j] > 0
+   _, eqs = gp.formulations.indicator(
+       is_open, 1, (ship[i, j] >= min_ship[j]).where[min_ship[j] > 0]
+   )
+
+Alternatively, index the constraint with a multidimensional subset. The
+generated symbols are then limited to the elements of the subset:
+
+.. code-block:: python
+
+   routes = gp.Set(
+       m,
+       "routes",
+       domain=[i, j],
+       records=[("seattle", "chicago"), ("san-diego", "topeka")],
+   )
+   use = gp.Variable(m, "use", type="binary", domain=[i, j])
+
+   # use[routes] == 0  =>  ship[routes] <= 0
+   _, eqs = gp.formulations.indicator(use[routes], 0, ship[routes] <= 0)
+
+Some MIP solvers handle indicator constraints directly in their branch-and-cut
+algorithm instead of relying on a reformulation. Pass ``native=True`` to keep
+the constraint as it is and let :meth:`solve <gamspy.Model.solve>` hand the
+indicator to the solver through the solver options file. Native indicator
+constraints are supported by COPT, CPLEX, GUROBI, SCIP and XPRESS. Solving the
+model with any other solver raises an error:
+
+.. code-block:: python
+
+   _, eqs = gp.formulations.indicator(is_open, 0, ship[i, j] <= 0, native=True)

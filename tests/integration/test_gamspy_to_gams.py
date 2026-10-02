@@ -575,3 +575,55 @@ def test_toGams_with_alias_as_domain(tmp_path):
     with open(os.path.join(folder, "test.gms")) as file:
         content = file.read()
         assert "Set i(*);" in content
+
+
+def test_native_indicator(tmp_path):
+    import gamspy as gp
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b", "c"])
+    j = gp.Set(m, "j", records=["1", "2"])
+    ij = gp.Set(m, "ij", domain=[i, j], records=[("a", "1"), ("b", "2"), ("c", "1")])
+    x = gp.Variable(m, "x", domain=[i, j])
+    x.lo[...] = 0
+    x.up[...] = 10
+    b = gp.Variable(m, "b", type="binary", domain=i)
+    res = gp.formulations.indicator(b, 1, x[ij] <= 2, native=True)
+    one_closed = gp.Equation(m, "one_closed", definition=gp.Sum(i, b[i]) == 2)
+    model = gp.Model(
+        m,
+        "indicator_model",
+        equations=[res.equations_created["indicator"], one_closed],
+        problem="mip",
+        sense="max",
+        objective=gp.Sum([i, j], x[i, j]),
+    )
+    model.solve()
+    assert math.isclose(model.objective_value, 44)
+
+    folder = str(tmp_path)
+    model.toGams(folder)
+
+    def run(solver: str) -> subprocess.CompletedProcess:
+        # the option files are written to the current directory
+        return subprocess.run(
+            [
+                os.path.join(m.system_directory, "gams"),
+                "indicator_model.gms",
+                f"mip={solver}",
+                "traceopt=2",
+                "trace=trace.txt",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=folder,
+        )
+
+    assert run("cplex").returncode == 0
+    # without the indicators, the objective value would be 36
+    with open(os.path.join(folder, "trace.txt")) as trace:
+        objective = trace.read().splitlines()[-1].split("//")[0].split(" ")[-3]
+        assert math.isclose(float(objective), 44)
+
+    # compilation aborts for solvers without indicator support
+    assert run("highs").returncode == 2
