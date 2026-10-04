@@ -581,15 +581,16 @@ def _write_symbols_to_gdx(
                 gdx.gdxAddAlias(gdx_handle, symobj.alias_with.name, symname)
         else:
             # Adjust equation userinfo for GDX
+            subtype = symobj._gams_subtype
             if isinstance(symobj, Equation):
-                symobj._gams_subtype = symobj._gams_subtype + gdx.GMS_EQU_USERINFO_BASE
+                subtype += gdx.GMS_EQU_USERINFO_BASE
 
             if symobj.number_records == 0:
-                power_write_symbol_no_records(gdx_handle, symobj)
+                power_write_symbol_no_records(gdx_handle, symobj, subtype)
             elif symobj.number_records == 1 and symobj.dimension == 0:
-                power_write_symbol_scalar_record(gdx_handle, symobj)
+                power_write_symbol_scalar_record(gdx_handle, symobj, subtype)
             else:
-                power_write_category(container, gdx_handle, symobj)
+                power_write_category(container, gdx_handle, symobj, subtype)
 
         if gdx.gdxDataErrorCount(gdx_handle) != 0:
             raise GdxException(
@@ -622,14 +623,16 @@ def write(
             _write_symbols_to_gdx(gdx_handle, container, symnames, symobjs)
 
 
-def power_write_symbol_no_records(gdx_handle, symobj: SymbolWithRecordsType) -> None:
+def power_write_symbol_no_records(
+    gdx_handle, symobj: SymbolWithRecordsType, subtype: int
+) -> None:
     gdx.gdxDataWriteStrStart(
         gdx_handle,
         symobj.name,
         symobj.description,
         symobj.dimension,
         symobj._gams_type,
-        symobj._gams_subtype,
+        subtype,
     )
 
     # define domain
@@ -642,14 +645,16 @@ def power_write_symbol_no_records(gdx_handle, symobj: SymbolWithRecordsType) -> 
     gdx.gdxDataWriteDone(gdx_handle)
 
 
-def power_write_symbol_scalar_record(gdx_handle, symobj: SymbolWithRecordsType) -> None:
+def power_write_symbol_scalar_record(
+    gdx_handle, symobj: SymbolWithRecordsType, subtype: int
+) -> None:
     gdx.gdxDataWriteStrStart(
         gdx_handle,
         symobj.name,
         symobj.description,
         symobj.dimension,
         symobj._gams_type,
-        symobj._gams_subtype,
+        subtype,
     )
 
     vals = symobj.records.to_numpy().reshape((-1,))  # ty: ignore[unresolved-attribute]
@@ -670,7 +675,7 @@ def power_write_symbol_scalar_record(gdx_handle, symobj: SymbolWithRecordsType) 
 
 
 def power_write_category(
-    container: Container, gdx_handle, symobj: SymbolWithRecordsType
+    container: Container, gdx_handle, symobj: SymbolWithRecordsType, subtype: int
 ) -> None:
     from gamspy import Set
 
@@ -701,7 +706,7 @@ def power_write_category(
             symobj.description,
             symobj.dimension,
             symobj._gams_type,
-            symobj._gams_subtype,
+            subtype,
             arrkeys,
             arrvals,
             majorList,

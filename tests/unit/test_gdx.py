@@ -86,3 +86,17 @@ def test_invalid_mode(gdx_file, close_spy):
             ...
 
     assert close_spy["free"] == 1
+
+
+@pytest.mark.unit
+def test_repeated_write_preserves_equation_type(tmp_path):
+    m = gp.Container()
+    e = gp.Equation(m, "e", type="nonbinding")
+    subtype = e._gams_subtype
+
+    for k in range(3):
+        path = str(tmp_path / f"out{k}.gdx")
+        m._write(path, ["e"])
+
+        assert e._gams_subtype == subtype
+        assert gp.Container(load_from=path)["e"].type == "nonbinding"
