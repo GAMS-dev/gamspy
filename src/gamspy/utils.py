@@ -636,6 +636,10 @@ def _get_license_path(system_directory: str) -> str:
     return os.path.join(system_directory, "gamslice.txt")
 
 
+def _quote_path(path: str | os.PathLike[str]) -> str:
+    return f'"{os.path.abspath(path)}"'
+
+
 def _replace_equality_signs(string: str) -> str:
     string = string.replace("=l=", "<=")
     string = string.replace("=e=", "eq")

@@ -401,6 +401,51 @@ def test_loadRecordsFromGdx_with_missing_symbols(tmp_path):
 
 
 @pytest.mark.unit
+def test_gdx_paths_with_spaces(tmp_path):
+    directory = tmp_path / "with space"
+    directory.mkdir()
+    path = str(directory / "data.gdx")
+    records = [("a", 1.0), ("b", 2.0)]
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    _ = gp.Parameter(m, "p", domain=i, records=records)
+    m.write(path)
+    assert os.path.exists(path)
+
+    m2 = gp.Container()
+    m2.loadRecordsFromGdx(path)
+    assert m2["p"].toList() == records
+
+    m3 = gp.Container()
+    i3 = gp.Set(m3, "i")
+    _ = gp.Parameter(m3, "q", domain=i3)
+    m3.loadRecordsFromGdx(path, ["i"])
+    m3.loadRecordsFromGdx(path, {"p": "q"})
+    assert m3["q"].toList() == records
+
+    m4 = gp.Container(load_from=path)
+    assert m4["p"].toList() == records
+
+
+@pytest.mark.unit
+def test_gdx_relative_paths_after_chdir(tmp_path, monkeypatch):
+    # The GAMS process starts before the chdir, so relative paths must be
+    # resolved against the current directory of Python.
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    _ = gp.Parameter(m, "p", domain=i, records=[("a", 1.0)])
+    m2 = gp.Container()
+
+    monkeypatch.chdir(tmp_path)
+    m.write("data.gdx")
+    assert os.path.exists(tmp_path / "data.gdx")
+
+    m2.loadRecordsFromGdx("data.gdx")
+    assert m2["p"].toList() == [("a", 1.0)]
+
+
+@pytest.mark.unit
 def test_hibernate():
     m = gp.Container()
     i = gp.Set(m, "i", records=range(5))
