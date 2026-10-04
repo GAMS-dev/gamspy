@@ -363,7 +363,7 @@ def read(
         f"{md.name}={source_name}" if md.name != source_name else md.name
         for source_name, md in symbols_with_records
     )
-    container._add_statement(f"$gdxLoad {load_from} {symbol_str}")
+    container._add_statement(f"$gdxLoad {utils._quote_path(load_from)} {symbol_str}")
     container._should_load_from(load_symbols, source=DataSource.GAMS)
 
 

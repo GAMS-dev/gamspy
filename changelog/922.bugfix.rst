@@ -1,0 +1,1 @@
+Fix writing and loading GDX files whose path contains a space, and resolve relative GDX paths against the current working directory of Python.

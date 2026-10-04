@@ -2006,7 +2006,7 @@ $setEnv GDXCOMPRESS {int(compress)}
                 f"`symbol_names` must be of type list, dict, or None but given {type(symbol_names)}"
             )
 
-        self._add_statement(rf"$gdxUnload {write_to} {symbols_str}")
+        self._add_statement(rf"$gdxUnload {utils._quote_path(write_to)} {symbols_str}")
 
         if eps_to_zero:
             self._add_statement("$offEpsToZero")
@@ -2142,6 +2142,8 @@ $endIf
         if not os.path.exists(load_from):
             raise ValidationError(f"`{load_from}` does not exist.")
 
+        gams_path = utils._quote_path(load_from)
+
         if symbol_names is None:
             # If no symbol names are given, all records in the gdx should be loaded
             symbol_names = gdxio._get_symbol_names_from_gdx(
@@ -2150,7 +2152,7 @@ $endIf
             gdxio.load_missing_symbols(
                 self, load_from, symbol_names, declare_in_gams=False
             )
-            self._add_statement(f"$declareAndLoad {load_from}")
+            self._add_statement(f"$declareAndLoad {gams_path}")
             self._synch_with_gams()
             self._should_load_from(symbol_names, source=DataSource.GAMS)
             return
@@ -2164,13 +2166,13 @@ $endIf
             symbol_str = " ".join(
                 f"{value}={key}" for key, value in symbol_names.items()
             )
-            self._add_statement(f"$gdxLoad {load_from} {symbol_str}")
+            self._add_statement(f"$gdxLoad {gams_path} {symbol_str}")
             self._synch_with_gams()
             self._should_load_from(symbol_names.values(), source=DataSource.GAMS)
         else:
             symbol_str = " ".join(symbol_names)
             gdxio.load_missing_symbols(self, load_from, symbol_names)
-            self._add_statement(f"$gdxLoad {load_from} {symbol_str}")
+            self._add_statement(f"$gdxLoad {gams_path} {symbol_str}")
             self._synch_with_gams()
             self._should_load_from(symbol_names, source=DataSource.GAMS)
 
