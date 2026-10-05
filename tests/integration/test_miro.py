@@ -4,6 +4,7 @@ import json
 import os
 import pathlib
 import platform
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -19,12 +20,23 @@ from gamspy.exceptions import ValidationError
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture(autouse=True)
-def cleanup_miro_log():
-    yield
+MIRO_MODELS = pathlib.Path(__file__).parent / "miro_models"
 
-    if os.path.exists("miro.log"):
-        os.remove("miro.log")
+
+@pytest.fixture(autouse=True)
+def directory(tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch) -> str:
+    # MIRO writes conf_<model>/ and data_<model>/ next to sys.argv[0], and the
+    # models write miro.log to the cwd, so run every test in a scratch copy.
+    shutil.copytree(
+        MIRO_MODELS,
+        tmp_path / "miro_models",
+        ignore=shutil.ignore_patterns(
+            "conf_*", "data_*", "*_gdxout_.gdx", "miro.log", "__pycache__"
+        ),
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", [str(tmp_path / "test_miro.py")])
+    return str(tmp_path)
 
 
 def test_domain_forwarding(container):
@@ -57,8 +69,7 @@ def test_domain_forwarding(container):
     assert p2.records.values[0][1] == 1
 
 
-def test_domain_forwarding_2():
-    directory = str(pathlib.Path(__file__).parent.resolve())
+def test_domain_forwarding_2(directory):
     miro_gdx_in = os.path.join(directory, "miro_models", "_miro4_gdxin_.gdx")
     miro_gdx_out = os.path.join(directory, "miro_models", "_miro4_gdxout_.gdx")
     model_path = os.path.join(directory, "miro_models", "miro4.py")
@@ -76,8 +87,7 @@ def test_domain_forwarding_2():
     assert process.returncode == 0, process.stderr
 
 
-def test_miro():
-    directory = str(pathlib.Path(__file__).parent.resolve())
+def test_miro(directory):
     current_environment = os.environ.copy()
     current_environment["MIRO"] = "1"
 
@@ -277,8 +287,7 @@ def test_miro():
         }
 
 
-def test_contract():
-    directory = str(pathlib.Path(__file__).parent.resolve())
+def test_contract(directory):
     current_environment = os.environ.copy()
     current_environment["MIRO"] = "1"
     process = subprocess.run(
@@ -442,8 +451,7 @@ def test_contract():
         }
 
 
-def test_table_columns():
-    directory = str(pathlib.Path(__file__).parent.resolve())
+def test_table_columns(directory):
     miro_gdx_in = os.path.join(directory, "miro_models", "_miro3_gdxin_.gdx")
     miro_gdx_out = os.path.join(directory, "miro_models", "_miro3_gdxout_.gdx")
     model_path = os.path.join(directory, "miro_models", "miro3.py")
@@ -797,8 +805,7 @@ def test_miro_encoder(container):
     }
 
 
-def test_non_init():
-    directory = str(pathlib.Path(__file__).parent.resolve())
+def test_non_init(directory):
     miro_gdx_in = os.path.join(directory, "miro_models", "_miro5_gdxin_.gdx")
     miro_gdx_out = os.path.join(directory, "miro_models", "_miro5_gdxout_.gdx")
 
@@ -820,8 +827,7 @@ def test_non_init():
     assert process.returncode == 0, process.stderr
 
 
-def test_miro_in():
-    directory = str(pathlib.Path(__file__).parent.resolve())
+def test_miro_in(directory):
     miro_gdx_in = os.path.join(directory, "miro_models", "_miro5_gdxin_.gdx")
 
     subprocess_env = os.environ.copy()
@@ -858,8 +864,7 @@ def test_miro_in():
     platform.system() != "Linux" or sys.version_info.minor != 9,
     reason="Run miro tests",
 )
-def test_args():
-    directory = str(pathlib.Path(__file__).parent.resolve())
+def test_args(directory):
     script_path = os.path.join(directory, "miro_models", "miro10.py")
     subprocess_env = os.environ.copy()
     subprocess_env["MIRO"] = "1"
@@ -916,8 +921,7 @@ def test_miro_protect(container):
     f.setRecords(6)
 
 
-def test_domain_violation():
-    directory = str(pathlib.Path(__file__).parent.resolve())
+def test_domain_violation(directory):
     script_path = os.path.join(directory, "miro_models", "miro11.py")
     gdxin_path = os.path.join(directory, "miro_models", "_miro11_gdxin_.gdx")
     subprocess_env = os.environ.copy()
@@ -956,8 +960,7 @@ def test_duplicate_domain():
     }
 
 
-def test_gams_state_of_miro_symbol():
-    directory = str(pathlib.Path(__file__).parent.resolve())
+def test_gams_state_of_miro_symbol(directory):
     script_path = os.path.join(directory, "miro_models", "miro12.py")
     gdxin_path = os.path.join(directory, "miro_models", "_miro12_gdxin_.gdx")
     gdxout_path = os.path.join(directory, "miro_models", "_miro12_gdxout_.gdx")

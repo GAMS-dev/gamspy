@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 from os.path import join
+from pathlib import Path
 
 import gamspy_base
 import pytest
@@ -159,11 +160,12 @@ def teardown():
 
 
 @pytest.mark.doc
-def test_docs():
-    api_files = [
-        file for file in glob.glob("src/**", recursive=True) if file.endswith(".py")
-    ]
+def test_docs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    src = Path(__file__).parent.parent / "src"
+    api_files = [str(file) for file in src.rglob("*.py")]
 
+    # The examples write files to the cwd.
+    monkeypatch.chdir(tmp_path)
     for file in api_files:
         results = doctest.testfile(
             file,
