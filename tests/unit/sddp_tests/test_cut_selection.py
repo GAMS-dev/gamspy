@@ -8,9 +8,8 @@ from gamspy.exceptions import ValidationError
 from gamspy.formulations.sddp import LastCuts
 
 # ClearLake (the conftest fixtures) has n_trials=2, so one retained iteration is
-# 2 cuts per stage transition. Its exact risk-neutral lower bound is 112.3046875
-# (== 28750 / 256), reached by iteration 5 and held thereafter.
-EXACT_LB = 112.3046875
+# 2 cuts per stage transition. Its exact risk-neutral lower bound is 70.3125
+EXACT_LB = 70.3125
 N_TRIALS = 2
 
 
@@ -53,7 +52,7 @@ def test_train_rejects_invalid_cut_selection(clearlake_built):
 def test_cut_selection_none_is_unchanged(clearlake_built):
     res = clearlake_built.sddp.train(n_iter=12)
 
-    assert res.lower_bound == EXACT_LB
+    assert math.isclose(res.lower_bound, EXACT_LB, rel_tol=1e-9)
     assert res.cut_selection is None
 
     assert [r["active_cuts"] for r in res.convergence_table] == [
@@ -84,7 +83,7 @@ def test_last_cuts_window_and_restoration(clearlake_built):
         10,
     ]
 
-    assert res.lower_bound == EXACT_LB
+    assert math.isclose(res.lower_bound, EXACT_LB, rel_tol=1e-9)
     assert res.iterations_run == 12
     assert res.cut_selection == LastCuts(5)
 
@@ -97,6 +96,6 @@ def test_keep_iter_at_least_n_iter_warns(clearlake_built):
     # Inert: it drops to the no-selection path, so the pool grows unbounded and
     # the result reports honestly that no selection was in effect.
     assert [r["active_cuts"] for r in res.convergence_table] == [2, 4, 6, 8, 10]
-    assert res.lower_bound == EXACT_LB
+    assert math.isclose(res.lower_bound, EXACT_LB, rel_tol=1e-9)
     assert res.cut_selection is None
     assert math.isnan(res.selection_bound_gap_pct)

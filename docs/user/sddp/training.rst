@@ -26,7 +26,7 @@ The lower bound usually plateaus well before the cap, so ``rel_tol`` and
 ``patience`` add a stopping rule: training stops once the bound improves by less
 than ``rel_tol`` (relative) for ``patience`` consecutive iterations, reporting
 ``stop_reason == "converged"``. On ClearLake, ``rel_tol=1e-3, patience=3`` stops
-after 8 of the 20 allowed iterations. Leaving ``rel_tol=None`` (the default)
+after 6 of the 20 allowed iterations. Leaving ``rel_tol=None`` (the default)
 disables early stopping and runs all ``n_iter``.
 
 To train a risk-averse policy, pass ``risk=``; see :doc:`risk`.

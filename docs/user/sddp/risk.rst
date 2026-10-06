@@ -56,7 +56,7 @@ The risk-adjusted bound
 
 A risk-averse policy guards against the tail, so it costs more on average, and
 the lower bound reflects a different objective. Training ClearLake under CVaR
-raises the bound well above the risk-neutral 112.30:
+raises the bound well above the risk-neutral 70.31:
 
 .. list-table::
    :header-rows: 1
@@ -64,11 +64,11 @@ raises the bound well above the risk-neutral 112.30:
    * - ``risk``
      - lower bound
    * - ``None`` (risk-neutral)
-     - 112.30
+     - 70.31
    * - ``CVaR(tail=0.25, weight=0.5)``
-     - 399.17
+     - 501.77
    * - ``CVaR(tail=0.25, weight=1.0)``
-     - 916.67
+     - 1375.00
 
 The summary marks the bound as risk-adjusted, because it now bounds the risk
 measure rather than the expected cost:
@@ -77,7 +77,7 @@ measure rather than the expected cost:
 
    ========================================================================
      Risk measure         : CVaR(tail=0.25, weight=1.0)
-     Lower bound (risk-adj.):    9.166667E+2
+     Lower bound (risk-adj.):    1.375000E+3
      Iterations run       :             40
      Stop reason          :       max_iter
    ========================================================================

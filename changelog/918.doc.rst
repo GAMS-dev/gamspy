@@ -1,0 +1,1 @@
+Fix swapped wet and dry season inflow data in the ClearLake SDDP example and update the worked examples that the documentation derives from it.

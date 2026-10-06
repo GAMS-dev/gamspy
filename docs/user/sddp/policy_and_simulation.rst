@@ -23,7 +23,7 @@ and the realised noise.
    decision = sddp.policy(stage="mar", state=150, noise=350, report=[R, L, Z, F])
 
    decision.decisions          # {'R': 200.0, 'L': 250.0, 'Z': 0.0, 'F': 50.0}
-   decision.approx_cost_to_go  # 625.0
+   decision.approx_cost_to_go  # 875.0
 
 The returned ``PolicyResult`` carries the queried ``stage``, the
 ``incoming_state`` and ``noise``, the optimal ``decisions`` for the reported
