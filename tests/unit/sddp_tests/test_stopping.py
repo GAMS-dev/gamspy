@@ -6,14 +6,14 @@ import pytest
 
 pytestmark = pytest.mark.requires_license
 
-EXACT_LB = 112.3046875
+EXACT_LB = 70.3125
 
 
 def test_disabled_runs_all_iterations(clearlake_built):
     result = clearlake_built.sddp.train(n_iter=10)
     assert result.stop_reason == "max_iter"
     assert result.iterations_run == 10
-    assert result.lower_bound == EXACT_LB
+    assert math.isclose(result.lower_bound, EXACT_LB, rel_tol=1e-9)
 
 
 def test_converges_before_cap(clearlake_built):

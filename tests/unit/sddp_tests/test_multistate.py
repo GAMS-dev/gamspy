@@ -12,15 +12,15 @@ from gamspy.exceptions import ValidationError
 from gamspy.formulations.sddp import SDDP, CVaR
 
 # Two independent identical ClearLake reservoirs sharing one noise. The problem
-# decomposes, so the risk-neutral lower bound is exactly 2 x 112.3046875.
-EXACT_2X = 224.609375
+# decomposes, so the risk-neutral lower bound is exactly 2 x 70.3125.
+EXACT_2X = 140.625
 
 SCENARIOS = np.array(
     [
-        [50.0, 150.0, 350.0],
-        [50.0, 150.0, 350.0],
-        [-50.0, 100.0, 250.0],
-        [-50.0, 100.0, 250.0],
+        [-50.0, 100.0, 250.0],  # jan
+        [-50.0, 100.0, 250.0],  # feb
+        [50.0, 150.0, 350.0],  # mar
+        [50.0, 150.0, 350.0],  # apr
     ]
 )
 PROBABILITIES = [0.25, 0.5, 0.25]

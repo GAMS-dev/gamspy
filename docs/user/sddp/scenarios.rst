@@ -19,10 +19,10 @@ Describing the noise
 .. code-block:: python
 
    scenario_data = np.array([
-       [ 50.0, 150.0, 350.0],   # jan
-       [ 50.0, 150.0, 350.0],   # feb
-       [-50.0, 100.0, 250.0],   # mar
-       [-50.0, 100.0, 250.0],   # apr
+       [-50.0, 100.0, 250.0],   # jan
+       [-50.0, 100.0, 250.0],   # feb
+       [ 50.0, 150.0, 350.0],   # mar
+       [ 50.0, 150.0, 350.0],   # apr
    ])
 
    sddp.set_noise(parameter=precip, scenario_data=scenario_data)

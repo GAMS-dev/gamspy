@@ -11,16 +11,15 @@ import gamspy as gp
 from gamspy import Container
 from gamspy.formulations.sddp import SDDP
 
-# ClearLake 4-stage reservoir - the canonical SDDP regression problem. With
-# probabilities [0.25, 0.5, 0.25] the deterministic lower bound is exactly
-# 112.3046875 (== 28750 / 256, so it round-trips through float bit-for-bit).
-EXACT_LB = 112.3046875
+# ClearLake 4-stage reservoir - the canonical SDDP regression problem. The
+# deterministic lower bound is exactly 70.3125
+EXACT_LB = 70.3125
 SCENARIOS = np.array(
     [
-        [50.0, 150.0, 350.0],
-        [50.0, 150.0, 350.0],
-        [-50.0, 100.0, 250.0],
-        [-50.0, 100.0, 250.0],
+        [-50.0, 100.0, 250.0],  # jan
+        [-50.0, 100.0, 250.0],  # feb
+        [50.0, 150.0, 350.0],  # mar
+        [50.0, 150.0, 350.0],  # apr
     ]
 )
 PROBABILITIES = [0.25, 0.5, 0.25]
