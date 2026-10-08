@@ -345,6 +345,24 @@ def test_set_from_empty_iterable(container):
     assert s.toList() == []
 
 
+@pytest.mark.parametrize(
+    ("element_text", "expected"),
+    [
+        (pd.Series(["x", ""], dtype=str), ["x", ""]),
+        (pd.Series(["x", np.nan], dtype=str), ["x", ""]),
+        (pd.Series(["x", None], dtype="string"), ["x", ""]),
+        (pd.Series(["x", 1], dtype=object), ["x", "1"]),
+    ],
+    ids=["clean_str", "str_with_nan", "string_with_na", "object_with_non_str"],
+)
+def test_set_element_text_is_normalized(container, element_text, expected):
+    s = Set(container, "s")
+    s.setRecords(pd.DataFrame({"uni": ["a", "b"], "element_text": element_text}))
+
+    assert s.records["element_text"].tolist() == expected
+    assert s.records["element_text"].dtype == pd.Series(dtype=str).dtype
+
+
 def test_set_dimensionality_mismatch(container):
     i = Set(container, "i", records=["a"])
 
