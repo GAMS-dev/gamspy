@@ -15,7 +15,7 @@ leg-performance:
     - conda activate performance
     - conda install -y -c conda-forge cyipopt
     - uv pip install . --group test --group doc --group dev
-    - uv pip install highsbox llvmlite tccbox psutil pyoptinterface
+    - uv pip install highsbox highspy llvmlite tccbox psutil pyoptinterface linopy
     - gamspy install license $PERFORMANCE_LICENSE
     - echo $GAMS_LICENSE > $(python -m gamspy show base)/gamslice.txt
     - gamspy install solver -a --use-uv

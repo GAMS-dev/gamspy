@@ -31,6 +31,8 @@ if TYPE_CHECKING:
         VarEquRecordsType,
     )
 
+_STR_DTYPE = pd.Series(dtype=str).dtype
+
 
 class BaseIngestor:
     """Base strategy for ingesting records into GAMSPy symbols."""
@@ -385,9 +387,16 @@ class SetIngestor(BaseIngestor):
             + self.symbol._attributes
         )
 
-        records.isetitem(-1, records.iloc[:, -1].astype(object))
-        records.iloc[records.iloc[:, -1].isna(), -1] = ""
-        records.isetitem(-1, records.iloc[:, -1].astype(str))
+        # Skip the costly round trip when the column is already a NaN-free str column.
+        element_text = records.iloc[:, -1]
+        if not (
+            isinstance(element_text.dtype, pd.StringDtype)
+            and element_text.dtype == _STR_DTYPE
+            and not element_text.hasnans
+        ):
+            records.isetitem(-1, element_text.astype(object))
+            records.iloc[records.iloc[:, -1].isna(), -1] = ""
+            records.isetitem(-1, records.iloc[:, -1].astype(str))
 
         self.symbol.records = records
 
