@@ -40,7 +40,8 @@ def get_keys_and_values(
     if dim == 0:
         arrvals = records.to_numpy(dtype=np.float64)
     elif isinstance(symobj, (Set, Parameter)):
-        arrvals = np.asarray(records.iloc[:, -1].array).reshape((-1, 1))
+        # The GDX writer doesn't work well with strides
+        arrvals = np.ascontiguousarray(records.iloc[:, -1].array).reshape((-1, 1))
     else:
         num_attr = len(symobj._attributes)
         arrvals = np.empty((nrecs, num_attr), dtype=np.float64, order="F")
