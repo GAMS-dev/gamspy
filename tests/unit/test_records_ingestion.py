@@ -680,3 +680,25 @@ def test_container_getUELs_with_colliding_domain_name(container):
     Parameter(container, "p", domain=[value], records=[("a", 1.0), ("b", 2.0)])
 
     assert container._getUELs() == ["a", "b"]
+
+
+@pytest.mark.parametrize("assign", ["setRecords", "records"])
+def test_records_sliced_from_variable_reach_gams_intact(container, assign):
+    # Each attribute column of loaded variable records is a strided view into one
+    # 2D block; the values sent to GAMS must still be the ones of that column.
+    t = Set(container, "t", records=["a", "b", "c"])
+    v = Variable(container, "v", domain=t)
+    v.lo[t] = 5
+    v.up[t] = 9
+    records = v.records[["t", "lower"]].rename(columns={"lower": "value"})
+
+    p = Parameter(container, "p", domain=t)
+    if assign == "setRecords":
+        p.setRecords(records)
+    else:
+        p.records = records
+
+    q = Parameter(container, "q", domain=t)
+    q[t] = p[t]
+
+    assert q.toList() == [("a", 5.0), ("b", 5.0), ("c", 5.0)]

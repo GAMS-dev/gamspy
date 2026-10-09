@@ -1,0 +1,1 @@
+Fix wrong values being sent to GAMS when the records of a parameter are a column sliced from the records of a variable or equation.
