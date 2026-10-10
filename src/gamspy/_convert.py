@@ -6,6 +6,7 @@ import subprocess
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
+import gamspy._algebra.expression as expression
 import gamspy._symbols as syms
 import gamspy.utils as utils
 from gamspy._options import (
@@ -355,7 +356,7 @@ def get_convert_solver_options(
 def get_symbols(model) -> list[str]:
     all_symbols = []
     for equation in model.equations:
-        symbols = equation._definition._find_all_symbols()
+        symbols = expression.find_symbols(equation._definition)
 
         for symbol in symbols:
             if symbol not in all_symbols:
@@ -363,7 +364,7 @@ def get_symbols(model) -> list[str]:
 
     if model._matches:
         for equation in model._matches:
-            symbols = equation._definition._find_all_symbols()
+            symbols = expression.find_symbols(equation._definition)
             for symbol in symbols:
                 if symbol not in all_symbols:
                     all_symbols.append(symbol)

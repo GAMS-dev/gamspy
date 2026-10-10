@@ -22,7 +22,12 @@ from gamspy import (
     Sum,
     Variable,
 )
-from gamspy._algebra.expression import Expression, SetExpression, ShiftExpression
+from gamspy._algebra.expression import (
+    Expression,
+    SetExpression,
+    ShiftExpression,
+    find_symbols,
+)
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
@@ -488,7 +493,7 @@ def test_lag_and_lead_domain():
         b[t] = a[u.lag(1)]
 
     # Both the shifted set and the symbols of the jump are discovered.
-    assert sorted(set((a[t.lag(p[t])] * 2)._find_all_symbols())) == ["a", "p", "t"]
+    assert sorted(set(find_symbols(a[t.lag(p[t])] * 2))) == ["a", "p", "t"]
 
 
 def test_lag_and_lead_latex():

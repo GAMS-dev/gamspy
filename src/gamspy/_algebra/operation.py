@@ -294,13 +294,6 @@ class Operation(operable.Operable):
     def __hash__(self):
         return id(self)
 
-    def _replace_operations(self, output: str) -> str:
-        output = output.replace("=l=", "<=")
-        output = output.replace("=g=", ">=")
-        output = output.replace("=e=", "eq")
-
-        return output
-
     def gamsRepr(self) -> str:
         """
         Representation of this operation in GAMS.
@@ -337,13 +330,11 @@ class Operation(operable.Operable):
         expression_str = (
             str(self.rhs)
             if isinstance(self.rhs, (bool, float, int, str))
-            else self.rhs.gamsRepr()
+            else expression.get_logical_gams_repr(self.rhs)
         )
 
         output += expression_str
         output += ")"
-
-        output = self._replace_operations(output)
 
         return output
 

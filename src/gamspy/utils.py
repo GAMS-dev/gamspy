@@ -640,13 +640,6 @@ def _quote_path(path: str | os.PathLike[str]) -> str:
     return f'"{os.path.abspath(path)}"'
 
 
-def _replace_equality_signs(string: str) -> str:
-    string = string.replace("=l=", "<=")
-    string = string.replace("=e=", "eq")
-    string = string.replace("=g=", ">=")
-    return string
-
-
 def _to_list(obj: IndexType) -> list:
     """Converts the given object to a list"""
     if type(obj) is tuple:

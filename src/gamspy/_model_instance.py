@@ -56,6 +56,7 @@ from gams.core.gmo import (
 )
 
 import gamspy as gp
+import gamspy._algebra.expression as expression
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
@@ -658,7 +659,9 @@ class ModelInstance:
         symbols_in_conditions: list[str] = []
         for equation in self.model.equations:
             assert equation._definition is not None
-            symbols_in_conditions += equation._definition._find_symbols_in_conditions()
+            symbols_in_conditions += expression.find_symbols_in_conditions(
+                equation._definition
+            )
 
         will_be_modified: list[Parameter | ImplicitParameter] = []
         for symbol in modifiables:

@@ -117,7 +117,7 @@ def test_map_special_values(set_options):
     m = gp.Container()
     a = gp.Parameter(m, "a")
     a[...] = gp.SpecialValues.EPS
-    assert a.getAssignment() == "a = -0.0;"
+    assert a.getAssignment() == "a = (-0.0);"
 
 
 @pytest.mark.doc
