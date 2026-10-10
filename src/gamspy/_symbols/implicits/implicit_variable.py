@@ -207,18 +207,9 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         [Set(name='i', domain=['*']), Set(name='j', domain=['*'])]
 
         """
-        from gamspy.math.matrix import permute
+        from gamspy.math.matrix import _transpose
 
-        dims = list(range(len(self.domain)))
-        if len(dims) < 2:
-            raise ValidationError(
-                "Variable must contain at least 2 dimensions to transpose"
-            )
-
-        x = dims[-1]
-        dims[-1] = dims[-2]
-        dims[-2] = x
-        return permute(self, dims)  # ty: ignore[invalid-return-type]
+        return _transpose(self, "Variable")  # ty: ignore[invalid-return-type]
 
     @property
     def records(self) -> pd.DataFrame | None:

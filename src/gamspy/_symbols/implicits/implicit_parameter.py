@@ -14,8 +14,7 @@ from gamspy._internals import DataSource
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy._symbols.implicits.implicit_variable import ImplicitVariable
 from gamspy._universe import UNIVERSE
-from gamspy.exceptions import ValidationError
-from gamspy.math.matrix import permute
+from gamspy.math.matrix import _transpose
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -403,16 +402,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         [Set(name='i', domain=['*']), Set(name='j', domain=['*'])]
 
         """
-        dims = list(range(len(self.domain)))
-        if len(dims) < 2:
-            raise ValidationError(
-                "Parameter must contain at least 2 dimensions to transpose"
-            )
-
-        x = dims[-1]
-        dims[-1] = dims[-2]
-        dims[-2] = x
-        return permute(self, dims)  # ty: ignore[invalid-return-type]
+        return _transpose(self, "Parameter")  # ty: ignore[invalid-return-type]
 
     def gamsRepr(self) -> str:
         """Representation of the parameter in GAMS syntax.

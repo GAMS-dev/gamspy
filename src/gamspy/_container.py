@@ -249,7 +249,7 @@ class Container:
 
         self._data: CasePreservingDict[SymbolType] = CasePreservingDict()
 
-        self._options = validation.validate_global_options(options)
+        self._options = validation.validate_global_options(options).model_copy()
         if self._options.license is not None:
             self._license_path = self._options.license
         else:
@@ -289,15 +289,14 @@ class Container:
                 if load_from.endswith(".gdx"):
                     self.loadRecordsFromGdx(load_from)
                 elif load_from.endswith(".g00"):
-                    self._options._set_extra_options(
+                    with self._options._temporary_extra_options(
                         {
                             "restart": load_from,
                             "gdx": self._gdx_out,
                             "gdxSymbols": "allNoData",
                         }
-                    )
-                    self._synch_with_gams()
-                    self._options._set_extra_options({})
+                    ):
+                        self._synch_with_gams()
                     symbol_names = gdxio._get_symbol_names_from_gdx(
                         self.system_directory, self._gdx_out
                     )
@@ -2203,14 +2202,17 @@ $endIf
         self._add_statement(gams_code)
 
         gdx_out = self._gdx_out
-        self._options._set_extra_options(
+        with self._options._temporary_extra_options(
             {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
-        )
+        ):
+            self._synch_with_gams()
+            symbol_names = gdxio._get_symbol_names_from_gdx(
+                self.system_directory, gdx_out
+            )
+            gdxio.load_missing_symbols(
+                self, gdx_out, symbol_names, declare_in_gams=False
+            )
 
-        self._synch_with_gams()
-        symbol_names = gdxio._get_symbol_names_from_gdx(self.system_directory, gdx_out)
-        gdxio.load_missing_symbols(self, gdx_out, symbol_names, declare_in_gams=False)
-        self._options._set_extra_options({})
         self._should_load_from(symbol_names, source=DataSource.GAMS)
 
         # Unfortunately MPSGE requires a dirty trick
@@ -2256,9 +2258,8 @@ $endIf
             )
 
         save_file = self._job + ".g00"
-        self._options._set_extra_options({"save": save_file})
-        self._synch_with_gams()
-        self._options._set_extra_options({})
+        with self._options._temporary_extra_options({"save": save_file}):
+            self._synch_with_gams()
 
         self._execution_engine.stop()
         self._restart_from = save_file
@@ -2763,9 +2764,8 @@ $endIf
             )
 
         save_file_path = os.path.join(working_directory, "save.g00")
-        self._options._set_extra_options({"save": save_file_path})
-        self._synch_with_gams()
-        self._options._set_extra_options({})
+        with self._options._temporary_extra_options({"save": save_file_path}):
+            self._synch_with_gams()
 
         m = Container(load_from=save_file_path, working_directory=working_directory)
 
