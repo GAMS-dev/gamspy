@@ -527,6 +527,21 @@ TABLE_HEADER = """\\begin{tabularx}{\\textwidth}{| l | l | X |}
 
 TABLE_FOOTER = "\\hline\n\\end{tabularx}"
 
+LATEX_TEXT_ESCAPES = str.maketrans(
+    {
+        "\\": r"\textbackslash{}",
+        "&": r"\&",
+        "%": r"\%",
+        "$": r"\$",
+        "#": r"\#",
+        "_": r"\_",
+        "{": r"\{",
+        "}": r"\}",
+        "~": r"\textasciitilde{}",
+        "^": r"\textasciicircum{}",
+    }
+)
+
 
 class LatexConverter:
     def __init__(self, model: Model, path: Path, rename: dict[str, str] | None) -> None:
@@ -551,15 +566,12 @@ class LatexConverter:
 
         self.symbols = sorted(symbols, key=list(self.container._data.keys()).index)
 
-        if rename is not None:
-            for name, latex_name in rename.items():
-                try:
-                    symbol = self.container._data[name]
-                    symbol._latex_name = latex_name
-                except KeyError as e:
-                    raise KeyError(
-                        f"`{name}` does not exist in the Container. You can only rename symbols that already exist in the container."
-                    ) from e
+        self.rename = {} if rename is None else rename
+        for name in self.rename:
+            if name not in self.container._data:
+                raise KeyError(
+                    f"`{name}` does not exist in the Container. You can only rename symbols that already exist in the container."
+                )
 
         self.header = self.get_header()
         self.set_header = "\\subsection*{Sets}"
@@ -571,6 +583,31 @@ class LatexConverter:
         self.tex_path = os.path.join(path, model.name + ".tex")
 
     def convert(self) -> None:
+        # Renaming only applies to the generated file.
+        original_names = {}
+        for name, latex_name in self.rename.items():
+            symbol = self.container._data[name]
+            original_names[name] = symbol._latex_name
+            symbol._latex_name = latex_name
+
+        try:
+            latex_str = self._generate()
+        finally:
+            for name, latex_name in original_names.items():
+                self.container._data[name]._latex_name = latex_name
+
+        with open(self.tex_path, "w", encoding="utf-8") as file:  # Write the TEX file
+            file.write(latex_str)
+
+        print("=" * 80)
+        print(
+            f"LaTeX (.tex) file has been generated under {os.path.join(self.path, self.model.name + '.tex')}"
+        )
+        print("=" * 80)
+
+        self.latex_str = latex_str
+
+    def _generate(self) -> str:
         latex_strs = [self.header]
 
         # Sets
@@ -612,17 +649,7 @@ class LatexConverter:
 
         latex_strs.append(self.footer)
 
-        latex_str = "\n".join(latex_strs)
-        with open(self.tex_path, "w", encoding="utf-8") as file:  # Write the TEX file
-            file.write(latex_str)
-
-        print("=" * 80)
-        print(
-            f"LaTeX (.tex) file has been generated under {os.path.join(self.path, self.model.name + '.tex')}"
-        )
-        print("=" * 80)
-
-        self.latex_str = latex_str
+        return "\n".join(latex_strs)
 
     def to_pdf(self) -> None:
         try:
@@ -652,37 +679,62 @@ class LatexConverter:
             symbol: SymbolType = self.container._data[name]
 
             if isinstance(symbol, symbol_type):
-                summary = symbol.summary
-                domain_str = ",".join(summary["domain"])
+                domain = symbol.domain
                 if isinstance(symbol, syms.Variable) and self.model._limited_variables:
                     for elem in self.model._limited_variables:
                         if elem.name == symbol.name:
-                            domain_str = utils._get_domain_str(elem.domain, latex=True)[
-                                1:-1
-                            ]
+                            domain = elem.domain
 
-                row = f"{symbol._latex_name} & {domain_str} & {summary['description']}\\\\"
+                domain_str = utils._get_domain_str(domain, latex=True)[1:-1]
+                if domain_str:
+                    domain_str = f"${domain_str}$"
+
+                description = symbol.description.translate(LATEX_TEXT_ESCAPES)
+                row = f"${symbol._latex_name}$ & {domain_str} & {description}\\\\"
                 table.append(row)
 
         table.append(TABLE_FOOTER)
 
         return "\n".join(table)
 
+    def get_matched_variables(self) -> dict[str, list[syms.Variable]]:
+        matched_variables: dict[str, list[syms.Variable]] = {}
+        if self.model._matches is None:
+            return matched_variables
+
+        for key, value in self.model._matches.items():
+            equations = [key] if isinstance(key, syms.Equation) else key
+            variables = [value] if isinstance(value, syms.Variable) else value
+            for equation in equations:
+                matched_variables[equation.name] = list(variables)
+
+        return matched_variables
+
     def get_definitions(self) -> str:
+        matched_variables = self.get_matched_variables()
+        equations = list(self.model.equations)
+        if self.model._matches is not None:
+            for key in self.model._matches:
+                for equation in [key] if isinstance(key, syms.Equation) else key:
+                    if equation not in equations:
+                        equations.append(equation)
+
         definitions: list[str] = []
-        for equation in self.model.equations:
+        for equation in equations:
             if equation.name in self.model._autogen_symbols:
                 continue
 
             domain_str = utils._get_domain_str(equation.domain, latex=True)[1:-1]
-            header = "\\subsubsection*{" + equation._latex_name
+            header = "\\subsubsection*{$" + equation._latex_name
             if domain_str:
-                header += f"$_{{{domain_str}}}$"
-            header += "}\n"
+                header += f"_{{{domain_str}}}"
+            header += "$}\n"
 
             footer = "\n\\vspace{5pt}\n\\hrule"
-            latex_repr = f"{header}{equation.latexRepr()}{footer}"
-            definitions.append(latex_repr)
+            equation_str = equation._latex_repr(
+                matched_variables.get(equation.name, [])
+            )
+            definitions.append(f"{header}{equation_str}{footer}")
 
         return "\n".join(definitions)
 
@@ -693,48 +745,32 @@ class LatexConverter:
             if not isinstance(symbol, syms.Variable):
                 continue
 
-            constraint = "&" + symbol.latexRepr()
+            reference = symbol[...].latexRepr()
+            bounds = f"[{symbol.lo.latexRepr()}, {symbol.up.latexRepr()}]"
             if symbol.type == "binary":
-                constraint += "\\in " + r"\{0,1\}"
-                if symbol.domain:
-                    constraint += (
-                        " ~ \\forall "
-                        + utils._get_domain_str(symbol.domain, latex=True)[1:-1]
-                    )
+                constraint = reference + r" \in \{0,1\}"
             elif symbol.type == "integer":
-                constraint += "\\in \\mathbb{Z}_{+}"
-                if symbol.domain:
-                    constraint += (
-                        " ~ \\forall "
-                        + utils._get_domain_str(symbol.domain, latex=True)[1:-1]
-                    )
+                constraint = reference + r" \in \mathbb{Z}_{\geq 0}"
             elif symbol.type == "positive":
-                constraint += "\\geq 0"
-                if symbol.domain:
-                    constraint += (
-                        " ~ \\forall "
-                        + utils._get_domain_str(symbol.domain, latex=True)[1:-1]
-                    )
+                constraint = reference + r" \geq 0"
             elif symbol.type == "negative":
-                constraint += "\\leq 0"
-                if symbol.domain:
-                    constraint += (
-                        " ~ \\forall "
-                        + utils._get_domain_str(symbol.domain, latex=True)[1:-1]
-                    )
-            elif symbol.type == "sos1":
-                constraint += "SOS1"
-            elif symbol.type == "sos2":
-                constraint += "SOS2"
+                constraint = reference + r" \leq 0"
+            elif symbol.type in ("sos1", "sos2"):
+                constraint = reference + rf" \geq 0 ~ (\text{{{symbol.type.upper()}}})"
             elif symbol.type == "semicont":
-                constraint += "SemiCont"
+                constraint = reference + rf" \in \{{0\}} \cup {bounds}"
             elif symbol.type == "semiint":
-                constraint += r"\{0, 1, 2, ... \}" + " SemiInt"
+                constraint = (
+                    reference + rf" \in \{{0\}} \cup ({bounds} \cap \mathbb{{Z}})"
+                )
             else:
                 continue
 
-            constraint += "&\\\\"
-            constraints.append(constraint)
+            if symbol.domain:
+                domain_str = utils._get_domain_str(symbol.domain, latex=True)[1:-1]
+                constraint += f" ~ \\forall {domain_str}"
+
+            constraints.append(f"&{constraint}&\\\\")
 
         constraints.append(r"\end{flalign*}")
         return "\n".join(constraints)
@@ -746,7 +782,7 @@ class LatexConverter:
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{fontspec}
-\setmainfont{CMU Serif} % 1. Sets a font that knows Greek in text mode
+\IfFontExistsTF{CMU Serif}{\setmainfont{CMU Serif}}{} % 1. Sets a font that knows Greek in text mode
 \usepackage{unicode-math} % 2. Allows Greek keys to work in math mode
 \usepackage[hidelinks]{hyperref}
 \usepackage{tabularx}

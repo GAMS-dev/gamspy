@@ -351,11 +351,111 @@ def test_latex_unary_operators():
     i = gp.Set(m, "i")
     a = gp.Parameter(m, "a", domain=i)
 
-    assert (-a[i]).latexRepr() == "(-a_{i})"
+    assert (-a[i]).latexRepr() == "-a_{i}"
     assert (-a[i]).gamsRepr() == "(-a(i))"
 
-    assert (~(a[i] > 1)).latexRepr() == "not (a_{i} > 1)"
+    assert (~(a[i] > 1)).latexRepr() == r"\neg (a_{i} > 1)"
     assert (~(a[i] > 1)).gamsRepr() == "(not (a(i) > 1))"
+
+    # A negated operand keeps its parentheses wherever a binary minus would
+    assert (-a[i] + 1).latexRepr() == "-a_{i} + 1"
+    assert (1 - (-a[i])).latexRepr() == "1 - (-a_{i})"
+    assert (a[i] * -a[i]).latexRepr() == r"a_{i} \cdot (-a_{i})"
+    assert (a[i] * -1).latexRepr() == r"a_{i} \cdot (-1)"
+    assert (a[i] + -1).latexRepr() == "a_{i} + (-1)"
+    assert (-(-a[i])).latexRepr() == "-(-a_{i})"  # noqa: B002
+    assert (-(a[i] + 1)).latexRepr() == "-(a_{i} + 1)"
+
+
+def test_latex_operators():
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    a = gp.Parameter(m, "a", domain=i)
+    b = gp.Parameter(m, "b", domain=i)
+
+    assert (a[i] == b[i]).latexRepr() == "a_{i} = b_{i}"
+    assert (a[i] != b[i]).latexRepr() == r"a_{i} \neq b_{i}"
+    assert (gp.Card(i) >= 2).latexRepr() == r"\operatorname{card}(i) \geq 2"
+    assert (gp.Card(i) <= 2).latexRepr() == r"\operatorname{card}(i) \leq 2"
+
+    # The fraction bar groups its operands, so they need no parentheses
+    assert ((a[i] + 1) / (b[i] - 1)).latexRepr() == r"\frac{a_{i} + 1}{b_{i} - 1}"
+    assert (a[i] * (a[i] / b[i])).latexRepr() == r"a_{i} \cdot \frac{a_{i}}{b_{i}}"
+    assert (a[i] / (a[i] / b[i])).latexRepr() == r"\frac{a_{i}}{\frac{a_{i}}{b_{i}}}"
+
+
+def test_latex_numbers():
+    m = gp.Container()
+    a = gp.Parameter(m, "a")
+
+    assert (a * 1.5e-7).latexRepr() == r"a \cdot (1.5 \cdot 10^{-7})"
+    assert (1.5e-7 * a).latexRepr() == r"1.5 \cdot 10^{-7} \cdot a"
+    assert (a * 1e20).latexRepr() == r"a \cdot 10^{20}"
+    assert (a + gp.SpecialValues.POSINF).latexRepr() == r"a + \infty"
+    assert (a + gp.SpecialValues.NEGINF).latexRepr() == r"a + (-\infty)"
+    assert (a + gp.SpecialValues.EPS).latexRepr() == r"a + \text{EPS}"
+    assert (a + gp.SpecialValues.NA).latexRepr() == r"a + \text{NA}"
+    assert gp.Number(-2).latexRepr() == "-2"
+
+
+def test_latex_operations():
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    a = gp.Parameter(m, "a", domain=i)
+    b = gp.Parameter(m, "b", domain=i)
+    p = gp.Parameter(m, "p")
+
+    # The body of a big operator is parenthesized if it contains + or -
+    assert gp.Sum(i, a[i] + b[i]).latexRepr() == r"\sum_{i} (a_{i} + b_{i})"
+    assert gp.Sum(i, a[i] * b[i]).latexRepr() == r"\sum_{i} a_{i} \cdot b_{i}"
+    assert (p * gp.Sum(i, a[i] + b[i])).latexRepr() == (
+        r"p \cdot \sum_{i} (a_{i} + b_{i})"
+    )
+
+    # The scope of a big operator extends to the right
+    assert (gp.Sum(i, a[i]) * p).latexRepr() == r"(\sum_{i} a_{i}) \cdot p"
+    assert (gp.Sum(i, a[i]) + p).latexRepr() == r"\sum_{i} a_{i} + p"
+    assert (p * gp.Sum(i, a[i]) * p).latexRepr() == (
+        r"(p \cdot \sum_{i} a_{i}) \cdot p"
+    )
+
+    assert gp.Product(i, a[i]).latexRepr() == r"\prod_{i} a_{i}"
+    assert gp.Smax(i, a[i]).latexRepr() == r"\max_{i} a_{i}"
+    assert gp.Smin(i, a[i]).latexRepr() == r"\min_{i} a_{i}"
+    assert gp.Sand(i, a[i] > 0).latexRepr() == r"\bigwedge_{i} (a_{i} > 0)"
+    assert gp.Sor(i, a[i] > 0).latexRepr() == r"\bigvee_{i} (a_{i} > 0)"
+
+    # A condition applies to its whole operand
+    assert (a[i] + 1).where[b[i] > 0].latexRepr() == r"(a_{i} + 1) ~ | ~ b_{i} > 0"
+    assert gp.Sum(i, a[i].where[b[i]]).latexRepr() == r"\sum_{i} (a_{i} ~ | ~ b_{i})"
+
+
+def test_latex_math_functions():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i_1"])
+    a = gp.Parameter(m, "a", domain=i)
+    x = gp.Variable(m, "x", domain=i)
+
+    assert (x[i] ** 2).latexRepr() == "x_{i}^{2}"
+    assert ((x[i] + 1) ** 2).latexRepr() == "(x_{i} + 1)^{2}"
+    assert ((-x[i]) ** 2).latexRepr() == "(-x_{i})^{2}"
+    assert ((x[i] ** 2) ** 3).latexRepr() == "(x_{i}^{2})^{3}"
+    assert (x[i] ** a[i]).latexRepr() == "x_{i}^{a_{i}}"
+    assert (2 ** x[i]).latexRepr() == "2^{x_{i}}"
+    assert gp.math.sqr(x[i] - 1).latexRepr() == "(x_{i} - 1)^{2}"
+    assert (x.l[i] ** 2).latexRepr() == r"({x}^{\mathrm{l}}_{i})^{2}"
+    assert gp.math.sqrt(x[i] + 1).latexRepr() == r"\sqrt{x_{i} + 1}"
+    assert gp.math.abs(x[i]).latexRepr() == r"\lvert x_{i} \rvert"
+    assert gp.math.floor(a[i]).latexRepr() == r"\lfloor a_{i} \rfloor"
+    assert gp.math.ceil(a[i]).latexRepr() == r"\lceil a_{i} \rceil"
+    assert gp.math.exp(x[i]).latexRepr() == r"\exp(x_{i})"
+    assert gp.math.log(x[i]).latexRepr() == r"\ln(x_{i})"
+    assert gp.math.log10(x[i]).latexRepr() == r"\log_{10}(x_{i})"
+    assert gp.math.Max(x[i], a[i]).latexRepr() == r"\max(x_{i},a_{i})"
+    assert (a[i] % 3).latexRepr() == r"\operatorname{mod}(a_{i},3)"
+    assert gp.math.same_as(i, "i_1").latexRepr() == (
+        r"\operatorname{sameAs}(i,\text{`i\_1'})"
+    )
 
 
 def test_long_expressions_are_wrapped():

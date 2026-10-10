@@ -22,6 +22,34 @@ if TYPE_CHECKING:
     from gamspy._types import ImplicitSymbolType, OperableType, SymbolType
 
 
+# Functions that have a dedicated LaTeX command. Note that log is the natural logarithm.
+LATEX_FUNCTIONS = {
+    "exp": "\\exp",
+    "log": "\\ln",
+    "log10": "\\log_{10}",
+    "log2": "\\log_{2}",
+    "sin": "\\sin",
+    "cos": "\\cos",
+    "tan": "\\tan",
+    "sinh": "\\sinh",
+    "cosh": "\\cosh",
+    "tanh": "\\tanh",
+    "arcsin": "\\arcsin",
+    "arccos": "\\arccos",
+    "arctan": "\\arctan",
+    "max": "\\max",
+    "min": "\\min",
+}
+
+LATEX_DELIMITERS = {
+    "abs": ("\\lvert", "\\rvert"),
+    "ceil": ("\\lceil", "\\rceil"),
+    "floor": ("\\lfloor", "\\rfloor"),
+}
+
+LATEX_POWERS = ("power", "rPower", "sqr")
+
+
 class MathOp(operable.Operable):
     """
     Represents a symbolic and numerical mathematical operation.
@@ -212,7 +240,7 @@ class MathOp(operable.Operable):
         return f"{self.op_name}({operands_str})"
 
     def latexRepr(self) -> str:
-        """
+        r"""
         Representation of this MathOp in Latex.
 
         Returns
@@ -225,24 +253,35 @@ class MathOp(operable.Operable):
         >>> m = gp.Container()
         >>> a = gp.Parameter(m, "a", records=5)
         >>> print(gp.math.div(a,5).latexRepr())
-        div(a,5)
+        \operatorname{div}(a,5)
 
         """
-        op_map = {
-            "sqrt": "\\sqrt",
-            "floor": "\\floor",
-            "ceil": "\\lceil",
-            "abs": "\\lvert",
-        }
+        if self.op_name in LATEX_POWERS:
+            base, base_prec, base_open = expression.latex_operand(self.elements[0])
+            # A superscripted base (x^{2}, x^{l}, 10^{3}) would get a double superscript.
+            if base_prec < expression.LEAF_PRECEDENCE or base_open or "^" in base:
+                base = f"({base})"
+
+            exponent = (
+                "2"
+                if self.op_name == "sqr"
+                else _stringify(self.elements[1], latex=True)
+            )
+            return f"{base}^{{{exponent}}}"
 
         operands_str = ",".join(
             [_stringify(elem, latex=True) for elem in self.elements]
         )
-        if self.op_name in op_map:
-            return f"{op_map[self.op_name]}{{{operands_str}}}"
+        if self.op_name == "sqrt":
+            return f"\\sqrt{{{operands_str}}}"
+
+        if self.op_name in LATEX_DELIMITERS:
+            left, right = LATEX_DELIMITERS[self.op_name]
+            return f"{left} {operands_str} {right}"
 
         op_name = self.op_name.replace("_", r"\_")
-        return f"{op_name}({operands_str})"
+        function = LATEX_FUNCTIONS.get(self.op_name, f"\\operatorname{{{op_name}}}")
+        return f"{function}({operands_str})"
 
     def __str__(self):
         return self.gamsRepr()
@@ -372,18 +411,20 @@ def aggregate(
 def _stringify(
     x: str | int | float | SymbolType | ImplicitSymbolType, *, latex: bool = False
 ):
-    if isinstance(x, (int, float)):
-        x = utils._map_special_values(x)
-
-        return str(x)
-    elif isinstance(x, str):
+    if isinstance(x, str):
         if latex:
             x = x.replace("_", r"\_")
+            return f"\\text{{`{x}'}}"
 
         return f'"{x}"'
 
     if latex:
-        return x.latexRepr()
+        return expression.get_operand_latex_repr(x)
+
+    if isinstance(x, (int, float)):
+        x = utils._map_special_values(x)
+
+        return str(x)
 
     return x.gamsRepr()
 

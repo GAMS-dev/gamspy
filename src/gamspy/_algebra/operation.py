@@ -371,7 +371,7 @@ class Operation(operable.Operable):
         return expression.create_graph(self)
 
     def latexRepr(self) -> str:
-        """
+        r"""
         Representation of this operation in Latex.
 
         Returns
@@ -385,16 +385,17 @@ class Operation(operable.Operable):
         >>> m = gp.Container()
         >>> i = gp.Set(m, "i", records=range(3))
         >>> a = gp.Parameter(m, "a", domain=i, records=np.array([3,5,7]))
-        >>> print(gp.Sum(i, a[i]).latexRepr()) # doctest: +SKIP
+        >>> print(gp.Sum(i, a[i]).latexRepr())
+        \sum_{i} a_{i}
 
         """
         op_map = {
-            "sum": "sum",
-            "prod": "prod",
-            "smax": "max",
-            "smin": "min",
-            "sand": "sand",
-            "sor": "sor",
+            "sum": "\\sum",
+            "prod": "\\prod",
+            "smax": "\\max",
+            "smin": "\\min",
+            "sand": "\\bigwedge",
+            "sor": "\\bigvee",
         }
 
         indices = []
@@ -409,18 +410,16 @@ class Operation(operable.Operable):
         index_str = ",".join([index.latexRepr() for index in indices])
 
         if given_condition is not None:
-            condition_str = str(given_condition)
-            if hasattr(given_condition, "latexRepr"):
-                condition_str = given_condition.latexRepr()
+            condition_str = expression.get_operand_latex_repr(given_condition)
             index_str += " ~ | ~ " + condition_str
 
-        expression_str = (
-            str(self.rhs)
-            if isinstance(self.rhs, (int, float, str))
-            else self.rhs.latexRepr()
-        )
-        representation = f"\\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
-        return representation
+        expression_str, expression_prec, _ = expression.latex_operand(self.rhs)
+
+        # A big operator binds tighter than + and -: sum_i (x_i + y_i)
+        if expression_prec <= expression.PRECEDENCE["+"]:
+            expression_str = f"({expression_str})"
+
+        return f"{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
 
 
 class Sum(Operation):
@@ -843,7 +842,7 @@ class Ord(operable.Operable):
         return f"ord({self._symbol.name})"
 
     def latexRepr(self) -> str:
-        """
+        r"""
         Representation of Ord function in Latex.
 
         Returns
@@ -856,10 +855,10 @@ class Ord(operable.Operable):
         >>> m = gp.Container()
         >>> i = gp.Set(m, "i")
         >>> print(gp.Ord(i).latexRepr())
-        ord(i)
+        \operatorname{ord}(i)
 
         """
-        return f"ord({self._symbol._latex_name})"
+        return f"\\operatorname{{ord}}({self._symbol._latex_name})"
 
 
 class Card(operable.Operable):
@@ -933,7 +932,7 @@ class Card(operable.Operable):
         return f"card({self._symbol.name})"
 
     def latexRepr(self) -> str:
-        """
+        r"""
         Representation of Card function in Latex.
 
         Returns
@@ -946,7 +945,7 @@ class Card(operable.Operable):
         >>> m = gp.Container()
         >>> i = gp.Set(m, "i")
         >>> print(gp.Card(i).latexRepr())
-        card(i)
+        \operatorname{card}(i)
 
         """
-        return f"card({self._symbol._latex_name})"
+        return f"\\operatorname{{card}}({self._symbol._latex_name})"

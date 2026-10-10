@@ -29,6 +29,8 @@ from gamspy._universe import UNIVERSE, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from gamspy import Container, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
@@ -1249,6 +1251,9 @@ class Equation(VarEquSymbol):
         $
 
         """
+        return self._latex_repr()
+
+    def _latex_repr(self, matched_variables: Sequence[Variable] = ()) -> str:
         if self._definition is None:
             raise ValidationError(
                 "Equation must be defined to get its latex representation."
@@ -1256,42 +1261,54 @@ class Equation(VarEquSymbol):
 
         # The LHS of an equation definition can either be an ImplicitEquation or a condition.
         # e.g. e[i] = ... or e[i].where[b[i]] = ...
-        assert isinstance(
-            self._definition.left,
-            (implicits.ImplicitEquation, condition.Condition),
-        )
+        left = self._definition.left
+        assert isinstance(left, (implicits.ImplicitEquation, condition.Condition))
 
+        where = None
+        if isinstance(left, condition.Condition):
+            where = left.condition
+            left = left.conditioning_on
+            assert isinstance(left, implicits.ImplicitEquation)
+
+        # A literal in the definition domain restricts the declared set at that position:
+        # e[i, "j1"] = ... holds for all i where j = 'j1'
+        conditions = []
+        for position, literal in left._scalar_domains:
+            declared = utils._get_domain_str([self.domain[position]], latex=True)[1:-1]
+            literal = literal.replace("_", r"\_")
+            conditions.append(f"{declared} = \\text{{`{literal}'}}")
+
+        if where is not None:
+            where_str, where_prec, _ = expression.latex_operand(where)
+            if conditions and where_prec < expression.PRECEDENCE["and"]:
+                where_str = f"({where_str})"
+            conditions.append(where_str)
+
+        condition_str = " \\wedge ".join(conditions)
+        domain_str = utils._get_domain_str(left.domain, latex=True)[1:-1]
         right_side = ""
-        if isinstance(self._definition.left, implicits.ImplicitEquation):
-            if len(self._definition.left.domain) > 0:
-                domain_str = ",".join(
-                    [symbol.latexRepr() for symbol in self._definition.left.domain]
-                )
-                right_side = f"\\hfill \\forall {domain_str}"
-        else:
-            domain_str = ",".join(
-                [
-                    symbol.latexRepr()  # ty: ignore[unresolved-attribute]
-                    for symbol in self._definition.left.conditioning_on.domain
-                ]
-            )
-            domain_str = f"\\forall {domain_str}"
-
-            if hasattr(self._definition.left.condition, "latexRepr"):
-                constraint_str = self._definition.left.condition.latexRepr()  # ty: ignore[call-non-callable]
-            else:
-                constraint_str = str(self._definition.left.condition)
-
-            right_side = f"\\hfill {domain_str} ~ | ~ {constraint_str}"
+        if domain_str:
+            right_side = f"\\hfill \\forall {domain_str}"
+            if condition_str:
+                right_side += f" ~ | ~ {condition_str}"
+        elif condition_str:
+            right_side = f"\\hfill \\text{{if }} {condition_str}"
 
         assert self._definition.right is not None
-        definition_str = self._definition.right.latexRepr()  # ty: ignore[unresolved-attribute]
-        if definition_str[0] == "(":
-            definition_str = definition_str[1:-1]
+        definition_str = expression.get_operand_latex_repr(self._definition.right)
 
-        equation_str = "$\n" + definition_str + f"{right_side}" + "\n$"
+        if matched_variables:
+            # Variables are matched to the equation position by position.
+            positions = left._reference_domain()
+            variable_strs = [
+                variable[positions].latexRepr()
+                if positions and variable.dimension == len(positions)
+                else variable.latexRepr()
+                for variable in matched_variables
+            ]
+            definition_str += " \\perp " + ",".join(variable_strs)
 
-        return equation_str
+        return "$\n" + definition_str + right_side + "\n$"
 
     def getDeclaration(self) -> str:
         """

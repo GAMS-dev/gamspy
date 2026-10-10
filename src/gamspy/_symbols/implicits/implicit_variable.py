@@ -417,18 +417,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
 
     def gamsRepr(self) -> str:
         representation = self.name
-        domain = list(self.domain)
-        if domain and self.permutation is not None:
-            # self.permutation maps each axis to its position in the
-            # parent's declared domain, so invert it to render the
-            # reference in the parent's domain order.
-            domain = utils._permute_domain(
-                domain, utils._invert_permutation(self.permutation)
-            )
-
-        for i, d in self._scalar_domains:
-            domain.insert(i, d)
-
+        domain = self._reference_domain()
         if domain:
             representation += utils._get_domain_str(domain)
 
