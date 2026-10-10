@@ -1,17 +1,10 @@
 from __future__ import annotations
 
-import itertools
-import os
-import threading
-import weakref
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-import pandas as pd
 from gams.core.gdx import GMS_DT_PAR
 
-import gamspy as gp
-import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
@@ -25,12 +18,12 @@ from gamspy._symbols.base import RecordSymbol
 from gamspy._symbols.equals import equals_parameter
 from gamspy._symbols.generate_records import generate_records_parameter
 from gamspy._symbols.pivot import pivot_parameter
-from gamspy._universe import UNIVERSE, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    import pandas as pd
     from scipy.sparse import coo_matrix
 
     from gamspy import Alias, Card, Container, Ord, Set
@@ -99,39 +92,16 @@ class Parameter(operable.Operable, RecordSymbol):
         description: str = "",
     ) -> Parameter:
         obj = cast("Parameter", object.__new__(cls))
-
-        # legacy gtp attributes
-        ## set private properties directly
-        obj._container = cast(
-            "Container",
-            weakref.proxy(container)
-            if not isinstance(container, weakref.ProxyType)
-            else container,
-        )
-        obj.name = name
-        obj._domain = obj._normalize_domain(obj._container, domain)
-        obj._domain_forwarding = False
-        obj._description = description
-        obj._records = records
         obj._gams_type = GMS_DT_PAR
         obj._gams_subtype = 0
-        obj._container._data.update({name: obj})
-
-        # gamspy attributes
-        obj._domain_violations = None
-        obj.where = condition.Condition(obj)
-        obj._latex_name = name.replace("_", r"\_")
-        obj._container._add_statement(obj)
-        obj._metadata = {}
-        obj._assignment = None
-        obj._should_load_from = DataSource.NONE
-        obj._should_unload_to_gams = False
-
-        ## miro support
-        obj._is_miro_input = False
-        obj._is_miro_output = False
-        obj._is_miro_table = False
-        obj._is_miro_symbol = False
+        obj._init_symbol(
+            container,
+            name,
+            domain,
+            records=records,
+            description=description,
+            validate=False,
+        )
 
         return obj
 
@@ -148,35 +118,15 @@ class Parameter(operable.Operable, RecordSymbol):
         is_miro_output: bool = False,
         is_miro_table: bool = False,
     ):
-        self._metadata: dict[str, Any] = {}
-        # miro support
-        self._is_miro_input = is_miro_input
-        self._is_miro_output = is_miro_output
-        self._is_miro_table = is_miro_table
-        self._is_miro_symbol = is_miro_input or is_miro_output or is_miro_table
-        self._domain_violations = None
-
-        domain = self._normalize_domain(self.container, domain)
-        if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
-            raise ValueError(
-                "Cannot overwrite symbol in container unless symbol domains are equal"
-            )
-
-        if self._domain_forwarding != domain_forwarding:
-            raise ValueError(
-                "Cannot overwrite symbol in container unless"
-                " 'domain_forwarding' is left unchanged"
-            )
-
-        # reset some properties
-        if description != "":
-            self._description = description
-
-        self._records: pd.DataFrame | None = None
-
-        with self._miro_unprotected():
-            if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
+        self._redefine_symbol(
+            domain,
+            domain_forwarding=domain_forwarding,
+            description=description,
+            is_miro_input=is_miro_input,
+            is_miro_output=is_miro_output,
+            is_miro_table=is_miro_table,
+        )
+        self._redefine_records(records, uels_on_axes=uels_on_axes)
 
     def __init__(
         self,
@@ -191,102 +141,37 @@ class Parameter(operable.Operable, RecordSymbol):
         is_miro_output: bool = False,
         is_miro_table: bool = False,
     ):
-        self._metadata: dict[str, Any] = {}
-        if (is_miro_input or is_miro_output) and name is None:
-            raise ValidationError("Please specify a name for miro symbols.")
-
-        # miro support
-        self._is_miro_input = is_miro_input
-        self._is_miro_output = is_miro_output
-        self._is_miro_table = is_miro_table
-        self._is_miro_symbol = is_miro_input or is_miro_output or is_miro_table
-        self._domain_violations = None
-
-        if container is None:
-            try:
-                container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
-            except KeyError as e:
-                raise ValidationError("Parameter requires a container.") from e
-
-        self._container = cast("Container", weakref.proxy(container))
-
-        if name is not None:
-            name = validation.validate_name(name)
-
-            if is_miro_input or is_miro_output:
-                name = name.lower()
-        else:
-            name = self._container._get_symbol_name(prefix="p")
-
-        self.name = name
-        domain = self._normalize_domain(self.container, domain)
-        self._domain = self._validate_domain(domain)
-        self._domain_forwarding = domain_forwarding
-        self._description = description
-        self._records = None
+        container, name = self._resolve_container_and_name(
+            container,
+            name,
+            prefix="p",
+            is_miro=is_miro_input or is_miro_output,
+        )
         self._gams_type = GMS_DT_PAR
         self._gams_subtype = 0
-        self._latex_name = self.name.replace("_", r"\_")
-        self._should_load_from = DataSource.NONE
-        self._should_unload_to_gams = False
-        self._container._data.update({name: self})
+        self._init_symbol(
+            container,
+            name,
+            domain,
+            description=description,
+            domain_forwarding=domain_forwarding,
+            is_miro_input=is_miro_input,
+            is_miro_output=is_miro_output,
+            is_miro_table=is_miro_table,
+        )
+        self._init_records(records, uels_on_axes=uels_on_axes)
 
-        if is_miro_input:
-            self._already_loaded = False
-            self._container._miro_input_symbols.append(self.name)
-
-        if is_miro_output:
-            self._container._miro_output_symbols.append(self.name)
-
-        validation.validate_container(self, self._domain)
-        self.where = condition.Condition(self)
-        self._assignment: Expression | None = None
-        self._container._add_statement(self)
+    def _init_records(self, records: Any, *, uels_on_axes: bool) -> None:
+        if records is None:
+            super()._init_records(records, uels_on_axes=uels_on_axes)
+            return
 
         with self._miro_unprotected():
-            if records is not None:
-                self._setRecords(records, uels_on_axes=uels_on_axes)
-                if self.dimension == 0 and not self._is_miro_symbol:
-                    self._should_unload_to_gams = False
-                self._container._synch_with_gams()
-            elif self._is_miro_symbol:
-                # miro symbols must sync at declaration so their records are
-                # loaded from the miro input gdx.
-                self._should_unload_to_gams = True
-                self._container._synch_with_gams()
-
-    def _serialize(self) -> dict:
-        info: dict[str, Any] = {
-            "_domain_forwarding": self._domain_forwarding,
-            "_is_miro_input": self._is_miro_input,
-            "_is_miro_output": self._is_miro_output,
-            "_is_miro_table": self._is_miro_table,
-            "_metadata": self._metadata,
-        }
-        if self._assignment is not None:
-            info["_assignment"] = self._assignment.getDeclaration()
-
-        return info
-
-    def _deserialize(self, info: dict) -> None:
-        for key, value in info.items():
-            if key == "_assignment":
-                left, operator, right = expression.split_assignment(value)
-                value = expression.Expression(left, operator, right[:-1])
-
-            setattr(self, key, value)
-
-        # Relink domain symbols
-        new_domain: list = []
-        for elem in self._domain:
-            if is_universe(elem):
-                new_domain.append(UNIVERSE)
-            elif isinstance(elem, str):
-                new_domain.append(elem)
-            else:
-                new_domain.append(self._container[elem.name])
-
-        self._domain = new_domain
+            self._setRecords(records, uels_on_axes=uels_on_axes)
+            # The records of a scalar are sent to GAMS with its declaration.
+            if self.dimension == 0 and not self._is_miro_symbol:
+                self._should_unload_to_gams = False
+            self._container._synch_with_gams()
 
     def __getitem__(self, indices: IndexType) -> ImplicitParameter:
         domain = validation.validate_domain(self, indices)
@@ -314,13 +199,7 @@ class Parameter(operable.Operable, RecordSymbol):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
         rhs, operator = sparse._unwrap(rhs)
-
-        if self._is_miro_input and self._container._options.miro_protect:
-            raise ValidationError(
-                f"Cannot assign to protected miro input symbol {self.name}. `miro_protect`"
-                " attribute of the container can be set to False to allow"
-                " assigning to MIRO input symbols"
-            )
+        self._check_miro_protection()
 
         if isinstance(rhs, float):
             rhs = utils._map_special_values(rhs)
@@ -394,18 +273,9 @@ class Parameter(operable.Operable, RecordSymbol):
         'v("i1","j1")'
 
         """
-        from gamspy.math.matrix import permute
+        from gamspy.math.matrix import _transpose
 
-        dims = list(range(len(self.domain)))
-        if len(dims) < 2:
-            raise ValidationError(
-                "Parameter must contain at least 2 dimensions to transpose"
-            )
-
-        x = dims[-1]
-        dims[-1] = dims[-2]
-        dims[-2] = x
-        return permute(self, dims)  # ty: ignore[invalid-return-type]
+        return _transpose(self, "Parameter")  # ty: ignore[invalid-return-type]
 
     @property
     def _attributes(self):
@@ -744,31 +614,11 @@ class Parameter(operable.Operable, RecordSymbol):
         [('seattle', 10.0), ('san-diego', 25.0)]
 
         """
-        if self._should_load_from is not DataSource.NONE:
-            self._load_records()
-
-        return self._records
+        return self._get_records()
 
     @records.setter
     def records(self, records: pd.DataFrame | None):
-        if (
-            hasattr(self, "_is_miro_input")
-            and self._is_miro_input
-            and self._container._options.miro_protect
-        ):
-            raise ValidationError(
-                "Cannot assign to protected miro input symbols. `miro_protect`"
-                " attribute of the container can be set to False to allow"
-                " assigning to MIRO input symbols"
-            )
-
-        if records is not None and not isinstance(records, pd.DataFrame):
-            raise TypeError("Symbol 'records' must be type DataFrame")
-
-        self._records = records
-        self._should_unload_to_gams = True
-        self._should_load_from = DataSource.NONE
-        self._handle_domain_forwarding()
+        self._assign_records(records)
 
     def __hash__(self):
         return id(self)
@@ -812,26 +662,14 @@ class Parameter(operable.Operable, RecordSymbol):
         ['seattle', 'san-diego']
 
         """
-        if self._is_miro_input and self._container._options.miro_protect:
-            raise ValidationError(
-                f"Cannot assign to protected miro input symbol {self.name}. `miro_protect`"
-                " attribute of the container can be set to False to allow"
-                " assigning to MIRO input symbols"
-            )
-
-        if records is None:
-            self._container._add_statement(f"option clear={self.name};")
-            self._records = None
-        elif isinstance(records, (int, float)) and not self._is_frozen_modifiable:
+        if isinstance(records, (int, float)) and not self._is_frozen_modifiable:
+            self._check_miro_protection()
             self._container._add_statement(f"{self.name} = {records};")
             self._container._synch_with_gams()
             self._should_load_from = DataSource.GAMS
-        else:
-            self._setRecords(records, uels_on_axes=uels_on_axes)
-            if self._is_frozen_modifiable:
-                return
+            return
 
-            self._container._synch_with_gams()
+        self._update_records(records, uels_on_axes=uels_on_axes)
 
     def gamsRepr(self) -> str:
         """

@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import os
-import threading
-import weakref
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Literal
 
 import pandas as pd
 from gams.core import gdx
@@ -12,10 +10,8 @@ from gams.core.gdx import GMS_DT_ALIAS
 import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._gdx as gdxio
-import gamspy._validation as validation
 from gamspy._internals import DataSource
 from gamspy._symbols.base import BaseSymbol
-from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -65,12 +61,7 @@ class UniverseAlias(BaseSymbol):
         # legacy gtp attributes
         ## set private properties directly
 
-        obj._container = cast(
-            "Container",
-            weakref.proxy(container)
-            if not isinstance(container, weakref.ProxyType)
-            else container,
-        )
+        obj._container = obj._container_proxy(container)
         obj.name = name
 
         ## typing
@@ -93,15 +84,10 @@ class UniverseAlias(BaseSymbol):
         return
 
     def __init__(self, container: Container | None = None, name: str = "universe"):
-        self.name = validation.validate_name(name)
-
-        if container is None:
-            try:
-                container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
-            except KeyError as e:
-                raise ValidationError("UniverseAlias requires a container.") from e
-
-        self._container = cast("Container", weakref.proxy(container))
+        container, self.name = self._resolve_container_and_name(
+            container, name, prefix="u"
+        )
+        self._container = self._container_proxy(container)
 
         # gtp attributes
         self._gams_type = gdx.GMS_DT_ALIAS

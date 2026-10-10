@@ -33,11 +33,10 @@ def _synch_loop_with_gams(container: Container) -> None:
     container._models_solved_in_loop.clear()
 
     gdx_out = container._gdx_out
-    container._options._set_extra_options(
+    with container._options._temporary_extra_options(
         {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
-    )
-    container._synch_with_gams()
-    container._options._set_extra_options({})
+    ):
+        container._synch_with_gams()
     symbol_names = gdxio._get_symbol_names_from_gdx(container.system_directory, gdx_out)
     container._should_load_from(symbol_names, source=DataSource.GAMS)
 

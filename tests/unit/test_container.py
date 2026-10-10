@@ -11,6 +11,7 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
+from unittest import mock
 
 import gams.transfer as gt
 import gamspy_base
@@ -2898,3 +2899,79 @@ def test_nested_context_managers():
 
     with pytest.raises(ValidationError, match="requires a container"):
         gp.Set(name="m")
+
+
+@pytest.mark.unit
+def test_serialize_deserialized_alias(tmp_path):
+    m = Container()
+    i = Set(m, "i", records=["a", "b"])
+    j = Alias(m, "j", i)
+    j["a"] = False
+
+    first_path = os.path.join(tmp_path, "first.zip")
+    serialize(m, first_path)
+    m2 = deserialize(first_path)
+    assert m2["j"].getAssignment() == 'j("a") = no;'
+
+    # The symbols of a deserialized container are created without __init__.
+    second_path = os.path.join(tmp_path, "second.zip")
+    serialize(m2, second_path)
+    m3 = deserialize(second_path)
+    assert m3["j"].getAssignment() == 'j("a") = no;'
+    m2.close()
+    m3.close()
+
+
+@pytest.mark.unit
+def test_redefine_loaded_equation_with_definition(tmp_path):
+    m = Container()
+    i = Set(m, "i", records=["a", "b"])
+    x = Variable(m, "x", domain=i)
+    _ = Equation(m, "e", domain=i, definition=x[i] >= 0)
+    gdx_path = os.path.join(tmp_path, "data.gdx")
+    m.write(gdx_path)
+
+    # The symbols of a loaded container are created without __init__.
+    m2 = Container(load_from=gdx_path)
+    i2 = m2["i"]
+    x2 = m2["x"]
+    e2 = Equation(m2, "e", type="geq", domain=i2, definition=x2[i2] >= 1)
+    assert e2.getDefinition() == "e(i) .. x(i) =g= 1;"
+    m2.close()
+
+
+@pytest.mark.unit
+def test_failed_run_does_not_leak_extra_options():
+    m = Container()
+    with pytest.raises(GamspyException):
+        m.addGamsCode("this is not valid GAMS code;")
+
+    assert m._options._extra_options == {}
+
+
+@pytest.mark.unit
+def test_container_does_not_modify_given_options():
+    options = Options(seed=7)
+    m = Container(options=options)
+    _ = Set(m, "i", records=["i1"])  # runs GAMS, which uses up the seed
+
+    assert options.seed == 7
+    m2 = Container(options=options)
+    assert m2._options.seed == 7
+    m.close()
+    m2.close()
+
+
+@pytest.mark.unit
+def test_failed_lazy_load_is_retried(monkeypatch):
+    m = Container()
+    p = Parameter(m, "p", records=1)
+    p[...] = 2  # the records are now loaded from GAMS when they are accessed
+
+    with monkeypatch.context() as patched:
+        patched.setattr("gamspy._gdx.get_records", mock.Mock(side_effect=RuntimeError))
+        with pytest.raises(RuntimeError):
+            _ = p.records
+
+    assert p.toValue() == 2
+    m.close()

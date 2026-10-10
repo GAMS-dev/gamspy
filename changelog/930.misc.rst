@@ -1,0 +1,1 @@
+Unify the declaration, redeclaration, serialization and records handling of ``Set``, ``Parameter``, ``Variable`` and ``Equation`` in their common base class.

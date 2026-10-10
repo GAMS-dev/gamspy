@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import contextlib
 import os
 from difflib import get_close_matches
-from typing import Any, Literal, cast, get_args
+from typing import TYPE_CHECKING, Any, Literal, cast, get_args
 
 from gamspy.exceptions import ValidationError
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 OptionName = Literal[
     "GAMS_SYSDIR",
@@ -128,6 +132,16 @@ def set_options(options: dict[OptionName, Any]) -> None:
 
     for name, value in given.items():
         configuration[name] = value
+
+
+@contextlib.contextmanager
+def _temporary_options(options: dict[OptionName, Any]) -> Iterator[None]:
+    previous = {name: configuration.get(name) for name in options}
+    set_options(options)
+    try:
+        yield
+    finally:
+        set_options(cast("dict[OptionName, Any]", previous))
 
 
 def get_option(name: str) -> Any:

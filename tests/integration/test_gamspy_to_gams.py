@@ -552,6 +552,9 @@ def test_dump_gams_state(container, tmp_path):
     transport.toGams(path, dump_gams_state=True)
     assert os.path.exists(os.path.join(path, "transport.g00"))
 
+    # Later runs must not save the GAMS state again.
+    assert m._options._extra_options == {}
+
 
 def test_toGams_with_alias_as_domain(tmp_path):
     import gamspy as gp

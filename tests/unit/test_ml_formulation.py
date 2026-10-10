@@ -1152,3 +1152,20 @@ def test_gradient_boosting_with_new_constraint(data_gbt):
     assert np.allclose(feat_1.l.records["level"].to_numpy(), [2] * 5)
     assert model.status == ModelStatus(1)
     assert model.objective_value == 73.63
+
+
+def test_random_forest_restores_domain_validation_on_error(data_rf):
+    m, _, _, in_data, output, _, par_input, _ = data_rf
+
+    forest = RandomForestRegressor(n_estimators=2, random_state=42)
+    forest.fit(in_data, output)
+    rf = RandomForest(m, ensemble=forest)
+
+    previous = gp.get_option("DOMAIN_VALIDATION")
+    with (
+        mock.patch.object(m, "setRecords", side_effect=RuntimeError),
+        pytest.raises(RuntimeError),
+    ):
+        rf(par_input)
+
+    assert gp.get_option("DOMAIN_VALIDATION") == previous

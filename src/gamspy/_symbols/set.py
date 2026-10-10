@@ -1,16 +1,10 @@
 from __future__ import annotations
 
-import itertools
-import os
-import threading
-import weakref
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
 
-import pandas as pd
 from gams.core.gdx import GMS_DT_SET
 
 import gamspy as gp
-import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.sparse as sparse
@@ -23,10 +17,11 @@ from gamspy._symbols.base import DomainSymbol
 from gamspy._symbols.equals import equals_set
 from gamspy._symbols.generate_records import generate_records_set
 from gamspy._symbols.pivot import pivot_set
-from gamspy._universe import UNIVERSE, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy import Alias, Container, Parameter
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression, ShiftExpression
@@ -502,6 +497,8 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
 
     """
 
+    _default_domain: ClassVar[Literal["*"]] = "*"
+
     @classmethod
     def _constructor_bypass(
         cls,
@@ -513,42 +510,18 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         *,
         is_singleton: bool = False,
     ) -> Set:
-        # create new symbol object
         obj = cast("Set", object.__new__(cls))
-
-        # legacy gtp attributes
-        ## set private properties directly
-        obj._container = cast(
-            "Container",
-            weakref.proxy(container)
-            if not isinstance(container, weakref.ProxyType)
-            else container,
-        )
-
-        obj.name = name
-        obj._domain = obj._normalize_domain(obj._container, domain, default="*")
-        obj._domain_forwarding = False
-        obj._description = description
-        obj._records = records
         obj._is_singleton = is_singleton
         obj._gams_type = GMS_DT_SET
-        obj._gams_subtype = 1 if obj.is_singleton else 0
-        obj._container._data.update({name: obj})
-
-        ## gamspy attributes
-        obj._domain_violations = None
-        obj.where = condition.Condition(obj)
-        obj._latex_name = name.replace("_", r"\_")
-        obj._container._add_statement(obj)
-        obj._metadata = {}
-        obj._assignment = None
-        obj._should_load_from = DataSource.NONE
-        obj._should_unload_to_gams = False
-
-        # miro support
-        obj._is_miro_input = False
-        obj._is_miro_output = False
-        obj._is_miro_symbol = False
+        obj._gams_subtype = 1 if is_singleton else 0
+        obj._init_symbol(
+            container,
+            name,
+            domain,
+            records=records,
+            description=description,
+            validate=False,
+        )
 
         return obj
 
@@ -565,40 +538,20 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
     ):
-        self._metadata: dict[str, Any] = {}
-        self._is_miro_input = is_miro_input
-        self._is_miro_output = is_miro_output
-        self._is_miro_symbol = is_miro_input or is_miro_output
-        self._domain_violations = None
-
-        domain = self._normalize_domain(self.container, domain, default="*")
-        if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
-            raise ValueError(
-                "Cannot overwrite symbol in container unless symbol domains are equal"
-            )
-
         if self.is_singleton != is_singleton:
             raise ValueError(
                 "Cannot overwrite symbol in container unless"
                 " 'is_singleton' is left unchanged"
             )
 
-        if self._domain_forwarding != domain_forwarding:
-            raise ValueError(
-                "Cannot overwrite symbol in container unless"
-                " 'domain_forwarding' is left unchanged"
-            )
-
-        # reset some properties
-        if description != "":
-            self._description = description
-
-        self._records: pd.DataFrame | None = None
-
-        # only set records if records are provided
-        with self._miro_unprotected():
-            if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
+        self._redefine_symbol(
+            domain,
+            domain_forwarding=domain_forwarding,
+            description=description,
+            is_miro_input=is_miro_input,
+            is_miro_output=is_miro_output,
+        )
+        self._redefine_records(records, uels_on_axes=uels_on_axes)
 
     def __init__(
         self,
@@ -613,99 +566,30 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
     ):
-        self._metadata: dict[str, Any] = {}
-        if (is_miro_input or is_miro_output) and name is None:
-            raise ValidationError("Please specify a name for miro symbols.")
-
-        self._is_miro_input = is_miro_input
-        self._is_miro_output = is_miro_output
-        self._is_miro_symbol = is_miro_input or is_miro_output
-        self._domain_violations = None
-
-        if container is None:
-            try:
-                container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
-            except KeyError as e:
-                raise ValidationError("Set requires a container.") from e
-
-        self._container = cast("Container", weakref.proxy(container))
-
-        self._assignment: Expression | None = None
-
-        if name is not None:
-            name = validation.validate_name(name)
-            if is_miro_input or is_miro_output:
-                name = name.lower()
-        else:
-            name = container._get_symbol_name(prefix="s")
-
-        self.name = name
-        domain = self._normalize_domain(self.container, domain, default="*")
-        self._domain = self._validate_domain(domain)
-        self._singleton_check(is_singleton, records, domain)
+        container, name = self._resolve_container_and_name(
+            container,
+            name,
+            prefix="s",
+            is_miro=is_miro_input or is_miro_output,
+        )
+        self._singleton_check(
+            is_singleton,
+            records,
+            self._normalize_domain(container, domain, default=self._default_domain),
+        )
         self._is_singleton = is_singleton
-        self._domain_forwarding = domain_forwarding
-        self._description = description
-        self._records = None
         self._gams_type = GMS_DT_SET
-        self._gams_subtype = 1 if self._is_singleton else 0
-        self.where = condition.Condition(self)
-        self._latex_name = self.name.replace("_", r"\_")
-        self._should_load_from = DataSource.NONE
-        self._should_unload_to_gams = False
-        self._container._data.update({name: self})
-
-        if is_miro_input:
-            self._already_loaded = False
-            self._container._miro_input_symbols.append(self.name)
-
-        if is_miro_output:
-            self._container._miro_output_symbols.append(self.name)
-
-        validation.validate_container(self, self._domain)
-        self._container._add_statement(self)
-
-        with self._miro_unprotected():
-            if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
-            elif self._is_miro_symbol:
-                # miro symbols must sync at declaration so their records are
-                # loaded from the miro input gdx.
-                self._should_unload_to_gams = True
-                self._container._synch_with_gams()
-
-    def _serialize(self) -> dict:
-        info: dict[str, Any] = {
-            "_domain_forwarding": self._domain_forwarding,
-            "_is_miro_input": self._is_miro_input,
-            "_is_miro_output": self._is_miro_output,
-            "_metadata": self._metadata,
-        }
-        if self._assignment is not None:
-            info["_assignment"] = self._assignment.getDeclaration()
-
-        return info
-
-    def _deserialize(self, info: dict) -> None:
-        # Set attributes
-        for key, value in info.items():
-            if key == "_assignment":
-                left, operator, right = expression.split_assignment(value)
-                value = expression.Expression(left, operator, right[:-1])
-
-            setattr(self, key, value)
-
-        # Relink domain symbols
-        new_domain: list = []
-        for elem in self._domain:
-            if is_universe(elem):
-                new_domain.append(UNIVERSE)
-            elif isinstance(elem, str):
-                new_domain.append(elem)
-            else:
-                new_domain.append(self._container[elem.name])
-
-        self._domain = new_domain
+        self._gams_subtype = 1 if is_singleton else 0
+        self._init_symbol(
+            container,
+            name,
+            domain,
+            description=description,
+            domain_forwarding=domain_forwarding,
+            is_miro_input=is_miro_input,
+            is_miro_output=is_miro_output,
+        )
+        self._init_records(records, uels_on_axes=uels_on_axes)
 
     def __getitem__(self, indices: IndexType) -> ImplicitSet:
         domain = validation.validate_domain(self, indices)
@@ -739,6 +623,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
         rhs, operator = sparse._unwrap(rhs)
+        self._check_miro_protection()
 
         if isinstance(rhs, bool):
             rhs = "yes" if rhs is True else "no"
@@ -949,33 +834,11 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         [['seattle', ''], ['san-diego', '']]
 
         """
-        if self._should_load_from is not DataSource.NONE:
-            self._load_records()
-
-        return self._records
+        return self._get_records()
 
     @records.setter
     def records(self, records: pd.DataFrame | None):
-        if (
-            hasattr(self, "_is_miro_input")
-            and self._is_miro_input
-            and self._container._options.miro_protect
-        ):
-            raise ValidationError(
-                "Cannot assign to protected miro input symbols. `miro_protect`"
-                " attribute of the container can be set to False to allow"
-                " assigning to MIRO input symbols"
-            )
-
-        if records is not None and not isinstance(records, pd.DataFrame):
-            raise TypeError("Symbol 'records' must be type DataFrame")
-
-        self._records = records
-        self._should_unload_to_gams = True
-        # Records assigned from Python are the up to date ones, so a pending
-        # read (e.g. from an earlier assignment in GAMS) must not overwrite them.
-        self._should_load_from = DataSource.NONE
-        self._handle_domain_forwarding()
+        self._assign_records(records)
 
     def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
         SetIngestor(self).ingest(records, uels_on_axes=uels_on_axes)
@@ -1014,13 +877,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         [['seattle', ''], ['san-diego', '']]
 
         """
-        if records is None:
-            self._container._add_statement(f"option clear={self.name};")
-            self._records = None
-            return
-
-        self._setRecords(records, uels_on_axes=uels_on_axes)
-        self._container._synch_with_gams()
+        self._update_records(records, uels_on_axes=uels_on_axes)
 
     def gamsRepr(self) -> str:
         """

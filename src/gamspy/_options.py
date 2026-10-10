@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import os
 import shutil
 from pathlib import Path
@@ -13,7 +14,7 @@ from gamspy._config import get_option
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
     from types import FrameType
 
     from gamspy._container import Container
@@ -642,6 +643,15 @@ class Options(BaseModel):
     def _set_extra_options(self, options: dict) -> None:
         """Set extra options"""
         self._extra_options = options
+
+    @contextlib.contextmanager
+    def _temporary_extra_options(self, options: dict) -> Iterator[None]:
+        previous = self._extra_options
+        self._extra_options = options
+        try:
+            yield
+        finally:
+            self._extra_options = previous
 
     def export(self, pf_file: str) -> None:
         """

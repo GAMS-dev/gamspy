@@ -896,6 +896,9 @@ def test_miro_protect(container):
     with pytest.raises(ValidationError):
         i.setRecords(["i1", "i2"])
 
+    with pytest.raises(ValidationError):
+        i["i1"] = True
+
     f = Parameter(
         m,
         name="f",
