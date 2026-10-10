@@ -658,6 +658,12 @@ def _map_special_values(value: float):
     if SpecialValues.isEps(value):
         return "EPS"
 
+    if SpecialValues.isNA(value):
+        return SPECIAL_VALUE_MAP[SpecialValues.NA]
+
+    if SpecialValues.isUndef(value):
+        return SPECIAL_VALUE_MAP[SpecialValues.UNDEF]
+
     if value in SPECIAL_VALUE_MAP:
         return SPECIAL_VALUE_MAP[value]
 

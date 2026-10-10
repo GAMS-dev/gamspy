@@ -193,8 +193,19 @@ def test_undef():
     )  # Instead of using numpy there might be a NA from the math package
 
     generated = m.generateGamsString()
-    expected = "$onMultiR\n$onUNDF\n$onDotL\nParameter rho / Undf /;\n$offDotL\n$offUNDF\n$offMulti\n"
+    expected = "$onMultiR\n$onUNDF\n$onDotL\nParameter rho / UNDF /;\n$offDotL\n$offUNDF\n$offMulti\n"
     assert generated == expected
+
+
+def test_scalar_na_is_not_written_as_undf():
+    m = Container()
+    p = Parameter(m, "p", records=gp.SpecialValues.NA)
+    assert p.getDeclaration() == "Parameter p / NA /;"
+
+    # The value must arrive in GAMS as NA, not as UNDF.
+    q = Parameter(m, "q")
+    q[...] = p
+    assert gp.SpecialValues.isNA(q.toValue())
 
 
 def test_assignment_dimensionality(transport):

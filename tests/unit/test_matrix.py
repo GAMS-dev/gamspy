@@ -9,7 +9,6 @@ import pytest
 from gamspy import Alias, Equation, Parameter, Set, Sum, Variable
 from gamspy.exceptions import GamspyException, ValidationError
 from gamspy.math import dim, permute, trace, vector_norm
-from gamspy.math.misc import MathOp
 
 pytestmark = pytest.mark.unit
 
@@ -634,9 +633,11 @@ def test_vector_norm(container):
     c_val = c.records.iloc[0, 0]
     assert math.isclose(c_val, 5, rel_tol=1e-4)
 
-    # this is a special case
+    # The square root of the 2-norm cancels with the square.
     norm_squared = n_expr**2
-    assert isinstance(norm_squared, MathOp)
+    assert isinstance(norm_squared, Sum)
+    c[...] = norm_squared
+    assert math.isclose(c.records.iloc[0, 0], 25, rel_tol=1e-4)
 
     c[...] = vector_norm(b, ord=3)
     c_val = c.records.iloc[0, 0]

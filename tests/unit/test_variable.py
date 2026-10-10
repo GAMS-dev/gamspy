@@ -1188,6 +1188,15 @@ def test_toDense():
         np.full(eq_empty.shape, eq_empty._default_records["scale"]),
     )
 
+    # Missing records take the default value of the attribute
+    k = gp.Set(m, "k", records=["a", "b"])
+    v_free = gp.Variable(m, "v_free", domain=k)
+    v_free.setRecords(pd.DataFrame({"k": ["b"], "level": [3.0]}))
+    assert np.array_equal(v_free.toDense("level"), [0.0, 3.0])
+    assert np.array_equal(v_free.toDense("upper"), [np.inf, np.inf])
+    assert np.array_equal(v_free.toDense("lower"), [-np.inf, -np.inf])
+    assert np.array_equal(v_free.toDense("scale"), [1.0, 1.0])
+
     # Domain has no records
     m = gp.Container()
     i = gp.Set(m, "i", records=range(5))

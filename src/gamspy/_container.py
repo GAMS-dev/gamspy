@@ -240,6 +240,8 @@ class Container:
 
         self._unsaved_statements: list = []
         self._literal_bound_sets: list = []
+        # Needed to support nesting.
+        self._outer_contexts: dict[tuple[int, int], list[Container | None]] = {}
 
         self._frozen_modifiables: set[str] = set()
         self._frozen_companions: set[str] = set()
@@ -313,20 +315,23 @@ class Container:
                 self._synch_with_gams()
 
     def __enter__(self) -> Container:
-        pid = os.getpid()
-        tid = threading.get_native_id()
-        gp._ctx_managers[(pid, tid)] = self
+        key = (os.getpid(), threading.get_native_id())
+        self._outer_contexts.setdefault(key, []).append(gp._ctx_managers.get(key))
+        gp._ctx_managers[key] = self
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pid = os.getpid()
-        tid = threading.get_native_id()
+        key = (os.getpid(), threading.get_native_id())
+        outer_contexts = self._outer_contexts.get(key)
+        outer = outer_contexts.pop() if outer_contexts else None
+        if not outer_contexts:
+            self._outer_contexts.pop(key, None)
 
-        try:
-            del gp._ctx_managers[(pid, tid)]
-        except KeyError:
-            ...
+        if outer is None:
+            gp._ctx_managers.pop(key, None)
+        else:
+            gp._ctx_managers[key] = outer
 
     def __getitem__(self, symbol_name: str) -> SymbolType:
         try:

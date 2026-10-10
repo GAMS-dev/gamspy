@@ -390,19 +390,31 @@ class Operation(operable.Operable):
         }
 
         indices = []
-        given_condition = None
+        conditions = []
         for index in self.op_domain:
             if isinstance(index, condition.Condition):
                 indices.append(index.conditioning_on)
-                given_condition = index.condition
+                conditions.append(index.condition)
             else:
                 indices.append(index)
 
         index_str = ",".join([index.latexRepr() for index in indices])
 
-        if given_condition is not None:
-            condition_str = expression.get_operand_latex_repr(given_condition)
-            index_str += " ~ | ~ " + condition_str
+        if conditions:
+            condition_strs = []
+            for given_condition in conditions:
+                condition_str, condition_prec, _ = expression.latex_operand(
+                    given_condition
+                )
+                # The conditions of several indices are joined with \wedge.
+                if (
+                    len(conditions) > 1
+                    and condition_prec < expression.PRECEDENCE["and"]
+                ):
+                    condition_str = f"({condition_str})"
+                condition_strs.append(condition_str)
+
+            index_str += " ~ | ~ " + " \\wedge ".join(condition_strs)
 
         expression_str, expression_prec, _ = expression.latex_operand(self.rhs)
 

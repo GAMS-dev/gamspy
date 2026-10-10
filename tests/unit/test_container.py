@@ -2873,3 +2873,28 @@ def test_container_getUELs_no_symbols_with_records_returns_empty():
     gp.Set(m, "i")
 
     assert m._getUELs() == []
+
+
+@pytest.mark.unit
+def test_nested_context_managers():
+    with gp.Container() as outer:
+        with gp.Container() as inner:
+            gp.Set(name="i")
+        assert "i" in inner
+        assert "i" not in outer
+
+        # Leaving the inner context makes the outer container active again.
+        gp.Set(name="j")
+        assert "j" in outer
+
+        # Re-entering the same container is also restored correctly.
+        with outer, outer:
+            gp.Set(name="k")
+        gp.Set(name="l")
+        assert "k" in outer
+        assert "l" in outer
+
+        inner.close()
+
+    with pytest.raises(ValidationError, match="requires a container"):
+        gp.Set(name="m")

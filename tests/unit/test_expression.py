@@ -430,6 +430,22 @@ def test_latex_operations():
     assert (a[i] + 1).where[b[i] > 0].latexRepr() == r"(a_{i} + 1) ~ | ~ b_{i} > 0"
     assert gp.Sum(i, a[i].where[b[i]]).latexRepr() == r"\sum_{i} (a_{i} ~ | ~ b_{i})"
 
+    # The conditions of all indices are kept
+    j = gp.Set(m, "j")
+    c = gp.Parameter(m, "c", domain=j)
+    x = gp.Variable(m, "x", domain=[i, j])
+    assert gp.Sum((i.where[a[i] > 0], j.where[c[j] > 0]), x[i, j]).latexRepr() == (
+        r"\sum_{i,j ~ | ~ a_{i} > 0 \wedge c_{j} > 0} x_{i,j}"
+    )
+    assert gp.Sum(
+        (i.where[(a[i] > 0) | (b[i] > 0)], j.where[c[j] > 0]), x[i, j]
+    ).latexRepr() == (
+        r"\sum_{i,j ~ | ~ (a_{i} > 0 \vee b_{i} > 0) \wedge c_{j} > 0} x_{i,j}"
+    )
+    assert gp.Sum(i.where[(a[i] > 0) | (b[i] > 0)], a[i]).latexRepr() == (
+        r"\sum_{i ~ | ~ a_{i} > 0 \vee b_{i} > 0} a_{i}"
+    )
+
 
 def test_latex_math_functions():
     m = gp.Container()

@@ -2242,8 +2242,8 @@ class VarEquSymbol(RecordSymbol):
             for dimension in range(self.dimension)
         ]
 
-        # fill the dense array
-        a = np.zeros(self.shape)
+        # fill the dense array, missing records take the default value of the attribute
+        a = np.full(self.shape, self._default_records[column], dtype=float)
         val = self.records.loc[:, column].to_numpy(dtype=float)
         a[tuple(idx)] = val
 

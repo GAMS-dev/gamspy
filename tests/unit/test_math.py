@@ -1111,18 +1111,24 @@ def test_sqrt_cancels_with_power_two():
 
     x = Parameter(m, "x", records=5)
     safe_sqrt = gams_math.sqrt(x, safe_cancel=True)
-    # `+ 0` wraps the sqrt MathOp as `.left` of an Expression, which is what
-    # the `** 2` optimization in Operable.__pow__ looks for.
-    squared = (safe_sqrt + 0) ** 2
-    assert squared is x
+    assert safe_sqrt**2 is x
 
     # An integral float exponent is normalized to an int first, so it cancels
     # just like ** 2 does.
-    assert (safe_sqrt + 0) ** 2.0 is x
+    assert safe_sqrt**2.0 is x
 
     unsafe_sqrt = gams_math.sqrt(x)
-    not_cancelled = (unsafe_sqrt + 0) ** 2
-    assert not_cancelled is not x
+    assert unsafe_sqrt**2 is not x
+
+    # Only a bare sqrt cancels. Squaring a larger expression that contains
+    # the sqrt must keep every term.
+    y = Parameter(m, "y", records=3)
+    assert ((safe_sqrt + y) ** 2).gamsRepr() == "power(sqrt(x) + y,2)"
+    assert ((safe_sqrt * 3) ** 2).gamsRepr() == "power(sqrt(x) * 3,2)"
+
+    i = Set(m, "i", records=["i1", "i2"])
+    v = Parameter(m, "v", domain=i)
+    assert (gams_math.vector_norm(v) ** 2).gamsRepr() == "sum(i,sqr(v(i)))"
 
 
 def test_strict_power_operator():
@@ -1144,7 +1150,7 @@ def test_strict_power_operator():
         # The sqrt(x) ** 2 simplification is an algebraic identity rather than a
         # choice of GAMS function, hence it still applies.
         x = Parameter(m, "x", records=5)
-        assert (gams_math.sqrt(x, safe_cancel=True) + 0) ** 2 is x
+        assert gams_math.sqrt(x, safe_cancel=True) ** 2 is x
 
         # GAMSPy's own formulations do not depend on the option.
         assert (
