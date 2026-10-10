@@ -6,6 +6,7 @@ import model_builders
 import pytest
 
 import gamspy.exceptions as exceptions
+import gamspy.math as gp_math
 from gamspy import (
     Equation,
     Model,
@@ -627,3 +628,29 @@ def test_native_indicator(tmp_path):
 
     # compilation aborts for solvers without indicator support
     assert run("highs").returncode == 2
+
+
+def test_symbols_in_function_arguments(container, tmp_path):
+    m = container
+    x = Variable(m, "x")
+    y = Variable(m, "y")
+    z = Variable(m, "z")
+    x.lo = 0
+    y.fx = 3
+
+    e = Equation(m, "e")
+    e[...] = z == gp_math.Max(x + 1, y)
+    model = Model(m, "fmax", equations=[e], problem="DNLP", sense="min", objective=z)
+
+    # y only appears in the second argument of max, so it must still be declared.
+    model.toGams(str(tmp_path))
+    process = subprocess.run(
+        [
+            os.path.join(m.system_directory, "gams"),
+            os.path.join(str(tmp_path), "fmax.gms"),
+            f"output={os.path.join(str(tmp_path), 'fmax.lst')}",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert process.returncode == 0, process.stderr

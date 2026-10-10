@@ -567,10 +567,16 @@ class Equation(VarEquSymbol):
                 "Equation definition must contain at least one equality sign such as ==, <= or >=."
             )
 
-        if self.type in IRREGULAR_EQ_MAP and "=e=" in rhs_repr:
-            rhs.operator = IRREGULAR_EQ_MAP[self.type]
+        if (
+            self.type in IRREGULAR_EQ_MAP
+            and "=e=" in rhs_repr
+            and isinstance(rhs, expression.Expression)
+        ):
+            rhs = expression.Expression(
+                rhs.left, IRREGULAR_EQ_MAP[self.type], rhs.right
+            )
 
-        if self.type == "external" and "=e=" not in rhs.gamsRepr():
+        if self.type == "external" and "=e=" not in rhs_repr:
             raise ValidationError("External equations must contain ==")
 
         statement = expression.Expression(

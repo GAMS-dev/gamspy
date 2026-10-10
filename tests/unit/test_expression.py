@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 import gamspy as gp
+from gamspy._algebra.expression import find_symbols, find_symbols_in_conditions
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
@@ -615,4 +616,33 @@ def test_find_symbols_in_nested_condition():
     e[i] = v[i].where[b[i] > 1] == 1
 
     # the condition is an Expression, so its symbols are yielded from the nested traversal
-    assert sorted(set(e._definition._find_symbols_in_conditions())) == ["b", "i"]
+    assert sorted(set(find_symbols_in_conditions(e._definition))) == ["b", "i"]
+
+
+def test_find_symbols_in_all_function_arguments():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a"])
+    x = gp.Variable(m, "x")
+    y = gp.Variable(m, "y")
+    z = gp.Variable(m, "z")
+    p = gp.Parameter(m, "p", records=1)
+    q = gp.Parameter(m, "q", records=1)
+
+    e = gp.Equation(m, "e")
+    e[...] = z == gp.math.Max(x + 1, y)
+    assert sorted(set(find_symbols(e._definition))) == ["e", "x", "y", "z"]
+
+    # conditions nested in function arguments and in the conditioned operand
+    e[...] = z >= gp.math.Max(
+        x, gp.Sum(i.where[gp.math.Max(1, p) > 0], y), (x + y).where[q]
+    )
+    assert sorted(set(find_symbols(e._definition))) == [
+        "e",
+        "i",
+        "p",
+        "q",
+        "x",
+        "y",
+        "z",
+    ]
+    assert sorted(set(find_symbols_in_conditions(e._definition))) == ["p", "q"]

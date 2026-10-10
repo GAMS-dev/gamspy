@@ -472,3 +472,42 @@ def test_multiple_conditions():
         NORTS.getAssignment()
         == "NORTS(R,T,S) $ ((sum(PERIODYR(T,FIL),1) / D(T) >= G_OFFTHD(T)) $ (FIL(T))) = 1;"
     )
+
+
+def test_shared_relation_is_not_mutated():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    q = Parameter(m, "q", domain=i, records=[("i1", 1), ("i2", 5)])
+    r = Parameter(m, "r", domain=i)
+    x = Variable(m, "x", domain=i)
+
+    # A printed relation must not leak =l= into a later condition.
+    c = q[i] <= 3
+    assert c.gamsRepr() == "q(i) =l= 3"
+    r[i].where[c] = 1
+    assert r.getAssignment() == "r(i) $ (q(i) <= 3) = 1;"
+    assert r.toList() == [("i1", 1.0)]
+    assert c.gamsRepr() == "q(i) =l= 3"
+
+    # Conditions on the right-hand side of an assignment are logical too.
+    r[i] = (q[i] >= 3).where[q[i] == 5]
+    assert r.getAssignment() == "r(i) = (q(i) >= 3) $ (q(i) eq 5);"
+    assert r.toList() == [("i2", 1.0)]
+
+    # Using a relation in a condition must not change an equation that
+    # shares the same expression.
+    rel = x[i] <= 3
+    gamspy_math.ifthen(rel, 1, 0)
+    _ = Sum(i, rel)
+    _ = q[i].where[rel]
+    e = Equation(m, "e", domain=i)
+    e[i] = rel
+    assert e.getDefinition() == "e(i) .. x(i) =l= 3;"
+
+    # Irregular equation types do not rewrite the operator of the given
+    # expression.
+    rel = x[i] == 0
+    nb = Equation(m, "nb", domain=i, type="nonbinding")
+    nb[i] = rel
+    assert nb.getDefinition() == "nb(i) .. x(i) =n= 0;"
+    assert rel.gamsRepr() == "x(i) =e= 0"

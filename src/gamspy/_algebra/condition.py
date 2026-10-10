@@ -86,9 +86,6 @@ class Condition(operable.Operable):
     def __getitem__(
         self, condition: ConditionType | Number | bool | int | float
     ) -> Condition:
-        if isinstance(condition, expression.Expression):
-            condition._fix_equalities()
-
         return Condition(self.conditioning_on, condition)
 
     def __setitem__(
@@ -124,9 +121,6 @@ class Condition(operable.Operable):
                 )
 
             op_type = ".."
-
-        if isinstance(condition, (expression.Expression, Condition)):
-            condition._fix_equalities()
 
         lhs = Condition(self.conditioning_on, condition)
         statement = expression.Expression(lhs, op_type, right_operand)
@@ -170,11 +164,6 @@ class Condition(operable.Operable):
             return len(self.records.index)
 
         return 0
-
-    def _fix_equalities(self) -> None:
-        lhs = self.conditioning_on
-        if isinstance(lhs, (expression.Expression, Condition)):
-            lhs._fix_equalities()
 
     @property
     def dimension(self) -> int:
@@ -280,12 +269,15 @@ class Condition(operable.Operable):
         'a(i) $ (a(i) > 5)'
 
         """
-        condition_str = (
-            self.condition.gamsRepr()  # ty: ignore[call-non-callable]
-            if hasattr(self.condition, "gamsRepr")
-            else str(self.condition)
+        return self._create_gams_repr()
+
+    def _create_gams_repr(self, *, logical: bool = False) -> str:
+        condition_str = expression.get_logical_gams_repr(self.condition)
+        conditioning_on_str = (
+            expression.get_logical_gams_repr(self.conditioning_on)
+            if logical
+            else self.conditioning_on.gamsRepr()
         )
-        conditioning_on_str = self.conditioning_on.gamsRepr()
 
         if isinstance(self.condition, bool):
             condition_str = str(int(self.condition))

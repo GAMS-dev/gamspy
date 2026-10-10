@@ -1330,7 +1330,7 @@ class Model:
             infeas_dict[equation.name] = infeas_rows
 
             if equation._definition is not None:
-                names = equation._definition._find_all_symbols()
+                names = expression.find_symbols(equation._definition)
                 var_names = [
                     name
                     for name in names

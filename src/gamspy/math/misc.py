@@ -94,10 +94,6 @@ class MathOp(operable.Operable):
 
         self.where = condition.Condition(self)
 
-        for elem in elements:
-            if isinstance(elem, expression.Expression):
-                elem._fix_equalities()
-
     def __eq__(self, other):
         return expression.Expression(self, "=e=", other)
 
@@ -426,7 +422,7 @@ def _stringify(
 
         return str(x)
 
-    return x.gamsRepr()
+    return expression.get_logical_gams_repr(x)
 
 
 def abs(x: OperableType) -> MathOp:
@@ -1544,8 +1540,6 @@ def ifthen(
     >>> x = ifthen(tt == 2, 3, 4 + y)
 
     """
-    condition._representation = utils._replace_equality_signs(condition.gamsRepr())
-
     return MathOp("ifthen", (condition, yes_return, no_return))
 
 

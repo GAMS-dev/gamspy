@@ -130,6 +130,19 @@ def test_magics(transport):
     op1 = 5 ^ x[i]
     assert op1.gamsRepr() == "5 xor x(i)"
 
+    # OR and XOR have the same precedence in GAMS
+    op1 = b[i] | (x[i] ^ b[i])
+    assert op1.gamsRepr() == "b(i) or (x(i) xor b(i))"
+    op2 = (b[i] | x[i]) ^ b[i]
+    assert op2.gamsRepr() == "b(i) or x(i) xor b(i)"
+    op3 = b[i] ^ (x[i] | b[i])
+    assert op3.gamsRepr() == "b(i) xor (x(i) or b(i))"
+
+    one = Parameter(m, "one", records=1)
+    xor_result = Parameter(m, "xor_result")
+    xor_result[...] = one | (one ^ one)
+    assert xor_result.toValue() == 1
+
     # LT
     # Parameter < Variable, Variable < Parameter
     op1 = b[i] < x[i]

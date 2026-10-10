@@ -35,7 +35,7 @@ def test_parameter_special_values(container):
     assert b.getAssignment() == "b(i) = INF;"
 
     b[...] = gp.SpecialValues.NEGINF
-    assert b.getAssignment() == "b(i) = -INF;"
+    assert b.getAssignment() == "b(i) = (-INF);"
 
 
 def test_implicit_parameter_special_values(container):
@@ -57,7 +57,7 @@ def test_implicit_parameter_special_values(container):
     assert b.getAssignment() == "b.l(i) = INF;"
 
     b.l[...] = gp.SpecialValues.NEGINF
-    assert b.getAssignment() == "b.l(i) = -INF;"
+    assert b.getAssignment() == "b.l(i) = (-INF);"
 
 
 def test_operation_special_values(container):
@@ -76,6 +76,21 @@ def test_operation_special_values(container):
     i = Set(m, "i", records=["i1", "i2"])
     dummy[...] = gp.Sum(i, -0.0)
     assert dummy.getAssignment() == "dummy = sum(i,EPS);"
+
+
+def test_negative_infinity_as_operand(container):
+    m = container
+    i = Set(m, "i", records=["i1"])
+    a = Parameter(m, "a", domain=i, records=[("i1", 2)])
+    b = Parameter(m, "b", domain=i)
+
+    # GAMS does not accept a sign right after an operator: a(i) * -INF
+    assert (a[i] * gp.SpecialValues.NEGINF).gamsRepr() == "a(i) * (-INF)"
+    assert (a[i] - gp.SpecialValues.NEGINF).gamsRepr() == "a(i) - (-INF)"
+    assert (gp.SpecialValues.NEGINF * a[i]).gamsRepr() == "(-INF) * a(i)"
+
+    b[i] = a[i] * gp.SpecialValues.NEGINF
+    assert b.toList() == [("i1", float("-inf"))]
 
 
 def test_eps(container):

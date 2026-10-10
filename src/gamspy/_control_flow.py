@@ -9,7 +9,7 @@ import gamspy as gp
 import gamspy._gdx as gdxio
 from gamspy._algebra.condition import Condition
 from gamspy._algebra.domain import Domain
-from gamspy._algebra.expression import _validate_controlled
+from gamspy._algebra.expression import _validate_controlled, get_logical_gams_repr
 from gamspy._config import get_option
 from gamspy._internals import ATTR_PREFIX, DataSource
 from gamspy._symbols.implicits import ImplicitSet
@@ -484,8 +484,7 @@ class While:
         self.container._in_loop += 1
         self._loop_number = self.container._in_loop
 
-        representation = self.condition.gamsRepr()
-        representation = gp.utils._replace_equality_signs(representation)
+        representation = get_logical_gams_repr(self.condition)
         self.container._add_statement(f"while({representation},")
 
         return self
@@ -548,7 +547,7 @@ def _condition_repr(condition: ConditionType, container: Container) -> str:
     ):
         _validate_controlled(condition, [])
 
-    return gp.utils._replace_equality_signs(condition.gamsRepr())
+    return get_logical_gams_repr(condition)
 
 
 def _continue_if_chain(container: Container, construct: str) -> bool:
