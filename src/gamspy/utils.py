@@ -722,7 +722,7 @@ def _get_domain_str(
             if is_universe(elem):
                 domain_strs.append(elem)
             elif latex:
-                domain_strs.append('"' + elem.replace("_", r"\_") + '"')
+                domain_strs.append("\\text{" + elem.replace("_", r"\_") + "}")
             else:
                 domain_strs.append('"' + elem + '"')
         elif isinstance(elem, (Universe, *_get_domain_element_types())):

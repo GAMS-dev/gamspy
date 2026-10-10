@@ -335,9 +335,11 @@ class Condition(operable.Operable):
         'a_{i} ~ | ~ a_{i} > 2'
 
         """
-        condition_str = (
-            self.condition.latexRepr()  # ty: ignore[call-non-callable]
-            if hasattr(self.condition, "latexRepr")
-            else str(self.condition)
+        conditioning_on_str, conditioning_on_prec, conditioning_on_open = (
+            expression.latex_operand(self.conditioning_on)
         )
-        return f"{self.conditioning_on.latexRepr()} ~ | ~ {condition_str}"
+        if conditioning_on_prec < expression.LEAF_PRECEDENCE or conditioning_on_open:
+            conditioning_on_str = f"({conditioning_on_str})"
+
+        condition_str = expression.get_operand_latex_repr(self.condition)
+        return f"{conditioning_on_str} ~ | ~ {condition_str}"

@@ -144,14 +144,21 @@ class ImplicitSymbol(ABC):
     def gamsRepr(self):
         """Representation of the implicit symbol in GAMS"""
 
-    def latexRepr(self: ImplicitSymbolType):
-        name = self._latex_name
-        representation = name
+    def _reference_domain(self: ImplicitSymbolType) -> list:
         domain = list(self.domain)
+        if domain and self.permutation is not None:
+            domain = utils._permute_domain(
+                domain, utils._invert_permutation(self.permutation)
+            )
 
         for i, d in self._scalar_domains:
             domain.insert(i, d)
 
+        return domain
+
+    def latexRepr(self: ImplicitSymbolType) -> str:
+        representation = self._latex_name
+        domain = self._reference_domain()
         if domain:
             set_strs = []
             for elem in domain:

@@ -1,0 +1,1 @@
+Fix incorrect and invalid LaTeX output of latexRepr and toLatex.

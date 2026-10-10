@@ -4,7 +4,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{fontspec}
-\setmainfont{CMU Serif} % 1. Sets a font that knows Greek in text mode
+\IfFontExistsTF{CMU Serif}{\setmainfont{CMU Serif}}{} % 1. Sets a font that knows Greek in text mode
 \usepackage{unicode-math} % 2. Allows Greek keys to work in math mode
 \usepackage[hidelinks]{hyperref}
 \usepackage{tabularx}
@@ -22,10 +22,10 @@
 \hline
 \endhead
 
-days & days & 100 days from 95-11-27 to 96-04-29\\
-stocks & stocks & 170 selected stocks\\
-d & days & selected days\\
-s & stocks & selected stocks\\
+$days$ & $days$ & 100 days from 95-11-27 to 96-04-29\\
+$stocks$ & $stocks$ & 170 selected stocks\\
+$d$ & $days$ & selected days\\
+$s$ & $stocks$ & selected stocks\\
 \hline
 \end{tabularx}
 \subsection*{Parameters}
@@ -35,9 +35,9 @@ s & stocks & selected stocks\\
 \hline
 \endhead
 
-mean & stocks & mean of daily return\\
-dev & stocks,days & deviations\\
-totmean &  & total mean return\\
+$mean$ & $stocks$ & mean of daily return\\
+$dev$ & $stocks,days$ & deviations\\
+$totmean$ &  & total mean return\\
 \hline
 \end{tabularx}
 \subsection*{Variables}
@@ -47,11 +47,11 @@ totmean &  & total mean return\\
 \hline
 \endhead
 
-x & stocks & investments\\
-w & days & intermediate variables\\
-m\_budget &  & \\
-m\_wdef & days & \\
-m\_retcon &  & \\
+$x$ & $stocks$ & investments\\
+$w$ & $days$ & intermediate variables\\
+$m\_budget$ &  & \\
+$m\_wdef$ & $days$ & \\
+$m\_retcon$ &  & \\
 \hline
 \end{tabularx}
 \subsection*{Equations}
@@ -61,17 +61,46 @@ m\_retcon &  & \\
 \hline
 \endhead
 
-budget &  & \\
-retcon &  & returns constraint\\
-wdef & days & \\
-d\_x & stocks & \\
-d\_w & days & \\
+$budget$ &  & \\
+$retcon$ &  & returns constraint\\
+$wdef$ & $days$ & \\
+$d\_x$ & $stocks$ & \\
+$d\_w$ & $days$ & \\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
-
+\subsubsection*{$d\_x_{stocks}$}
+$
+\sum_{d} m\_wdef_{d} \cdot dev_{s,d} \geq m\_retcon \cdot mean_{s} + m\_budget \perp x_{s}\hfill \forall s
+$
+\vspace{5pt}
+\hrule
+\subsubsection*{$d\_w_{days}$}
+$
+\frac{2 \cdot w_{d}}{\operatorname{card}(d) - 1} = m\_wdef_{d} \perp w_{d}\hfill \forall d
+$
+\vspace{5pt}
+\hrule
+\subsubsection*{$retcon$}
+$
+\sum_{s} mean_{s} \cdot x_{s} \geq totmean \cdot 1.25 \perp m\_retcon
+$
+\vspace{5pt}
+\hrule
+\subsubsection*{$budget$}
+$
+\sum_{s} x_{s} = 1.0 \perp m\_budget
+$
+\vspace{5pt}
+\hrule
+\subsubsection*{$wdef_{days}$}
+$
+w_{d} = \sum_{s} x_{s} \cdot dev_{s,d} \perp m\_wdef_{d}\hfill \forall d
+$
+\vspace{5pt}
+\hrule
 \begin{flalign*}
-&x\geq 0 ~ \forall stocks&\\
-&m\_retcon\geq 0&\\
+&x_{stocks} \geq 0 ~ \forall stocks&\\
+&m\_retcon \geq 0&\\
 \end{flalign*}
 \end{document}

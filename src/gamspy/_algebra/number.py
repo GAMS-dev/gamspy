@@ -79,7 +79,7 @@ class Number(operable.Operable):
         return f"{self._value}"
 
     def latexRepr(self) -> str:
-        """
+        r"""
         Representation of this Number in Latex.
 
         Returns
@@ -89,10 +89,8 @@ class Number(operable.Operable):
         Examples
         --------
         >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> i = gp.Set(m)
-        >>> print(i.latexRepr())
-        i
+        >>> print(gp.Number(-1.5e-7).latexRepr())
+        -1.5 \cdot 10^{-7}
 
         """
-        return f"{self._value}"
+        return expression.get_operand_latex_repr(self)
