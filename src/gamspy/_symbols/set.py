@@ -7,16 +7,14 @@ from gams.core.gdx import GMS_DT_SET
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
-import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
-import gamspy.utils as utils
-from gamspy._internals import DataSource
 from gamspy._records_ingestion import SetIngestor
 from gamspy._symbols.base import DomainSymbol
 from gamspy._symbols.equals import equals_set
 from gamspy._symbols.generate_records import generate_records_set
 from gamspy._symbols.pivot import pivot_set
+from gamspy._symbols.utils import assign
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -622,27 +620,12 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
-        rhs, operator = sparse._unwrap(rhs)
-        self._check_miro_protection()
-
-        if isinstance(rhs, bool):
-            rhs = "yes" if rhs is True else "no"
-
-        statement = expression.Expression(
+        assign(
+            self,
             implicits.ImplicitSet(self, name=self.name, domain=domain),
-            operator,
             rhs,
+            domain,
         )
-
-        # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
-        if not self._container._in_loop:
-            statement._validate_definition(utils._unpack(domain))
-
-        self._container._add_statement(statement)
-        self._assignment = statement
-
-        self._container._synch_with_gams()
-        self._should_load_from = DataSource.GAMS
 
     def __repr__(self) -> str:
         return f"Set(name='{self.name}', domain={self.domain})"

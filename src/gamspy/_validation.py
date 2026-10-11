@@ -51,7 +51,7 @@ if TYPE_CHECKING:
         ImplicitSet,
         ImplicitVariable,
     )
-    from gamspy._types import IndexType
+    from gamspy._types import IndexType, ValidatedIndexType
 
 NAME_MATCH_REGEX = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]{0,62}$")
 
@@ -432,7 +432,7 @@ def validate_domain(
     | Operation
     | Expression,
     indices: IndexType,
-):
+) -> list[ValidatedIndexType]:
     index_list = utils._to_list(indices)
     index_list = [str(elem) if type(elem) is int else elem for elem in index_list]
     index_list = _expand_ellipsis_slice(symbol.domain, index_list)
