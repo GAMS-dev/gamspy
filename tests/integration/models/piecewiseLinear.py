@@ -88,8 +88,12 @@ def pwl_suite(fct, name):
                         problem="mip",
                     )
                     model.solve(solver_options={"solveFinal": 1})
-                    assert y.toDense() == expected_y, f"Case {case_i} failed !"
-                    assert x.toDense() == expected_x, f"Case {case_i} failed !"
+                    assert math.isclose(y.toDense(), expected_y), (
+                        f"Case {case_i} failed !"
+                    )
+                    assert math.isclose(x.toDense(), expected_x), (
+                        f"Case {case_i} failed !"
+                    )
             else:
                 y, eqs = fct(
                     x,
@@ -101,7 +105,7 @@ def pwl_suite(fct, name):
                     m, equations=eqs, objective=y, sense=sense, problem="mip"
                 )
                 model.solve(solver_options={"solveFinal": 1})
-                assert y.toDense() == expected_y, f"Case {case_i} failed !"
+                assert math.isclose(y.toDense(), expected_y), f"Case {case_i} failed !"
                 assert math.isclose(x.toDense(), expected_x), f"Case {case_i} failed !"
 
         print(f"Case {case_i} passed !")

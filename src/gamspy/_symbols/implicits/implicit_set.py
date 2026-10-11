@@ -8,7 +8,7 @@ import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
-from gamspy._universe import UNIVERSE, Universe, is_universe_domain
+from gamspy._universe import UNIVERSE, is_universe_domain
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
     from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
+    from gamspy._types import ValidatedIndexType
 
 
 class ImplicitSet(ImplicitSymbol, operable.Operable):
@@ -29,14 +30,14 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
     ----------
     container : Container
     name : str
-    domain : list[Set | str], optional
+    domain : list[Set | Alias | ImplicitSet | Expression | str], optional
     """
 
     def __init__(
         self,
         parent: Set | Alias,
         name: str,
-        domain: list[Set | Universe | str] | None = None,
+        domain: list[ValidatedIndexType] | None = None,
         scalar_domains: list[tuple[int, str]] | None = None,
     ) -> None:
         self.parent = parent

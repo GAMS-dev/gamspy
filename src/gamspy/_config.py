@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal, cast, get_args
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Generator
 
 OptionName = Literal[
     "GAMS_SYSDIR",
@@ -135,7 +135,7 @@ def set_options(options: dict[OptionName, Any]) -> None:
 
 
 @contextlib.contextmanager
-def _temporary_options(options: dict[OptionName, Any]) -> Iterator[None]:
+def _temporary_options(options: dict[OptionName, Any]) -> Generator[None]:
     previous = {name: configuration.get(name) for name in options}
     set_options(options)
     try:

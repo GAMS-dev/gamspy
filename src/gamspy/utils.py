@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.domain import Domain
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import IndexType, SymbolType
+    from gamspy._types import IndexType, SymbolType, ValidatedDomainType
 
 SPECIAL_VALUE_MAP = {
     SpecialValues.NA: "NA",
@@ -806,7 +806,7 @@ def _get_set(domain: Sequence[Set | Alias | Domain | Expression]):
     return res
 
 
-def _unpack(domain: Sequence[Set | Alias | ImplicitSet]):
+def _unpack(domain: ValidatedDomainType):
     """Flatten a domain into the sets it puts under control."""
     from gamspy._algebra.expression import ShiftExpression
 

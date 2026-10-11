@@ -14,7 +14,7 @@ from gamspy._config import get_option
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Generator, Sequence
     from types import FrameType
 
     from gamspy._container import Container
@@ -645,7 +645,7 @@ class Options(BaseModel):
         self._extra_options = options
 
     @contextlib.contextmanager
-    def _temporary_extra_options(self, options: dict) -> Iterator[None]:
+    def _temporary_extra_options(self, options: dict) -> Generator[None]:
         previous = self._extra_options
         self._extra_options = options
         try:

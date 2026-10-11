@@ -8,7 +8,6 @@ from gams.core.gdx import GMS_DT_PAR
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
-import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -18,6 +17,7 @@ from gamspy._symbols.base import RecordSymbol
 from gamspy._symbols.equals import equals_parameter
 from gamspy._symbols.generate_records import generate_records_parameter
 from gamspy._symbols.pivot import pivot_parameter
+from gamspy._symbols.utils import assign
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -198,27 +198,12 @@ class Parameter(operable.Operable, RecordSymbol):
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
-        rhs, operator = sparse._unwrap(rhs)
-        self._check_miro_protection()
-
-        if isinstance(rhs, float):
-            rhs = utils._map_special_values(rhs)
-
-        statement = expression.Expression(
+        assign(
+            self,
             implicits.ImplicitParameter(self, name=self.name, domain=domain),
-            operator,
             rhs,
+            domain,
         )
-
-        # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
-        if not self._container._in_loop:
-            statement._validate_definition(utils._unpack(domain))
-
-        self._container._add_statement(statement)
-        self._assignment = statement
-
-        self.container._synch_with_gams()
-        self._should_load_from = DataSource.GAMS
 
     def __eq__(self, other):
         op = "eq"

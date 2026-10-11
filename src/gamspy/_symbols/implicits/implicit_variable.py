@@ -18,8 +18,9 @@ if TYPE_CHECKING:
     import numpy as np
     import pandas as pd
 
-    from gamspy import Set, Variable
+    from gamspy import Variable
     from gamspy._algebra.expression import Expression
+    from gamspy._types import ValidatedIndexType
 
 
 class ImplicitVariable(ImplicitSymbol, operable.Operable):
@@ -27,7 +28,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         self,
         parent: Variable,
         name: str,
-        domain: list[Set | str],
+        domain: list[ValidatedIndexType],
         permutation: list[int] | None = None,
         scalar_domains: list[tuple[int, str]] | None = None,
     ):
@@ -38,7 +39,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         ----------
         parent : Variable
         name : str
-        domain : list[Set | str]
+        domain : list[Set | Alias | ImplicitSet | Expression | str]
         """
         self.parent = parent
         super().__init__(name, domain, permutation, scalar_domains)
