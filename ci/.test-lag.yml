@@ -1,65 +1,40 @@
 #### TESTS #####
 .lag_template:
+  extends: .uv_package_cache
   stage: test
   needs: [lag-cli-3.10, setup-lag-toolchain]
   tags: [linux-arm64]
-  image: ghcr.io/astral-sh/uv:trixie-slim
-  variables:
-    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
-  script:
-    - apt-get update && apt-get install -y ca-certificates git
+  image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
+  before_script:
     - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
-    - uv sync --group test
+    - uv sync --locked --group test
     - uv pip install gamspy-arm-perf
     - gamspy install license $LOCAL_LICENSE
     - UV_NO_CONFIG=1 gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
+  script:
     - python -m pytest -n $NUM_PROCESS -x -ra -m 'unit or integration or model_library or requires_license' tests
 
 lag-test-3.14:
-  extends: .lag_template
+  extends: [.lag_template, .pytest_with_coverage]
   variables:
     PYTHON_VERSION: "3.14"
-  script:
-    - apt-get update && apt-get install -y ca-certificates git
-    - uv venv .venv --python 3.14
-    - source .venv/bin/activate
-    - uv sync --group test
-    - uv pip install gamspy-arm-perf
-    - gamspy install license $LOCAL_LICENSE
-    - UV_NO_CONFIG=1 gamspy install solver -a --use-uv
-    - gamspy uninstall solver miles --use-uv
-    - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -n $NUM_PROCESS -x -ra -m 'unit or integration or model_library or requires_license or doc' tests
-    - coverage report -m --data-file=".coverage"
-    - coverage xml --data-file=".coverage"
 
 lag-test-3.13:
-  extends: .lag_template
+  extends: [.lag_template, .develop_and_master_only]
   variables:
     PYTHON_VERSION: "3.13"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
 
 lag-test-3.12:
-  extends: .lag_template
+  extends: [.lag_template, .develop_and_master_only]
   variables:
     PYTHON_VERSION: "3.12"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
 
 lag-test-3.11:
-  extends: .lag_template
+  extends: [.lag_template, .develop_and_master_only]
   variables:
     PYTHON_VERSION: "3.11"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
 
 lag-test-3.10:
   extends: .lag_template
@@ -68,18 +43,16 @@ lag-test-3.10:
 
 #### ENGINE #####
 .lag_engine_template:
+  extends: .uv_package_cache
   stage: engine
   when: manual
   needs: [setup-lag-toolchain]
   allow_failure: true
   tags: [linux-arm64]
-  image: ghcr.io/astral-sh/uv:trixie-slim
-  variables:
-    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
+  image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   script:
-    - apt-get update && apt-get install -y ca-certificates
     - uv venv .venv --python $PYTHON_VERSION && source .venv/bin/activate
-    - uv sync --group test
+    - uv sync --locked --group test
     - uv pip install gamspy-arm-perf
     - python -m pytest -x -ra -m 'engine' tests
 
@@ -95,18 +68,16 @@ lag-engine-3.10:
 
 #### NEOS #####
 .lag_neos_template:
+  extends: .uv_package_cache
   stage: neos
   when: manual
   needs: [setup-lag-toolchain]
   allow_failure: true
   tags: [linux-arm64]
-  image: ghcr.io/astral-sh/uv:trixie-slim
-  variables:
-    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
+  image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   script:
-    - apt-get update && apt-get install -y ca-certificates
     - uv venv .venv --python $PYTHON_VERSION && source .venv/bin/activate
-    - uv sync --group test
+    - uv sync --locked --group test
     - uv pip install gamspy-arm-perf
     - gamspy install solver -a --use-uv
     - python -m pytest -x -ra -m 'neos' tests

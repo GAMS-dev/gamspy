@@ -2,6 +2,7 @@ leg-upload-wheel:
   stage: upload
   needs: []
   allow_failure: true
+  interruptible: false
   tags: [puma]
   image: ghcr.io/astral-sh/uv:python3.13-trixie-slim
   script:
