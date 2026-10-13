@@ -2,6 +2,7 @@ leg-update-website:
   stage: website
   needs: []
   allow_failure: true
+  interruptible: false
   tags: [puma]
   image: debian:trixie-slim
   before_script:
