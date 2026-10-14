@@ -2,7 +2,12 @@ import gamspy.formulations.nn as nn
 import gamspy.formulations.piecewise as piecewise
 import gamspy.formulations.sddp as sddp
 import gamspy.formulations.utils as utils
-from gamspy.formulations.general_constraints import indicator
+from gamspy.formulations.general_constraints import (
+    absolute,
+    indicator,
+    maximum,
+    minimum,
+)
 from gamspy.formulations.ml import (
     DecisionTreeStruct,
     GradientBoosting,
@@ -31,6 +36,7 @@ from gamspy.formulations.result import FormulationResult
 from gamspy.formulations.shape import flatten_dims
 
 __all__ = [
+    "absolute",
     "AvgPool2d",
     "Conv1d",
     "Conv2d",
@@ -40,6 +46,8 @@ __all__ = [
     "Linear",
     "MaxPool2d",
     "MinPool2d",
+    "maximum",
+    "minimum",
     "PWLCurve",
     "RandomForest",
     "RegressionTree",

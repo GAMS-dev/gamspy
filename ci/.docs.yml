@@ -13,3 +13,5 @@ leg-build-docs:
     - pytest --nbmake docs/user/notebooks/*.ipynb
     - ipython kernel install --name "python3" --user
     - cd docs && make linkcheck && make html
+  pages:
+    publish: docs/_build/html
