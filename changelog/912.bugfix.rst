@@ -1,0 +1,1 @@
+Fix ``indicator`` failing when ``USE_PY_VAR_NAME`` is ``"yes"`` and adding symbols named after its internal Python variables otherwise.

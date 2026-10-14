@@ -12,7 +12,10 @@ from gamspy._options import get_indicator_file_name, write_solver_options
 from gamspy.exceptions import ValidationError
 from gamspy.formulations import (
     PWLCurve,
+    absolute,
     indicator,
+    maximum,
+    minimum,
     pwl_convexity_formulation,
     pwl_dlog_formulation,
     pwl_interval_formulation,
@@ -505,6 +508,176 @@ def test_indicator_solve(big_m):
     )
     model.solve()
     assert math.isclose(model.objective_value, 22)
+
+
+def test_min_max():
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b"])
+    j = gp.Set(m, name="j", records=["1", "2", "3"])
+    k = gp.Set(m, name="k", records=["1", "2"])
+    x = gp.Variable(m, name="x", domain=[i, j])
+    z = gp.Variable(m, name="z", domain=k)
+
+    with pytest.raises(ValidationError, match="At least one operand is required"):
+        maximum()
+    with pytest.raises(ValidationError, match="must be a parameter or a variable"):
+        minimum(1, 2)
+    for operand in (i, "a", True):
+        with pytest.raises(ValidationError, match="operands must be numbers"):
+            maximum(x, operand)
+    for operand in (x <= 1, x == 1):
+        with pytest.raises(ValidationError, match="cannot be inequalities"):
+            maximum(x, operand)
+    with pytest.raises(ValidationError, match="finite numbers"):
+        minimum(x, math.inf)
+    with pytest.raises(ValidationError, match="over must be a subset"):
+        maximum(z, over=j)
+    p = gp.Parameter(m, name="p", domain=j)
+    symbols_before = list(m.data)
+    for kwargs, match in (
+        ({"big_m": -1}, "positive finite number"),
+        ({"big_m": p}, "domain of big_m must be"),
+        ({"big_m": 10, "native": True}, "cannot be used with native=True"),
+    ):
+        with pytest.raises(ValidationError, match=match):
+            maximum(x[i, j], z, over=j, **kwargs)
+    assert list(m.data) == symbols_before
+
+    res1 = maximum(x, 0)
+    assert [d.name for d in res1.result.domain] == ["i", "j"]
+    assert list(res1.variables_created) == [
+        "output",
+        "select_0",
+        "sos1_0",
+        "select_1",
+        "sos1_1",
+    ]
+    assert list(res1.equations_created) == [
+        "bound_0",
+        "slack_0",
+        "link_0",
+        "bound_1",
+        "slack_1",
+        "link_1",
+        "pick_one",
+    ]
+
+    # the output is broadcast over the union of the operand domains
+    res2 = minimum(x[i, "1"], z, big_m=100)
+    assert [d.name for d in res2.result.domain] == ["i", "k"]
+    assert list(res2.equations_created) == [
+        "bound_0",
+        "big_m_0",
+        "bound_1",
+        "big_m_1",
+        "pick_one",
+    ]
+
+    res3 = maximum(x, over=j, native=True)
+    assert [d.name for d in res3.result.domain] == ["i"]
+    assert [d.name for d in res3.variables_created["select_0"].domain] == ["i", "j"]
+    assert list(res3.equations_created) == [
+        "bound_0",
+        "indicator_0",
+        "binary_0",
+        "pick_one",
+    ]
+
+    res4 = minimum(x, over=[i, j])
+    assert res4.result.domain == []
+
+    with pytest.raises(ValidationError, match="cannot be inequalities"):
+        absolute(x <= 1)
+    for operand in (i, "a", 5):
+        with pytest.raises(ValidationError, match="operand"):
+            absolute(operand)
+
+    res5 = absolute(x[i, j] - 1, big_m=100)
+    assert [d.name for d in res5.result.domain] == ["i", "j"]
+    assert list(res5.equations_created) == [
+        "bound_0",
+        "big_m_0",
+        "bound_1",
+        "big_m_1",
+        "pick_one",
+    ]
+
+
+@pytest.mark.parametrize("kwargs", [{}, {"big_m": 100}, {"native": True}])
+def test_min_max_solve(kwargs):
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b"])
+    j = gp.Set(m, name="j", records=["1", "2", "3"])
+    ij = gp.Set(m, name="ij", domain=[i, j], records=[("a", "1"), ("b", "3")])
+    p = gp.Parameter(
+        m,
+        name="p",
+        domain=[i, j],
+        records=[
+            ("a", "1", 4),
+            ("a", "2", 1),
+            ("a", "3", -2),
+            ("b", "1", 0),
+            ("b", "2", 9),
+            ("b", "3", 6),
+        ],
+    )
+    x = gp.Variable(m, name="x", domain=[i, j])
+    x.fx[i, j] = p[i, j]
+
+    # the output of x[ij] is only defined over ij
+    cases = [
+        (maximum(x, over=j, **kwargs), [i], {"a": 4, "b": 9}),
+        (minimum(x, over=j, **kwargs), [i], {"a": -2, "b": 0}),
+        (maximum(x[i, "1"], x[i, "3"], 1, **kwargs), [i], {"a": 4, "b": 6}),
+        (minimum(x[i, "2"], 2, **kwargs), [i], {"a": 1, "b": 2}),
+        (maximum(x[ij], 5, **kwargs), [ij], {("a", "1"): 5, ("b", "3"): 6}),
+        (maximum(x[ij], over=ij, **kwargs), [], 6),
+        (minimum(2 * x[i, j] - p[i, j], over=[i, j], **kwargs), [], -2),
+        (absolute(x[i, "3"], **kwargs), [i], {"a": 2, "b": 6}),
+        (absolute(x[i, "1"] - 5, **kwargs), [i], {"a": 1, "b": 5}),
+    ]
+
+    equations = [eq for res, _, _ in cases for eq in res.equations_created.values()]
+    objective = sum(
+        gp.Sum(domain, res.result[domain]) if domain else res.result
+        for res, domain, _ in cases
+    )
+    for sense in ("min", "max"):
+        model = gp.Model(
+            m, equations=equations, problem="mip", sense=sense, objective=objective
+        )
+        model.solve()
+        for res, domain, expected in cases:
+            if domain:
+                assert res.result.toDict() == pytest.approx(expected)
+            else:
+                assert res.result.toValue() == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("mode", ["no", "yes", "yes-or-autogenerate"])
+def test_general_constraints_name_their_symbols(set_options, mode):
+    set_options({"USE_PY_VAR_NAME": mode})
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    x = gp.Variable(m, "x", domain=i)
+    b = gp.Variable(m, "b", type="binary", domain=i)
+
+    # every call creates its own symbols instead of naming them after the
+    # local variables of the formulation
+    for formulate in (
+        lambda: indicator(b, 1, x <= 1),
+        lambda: indicator(b, 1, x <= 1, native=True),
+        lambda: maximum(x, 0),
+        lambda: minimum(x, 0),
+        lambda: absolute(x),
+    ):
+        (y1, eqs1), (y2, eqs2) = formulate(), formulate()
+        assert y1 is None or y1 is not y2
+        assert not {eq.name for eq in eqs1} & {eq.name for eq in eqs2}
+
+    for name in ("output_var", "select_var"):
+        assert gp.Parameter(m, name).name == name
 
 
 def test_pwl_enforce_sos2_log_binary_with_domain():

@@ -483,13 +483,14 @@ def setBaseEqual(set_a: Set | Alias, set_b: Set | Alias) -> bool:
     return a == b
 
 
-def _get_unique_name() -> str:
+def _get_unique_name(prefix: str | None = None) -> str:
     """
     N= 2^122 and the collision probability is: 1 - e^(-(n^2 / 2*N))
     """
     u = uuid.uuid4()
     b64 = base64.urlsafe_b64encode(u.bytes)
-    return b64.rstrip(b"=").decode("ascii").replace("-", "_")
+    name = b64.rstrip(b"=").decode("ascii").replace("-", "_")
+    return name if prefix is None else f"{prefix}_{name}"
 
 
 @functools.cache

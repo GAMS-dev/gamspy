@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="330" viewBox="0 0 420 330" font-family="Helvetica, Arial, sans-serif">
+  <title>Relaxations of a maximum</title>
+  <desc>The LP relaxation of the SOS1 formulation contains every point above the maximum. The big-M relaxation is bounded by y at most 3.5 for M equal to 3.5 and by y at most 3 for M equal to 2.5, which is the convex hull of the maximum.</desc>
+  <rect width="420" height="330" fill="#171c22"/>
+
+  <g fill="none" stroke="#aab4c0" stroke-opacity="0.25" stroke-width="1">
+    <path d="M120 30 V270 M180 30 V270 M240 30 V270 M300 30 V270 M360 30 V270"/>
+    <path d="M60 210 H360 M60 150 H360 M60 90 H360 M60 30 H360"/>
+  </g>
+
+  <path d="M60 30 V90 L210 165 L360 90 V30 Z" fill="#6eb4ef" fill-opacity="0.12"/>
+  <path d="M60 60 V90 L210 165 L360 90 V60 Z" fill="#6eb4ef" fill-opacity="0.16"/>
+  <path d="M60 90 L210 165 L360 90 Z" fill="#6eb4ef" fill-opacity="0.24"/>
+  <g fill="none" stroke="#6eb4ef" stroke-width="1.5" stroke-dasharray="4 4">
+    <path d="M60 60 H360"/>
+    <path d="M60 90 H360"/>
+  </g>
+
+  <g fill="none" stroke="#9aa5b1" stroke-width="2" stroke-dasharray="7 5">
+    <path d="M60 90 L360 240"/>
+    <path d="M60 240 L360 90"/>
+  </g>
+
+  <path d="M60 90 L210 165 L360 90" fill="none" stroke="#6eb4ef" stroke-width="4"/>
+
+  <g fill="#dbe3ec" font-size="15">
+    <text x="364" y="41">SOS1</text>
+    <text x="364" y="65">M = 3.5</text>
+    <text x="364" y="95">M = 2.5</text>
+  </g>
+  <g fill="none" stroke="#dbe3ec" stroke-width="1.5">
+    <path d="M45 270 H375"/>
+    <path d="M60 285 V15"/>
+  </g>
+
+  <g fill="#dbe3ec" font-size="14" text-anchor="middle">
+    <text x="60" y="292">0</text>
+    <text x="120" y="292">1</text>
+    <text x="180" y="292">2</text>
+    <text x="240" y="292">3</text>
+    <text x="300" y="292">4</text>
+    <text x="360" y="292">5</text>
+  </g>
+  <g fill="#dbe3ec" font-size="14" text-anchor="end">
+    <text x="53" y="215">1</text>
+    <text x="53" y="155">2</text>
+    <text x="53" y="95">3</text>
+    <text x="53" y="35">4</text>
+  </g>
+  <g fill="#dbe3ec" font-family="Georgia, serif" font-size="20" font-style="italic">
+    <text x="375" y="307">x</text>
+    <text x="20" y="27">y</text>
+  </g>
+</svg>

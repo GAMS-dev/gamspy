@@ -23,6 +23,7 @@ if typing.TYPE_CHECKING:
     DomainType: typing.TypeAlias = list[DomainElementType]
     BigMType: typing.TypeAlias = int | float | Operable
     BinaryType: typing.TypeAlias = gp.Variable | ImplicitVariable
+    OperandType: typing.TypeAlias = int | float | Operable
 
 
 _RELATIONAL_OPERATORS = {"=l=", "=e=", "=g="}
@@ -191,7 +192,9 @@ def _add_native_indicator(
         generation = generated >= 0
 
     result.equations_created["indicator"] = equation
-    result.equations_created["binary"] = m.addEquation(definition=generation)
+    result.equations_created["binary"] = m.addEquation(
+        name=gp.utils._get_unique_name("binary"), definition=generation
+    )
 
     # Model adds the generation equation if the indicator equation is in the model
     equation._indicator = (
@@ -206,7 +209,11 @@ def _add_native_indicator(
 def _add_sos1_pair(m: gp.Container, domain: DomainType) -> gp.Variable:
     # at most one of [*domain, "0"] and [*domain, "1"] can be nonzero
     sos_dim = gp.math._generate_dims(m, [2])[0]
-    return m.addVariable(domain=[*domain, sos_dim], type="sos1")
+    return m.addVariable(
+        name=gp.utils._get_unique_name("sos1"),
+        domain=[*domain, sos_dim],
+        type="sos1",
+    )
 
 
 def _add_equation(
@@ -216,7 +223,7 @@ def _add_equation(
     definition: Expression,
     condition: typing.Any,
 ) -> gp.Equation:
-    equation = m.addEquation(domain=domain)
+    equation = m.addEquation(name=gp.utils._get_unique_name("equation"), domain=domain)
     indices = key if key else ...
     if condition is None:
         equation[indices] = definition
@@ -396,3 +403,299 @@ def indicator(
     )
 
     return result
+
+
+def _validate_operand(operand: typing.Any) -> None:
+    if isinstance(operand, (int, float)) and not isinstance(operand, bool):
+        if not math.isfinite(operand):
+            raise ValidationError("operands must be finite numbers")
+
+        return
+
+    if isinstance(operand, Expression) and operand.operator in _RELATIONAL_OPERATORS:
+        raise ValidationError(
+            "operands cannot be inequalities or equalities, e.g. use x - 1"
+            " instead of x <= 1"
+        )
+
+    if not isinstance(operand, Operable) or isinstance(
+        operand, (gp.Set, gp.Alias, ImplicitSet)
+    ):
+        raise ValidationError(
+            "operands must be numbers, parameters, variables or expressions"
+        )
+
+
+def _extremum(
+    sense: typing.Literal["min", "max"],
+    operands: tuple[OperandType, ...],
+    *,
+    over: DomainElementType | Sequence[DomainElementType] | None,
+    big_m: BigMType | None,
+    native: bool,
+) -> FormulationResult:
+    if len(operands) == 0:
+        raise ValidationError("At least one operand is required")
+
+    for operand in operands:
+        _validate_operand(operand)
+
+    reduced = _domain_names([] if over is None else gp.utils._to_list(over))
+
+    domains = [list(getattr(operand, "domain", [])) for operand in operands]
+    if not reduced <= _domain_names([d for domain in domains for d in domain]):
+        raise ValidationError("over must be a subset of the domain of the operands")
+
+    # the domain of the output is the union of the operand domains except over
+    output_domain: DomainType = []
+    for domain in domains:
+        for set_ in domain:
+            name = _domain_name(set_)
+            if name not in reduced and name not in _domain_names(output_domain):
+                output_domain.append(set_)
+
+    containers = [getattr(operand, "container", None) for operand in operands]
+    m = next((container for container in containers if container is not None), None)
+    if m is None:
+        raise ValidationError("At least one operand must be a parameter or a variable")
+
+    reduced_domains = [
+        [set_ for set_ in domain if _domain_name(set_) in reduced] for domain in domains
+    ]
+    indices = [
+        _control_index([*output_domain, *reduced_domain])
+        for reduced_domain in reduced_domains
+    ]
+
+    for _, _, controlled in indices:
+        _validate_big_m(big_m, controlled)
+
+    if native and big_m is not None:
+        raise ValidationError("big_m cannot be used with native=True")
+
+    output_index, output_key, _ = _control_index(output_domain)
+    output_var = m.addVariable(
+        name=gp.utils._get_unique_name("output_var"),
+        domain=_declaration_domain(output_index),
+    )
+    output = output_var[output_index] if output_index else output_var
+
+    result = FormulationResult(output_var)
+    result.variables_created["output"] = output_var
+
+    # output is bounded by every operand and equals the selected one
+    selections = []
+    for k, (operand, reduced_domain, (index, key, _)) in enumerate(
+        zip(operands, reduced_domains, indices, strict=True)
+    ):
+        declaration = _declaration_domain(index)
+
+        select_var = m.addVariable(
+            name=gp.utils._get_unique_name("select_var"),
+            type="binary",
+            domain=declaration,
+        )
+        select = select_var[index] if index else select_var
+        result.variables_created[f"select_{k}"] = select_var
+
+        if sense == "max":
+            bound, selected = output >= operand, output <= operand
+        else:
+            bound, selected = output <= operand, output >= operand
+
+        result.equations_created[f"bound_{k}"] = _add_equation(
+            m, declaration, key, bound, None
+        )
+        selection = indicator(select, 1, selected, big_m=big_m, native=native)
+        for name, variable in selection.variables_created.items():
+            result.variables_created[f"{name}_{k}"] = variable
+        for name, equation in selection.equations_created.items():
+            result.equations_created[f"{name}_{k}"] = equation
+
+        selections.append(gp.Sum(reduced_domain, select) if reduced_domain else select)
+
+    result.equations_created["pick_one"] = _add_equation(
+        m,
+        _declaration_domain(output_index),
+        output_key,
+        sum(selections[1:], start=selections[0]) == 1,
+        None,
+    )
+
+    return result
+
+
+def minimum(
+    *operands: OperandType,
+    over: DomainElementType | Sequence[DomainElementType] | None = None,
+    big_m: BigMType | None = None,
+    native: bool = False,
+) -> FormulationResult:
+    """
+    Creates a variable ``y`` that equals the minimum of ``operands``, i.e.
+    ``y == min(operands[0], operands[1], ...)``. If ``over`` is given, the
+    minimum is also taken over these sets, e.g. ``minimum(x[i, j], over=j)``
+    creates ``y[i] == min(x[i, j] for j)``.
+
+    The formulation is the same as for :meth:`maximum
+    <gamspy.formulations.maximum>` with the inequalities reversed:
+
+    .. math::
+        y \\leq a_k \\quad \\forall{k}
+
+        b_k = 1 \\implies y \\geq a_k \\quad \\forall{k}
+
+        \\sum_{k}{b_k} = 1
+
+        b_k \\in \\{0, 1\\} \\quad \\forall{k}
+
+    The arguments, the domain of ``y``, the generated symbols and the keys of
+    the FormulationResult are also the same. The only other difference is that
+    ``big_m`` must be at least as large as ``a_k - y`` for every operand.
+
+    Returns
+    -------
+    FormulationResult
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=range(3))
+    >>> j = gp.Set(m, "j", records=range(2))
+    >>> x = gp.Variable(m, "x", domain=[i, j])
+    >>> z = gp.Variable(m, "z", domain=i)
+    >>> y, eqs = gp.formulations.minimum(z, 10)
+    >>> [d.name for d in y.domain]
+    ['i']
+    >>> y, eqs = gp.formulations.minimum(x, over=j, big_m=100)
+    >>> [d.name for d in y.domain]
+    ['i']
+
+    """
+    return _extremum("min", operands, over=over, big_m=big_m, native=native)
+
+
+def maximum(
+    *operands: OperandType,
+    over: DomainElementType | Sequence[DomainElementType] | None = None,
+    big_m: BigMType | None = None,
+    native: bool = False,
+) -> FormulationResult:
+    """
+    Creates a variable ``y`` that equals the maximum of ``operands``, i.e.
+    ``y == max(operands[0], operands[1], ...)``. If ``over`` is given, the
+    maximum is also taken over these sets, e.g. ``maximum(x[i, j], over=j)``
+    creates ``y[i] == max(x[i, j] for j)``.
+
+    Each operand can be a number, a parameter, a variable or an expression.
+    The domain of ``y`` is the union of the domains of the operands except
+    ``over``. If an operand is indexed with a multidimensional subset, e.g.
+    ``x[ij]`` with ``ij(i, j)``, ``y`` is declared over ``i`` and ``j`` but is
+    only constrained for the elements of ``ij``. Index ``y`` with the subset,
+    e.g. ``y[ij]``, since its other elements are free.
+
+    For each operand ``a_k``, the formulation **generates** a binary variable
+    ``b_k`` over the domain of ``y`` and the sets of ``over`` that are in the
+    domain of the operand. ``b_k = 1`` selects the operand whose value ``y``
+    takes:
+
+    .. math::
+        y \\geq a_k \\quad \\forall{k}
+
+        b_k = 1 \\implies y \\leq a_k \\quad \\forall{k}
+
+        \\sum_{k}{b_k} = 1
+
+        b_k \\in \\{0, 1\\} \\quad \\forall{k}
+
+    The ``bound_k`` equations keep ``y`` above every operand, the indicator
+    constraints keep it below the selected operand and ``pick_one`` selects
+    exactly one operand for each element of the domain of ``y``. The
+    indicator constraints are modeled with :meth:`indicator
+    <gamspy.formulations.indicator>`, which accepts ``big_m`` and ``native``.
+    With ``big_m``, they become ``y - a_k <= big_m * (1 - b_k)``, so ``big_m``
+    must be at least as large as ``y - a_k`` for every operand, e.g. the
+    difference between the largest upper bound and the smallest lower bound
+    of the operands.
+
+    FormulationResult:
+        - variables_created: ["output", "select_k"] and the variables of the indicator constraints suffixed with ``_k``
+        - equations_created: ["bound_k", "pick_one"] and the equations of the indicator constraints suffixed with ``_k``
+        - ``k`` is the position of the operand in ``operands``.
+
+    Parameters
+    ----------
+    *operands : int | float | Operable
+        Operands of the maximum.
+    over : Set | Alias | Sequence[Set | Alias] | None, optional
+        Sets to take the maximum over.
+    big_m : int | float | Operable | None, optional
+        Big-M value of the indicator constraints.
+    native : bool, optional
+        Pass the indicator constraints to the solver instead of reformulating
+        them.
+
+    Returns
+    -------
+    FormulationResult
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=range(3))
+    >>> j = gp.Set(m, "j", records=range(2))
+    >>> x = gp.Variable(m, "x", domain=[i, j])
+    >>> z = gp.Variable(m, "z", domain=i)
+    >>> res = gp.formulations.maximum(z, 0)
+    >>> list(res.variables_created)
+    ['output', 'select_0', 'sos1_0', 'select_1', 'sos1_1']
+    >>> y, eqs = gp.formulations.maximum(x, over=j, big_m=100)
+    >>> [d.name for d in y.domain]
+    ['i']
+    >>> y, eqs = gp.formulations.maximum(x[i, j], over=[i, j])
+    >>> y.domain
+    []
+
+    """
+    return _extremum("max", operands, over=over, big_m=big_m, native=native)
+
+
+def absolute(
+    operand: Operable,
+    *,
+    big_m: BigMType | None = None,
+    native: bool = False,
+) -> FormulationResult:
+    """
+    Creates a variable ``y`` that equals the absolute value of ``operand``,
+    i.e. ``y == abs(operand)``. The operand can be a parameter, a variable or
+    an expression, and ``y`` has the same domain.
+
+    The absolute value is modeled as ``maximum(operand, -operand)``, so the
+    generated symbols, the keys of the FormulationResult and the ``big_m`` and
+    ``native`` arguments are the same as for :meth:`maximum
+    <gamspy.formulations.maximum>`. ``big_m`` must be at least twice the
+    largest absolute value that ``operand`` can take.
+
+    Returns
+    -------
+    FormulationResult
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=range(3))
+    >>> x = gp.Variable(m, "x", domain=i)
+    >>> y, eqs = gp.formulations.absolute(x)
+    >>> [d.name for d in y.domain]
+    ['i']
+    >>> y, eqs = gp.formulations.absolute(x - 5, big_m=100)
+    >>> len(eqs)
+    5
+
+    """
+    _validate_operand(operand)
+    return _extremum("max", (operand, -operand), over=None, big_m=big_m, native=native)
