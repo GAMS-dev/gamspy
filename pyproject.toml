@@ -56,7 +56,7 @@ graph = ["graphviz>=0.20"]
 
 [tool.uv]
 exclude-newer = "3 days"
-exclude-newer-package = {gamspy_base = false, gamsapi = false, gamspy-highs = false, gamspy-ipopt = false, gamspy-ipopth = false, gamspy-knitro = false, gamspy-miles = false, gamspy-minos = false, gamspy-mosek = false, gamspy-mpsge = false, gamspy-pathnlp = false, gamspy-reshop = false, gamspy-scip = false, gamspy-shot = false, gamspy-snopt = false, gamspy-soplex = false, gamspy-xpress = false, gamspy-baron = false, gamspy-cbc = false, gamspy-conopt3 = false, gamspy-copt = false, gamspy-de = false, gamspy-dicopt = false, gamspy-examiner = false, gamspy-examiner2 = false, gamspy-gurobi = false, gamspy-arm-perf = false}
+exclude-newer-package = {gamspy_base = false, gamsapi = false, gamspy-highs = false, gamspy-ipopt = false, gamspy-ipopth = false, gamspy-knitro = false, gamspy-miles = false, gamspy-minos = false, gamspy-mosek = false, gamspy-mpsge = false, gamspy-pathnlp = false, gamspy-reshop = false, gamspy-scip = false, gamspy-shot = false, gamspy-snopt = false, gamspy-soplex = false, gamspy-xpress = false, gamspy-baron = false, gamspy-cbc = false, gamspy-conopt3 = false, gamspy-copt = false, gamspy-de = false, gamspy-dicopt = false, gamspy-examiner = false, gamspy-examiner2 = false, gamspy-gurobi = false, gamspy-arm-perf = false, gamspy-mkl = false}
 
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu" }]
@@ -241,6 +241,7 @@ select = [
     "PLC0208",  # iteration-over-set
     "PLE",      # Pylint error rules
     "PGH003",   # blanket-type-ignore
+    "ANN",      # flake8-annotations
 ]
 ignore = [
     "E501",   # line-too-long
@@ -250,7 +251,8 @@ ignore = [
     "SIM117", # multiple-with-statements
     "RUF005", # collection-literal-concatenation
     "RUF022", # unsorted-dunder-all
-    "B905"    # zip-without-explicit-strict
+    "B905",   # zip-without-explicit-strict
+    "ANN401", # any-type
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
