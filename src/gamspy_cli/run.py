@@ -4,7 +4,7 @@ import os
 import platform
 import subprocess
 import sys
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path  # noqa: TC003
 from typing import Annotated, Optional
 
@@ -17,7 +17,7 @@ app = typer.Typer(
 )
 
 
-class ModeEnum(str, Enum):
+class ModeEnum(StrEnum):
     config = "config"
     base = "base"
     deploy = "deploy"

@@ -10,7 +10,7 @@ authors = [
 ]
 readme = "README_PYPI.md"
 description = "Algebraic modeling and mathematical optimization in Python"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license-files = ["LICENSE"]
 keywords = ["Mathematical Optimization", "Algebraic Modeling", "Python", "GAMS"]
 classifiers = [
@@ -23,11 +23,11 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Operating System :: POSIX",
   "Operating System :: Unix",
   "Operating System :: MacOS",
@@ -220,8 +220,8 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.10
-target-version = "py310"
+# Assume Python 3.11
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [

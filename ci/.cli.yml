@@ -1,56 +1,56 @@
-leg-cli-3.14:
+leg-cli-3.15:
   extends: .uv_package_cache
   stage: cli
   needs: [setup-leg-toolchain]
   tags: [linux]
   image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   script:
-    - uv venv .venv --python 3.14
+    - uv venv .venv --python 3.15
     - source .venv/bin/activate
     - uv build
     - uv sync --locked --group test
     - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
-leg-cli-3.10:
+leg-cli-3.11:
   extends: .uv_package_cache
   stage: cli
   needs: [setup-leg-toolchain]
   tags: [linux]
   image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   script:
-    - uv venv .venv --python 3.10
+    - uv venv .venv --python 3.11
     - source .venv/bin/activate
     - uv sync --locked --group test
     - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
-lag-cli-3.14:
+lag-cli-3.15:
   extends: .uv_package_cache
   stage: cli
   needs: [setup-lag-toolchain]
   tags: [linux-arm64]
   image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   script:
-    - uv venv .venv --python 3.14
+    - uv venv .venv --python 3.15
     - source .venv/bin/activate
     - uv build
     - uv sync --locked --group test
     - uv pip install gamspy-arm-perf
     - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
-lag-cli-3.10:
+lag-cli-3.11:
   extends: .uv_package_cache
   stage: cli
   needs: [setup-lag-toolchain]
   tags: [linux-arm64]
   image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   script:
-    - uv venv .venv --python 3.10
+    - uv venv .venv --python 3.11
     - source .venv/bin/activate
     - uv sync --locked --group test
     - uv pip install gamspy-arm-perf
     - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
-dac-cli-3.14:
+dac-cli-3.15:
   extends: .uv_package_cache
   stage: cli
   when: on_success
@@ -58,71 +58,71 @@ dac-cli-3.14:
   tags: [macos-arm64]
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.14
+    - uv venv .venv --python 3.15
     - source .venv/bin/activate
     - uv build
     - uv sync --locked --group test
     - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
-dac-cli-3.10:
+dac-cli-3.11:
   extends: .uv_package_cache
   stage: cli
-  needs: [dac-cli-3.14, setup-dac-toolchain]
+  needs: [dac-cli-3.15, setup-dac-toolchain]
   tags: [macos-arm64]
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.10
+    - uv venv .venv --python 3.11
     - source .venv/bin/activate
     - uv sync --locked --group test
     - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
-deg-cli-3.14:
+deg-cli-3.15:
   extends: .uv_package_cache
   stage: cli
   needs: [setup-deg-toolchain]
   tags: [macos]
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.14
+    - uv venv .venv --python 3.15
     - source .venv/bin/activate
     - uv build
     - uv sync --locked --group test
     - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
-deg-cli-3.10:
+deg-cli-3.11:
   extends: .uv_package_cache
   stage: cli
-  # Preserving dependency on 3.14 while adding toolchain
-  needs: [deg-cli-3.14, setup-deg-toolchain]
+  # Preserving dependency on 3.15 while adding toolchain
+  needs: [deg-cli-3.15, setup-deg-toolchain]
   tags: [macos]
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.10
+    - uv venv .venv --python 3.11
     - source .venv/bin/activate
     - uv sync --locked --group test
     - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
 
-wei-cli-3.14:
+wei-cli-3.15:
   extends: .uv_package_cache
   stage: cli
   needs: [setup-wei-toolchain]
   tags: [windows]
   script:
     - !reference [.wei_unpack_toolchain, script]
-    - uv venv .venv --python 3.14
+    - uv venv .venv --python 3.15
     - .venv\Scripts\Activate.ps1
     - uv build
     - uv sync --locked --group test
     - $env:UV_NO_CONFIG="1"; python -m pytest -x -ra -m 'cli' tests
 
-wei-cli-3.10:
+wei-cli-3.11:
   extends: .uv_package_cache
   stage: cli
   needs: [setup-wei-toolchain]
   tags: [windows]
   script:
     - !reference [.wei_unpack_toolchain, script]
-    - uv venv .venv --python 3.10
+    - uv venv .venv --python 3.11
     - .venv\Scripts\Activate.ps1
     - uv sync --locked --group test
     - $env:UV_NO_CONFIG="1"; python -m pytest -x -ra -m 'cli' tests

@@ -225,7 +225,7 @@ Prerequisites
 
 Building GAMSPy requires the following software to be installed:
 
-1) Python 3.10.x or newer
+1) Python 3.11.x or newer
 
 2) The GAMSPy source code::
     

@@ -2,7 +2,7 @@
 .lag_template:
   extends: .uv_package_cache
   stage: test
-  needs: [lag-cli-3.10, setup-lag-toolchain]
+  needs: [lag-cli-3.11, setup-lag-toolchain]
   tags: [linux-arm64]
   image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   before_script:
@@ -16,8 +16,13 @@
   script:
     - python -m pytest -n $NUM_PROCESS -x -ra -m 'unit or integration or model_library or requires_license' tests
 
-lag-test-3.14:
+lag-test-3.15:
   extends: [.lag_template, .pytest_with_coverage]
+  variables:
+    PYTHON_VERSION: "3.15"
+
+lag-test-3.14:
+  extends: [.lag_template, .develop_and_master_only]
   variables:
     PYTHON_VERSION: "3.14"
 
@@ -32,14 +37,9 @@ lag-test-3.12:
     PYTHON_VERSION: "3.12"
 
 lag-test-3.11:
-  extends: [.lag_template, .develop_and_master_only]
-  variables:
-    PYTHON_VERSION: "3.11"
-
-lag-test-3.10:
   extends: .lag_template
   variables:
-    PYTHON_VERSION: "3.10"
+    PYTHON_VERSION: "3.11"
 
 #### ENGINE #####
 .lag_engine_template:
@@ -56,15 +56,15 @@ lag-test-3.10:
     - uv pip install gamspy-arm-perf
     - python -m pytest -x -ra -m 'engine' tests
 
-lag-engine-3.14:
+lag-engine-3.15:
   extends: .lag_engine_template
   variables:
-    PYTHON_VERSION: "3.14"
+    PYTHON_VERSION: "3.15"
 
-lag-engine-3.10:
+lag-engine-3.11:
   extends: .lag_engine_template
   variables:
-    PYTHON_VERSION: "3.10"
+    PYTHON_VERSION: "3.11"
 
 #### NEOS #####
 .lag_neos_template:
@@ -82,12 +82,12 @@ lag-engine-3.10:
     - gamspy install solver -a --use-uv
     - python -m pytest -x -ra -m 'neos' tests
 
-lag-neos-3.14:
+lag-neos-3.15:
   extends: .lag_neos_template
   variables:
-    PYTHON_VERSION: "3.14"
+    PYTHON_VERSION: "3.15"
 
-lag-neos-3.10:
+lag-neos-3.11:
   extends: .lag_neos_template
   variables:
-    PYTHON_VERSION: "3.10"
+    PYTHON_VERSION: "3.11"

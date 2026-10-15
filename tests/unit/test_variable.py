@@ -1075,7 +1075,7 @@ def test_variable_drop_methods():
 
 
 @pytest.mark.skipif(
-    not (platform.system() == "Linux" and sys.version_info.minor == 14),
+    not (platform.system() == "Linux" and sys.version_info.minor == 15),
     reason="Test only for linux.",
 )
 def test_toSparseCoo():

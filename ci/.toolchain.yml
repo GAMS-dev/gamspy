@@ -5,15 +5,16 @@ variables:
   # Pinned so that the toolchain cache below is deterministic. Bumped by the scheduled autoupgrade job.
   UV_VERSION: "0.13.1"
 
+# PY_VERSIONS_KEY is part of the toolchain cache key, so it must change whenever PY_VERSIONS changes.
 .python_versions:
   variables:
-    PY_VERSIONS: "3.10 3.14"
-    PY_VERSIONS_KEY: "py-min-max"
+    PY_VERSIONS: "3.11 3.15"
+    PY_VERSIONS_KEY: "py-min-max-3.11-3.15"
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       variables:
-        PY_VERSIONS: "3.10 3.11 3.12 3.13 3.14"
-        PY_VERSIONS_KEY: "py-all"
+        PY_VERSIONS: "3.11 3.12 3.13 3.14 3.15"
+        PY_VERSIONS_KEY: "py-all-3.11-3.15"
     - when: on_success
 
 # uv and the Python interpreters only change when UV_VERSION or PY_VERSIONS change,
