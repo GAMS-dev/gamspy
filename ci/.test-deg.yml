@@ -1,127 +1,93 @@
 #### TESTS #####
 .deg_template:
+  extends: [.uv_package_cache, .develop_and_master_only]
   stage: test
-  needs: [deg-cli-3.10, setup-deg-toolchain]
+  needs: [deg-cli-3.11, setup-deg-toolchain]
   tags: [macos]
-  variables:
-    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
-  script:
+  before_script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
-    - uv sync --group test
+    - uv sync --locked --group test
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > "$CI_PROJECT_DIR/ci_license.txt"
     - export GAMSPY_LICENSE_PATH="$CI_PROJECT_DIR/ci_license.txt"
     - UV_NO_CONFIG=1 gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
+  script:
     - python -B -m pytest -n $NUM_PROCESS -x -ra -m 'unit or integration or model_library or requires_license' tests
+
+deg-test-3.15:
+  extends: [.deg_template, .pytest_with_coverage]
+  variables:
+    PYTHON_VERSION: "3.15"
 
 deg-test-3.14:
   extends: .deg_template
   variables:
     PYTHON_VERSION: "3.14"
-  script:
-    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python $PYTHON_VERSION
-    - source .venv/bin/activate
-    - uv sync --group test
-    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > "$CI_PROJECT_DIR/ci_license.txt"
-    - export GAMSPY_LICENSE_PATH="$CI_PROJECT_DIR/ci_license.txt"
-    - UV_NO_CONFIG=1 gamspy install solver -a --use-uv
-    - gamspy uninstall solver miles --use-uv
-    - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -n $NUM_PROCESS -x -ra -m 'unit or integration or model_library or requires_license or doc' tests
-    - coverage report -m --data-file=".coverage"
-    - coverage xml --data-file=".coverage"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
 
 deg-test-3.13:
   extends: .deg_template
   variables:
     PYTHON_VERSION: "3.13"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
 
 deg-test-3.12:
   extends: .deg_template
   variables:
     PYTHON_VERSION: "3.12"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
 
 deg-test-3.11:
   extends: .deg_template
   variables:
     PYTHON_VERSION: "3.11"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
-
-deg-test-3.10:
-  extends: .deg_template
-  variables:
-    PYTHON_VERSION: "3.10"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
 
 #### ENGINE ####
 .deg_engine_template:
+  extends: .uv_package_cache
   stage: engine
   when: manual
   needs: [setup-deg-toolchain]
   allow_failure: true
   tags: [macos]
-  variables:
-    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
-    - uv sync --group test
+    - uv sync --locked --group test
     - python -B -m pytest -x -ra -m 'engine' tests
 
-deg-engine-3.14:
+deg-engine-3.15:
   extends: .deg_engine_template
   variables:
-    PYTHON_VERSION: "3.14"
+    PYTHON_VERSION: "3.15"
 
-deg-engine-3.10:
+deg-engine-3.11:
   extends: .deg_engine_template
   variables:
-    PYTHON_VERSION: "3.10"
+    PYTHON_VERSION: "3.11"
 
 #### NEOS ####
 .deg_neos_template:
+  extends: .uv_package_cache
   stage: neos
   when: manual
   needs: [setup-deg-toolchain]
   allow_failure: true
   tags: [macos]
-  variables:
-    UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
     - uv venv .venv --python $PYTHON_VERSION
     - source .venv/bin/activate
-    - uv sync --group test
+    - uv sync --locked --group test
     - gamspy install solver -a --use-uv
     - python -B -m pytest -x -ra -m 'neos' tests
 
-deg-neos-3.14:
+deg-neos-3.15:
   extends: .deg_neos_template
   variables:
-    PYTHON_VERSION: "3.14"
+    PYTHON_VERSION: "3.15"
 
-deg-neos-3.10:
+deg-neos-3.11:
   extends: .deg_neos_template
   variables:
-    PYTHON_VERSION: "3.10"
+    PYTHON_VERSION: "3.11"

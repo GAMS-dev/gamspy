@@ -378,6 +378,21 @@ def permute(
     raise GamspyException(f"permute not implemented for {type(x)}")
 
 
+def _transpose(
+    x: (
+        Parameter | implicits.ImplicitParameter | Variable | implicits.ImplicitVariable
+    ),
+    kind: str,
+) -> implicits.ImplicitVariable | implicits.ImplicitParameter:
+    """Swaps the last two dimensions of `x`. `kind` names `x` in the error message."""
+    dims = list(range(len(x.domain)))
+    if len(dims) < 2:
+        raise ValidationError(f"{kind} must contain at least 2 dimensions to transpose")
+
+    dims[-1], dims[-2] = dims[-2], dims[-1]
+    return permute(x, dims)
+
+
 def _validate_matrix_mult_dims(
     left, right
 ) -> tuple[Sequence[Set | Alias], Sequence[Set | Alias], Set | Alias]:

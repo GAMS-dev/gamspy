@@ -56,6 +56,7 @@ from gams.core.gmo import (
 )
 
 import gamspy as gp
+import gamspy._algebra.expression as expression
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
@@ -315,17 +316,22 @@ class ModelInstance:
         model._assign_model_attributes()
 
         # Write pf file
-        options._set_extra_options({"solvercntr": self.solver_control_file})
+        previous_log_file = options.log_file
         options.log_file = os.path.join(self.container.working_directory, "gamslog.dat")
-
-        runner = backend_factory(
-            self.container,
-            options,
-            self.model._default_solver,
-            model=model,
-            output=self.output,
-        )
-        runner.run()
+        try:
+            with options._temporary_extra_options(
+                {"solvercntr": self.solver_control_file}
+            ):
+                runner = backend_factory(
+                    self.container,
+                    options,
+                    self.model._default_solver,
+                    model=model,
+                    output=self.output,
+                )
+                runner.run()
+        finally:
+            options.log_file = previous_log_file
 
         if hibernate:
             self.container.hibernate()
@@ -658,7 +664,9 @@ class ModelInstance:
         symbols_in_conditions: list[str] = []
         for equation in self.model.equations:
             assert equation._definition is not None
-            symbols_in_conditions += equation._definition._find_symbols_in_conditions()
+            symbols_in_conditions += expression.find_symbols_in_conditions(
+                equation._definition
+            )
 
         will_be_modified: list[Parameter | ImplicitParameter] = []
         for symbol in modifiables:

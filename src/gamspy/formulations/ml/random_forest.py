@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 import gamspy as gp
 import gamspy.formulations.utils as utils
+from gamspy._config import _temporary_options
 from gamspy.exceptions import ValidationError
 from gamspy.formulations.ml.decision_tree_struct import DecisionTreeStruct
 from gamspy.formulations.ml.regression_tree import RegressionTree
@@ -133,48 +134,45 @@ class RandomForest:
         M: float | None = None,
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         rf_out_list: list[gp.Variable] = []
-        previous_value = gp.get_option("DOMAIN_VALIDATION")
-        gp.set_options({"DOMAIN_VALIDATION": 0})
+        with _temporary_options({"DOMAIN_VALIDATION": 0}):
+            set_records_total: dict[SymbolType, Any] = {}
 
-        set_records_total: dict[SymbolType, Any] = {}
+            results = (
+                regression_tree._yield_call(input, M)
+                for regression_tree in self._list_of_trees
+            )
 
-        results = (
-            regression_tree._yield_call(input, M)
-            for regression_tree in self._list_of_trees
-        )
+            zipped_results = zip(*results, strict=False)
+            dt_outs = next(zipped_results)
+            rf_out_list.extend(dt_outs)
 
-        zipped_results = zip(*results, strict=False)
-        dt_outs = next(zipped_results)
-        rf_out_list.extend(dt_outs)
+            set_records_iter = next(zipped_results)
+            set_of_output_dim = None
+            for item, set_records_dict in set_records_iter:
+                set_records_total.update(set_records_dict)
+                set_of_output_dim = item
 
-        set_records_iter = next(zipped_results)
-        set_of_output_dim = None
-        for item, set_records_dict in set_records_iter:
-            set_records_total.update(set_records_dict)
-            set_of_output_dim = item
+            self.container.setRecords(set_records_total)
 
-        self.container.setRecords(set_records_total)
+            rf_eqn_list = list(itertools.chain.from_iterable(next(zipped_results)))
 
-        rf_eqn_list = list(itertools.chain.from_iterable(next(zipped_results)))
+            set_of_samples = input.domain[0]
 
-        set_of_samples = input.domain[0]
+            out = gp.Variable._constructor_bypass(
+                self.container,
+                name=utils._generate_name("v", self._name_prefix, "real_output"),
+                domain=[set_of_samples, set_of_output_dim],  # ty: ignore[invalid-argument-type]
+            )
 
-        out = gp.Variable._constructor_bypass(
-            self.container,
-            name=utils._generate_name("v", self._name_prefix, "real_output"),
-            domain=[set_of_samples, set_of_output_dim],  # ty: ignore[invalid-argument-type]
-        )
+            rf_eqn = gp.Equation._constructor_bypass(
+                self.container,
+                name=utils._generate_name("e", self._name_prefix, "rf_eqn"),
+                domain=[set_of_samples, set_of_output_dim],  # ty: ignore[invalid-argument-type]
+                description="predicted out times number of estimators should be equal to the random forest out",
+            )
 
-        rf_eqn = gp.Equation._constructor_bypass(
-            self.container,
-            name=utils._generate_name("e", self._name_prefix, "rf_eqn"),
-            domain=[set_of_samples, set_of_output_dim],  # ty: ignore[invalid-argument-type]
-            description="predicted out times number of estimators should be equal to the random forest out",
-        )
-
-        self.container._synch_with_gams()
-        rf_eqn[...] = len(self._list_of_trees) * out == sum(rf_out_list)
-        rf_eqn_list.append(rf_eqn)
-        gp.set_options({"DOMAIN_VALIDATION": previous_value})
+            self.container._synch_with_gams()
+            rf_eqn[...] = len(self._list_of_trees) * out == sum(rf_out_list)
+            rf_eqn_list.append(rf_eqn)
 
         return out, rf_eqn_list

@@ -55,10 +55,10 @@ We start from the data and a container. The inflow scenarios are a
 
    # Three inflow scenarios per month and their probabilities.
    scenario_data = np.array([
-       [ 50.0, 150.0, 350.0],   # jan
-       [ 50.0, 150.0, 350.0],   # feb
-       [-50.0, 100.0, 250.0],   # mar
-       [-50.0, 100.0, 250.0],   # apr
+       [-50.0, 100.0, 250.0],   # jan
+       [-50.0, 100.0, 250.0],   # feb
+       [ 50.0, 150.0, 350.0],   # mar
+       [ 50.0, 150.0, 350.0],   # apr
    ])
    scenario_probs = [0.25, 0.50, 0.25]
 
@@ -144,20 +144,19 @@ iteration and a summary:
 
 .. code-block:: text
 
-       j1:  bound =    1.074219E+2   sim cost =    9.375000E+2 ±  7.954951E+2
-       j2:  bound =    1.074219E+2   sim cost =    1.718750E+2 ±  2.430680E+2
-       j3:  bound =    1.113281E+2   sim cost =    2.500000E+2 ±  3.535534E+2
-       j4:  bound =    1.116536E+2   sim cost =    0.000000E+0 ±  0.000000E+0
-       j5:  bound =    1.123047E+2   sim cost =    0.000000E+0 ±  0.000000E+0
-       j6:  bound =    1.123047E+2   sim cost =    0.000000E+0 ±  0.000000E+0
-       j7:  bound =    1.123047E+2   sim cost =    0.000000E+0 ±  0.000000E+0
-       j8:  bound =    1.123047E+2   sim cost =    0.000000E+0 ±  0.000000E+0
+       iteration1:  bound =    1.171875E+1   sim cost =    5.535714E+2 ±  7.828682E+2
+       iteration2:  bound =    6.302083E+1   sim cost =    6.666667E+1 ±  9.428090E+1
+       iteration3:  bound =    7.031250E+1   sim cost =    7.500000E+2 ±  1.060660E+3
+       iteration4:  bound =    7.031250E+1   sim cost =    0.000000E+0 ±  0.000000E+0
+       iteration5:  bound =    7.031250E+1   sim cost =    0.000000E+0 ±  0.000000E+0
+       iteration6:  bound =    7.031250E+1   sim cost =    0.000000E+0 ±  0.000000E+0
+
 
    ========================================================================
-     Lower bound          :    1.123047E+2
-     Iterations run       :              8
+     Lower bound          :    7.031250E+1
+     Iterations run       :              6
      Stop reason          :      converged
-     Total time           :           9.63 s
+     Total time           :           3.88 s
      --------------------------------------------------------------------
      Policy cost          :    1.210000E+2 ±  3.626809E+1   (500 MC paths, 95% CI)
      Optimality gap       :        7.1862 %
@@ -165,8 +164,8 @@ iteration and a summary:
 
 The ``bound`` column is the **lower bound**: a rigorous under-estimate of the
 optimal expected cost that rises as :doc:`cuts <how_it_works>` accumulate. It
-climbs from 107.42 and settles at 112.3047, where the plateau rule stops
-training after 8 of the 20 allowed iterations. The ``sim cost`` column is a small-sample (``n_trials``)
+climbs from 11.72 and settles at 70.3125, where the plateau rule stops
+training after 6 of the 20 allowed iterations. The ``sim cost`` column is a small-sample (``n_trials``)
 diagnostic of the forward paths, *not* a bound; it is noisy and can even be
 zero, which is why training watches the bound, not this column.
 
@@ -174,8 +173,8 @@ The result object carries the same numbers:
 
 .. code-block:: python
 
-   result.lower_bound      # 112.3046875
-   result.iterations_run   # 8
+   result.lower_bound      # 70.3125
+   result.iterations_run   # 6
    result.stop_reason      # 'converged'
 
 Querying the policy
@@ -190,12 +189,12 @@ reservoir came in at level 150, and this month's inflow turned out to be a large
    decision = sddp.policy(stage="mar", state=150, noise=350, report=[R, L, Z, F])
 
    decision.decisions          # {'R': 200.0, 'L': 250.0, 'Z': 0.0, 'F': 50.0}
-   decision.approx_cost_to_go  # 625.0
+   decision.approx_cost_to_go  # 875.0
 
 With a high level and a large inflow the reservoir would overflow, so the policy
 releases the maximum 200, spills the excess 50 in a controlled flood, imports
 nothing, and ends the month at the 250 cap. The expected cost from ``mar`` to
-the end of the season under this situation is 625.
+the end of the season under this situation is 875.0.
 
 Simulating the policy
 =====================

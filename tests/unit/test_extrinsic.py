@@ -6,6 +6,7 @@ import platform
 import pytest
 
 from gamspy import Equation, Parameter, Set, Sum, Variable
+from gamspy._algebra.expression import find_symbols
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
@@ -124,7 +125,7 @@ def test_extrinsic_function_traversal(container):
     e[...] = v == trilib.myCos(90)
 
     # the arguments of an extrinsic function are walked like any other operand
-    assert sorted(set(e._definition._find_all_symbols())) == ["e", "v"]
+    assert sorted(set(find_symbols(e._definition))) == ["e", "v"]
 
     pytest.importorskip("graphviz")
     assert "label=myCos" in e.toGraph().source

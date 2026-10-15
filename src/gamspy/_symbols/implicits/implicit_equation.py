@@ -11,8 +11,9 @@ if TYPE_CHECKING:
     import numpy as np
     import pandas as pd
 
-    from gamspy import Equation, Set
+    from gamspy import Equation
     from gamspy._algebra.expression import Expression
+    from gamspy._types import ValidatedIndexType
 
 
 class ImplicitEquation(ImplicitSymbol):
@@ -21,7 +22,7 @@ class ImplicitEquation(ImplicitSymbol):
         parent: Equation,
         name: str,
         type: str,
-        domain: list[Set | str],
+        domain: list[ValidatedIndexType],
     ) -> None:
         """Implicit Equation
 
@@ -29,7 +30,7 @@ class ImplicitEquation(ImplicitSymbol):
         ----------
         parent : Equation
         name : str
-        domain : List[Set | str]
+        domain : list[Set | Alias | ImplicitSet | Expression | str]
         """
         self.parent = parent
         super().__init__(name, domain)

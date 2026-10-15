@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="330" viewBox="0 0 420 330" font-family="Helvetica, Arial, sans-serif">
+  <title>Relaxations of the indicator formulations</title>
+  <desc>The LP relaxation of the SOS1 formulation is the whole box. The big-M relaxation with M equal to 6 cuts off the corner above the line from x equals 2 at b equals 1 to x equals 5 at b equals 0.5, and with M equal to 3, the line ends at x equals 5 at b equals 0, which gives the convex hull.</desc>
+  <rect width="420" height="330" fill="#eeeeee"/>
+
+  <g fill="none" stroke="#777777" stroke-opacity="0.45" stroke-width="1">
+    <path d="M120 30 V270 M180 30 V270 M240 30 V270 M300 30 V270 M360 30 V270"/>
+    <path d="M60 165 H360 M60 60 H360"/>
+  </g>
+
+  <path d="M60 60 H360 V270 H60 Z" fill="#375a9e" fill-opacity="0.12"/>
+  <path d="M60 60 H180 L360 165 V270 H60 Z" fill="#375a9e" fill-opacity="0.16"/>
+  <path d="M60 60 H180 L360 270 H60 Z" fill="#375a9e" fill-opacity="0.24"/>
+  <g fill="none" stroke="#375a9e" stroke-width="1.5" stroke-dasharray="4 4">
+    <path d="M180 60 L360 165"/>
+    <path d="M180 60 L360 270"/>
+  </g>
+  <g fill="none" stroke="#222222" stroke-width="1.5">
+    <path d="M45 270 H375"/>
+    <path d="M60 285 V15"/>
+  </g>
+
+  <g fill="none" stroke="#375a9e" stroke-width="4">
+    <path d="M60 270 H360"/>
+    <path d="M60 60 H180"/>
+  </g>
+  <g fill="#375a9e" stroke="#375a9e" stroke-width="3">
+    <circle cx="60" cy="270" r="6"/>
+    <circle cx="360" cy="270" r="6"/>
+    <circle cx="60" cy="60" r="6"/>
+    <circle cx="180" cy="60" r="6"/>
+  </g>
+
+  <g fill="#222222" font-size="15">
+    <text x="364" y="65">SOS1</text>
+    <text x="364" y="170">M = 6</text>
+    <text x="364" y="258">M = 3</text>
+  </g>
+  <g fill="#222222" font-size="14" text-anchor="middle">
+    <text x="60" y="292">0</text>
+    <text x="120" y="292">1</text>
+    <text x="180" y="292">2</text>
+    <text x="240" y="292">3</text>
+    <text x="300" y="292">4</text>
+    <text x="360" y="292">5</text>
+  </g>
+  <g fill="#222222" font-size="14" text-anchor="end">
+    <text x="45" y="170">0.5</text>
+    <text x="45" y="65">1</text>
+  </g>
+  <g fill="#222222" font-family="Georgia, serif" font-size="20" font-style="italic">
+    <text x="375" y="307">x</text>
+    <text x="20" y="27">b</text>
+  </g>
+</svg>

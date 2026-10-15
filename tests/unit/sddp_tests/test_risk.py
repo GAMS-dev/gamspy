@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import FrozenInstanceError
 
 import numpy as np
@@ -11,15 +12,15 @@ from gamspy.exceptions import ValidationError
 from gamspy.formulations.sddp import SDDP, CVaR
 
 # Same ClearLake regression problem as conftest. The risk-neutral lower bound
-# is exactly 112.3046875 (== 28750 / 256); CVaR with weight=0 (or tail=1,
-# weight=1) must collapse back onto it.
-EXACT_LB = 112.3046875
+# is exactly 70.3125; CVaR with weight=0 (or tail=1, weight=1) must collapse
+# back onto it.
+EXACT_LB = 70.3125
 SCENARIOS = np.array(
     [
-        [50.0, 150.0, 350.0],
-        [50.0, 150.0, 350.0],
-        [-50.0, 100.0, 250.0],
-        [-50.0, 100.0, 250.0],
+        [-50.0, 100.0, 250.0],  # jan
+        [-50.0, 100.0, 250.0],  # feb
+        [50.0, 150.0, 350.0],  # mar
+        [50.0, 150.0, 350.0],  # apr
     ]
 )
 PROBABILITIES = [0.25, 0.5, 0.25]
@@ -110,7 +111,7 @@ def test_cvar_weight_zero_matches_expectation():
     _m, sddp = _clearlake_built()
     risk = CVaR(tail=0.05, weight=0.0)
     res = sddp.train(n_iter=20, risk=risk)
-    assert res.lower_bound == EXACT_LB
+    assert math.isclose(res.lower_bound, EXACT_LB, rel_tol=1e-9)
     assert res.risk is not None
 
 
@@ -146,11 +147,11 @@ def test_cvar_raises_risk_adjusted_lower_bound():
 def test_pure_cvar_value_lb():
     _m, sddp = _clearlake_built()
     res = sddp.train(n_iter=80, risk=CVaR(tail=0.25, weight=1.0))
-    assert np.isclose(res.lower_bound, 916.6667, rtol=1e-3)
+    assert np.isclose(res.lower_bound, 1375.0, rtol=1e-3)
 
 
 @pytest.mark.requires_license
 def test_blend_cvar_value_lb():
     _m, sddp = _clearlake_built()
     res = sddp.train(n_iter=80, risk=CVaR(tail=0.25, weight=0.5))
-    assert np.isclose(res.lower_bound, 399.1699, rtol=1e-3)
+    assert np.isclose(res.lower_bound, 501.7732, rtol=1e-3)

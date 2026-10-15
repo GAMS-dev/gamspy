@@ -240,6 +240,8 @@ class Container:
 
         self._unsaved_statements: list = []
         self._literal_bound_sets: list = []
+        # Needed to support nesting.
+        self._outer_contexts: dict[tuple[int, int], list[Container | None]] = {}
 
         self._frozen_modifiables: set[str] = set()
         self._frozen_companions: set[str] = set()
@@ -247,7 +249,7 @@ class Container:
 
         self._data: CasePreservingDict[SymbolType] = CasePreservingDict()
 
-        self._options = validation.validate_global_options(options)
+        self._options = validation.validate_global_options(options).model_copy()
         if self._options.license is not None:
             self._license_path = self._options.license
         else:
@@ -287,15 +289,14 @@ class Container:
                 if load_from.endswith(".gdx"):
                     self.loadRecordsFromGdx(load_from)
                 elif load_from.endswith(".g00"):
-                    self._options._set_extra_options(
+                    with self._options._temporary_extra_options(
                         {
                             "restart": load_from,
                             "gdx": self._gdx_out,
                             "gdxSymbols": "allNoData",
                         }
-                    )
-                    self._synch_with_gams()
-                    self._options._set_extra_options({})
+                    ):
+                        self._synch_with_gams()
                     symbol_names = gdxio._get_symbol_names_from_gdx(
                         self.system_directory, self._gdx_out
                     )
@@ -313,20 +314,23 @@ class Container:
                 self._synch_with_gams()
 
     def __enter__(self) -> Container:
-        pid = os.getpid()
-        tid = threading.get_native_id()
-        gp._ctx_managers[(pid, tid)] = self
+        key = (os.getpid(), threading.get_native_id())
+        self._outer_contexts.setdefault(key, []).append(gp._ctx_managers.get(key))
+        gp._ctx_managers[key] = self
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pid = os.getpid()
-        tid = threading.get_native_id()
+        key = (os.getpid(), threading.get_native_id())
+        outer_contexts = self._outer_contexts.get(key)
+        outer = outer_contexts.pop() if outer_contexts else None
+        if not outer_contexts:
+            self._outer_contexts.pop(key, None)
 
-        try:
-            del gp._ctx_managers[(pid, tid)]
-        except KeyError:
-            ...
+        if outer is None:
+            gp._ctx_managers.pop(key, None)
+        else:
+            gp._ctx_managers[key] = outer
 
     def __getitem__(self, symbol_name: str) -> SymbolType:
         try:
@@ -2006,7 +2010,7 @@ $setEnv GDXCOMPRESS {int(compress)}
                 f"`symbol_names` must be of type list, dict, or None but given {type(symbol_names)}"
             )
 
-        self._add_statement(rf"$gdxUnload {write_to} {symbols_str}")
+        self._add_statement(rf"$gdxUnload {utils._quote_path(write_to)} {symbols_str}")
 
         if eps_to_zero:
             self._add_statement("$offEpsToZero")
@@ -2142,6 +2146,8 @@ $endIf
         if not os.path.exists(load_from):
             raise ValidationError(f"`{load_from}` does not exist.")
 
+        gams_path = utils._quote_path(load_from)
+
         if symbol_names is None:
             # If no symbol names are given, all records in the gdx should be loaded
             symbol_names = gdxio._get_symbol_names_from_gdx(
@@ -2150,7 +2156,7 @@ $endIf
             gdxio.load_missing_symbols(
                 self, load_from, symbol_names, declare_in_gams=False
             )
-            self._add_statement(f"$declareAndLoad {load_from}")
+            self._add_statement(f"$declareAndLoad {gams_path}")
             self._synch_with_gams()
             self._should_load_from(symbol_names, source=DataSource.GAMS)
             return
@@ -2164,13 +2170,13 @@ $endIf
             symbol_str = " ".join(
                 f"{value}={key}" for key, value in symbol_names.items()
             )
-            self._add_statement(f"$gdxLoad {load_from} {symbol_str}")
+            self._add_statement(f"$gdxLoad {gams_path} {symbol_str}")
             self._synch_with_gams()
             self._should_load_from(symbol_names.values(), source=DataSource.GAMS)
         else:
             symbol_str = " ".join(symbol_names)
             gdxio.load_missing_symbols(self, load_from, symbol_names)
-            self._add_statement(f"$gdxLoad {load_from} {symbol_str}")
+            self._add_statement(f"$gdxLoad {gams_path} {symbol_str}")
             self._synch_with_gams()
             self._should_load_from(symbol_names, source=DataSource.GAMS)
 
@@ -2196,14 +2202,17 @@ $endIf
         self._add_statement(gams_code)
 
         gdx_out = self._gdx_out
-        self._options._set_extra_options(
+        with self._options._temporary_extra_options(
             {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
-        )
+        ):
+            self._synch_with_gams()
+            symbol_names = gdxio._get_symbol_names_from_gdx(
+                self.system_directory, gdx_out
+            )
+            gdxio.load_missing_symbols(
+                self, gdx_out, symbol_names, declare_in_gams=False
+            )
 
-        self._synch_with_gams()
-        symbol_names = gdxio._get_symbol_names_from_gdx(self.system_directory, gdx_out)
-        gdxio.load_missing_symbols(self, gdx_out, symbol_names, declare_in_gams=False)
-        self._options._set_extra_options({})
         self._should_load_from(symbol_names, source=DataSource.GAMS)
 
         # Unfortunately MPSGE requires a dirty trick
@@ -2249,9 +2258,8 @@ $endIf
             )
 
         save_file = self._job + ".g00"
-        self._options._set_extra_options({"save": save_file})
-        self._synch_with_gams()
-        self._options._set_extra_options({})
+        with self._options._temporary_extra_options({"save": save_file}):
+            self._synch_with_gams()
 
         self._execution_engine.stop()
         self._restart_from = save_file
@@ -2756,9 +2764,8 @@ $endIf
             )
 
         save_file_path = os.path.join(working_directory, "save.g00")
-        self._options._set_extra_options({"save": save_file_path})
-        self._synch_with_gams()
-        self._options._set_extra_options({})
+        with self._options._temporary_extra_options({"save": save_file_path}):
+            self._synch_with_gams()
 
         m = Container(load_from=save_file_path, working_directory=working_directory)
 

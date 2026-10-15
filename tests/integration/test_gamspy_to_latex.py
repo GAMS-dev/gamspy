@@ -351,7 +351,7 @@ def test_symbol_name_with_underscore():
     assert (
         fuel_balance_air.latexRepr()
         == r"""$
-fuel\_at\_landing_{cities} = fuel\_at\_takeoff_{cities - 1} - (1 + \frac{0.5 \cdot (fuel\_at\_takeoff_{cities - 1} + fuel\_at\_landing_{cities})}{2000}) \cdot distance\_for\_next\_city_{cities - 1}\hfill \forall cities ~ | ~ ord(cities) > 1
+fuel\_at\_landing_{cities} = fuel\_at\_takeoff_{cities - 1} - (1 + \frac{0.5 \cdot (fuel\_at\_takeoff_{cities - 1} + fuel\_at\_landing_{cities})}{2000}) \cdot distance\_for\_next\_city_{cities - 1}\hfill \forall cities ~ | ~ \operatorname{ord}(cities) > 1
 $"""
     )
 
@@ -381,6 +381,100 @@ $"""
     p4 = gp.Parameter(m, name="p4_underscore")
     assert (
         gp.math.regularized_beta(p3, p4, 2).latexRepr()
-        == r"betaReg(p3\_underscore,p4\_underscore,2)"
+        == r"\operatorname{betaReg}(p3\_underscore,p4\_underscore,2)"
     )
-    assert gp.math.abs(p3).latexRepr() == r"\lvert{p3\_underscore}"
+    assert gp.math.abs(p3).latexRepr() == r"\lvert p3\_underscore \rvert"
+
+
+def test_equation_latex_repr(container):
+    m = container
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j_1", "j2"])
+    a = Parameter(m, "a", domain=i)
+    x = Variable(m, "x", domain=i)
+
+    # Parentheses at the start of the definition belong to the expression
+    e1 = Equation(m, "e1", domain=i)
+    e1[i] = (x[i] + 1) * (x[i] - 1) == a[i]
+    assert e1.latexRepr() == (
+        "$\n(x_{i} + 1) \\cdot (x_{i} - 1) = a_{i}\\hfill \\forall i\n$"
+    )
+
+    e2 = Equation(m, "e2", domain=i)
+    e2[i] = -x[i] + a[i] == 0
+    assert e2.latexRepr() == "$\n-x_{i} + a_{i} = 0\\hfill \\forall i\n$"
+
+    # A literal in the definition domain restricts the declared set
+    e3 = Equation(m, "e3", domain=[i, j])
+    e3[i, "j_1"] = x[i] <= 10
+    assert e3.latexRepr() == (
+        "$\nx_{i} \\leq 10\\hfill \\forall i ~ | ~ j = \\text{`j\\_1'}\n$"
+    )
+
+    e4 = Equation(m, "e4", domain=[i, j])
+    e4[i, "j_1"].where[(a[i] > 0) | (a[i] < -1)] = x[i] <= 10
+    assert e4.latexRepr() == (
+        "$\nx_{i} \\leq 10\\hfill \\forall i ~ | ~ j = \\text{`j\\_1'} "
+        "\\wedge (a_{i} > 0 \\vee a_{i} < -1)\n$"
+    )
+
+    e5 = Equation(m, "e5", domain=i)
+    e5["i1"] = x["i1"] == 1
+    assert e5.latexRepr() == (
+        "$\nx_{\\text{`i1'}} = 1\\hfill \\text{if } i = \\text{`i1'}\n$"
+    )
+
+
+def test_latex_symbol_references(container):
+    m = container
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1", "j2"])
+    k = Set(m, "k", records=["k1"])
+    c = Parameter(m, "c", domain=[i, j])
+    d = Parameter(m, "d", domain=[i, j, k])
+    x = Variable(m, "x", domain=[i, j])
+
+    # Transposed references are rendered in the declared domain order like in GAMS
+    assert c.t()[j, i].latexRepr() == "c_{i,j}"
+    assert x.t()[j, i].latexRepr() == "x_{i,j}"
+    assert gp.math.permute(d, [2, 0, 1])[k, i, "j1"].latexRepr() == (
+        r"d_{i,\text{`j1'},k}"
+    )
+
+    # Attributes are not dropped
+    assert x.l[i, j].latexRepr() == r"{x}^{\mathrm{l}}_{i,j}"
+    assert x.up[i, "j1"].latexRepr() == r"{x}^{\mathrm{up}}_{i,\text{`j1'}}"
+    assert i.pos.latexRepr() == r"{i}^{\mathrm{pos}}"
+
+
+def test_to_latex_document(container, tmp_path):
+    m = container
+    i = Set(m, "i", records=["i1", "i2"], description="plants & 50% of $_x")
+    a = Parameter(m, "a", domain=i, description="#1 ~ ^ \\ {x}")
+    x = Variable(m, "x", domain=i, type="semicont")
+    y = Variable(m, "y", domain=i, type="semiint")
+    z = Variable(m, "z", domain=i, type="sos1")
+    e = Equation(m, "e", domain=i)
+    e[i] = x[i] + y[i] + z[i] >= a[i]
+    model = Model(m, "document", equations=[e], problem="MIP")
+
+    model.toLatex(str(tmp_path), rename={"a": r"\alpha"})
+    with open(tmp_path / "document.tex", encoding="utf-8") as file:
+        content = file.read()
+
+    # Renaming only applies to the generated file
+    assert a.latexRepr() == "a"
+    assert (
+        r"$\alpha$ & $i$ & \#1 \textasciitilde{} \textasciicircum{} \textbackslash{} \{x\}\\"
+        in content
+    )
+    assert r"$i$ & $*$ & plants \& 50\% of \$\_x\\" in content
+    assert (
+        r"&x_{i} \in \{0\} \cup [{x}^{\mathrm{lo}}_{i}, {x}^{\mathrm{up}}_{i}] ~ \forall i&\\"
+        in content
+    )
+    assert (
+        r"&y_{i} \in \{0\} \cup ([{y}^{\mathrm{lo}}_{i}, {y}^{\mathrm{up}}_{i}] \cap \mathbb{Z}) ~ \forall i&\\"
+        in content
+    )
+    assert r"&z_{i} \geq 0 ~ (\text{SOS1}) ~ \forall i&\\" in content

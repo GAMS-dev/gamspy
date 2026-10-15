@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 from os.path import join
+from pathlib import Path
 
 import gamspy_base
 import pytest
@@ -17,7 +18,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 @pytest.mark.unit
 def test_version():
-    assert gp.__version__ == "1.28.1"
+    assert gp.__version__ == "1.29.0"
 
 
 @pytest.mark.unit
@@ -116,7 +117,7 @@ def test_map_special_values(set_options):
     m = gp.Container()
     a = gp.Parameter(m, "a")
     a[...] = gp.SpecialValues.EPS
-    assert a.getAssignment() == "a = -0.0;"
+    assert a.getAssignment() == "a = (-0.0);"
 
 
 @pytest.mark.doc
@@ -159,11 +160,12 @@ def teardown():
 
 
 @pytest.mark.doc
-def test_docs():
-    api_files = [
-        file for file in glob.glob("src/**", recursive=True) if file.endswith(".py")
-    ]
+def test_docs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    src = Path(__file__).parent.parent / "src"
+    api_files = [str(file) for file in src.rglob("*.py")]
 
+    # The examples write files to the cwd.
+    monkeypatch.chdir(tmp_path)
     for file in api_files:
         results = doctest.testfile(
             file,

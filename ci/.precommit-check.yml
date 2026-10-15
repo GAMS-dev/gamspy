@@ -3,8 +3,15 @@ leg-precommit:
   when: on_success
   tags: [linux]
   image: astral/uv:python3.13-trixie
+  variables:
+    PREK_HOME: "$CI_PROJECT_DIR/.prek_cache"
+  cache:
+    key: "prek-$CI_JOB_NAME"
+    paths:
+      - .prek_cache/
   script:
     - uv audit --ignore-until-fixed GHSA-rrmf-rvhw-rf47 --frozen
-    - apt-get update && apt-get install -y --no-install-recommends ca-certificates git
     - uv pip install --system prek ty
     - prek run --all-files
+    # Removes the repositories and environments of hook versions that are no longer configured
+    - prek cache gc

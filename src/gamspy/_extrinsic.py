@@ -128,15 +128,16 @@ class ExtrinsicFunction(operable.Operable):
         -------
         str
         """
-        representation = self.name.replace("_", r"\_")
+        name = self.name.replace("_", r"\_")
+        representation = f"\\operatorname{{{name}}}"
 
         if self.args:
             arg_strs = []
             for arg in self.args:
                 arg_str = (
                     str(arg).replace("_", r"\_")
-                    if isinstance(arg, (int, float, str))
-                    else arg.latexRepr()
+                    if isinstance(arg, str)
+                    else expression.get_operand_latex_repr(arg)
                 )
                 arg_strs.append(arg_str)
 

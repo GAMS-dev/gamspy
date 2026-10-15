@@ -18,8 +18,9 @@ if TYPE_CHECKING:
     import numpy as np
     import pandas as pd
 
-    from gamspy import Set, Variable
+    from gamspy import Variable
     from gamspy._algebra.expression import Expression
+    from gamspy._types import ValidatedIndexType
 
 
 class ImplicitVariable(ImplicitSymbol, operable.Operable):
@@ -27,7 +28,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         self,
         parent: Variable,
         name: str,
-        domain: list[Set | str],
+        domain: list[ValidatedIndexType],
         permutation: list[int] | None = None,
         scalar_domains: list[tuple[int, str]] | None = None,
     ):
@@ -38,7 +39,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         ----------
         parent : Variable
         name : str
-        domain : list[Set | str]
+        domain : list[Set | Alias | ImplicitSet | Expression | str]
         """
         self.parent = parent
         super().__init__(name, domain, permutation, scalar_domains)
@@ -207,18 +208,9 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         [Set(name='i', domain=['*']), Set(name='j', domain=['*'])]
 
         """
-        from gamspy.math.matrix import permute
+        from gamspy.math.matrix import _transpose
 
-        dims = list(range(len(self.domain)))
-        if len(dims) < 2:
-            raise ValidationError(
-                "Variable must contain at least 2 dimensions to transpose"
-            )
-
-        x = dims[-1]
-        dims[-1] = dims[-2]
-        dims[-2] = x
-        return permute(self, dims)  # ty: ignore[invalid-return-type]
+        return _transpose(self, "Variable")  # ty: ignore[invalid-return-type]
 
     @property
     def records(self) -> pd.DataFrame | None:
@@ -417,18 +409,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
 
     def gamsRepr(self) -> str:
         representation = self.name
-        domain = list(self.domain)
-        if domain and self.permutation is not None:
-            # self.permutation maps each axis to its position in the
-            # parent's declared domain, so invert it to render the
-            # reference in the parent's domain order.
-            domain = utils._permute_domain(
-                domain, utils._invert_permutation(self.permutation)
-            )
-
-        for i, d in self._scalar_domains:
-            domain.insert(i, d)
-
+        domain = self._reference_domain()
         if domain:
             representation += utils._get_domain_str(domain)
 

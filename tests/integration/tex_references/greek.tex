@@ -4,7 +4,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{fontspec}
-\setmainfont{CMU Serif} % 1. Sets a font that knows Greek in text mode
+\IfFontExistsTF{CMU Serif}{\setmainfont{CMU Serif}}{} % 1. Sets a font that knows Greek in text mode
 \usepackage{unicode-math} % 2. Allows Greek keys to work in math mode
 \usepackage[hidelinks]{hyperref}
 \usepackage{tabularx}
@@ -22,8 +22,8 @@
 \hline
 \endhead
 
-i & * & canning plants\\
-j & * & markets\\
+$i$ & $*$ & canning plants\\
+$j$ & $*$ & markets\\
 \hline
 \end{tabularx}
 \subsection*{Parameters}
@@ -33,9 +33,9 @@ j & * & markets\\
 \hline
 \endhead
 
-a & i & capacity of plant i in cases\\
-b & j & demand at market j in cases\\
-c & i,j & transport cost in thousands of dollars per case\\
+$a$ & $i$ & capacity of plant i in cases\\
+$b$ & $j$ & demand at market j in cases\\
+$c$ & $i,j$ & transport cost in thousands of dollars per case\\
 \hline
 \end{tabularx}
 \subsection*{Variables}
@@ -45,7 +45,7 @@ c & i,j & transport cost in thousands of dollars per case\\
 \hline
 \endhead
 
-ρ & i,j & shipment quantities in cases\\
+$ρ$ & $i,j$ & shipment quantities in cases\\
 \hline
 \end{tabularx}
 \subsection*{Equations}
@@ -55,26 +55,26 @@ c & i,j & transport cost in thousands of dollars per case\\
 \hline
 \endhead
 
-supply & i & observe supply limit at plant i\\
-demand & j & satisfy demand at market j\\
+$supply$ & $i$ & observe supply limit at plant i\\
+$demand$ & $j$ & satisfy demand at market j\\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
 \textbf{min} $\sum_{i,j} c_{i,j} \cdot ρ_{i,j}$\\
 \textbf{s.t.}
-\subsubsection*{supply$_{i}$}
+\subsubsection*{$supply_{i}$}
 $
 \sum_{j} ρ_{i,j} \leq a_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{demand$_{j}$}
+\subsubsection*{$demand_{j}$}
 $
 \sum_{i} ρ_{i,j} \geq b_{j}\hfill \forall j
 $
 \vspace{5pt}
 \hrule
 \begin{flalign*}
-&ρ\geq 0 ~ \forall i,j&\\
+&ρ_{i,j} \geq 0 ~ \forall i,j&\\
 \end{flalign*}
 \end{document}

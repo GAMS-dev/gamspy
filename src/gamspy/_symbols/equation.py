@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-import itertools
-import os
-import threading
-import weakref
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
-import pandas as pd
 from gams.core.gdx import GMS_DT_EQU
 
 import gamspy as gp
@@ -21,14 +16,16 @@ import gamspy.utils as utils
 from gamspy._internals import (
     EQU_TYPE,
     TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
-    DataSource,
 )
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import VarEquSymbol
-from gamspy._universe import UNIVERSE, is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    import pandas as pd
+
     from gamspy import Container, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
@@ -158,6 +155,31 @@ class Equation(VarEquSymbol):
 
     """
 
+    _attribute_slots: ClassVar[dict[str, str]] = {
+        "l": "_l",
+        "m": "_m",
+        "lo": "_lo",
+        "up": "_up",
+        "scale": "_s",
+        "stage": "_stage",
+        "range": "_range",
+        "slacklo": "_slacklo",
+        "slackup": "_slackup",
+        "slack": "_slack",
+        "infeas": "_infeas",
+    }
+    _l: ImplicitParameter
+    _m: ImplicitParameter
+    _lo: ImplicitParameter
+    _up: ImplicitParameter
+    _s: ImplicitParameter
+    _stage: ImplicitParameter
+    _range: ImplicitParameter
+    _slacklo: ImplicitParameter
+    _slackup: ImplicitParameter
+    _slack: ImplicitParameter
+    _infeas: ImplicitParameter
+
     @classmethod
     def _constructor_bypass(
         cls,
@@ -168,52 +190,22 @@ class Equation(VarEquSymbol):
         records: pd.DataFrame | None = None,
         description: str = "",
     ) -> Equation:
-        # create new symbol object
         obj = cast("Equation", object.__new__(cls))
-
-        # set private properties directly
         type = cast_type(type)
-        obj.type = EQU_TYPE[type]
-        obj._assignment = None
+        obj._type = EQU_TYPE[type]
         obj._gams_type = cast("int", GMS_DT_EQU)
         obj._gams_subtype = cast("int", TRANSFER_TO_GAMS_EQUATION_SUBTYPES[type])
-
-        obj._container = cast(
-            "Container",
-            weakref.proxy(container)
-            if not isinstance(container, weakref.ProxyType)
-            else container,
-        )
-        obj.name = name
-        obj._domain = obj._normalize_domain(obj._container, domain)
-        obj._domain_forwarding = False
-        obj._description = description
-        obj._records = records
-        obj._container._data.update({name: obj})
-
-        # gamspy attributes
-        obj._domain_violations = None
-        obj._definition = None
-        obj._indicator = None
-        obj.where = condition.Condition(obj)
-        obj._latex_name = name.replace("_", r"\_")
-        obj.container._add_statement(obj)
-        obj._metadata = {}
-        obj._should_load_from = DataSource.NONE
-        obj._should_unload_to_gams = False
         obj._equation_listing = None
-
-        # create attributes
-        obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
-        obj._stage = obj._create_attr("stage")
-        obj._range = obj._create_attr("range")
-        obj._slacklo = obj._create_attr("slacklo")
-        obj._slackup = obj._create_attr("slackup")
-        obj._slack = obj._create_attr("slack")
-        obj._infeas = obj._create_attr("infeas")
-
-        # miro support
-        obj._is_miro_output = False
+        obj._init_definition_state(None)
+        obj._init_symbol(
+            container,
+            name,
+            domain,
+            records=records,
+            description=description,
+            validate=False,
+        )
+        obj._init_attributes()
 
         return obj
 
@@ -231,14 +223,6 @@ class Equation(VarEquSymbol):
         is_miro_output: bool = False,
         definition_domain: list | None = None,
     ):
-        self._metadata: dict[str, Any] = {}
-        self._assignment: Expression | None = None
-        # miro support
-        self._is_miro_output = is_miro_output
-        self._domain_violations = None
-
-        self._equation_listing: list[str] | None = None
-
         type = cast_type(type)
         if self.type != type.casefold():
             raise TypeError(
@@ -247,31 +231,21 @@ class Equation(VarEquSymbol):
                 f" `{type.casefold()}`"
             )
 
-        domain = self._normalize_domain(self.container, domain)
-        if any(d1 != d2 for d1, d2 in itertools.zip_longest(self._domain, domain)):
-            raise ValueError(
-                "Cannot overwrite symbol in container unless symbol domains are equal"
-            )
-
-        if self._domain_forwarding != domain_forwarding:
-            raise ValueError(
-                "Cannot overwrite symbol in container unless"
-                " 'domain_forwarding' is left unchanged"
-            )
-
-        # reset some properties
-        if description != "":
-            self._description = description
-
-        self._records: pd.DataFrame | None = None
+        self._redefine_symbol(
+            domain,
+            domain_forwarding=domain_forwarding,
+            description=description,
+            is_miro_output=is_miro_output,
+        )
+        self._assignment = None
+        self._equation_listing = None
         self._indicator = None
+        self._definition_domain = definition_domain
 
         with self._miro_unprotected():
             self._init_definition(definition)
 
-            # only set records if records are provided
-            if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
+        self._redefine_records(records, uels_on_axes=uels_on_axes)
 
     def __init__(
         self,
@@ -287,90 +261,35 @@ class Equation(VarEquSymbol):
         is_miro_output: bool = False,
         definition_domain: list | None = None,
     ):
-        self._metadata: dict[str, Any] = {}
-        self._assignment: Expression | None = None
-        if is_miro_output and name is None:
-            raise ValidationError("Please specify a name for miro symbols.")
-
-        # miro support
-        self._is_miro_output = is_miro_output
-        self._domain_violations = None
-
-        self._equation_listing: list[str] | None = None
-
-        if container is None:
-            try:
-                container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
-            except KeyError as e:
-                raise ValidationError("Equation requires a container.") from e
-
-        self._container = cast("Container", weakref.proxy(container))
-
-        type = cast_type(type)
-
-        if name is not None:
-            name = validation.validate_name(name)
-
-            if is_miro_output:
-                name = name.lower()
-        else:
-            name = container._get_symbol_name(prefix="e")
-
-        self.name = name
-
-        domain = self._normalize_domain(self._container, domain)
-        self._domain = self._validate_domain(domain)
-        self._domain_forwarding = domain_forwarding
-        self._type = type
-        self._description = description
-        self._records = None
+        container, name = self._resolve_container_and_name(
+            container, name, prefix="e", is_miro=is_miro_output
+        )
+        self._type = cast_type(type)
         self._gams_type: int = GMS_DT_EQU
-        self._gams_subtype: int = TRANSFER_TO_GAMS_EQUATION_SUBTYPES[self.type]
-        self._latex_name = self.name.replace("_", r"\_")
-        self._should_load_from = DataSource.NONE
-        self._should_unload_to_gams = False
-        self._container._data.update({name: self})
+        self._gams_subtype: int = TRANSFER_TO_GAMS_EQUATION_SUBTYPES[self._type]
+        self._equation_listing: list[str] | None = None
+        self._init_definition_state(definition_domain)
+        self._init_symbol(
+            container,
+            name,
+            domain,
+            description=description,
+            domain_forwarding=domain_forwarding,
+            is_miro_output=is_miro_output,
+        )
+        self._init_definition(definition)
+        self._init_attributes()
+        self._init_records(records, uels_on_axes=uels_on_axes)
 
-        if is_miro_output:
-            container._miro_output_symbols.append(self.name)
-
-        validation.validate_container(self, self._domain)
-
-        self.where = condition.Condition(self)
-        self._container._add_statement(self)
+    def _init_definition_state(self, definition_domain: list | None) -> None:
         self._definition: Expression | None = None
         # (binary variable, positions of its indices in the equation domain, value,
         # equation that makes GAMS generate the binary) of a native indicator
         self._indicator: tuple[Variable, tuple[int, ...], int, Equation] | None = None
         self._definition_domain = definition_domain
-        self._init_definition(definition)
-
-        # create attributes
-        self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
-        self._stage = self._create_attr("stage")
-        self._range = self._create_attr("range")
-        self._slacklo = self._create_attr("slacklo")
-        self._slackup = self._create_attr("slackup")
-        self._slack = self._create_attr("slack")
-        self._infeas = self._create_attr("infeas")
-
-        with self._miro_unprotected():
-            if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
-            elif self._is_miro_output:
-                # miro symbols must sync at declaration so their records are
-                # loaded from the miro gdx.
-                self._should_unload_to_gams = True
-                self._container._synch_with_gams()
 
     def _serialize(self) -> dict:
-        info: dict[str, Any] = {
-            "_domain_forwarding": self._domain_forwarding,
-            "_is_miro_output": self._is_miro_output,
-            "_metadata": self._metadata,
-        }
-        if self._assignment is not None:
-            info["_assignment"] = self._assignment.getDeclaration()
+        info = super()._serialize()
 
         if self._definition is not None:
             info["_definition"] = self._definition.getDeclaration()
@@ -381,39 +300,21 @@ class Equation(VarEquSymbol):
 
         return info
 
-    def _deserialize(self, info: dict) -> None:
-        for key, value in info.items():
-            if key == "_assignment":
-                left, operator, right = expression.split_assignment(value)
-                value = expression.Expression(left, operator, right[:-1])
-            elif key == "_definition":
-                left, right = value.split(" .. ")
-                value = expression.Expression(left, "..", right[:-1])
-            elif key == "_indicator":
-                binary_name, positions, indicator_value, generation_name = value
-                value = (
-                    self._container[binary_name],
-                    tuple(positions),
-                    indicator_value,
-                    self._container[generation_name],
-                )
+    def _deserialize_value(self, key: str, value: Any) -> Any:
+        if key == "_definition":
+            left, right = value.split(" .. ")
+            return expression.Expression(left, "..", right[:-1])
 
-            setattr(self, key, value)
+        if key == "_indicator":
+            binary_name, positions, indicator_value, generation_name = value
+            return (
+                self._container[binary_name],
+                tuple(positions),
+                indicator_value,
+                self._container[generation_name],
+            )
 
-        # Relink domain symbols
-        new_domain: list = []
-        for elem in self._domain:
-            if is_universe(elem):
-                new_domain.append(UNIVERSE)
-            elif isinstance(elem, str):
-                new_domain.append(elem)
-            else:
-                new_domain.append(self._container[elem.name])
-
-        self._domain = new_domain
-
-        # Refresh the implicit parameters' domain
-        self._update_attr_domains()
+        return super()._deserialize_value(key, value)
 
     def __getitem__(self, indices: IndexType) -> ImplicitEquation:
         domain = validation.validate_domain(self, indices)
@@ -435,101 +336,6 @@ class Equation(VarEquSymbol):
 
     def __repr__(self) -> str:
         return f"Equation(name='{self.name}', type='{self.type}', domain={self.domain})"
-
-    def _init_attributes(
-        self,
-    ) -> tuple[
-        ImplicitParameter,
-        ImplicitParameter,
-        ImplicitParameter,
-        ImplicitParameter,
-        ImplicitParameter,
-    ]:
-        level = self._create_attr("l")
-        marginal = self._create_attr("m")
-        lower = self._create_attr("lo")
-        upper = self._create_attr("up")
-        scale = self._create_attr("scale")
-        return level, marginal, lower, upper, scale
-
-    def _create_attr(
-        self,
-        attr_name: Literal[
-            "l",
-            "m",
-            "lo",
-            "up",
-            "scale",
-            "stage",
-            "range",
-            "slacklo",
-            "slackup",
-            "slack",
-            "infeas",
-        ],
-    ) -> ImplicitParameter:
-        return implicits.ImplicitParameter(
-            self,
-            name=f"{self.name}.{attr_name}",
-            domain=self.domain,
-        )
-
-    def _update_attr_domains(self) -> None:
-        self._l.__init__(
-            self,
-            name=f"{self.name}.l",
-            domain=self.domain,
-        )
-        self._m.__init__(
-            self,
-            name=f"{self.name}.m",
-            domain=self.domain,
-        )
-        self._lo.__init__(
-            self,
-            name=f"{self.name}.lo",
-            domain=self.domain,
-        )
-        self._up.__init__(
-            self,
-            name=f"{self.name}.up",
-            domain=self.domain,
-        )
-        self._s.__init__(
-            self,
-            name=f"{self.name}.scale",
-            domain=self.domain,
-        )
-        self._stage.__init__(
-            self,
-            name=f"{self.name}.stage",
-            domain=self.domain,
-        )
-        self._range.__init__(
-            self,
-            name=f"{self.name}.range",
-            domain=self.domain,
-        )
-        self._slackup.__init__(
-            self,
-            name=f"{self.name}.slackup",
-            domain=self.domain,
-        )
-        self._slacklo.__init__(
-            self,
-            name=f"{self.name}.slacklo",
-            domain=self.domain,
-        )
-        self._slack.__init__(
-            self,
-            name=f"{self.name}.slack",
-            domain=self.domain,
-        )
-        self._infeas.__init__(
-            self,
-            name=f"{self.name}.infeas",
-            domain=self.domain,
-        )
 
     def _init_definition(
         self,
@@ -565,10 +371,16 @@ class Equation(VarEquSymbol):
                 "Equation definition must contain at least one equality sign such as ==, <= or >=."
             )
 
-        if self.type in IRREGULAR_EQ_MAP and "=e=" in rhs_repr:
-            rhs.operator = IRREGULAR_EQ_MAP[self.type]
+        if (
+            self.type in IRREGULAR_EQ_MAP
+            and "=e=" in rhs_repr
+            and isinstance(rhs, expression.Expression)
+        ):
+            rhs = expression.Expression(
+                rhs.left, IRREGULAR_EQ_MAP[self.type], rhs.right
+            )
 
-        if self.type == "external" and "=e=" not in rhs.gamsRepr():
+        if self.type == "external" and "=e=" not in rhs_repr:
             raise ValidationError("External equations must contain ==")
 
         statement = expression.Expression(
@@ -1097,20 +909,11 @@ class Equation(VarEquSymbol):
         np.float64(10.0)
 
         """
-        if self._should_load_from is not DataSource.NONE:
-            self._load_records()
-
-        return self._records
+        return self._get_records()
 
     @records.setter
     def records(self, records: pd.DataFrame | None):
-        if records is not None and not isinstance(records, pd.DataFrame):
-            raise TypeError("Symbol 'records' must be type DataFrame")
-
-        self._records = records
-        self._should_unload_to_gams = True
-        self._should_load_from = DataSource.NONE
-        self._handle_domain_forwarding()
+        self._assign_records(records)
 
     def __hash__(self):
         return id(self)
@@ -1146,16 +949,7 @@ class Equation(VarEquSymbol):
         np.float64(5.0)
 
         """
-        if records is None:
-            self._container._add_statement(f"option clear={self.name};")
-            self._records = None
-            return
-
-        self._setRecords(records, uels_on_axes=uels_on_axes)
-        if self._is_frozen_modifiable:
-            return
-
-        self._container._synch_with_gams()
+        self._update_records(records, uels_on_axes=uels_on_axes)
 
     @property
     def _default_records(self) -> dict[str, float]:
@@ -1249,6 +1043,9 @@ class Equation(VarEquSymbol):
         $
 
         """
+        return self._latex_repr()
+
+    def _latex_repr(self, matched_variables: Sequence[Variable] = ()) -> str:
         if self._definition is None:
             raise ValidationError(
                 "Equation must be defined to get its latex representation."
@@ -1256,42 +1053,54 @@ class Equation(VarEquSymbol):
 
         # The LHS of an equation definition can either be an ImplicitEquation or a condition.
         # e.g. e[i] = ... or e[i].where[b[i]] = ...
-        assert isinstance(
-            self._definition.left,
-            (implicits.ImplicitEquation, condition.Condition),
-        )
+        left = self._definition.left
+        assert isinstance(left, (implicits.ImplicitEquation, condition.Condition))
 
+        where = None
+        if isinstance(left, condition.Condition):
+            where = left.condition
+            left = left.conditioning_on
+            assert isinstance(left, implicits.ImplicitEquation)
+
+        # A literal in the definition domain restricts the declared set at that position:
+        # e[i, "j1"] = ... holds for all i where j = 'j1'
+        conditions = []
+        for position, literal in left._scalar_domains:
+            declared = utils._get_domain_str([self.domain[position]], latex=True)[1:-1]
+            literal = literal.replace("_", r"\_")
+            conditions.append(f"{declared} = \\text{{`{literal}'}}")
+
+        if where is not None:
+            where_str, where_prec, _ = expression.latex_operand(where)
+            if conditions and where_prec < expression.PRECEDENCE["and"]:
+                where_str = f"({where_str})"
+            conditions.append(where_str)
+
+        condition_str = " \\wedge ".join(conditions)
+        domain_str = utils._get_domain_str(left.domain, latex=True)[1:-1]
         right_side = ""
-        if isinstance(self._definition.left, implicits.ImplicitEquation):
-            if len(self._definition.left.domain) > 0:
-                domain_str = ",".join(
-                    [symbol.latexRepr() for symbol in self._definition.left.domain]
-                )
-                right_side = f"\\hfill \\forall {domain_str}"
-        else:
-            domain_str = ",".join(
-                [
-                    symbol.latexRepr()  # ty: ignore[unresolved-attribute]
-                    for symbol in self._definition.left.conditioning_on.domain
-                ]
-            )
-            domain_str = f"\\forall {domain_str}"
-
-            if hasattr(self._definition.left.condition, "latexRepr"):
-                constraint_str = self._definition.left.condition.latexRepr()  # ty: ignore[call-non-callable]
-            else:
-                constraint_str = str(self._definition.left.condition)
-
-            right_side = f"\\hfill {domain_str} ~ | ~ {constraint_str}"
+        if domain_str:
+            right_side = f"\\hfill \\forall {domain_str}"
+            if condition_str:
+                right_side += f" ~ | ~ {condition_str}"
+        elif condition_str:
+            right_side = f"\\hfill \\text{{if }} {condition_str}"
 
         assert self._definition.right is not None
-        definition_str = self._definition.right.latexRepr()  # ty: ignore[unresolved-attribute]
-        if definition_str[0] == "(":
-            definition_str = definition_str[1:-1]
+        definition_str = expression.get_operand_latex_repr(self._definition.right)
 
-        equation_str = "$\n" + definition_str + f"{right_side}" + "\n$"
+        if matched_variables:
+            # Variables are matched to the equation position by position.
+            positions = left._reference_domain()
+            variable_strs = [
+                variable[positions].latexRepr()
+                if positions and variable.dimension == len(positions)
+                else variable.latexRepr()
+                for variable in matched_variables
+            ]
+            definition_str += " \\perp " + ",".join(variable_strs)
 
-        return equation_str
+        return "$\n" + definition_str + right_side + "\n$"
 
     def getDeclaration(self) -> str:
         """

@@ -127,12 +127,11 @@ class Operable:
         if (
             isinstance(other, int)
             and other == 2
-            and isinstance(self, expression.Expression)
-            and isinstance(self.left, gamspy_math.misc.MathOp)
-            and self.left.op_name == "sqrt"
-            and self.left.safe_cancel
+            and isinstance(self, gamspy_math.misc.MathOp)
+            and self.op_name == "sqrt"
+            and self.safe_cancel
         ):
-            return self.left.elements[0]
+            return self.elements[0]
 
         if get_option("STRICT_POWER_OPERATOR"):
             return gamspy_math.rpower(self, other)

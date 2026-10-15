@@ -700,8 +700,7 @@ Indicator Constraints
 
 Many models need logical relations such as "if a facility is closed, nothing
 can be shipped from it". :meth:`indicator <gamspy.formulations.indicator>`
-turns such relations into mixed-integer constraints, so the model can be solved
-with MIP solvers.
+makes such relations available for mixed-integer problems in a solver independent way. Some solvers support this natively (restrictions to the type of constraint may apply) for others this is reformulated using SOS1 or bigM constructs.
 
 An indicator constraint ``indicator(b, value, constraint)`` enforces
 ``constraint`` whenever the binary variable ``b`` equals ``value`` and drops
@@ -727,7 +726,7 @@ constraint. The constraint can be an inequality or an equality.
 
 By default, the indicator constraint is modeled with SOS1 variables. This
 formulation does not need any bounds, but requires a solver that supports SOS1
-variables, such as CPLEX, the default MIP solver. Some solvers, e.g. HiGHS and
+variables, such as COPT, CPLEX, GUROBI, SCIP, and XPRESS. Some solvers, e.g. BARON, HiGHS and
 MOSEK, do not support SOS1 variables. In that case, or if a big-M formulation
 performs better for your model, pass ``big_m``:
 
@@ -790,13 +789,469 @@ generated symbols are then limited to the elements of the subset:
    # use[routes] == 0  =>  ship[routes] <= 0
    _, eqs = gp.formulations.indicator(use[routes], 0, ship[routes] <= 0)
 
-Some MIP solvers handle indicator constraints directly in their branch-and-cut
+Some solvers handle *linear* indicator constraints directly in their branch-and-cut
 algorithm instead of relying on a reformulation. Pass ``native=True`` to keep
 the constraint as it is and let :meth:`solve <gamspy.Model.solve>` hand the
-indicator to the solver through the solver options file. Native indicator
+indicator relation directly to the solver. Native indicator
 constraints are supported by COPT, CPLEX, GUROBI, SCIP and XPRESS. Solving the
 model with any other solver raises an error:
 
 .. code-block:: python
 
    _, eqs = gp.formulations.indicator(is_open, 0, ship[i, j] <= 0, native=True)
+
+
+Reformulating Indicator Constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+An indicator constraint either holds or is ignored, depending on a binary
+variable. The following figure shows the feasible points of
+:math:`b = 1 \implies x \leq 2` for :math:`0 \leq x \leq 5`. They form two
+separate segments, one for each value of :math:`b`.
+
+.. figure:: ../images/indicator_feasible.svg
+  :alt: Indicator constraint
+  :width: 300
+  :align: center
+  :figclass: only-light
+
+  Feasible points of :math:`b = 1 \implies x \leq 2`. The constraint cuts off
+  the dashed part only if :math:`b = 1`.
+
+.. figure:: ../images/indicator_feasible_dark.svg
+  :alt: Indicator constraint
+  :width: 300
+  :align: center
+  :class: only-dark
+  :figclass: only-dark
+
+  Feasible points of :math:`b = 1 \implies x \leq 2`. The constraint cuts off
+  the dashed part only if :math:`b = 1`.
+
+To describe all cases at once, each formulation writes the constraint as
+:math:`g \leq 0`, where :math:`g = lhs - rhs` for a ``<=`` constraint and
+:math:`g = rhs - lhs` for a ``>=`` constraint. An equality is split into both
+inequalities. Similarly, let :math:`a` be the activation, which equals 1 when
+the constraint must hold, i.e. :math:`a = b` if ``value`` is 1 and
+:math:`a = 1 - b` if it is 0. The formulation then models:
+
+.. math::
+
+   a = 1 \implies g \leq 0
+
+**SOS1 (default).** The constraint gets a nonnegative slack :math:`s` that
+forms an SOS1 set with the activation, i.e. at most one of them is nonzero:
+
+.. math::
+
+   g \leq s
+
+   \{a, s\} \in \text{SOS1}, \quad s \geq 0
+
+If :math:`a = 1`, then :math:`s = 0`, so :math:`g \leq 0`. If :math:`a = 0`,
+:math:`s` can take any value and the constraint is dropped. No bounds are
+needed, but the solver enforces the SOS1 set only by branching. Its LP
+relaxation drops the SOS1 set, so :math:`s` is unbounded and the relaxation
+does not restrict :math:`x` at all, even for :math:`b = 1`. An equality uses
+one slack for both inequalities, i.e. :math:`|lhs - rhs| \leq s`. Since
+:math:`a` can be the expression :math:`1 - b`, and a binary variable cannot
+be part of an SOS1 set, the implementation stores a copy of :math:`a`
+together with :math:`s` in one SOS1 variable, stored under ``sos1``, and
+links the copy to :math:`a` with the ``link`` equation. The other equations
+are stored under ``slack`` (``le_slack`` and ``ge_slack`` for an equality).
+
+**Big-M.** With ``big_m``, the constraint becomes one inequality, stored
+under ``big_m`` (``le_big_m`` and ``ge_big_m`` for an equality):
+
+.. math::
+
+   g \leq M (1 - a)
+
+If :math:`a = 1`, the right-hand side is 0, so :math:`g \leq 0`. If
+:math:`a = 0`, the inequality must not cut off any feasible point, so
+:math:`M` must be at least the largest value of :math:`g`. In the shipping
+example above, :math:`a = 1 - is\_open_i` and :math:`g = ship_{ij}`, which
+gives the well-known constraint:
+
+.. math::
+
+   ship_{ij} \leq M \cdot is\_open_i \quad \forall{i, j}
+
+For a fractional :math:`a`, the right-hand side interpolates between the two
+cases. Therefore, unlike the SOS1 formulation, the LP relaxation restricts
+:math:`x`, and a smaller :math:`M` restricts it more. In the example of the
+figure, :math:`g = x - 2` is at most 3, so :math:`M = 3` is the smallest
+valid value. Then the relaxation is :math:`x \leq 2 + 3 (1 - b)`, which is
+the convex hull of the feasible points. :math:`M = 6` is also valid but cuts
+off less:
+
+.. figure:: ../images/indicator_relaxation.svg
+  :alt: Relaxations of the indicator formulations
+  :width: 300
+  :align: center
+  :figclass: only-light
+
+  LP relaxations of the SOS1 and big-M formulations of :math:`b = 1 \implies
+  x \leq 2` for :math:`0 \leq x \leq 5`. The SOS1 relaxation is the whole
+  box, and the big-M relaxations are bounded by the dashed lines.
+
+.. figure:: ../images/indicator_relaxation_dark.svg
+  :alt: Relaxations of the indicator formulations
+  :width: 300
+  :align: center
+  :class: only-dark
+  :figclass: only-dark
+
+  LP relaxations of the SOS1 and big-M formulations of :math:`b = 1 \implies
+  x \leq 2` for :math:`0 \leq x \leq 5`. The SOS1 relaxation is the whole
+  box, and the big-M relaxations are bounded by the dashed lines.
+
+**Native.** With ``native=True``, the constraint is not reformulated. It is
+stored under ``indicator`` and passed to the solver as an indicator
+constraint. The solver decides how to enforce it. A redundant constraint :math:`\sum b \geq 0`, stored under
+``binary``, ensures that the binary variable is part of the model.
+
+If the binary variable has fewer dimensions than the constraint, the same
+binary variable controls the constraint for all elements of the other
+dimensions, e.g. :math:`is\_open_i` for all :math:`j` above. If the
+constraint has a condition or is indexed with a subset, the equations exist
+only for the corresponding elements.
+
+Minimum, Maximum and Absolute Value
+-----------------------------------
+
+Many models contain quantities that are the largest or the smallest of several
+values: the peak load over all time periods, the completion time of the last
+job, or the price of a contract that pays the better of a fixed and a market
+price. Writing these with :meth:`Max <gamspy.math.Max>` or
+:meth:`Min <gamspy.math.Min>` makes the model a ``DNLP``. These functions are
+not differentiable where the operands are equal, so NLP solvers can struggle
+with them and do not guarantee a global optimum. With binary variables, the
+same relation can be expressed exactly with linear constraints.
+
+Do You Need a Formulation?
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Often you do not. If the model only ever benefits from making a maximum
+smaller, or a minimum larger, plain inequalities are enough and the model
+does not need discrete helper variables. For example, a power plant must be built large enough for the
+peak demand, and minimizing the capacity cost keeps ``capacity`` at the peak:
+
+.. code-block:: python
+
+   import gamspy as gp
+
+   m = gp.Container()
+   t = gp.Set(m, "t", records=["morning", "noon", "evening"])
+   load = gp.Variable(m, "load", domain=t)
+   capacity = gp.Variable(m, "capacity")
+
+   # capacity >= max(load[t] for t)
+   peak = gp.Equation(m, "peak", domain=t)
+   peak[t] = capacity >= load[t]
+
+The inequalities only state that ``capacity`` is at least the maximum, i.e.
+they allow every point above the maximum, as the following figure shows for
+two operands :math:`a_1` and :math:`a_2` that depend on a variable :math:`x`.
+The objective takes care of the rest, because a larger ``capacity`` costs
+more. This works when you minimize a maximum or maximize a minimum.
+
+.. figure:: ../images/minmax_epigraph.svg
+  :alt: Inequalities of a maximum
+  :width: 300
+  :align: center
+  :figclass: only-light
+
+  The inequalities :math:`y \geq a_k` allow every point in the shaded region;
+  the maximum is only its lower boundary.
+
+.. figure:: ../images/minmax_epigraph_dark.svg
+  :alt: Inequalities of a maximum
+  :width: 300
+  :align: center
+  :class: only-dark
+  :figclass: only-dark
+
+  The inequalities :math:`y \geq a_k` allow every point in the shaded region;
+  the maximum is only its lower boundary.
+
+The inequalities are not enough when the model benefits from moving the value
+away from the true maximum or minimum. Then the solver simply does so. Suppose
+a farmer sells under a contract that pays the better of a fixed price and
+the market price, and the model maximizes income. With ``income >= ...``
+constraints alone, the solver raises ``income`` without limit. The same
+happens when you maximize a maximum or minimize a minimum, or when the value
+feeds other constraints in a way that makes it attractive to move. In these
+cases, use :meth:`maximum <gamspy.formulations.maximum>` or
+:meth:`minimum <gamspy.formulations.minimum>`, which make the result equal
+to the maximum or minimum:
+
+.. code-block:: python
+
+   i = gp.Set(m, "i", records=["wheat", "corn"])
+   contract_price = gp.Parameter(
+       m, "contract_price", domain=i, records=[("wheat", 200), ("corn", 150)]
+   )
+   market_price = gp.Parameter(
+       m, "market_price", domain=i, records=[("wheat", 180), ("corn", 170)]
+   )
+   sold = gp.Variable(m, "sold", type="positive", domain=i)
+
+   # income[i] == max(contract_price[i] * sold[i], market_price[i] * sold[i])
+   income, eqs = gp.formulations.maximum(
+       contract_price[i] * sold[i], market_price[i] * sold[i]
+   )
+
+Unlike ``capacity`` above, you do not declare ``income`` yourself.
+:meth:`maximum <gamspy.formulations.maximum>` creates the variable, together
+with the equations that make it equal to the maximum, and returns both. The
+variable gets a generated name that starts with ``output_var_``, so refer to
+it through the returned object. Operands can be numbers,
+parameters, variables or expressions. The domain of the result is the union
+of the operand domains, ``i`` in this example. If an operand is indexed with a multidimensional subset, such as
+``x[ij]`` with ``ij(i, j)``, the result is declared over ``i`` and ``j`` but
+only constrained for the elements of ``ij``. Use it as ``result[ij]``, since
+its other elements are free.
+
+To take the maximum or minimum over a set instead of over separate operands,
+pass the set with ``over``:
+
+.. code-block:: python
+
+   # highest_load == max(load[t] for t)
+   highest_load, eqs = gp.formulations.maximum(load, over=t)
+
+Absolute Value
+^^^^^^^^^^^^^^
+
+An absolute value is the maximum of a value and its negation, so the same
+reasoning applies. Writing it with :meth:`abs <gamspy.math.abs>` makes the
+model a ``DNLP``. When the model benefits from a small absolute value, e.g.
+when you minimize the deviation from a target, two inequalities are enough:
+
+.. code-block:: python
+
+   target = gp.Parameter(m, "target", domain=t, records=[("noon", 80)])
+   deviation = gp.Variable(m, "deviation", domain=t)
+
+   # deviation[t] >= abs(load[t] - target[t])
+   above = gp.Equation(m, "above", domain=t)
+   above[t] = deviation[t] >= load[t] - target[t]
+   below = gp.Equation(m, "below", domain=t)
+   below[t] = deviation[t] >= target[t] - load[t]
+
+When the model benefits from a large absolute value, or the value must be
+exact, use :meth:`absolute <gamspy.formulations.absolute>`:
+
+.. code-block:: python
+
+   # exact_deviation[t] == abs(load[t] - target[t])
+   exact_deviation, eqs = gp.formulations.absolute(load[t] - target[t])
+
+For complete applications, see the
+`express delivery fleet purchase <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/fleetspeed/fleetspeed.py>`_
+for :meth:`maximum <gamspy.formulations.maximum>`, the
+`transportation problem with chartered trucks <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/trnscharter/trnscharter.py>`_
+for :meth:`minimum <gamspy.formulations.minimum>` and the
+`single row facility layout problem <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/srflp/srflp.py>`_
+for :meth:`absolute <gamspy.formulations.absolute>`.
+
+How It Works
+^^^^^^^^^^^^
+
+Let :math:`a_1, \dots, a_n` be the operands and :math:`y = \max(a_1, \dots,
+a_n)`. :meth:`maximum <gamspy.formulations.maximum>` introduces a binary
+variable :math:`b_k` for every operand and generates:
+
+.. math::
+
+   y \geq a_k \quad \forall{k}
+
+   b_k = 1 \implies y \leq a_k \quad \forall{k}
+
+   \sum_{k}{b_k} = 1
+
+   b_k \in \{0, 1\} \quad \forall{k}
+
+The first constraints are the inequalities from `Do You Need a Formulation?`_
+and keep :math:`y` above every operand. The binary variables select one
+operand, and the indicator constraints pull :math:`y` down to the selected
+operand. The formulation is exact:
+
+- Every feasible :math:`y` is the maximum. The first constraints give
+  :math:`y \geq \max_k a_k`. If :math:`b_j = 1`, the indicator constraint
+  gives :math:`y \leq a_j \leq \max_k a_k`.
+- Every maximum is feasible. Select an operand :math:`j` with :math:`a_j =
+  \max_k a_k`, i.e. set :math:`b_j = 1` and the other binary variables to 0.
+  If several operands attain the maximum, any of them can be selected.
+
+The following figure shows the feasible points for the two operands of the
+first figure. Selecting :math:`b_1 = 1` forces :math:`y = a_1`, and
+:math:`y \geq a_2` then requires :math:`a_1 \geq a_2`. Therefore, each binary
+variable selects one piece of the maximum, and only the pieces together give
+the whole maximum. The union of the pieces is not convex, which is why no LP
+can describe the maximum exactly and the binary variables are needed:
+
+.. figure:: ../images/minmax_selection.svg
+  :alt: Selection of a maximum
+  :width: 300
+  :align: center
+  :figclass: only-light
+
+  Each binary variable selects the piece of the maximum where its operand is
+  the largest. Both are feasible where the operands are equal.
+
+.. figure:: ../images/minmax_selection_dark.svg
+  :alt: Selection of a maximum
+  :width: 300
+  :align: center
+  :class: only-dark
+  :figclass: only-dark
+
+  Each binary variable selects the piece of the maximum where its operand is
+  the largest. Both are feasible where the operands are equal.
+
+The generated symbols are available in the returned
+:class:`FormulationResult <gamspy.formulations.FormulationResult>`
+under the following keys, where ``k`` is the position of the operand:
+
+=========================================  ================================
+Symbol                                     Key
+=========================================  ================================
+:math:`y \geq a_k`                         ``bound_k``
+:math:`b_k = 1 \implies y \leq a_k`        see `Reformulating the Selection`_
+:math:`\sum_{k}{b_k} = 1`                  ``pick_one``
+:math:`y`                                  ``output``
+:math:`b_k`                                ``select_k``
+=========================================  ================================
+
+With ``over``, the selection also ranges over the elements of the given sets.
+Each operand gets binary variables over its own domain, and ``pick_one``
+selects exactly one of them for each element of the domain of :math:`y`. For
+example, ``maximum(x[i, j], z[i], over=j)`` generates the following, where
+:math:`b_{ij}` is stored under ``select_0`` and :math:`c_i` under
+``select_1``:
+
+.. math::
+
+   y_i \geq x_{ij} \quad \forall{i, j}
+
+   y_i \geq z_i \quad \forall{i}
+
+   b_{ij} = 1 \implies y_i \leq x_{ij} \quad \forall{i, j}
+
+   c_i = 1 \implies y_i \leq z_i \quad \forall{i}
+
+   \sum_{j}{b_{ij}} + c_i = 1 \quad \forall{i}
+
+:meth:`minimum <gamspy.formulations.minimum>` reverses the inequalities, i.e.
+it generates :math:`y \leq a_k` and :math:`b_k = 1 \implies y \geq a_k`.
+:meth:`absolute <gamspy.formulations.absolute>` generates the maximum of
+:math:`a` and :math:`-a`:
+
+.. math::
+
+   y \geq a, \quad y \geq -a
+
+   b_1 = 1 \implies y \leq a
+
+   b_2 = 1 \implies y \leq -a
+
+   b_1 + b_2 = 1
+
+Together with :math:`y \geq -a`, selecting :math:`b_1 = 1` requires
+:math:`a \geq 0`. Therefore, the binary variables also encode the sign of
+:math:`a`. Both are feasible if :math:`a = 0`.
+
+Reformulating the Selection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The indicator constraints :math:`b_k = 1 \implies y \leq a_k` are modeled with
+:meth:`indicator <gamspy.formulations.indicator>`. Therefore, the formulation
+accepts the same ``big_m`` and ``native`` arguments and the advice in
+`Indicator Constraints`_ applies. The generated symbols of each indicator
+constraint are suffixed with ``_k``.
+
+**SOS1 (default).** Each indicator constraint gets an SOS1 set as described
+in `Reformulating Indicator Constraints`_, stored under ``slack_k``,
+``link_k`` and ``sos1_k``. No bounds are needed, but the LP relaxation drops
+the SOS1 sets and keeps only :math:`y \geq a_k`, i.e. the shaded region of
+the first figure.
+
+**Big-M.** With ``big_m``, each indicator constraint becomes one inequality,
+stored under ``big_m_k``:
+
+.. math::
+
+   y - a_k \leq M (1 - b_k) \quad \forall{k}
+
+If :math:`b_k = 1`, the right-hand side is 0. If :math:`b_k = 0`, the
+constraint must not cut off any feasible point, so :math:`M` must be at least
+the largest value of :math:`y - a_k`. Since :math:`y` is at most the largest
+upper bound :math:`U` of the operands and :math:`a_k` is at least the
+smallest lower bound :math:`L`, :math:`M = U - L` is valid. For
+:meth:`absolute <gamspy.formulations.absolute>` with :math:`|a| \leq A`, this
+gives :math:`M = 2A`. A value that is too small silently cuts off solutions.
+``big_m`` can also be a parameter expression, which gives each element of the
+domain its own value.
+
+Unlike the SOS1 sets, the big-M constraints bound :math:`y` from above in the
+LP relaxation, and the bound is tighter for a smaller :math:`M`. For the two
+operands of the figures, adding both constraints and using :math:`b_1 + b_2 =
+1` gives :math:`2y \leq a_1 + a_2 + M`. The operands are between 0.5 and 3,
+so :math:`M = U - L = 2.5` is valid. It is also the smallest valid value,
+since the gap :math:`y - a_1` reaches 2.5 at :math:`x = 0`. Then the
+relaxation is
+:math:`y \leq 3`, which is the convex hull of the maximum. A larger
+:math:`M = 3.5` relaxes it to :math:`y \leq 3.5`:
+
+.. figure:: ../images/minmax_relaxation.svg
+  :alt: Relaxations of a maximum
+  :width: 300
+  :align: center
+  :figclass: only-light
+
+  LP relaxations of the SOS1 and big-M formulations for :math:`0 \leq x \leq
+  5`. The SOS1 relaxation is unbounded above, and the big-M relaxations are
+  bounded by the dashed lines.
+
+.. figure:: ../images/minmax_relaxation_dark.svg
+  :alt: Relaxations of a maximum
+  :width: 300
+  :align: center
+  :class: only-dark
+  :figclass: only-dark
+
+  LP relaxations of the SOS1 and big-M formulations for :math:`0 \leq x \leq
+  5`. The SOS1 relaxation is unbounded above, and the big-M relaxations are
+  bounded by the dashed lines.
+
+**Native.** With ``native=True``, the indicator constraints are passed to the
+solver as they are, stored under ``indicator_k``. The solver decides how to
+enforce them. As in `Reformulating Indicator Constraints`_, a redundant
+constraint per operand is stored under ``binary_k``.
+
+For each element of the domain of :math:`y` and :math:`n` selectable operands,
+i.e. operands times the elements of ``over``, the formulation generates the
+following symbols in addition to :math:`y`:
+
+=========  ================  ===============  =================
+Mode       Binary variables  SOS1 sets        Equations
+=========  ================  ===============  =================
+SOS1       :math:`n`         :math:`n`        :math:`3n + 1`
+Big-M      :math:`n`         0                :math:`2n + 1`
+Native     :math:`n`         0                :math:`2n + 1`
+=========  ================  ===============  =================
+
+The native mode also adds the ``binary_k`` constraints, one per operand. To
+choose a mode:
+
+- Use the default if the operands have no finite bounds, or if you do not know
+  them. It requires a solver that supports SOS1 variables.
+- Use ``big_m`` if the operands have tight bounds. The stronger relaxation
+  usually pays off, and every MIP solver supports it.
+- Use ``native=True`` with a solver that supports indicator constraints to
+  let the solver choose how to handle them.
+
+Every operand adds a binary variable, so prefer the plain inequalities
+whenever they are enough.

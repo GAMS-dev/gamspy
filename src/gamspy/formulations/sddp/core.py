@@ -73,7 +73,7 @@ class SDDP:
     ... )
     >>> obj[...] = cost == gp.Sum(stage[t], 10.0 * spill[t] + 5.0 * shortfall[t])
     >>> sddp.add_state(level, initial_state=100.0)
-    >>> sddp.set_noise(precip, scenario_data=np.array([[50.0], [50.0], [-50.0], [-50.0]]))
+    >>> sddp.set_noise(precip, scenario_data=np.array([[-50.0], [-50.0], [50.0], [50.0]]))
     >>> sddp.build(stage_cost=cost)
     >>> sddp
     SDDP(stages=4, states=['L'], noise=precip, built=True)

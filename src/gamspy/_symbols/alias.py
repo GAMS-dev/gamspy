@@ -1,23 +1,16 @@
 from __future__ import annotations
 
-import os
-import threading
-import weakref
 from typing import TYPE_CHECKING, Any, cast
 
 from gams.core.gdx import GMS_DT_ALIAS
 
-import gamspy as gp
 import gamspy._algebra.condition as condition
-import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
-import gamspy._algebra.sparse as sparse
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
-import gamspy.utils as utils
-from gamspy._internals import DataSource
-from gamspy._symbols.base import BaseSymbol
+from gamspy._symbols.base import BaseSymbol, _deserialize_assignment
 from gamspy._symbols.set import SetMixin
+from gamspy._symbols.utils import assign
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -72,12 +65,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         # legacy gtp attributes
         ## set private properties directly
 
-        obj._container = cast(
-            "Container",
-            weakref.proxy(container)
-            if not isinstance(container, weakref.ProxyType)
-            else container,
-        )
+        obj._container = obj._container_proxy(container)
         obj.name = name
         obj._alias_with = obj._validate_alias_with(alias_with)
 
@@ -93,6 +81,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
         obj._metadata = {}
+        obj._assignment = None
 
         return obj
 
@@ -119,19 +108,8 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         self._metadata: dict[str, Any] = {}
         self._assignment: Expression | None = None
 
-        if container is None:
-            try:
-                container = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
-            except KeyError as e:
-                raise ValidationError("Alias requires a container.") from e
-
-        self._container = cast("Container", weakref.proxy(container))
-
-        if name is not None:
-            name = validation.validate_name(name)
-        else:
-            name = container._get_symbol_name(prefix="a")
-
+        container, name = self._resolve_container_and_name(container, name, prefix="a")
+        self._container = self._container_proxy(container)
         self.name = name
 
         # gtp attributes
@@ -161,6 +139,9 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
     def _should_load_from(self, value: RecordsSourceType) -> None:
         self.alias_with._should_load_from = value
 
+    def _check_miro_protection(self) -> None:
+        self.alias_with._check_miro_protection()
+
     def _serialize(self) -> dict:
         info: dict[str, Any] = {"_metadata": self._metadata}
         if self._assignment is not None:
@@ -171,8 +152,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
     def _deserialize(self, info: dict) -> None:
         for key, value in info.items():
             if key == "_assignment":
-                left, operator, right = expression.split_assignment(value)
-                value = expression.Expression(left, operator, right)
+                value = _deserialize_assignment(value)
 
             setattr(self, key, value)
 
@@ -218,26 +198,12 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
-        rhs, operator = sparse._unwrap(rhs)
-
-        if isinstance(rhs, bool):
-            rhs = "yes" if rhs is True else "no"
-
-        statement = expression.Expression(
+        assign(
+            self,
             implicits.ImplicitSet(self, name=self.name, domain=domain),
-            operator,
             rhs,
+            domain,
         )
-
-        # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
-        if not self._container._in_loop:
-            statement._validate_definition(utils._unpack(domain))
-
-        self._container._add_statement(statement)
-        self._assignment = statement
-
-        self.container._synch_with_gams()
-        self._should_load_from = DataSource.GAMS
 
     @property
     def records(self) -> pd.DataFrame | None:

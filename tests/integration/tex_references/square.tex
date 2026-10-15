@@ -4,7 +4,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{fontspec}
-\setmainfont{CMU Serif} % 1. Sets a font that knows Greek in text mode
+\IfFontExistsTF{CMU Serif}{\setmainfont{CMU Serif}}{} % 1. Sets a font that knows Greek in text mode
 \usepackage{unicode-math} % 2. Allows Greek keys to work in math mode
 \usepackage[hidelinks]{hyperref}
 \usepackage{tabularx}
@@ -22,7 +22,7 @@
 \hline
 \endhead
 
-i & * & corner points of square\\
+$i$ & $*$ & corner points of square\\
 \hline
 \end{tabularx}
 \subsection*{Parameters}
@@ -41,11 +41,11 @@ i & * & corner points of square\\
 \hline
 \endhead
 
-t & i & position of square corner points on curve\\
-x &  & x-coordinate of lower-left corner of square (=fx(t('1')))\\
-y &  & y-coordinate of lower-left corner of square (=fy(t('1')))\\
-a &  & horizontal distance between lower-left and lower-right corner of square\\
-b &  & vertical distance between lower-left and lower-right corner of square\\
+$t$ & $i$ & position of square corner points on curve\\
+$x$ &  & x-coordinate of lower-left corner of square (=fx(t('1')))\\
+$y$ &  & y-coordinate of lower-left corner of square (=fy(t('1')))\\
+$a$ &  & horizontal distance between lower-left and lower-right corner of square\\
+$b$ &  & vertical distance between lower-left and lower-right corner of square\\
 \hline
 \end{tabularx}
 \subsection*{Equations}
@@ -55,69 +55,69 @@ b &  & vertical distance between lower-left and lower-right corner of square\\
 \hline
 \endhead
 
-e1x &  & define x-coordinate of lower-left corner\\
-e1y &  & define y-coordinate of lower-left corner\\
-e2x &  & define x-coordinate of lower-right corner\\
-e2y &  & define y-coordinate of lower-right corner\\
-e3x &  & define x-coordinate of upper-left corner\\
-e3y &  & define y-coordinate of upper-left corner\\
-e4x &  & define x-coordinate of upper-right corner\\
-e4y &  & define y-coordinate of upper-right corner\\
+$e1x$ &  & define x-coordinate of lower-left corner\\
+$e1y$ &  & define y-coordinate of lower-left corner\\
+$e2x$ &  & define x-coordinate of lower-right corner\\
+$e2y$ &  & define y-coordinate of lower-right corner\\
+$e3x$ &  & define x-coordinate of upper-left corner\\
+$e3y$ &  & define y-coordinate of upper-left corner\\
+$e4x$ &  & define x-coordinate of upper-right corner\\
+$e4y$ &  & define y-coordinate of upper-right corner\\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
-\textbf{max} $power(a,2) + power(b,2)$\\
+\textbf{max} $a^{2} + b^{2}$\\
 \textbf{s.t.}
-\subsubsection*{e1x}
+\subsubsection*{$e1x$}
 $
-sin(t_{\text{`1'}}) \cdot cos(t_{\text{`1'}} - t_{\text{`1'}} \cdot t_{\text{`1'}}) = x
-$
-\vspace{5pt}
-\hrule
-\subsubsection*{e1y}
-$
-t_{\text{`1'}} \cdot sin(t_{\text{`1'}}) = y
+\sin(t_{\text{`1'}}) \cdot \cos(t_{\text{`1'}} - t_{\text{`1'}} \cdot t_{\text{`1'}}) = x
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{e2x}
+\subsubsection*{$e1y$}
 $
-sin(t_{\text{`2'}}) \cdot cos(t_{\text{`2'}} - t_{\text{`2'}} \cdot t_{\text{`2'}}) = x + a
-$
-\vspace{5pt}
-\hrule
-\subsubsection*{e2y}
-$
-t_{\text{`2'}} \cdot sin(t_{\text{`2'}}) = y + b
+t_{\text{`1'}} \cdot \sin(t_{\text{`1'}}) = y
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{e3x}
+\subsubsection*{$e2x$}
 $
-sin(t_{\text{`3'}}) \cdot cos(t_{\text{`3'}} - t_{\text{`3'}} \cdot t_{\text{`3'}}) = x - b
-$
-\vspace{5pt}
-\hrule
-\subsubsection*{e3y}
-$
-t_{\text{`3'}} \cdot sin(t_{\text{`3'}}) = y + a
+\sin(t_{\text{`2'}}) \cdot \cos(t_{\text{`2'}} - t_{\text{`2'}} \cdot t_{\text{`2'}}) = x + a
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{e4x}
+\subsubsection*{$e2y$}
 $
-sin(t_{\text{`4'}}) \cdot cos(t_{\text{`4'}} - t_{\text{`4'}} \cdot t_{\text{`4'}}) = x + a - b
+t_{\text{`2'}} \cdot \sin(t_{\text{`2'}}) = y + b
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{e4y}
+\subsubsection*{$e3x$}
 $
-t_{\text{`4'}} \cdot sin(t_{\text{`4'}}) = y + a + b
+\sin(t_{\text{`3'}}) \cdot \cos(t_{\text{`3'}} - t_{\text{`3'}} \cdot t_{\text{`3'}}) = x - b
+$
+\vspace{5pt}
+\hrule
+\subsubsection*{$e3y$}
+$
+t_{\text{`3'}} \cdot \sin(t_{\text{`3'}}) = y + a
+$
+\vspace{5pt}
+\hrule
+\subsubsection*{$e4x$}
+$
+\sin(t_{\text{`4'}}) \cdot \cos(t_{\text{`4'}} - t_{\text{`4'}} \cdot t_{\text{`4'}}) = x + a - b
+$
+\vspace{5pt}
+\hrule
+\subsubsection*{$e4y$}
+$
+t_{\text{`4'}} \cdot \sin(t_{\text{`4'}}) = y + a + b
 $
 \vspace{5pt}
 \hrule
 \begin{flalign*}
-&a\geq 0&\\
-&b\geq 0&\\
+&a \geq 0&\\
+&b \geq 0&\\
 \end{flalign*}
 \end{document}

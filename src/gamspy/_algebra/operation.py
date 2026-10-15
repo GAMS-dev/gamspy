@@ -294,13 +294,6 @@ class Operation(operable.Operable):
     def __hash__(self):
         return id(self)
 
-    def _replace_operations(self, output: str) -> str:
-        output = output.replace("=l=", "<=")
-        output = output.replace("=g=", ">=")
-        output = output.replace("=e=", "eq")
-
-        return output
-
     def gamsRepr(self) -> str:
         """
         Representation of this operation in GAMS.
@@ -337,13 +330,11 @@ class Operation(operable.Operable):
         expression_str = (
             str(self.rhs)
             if isinstance(self.rhs, (bool, float, int, str))
-            else self.rhs.gamsRepr()
+            else expression.get_logical_gams_repr(self.rhs)
         )
 
         output += expression_str
         output += ")"
-
-        output = self._replace_operations(output)
 
         return output
 
@@ -371,7 +362,7 @@ class Operation(operable.Operable):
         return expression.create_graph(self)
 
     def latexRepr(self) -> str:
-        """
+        r"""
         Representation of this operation in Latex.
 
         Returns
@@ -385,42 +376,53 @@ class Operation(operable.Operable):
         >>> m = gp.Container()
         >>> i = gp.Set(m, "i", records=range(3))
         >>> a = gp.Parameter(m, "a", domain=i, records=np.array([3,5,7]))
-        >>> print(gp.Sum(i, a[i]).latexRepr()) # doctest: +SKIP
+        >>> print(gp.Sum(i, a[i]).latexRepr())
+        \sum_{i} a_{i}
 
         """
         op_map = {
-            "sum": "sum",
-            "prod": "prod",
-            "smax": "max",
-            "smin": "min",
-            "sand": "sand",
-            "sor": "sor",
+            "sum": "\\sum",
+            "prod": "\\prod",
+            "smax": "\\max",
+            "smin": "\\min",
+            "sand": "\\bigwedge",
+            "sor": "\\bigvee",
         }
 
         indices = []
-        given_condition = None
+        conditions = []
         for index in self.op_domain:
             if isinstance(index, condition.Condition):
                 indices.append(index.conditioning_on)
-                given_condition = index.condition
+                conditions.append(index.condition)
             else:
                 indices.append(index)
 
         index_str = ",".join([index.latexRepr() for index in indices])
 
-        if given_condition is not None:
-            condition_str = str(given_condition)
-            if hasattr(given_condition, "latexRepr"):
-                condition_str = given_condition.latexRepr()
-            index_str += " ~ | ~ " + condition_str
+        if conditions:
+            condition_strs = []
+            for given_condition in conditions:
+                condition_str, condition_prec, _ = expression.latex_operand(
+                    given_condition
+                )
+                # The conditions of several indices are joined with \wedge.
+                if (
+                    len(conditions) > 1
+                    and condition_prec < expression.PRECEDENCE["and"]
+                ):
+                    condition_str = f"({condition_str})"
+                condition_strs.append(condition_str)
 
-        expression_str = (
-            str(self.rhs)
-            if isinstance(self.rhs, (int, float, str))
-            else self.rhs.latexRepr()
-        )
-        representation = f"\\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
-        return representation
+            index_str += " ~ | ~ " + " \\wedge ".join(condition_strs)
+
+        expression_str, expression_prec, _ = expression.latex_operand(self.rhs)
+
+        # A big operator binds tighter than + and -: sum_i (x_i + y_i)
+        if expression_prec <= expression.PRECEDENCE["+"]:
+            expression_str = f"({expression_str})"
+
+        return f"{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
 
 
 class Sum(Operation):
@@ -843,7 +845,7 @@ class Ord(operable.Operable):
         return f"ord({self._symbol.name})"
 
     def latexRepr(self) -> str:
-        """
+        r"""
         Representation of Ord function in Latex.
 
         Returns
@@ -856,10 +858,10 @@ class Ord(operable.Operable):
         >>> m = gp.Container()
         >>> i = gp.Set(m, "i")
         >>> print(gp.Ord(i).latexRepr())
-        ord(i)
+        \operatorname{ord}(i)
 
         """
-        return f"ord({self._symbol._latex_name})"
+        return f"\\operatorname{{ord}}({self._symbol._latex_name})"
 
 
 class Card(operable.Operable):
@@ -933,7 +935,7 @@ class Card(operable.Operable):
         return f"card({self._symbol.name})"
 
     def latexRepr(self) -> str:
-        """
+        r"""
         Representation of Card function in Latex.
 
         Returns
@@ -946,7 +948,7 @@ class Card(operable.Operable):
         >>> m = gp.Container()
         >>> i = gp.Set(m, "i")
         >>> print(gp.Card(i).latexRepr())
-        card(i)
+        \operatorname{card}(i)
 
         """
-        return f"card({self._symbol._latex_name})"
+        return f"\\operatorname{{card}}({self._symbol._latex_name})"

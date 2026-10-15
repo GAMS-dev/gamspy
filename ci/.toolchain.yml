@@ -2,30 +2,54 @@ variables:
   UV_PYTHON_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_pythons"
   UV_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_bin"
   UV_LINK_MODE: "copy"
+  # Pinned so that the toolchain cache below is deterministic. Bumped by the scheduled autoupgrade job.
+  UV_VERSION: "0.13.1"
 
+# PY_VERSIONS_KEY is part of the toolchain cache key, so it must change whenever PY_VERSIONS changes.
 .python_versions:
   variables:
-    PY_VERSIONS: "3.10 3.14"
+    PY_VERSIONS: "3.11 3.15"
+    PY_VERSIONS_KEY: "py-min-max-3.11-3.15"
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       variables:
-        PY_VERSIONS: "3.10 3.11 3.12 3.13 3.14"
+        PY_VERSIONS: "3.11 3.12 3.13 3.14 3.15"
+        PY_VERSIONS_KEY: "py-all-3.11-3.15"
     - when: on_success
 
+# uv and the Python interpreters only change when UV_VERSION or PY_VERSIONS change,
+# so they are cached per runner instead of being downloaded in every pipeline.
+.toolchain_cache:
+  cache:
+    key: "uv-toolchain-$CI_JOB_NAME-$UV_VERSION-$PY_VERSIONS_KEY"
+    paths:
+      - .uv_pythons/
+      - .uv_bin/
+
+# Packages downloaded by uv (dependencies and solvers). The key includes UV_VERSION so that
+# the cache is reset whenever uv is bumped and does not keep growing with outdated wheels.
+.uv_package_cache:
+  variables:
+    UV_CACHE_DIR: "$CI_PROJECT_DIR/.uv_cache"
+  cache:
+    key: "uv-cache-$CI_JOB_NAME-$UV_VERSION"
+    paths:
+      - .uv_cache/
+
 .setup_template:
-  extends: .python_versions
+  extends: [.python_versions, .toolchain_cache]
   stage: setup
   script:
-    - |
-      if [ -f /etc/debian_version ]; then
-        apt-get update && apt-get install -y curl ca-certificates
-      fi
     - mkdir -p "$UV_INSTALL_DIR"
+    - export PATH="$UV_INSTALL_DIR:$PATH"
     - |
       if ! command -v uv &> /dev/null; then
-        curl -LsSf https://astral.sh/uv/install.sh | INSTALLER_NO_MODIFY_PATH=1 sh
-        export PATH="$UV_INSTALL_DIR:$PATH"
+        if [ -f /etc/debian_version ]; then
+          apt-get update && apt-get install -y curl ca-certificates
+        fi
+        curl -LsSf "https://astral.sh/uv/$UV_VERSION/install.sh" | INSTALLER_NO_MODIFY_PATH=1 sh
       fi
+    # No-op for the versions restored from the cache.
     - uv python install $PY_VERSIONS
   artifacts:
     name: "toolchain-$CI_JOB_NAME"
@@ -37,12 +61,12 @@ variables:
 setup-leg-toolchain:
   extends: .setup_template
   tags: [linux]
-  image: ghcr.io/astral-sh/uv:trixie-slim
+  image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
 
 setup-lag-toolchain:
   extends: .setup_template
   tags: [linux-arm64]
-  image: ghcr.io/astral-sh/uv:trixie-slim
+  image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
 
 setup-deg-toolchain:
   extends: .setup_template
@@ -53,22 +77,38 @@ setup-dac-toolchain:
   tags: [macos-arm64]
 
 setup-wei-toolchain:
-  extends: .python_versions
+  extends: [.python_versions, .toolchain_cache]
   stage: setup
   tags: [windows]
+  # .uv_pythons contains junctions that GitLab Runner cannot archive, so the zipped toolchain is cached instead.
+  cache:
+    paths:
+      - uv_toolchain.zip
+      - uv_bin.zip
   script:
-    - $env:UV_INSTALL_DIR = "$CI_PROJECT_DIR\.uv_bin"
-    - $env:INSTALLER_NO_MODIFY_PATH = "1"
-    - irm https://astral.sh/uv/install.ps1 | iex
-    - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
-    - uv python install ($env:PY_VERSIONS -split ' ')
-    # Compress the folder manually to bypass GitLab Runner's symlink/junction issues
-    - echo "Compressing toolchain to avoid 'Incorrect function' artifact error..."
-    - Compress-Archive -Path "$CI_PROJECT_DIR\.uv_pythons" -DestinationPath "$CI_PROJECT_DIR\uv_toolchain.zip" -Force
-    - Compress-Archive -Path "$CI_PROJECT_DIR\.uv_bin" -DestinationPath "$CI_PROJECT_DIR\uv_bin.zip" -Force
+    - |
+      if ((Test-Path "$CI_PROJECT_DIR\uv_toolchain.zip") -and (Test-Path "$CI_PROJECT_DIR\uv_bin.zip")) {
+        echo "Using cached uv $env:UV_VERSION and Python $env:PY_VERSIONS"
+      } else {
+        $env:UV_INSTALL_DIR = "$CI_PROJECT_DIR\.uv_bin"
+        $env:INSTALLER_NO_MODIFY_PATH = "1"
+        irm "https://astral.sh/uv/$env:UV_VERSION/install.ps1" | iex
+        $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"
+        uv python install ($env:PY_VERSIONS -split ' ')
+        # Compress the folder manually to bypass GitLab Runner's symlink/junction issues
+        echo "Compressing toolchain to avoid 'Incorrect function' artifact error..."
+        Compress-Archive -Path "$CI_PROJECT_DIR\.uv_pythons" -DestinationPath "$CI_PROJECT_DIR\uv_toolchain.zip" -Force
+        Compress-Archive -Path "$CI_PROJECT_DIR\.uv_bin" -DestinationPath "$CI_PROJECT_DIR\uv_bin.zip" -Force
+      }
   artifacts:
     name: "toolchain-windows"
     paths:
       - uv_toolchain.zip
       - uv_bin.zip
     expire_in: 2 hours
+
+.wei_unpack_toolchain:
+  script:
+    - '& "$env:SystemRoot\System32\tar.exe" -xf uv_toolchain.zip'
+    - '& "$env:SystemRoot\System32\tar.exe" -xf uv_bin.zip'
+    - $env:Path = "$CI_PROJECT_DIR\.uv_bin;$env:Path"

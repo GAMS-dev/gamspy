@@ -14,6 +14,7 @@ import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._config import get_option
 from gamspy._extrinsic import ExtrinsicFunction
+from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import BaseSymbol
 from gamspy._symbols.implicits import ImplicitSet
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
@@ -40,19 +41,13 @@ class DomainPlaceHolder:
     indices: list[tuple[str, int]]
 
 
-def peek(stack):
-    if len(stack) > 0:
-        return stack[-1]
-    return None
-
-
 # Higher number means higher precedence.
 PRECEDENCE = {
     "..": 0,
     "=": 0,
     "$=": 0,
     "or": 1,
-    "xor": 2,
+    "xor": 1,
     "and": 3,
     "=e=": 4,
     "=n=": 4,
@@ -108,6 +103,10 @@ LEAF_PRECEDENCE = float("inf")
 ASSIGNMENT_OPERATORS = (sparse.SPARSE, "=")
 STATEMENT_OPERATORS = (*ASSIGNMENT_OPERATORS, "..")
 
+# Equality operations generate GAMS equation signs (=g=, =e=, =l=). Outside
+# of an equation definition, they have to be written as relational operators.
+LOGICAL_OPERATORS = {"=g=": ">=", "=e=": "eq", "=l=": "<="}
+
 
 def split_assignment(declaration: str) -> tuple[str, str, str]:
     for operator in ASSIGNMENT_OPERATORS:
@@ -126,51 +125,141 @@ def get_operand_gams_repr(operand) -> str:
 
     # b[i] * -1   -> not valid
     # b[i] * (-1) -> valid
-    if isinstance(operand, (int, float)) and operand < 0:
+    # The same goes for -INF, which is a string after special values are mapped.
+    if representation.startswith("-"):
         representation = f"({representation})"
 
     return representation
 
 
-def get_operand_latex_repr(operand) -> str:
+# In LaTeX, a leading minus sign is not wrapped in parentheses, so a negated
+# operand binds like a binary minus: a + (-b) and a \cdot (-b) keep their
+# parentheses while -a + b does not get any.
+LATEX_NEGATION_PRECEDENCE = PRECEDENCE["-"]
+
+# A condition (x ~ | ~ cond) is always parenthesized when it is an operand.
+LATEX_CONDITION_PRECEDENCE = 0.5
+
+LATEX_SPECIAL_VALUES = {
+    "EPS": "\\text{EPS}",
+    "NA": "\\text{NA}",
+    "UNDF": "\\text{UNDF}",
+    "INF": "\\infty",
+    "-INF": "-\\infty",
+}
+
+
+def _latex_number(value: int | float) -> tuple[str, float]:
+    if isinstance(value, float):
+        if SpecialValues.isEps(value):
+            return LATEX_SPECIAL_VALUES["EPS"], LEAF_PRECEDENCE
+        if SpecialValues.isNA(value):
+            return LATEX_SPECIAL_VALUES["NA"], LEAF_PRECEDENCE
+        if SpecialValues.isUndef(value):
+            return LATEX_SPECIAL_VALUES["UNDF"], LEAF_PRECEDENCE
+        if SpecialValues.isPosInf(value):
+            return LATEX_SPECIAL_VALUES["INF"], LEAF_PRECEDENCE
+        if SpecialValues.isNegInf(value):
+            return LATEX_SPECIAL_VALUES["-INF"], LATEX_NEGATION_PRECEDENCE
+
+    representation = str(abs(value))
+    precedence = LEAF_PRECEDENCE
+    if "e" in representation:
+        # 1.5e-07 -> 1.5 \cdot 10^{-7}
+        mantissa, exponent = representation.split("e")
+        representation = f"10^{{{int(exponent)}}}"
+        if float(mantissa) != 1:
+            representation = f"{mantissa} \\cdot {representation}"
+            precedence = PRECEDENCE["*"]
+
+    if value < 0:
+        return f"-{representation}", LATEX_NEGATION_PRECEDENCE
+
+    return representation, precedence
+
+
+def latex_operand(operand) -> tuple[str, float, bool]:
+    if isinstance(operand, Expression):
+        return _create_latex_expression(operand)
+
+    if isinstance(operand, number.Number):
+        operand = operand._value
+
+    if isinstance(operand, (int, float)):
+        return *_latex_number(operand), False
+
+    if isinstance(operand, str) and operand in LATEX_SPECIAL_VALUES:
+        precedence = (
+            LATEX_NEGATION_PRECEDENCE if operand.startswith("-") else LEAF_PRECEDENCE
+        )
+        return LATEX_SPECIAL_VALUES[operand], precedence, False
+
+    if isinstance(operand, operation.Operation):
+        return operand.latexRepr(), LEAF_PRECEDENCE, True
+
+    if isinstance(operand, condition.Condition):
+        return operand.latexRepr(), LATEX_CONDITION_PRECEDENCE, False
+
     if hasattr(operand, "latexRepr"):
-        return operand.latexRepr()
+        return operand.latexRepr(), LEAF_PRECEDENCE, False
 
-    if isinstance(operand, float):
-        operand = utils._map_special_values(operand)
-
-    representation = str(operand)
-
-    return representation
+    return str(operand), LEAF_PRECEDENCE, False
 
 
-def create_gams_expression(root_node: Expression) -> str:
+def get_operand_latex_repr(operand) -> str:
+    return latex_operand(operand)[0]
+
+
+def get_logical_gams_repr(operand) -> str:
+    if isinstance(operand, Expression):
+        return create_gams_expression(operand, logical=True)
+
+    if isinstance(operand, condition.Condition):
+        return operand._create_gams_repr(logical=True)
+
+    return get_operand_gams_repr(operand)
+
+
+def create_gams_expression(root_node: Expression, *, logical: bool = False) -> str:
     """
     Creates GAMS representation of a binary expression tree without recursion.
     It uses an iterative post-order traversal to build the expression,
     adding parentheses only when necessary based on operator precedence and
-    associativity rules.
+    associativity rules. If logical is True, equation signs are written as
+    relational operators. The right-hand side of an assignment is always
+    written in logical form.
     """
     # 1. Get nodes in post-order (left - right - parent).
-    s1: list[OperableType | ImplicitEquation | str] = [root_node]
+    s1: list[tuple[OperableType | ImplicitEquation | str, bool]] = [
+        (root_node, logical)
+    ]
     post_order_nodes = []
     while s1:
-        node = s1.pop()
-        post_order_nodes.append(node)
+        node, is_logical = s1.pop()
+        post_order_nodes.append((node, is_logical))
         if isinstance(node, Expression):
             if node.left is not None:
-                s1.append(node.left)
+                s1.append((node.left, is_logical))
             if node.right is not None:
-                s1.append(node.right)
+                s1.append(
+                    (node.right, is_logical or node.operator in ASSIGNMENT_OPERATORS)
+                )
 
     # 2. Build the GAMS expression
     eval_stack: list[tuple[str, float]] = []
-    for node in reversed(post_order_nodes):
+    for node, is_logical in reversed(post_order_nodes):
         if not isinstance(node, Expression):
-            eval_stack.append((get_operand_gams_repr(node), LEAF_PRECEDENCE))
+            representation = (
+                get_logical_gams_repr(node)
+                if is_logical
+                else get_operand_gams_repr(node)
+            )
+            eval_stack.append((representation, LEAF_PRECEDENCE))
             continue
 
         op = node.operator
+        if is_logical:
+            op = LOGICAL_OPERATORS.get(op, op)
         op_prec = PRECEDENCE[op]
         op_assoc = ASSOCIATIVITY[op]
 
@@ -224,15 +313,25 @@ def create_latex_expression(root_node: Expression) -> str:
     adding parentheses only when necessary based on operator precedence and
     associativity rules.
     """
+    return _create_latex_expression(root_node)[0]
+
+
+def _create_latex_expression(root_node: Expression) -> tuple[str, float, bool]:
     op_map = {
         "=g=": "\\geq",
         "=l=": "\\leq",
         "=e=": "=",
+        "=n=": "\\text{=n=}",
+        "=x=": "\\text{=x=}",
+        "=b=": "\\text{=b=}",
+        "eq": "=",
+        "ne": "\\neq",
+        ">=": "\\geq",
+        "<=": "\\leq",
         "*": "\\cdot",
         "and": "\\wedge",
         "or": "\\vee",
         "xor": "\\oplus",
-        "$": "|",
         "$=": "\\stackrel{\\$}{=}",
     }
 
@@ -248,11 +347,12 @@ def create_latex_expression(root_node: Expression) -> str:
             if node.right is not None:
                 s1.append(node.right)
 
-    # 2. Build the LaTeX expression
-    eval_stack: list[tuple[str, float]] = []
+    # 2. Build the LaTeX expression. Each entry also tracks whether the string
+    # ends with a big operator (e.g. a sum) whose scope extends to the right.
+    eval_stack: list[tuple[str, float, bool]] = []
     for node in reversed(post_order_nodes):
         if not isinstance(node, Expression):
-            eval_stack.append((get_operand_latex_repr(node), LEAF_PRECEDENCE))
+            eval_stack.append(latex_operand(node))
             continue
 
         op = node.operator
@@ -261,34 +361,43 @@ def create_latex_expression(root_node: Expression) -> str:
 
         # Handle unary ops
         if op in ("u-", "not"):
-            operand_str, operand_prec = eval_stack.pop()
+            operand_str, operand_prec, operand_open = eval_stack.pop()
 
             # Add parentheses if the operand's operator has lower precedence
             if operand_prec < op_prec:
                 operand_str = f"({operand_str})"
+                operand_open = False
 
             if op == "u-":
-                new_str = f"(-{operand_str})"
-                # A parenthesized expression has the highest precedence
-                eval_stack.append((new_str, LEAF_PRECEDENCE))
-            else:  # Standard handling for 'not'
-                new_str = f"not {operand_str}"
-                eval_stack.append((new_str, op_prec))
+                eval_stack.append(
+                    (f"-{operand_str}", LATEX_NEGATION_PRECEDENCE, operand_open)
+                )
+            else:
+                eval_stack.append((f"\\neg {operand_str}", op_prec, operand_open))
 
         # Handle binary ops
         else:
-            right_str, right_prec = eval_stack.pop()
-            left_str, left_prec = eval_stack.pop()
+            right_str, right_prec, right_open = eval_stack.pop()
+            left_str, left_prec, left_open = eval_stack.pop()
 
-            if left_prec < op_prec or (left_prec == op_prec and op_assoc == "right"):
+            # The fraction bar already groups both operands.
+            if op == "/":
+                eval_stack.append(
+                    (f"\\frac{{{left_str}}}{{{right_str}}}", LEAF_PRECEDENCE, False)
+                )
+                continue
+
+            # (sum_i x_i) * y would otherwise read as sum_i (x_i * y).
+            if (
+                left_prec < op_prec
+                or (left_prec == op_prec and op_assoc == "right")
+                or (left_open and op == "*")
+            ):
                 left_str = f"({left_str})"
 
             if right_prec < op_prec or (right_prec == op_prec and op_assoc == "left"):
                 right_str = f"({right_str})"
-
-            if op == "/":
-                eval_stack.append((f"\\frac{{{left_str}}}{{{right_str}}}", op_prec))
-                continue
+                right_open = False
 
             op = op_map.get(op, op)
 
@@ -298,19 +407,16 @@ def create_latex_expression(root_node: Expression) -> str:
                 new_str = f"{left_str} {op}\n {right_str}"
             else:
                 new_str = f"{left_str} {op} {right_str}"
-            eval_stack.append((new_str, op_prec))
+            eval_stack.append((new_str, op_prec, right_open))
 
-    final_string = eval_stack[0][0]
-
-    return final_string
+    return eval_stack[0]
 
 
 def _describe_graph_node(node):
     """
     Return (label, shape, children) for a single node of an expression
     tree. children is a list of (child, edge_label) tuples; leaves
-    return an empty list. Mirrors the node kinds enumerated in
-    ``Expression._find_all_symbols``.
+    return an empty list.
     """
     OP_SHAPE = "box"
     LEAF_SHAPE = "ellipse"
@@ -351,6 +457,61 @@ def _describe_graph_node(node):
 
     # Leaf: bare symbol, implicit symbol, Number, or raw scalar.
     return get_operand_gams_repr(node), LEAF_SHAPE, []
+
+
+def find_symbols(root_node) -> Iterator[str]:
+    """
+    Yields the names of all symbols that root_node refers to, including the
+    sets in their domains, with a stack-based traversal (O(N)).
+    """
+    seen: set[str] = set()
+    stack = [root_node]
+    while stack:
+        node = stack.pop()
+
+        if isinstance(node, BaseSymbol):
+            if node.name in seen:
+                continue
+
+            seen.add(node.name)
+            yield node.name
+
+            if type(node) is gp_syms.Alias:
+                stack.append(node.alias_with)
+
+            stack.extend(
+                elem
+                for elem in node.domain
+                if not isinstance(elem, str) and elem.name != node.name
+            )
+        elif isinstance(node, ImplicitSymbol):
+            stack.append(node.parent)
+            stack.extend(node.domain)
+        else:
+            stack.extend(child for child, _ in _describe_graph_node(node)[2])
+
+
+def find_symbols_in_conditions(root_node) -> Iterator[str]:
+    """
+    Yields the names of all symbols that are used in a condition anywhere in
+    root_node.
+    """
+    seen: set[str] = set()
+    stack = [root_node]
+    while stack:
+        node = stack.pop()
+
+        # Symbols are leaves. Their domains are not conditions.
+        if isinstance(node, (BaseSymbol, ImplicitSymbol)):
+            continue
+
+        if isinstance(node, condition.Condition):
+            for name in find_symbols(node.condition):
+                if name not in seen:
+                    seen.add(name)
+                    yield name
+
+        stack.extend(child for child, _ in _describe_graph_node(node)[2])
 
 
 def create_graph(root_node):
@@ -434,9 +595,6 @@ class Expression(operable.Operable):
         self.right = (
             utils._map_special_values(right) if isinstance(right, float) else right
         )
-
-        if operator in ASSIGNMENT_OPERATORS and isinstance(right, Expression):
-            right._fix_equalities()
 
         self._representation: str | None = None
         self._left_domain: Sequence = []
@@ -647,9 +805,6 @@ class Expression(operable.Operable):
     def __repr__(self) -> str:
         return f"Expression(left={self.left}, data={self.operator}, right={self.right})"
 
-    def _replace_operator(self, operator: str):
-        self.operator = operator
-
     def latexRepr(self) -> str:
         """
         Returns the LaTeX representation of this Expression.
@@ -740,149 +895,6 @@ class Expression(operable.Operable):
 
         """
         return self.gamsRepr()
-
-    def _fix_equalities(self) -> None:
-        # Equality operations on Parameter and Variable objects generate
-        # GAMS equality signs: =g=, =e=, =l=. If these signs appear on
-        # assignments, replace them with regular equality ops.
-        # Uses a stack based post-order traversal algorithm.
-        EQ_MAP: dict[str, str] = {"=g=": ">=", "=e=": "eq", "=l=": "<="}
-        stack = []
-        root = self
-
-        while True:
-            while root is not None:
-                if hasattr(root, "right"):
-                    stack.append(root.right)
-
-                stack.append(root)
-                root = root.left if hasattr(root, "left") else None
-
-            if len(stack) == 0:
-                break
-
-            root = stack.pop()
-
-            if isinstance(root, Expression) and root.operator in EQ_MAP:
-                root._replace_operator(EQ_MAP[root.operator])
-
-            last_item = peek(stack)
-            if (
-                hasattr(root, "right")
-                and last_item is not None
-                and last_item is root.right
-            ):
-                stack.pop()
-                stack.append(root)
-                root = root.right
-            else:
-                root = None
-
-    def _find_all_symbols(self) -> Iterator[str]:
-        # Finds all symbols in an expression with a stack-based in-order
-        # traversal algorithm (O(N)). Yields symbols lazily to save memory.
-        seen: set[str] = set()
-        stack = []
-
-        node = self
-        while True:
-            if node is not None:
-                stack.append(node)
-                node = getattr(node, "left", None)
-            elif stack:
-                node = stack.pop()
-
-                if isinstance(node, BaseSymbol):
-                    if node.name not in seen:
-                        if type(node) is gp_syms.Alias:
-                            seen.add(node.alias_with.name)
-                            yield node.alias_with.name
-
-                        seen.add(node.name)
-                        yield node.name
-
-                    domain = [
-                        elem
-                        for elem in node.domain
-                        if not isinstance(elem, str) and elem.name != node.name
-                    ]
-                    stack.extend(domain)
-                    node = None
-                elif isinstance(node, ImplicitSymbol):
-                    name = node.parent.name
-                    if name not in seen:
-                        seen.add(name)
-                        yield name
-
-                    stack.extend(node.domain)
-                    stack.extend(node.container[node.parent.name].domain)
-                    node = None
-                elif isinstance(node, ShiftExpression):
-                    stack.append(node.right)
-                    node = node.left
-                elif isinstance(node, operation.Operation):
-                    stack.extend(node.op_domain)
-                    node = node.rhs
-                elif isinstance(node, condition.Condition):
-                    stack.append(node.conditioning_on)
-
-                    if isinstance(node.condition, Expression):
-                        node = node.condition
-                    else:
-                        stack.append(node.condition)
-                        node = None
-                elif isinstance(node, (operation.Ord, operation.Card)):
-                    stack.append(node._symbol)
-                    node = None
-                elif isinstance(node, MathOp):
-                    if isinstance(node.elements[0], Expression):
-                        node = node.elements[0]
-                    else:
-                        stack.extend(node.elements)
-                        node = None
-                elif isinstance(node, ExtrinsicFunction):
-                    stack.extend(list(node.args))
-                    node = None
-                else:
-                    node = getattr(node, "right", None)
-            else:
-                break
-
-    def _find_symbols_in_conditions(self) -> Iterator[str]:
-        seen: set[str] = set()
-        stack = []
-
-        node = self
-        while True:
-            if node is not None:
-                stack.append(node)
-                node = getattr(node, "left", None)
-            elif stack:
-                node = stack.pop()
-
-                if isinstance(node, condition.Condition):
-                    given_condition = node.condition
-
-                    if isinstance(given_condition, Expression):
-                        # Consume the generator from the nested expression
-                        for name in given_condition._find_all_symbols():
-                            if name not in seen:
-                                seen.add(name)
-                                yield name
-
-                    elif isinstance(given_condition, ImplicitSymbol):
-                        name = given_condition.parent.name
-                        if name not in seen:
-                            seen.add(name)
-                            yield name
-
-                if isinstance(node, operation.Operation):
-                    stack.extend(node.op_domain)
-                    node = node.rhs
-                else:
-                    node = getattr(node, "right", None)
-            else:
-                break
 
     def _validate_definition(
         self, control_stack: list[Set | Alias | ImplicitSet]

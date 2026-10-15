@@ -59,6 +59,11 @@ if TYPE_CHECKING:
     NormalizedDomainType: TypeAlias = Sequence[
         Set | Alias | UniverseAlias | Universe | str
     ]
+    # The ellipsis/slice is expanded and integer labels are converted to str.
+    ValidatedIndexType: TypeAlias = (
+        Set | Alias | UniverseAlias | Universe | ImplicitSet | Expression | str
+    )
+    ValidatedDomainType: TypeAlias = Sequence[ValidatedIndexType]
     IndexType: TypeAlias = (
         EllipsisType
         | slice

@@ -14,6 +14,7 @@ from IJKLM.help import (
 )
 from IJKLM.run_gams import data_to_gdx, run_gams
 from IJKLM.run_gamspy import run_gamspy
+from IJKLM.run_linopy import run_linopy
 from IJKLM.run_poi import run_poi
 
 
@@ -31,6 +32,7 @@ def run_experiment(cardinality_of_i, cardinality_of_j, repeats, number, time_lim
     df_poi = create_data_frame()
     df_gams = create_data_frame()
     df_gamspy = create_data_frame()
+    df_linopy = create_data_frame()
 
     # define the x axis
     N = list(incremental_range(100000, cardinality_of_i + 1, 10000, 1000))
@@ -76,8 +78,14 @@ def run_experiment(cardinality_of_i, cardinality_of_j, repeats, number, time_lim
             df_gamspy = process_results(gamspy, df_gamspy)
             print_log_message(language="GAMSPy", n=n, df=df_gamspy)
 
+        # Linopy
+        if below_time_limit(df_linopy, time_limit):
+            rr = run_linopy(I, IJK, JKL, KLM, repeats=repeats, number=number)
+            df_linopy = process_results(rr, df_linopy)
+            print_log_message(language="Linopy", n=n, df=df_linopy)
+
     # merge all results
-    df = pd.concat([df_poi, df_gams, df_gamspy]).reset_index(drop=True)
+    df = pd.concat([df_poi, df_gams, df_gamspy, df_linopy]).reset_index(drop=True)
 
     # save results
     save_results(df, os.path.join(os.path.dirname(__file__), "IJKLM"))

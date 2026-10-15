@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.domain import Domain
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import IndexType, SymbolType
+    from gamspy._types import IndexType, SymbolType, ValidatedDomainType
 
 SPECIAL_VALUE_MAP = {
     SpecialValues.NA: "NA",
@@ -483,25 +483,27 @@ def setBaseEqual(set_a: Set | Alias, set_b: Set | Alias) -> bool:
     return a == b
 
 
-def _get_unique_name() -> str:
+def _get_unique_name(prefix: str | None = None) -> str:
     """
     N= 2^122 and the collision probability is: 1 - e^(-(n^2 / 2*N))
     """
     u = uuid.uuid4()
     b64 = base64.urlsafe_b64encode(u.bytes)
-    return b64.rstrip(b"=").decode("ascii").replace("-", "_")
+    name = b64.rstrip(b"=").decode("ascii").replace("-", "_")
+    return name if prefix is None else f"{prefix}_{name}"
 
 
 @functools.cache
 def _declaration_plumbing() -> tuple[frozenset[int], tuple[CodeType, ...]]:
     """Ids of every function that sits between a declaration and _get_name_from_stack."""
     import gamspy as gp
-    from gamspy._symbols.base import SymbolConstructor
+    from gamspy._symbols.base import BaseSymbol, SymbolConstructor
 
     plumbing = {
         _get_name_from_stack.__code__,
         gp.Container._get_symbol_name.__code__,
         SymbolConstructor.__call__.__code__,
+        BaseSymbol._resolve_container_and_name.__code__,
         gp.Model.__init__.__code__,
     }
     plumbing.update(
@@ -636,11 +638,8 @@ def _get_license_path(system_directory: str) -> str:
     return os.path.join(system_directory, "gamslice.txt")
 
 
-def _replace_equality_signs(string: str) -> str:
-    string = string.replace("=l=", "<=")
-    string = string.replace("=e=", "eq")
-    string = string.replace("=g=", ">=")
-    return string
+def _quote_path(path: str | os.PathLike[str]) -> str:
+    return f'"{os.path.abspath(path)}"'
 
 
 def _to_list(obj: IndexType) -> list:
@@ -660,6 +659,12 @@ def _map_special_values(value: float):
 
     if SpecialValues.isEps(value):
         return "EPS"
+
+    if SpecialValues.isNA(value):
+        return SPECIAL_VALUE_MAP[SpecialValues.NA]
+
+    if SpecialValues.isUndef(value):
+        return SPECIAL_VALUE_MAP[SpecialValues.UNDEF]
 
     if value in SPECIAL_VALUE_MAP:
         return SPECIAL_VALUE_MAP[value]
@@ -718,7 +723,7 @@ def _get_domain_str(
             if is_universe(elem):
                 domain_strs.append(elem)
             elif latex:
-                domain_strs.append('"' + elem.replace("_", r"\_") + '"')
+                domain_strs.append("\\text{" + elem.replace("_", r"\_") + "}")
             else:
                 domain_strs.append('"' + elem + '"')
         elif isinstance(elem, (Universe, *_get_domain_element_types())):
@@ -802,7 +807,7 @@ def _get_set(domain: Sequence[Set | Alias | Domain | Expression]):
     return res
 
 
-def _unpack(domain: Sequence[Set | Alias | ImplicitSet]):
+def _unpack(domain: ValidatedDomainType):
     """Flatten a domain into the sets it puts under control."""
     from gamspy._algebra.expression import ShiftExpression
 

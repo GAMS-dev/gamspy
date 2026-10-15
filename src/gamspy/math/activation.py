@@ -18,13 +18,9 @@ if TYPE_CHECKING:
     from gamspy._symbols import Alias, Equation, Parameter, Set, Variable
 
 
-def _get_random_name(prefix: str) -> str:
-    return f"{prefix}_{utils._get_unique_name()}"
-
-
 def _get_lb(x: Variable, default_lb: float):
     lb = x.container.addParameter(
-        _get_random_name("lb"),
+        utils._get_unique_name("lb"),
         domain=x.domain,
     )
     lb[...] = x.lo[...]
@@ -34,7 +30,7 @@ def _get_lb(x: Variable, default_lb: float):
 
 def _get_ub(x: Variable, default_ub: float):
     ub = x.container.addParameter(
-        _get_random_name("ub"),
+        utils._get_unique_name("ub"),
         domain=x.domain,
     )
     ub[...] = x.up[...]
@@ -146,10 +142,10 @@ def relu_with_sos1_var(
     last_dim = gamspy.math._generate_dims(x.container, [2])[0]
 
     y = x.container.addVariable(
-        _get_random_name("sos1"), type="sos1", domain=[*domain, last_dim]
+        utils._get_unique_name("sos1"), type="sos1", domain=[*domain, last_dim]
     )
     eq = x.container.addEquation(
-        _get_random_name("eq"),
+        utils._get_unique_name("eq"),
         domain=domain,
     )
 
@@ -235,14 +231,14 @@ def leaky_relu_with_binary_var(
     domain = x.domain
     sigma = syms.Variable._constructor_bypass(
         x.container,
-        _get_random_name("bin"),
+        utils._get_unique_name("bin"),
         type="binary",
         domain=domain,
     )
 
     y = syms.Variable._constructor_bypass(
         x.container,
-        _get_random_name("y"),
+        utils._get_unique_name("y"),
         domain=domain,
         type="free",
     )
@@ -250,7 +246,7 @@ def leaky_relu_with_binary_var(
     eq = [
         syms.Equation._constructor_bypass(
             x.container,
-            _get_random_name("eq"),
+            utils._get_unique_name("eq"),
             domain=domain,
         )
         for _ in range(4)
@@ -353,20 +349,20 @@ def relu_with_binary_var(
     assert isinstance(x.container, Container)
     domain = x.domain
     sigma = x.container.addVariable(
-        _get_random_name("bin"),
+        utils._get_unique_name("bin"),
         type="binary",
         domain=domain,
     )
 
     y = x.container.addVariable(
-        _get_random_name("y"),
+        utils._get_unique_name("y"),
         type="positive",
         domain=domain,
     )
 
     eq = [
         x.container.addEquation(
-            _get_random_name("eq"),
+            utils._get_unique_name("eq"),
             domain=domain,
         )
         for _ in range(3)
@@ -477,12 +473,12 @@ def relu_with_equilibrium(
     if not isinstance(x, syms.Variable):
         new_input = syms.Variable._constructor_bypass(
             x.container,
-            _get_random_name("new_input"),
+            utils._get_unique_name("new_input"),
             domain=domain,
         )
         set_new_input = syms.Equation._constructor_bypass(
             x.container,
-            _get_random_name("set_new_input"),
+            utils._get_unique_name("set_new_input"),
             domain=domain,
         )
         set_new_input[...] = new_input == x
@@ -491,7 +487,7 @@ def relu_with_equilibrium(
 
     eq = syms.Equation._constructor_bypass(
         x.container,
-        _get_random_name("matches_eq"),
+        utils._get_unique_name("matches_eq"),
         domain=domain,
     )
 
@@ -556,14 +552,14 @@ def relu_with_complementarity_var(
     domain = x.domain
 
     y = x.container.addVariable(
-        _get_random_name("y"),
+        utils._get_unique_name("y"),
         type="positive",
         domain=domain,
     )
 
     eq = [
         x.container.addEquation(
-            _get_random_name("eq"),
+            utils._get_unique_name("eq"),
             domain=domain,
         )
         for _ in range(2)
@@ -643,12 +639,12 @@ def log_softmax(x: Variable, dim: int = -1, *, skip_intrinsic: bool = False):
     sum_domain = next_alias(domain[dim])
 
     y = x.container.addVariable(
-        _get_random_name("y"),
+        utils._get_unique_name("y"),
         domain=x.domain,
     )
 
     eq = x.container.addEquation(
-        _get_random_name("eq"),
+        utils._get_unique_name("eq"),
         domain=x.domain,
     )
 
@@ -714,12 +710,12 @@ def softplus(
     """
     y = syms.Variable._constructor_bypass(
         x.container,
-        _get_random_name("y"),
+        utils._get_unique_name("y"),
         domain=x.domain,
     )
     eq = syms.Equation._constructor_bypass(
         x.container,
-        _get_random_name("eq"),
+        utils._get_unique_name("eq"),
         domain=x.domain,
     )
 
@@ -783,12 +779,12 @@ def softmax(x: Variable, dim: int = -1):
     expr_domain = [d if i != dim else sum_domain for (i, d) in enumerate(domain)]
 
     y = x.container.addVariable(
-        _get_random_name("y"),
+        utils._get_unique_name("y"),
         domain=domain,
     )
 
     eq = x.container.addEquation(
-        _get_random_name("eq"),
+        utils._get_unique_name("eq"),
         domain=domain,
     )
 
@@ -840,12 +836,12 @@ def gelu(
     assert isinstance(x.container, Container)
 
     y = x.container.addVariable(
-        _get_random_name("y"),
+        utils._get_unique_name("y"),
         domain=x.domain,
     )
 
     eq = x.container.addEquation(
-        _get_random_name("eq"),
+        utils._get_unique_name("eq"),
         domain=x.domain,
     )
 

@@ -131,23 +131,23 @@ future. From those scenario solves:
 **A cut in numbers.** Take the last stage of the :doc:`ClearLake model
 <clearlake>`, ``apr``, in the first iteration, at the trial state
 :math:`\bar{x} = 250` (a full reservoir). The
-April inflow scenarios are :math:`-50`, :math:`100` and :math:`250` with
-probabilities :math:`0.25`, :math:`0.50` and :math:`0.25`. In the dry and the
+April inflow scenarios are :math:`50`, :math:`150` and :math:`350` with
+probabilities :math:`0.25`, :math:`0.50` and :math:`0.25`. In the low and the
 medium scenarios the stage balances the water at zero cost, so
 :math:`v_{\xi} = 0` and :math:`\pi_{\xi} = 0`. In the wet scenario the stage
-faces :math:`250 + 250 = 500` units of water: releasing the maximum 200 and
-storing 250 still leaves 50 to spill at cost 10 each. So
-:math:`v_{\xi} = 500`, and one extra unit of incoming water would mean one
+faces :math:`250 + 350 = 600` units of water: releasing the maximum 200 and
+storing 250 still leaves 150 to spill at cost 10 each. So
+:math:`v_{\xi} = 1500`, and one extra unit of incoming water would mean one
 more unit spilled, so :math:`\pi_{\xi} = 10`. The recipe above gives
 
 .. math::
 
-   V(250) = 0.25 \cdot 500 = 125, \qquad
+   V(250) = 0.25 \cdot 1500 = 375, \qquad
    g = 0.25 \cdot 10 = 2.5, \qquad
-   d = 125 - 2.5 \cdot 250 = -500,
+   d = 375 - 2.5 \cdot 250 = -250,
 
-and the cut :math:`\alpha_{\text{apr}} - 2.5\, L_{\text{mar}} \ge -500` now
-warns the March solve: every unit of water stored beyond 200 carries an
+and the cut :math:`\alpha_{\text{apr}} - 2.5\, L_{\text{mar}} \ge -250` now
+warns the March solve: every unit of water stored beyond 100 carries an
 expected flood cost of 2.5.
 
 At the last stage, as in this example, the scenario values are exact. At
@@ -249,8 +249,8 @@ an internal error and raises rather than report a wrong number.
    policy is optimal. That plateau is the basis of the ``rel_tol`` /
    ``patience`` early-stopping rule in :doc:`training`.
 
-On ClearLake the bound climbs from 107.42 at the first iteration to its
-converged value 112.3046875, where the plateau rule stops training after
+On ClearLake the bound climbs from 11.72 at the first iteration to its
+converged value 70.3125, where the plateau rule stops training after
 eight iterations. To measure how far the trained policy actually sits above
 the bound, evaluate it on fresh out-of-sample paths with
 ``train(gap_paths=...)``; the resulting *optimality gap* is covered in

@@ -198,7 +198,7 @@ def main():
     cdb.execute(
         {
             "ExcelWriter": {
-                "file": os.path.join(file_dir, "results.xlsx"),
+                "file": "results.xlsx",
                 "clearSheet": True,
                 "symbols": [
                     {
@@ -271,7 +271,7 @@ def main():
     cdb.execute(
         {
             "ExcelWriter": {
-                "file": os.path.join(file_dir, "results.xlsx"),
+                "file": "results.xlsx",
                 "clearSheet": True,
                 "symbols": [
                     {

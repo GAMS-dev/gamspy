@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pytest
 
@@ -7,7 +9,7 @@ from gamspy.formulations.sddp import LastCuts
 
 pytestmark = pytest.mark.unit
 
-EXACT_LB = 112.3046875
+EXACT_LB = 70.3125
 
 
 def test_documented_workflow_with_bundled_demo_license(demo_clearlake_built):
@@ -21,8 +23,8 @@ def test_documented_workflow_with_bundled_demo_license(demo_clearlake_built):
     )
 
     assert result.stop_reason == "converged"
-    assert result.iterations_run == 8
-    assert result.lower_bound == EXACT_LB
+    assert result.iterations_run == 6
+    assert math.isclose(result.lower_bound, EXACT_LB, rel_tol=1e-9)
     assert result.policy_cost_paths == 500
 
     decision = c.sddp.policy(
@@ -34,7 +36,7 @@ def test_documented_workflow_with_bundled_demo_license(demo_clearlake_built):
     assert decision.decisions == pytest.approx(
         {"R": 200.0, "L": 250.0, "Z": 0.0, "F": 50.0}
     )
-    assert decision.approx_cost_to_go == pytest.approx(625.0)
+    assert decision.approx_cost_to_go == pytest.approx(875.0)
 
     simulation = c.sddp.simulate(n_paths=20, seed=0)
     assert simulation.n_paths == 20
@@ -51,4 +53,4 @@ def test_cut_selection_bound_with_bundled_demo_license(demo_clearlake_built):
 
     assert result.stop_reason == "max_iter"
     assert result.iterations_run == 5
-    assert result.lower_bound == EXACT_LB
+    assert math.isclose(result.lower_bound, EXACT_LB, rel_tol=1e-9)

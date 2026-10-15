@@ -1,21 +1,20 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
-import gamspy._algebra.sparse as sparse
 import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._internals import DataSource
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy._symbols.implicits.implicit_variable import ImplicitVariable
+from gamspy._symbols.utils import assign
 from gamspy._universe import UNIVERSE
-from gamspy.exceptions import ValidationError
-from gamspy.math.matrix import permute
+from gamspy.math.matrix import _transpose
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -28,7 +27,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols.implicits import ImplicitSet
-    from gamspy._types import IndexType
+    from gamspy._types import IndexType, ValidatedIndexType
     from gamspy.math.misc import MathOp
 
 logger = logging.getLogger("GAMSPy")
@@ -72,7 +71,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self,
         parent: Set | Alias | Parameter | Variable | Equation,
         name: str,
-        domain: Sequence[Any] | None = None,
+        domain: Sequence[ValidatedIndexType] | None = None,
         permutation: list[int] | None = None,
         scalar_domains: list[tuple[int, str]] | None = None,
     ) -> None:
@@ -82,7 +81,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         ----------
         parent : Parameter | Variable | Equation
         name : str
-        domain : list[Set | str], optional
+        domain : Sequence[Set | Alias | ImplicitSet | Expression | str], optional
         records : Any, optional
         """
         self.parent = parent
@@ -91,6 +90,16 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
         super().__init__(name, domain, permutation, scalar_domains)
         self._assignment = None
+
+    @property
+    def _latex_name(self) -> str:
+        # Attributes such as x.l or i.pos are rendered as a superscript: x^{l}
+        name = self.parent._latex_name
+        _, separator, attribute = self.name.rpartition(".")
+        if separator:
+            name = f"{{{name}}}^{{\\mathrm{{{attribute}}}}}"
+
+        return name
 
     def __getitem__(self, indices: IndexType) -> ImplicitParameter:
         domain = validation.validate_domain(self, indices)
@@ -134,12 +143,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             )
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
-        rhs, operator = sparse._unwrap(rhs)
-
-        if isinstance(rhs, float):
-            rhs = utils._map_special_values(rhs)
-
-        statement = expression.Expression(
+        assign(
+            self.parent,
             ImplicitParameter(
                 parent=self.parent,
                 name=self.name,
@@ -147,19 +152,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
                 permutation=self.permutation,
                 scalar_domains=self._scalar_domains,
             ),
-            operator,
             rhs,
+            domain,
         )
-
-        # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
-        if not self.container._in_loop:
-            statement._validate_definition(utils._unpack(domain))
-
-        self.container._add_statement(statement)
-        self.parent._assignment = statement
-
-        self.container._synch_with_gams()
-        self.parent._should_load_from = DataSource.GAMS
 
     def __eq__(self, other):
         op = "eq"
@@ -393,16 +388,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         [Set(name='i', domain=['*']), Set(name='j', domain=['*'])]
 
         """
-        dims = list(range(len(self.domain)))
-        if len(dims) < 2:
-            raise ValidationError(
-                "Parameter must contain at least 2 dimensions to transpose"
-            )
-
-        x = dims[-1]
-        dims[-1] = dims[-2]
-        dims[-2] = x
-        return permute(self, dims)  # ty: ignore[invalid-return-type]
+        return _transpose(self, "Parameter")  # ty: ignore[invalid-return-type]
 
     def gamsRepr(self) -> str:
         """Representation of the parameter in GAMS syntax.
@@ -411,18 +397,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             str: String representation of the parameter in GAMS syntax.
         """
         representation = self.name
-        domain = list(self.domain)
-        if domain and self.permutation is not None:
-            # self.permutation maps each axis to its position in the
-            # parent's declared domain, so invert it to render the
-            # reference in the parent's domain order.
-            domain = utils._permute_domain(
-                domain, utils._invert_permutation(self.permutation)
-            )
-
-        for i, d in self._scalar_domains:
-            domain.insert(i, d)
-
+        domain = self._reference_domain()
         if domain:
             representation += utils._get_domain_str(domain)
 

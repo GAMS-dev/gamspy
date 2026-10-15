@@ -4,7 +4,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{fontspec}
-\setmainfont{CMU Serif} % 1. Sets a font that knows Greek in text mode
+\IfFontExistsTF{CMU Serif}{\setmainfont{CMU Serif}}{} % 1. Sets a font that knows Greek in text mode
 \usepackage{unicode-math} % 2. Allows Greek keys to work in math mode
 \usepackage[hidelinks]{hyperref}
 \usepackage{tabularx}
@@ -22,8 +22,8 @@
 \hline
 \endhead
 
-w & * & weapons\\
-t & * & targets\\
+$w$ & $*$ & weapons\\
+$t$ & $*$ & targets\\
 \hline
 \end{tabularx}
 \subsection*{Parameters}
@@ -33,10 +33,10 @@ t & * & targets\\
 \hline
 \endhead
 
-td & w,t & target data\\
-wa & w & weapons availability\\
-tm & t & minimum number of weapons per target\\
-mv & t & military value of target\\
+$td$ & $w,t$ & target data\\
+$wa$ & $w$ & weapons availability\\
+$tm$ & $t$ & minimum number of weapons per target\\
+$mv$ & $t$ & military value of target\\
 \hline
 \end{tabularx}
 \subsection*{Variables}
@@ -46,7 +46,7 @@ mv & t & military value of target\\
 \hline
 \endhead
 
-x & w,t & weapons assignment\\
+$x$ & $w,t$ & weapons assignment\\
 \hline
 \end{tabularx}
 \subsection*{Equations}
@@ -56,26 +56,26 @@ x & w,t & weapons assignment\\
 \hline
 \endhead
 
-maxw & w & weapons balance\\
-minw & t & minimum number of weapons required per target\\
+$maxw$ & $w$ & weapons balance\\
+$minw$ & $t$ & minimum number of weapons required per target\\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
-\textbf{max} $\sum_{t} mv_{t} \cdot (1 - \prod_{w ~ | ~ td_{w,t}} rPower(1 - td_{w,t},x_{w,t}))$\\
+\textbf{max} $\sum_{t} mv_{t} \cdot (1 - \prod_{w ~ | ~ td_{w,t}} (1 - td_{w,t})^{x_{w,t}})$\\
 \textbf{s.t.}
-\subsubsection*{maxw$_{w}$}
+\subsubsection*{$maxw_{w}$}
 $
 \sum_{t ~ | ~ td_{w,t}} x_{w,t} \leq wa_{w}\hfill \forall w
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{minw$_{t}$}
+\subsubsection*{$minw_{t}$}
 $
 \sum_{w ~ | ~ td_{w,t}} x_{w,t} \geq tm_{t}\hfill \forall t ~ | ~ tm_{t}
 $
 \vspace{5pt}
 \hrule
 \begin{flalign*}
-&x\geq 0 ~ \forall w,t&\\
+&x_{w,t} \geq 0 ~ \forall w,t&\\
 \end{flalign*}
 \end{document}

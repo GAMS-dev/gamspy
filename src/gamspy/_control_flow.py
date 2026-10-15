@@ -9,7 +9,7 @@ import gamspy as gp
 import gamspy._gdx as gdxio
 from gamspy._algebra.condition import Condition
 from gamspy._algebra.domain import Domain
-from gamspy._algebra.expression import _validate_controlled
+from gamspy._algebra.expression import _validate_controlled, get_logical_gams_repr
 from gamspy._config import get_option
 from gamspy._internals import ATTR_PREFIX, DataSource
 from gamspy._symbols.implicits import ImplicitSet
@@ -33,11 +33,10 @@ def _synch_loop_with_gams(container: Container) -> None:
     container._models_solved_in_loop.clear()
 
     gdx_out = container._gdx_out
-    container._options._set_extra_options(
+    with container._options._temporary_extra_options(
         {"gdx": gdx_out, "gdxSymbols": "newOrChangedNoData"}
-    )
-    container._synch_with_gams()
-    container._options._set_extra_options({})
+    ):
+        container._synch_with_gams()
     symbol_names = gdxio._get_symbol_names_from_gdx(container.system_directory, gdx_out)
     container._should_load_from(symbol_names, source=DataSource.GAMS)
 
@@ -484,8 +483,7 @@ class While:
         self.container._in_loop += 1
         self._loop_number = self.container._in_loop
 
-        representation = self.condition.gamsRepr()
-        representation = gp.utils._replace_equality_signs(representation)
+        representation = get_logical_gams_repr(self.condition)
         self.container._add_statement(f"while({representation},")
 
         return self
@@ -548,7 +546,7 @@ def _condition_repr(condition: ConditionType, container: Container) -> str:
     ):
         _validate_controlled(condition, [])
 
-    return gp.utils._replace_equality_signs(condition.gamsRepr())
+    return get_logical_gams_repr(condition)
 
 
 def _continue_if_chain(container: Container, construct: str) -> bool:

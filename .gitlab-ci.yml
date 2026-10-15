@@ -1,6 +1,7 @@
 default:
   tags:
     - linux
+  interruptible: true
 
 workflow:
   rules:
@@ -57,6 +58,7 @@ variables:
 autoupgrade:
   stage: update
   image: python:3.13
+  interruptible: false
   script:
     - git config --global user.name "GitLab Bot"
     - git config --global user.email "gitlab-bot@${CI_SERVER_HOST}"
@@ -68,6 +70,9 @@ autoupgrade:
     - pip install --upgrade pip && pip install prek uv
     - prek update
     - uv lock --upgrade
+    # Bump the pinned uv version, which also invalidates the toolchain cache
+    - |
+      sed -i "s/^  UV_VERSION: \".*\"/  UV_VERSION: \"$(uv --version | cut -d' ' -f2)\"/" ci/.toolchain.yml
 
     - |
       if git diff --quiet; then
@@ -75,9 +80,9 @@ autoupgrade:
         exit 0
       fi
 
-    - git add .pre-commit-config.yaml uv.lock
+    - git add .pre-commit-config.yaml uv.lock ci/.toolchain.yml
     # Add [skip ci] to the commit message to prevent this push from triggering another pipeline
-    - git commit -m "[CHORE] Update pre-commit hooks and uv lock [skip ci]"
+    - git commit -m "[CHORE] Update pre-commit hooks, uv lock and uv version [skip ci]"
     - git push origin $CI_COMMIT_REF_NAME
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
@@ -86,6 +91,7 @@ autoupgrade:
 include: ['ci/.toolchain.yml',
           'ci/.precommit-check.yml',
           'ci/.cli.yml',
+          'ci/.test-common.yml',
           'ci/.test-leg.yml',
           'ci/.test-lag.yml',
           'ci/.test-dac.yml',

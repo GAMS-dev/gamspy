@@ -9,7 +9,9 @@ leg-build-docs:
     - apt-get update && apt-get install -y --no-install-recommends make pandoc
   script:
     - uv venv .venv && source .venv/bin/activate
-    - uv sync --group test --group doc && uv pip install pip
+    - uv sync --locked --group test --group doc && uv pip install pip
     - pytest --nbmake docs/user/notebooks/*.ipynb
     - ipython kernel install --name "python3" --user
     - cd docs && make linkcheck && make html
+  pages:
+    publish: docs/_build/html

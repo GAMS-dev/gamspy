@@ -6,10 +6,17 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
+import gamspy._algebra.expression as expression
+import gamspy._algebra.sparse as sparse
+import gamspy.utils as utils
+from gamspy._internals import DataSource
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy._symbols import Equation, Parameter, Set, Variable
+    from gamspy._algebra.sparse import SparseAssignment
+    from gamspy._symbols import Alias, Equation, Parameter, Set, Variable
+    from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
+    from gamspy._types import OperableType, ValidatedDomainType
 
 
 class DictFormat(Enum):
@@ -307,3 +314,28 @@ def toDictVariableEquation(
 
         if orient is DictFormat.COLUMNS:
             return symbol.records[symbol.domain_labels + columns].to_dict()
+
+
+def assign(
+    owner: Set | Alias | Parameter | Variable | Equation,
+    lhs: ImplicitSet | ImplicitParameter,
+    rhs: OperableType | str | SparseAssignment,
+    domain: ValidatedDomainType,
+) -> None:
+    owner._check_miro_protection()
+
+    rhs, operator = sparse._unwrap(rhs)
+    if isinstance(rhs, bool):
+        rhs = "yes" if rhs else "no"
+
+    statement = expression.Expression(lhs, operator, rhs)
+
+    # Cannot validate definition if we are in a gp.Loop since the control indices can be provided by the gp.Loop
+    if not owner.container._in_loop:
+        statement._validate_definition(utils._unpack(domain))
+
+    owner.container._add_statement(statement)
+    owner._assignment = statement
+
+    owner.container._synch_with_gams()
+    owner._should_load_from = DataSource.GAMS

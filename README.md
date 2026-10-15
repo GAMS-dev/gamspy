@@ -16,7 +16,7 @@ GAMSPy is an open-source Python package for building and solving mathematical op
 pip install gamspy
 ```
 
-GAMSPy requires Python 3.10 or newer. Installation includes the local execution runtime and a set of default solvers, so you do not need to install GAMS separately to run the example below. The included demo license is sufficient for this small model.
+GAMSPy requires Python 3.11 or newer. Installation includes the local execution runtime and a set of default solvers, so you do not need to install GAMS separately to run the example below. The included demo license is sufficient for this small model.
 
 ## Your first model
 

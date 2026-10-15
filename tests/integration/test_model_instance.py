@@ -1289,3 +1289,18 @@ def test_model_attributes():
     assert test.num_variables == 11.0
     assert test.num_discrete_variables == 10.0
     assert test.num_nonzeros == 21.0
+
+
+@pytest.mark.integration
+def test_freeze_does_not_modify_container_options():
+    m = gp.Container()
+    p = gp.Parameter(m, "p", records=1)
+    x = gp.Variable(m, "x")
+    e = gp.Equation(m, "e", definition=x >= p)
+    model = gp.Model(m, "mdl", equations=[e], problem="LP", sense="MIN", objective=x)
+
+    model.freeze(modifiables=[p])
+    model.unfreeze()
+
+    assert m._options._extra_options == {}
+    assert m._options.log_file is None

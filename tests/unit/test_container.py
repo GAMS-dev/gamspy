@@ -11,6 +11,7 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
+from unittest import mock
 
 import gams.transfer as gt
 import gamspy_base
@@ -398,6 +399,51 @@ def test_loadRecordsFromGdx_with_missing_symbols(tmp_path):
     a = m3["a"]
     assert a.domain == [i]
     assert a.toList() == [("0", 1.0), ("1", 2.0), ("2", 3.0)], a.toList()
+
+
+@pytest.mark.unit
+def test_gdx_paths_with_spaces(tmp_path):
+    directory = tmp_path / "with space"
+    directory.mkdir()
+    path = str(directory / "data.gdx")
+    records = [("a", 1.0), ("b", 2.0)]
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    _ = gp.Parameter(m, "p", domain=i, records=records)
+    m.write(path)
+    assert os.path.exists(path)
+
+    m2 = gp.Container()
+    m2.loadRecordsFromGdx(path)
+    assert m2["p"].toList() == records
+
+    m3 = gp.Container()
+    i3 = gp.Set(m3, "i")
+    _ = gp.Parameter(m3, "q", domain=i3)
+    m3.loadRecordsFromGdx(path, ["i"])
+    m3.loadRecordsFromGdx(path, {"p": "q"})
+    assert m3["q"].toList() == records
+
+    m4 = gp.Container(load_from=path)
+    assert m4["p"].toList() == records
+
+
+@pytest.mark.unit
+def test_gdx_relative_paths_after_chdir(tmp_path, monkeypatch):
+    # The GAMS process starts before the chdir, so relative paths must be
+    # resolved against the current directory of Python.
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b"])
+    _ = gp.Parameter(m, "p", domain=i, records=[("a", 1.0)])
+    m2 = gp.Container()
+
+    monkeypatch.chdir(tmp_path)
+    m.write("data.gdx")
+    assert os.path.exists(tmp_path / "data.gdx")
+
+    m2.loadRecordsFromGdx("data.gdx")
+    assert m2["p"].toList() == [("a", 1.0)]
 
 
 @pytest.mark.unit
@@ -2828,3 +2874,104 @@ def test_container_getUELs_no_symbols_with_records_returns_empty():
     gp.Set(m, "i")
 
     assert m._getUELs() == []
+
+
+@pytest.mark.unit
+def test_nested_context_managers():
+    with gp.Container() as outer:
+        with gp.Container() as inner:
+            gp.Set(name="i")
+        assert "i" in inner
+        assert "i" not in outer
+
+        # Leaving the inner context makes the outer container active again.
+        gp.Set(name="j")
+        assert "j" in outer
+
+        # Re-entering the same container is also restored correctly.
+        with outer, outer:
+            gp.Set(name="k")
+        gp.Set(name="l")
+        assert "k" in outer
+        assert "l" in outer
+
+        inner.close()
+
+    with pytest.raises(ValidationError, match="requires a container"):
+        gp.Set(name="m")
+
+
+@pytest.mark.unit
+def test_serialize_deserialized_alias(tmp_path):
+    m = Container()
+    i = Set(m, "i", records=["a", "b"])
+    j = Alias(m, "j", i)
+    j["a"] = False
+
+    first_path = os.path.join(tmp_path, "first.zip")
+    serialize(m, first_path)
+    m2 = deserialize(first_path)
+    assert m2["j"].getAssignment() == 'j("a") = no;'
+
+    # The symbols of a deserialized container are created without __init__.
+    second_path = os.path.join(tmp_path, "second.zip")
+    serialize(m2, second_path)
+    m3 = deserialize(second_path)
+    assert m3["j"].getAssignment() == 'j("a") = no;'
+    m2.close()
+    m3.close()
+
+
+@pytest.mark.unit
+def test_redefine_loaded_equation_with_definition(tmp_path):
+    m = Container()
+    i = Set(m, "i", records=["a", "b"])
+    x = Variable(m, "x", domain=i)
+    _ = Equation(m, "e", domain=i, definition=x[i] >= 0)
+    gdx_path = os.path.join(tmp_path, "data.gdx")
+    m.write(gdx_path)
+
+    # The symbols of a loaded container are created without __init__.
+    m2 = Container(load_from=gdx_path)
+    i2 = m2["i"]
+    x2 = m2["x"]
+    e2 = Equation(m2, "e", type="geq", domain=i2, definition=x2[i2] >= 1)
+    assert e2.getDefinition() == "e(i) .. x(i) =g= 1;"
+    m2.close()
+
+
+@pytest.mark.unit
+def test_failed_run_does_not_leak_extra_options():
+    m = Container()
+    with pytest.raises(GamspyException):
+        m.addGamsCode("this is not valid GAMS code;")
+
+    assert m._options._extra_options == {}
+
+
+@pytest.mark.unit
+def test_container_does_not_modify_given_options():
+    options = Options(seed=7)
+    m = Container(options=options)
+    _ = Set(m, "i", records=["i1"])  # runs GAMS, which uses up the seed
+
+    assert options.seed == 7
+    m2 = Container(options=options)
+    assert m2._options.seed == 7
+    m.close()
+    m2.close()
+
+
+@pytest.mark.unit
+def test_failed_lazy_load_is_retried(monkeypatch):
+    m = Container()
+    p = Parameter(m, "p", records=1)
+    p[...] = 2  # the records are now loaded from GAMS when they are accessed
+
+    with monkeypatch.context() as patched:
+        patched.setattr("gamspy._gdx.get_records", mock.Mock(side_effect=RuntimeError))
+        with pytest.raises(RuntimeError):
+            _ = p.records
+
+    assert p.toValue() == 2
+    m.close()

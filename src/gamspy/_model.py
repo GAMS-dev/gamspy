@@ -1330,7 +1330,7 @@ class Model:
             infeas_dict[equation.name] = infeas_rows
 
             if equation._definition is not None:
-                names = equation._definition._find_all_symbols()
+                names = expression.find_symbols(equation._definition)
                 var_names = [
                     name
                     for name in names
@@ -2099,7 +2099,7 @@ class Model:
             A dictionary to rename symbols in the LaTeX file. Keys are GAMSPy symbol names
             and values are the names that will be used in the LaTeX file.
         generate_pdf: bool, False by default
-            Generates a pdf file if it is set. Requires pdflatex to be installed.
+            Generates a pdf file if it is set. Requires xelatex to be installed.
 
         Examples
         --------

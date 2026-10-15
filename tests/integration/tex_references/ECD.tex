@@ -4,7 +4,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{fontspec}
-\setmainfont{CMU Serif} % 1. Sets a font that knows Greek in text mode
+\IfFontExistsTF{CMU Serif}{\setmainfont{CMU Serif}}{} % 1. Sets a font that knows Greek in text mode
 \usepackage{unicode-math} % 2. Allows Greek keys to work in math mode
 \usepackage[hidelinks]{hyperref}
 \usepackage{tabularx}
@@ -22,7 +22,7 @@
 \hline
 \endhead
 
-gen & * & \\
+$gen$ & $*$ & \\
 \hline
 \end{tabularx}
 \subsection*{Parameters}
@@ -32,8 +32,8 @@ gen & * & \\
 \hline
 \endhead
 
-load &  & \\
-data & gen,* & \\
+$load$ &  & \\
+$data$ & $gen,*$ & \\
 \hline
 \end{tabularx}
 \subsection*{Variables}
@@ -43,7 +43,7 @@ data & gen,* & \\
 \hline
 \endhead
 
-P & gen & \\
+$P$ & $gen$ & \\
 \hline
 \end{tabularx}
 \subsection*{Equations}
@@ -53,13 +53,13 @@ P & gen & \\
 \hline
 \endhead
 
-eq2 &  & \\
+$eq2$ &  & \\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
-\textbf{min} $\sum_{gen} data_{gen,\text{`a'}} \cdot P_{gen} \cdot P_{gen} + data_{gen,\text{`b'}} \cdot P_{gen} + data_{gen,\text{`c'}}$\\
+\textbf{min} $\sum_{gen} (data_{gen,\text{`a'}} \cdot P_{gen} \cdot P_{gen} + data_{gen,\text{`b'}} \cdot P_{gen} + data_{gen,\text{`c'}})$\\
 \textbf{s.t.}
-\subsubsection*{eq2}
+\subsubsection*{$eq2$}
 $
 \sum_{gen} P_{gen} \geq load
 $

@@ -4,7 +4,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{fontspec}
-\setmainfont{CMU Serif} % 1. Sets a font that knows Greek in text mode
+\IfFontExistsTF{CMU Serif}{\setmainfont{CMU Serif}}{} % 1. Sets a font that knows Greek in text mode
 \usepackage{unicode-math} % 2. Allows Greek keys to work in math mode
 \usepackage[hidelinks]{hyperref}
 \usepackage{tabularx}
@@ -22,9 +22,9 @@
 \hline
 \endhead
 
-i & * & widths\\
-p & * & possible patterns\\
-pp & p & dynamic subset of p\\
+$i$ & $*$ & widths\\
+$p$ & $*$ & possible patterns\\
+$pp$ & $p$ & dynamic subset of p\\
 \hline
 \end{tabularx}
 \subsection*{Parameters}
@@ -34,8 +34,8 @@ pp & p & dynamic subset of p\\
 \hline
 \endhead
 
-d & i & demand\\
-aip & i,p & number of width i in pattern growing in p\\
+$d$ & $i$ & demand\\
+$aip$ & $i,p$ & number of width i in pattern growing in p\\
 \hline
 \end{tabularx}
 \subsection*{Variables}
@@ -45,8 +45,8 @@ aip & i,p & number of width i in pattern growing in p\\
 \hline
 \endhead
 
-xp & p & patterns used\\
-z &  & objective variable\\
+$xp$ & $p$ & patterns used\\
+$z$ &  & objective variable\\
 \hline
 \end{tabularx}
 \subsection*{Equations}
@@ -56,26 +56,26 @@ z &  & objective variable\\
 \hline
 \endhead
 
-numpat &  & number of patterns used\\
-demand & i & meet demand\\
+$numpat$ &  & number of patterns used\\
+$demand$ & $i$ & meet demand\\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
 \textbf{min} $z$\\
 \textbf{s.t.}
-\subsubsection*{numpat}
+\subsubsection*{$numpat$}
 $
 z = \sum_{pp} xp_{pp}
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{demand$_{i}$}
+\subsubsection*{$demand_{i}$}
 $
 \sum_{pp} aip_{i,pp} \cdot xp_{pp} \geq d_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
 \begin{flalign*}
-&xp\in \mathbb{Z}_{+} ~ \forall p&\\
+&xp_{p} \in \mathbb{Z}_{\geq 0} ~ \forall p&\\
 \end{flalign*}
 \end{document}

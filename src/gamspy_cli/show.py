@@ -73,10 +73,13 @@ def print_expiration_date(lines: list[str]) -> None:
         mval = ord(m) - ord("a") + 36
 
     assert mval > 0
+    is_time_limited = month[0] == "0"
+    # GAMS counts a month as 30 days and keeps a time-limited license working
+    # for 30 days after its evaluation period
     expiration = datetime.strptime(lines[0][48:54], "%y%m%d") + timedelta(
-        days=mval * 30
+        days=(mval + 1) * 30
     )
-    if month[0] == "0":
+    if is_time_limited:
         rich.print(
             f"\n[bold]License expiration date[/bold]: {expiration.strftime('%Y-%m-%d')}"
         )

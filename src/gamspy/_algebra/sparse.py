@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy._algebra.condition import Condition
@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._symbols import Parameter
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
+    from gamspy._types import OperableType
     from gamspy.math import MathOp
 
 # GAMS operator that performs a sparse assignment.
@@ -25,7 +26,7 @@ class SparseAssignment:
 
     __slots__ = ("rhs",)
 
-    def __init__(self, rhs: Any) -> None:
+    def __init__(self, rhs: OperableType | str) -> None:
         self.rhs = rhs
 
     def __repr__(self) -> str:
@@ -91,7 +92,9 @@ def sparse(
     return SparseAssignment(rhs)
 
 
-def _unwrap(rhs: Any, operator: str = "=") -> tuple[Any, str]:
+def _unwrap(
+    rhs: OperableType | str | SparseAssignment, operator: str = "="
+) -> tuple[OperableType | str, str]:
     """
     Unwraps a sparse assignment right-hand side.
 
