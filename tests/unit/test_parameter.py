@@ -756,7 +756,7 @@ def test_setrecords_edge_cases():
 
 
 @pytest.mark.skipif(
-    not (platform.system() == "Linux" and sys.version_info.minor == 14),
+    not (platform.system() == "Linux" and sys.version_info.minor == 15),
     reason="Test only for linux.",
 )
 def test_toSparseCoo():
