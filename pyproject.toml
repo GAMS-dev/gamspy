@@ -241,7 +241,6 @@ select = [
     "PLC0208",  # iteration-over-set
     "PLE",      # Pylint error rules
     "PGH003",   # blanket-type-ignore
-    "ANN",      # flake8-annotations
 ]
 ignore = [
     "E501",   # line-too-long
