@@ -1,1 +1,0 @@
-Added ``minimum``, ``maximum`` and ``absolute`` formulations to ``gamspy.formulations`` for modeling minimum, maximum and absolute value constraints.

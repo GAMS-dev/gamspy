@@ -1,1 +1,0 @@
-Fixed the expiration date of time-limited licenses in ``gamspy show license``, which was 30 days earlier than the date GAMS reports.
