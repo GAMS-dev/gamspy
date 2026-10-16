@@ -1,21 +1,15 @@
 from __future__ import annotations
 
-import math
-from typing import TYPE_CHECKING
-
 import numpy as np
 
 import gamspy as gp
 import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
+from gamspy.formulations.nn._weighted import _WeightedLayer
 from gamspy.formulations.result import FormulationResult
-from gamspy.math import dim
-
-if TYPE_CHECKING:
-    from gamspy import Parameter, Variable
 
 
-class Linear:
+class Linear(_WeightedLayer):
     """
     Formulation generator for Linear layer in GAMS.
 
@@ -66,23 +60,34 @@ class Linear:
         if not isinstance(out_features, int) or out_features <= 0:
             raise ValidationError("out_features must be a positive integer")
 
-        if not isinstance(bias, bool):
-            raise ValidationError("bias must be a boolean")
-
-        self.container = container
+        super().__init__(container, name_prefix, bias)
         self.in_features = in_features
         self.out_features = out_features
-        self.use_bias = bias
-        self._state = 0
-        self.weight: Parameter | Variable | None = None
-        self.weight_array: np.ndarray | None = None
-        self.bias: Parameter | Variable | None = None
-        self.bias_array: np.ndarray | None = None
 
-        if name_prefix is None:
-            name_prefix = gp.utils._get_unique_name()
+    @property
+    def _weight_shape(self) -> tuple[int, ...]:
+        return (self.out_features, self.in_features)
 
-        self._name_prefix = name_prefix
+    @property
+    def _fan_in(self) -> int:
+        return self.in_features
+
+    def _bias_for_output(self) -> np.ndarray | float:
+        return 0.0 if self.bias_array is None else self.bias_array
+
+    def _affine_bounds(
+        self, lower: np.ndarray, upper: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
+        assert self.weight_array is not None
+        w_pos = np.maximum(self.weight_array, 0)
+        w_neg = np.minimum(self.weight_array, 0)
+
+        def matmul(x: np.ndarray, weight: np.ndarray) -> np.ndarray:
+            return utils._apply_real_linear(lambda v: v @ weight.T, x)
+
+        output_lower = matmul(lower, w_pos) + matmul(upper, w_neg)
+        output_upper = matmul(upper, w_pos) + matmul(lower, w_neg)
+        return output_lower, output_upper
 
     def load_weights(self, weight: np.ndarray, bias: np.ndarray | None = None) -> None:
         """
@@ -99,69 +104,9 @@ class Linear:
                bias=True during initialization
 
         """
-        if self._state == 2:
-            raise ValidationError(
-                "load_weights cannot be used after calling make_variable"
-            )
+        self._load_weights(weight, bias)
 
-        if self.use_bias is False and bias is not None:
-            raise ValidationError(
-                "bias must be None since bias was set to False during initialization"
-            )
-
-        if self.use_bias is True and bias is None:
-            raise ValidationError("bias must be provided")
-
-        if len(weight.shape) != 2:
-            raise ValidationError(
-                f"expected 2D input for weight (got {len(weight.shape)}D input)"
-            )
-
-        expected_shape = (
-            self.out_features,
-            self.in_features,
-        )
-        if weight.shape != expected_shape:
-            raise ValidationError(f"weight expected to be in shape {expected_shape}")
-
-        if bias is not None:
-            if len(bias.shape) != 1:
-                raise ValidationError(
-                    f"expected 1D input for bias (got {len(bias.shape)}D input)"
-                )
-
-            if bias.shape[0] != self.out_features:
-                raise ValidationError(
-                    f"bias expected to be in shape ({self.out_features},)"
-                )
-
-        if self.weight is None:
-            self.weight = gp.Parameter(
-                self.container,
-                name=utils._generate_name("p", self._name_prefix, "weight"),
-                domain=dim(expected_shape),
-                records=weight,
-            )
-        else:
-            self.weight.setRecords(weight)
-        self.weight_array = weight
-
-        if self.use_bias:
-            if self.bias is None:
-                self.bias = gp.Parameter(
-                    self.container,
-                    name=utils._generate_name("p", self._name_prefix, "bias"),
-                    domain=dim([self.out_features]),
-                    records=bias,
-                )
-            else:
-                self.bias.setRecords(bias)
-
-            self.bias_array = bias
-
-        self._state = 1
-
-    def make_variable(self, *, init_weights=False) -> None:
+    def make_variable(self, *, init_weights: bool = False) -> None:
         """
         Mark Linear layer as variable. After this is called `load_weights`
         cannot be called. Use this when you need to learn the weights
@@ -177,36 +122,7 @@ class Linear:
                When `init_weights` is set to True, values are initialized from
                :math:`\\mathcal{U}(-\\sqrt{k},\\sqrt{k})`, where :math:`k = 1/in\\_features`.
         """
-        if self._state == 1:
-            raise ValidationError(
-                "make_variable cannot be used after calling load_weights"
-            )
-
-        expected_shape = (
-            self.out_features,
-            self.in_features,
-        )
-
-        sk = math.sqrt(1 / self.in_features)
-        if self.weight is None:
-            self.weight = gp.Variable(
-                self.container,
-                name=utils._generate_name("v", self._name_prefix, "weight"),
-                domain=dim(expected_shape),
-            )
-            if init_weights:
-                self.weight.l[...] = gp.math.uniform(-sk, sk)
-
-        if self.use_bias and self.bias is None:
-            self.bias = gp.Variable(
-                self.container,
-                name=utils._generate_name("v", self._name_prefix, "bias"),
-                domain=dim([self.out_features]),
-            )
-            if init_weights:
-                self.bias.l[...] = gp.math.uniform(-sk, sk)
-
-        self._state = 2
+        self._make_variable(init_weights)
 
     def __call__(
         self, input: gp.Parameter | gp.Variable, *, propagate_bounds: bool = True
@@ -243,13 +159,8 @@ class Linear:
         -------
         FormulationResult
         """
-        if not isinstance(propagate_bounds, bool):
-            raise ValidationError("propagate_bounds should be a boolean.")
-
-        if self.weight is None:
-            raise ValidationError(
-                "You must call load_weights or make_variable first before using the Linear"
-            )
+        self._check_callable(propagate_bounds)
+        assert self.weight is not None
 
         if len(input.domain) == 0:
             raise ValidationError("expected an input with at least 1 dimension")
@@ -276,108 +187,13 @@ class Linear:
 
         set_out[...] = out == expr
 
-        # If propagate_bounds is True, weight is a parameter and input is a variable,
-        # we will propagate the bounds of the input to the output
-
         result = FormulationResult(
             result=out,
             equations_created={"set_output": set_out},
         )
         result.variables_created["output"] = out
-
-        if isinstance(self.weight, gp.Variable):
-            result.variables_created["weight"] = self.weight
-        else:
-            result.parameters_created["weight"] = self.weight
-
-        if self.bias is not None:
-            if isinstance(self.bias, gp.Variable):
-                result.variables_created["bias"] = self.bias
-            else:
-                result.parameters_created["bias"] = self.bias
-
-        if propagate_bounds and self._state == 1 and isinstance(input, gp.Variable):
-            x_bounds = gp.Parameter(
-                self.container,
-                name=utils._generate_name("p", self._name_prefix, "input_bounds"),
-                domain=dim([2, *input.shape]),
-            )
-            x_bounds[("0",) + tuple(input.domain)] = input.lo[...]
-            x_bounds[("1",) + tuple(input.domain)] = input.up[...]
-            result.parameters_created["input_bounds"] = x_bounds
-
-            # If the bounds are all zeros (None in GAMSPy parameters);
-            # we skip matrix multiplication as it will result in zero values
-            if x_bounds.records is None:
-                out_bounds_array = np.zeros(out.shape)
-
-                if self.bias_array is not None:
-                    out_bounds_array = out_bounds_array + self.bias_array
-
-                out_bounds = gp.Parameter(
-                    self.container,
-                    name=utils._generate_name("p", self._name_prefix, "output_bounds"),
-                    domain=dim(out.shape),
-                    records=out_bounds_array,
-                )
-                out.lo[...] = out_bounds
-                out.up[...] = out_bounds
-
-                result.parameters_created["output_bounds"] = out_bounds
-                return result
-
-            x_lb, x_ub = x_bounds.toDense()
-
-            # To deal with infinity values in the input bounds, we convert them into complex numbers
-            # where if the value is -inf, we convert it to 0 - 1j
-            # and if the value is inf, we convert it to 0 + 1j
-            x_lb = np.where(x_lb == -np.inf, 0 - 1j, x_lb)
-            x_ub = np.where(x_ub == np.inf, 0 + 1j, x_ub)
-
-            # get the positive and negative weights separately
-            w_pos = np.maximum(self.weight_array, 0)
-            w_neg = np.minimum(self.weight_array, 0)
-
-            lo_out = (x_lb @ w_pos.T) + (x_ub @ w_neg.T)
-            up_out = (x_ub @ w_pos.T) + (x_lb @ w_neg.T)
-
-            def _decode_complex_number(z: np.complex128) -> float:
-                """
-                Decode complex number to real number.
-                5 + 0j -> 5
-                3 + 1j -> inf
-                7 - 3j -> -inf
-                """
-                # If imaginary part is zero, return real part
-                if z.imag == 0:
-                    return z.real
-                # If imaginary part is positive, return positive infinity
-                elif z.imag > 0:
-                    return np.inf
-                # If imaginary part is negative, return negative infinity
-                else:
-                    return -np.inf
-
-            lo_out = np.vectorize(_decode_complex_number)(lo_out)
-            up_out = np.vectorize(_decode_complex_number)(up_out)
-
-            if self.use_bias:
-                lo_out = lo_out + self.bias_array
-                up_out = up_out + self.bias_array
-
-            out_bounds_array = np.stack([lo_out, up_out], axis=0)
-
-            out_bounds = gp.Parameter(
-                self.container,
-                name=utils._generate_name("p", self._name_prefix, "output_bounds"),
-                domain=dim([2, *out.shape]),
-                records=out_bounds_array,
-            )
-
-            out.lo[...] = out_bounds[("0",) + tuple(out.domain)]
-            out.up[...] = out_bounds[("1",) + tuple(out.domain)]
-
-            result.parameters_created["output_bounds"] = out_bounds
+        self._add_weights_to_result(result)
+        self._propagate_bounds(input, out, result, propagate_bounds=propagate_bounds)
 
         return result
 
