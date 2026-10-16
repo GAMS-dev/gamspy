@@ -19,7 +19,9 @@ from gamspy._special_values import SpecialValues
 from gamspy._symbols.utils import (
     _assert_axes_no_nans,
     _flatten_and_convert,
+    _flatten_columns,
     _get_implied_dimension_from_axes,
+    _unstack_attributes,
 )
 
 if TYPE_CHECKING:
@@ -32,6 +34,78 @@ if TYPE_CHECKING:
     )
 
 _STR_DTYPE = pd.Series(dtype=str).dtype
+
+STR_SPECIAL_VALUES = (
+    dict.fromkeys(EPS, SpecialValues.EPS)
+    | dict.fromkeys(UNDEF, SpecialValues.UNDEF)
+    | dict.fromkeys(NA, SpecialValues.NA)
+)
+
+
+def _is_float_array(values: Any) -> bool:
+    return isinstance(values, np.ndarray) and values.dtype == np.float64
+
+
+def _is_numeric(dtype: Any) -> bool:
+    return isinstance(dtype, np.dtype) and dtype.kind in "biuf"
+
+
+def _remap_special_values(column: pd.Series) -> pd.Series:
+    """
+    The column with string representations of EPS, NA and UNDEF replaced by their
+    float equivalents, or the column itself if it holds numbers only.
+    """
+    if _is_numeric(column.dtype) or infer_dtype(column) in [
+        "integer",
+        "floating",
+        "mixed-integer-float",
+    ]:
+        return column
+
+    special_value = STR_SPECIAL_VALUES.get
+    if isinstance(column.dtype, pd.StringDtype):
+        # Strings only: map each distinct one, missing ones stay missing.
+        codes, uniques = pd.factorize(column)
+        mapped = np.array(
+            [special_value(x, x) for x in uniques] + [column.dtype.na_value],
+            dtype=object,
+        )
+        return pd.Series(mapped[codes], index=column.index, dtype=object)
+
+    values = [
+        special_value(x, x) if isinstance(x, str) else x
+        for x in column.to_numpy(dtype=object)
+    ]
+    return pd.Series(values, index=column.index, dtype=object)
+
+
+def _empty_texts(size: int) -> Any:
+    if isinstance(_STR_DTYPE, pd.StringDtype):
+        return pd.array([""], dtype=_STR_DTYPE).take(np.zeros(size, dtype=np.intp))
+
+    return np.full(size, "", dtype=object)
+
+
+def _as_floats(values: Any) -> np.ndarray | pd.Series:
+    if _is_float_array(values):
+        return values
+
+    column = values if isinstance(values, pd.Series) else pd.Series(values, copy=False)
+    if column.dtype == np.float64:
+        return column
+
+    if _is_numeric(column.dtype):
+        return column.astype(float)
+
+    if column.dtype == object:
+        # float() rejects every string representation of a special value, so a
+        # column it converts has none to map.
+        try:
+            return column.astype(float)
+        except (TypeError, ValueError):
+            pass
+
+    return _remap_special_values(column).astype(float)
 
 
 class BaseIngestor:
@@ -76,22 +150,34 @@ class BaseIngestor:
                     i,
                     assemble_categorical(
                         apply_remap(codes, remap),
-                        new_categories,
+                        np.asarray(new_categories),
                         ordered=col.cat.ordered,
                         fastpath=True,
                     ),
                 )
             else:
                 codes, uniques = pd.factorize(col, sort=False)
-                uniques = np.asarray(uniques)
                 remap, new_categories = rstrip_categories(uniques)
 
-                if remap is not None:
-                    codes, uniques = apply_remap(codes, remap), new_categories
+                if remap is None:
+                    categories = uniques
+                else:
+                    if len(new_categories) != len(uniques):
+                        codes = apply_remap(codes, remap)
+                    categories = new_categories
+
+                if not (
+                    isinstance(categories.dtype, pd.StringDtype)
+                    and categories.dtype == _STR_DTYPE
+                    and len(categories)
+                ):
+                    categories = np.asarray(categories)
 
                 records.isetitem(
                     i,
-                    assemble_categorical(codes, uniques, ordered=True, fastpath=True),
+                    assemble_categorical(
+                        codes, categories, ordered=True, fastpath=True
+                    ),
                 )
 
         return records
@@ -107,28 +193,13 @@ class BaseIngestor:
         if start_idx is None:
             start_idx = self.symbol.dimension
 
-        for i in records.columns[start_idx:]:
-            if infer_dtype(records[i]) not in [
-                "integer",
-                "floating",
-                "mixed-integer-float",
-            ]:
-                records[i] = records[i].astype(object)
-
-                # Replace EPS
-                idx = records.loc[:, i].isin(EPS)
-                if idx.any():
-                    records.loc[idx, i] = SpecialValues.EPS
-
-                # Replace UNDEF
-                idx = records.loc[:, i].isin(UNDEF)
-                if idx.any():
-                    records.loc[idx, i] = SpecialValues.UNDEF
-
-                # Replace NA
-                idx = records.loc[:, i].isin(NA)
-                if idx.any():
-                    records.loc[idx, i] = SpecialValues.NA
+        dtypes = list(records.dtypes)
+        for n in range(start_idx, records.shape[1]):
+            if not _is_numeric(dtypes[n]):
+                column = records.iloc[:, n]
+                remapped = _remap_special_values(column)
+                if remapped is not column:
+                    records.isetitem(n, remapped)
 
         return records
 
@@ -202,6 +273,17 @@ class ParameterIngestor(BaseIngestor):
             + self.symbol._attributes
         )
         self.symbol.records = records
+
+    def _store(self, domain_columns: list[Any], values: Any) -> None:
+        attributes = self.symbol._attributes
+        names = (
+            generate_unique_labels(self.symbol.domain_names, reserved=attributes)
+            + attributes
+        )
+        self.symbol.records = pd.DataFrame(
+            dict(zip(names, [*domain_columns, _as_floats(values)], strict=True)),
+            copy=False,
+        )
 
     def _from_int_float(self, records: int | float) -> None:
         if not self.symbol.is_scalar:
@@ -323,7 +405,6 @@ class ParameterIngestor(BaseIngestor):
         self._finalize_records(records)
 
     def _from_series(self, records: pd.Series, uels_on_axes: bool) -> None:
-        records = copy.deepcopy(records)
         _assert_axes_no_nans(records)
 
         if self.symbol.is_scalar:
@@ -340,7 +421,8 @@ class ParameterIngestor(BaseIngestor):
                     "Dimensionality of data is inconsistent with domain specification."
                 )
 
-            self._finalize_records(_flatten_and_convert(records))
+            *domain_columns, values = _flatten_columns(records)
+            self._store(domain_columns, values)
 
     def _from_dict(self, records: dict) -> None:
         self._from_else(records)
@@ -382,6 +464,15 @@ class SetIngestor(BaseIngestor):
             if col_labels is not None and not self.symbol._is_miro_symbol
             else self.symbol.domain_names
         )
+        has_texts = records.shape[1] > self.symbol.dimension
+        if not has_texts:
+            records.insert(
+                records.shape[1],
+                "element_text",
+                _empty_texts(records.shape[0]),
+                allow_duplicates=True,
+            )
+
         records.columns = (
             generate_unique_labels(labels, reserved=self.symbol._attributes)
             + self.symbol._attributes
@@ -389,7 +480,7 @@ class SetIngestor(BaseIngestor):
 
         # Skip the costly round trip when the column is already a NaN-free str column.
         element_text = records.iloc[:, -1]
-        if not (
+        if has_texts and not (
             isinstance(element_text.dtype, pd.StringDtype)
             and element_text.dtype == _STR_DTYPE
             and not element_text.hasnans
@@ -447,7 +538,6 @@ class SetIngestor(BaseIngestor):
 
     def _from_series(self, records: pd.Series, uels_on_axes: bool) -> None:
         if uels_on_axes:
-            records = copy.deepcopy(records)
             _assert_axes_no_nans(records)
 
             dim = _get_implied_dimension_from_axes(records)
@@ -496,10 +586,7 @@ class SetIngestor(BaseIngestor):
         if records.shape[1] == 0:
             records = pd.DataFrame(columns=list(range(self.symbol.dimension)))
 
-        if records.shape[1] == self.symbol.dimension:
-            records = records.assign(element_text="")
-
-        if records.shape[1] - 1 != self.symbol.dimension:
+        if records.shape[1] not in (self.symbol.dimension, self.symbol.dimension + 1):
             raise ValueError(
                 "Dimensionality of records is inconsistent with set domain specification."
             )
@@ -736,7 +823,6 @@ class VarEquIngestor(BaseIngestor):
         self.symbol.records = records
 
     def _from_series(self, records: pd.Series, uels_on_axes: bool) -> None:
-        records = copy.deepcopy(records)
         _assert_axes_no_nans(records)
 
         n_idx = self._position_of_attributes(records)
@@ -764,22 +850,29 @@ class VarEquIngestor(BaseIngestor):
                     "Dimensionality of table is inconsistent with domain specification."
                 )
 
+            if not any(n_idx):
+                *domain_columns, values = _flatten_columns(records)
+                attributes = self.symbol._attributes
+                names = generate_unique_labels(
+                    ["*"] * self.symbol.dimension, reserved=attributes
+                )
+                data: dict[str, Any] = dict(zip(names, domain_columns, strict=True))
+                for attribute in attributes:
+                    data[attribute] = (
+                        _as_floats(values)
+                        if attribute == "level"
+                        else self.symbol._default_records[attribute]
+                    )
+                self.symbol.records = pd.DataFrame(data, copy=False)
+                return
+
             frame = self._remap_str_special_values(
                 _flatten_and_convert(records),
                 start_idx=self.symbol.dimension + sum(n_idx),
             )
-
-            if any(n_idx):
-                attr = frame.iloc[:, n_idx.index(True)].cat.categories.tolist()
-                frame = (
-                    frame.set_index(frame.columns.tolist()[:-1])
-                    .unstack(n_idx.index(True))
-                    .reset_index(drop=False)
-                )
-                frame.columns = ["*"] * self.symbol.dimension + attr
-            else:
-                frame.columns = ["*"] * self.symbol.dimension + ["level"]
-
+            attr = frame.iloc[:, n_idx.index(True)].cat.categories.tolist()
+            frame = _unstack_attributes(frame, n_idx.index(True))
+            frame.columns = ["*"] * self.symbol.dimension + attr
             self._from_dataframe(frame, False)
 
     def _from_else(self, records: VarEquRecordsType) -> None:

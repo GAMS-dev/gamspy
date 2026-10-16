@@ -4,11 +4,15 @@ from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import pandas_dtype
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from pandas.api.extensions import ExtensionDtype
+
 CategoriesT = TypeVar("CategoriesT", np.ndarray, pd.Index)
+
 
 # Code of a record whose domain entry is missing; it points at no category at all.
 MISSING = -1
@@ -39,7 +43,7 @@ def apply_remap(codes: np.ndarray, remap: np.ndarray) -> np.ndarray:
 
 
 def codes_and_categories(cat: pd.Categorical) -> tuple[np.ndarray, np.ndarray]:
-    return cat.codes, np.asarray(cat.categories.array)
+    return cat.codes, np.asarray(cat.categories.array, dtype=object)
 
 
 def used_categories(codes: np.ndarray, categories: CategoriesT) -> CategoriesT:
@@ -132,7 +136,34 @@ def set_categories(
     return apply_remap(codes, remap), new_categories
 
 
-def rstrip_categories(categories: np.ndarray) -> tuple[np.ndarray | None, np.ndarray]:
+def str_dtype() -> np.dtype | ExtensionDtype:
+    """pandas 2 changes it with the `future.infer_string` option."""
+    return pandas_dtype(str)
+
+
+def _str_categories(labels: list[str]) -> np.ndarray | pd.Index:
+    """Categories of the labels, with the dtype pandas would infer for them."""
+    # pandas infers no dtype for no labels.
+    strings = str_dtype()
+    if labels and isinstance(strings, pd.StringDtype):
+        return pd.Index(labels, dtype=strings)
+
+    return np.array(labels, dtype=object)
+
+
+def rstrip_categories(
+    categories: np.ndarray | pd.Index,
+) -> tuple[np.ndarray | None, np.ndarray | pd.Index]:
+    """
+    The categories converted to str and right-stripped. Returns the remap of the
+    codes, or None if the categories are unchanged, and the new categories.
+    """
+    if categories.dtype.kind in "iu" or categories.dtype == np.float64:
+        # Distinct numbers have distinct str representations without whitespace.
+        labels = [str(x) for x in categories.tolist()]
+        return np.arange(len(labels)), _str_categories(labels)
+
+    categories = np.asarray(categories, dtype=object)
     if categories.dtype == object:
         try:
             if all(x == x.rstrip() for x in categories):
@@ -140,9 +171,9 @@ def rstrip_categories(categories: np.ndarray) -> tuple[np.ndarray | None, np.nda
         except AttributeError:
             pass
 
-    stripped = np.array([str(x).rstrip() for x in categories], dtype=object)
-    remap, new_categories = pd.factorize(stripped, sort=False)
-    return remap, np.asarray(new_categories)
+    stripped = [str(x).rstrip() for x in categories]
+    remap, new_categories = pd.factorize(np.array(stripped, dtype=object), sort=False)
+    return remap, _str_categories(new_categories.tolist())
 
 
 def assemble_categorical(
