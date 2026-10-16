@@ -7,7 +7,7 @@ import os
 import threading
 import warnings
 from collections.abc import Sequence
-from enum import Enum
+from enum import Enum, StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
@@ -75,7 +75,7 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 
-class Problem(Enum):
+class Problem(StrEnum):
     """An enumeration for problem all problem types"""
 
     LP = "LP"
@@ -128,9 +128,6 @@ class Problem(Enum):
         """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
 
-    def __str__(self) -> str:
-        return self.value
-
 
 INT_TO_PROBLEM: dict[int, str] = {
     1: str(Problem.LP),
@@ -151,7 +148,7 @@ INT_TO_PROBLEM: dict[int, str] = {
 }
 
 
-class Sense(Enum):
+class Sense(StrEnum):
     """An enumeration for sense types"""
 
     MIN = "MIN"
@@ -167,9 +164,6 @@ class Sense(Enum):
     def values(cls):
         """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
-
-    def __str__(self) -> str:
-        return self.value
 
 
 class ModelStatus(Enum):
@@ -279,7 +273,7 @@ class SolveStatus(Enum):
     """This indicates a completely unknown or unexpected error condition."""
 
 
-class FileFormat(Enum):
+class FileFormat(StrEnum):
     """An enumeration for file format types"""
 
     AMPL = "ampl.mod"

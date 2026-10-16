@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING, ClassVar, cast
 
 from gams.core.gdx import GMS_DT_VAR
@@ -90,7 +90,7 @@ VAR_DEFAULT_VALUES = {
 }
 
 
-class VariableType(Enum):
+class VariableType(StrEnum):
     """
     Enumeration of available variable types.
     """
@@ -126,9 +126,6 @@ class VariableType(Enum):
     def values(cls):
         """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
-
-    def __str__(self) -> str:
-        return self.value
 
 
 class Variable(operable.Operable, VarEquSymbol):
@@ -878,12 +875,9 @@ class Variable(operable.Operable, VarEquSymbol):
 
 
 def cast_type(type: str | VariableType) -> str:
-    if isinstance(type, str) and type.lower() not in VariableType.values():
+    if type.lower() not in VariableType.values():
         raise ValueError(
             f"Allowed variable types: {VariableType.values()} but found {type}."
         )
-
-    if isinstance(type, VariableType):
-        type = type.value
 
     return type.lower()
