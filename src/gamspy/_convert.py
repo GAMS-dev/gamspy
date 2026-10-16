@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
-from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import gamspy._algebra.expression as expression
@@ -22,6 +21,7 @@ from gamspy.exceptions import LatexException, ValidationError
 logger = logging.getLogger("CONVERT")
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from pathlib import Path
 
     from gamspy import ConvertOptions, FileFormat, Model
@@ -307,7 +307,7 @@ def get_convert_solver_options(
     }
     OPTION_RENAME_MAP = {"GAMSInsert": "GmsInsert", "GAMSObjVar": "ObjVar"}
 
-    if not isinstance(file_format, Sequence):
+    if isinstance(file_format, FileFormat):
         file_format = [file_format]
 
     if any(not isinstance(format, FileFormat) for format in file_format):

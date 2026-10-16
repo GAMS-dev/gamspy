@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from gams.core.gdx import GMS_DT_EQU
@@ -81,7 +81,7 @@ EQU_DEFAULT_VALUES = {
 }
 
 
-class EquationType(Enum):
+class EquationType(StrEnum):
     """
     Enumeration of available equation types.
     """
@@ -102,9 +102,6 @@ class EquationType(Enum):
     def values(cls):
         """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
-
-    def __str__(self) -> str:
-        return self.value
 
 
 class Equation(VarEquSymbol):
@@ -1220,9 +1217,5 @@ def cast_type(type: str | EquationType) -> str:
         # assign eq by default
         if type == "regular":
             type = "eq"
-
-    elif isinstance(type, EquationType):
-        # assign eq by default
-        type = "eq" if type == EquationType.REGULAR else str(type)
 
     return type

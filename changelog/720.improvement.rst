@@ -1,0 +1,1 @@
+``Problem``, ``Sense``, ``EquationType``, ``VariableType``, and ``FileFormat`` are now ``StrEnum`` subclasses, so their members compare equal to their string values.
