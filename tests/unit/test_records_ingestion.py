@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy as gp
 from gamspy import (
     Equation,
     Parameter,
@@ -702,3 +703,57 @@ def test_records_sliced_from_variable_reach_gams_intact(container, assign):
     q[t] = p[t]
 
     assert q.toList() == [("a", 5.0), ("b", 5.0), ("c", 5.0)]
+
+
+@pytest.mark.parametrize(
+    "labels",
+    [pd.to_datetime(["2013-01-01 00:00:00"]), pd.to_timedelta(["1D"])],
+)
+@pytest.mark.parametrize("categorical", [False, True])
+def test_datetime_like_set_labels_match_parameter_labels(
+    container, labels, categorical
+):
+    sr = pd.Series(index=labels, data=1.0)
+    i = Set(
+        container,
+        "i",
+        records=pd.Series(labels).astype("category") if categorical else labels,
+    )
+    p = Parameter(container, "p", domain=i, records=sr)
+
+    assert i.toList() == [str(labels[0])]
+    assert p.toList() == [(str(labels[0]), 1.0)]
+
+
+def test_changing_ingested_series_afterwards_leaves_parameter_records(container):
+    records = pd.Series([1.0, 2.0], index=["a", "b"])
+    p = Parameter(container, "p", domain=["*"])
+    p.setRecords(records, uels_on_axes=True)
+    stored = p.records.copy()
+
+    records.iloc[0] = 9.0
+
+    pd.testing.assert_frame_equal(p.records, stored)
+
+
+def test_variable_from_series_with_special_value_strings(container):
+    v = Variable(container, "v", domain=["*"])
+    v.setRecords(pd.Series(["eps", 1.0], index=["a", "b"]), uels_on_axes=True)
+
+    assert v.toList() == [("a", SpecialValues.EPS), ("b", 1.0)]
+
+
+def test_datetime_series():
+    # Reported by https://github.com/grecht
+    sr = pd.Series(index=["2013-01-01 00:00:00"], data=0)
+
+    ct = gp.Container()
+
+    i1 = ct.addSet("i1", records=sr.index)
+    ct.addParameter("p1", domain=i1, records=sr)
+
+    # switch index to DateTime
+    sr.index = pd.to_datetime(sr.index)
+
+    i2 = ct.addSet("i2", records=sr.index)
+    ct.addParameter("p2", domain=i2, records=sr)  # this shouldn't fail
