@@ -16,7 +16,9 @@ from gamspy._symbols.implicits import ImplicitSet
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Container, Parameter
+    from types import TracebackType
+
+    from gamspy import Container, Model, Parameter
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Card, Operation
     from gamspy._symbols.implicits import ImplicitParameter
@@ -46,7 +48,64 @@ def _synch_loop_with_gams(container: Container) -> None:
             model._update_model_attributes()
 
 
-class Loop:
+class _BlockSnapshot:
+    """State of the container when a control flow block is entered."""
+
+    def __init__(self, container: Container) -> None:
+        statements = container._unsaved_statements
+        self.num_statements = len(statements)
+        self.last_statement = statements[-1] if statements else None
+        self.models: dict[str, Model] = dict(container._models_solved_in_loop)
+        self.last_control_flow = container._last_control_flow
+        self.open_if_chain = container._open_if_chain
+
+    def restore(self, container: Container) -> None:
+        """Discards everything the block added to the container."""
+        statements = container._unsaved_statements
+        del statements[max(self.num_statements - 1, 0) :]
+        if self.num_statements:
+            statements.append(self.last_statement)
+
+        container._models_solved_in_loop.clear()
+        container._models_solved_in_loop.update(self.models)
+        container._last_control_flow = self.last_control_flow
+        container._open_if_chain = self.open_if_chain
+
+
+class _LoopBlock:
+    """Shared entering and exiting logic of Loop, For and While."""
+
+    container: Container
+    _kind: Literal["loop", "for", "while"]
+
+    def _open(self, statement: str) -> None:
+        self._snapshot = _BlockSnapshot(self.container)
+        self.container._in_loop += 1
+        self._loop_number = self.container._in_loop
+        self.container._add_statement(statement)
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        self.container._in_loop -= 1
+
+        # The statements of a block that raised must not be executed later.
+        if exc_type is not None:
+            self._snapshot.restore(self.container)
+            return
+
+        self.container._add_statement(");")
+        self.container._last_control_flow = self._kind
+
+        # Run only in the most outer loop
+        if self.container._in_loop == 0:
+            _synch_loop_with_gams(self.container)
+
+
+class Loop(_LoopBlock):
     """
     A context manager to execute a group of statements iteratively for each member of a set or domain.
 
@@ -96,6 +155,8 @@ class Loop:
     ...         b[...] = a[i, j]
 
     """
+
+    _kind = "loop"
 
     def __init__(self, indices: OperationIndexType):
         self.indices = indices
@@ -191,32 +252,12 @@ class Loop:
         self.container._add_statement("continue;")
 
     def __enter__(self) -> Loop:
-        self.container._in_loop += 1
-        self._loop_number = self.container._in_loop
-
-        self.container._add_statement(f"loop({self._index_repr()},")
+        self._open(f"loop({self._index_repr()},")
 
         return self
 
-    def __exit__(self, exc_type, exc, tb):
-        self.container._in_loop -= 1
 
-        self.container._add_statement(");")
-
-        # An exception occurred inside the with block.
-        # Don't do synchronization that may raise another exception.
-        if exc_type is not None:
-            if self.container._in_loop == 0:
-                self.container._models_solved_in_loop.clear()
-            return False
-
-        # Run only in the most outer loop
-        if self.container._in_loop == 0:
-            self.container._last_control_flow = "loop"
-            _synch_loop_with_gams(self.container)
-
-
-class For:
+class For(_LoopBlock):
     """
     A context manager to execute a group of statements iteratively over a numerical range.
 
@@ -268,6 +309,8 @@ class For:
     ...     cnt[...] += 1
 
     """
+
+    _kind = "for"
 
     def __init__(
         self,
@@ -373,9 +416,6 @@ class For:
         self.container._add_statement("continue;")
 
     def __enter__(self) -> For:
-        self.container._in_loop += 1
-        self._loop_number = self.container._in_loop
-
         index_str = self.index.gamsRepr()
         start_str = (
             str(self.start)
@@ -390,30 +430,14 @@ class For:
             if isinstance(self.step, (int, float))
             else self.step.gamsRepr()
         )
-        self.container._add_statement(
+        self._open(
             f"for({index_str} = {start_str} {self.direction} {end_str} by {step_str}, "
         )
 
         return self
 
-    def __exit__(self, exc_type, exc, tb):
-        self.container._in_loop -= 1
 
-        self.container._add_statement(");")
-
-        # An exception occurred inside the with block.
-        # Don't do synchronization that may raise another exception.
-        if exc_type is not None:
-            if self.container._in_loop == 0:
-                self.container._models_solved_in_loop.clear()
-            return False
-
-        if self.container._in_loop == 0:  # Run only in the most outer loop
-            self.container._last_control_flow = "for"
-            _synch_loop_with_gams(self.container)
-
-
-class While:
+class While(_LoopBlock):
     """
     A context manager to execute a group of statements repeatedly as long as a
     condition evaluates to True.
@@ -440,6 +464,8 @@ class While:
     ...     cnt[...] += 1
 
     """
+
+    _kind = "while"
 
     def __init__(self, condition: ConditionType):
         self.condition = condition
@@ -480,29 +506,9 @@ class While:
         self.container._add_statement("continue;")
 
     def __enter__(self) -> While:
-        self.container._in_loop += 1
-        self._loop_number = self.container._in_loop
-
-        representation = get_logical_gams_repr(self.condition)
-        self.container._add_statement(f"while({representation},")
+        self._open(f"while({get_logical_gams_repr(self.condition)},")
 
         return self
-
-    def __exit__(self, exc_type, exc, tb):
-        self.container._in_loop -= 1
-
-        self.container._add_statement(");")
-
-        # An exception occurred inside the with block.
-        # Don't do synchronization that may raise another exception.
-        if exc_type is not None:
-            if self.container._in_loop == 0:
-                self.container._models_solved_in_loop.clear()
-            return False
-
-        if self.container._in_loop == 0:  # Run only in the most outer loop
-            self.container._last_control_flow = "while"
-            _synch_loop_with_gams(self.container)
 
 
 # This flag remembers whether a block of the outermost if chain has already been taken.
@@ -585,12 +591,18 @@ def _continue_if_chain(container: Container, construct: str) -> bool:
 
 def _close_if_block(
     container: Container,
+    snapshot: _BlockSnapshot,
     is_outermost: bool,
     kind: Literal["if", "elseif", "else"],
     exc_type: type[BaseException] | None,
 ) -> None:
     if is_outermost:
         container._in_loop -= 1
+
+    # The statements of a block that raised must not be executed later.
+    if exc_type is not None:
+        snapshot.restore(container)
+        return
 
     container._add_statement(");")
     if is_outermost and kind == "elseif":
@@ -599,12 +611,6 @@ def _close_if_block(
     container._last_control_flow = kind
 
     if not is_outermost:
-        return
-
-    # An exception occurred inside the with block.
-    # Don't do synchronization that may raise another exception.
-    if exc_type is not None:
-        container._models_solved_in_loop.clear()
         return
 
     _synch_loop_with_gams(container)
@@ -676,6 +682,7 @@ class If:
 
     def __enter__(self) -> None:
         representation = _condition_repr(self.condition, self.container)
+        self._snapshot = _BlockSnapshot(self.container)
 
         if self.container._in_loop:
             self.container._add_statement(f"if ({representation},")
@@ -687,8 +694,15 @@ class If:
         self.container._add_statement(f"{_IF_CHAIN_FLAG} = 0;")
         self.container._add_statement(f"if ({representation}, {_IF_CHAIN_FLAG} = 1;")
 
-    def __exit__(self, exc_type, exc, tb):
-        _close_if_block(self.container, self._is_outermost, "if", exc_type)
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        _close_if_block(
+            self.container, self._snapshot, self._is_outermost, "if", exc_type
+        )
 
 
 class ElseIf:
@@ -712,6 +726,7 @@ class ElseIf:
 
     def __enter__(self) -> ElseIf:
         representation = _condition_repr(self.condition, self.container)
+        self._snapshot = _BlockSnapshot(self.container)
         self._is_outermost = _continue_if_chain(self.container, "gp.ElseIf")
 
         if self._is_outermost:
@@ -725,8 +740,15 @@ class ElseIf:
 
         return self
 
-    def __exit__(self, exc_type, exc, tb):
-        _close_if_block(self.container, self._is_outermost, "elseif", exc_type)
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        _close_if_block(
+            self.container, self._snapshot, self._is_outermost, "elseif", exc_type
+        )
 
 
 class Else:
@@ -750,6 +772,7 @@ class Else:
         self._is_outermost = False
 
     def __enter__(self) -> Else:
+        self._snapshot = _BlockSnapshot(self.container)
         self._is_outermost = _continue_if_chain(self.container, "gp.Else")
 
         if self._is_outermost:
@@ -759,5 +782,12 @@ class Else:
 
         return self
 
-    def __exit__(self, exc_type, exc, tb):
-        _close_if_block(self.container, self._is_outermost, "else", exc_type)
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        _close_if_block(
+            self.container, self._snapshot, self._is_outermost, "else", exc_type
+        )
