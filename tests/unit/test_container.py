@@ -1093,6 +1093,24 @@ def test_read_rename_from_transfer_container():
 
 
 @pytest.mark.unit
+def test_read_domains_from_transfer_container():
+    gt_container = gt.Container(system_directory=gamspy_base.directory)
+    gt_i = gt.Set(gt_container, "I", records=["i1", "i2"])
+    _ = gt.Parameter(gt_container, "p", domain=gt_i, records=[("i1", 1)])
+    _ = gt.Variable(gt_container, "v", domain=gt_i)
+    _ = gt.Equation(gt_container, "e", "eq", domain=gt_i)
+
+    m = Container()
+    m.read(gt_container)
+    i = m["I"]
+    assert m["p"].domain == [i]
+    assert m["v"].domain == [i]
+    assert m["v"].l.domain == [i]
+    assert m["e"].m.domain == [i]
+    assert m["v"].l[i].gamsRepr() == "v.l(I)"
+
+
+@pytest.mark.unit
 def test_read_rename_errors(transport, tmp_path):
     m = transport.container
     gdx_path = str(tmp_path / "rename_err.gdx")

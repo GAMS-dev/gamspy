@@ -1731,14 +1731,17 @@ class Container:
                     gp.UniverseAlias._constructor_bypass(self, gamspy_name)
 
             for symname, domain in link_domains:
-                domain = [
-                    self._data[to_gamspy_name(i)]
-                    if i in cf_read_symbol_names and to_gamspy_name(i) in self
-                    else i
-                    for i in domain
-                ]
-                symbol = self._data[symname]
-                symbol._domain = symbol._normalize_domain(self, domain)
+                gdxio.link_domain(
+                    self,
+                    cast("Set | Parameter | Variable | Equation", self._data[symname]),
+                    domain,
+                    lambda name: (
+                        to_gamspy_name(name)
+                        if name.casefold() in cf_read_symbol_names
+                        and to_gamspy_name(name) in self
+                        else None
+                    ),
+                )
 
             self._synch_with_gams()
 
