@@ -30,6 +30,7 @@ from gamspy._internals import (
     DataSource,
     DomainStatus,
 )
+from gamspy._notation import LATEX, UNICODE
 from gamspy._records_ingestion import VarEquIngestor
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.equals import equals_variable
@@ -60,6 +61,7 @@ if TYPE_CHECKING:
     )
     from gamspy._algebra.expression import Expression
     from gamspy._model_instance import ModelInstance
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitParameter
     from gamspy._types import (
         DomainType,
@@ -186,7 +188,32 @@ class BaseSymbol(metaclass=SymbolConstructor):
         i
 
         """
-        return self._latex_name
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self: SymbolType) -> str:
+        """
+        Representation of symbol in mathematical notation with Unicode characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> print(i.unicodeRepr())
+        i
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_name(self: SymbolType, notation: Notation) -> str:
+        return notation.symbol_name(self.name)
+
+    def _math_repr(self: SymbolType, notation: Notation) -> str:
+        return self._math_name(notation)
 
     def toGraph(self: SymbolType):
         """
@@ -557,7 +584,6 @@ class DomainSymbol(BaseSymbol):
         self._domain_violations = None
         self._should_load_from = DataSource.NONE
         self._should_unload_to_gams = False
-        self._latex_name = name.replace("_", r"\_")
         self.where = condition.Condition(self)
         self._set_miro_flags(
             is_miro_input=is_miro_input,

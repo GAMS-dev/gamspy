@@ -73,7 +73,6 @@ class UniverseAlias(BaseSymbol):
 
         # gamspy attributes
         obj.where = condition.Condition(obj)
-        obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
 
         return obj
@@ -95,7 +94,6 @@ class UniverseAlias(BaseSymbol):
         self._container._data.update({name: self})
 
         # gamspy attributes
-        self._latex_name = self.name.replace("_", r"\_")
         self.where = condition.Condition(self)
 
         self._container._add_statement(self)
@@ -378,25 +376,6 @@ class UniverseAlias(BaseSymbol):
 
         """
         return self.name
-
-    def latexRepr(self) -> str:
-        """
-        Representation of the UniverseAlias in LaTeX.
-
-        Returns
-        -------
-        str
-
-        Examples
-        --------
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> i = gp.UniverseAlias(m, name="universe")
-        >>> i.latexRepr()
-        'universe'
-
-        """
-        return self._latex_name
 
     def getDeclaration(self) -> str:
         """

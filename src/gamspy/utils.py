@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from gamspy import Alias, Equation, Model, Set, UniverseAlias, Variable
     from gamspy._algebra.domain import Domain
     from gamspy._algebra.expression import Expression
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import IndexType, SymbolType, ValidatedDomainType
 
@@ -678,7 +679,7 @@ _DOMAIN_ELEMENT_TYPES: tuple[type, ...] = ()
 def _get_domain_element_types() -> tuple[type, ...]:
     """
     Types that can occupy a position of a domain and know how to represent
-    themselves in GAMS/LaTeX.
+    themselves in GAMS and in mathematical notation.
     """
     global _DOMAIN_ELEMENT_TYPES
     if not _DOMAIN_ELEMENT_TYPES:
@@ -698,7 +699,7 @@ def _get_domain_element_types() -> tuple[type, ...]:
 def _get_domain_str(
     domain: Iterable[Set | Alias | UniverseAlias | ImplicitSet | Universe | str],
     *,
-    latex: bool = False,
+    notation: Notation | None = None,
 ) -> str:
     """
     Creates the string format of a given domain
@@ -706,6 +707,9 @@ def _get_domain_str(
     Parameters
     ----------
     domain : Set | Alias | ImplicitSet | str
+    notation : Notation, optional
+        Mathematical notation of the domain. The domain is represented in GAMS if
+        it is not given.
 
     Returns
     -------
@@ -722,13 +726,13 @@ def _get_domain_str(
             # A relaxed domain label is quoted, the universe label is not.
             if is_universe(elem):
                 domain_strs.append(elem)
-            elif latex:
-                domain_strs.append("\\text{" + elem.replace("_", r"\_") + "}")
+            elif notation is not None:
+                domain_strs.append(notation.label(elem))
             else:
                 domain_strs.append('"' + elem + '"')
         elif isinstance(elem, (Universe, *_get_domain_element_types())):
-            if latex:
-                domain_strs.append(elem.latexRepr())
+            if notation is not None:
+                domain_strs.append(elem._math_repr(notation))
             else:
                 domain_strs.append(elem.gamsRepr())
         else:

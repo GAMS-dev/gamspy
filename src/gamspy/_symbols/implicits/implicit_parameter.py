@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._algebra.sparse import SparseAssignment
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy._types import IndexType, ValidatedIndexType
     from gamspy.math.misc import MathOp
@@ -91,13 +92,12 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         super().__init__(name, domain, permutation, scalar_domains)
         self._assignment = None
 
-    @property
-    def _latex_name(self) -> str:
-        # Attributes such as x.l or i.pos are rendered as a superscript: x^{l}
-        name = self.parent._latex_name
+    def _math_name(self, notation: Notation) -> str:
+        # Attributes such as x.l or i.pos are written with the notation of attributes: x^{l}
+        name = self.parent._math_name(notation)
         _, separator, attribute = self.name.rpartition(".")
         if separator:
-            name = f"{{{name}}}^{{\\mathrm{{{attribute}}}}}"
+            name = notation.attribute(name, attribute)
 
         return name
 

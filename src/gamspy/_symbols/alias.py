@@ -78,7 +78,6 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
 
         # gamspy attributes
         obj.where = condition.Condition(obj)
-        obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
         obj._metadata = {}
         obj._assignment = None
@@ -119,7 +118,6 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         self._container._data.update({name: self})
 
         # gamspy attributes
-        self._latex_name = self.name.replace("_", r"\_")
         self.where = condition.Condition(self)
         self._container._add_statement(self)
 

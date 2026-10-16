@@ -6,12 +6,14 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
 import gamspy.utils as utils
+from gamspy._notation import LATEX, UNICODE
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     import pandas as pd
 
     from gamspy import Container
+    from gamspy._notation import Notation
 
 
 class ExtrinsicFunction(operable.Operable):
@@ -128,16 +130,29 @@ class ExtrinsicFunction(operable.Operable):
         -------
         str
         """
-        name = self.name.replace("_", r"\_")
-        representation = f"\\operatorname{{{name}}}"
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Representation of this ExtrinsicFunction in mathematical notation with
+        Unicode characters.
+
+        Returns
+        -------
+        str
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
+        representation = notation.operator_name(self.name)
 
         if self.args:
             arg_strs = []
             for arg in self.args:
                 arg_str = (
-                    str(arg).replace("_", r"\_")
+                    notation.escape(arg)
                     if isinstance(arg, str)
-                    else expression.get_operand_latex_repr(arg)
+                    else expression.get_operand_math_repr(arg, notation)
                 )
                 arg_strs.append(arg_str)
 

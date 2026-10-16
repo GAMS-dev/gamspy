@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, no_type_check
 import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy.utils as utils
+from gamspy._notation import LATEX, UNICODE
 from gamspy._universe import is_universe, is_universe_domain
 from gamspy.exceptions import ValidationError
 
@@ -22,6 +23,7 @@ if TYPE_CHECKING:
         Sor,
         Sum,
     )
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import (
         ImplicitParameter,
         ImplicitSet,
@@ -59,9 +61,8 @@ class ImplicitSymbol(ABC):
 
         self.fix_domain_scalars(parent_scalar_domains)
 
-    @property
-    def _latex_name(self: ImplicitSymbolType) -> str:
-        return self.parent._latex_name
+    def _math_name(self: ImplicitSymbolType, notation: Notation) -> str:
+        return self.parent._math_name(notation)
 
     def __bool__(self):
         raise ValidationError("A symbol cannot be used as a truth value.")
@@ -157,21 +158,60 @@ class ImplicitSymbol(ABC):
         return domain
 
     def latexRepr(self: ImplicitSymbolType) -> str:
-        representation = self._latex_name
+        r"""
+        Representation of this symbol in Latex.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> x = gp.Variable(m, "x", domain=i)
+        >>> print(x.l[i].latexRepr())
+        {x}^{\mathrm{l}}_{i}
+
+        """
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self: ImplicitSymbolType) -> str:
+        """
+        Representation of this symbol in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> x = gp.Variable(m, "x", domain=i)
+        >>> print(x.l[i].unicodeRepr())
+        x.l[i]
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self: ImplicitSymbolType, notation: Notation) -> str:
+        representation = self._math_name(notation)
         domain = self._reference_domain()
         if domain:
             set_strs = []
             for elem in domain:
                 if isinstance(elem, utils._get_domain_element_types()):
-                    set_strs.append(elem.latexRepr())
+                    set_strs.append(elem._math_repr(notation))
                 elif is_universe(elem):
-                    set_strs.append(r"\text{`*'}")
+                    set_strs.append(notation.quoted("*"))
                 elif isinstance(elem, str):
-                    elem = elem.replace("_", r"\_")
-                    set_strs.append(f"\\text{{`{elem}'}}")
+                    set_strs.append(notation.quoted(elem))
 
-            domain_str = "{" + ",".join(set_strs) + "}"
-            representation = f"{representation}_{domain_str}"
+            representation = notation.indexed(representation, set_strs)
 
         return representation
 

@@ -700,6 +700,74 @@ This would result in: ::
 
     $v_{i} \geq 5\hfill \forall i$
 
+Exporting Model To Unicode
+==========================
+To inspect a model in a terminal, a notebook, or a log file without compiling LaTeX, the model can be
+represented in mathematical notation with Unicode characters by using the :meth:`toUnicode <gamspy.Model.toUnicode>`
+function of the model. It returns the same contents as :meth:`toLatex <gamspy.Model.toLatex>` as a string: the symbols
+of the model with their descriptions, the objective, the equation definitions, and the domains of the variables.
+For the transportation model in the :doc:`quick start guide <../notebooks/trnsport>`: ::
+
+    print(transport.toUnicode())
+
+This would result in: ::
+
+    Sets
+      i[*]  plants
+      j[*]  markets
+
+    Parameters
+      a[i]    supply of commodity at plant i (in cases)
+      b[j]    demand for commodity at market j (in cases)
+      c[i,j]  cost per unit of shipment between plant i and market j
+
+    Variables
+      x[i,j]  amount of commodity to ship from plant i to market j
+
+    Equations
+      supply[i]  observe supply limit at plant i
+      demand[j]  satisfy demand at market j
+
+    Model Definition
+      min ∑(i,j) c[i,j] · x[i,j]
+      s.t.
+        supply[i]: ∑(j) x[i,j] ≤ a[i]  ∀ i
+        demand[j]: ∑(i) x[i,j] ≥ b[j]  ∀ j
+        x[i,j] ≥ 0  ∀ i,j
+
+If a path is given, the representation is also written to a `.txt` file under the given directory, and symbols can
+be renamed just like in :meth:`toLatex <gamspy.Model.toLatex>`: ::
+
+    transport.toUnicode(path=<unicode_path>, rename={"x": "ξ"})
+
+The representation of the individual equation definitions and expressions can be retrieved with
+:meth:`equation.unicodeRepr <gamspy.Equation.unicodeRepr>`. Like ``latexRepr``, ``unicodeRepr`` is
+available on symbols, expressions, and operations such as :meth:`Sum <gamspy.Sum.unicodeRepr>`. For example: ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["seattle", "san-diego"])
+    j = gp.Set(m, "j", records=["new-york", "chicago", "topeka"])
+    a = gp.Parameter(m, "a", domain=i)
+    x = gp.Variable(m, "x", domain=[i, j])
+    supply = gp.Equation(m, "supply", domain=i)
+    supply[i].where[a[i] > 0] = gp.Sum(j, x[i, j]) <= a[i]
+    print(supply.unicodeRepr())
+
+This would result in: ::
+
+    ∑(j) x[i,j] ≤ a[i]  ∀ i | a[i] > 0
+
+Since Unicode has subscript forms for only a few letters, indices are written in brackets and attributes
+such as the level of a variable are written as ``x.l[i]``. Integer exponents are written as superscripts
+(``x[i]²``) and other exponents with a caret (``x[i]^a[i]``).
+
+.. note::
+    Printing Unicode characters requires an output encoding that supports them, such as UTF-8. Most
+    modern terminals use UTF-8 by default. On Windows, the encoding of redirected output can be set
+    to UTF-8 with the ``PYTHONIOENCODING=utf-8`` environment variable.
+
 Matches for MCP Models
 ======================
 

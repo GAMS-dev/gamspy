@@ -14,6 +14,7 @@ import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._config import get_option
 from gamspy._extrinsic import ExtrinsicFunction
+from gamspy._notation import LATEX, UNICODE
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import BaseSymbol
 from gamspy._symbols.implicits import ImplicitSet
@@ -29,6 +30,7 @@ if TYPE_CHECKING:
     import pandas as pd
 
     from gamspy import Alias, Container, Set
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitEquation
     from gamspy._types import OperableType
 
@@ -132,82 +134,78 @@ def get_operand_gams_repr(operand) -> str:
     return representation
 
 
-# In LaTeX, a leading minus sign is not wrapped in parentheses, so a negated
-# operand binds like a binary minus: a + (-b) and a \cdot (-b) keep their
-# parentheses while -a + b does not get any.
-LATEX_NEGATION_PRECEDENCE = PRECEDENCE["-"]
+# In mathematical notation, a leading minus sign is not wrapped in parentheses,
+# so a negated operand binds like a binary minus: a + (-b) and a \cdot (-b) keep
+# their parentheses while -a + b does not get any.
+NEGATION_PRECEDENCE = PRECEDENCE["-"]
 
 # A condition (x ~ | ~ cond) is always parenthesized when it is an operand.
-LATEX_CONDITION_PRECEDENCE = 0.5
-
-LATEX_SPECIAL_VALUES = {
-    "EPS": "\\text{EPS}",
-    "NA": "\\text{NA}",
-    "UNDF": "\\text{UNDF}",
-    "INF": "\\infty",
-    "-INF": "-\\infty",
-}
+CONDITION_PRECEDENCE = 0.5
 
 
-def _latex_number(value: int | float) -> tuple[str, float]:
+def _math_number(value: int | float, notation: Notation) -> tuple[str, float]:
+    special_values = notation.special_values
     if isinstance(value, float):
         if SpecialValues.isEps(value):
-            return LATEX_SPECIAL_VALUES["EPS"], LEAF_PRECEDENCE
+            return special_values["EPS"], LEAF_PRECEDENCE
         if SpecialValues.isNA(value):
-            return LATEX_SPECIAL_VALUES["NA"], LEAF_PRECEDENCE
+            return special_values["NA"], LEAF_PRECEDENCE
         if SpecialValues.isUndef(value):
-            return LATEX_SPECIAL_VALUES["UNDF"], LEAF_PRECEDENCE
+            return special_values["UNDF"], LEAF_PRECEDENCE
         if SpecialValues.isPosInf(value):
-            return LATEX_SPECIAL_VALUES["INF"], LEAF_PRECEDENCE
+            return special_values["INF"], LEAF_PRECEDENCE
         if SpecialValues.isNegInf(value):
-            return LATEX_SPECIAL_VALUES["-INF"], LATEX_NEGATION_PRECEDENCE
+            return special_values["-INF"], NEGATION_PRECEDENCE
 
     representation = str(abs(value))
     precedence = LEAF_PRECEDENCE
     if "e" in representation:
         # 1.5e-07 -> 1.5 \cdot 10^{-7}
         mantissa, exponent = representation.split("e")
-        representation = f"10^{{{int(exponent)}}}"
+        representation = notation.power("10", str(int(exponent)), True)
         if float(mantissa) != 1:
-            representation = f"{mantissa} \\cdot {representation}"
+            representation = f"{mantissa} {notation.operators['*']} {representation}"
             precedence = PRECEDENCE["*"]
 
     if value < 0:
-        return f"-{representation}", LATEX_NEGATION_PRECEDENCE
+        return f"-{representation}", NEGATION_PRECEDENCE
 
     return representation, precedence
 
 
-def latex_operand(operand) -> tuple[str, float, bool]:
+def math_operand(operand, notation: Notation) -> tuple[str, float, bool]:
+    """
+    Returns the representation of an operand in the given notation, its
+    precedence, and whether it ends with a big operator (e.g. a sum) whose
+    scope extends to the right.
+    """
     if isinstance(operand, Expression):
-        return _create_latex_expression(operand)
+        return _create_math_expression(operand, notation)
 
     if isinstance(operand, number.Number):
         operand = operand._value
 
     if isinstance(operand, (int, float)):
-        return *_latex_number(operand), False
+        return *_math_number(operand, notation), False
 
-    if isinstance(operand, str) and operand in LATEX_SPECIAL_VALUES:
-        precedence = (
-            LATEX_NEGATION_PRECEDENCE if operand.startswith("-") else LEAF_PRECEDENCE
-        )
-        return LATEX_SPECIAL_VALUES[operand], precedence, False
+    if isinstance(operand, str) and operand in notation.special_values:
+        precedence = NEGATION_PRECEDENCE if operand.startswith("-") else LEAF_PRECEDENCE
+        return notation.special_values[operand], precedence, False
 
     if isinstance(operand, operation.Operation):
-        return operand.latexRepr(), LEAF_PRECEDENCE, True
+        return operand._math_repr(notation), LEAF_PRECEDENCE, True
 
     if isinstance(operand, condition.Condition):
-        return operand.latexRepr(), LATEX_CONDITION_PRECEDENCE, False
+        return operand._math_repr(notation), CONDITION_PRECEDENCE, False
 
-    if hasattr(operand, "latexRepr"):
-        return operand.latexRepr(), LEAF_PRECEDENCE, False
+    if hasattr(operand, "_math_repr"):
+        return operand._math_repr(notation), LEAF_PRECEDENCE, False
 
     return str(operand), LEAF_PRECEDENCE, False
 
 
-def get_operand_latex_repr(operand) -> str:
-    return latex_operand(operand)[0]
+def get_operand_math_repr(operand, notation: Notation) -> str:
+    return math_operand(operand, notation)[0]
 
 
 def get_logical_gams_repr(operand) -> str:
@@ -306,34 +304,20 @@ def create_gams_expression(root_node: Expression, *, logical: bool = False) -> s
     return final_string
 
 
-def create_latex_expression(root_node: Expression) -> str:
+def create_math_expression(root_node: Expression, notation: Notation) -> str:
     """
-    Creates LaTeX representation of a binary expression tree without recursion.
-    It uses an iterative post-order traversal to build the expression,
-    adding parentheses only when necessary based on operator precedence and
-    associativity rules.
+    Creates the representation of a binary expression tree in the given
+    mathematical notation without recursion. It uses an iterative post-order
+    traversal to build the expression, adding parentheses only when necessary
+    based on operator precedence and associativity rules.
     """
-    return _create_latex_expression(root_node)[0]
+    return _create_math_expression(root_node, notation)[0]
 
 
-def _create_latex_expression(root_node: Expression) -> tuple[str, float, bool]:
-    op_map = {
-        "=g=": "\\geq",
-        "=l=": "\\leq",
-        "=e=": "=",
-        "=n=": "\\text{=n=}",
-        "=x=": "\\text{=x=}",
-        "=b=": "\\text{=b=}",
-        "eq": "=",
-        "ne": "\\neq",
-        ">=": "\\geq",
-        "<=": "\\leq",
-        "*": "\\cdot",
-        "and": "\\wedge",
-        "or": "\\vee",
-        "xor": "\\oplus",
-        "$=": "\\stackrel{\\$}{=}",
-    }
+def _create_math_expression(
+    root_node: Expression, notation: Notation
+) -> tuple[str, float, bool]:
+    op_map = notation.operators
 
     # 1. Get nodes in post-order (left - right - parent).
     s1: list[OperableType | ImplicitEquation | str] = [root_node]
@@ -347,12 +331,12 @@ def _create_latex_expression(root_node: Expression) -> tuple[str, float, bool]:
             if node.right is not None:
                 s1.append(node.right)
 
-    # 2. Build the LaTeX expression. Each entry also tracks whether the string
+    # 2. Build the expression. Each entry also tracks whether the string
     # ends with a big operator (e.g. a sum) whose scope extends to the right.
     eval_stack: list[tuple[str, float, bool]] = []
     for node in reversed(post_order_nodes):
         if not isinstance(node, Expression):
-            eval_stack.append(latex_operand(node))
+            eval_stack.append(math_operand(node, notation))
             continue
 
         op = node.operator
@@ -370,10 +354,12 @@ def _create_latex_expression(root_node: Expression) -> tuple[str, float, bool]:
 
             if op == "u-":
                 eval_stack.append(
-                    (f"-{operand_str}", LATEX_NEGATION_PRECEDENCE, operand_open)
+                    (f"-{operand_str}", NEGATION_PRECEDENCE, operand_open)
                 )
             else:
-                eval_stack.append((f"\\neg {operand_str}", op_prec, operand_open))
+                eval_stack.append(
+                    (f"{op_map['not']}{operand_str}", op_prec, operand_open)
+                )
 
         # Handle binary ops
         else:
@@ -382,16 +368,16 @@ def _create_latex_expression(root_node: Expression) -> tuple[str, float, bool]:
 
             # The fraction bar already groups both operands.
             if op == "/":
-                eval_stack.append(
-                    (f"\\frac{{{left_str}}}{{{right_str}}}", LEAF_PRECEDENCE, False)
-                )
-                continue
+                fraction = notation.fraction(left_str, right_str)
+                if fraction is not None:
+                    eval_stack.append((fraction, LEAF_PRECEDENCE, False))
+                    continue
 
             # (sum_i x_i) * y would otherwise read as sum_i (x_i * y).
             if (
                 left_prec < op_prec
                 or (left_prec == op_prec and op_assoc == "right")
-                or (left_open and op == "*")
+                or (left_open and op in ("*", "/"))
             ):
                 left_str = f"({left_str})"
 
@@ -824,7 +810,32 @@ class Expression(operable.Operable):
         'a + b'
 
         """
-        return create_latex_expression(self)
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Returns the representation of this Expression in mathematical notation
+        with Unicode characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i")
+        >>> a = gp.Parameter(m, name="a", domain=i)
+        >>> b = gp.Parameter(m, name="b")
+        >>> print((gp.Sum(i, a[i]) * b >= 5).unicodeRepr())
+        (∑(i) a[i]) · b ≥ 5
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
+        return create_math_expression(self, notation)
 
     def gamsRepr(self) -> str:
         """
@@ -1075,9 +1086,9 @@ class ShiftExpression(Expression):
         self.domain = ["*"]
         self.dimension = 1
 
-    def _jump_repr(self, *, latex: bool = False) -> str:
-        if latex:
-            representation = get_operand_latex_repr(self.jump)
+    def _jump_repr(self, notation: Notation | None = None) -> str:
+        if notation is not None:
+            representation = get_operand_math_repr(self.jump, notation)
         else:
             representation = get_operand_gams_repr(self.jump)
 
@@ -1285,8 +1296,33 @@ class ShiftExpression(Expression):
         't - 1'
 
         """
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Returns the representation of this lag/lead operation in mathematical
+        notation with Unicode characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> t = gp.Set(m, name="t", records=[f"y{idx}" for idx in range(3)])
+        >>> a = gp.Parameter(m, name="a", domain=t)
+        >>> a[t.lead(1)].unicodeRepr()
+        'a[t + 1]'
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
         return (
-            f"{self.parent.latexRepr()} {self.operator} {self._jump_repr(latex=True)}"
+            f"{self.parent._math_repr(notation)} {self.operator}"
+            f" {self._jump_repr(notation)}"
         )
 
     def gamsRepr(self) -> str:

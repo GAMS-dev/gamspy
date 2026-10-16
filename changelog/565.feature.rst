@@ -1,0 +1,1 @@
+Add ``unicodeRepr`` to symbols, expressions, and operations to represent them in mathematical notation with Unicode characters, and ``Model.toUnicode`` to represent a whole model like ``Model.toLatex`` does.
