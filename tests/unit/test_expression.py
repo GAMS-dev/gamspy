@@ -475,6 +475,171 @@ def test_latex_math_functions():
     )
 
 
+def test_unicode_unary_operators():
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    a = gp.Parameter(m, "a", domain=i)
+
+    assert (-a[i]).unicodeRepr() == "-a[i]"
+    assert (~(a[i] > 1)).unicodeRepr() == "¬(a[i] > 1)"
+
+    # A negated operand keeps its parentheses wherever a binary minus would
+    assert (-a[i] + 1).unicodeRepr() == "-a[i] + 1"
+    assert (1 - (-a[i])).unicodeRepr() == "1 - (-a[i])"
+    assert (a[i] * -a[i]).unicodeRepr() == "a[i] · (-a[i])"
+    assert (a[i] * -1).unicodeRepr() == "a[i] · (-1)"
+    assert (-(-a[i])).unicodeRepr() == "-(-a[i])"  # noqa: B002
+    assert (-(a[i] + 1)).unicodeRepr() == "-(a[i] + 1)"
+
+
+def test_unicode_operators():
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    a = gp.Parameter(m, "a", domain=i)
+    b = gp.Parameter(m, "b", domain=i)
+    p = gp.Parameter(m, "p")
+
+    assert (a[i] == b[i]).unicodeRepr() == "a[i] = b[i]"
+    assert (a[i] != b[i]).unicodeRepr() == "a[i] ≠ b[i]"
+    assert (gp.Card(i) >= 2).unicodeRepr() == "card(i) ≥ 2"
+    assert (gp.Ord(i) <= 2).unicodeRepr() == "ord(i) ≤ 2"
+    assert ((a[i] > 0) | (b[i] > 0)).unicodeRepr() == "a[i] > 0 ∨ b[i] > 0"  # noqa: RUF001
+    assert ((a[i] > 0) & (b[i] > 0)).unicodeRepr() == "a[i] > 0 ∧ b[i] > 0"
+
+    # Without a fraction bar, a division is parenthesized like any other operator
+    assert ((a[i] + 1) / (b[i] - 1)).unicodeRepr() == "(a[i] + 1) / (b[i] - 1)"
+    assert (a[i] * (a[i] / b[i])).unicodeRepr() == "a[i] · (a[i] / b[i])"
+    assert (a[i] / (a[i] / b[i])).unicodeRepr() == "a[i] / (a[i] / b[i])"
+    assert (a[i] / b[i] * p).unicodeRepr() == "a[i] / b[i] · p"
+    assert (gp.Sum(i, a[i]) / p).unicodeRepr() == "(∑(i) a[i]) / p"
+
+
+def test_unicode_numbers():
+    m = gp.Container()
+    a = gp.Parameter(m, "a")
+
+    assert (a * 1.5e-7).unicodeRepr() == "a · (1.5 · 10⁻⁷)"
+    assert (1.5e-7 * a).unicodeRepr() == "1.5 · 10⁻⁷ · a"
+    assert (a * 1e20).unicodeRepr() == "a · 10²⁰"
+    assert (a + gp.SpecialValues.POSINF).unicodeRepr() == "a + ∞"
+    assert (a + gp.SpecialValues.NEGINF).unicodeRepr() == "a + (-∞)"
+    assert (a + gp.SpecialValues.EPS).unicodeRepr() == "a + EPS"
+    assert (a + gp.SpecialValues.NA).unicodeRepr() == "a + NA"
+    assert gp.Number(-2).unicodeRepr() == "-2"
+
+
+def test_unicode_operations():
+    m = gp.Container()
+    i = gp.Set(m, "i")
+    a = gp.Parameter(m, "a", domain=i)
+    b = gp.Parameter(m, "b", domain=i)
+    p = gp.Parameter(m, "p")
+
+    # The body of a big operator is parenthesized if it contains + or -
+    assert gp.Sum(i, a[i] + b[i]).unicodeRepr() == "∑(i) (a[i] + b[i])"
+    assert gp.Sum(i, a[i] * b[i]).unicodeRepr() == "∑(i) a[i] · b[i]"
+
+    # The scope of a big operator extends to the right
+    assert (gp.Sum(i, a[i]) * p).unicodeRepr() == "(∑(i) a[i]) · p"
+    assert (gp.Sum(i, a[i]) + p).unicodeRepr() == "∑(i) a[i] + p"
+
+    assert gp.Product(i, a[i]).unicodeRepr() == "∏(i) a[i]"
+    assert gp.Smax(i, a[i]).unicodeRepr() == "max(i) a[i]"
+    assert gp.Smin(i, a[i]).unicodeRepr() == "min(i) a[i]"
+    assert gp.Sand(i, a[i] > 0).unicodeRepr() == "⋀(i) (a[i] > 0)"
+    assert gp.Sor(i, a[i] > 0).unicodeRepr() == "⋁(i) (a[i] > 0)"  # noqa: RUF001
+
+    # A condition applies to its whole operand
+    assert (a[i] + 1).where[b[i] > 0].unicodeRepr() == "(a[i] + 1) | b[i] > 0"
+    assert gp.Sum(i, a[i].where[b[i]]).unicodeRepr() == "∑(i) (a[i] | b[i])"
+
+    # The conditions of all indices are kept
+    j = gp.Set(m, "j")
+    c = gp.Parameter(m, "c", domain=j)
+    x = gp.Variable(m, "x", domain=[i, j])
+    assert gp.Sum(
+        (i.where[(a[i] > 0) | (b[i] > 0)], j.where[c[j] > 0]), x[i, j]
+    ).unicodeRepr() == ("∑(i,j | (a[i] > 0 ∨ b[i] > 0) ∧ c[j] > 0) x[i,j]")  # noqa: RUF001
+
+
+def test_unicode_math_functions():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i_1"])
+    a = gp.Parameter(m, "a", domain=i)
+    x = gp.Variable(m, "x", domain=i)
+
+    # Integer exponents are written as superscripts, others with a caret
+    assert (x[i] ** 2).unicodeRepr() == "x[i]²"
+    assert (x[i] ** -1).unicodeRepr() == "x[i]⁻¹"
+    assert ((x[i] + 1) ** 2).unicodeRepr() == "(x[i] + 1)²"
+    assert ((-x[i]) ** 2).unicodeRepr() == "(-x[i])²"
+    assert ((x[i] ** 2) ** 3).unicodeRepr() == "(x[i]²)³"
+    assert (x[i] ** a[i]).unicodeRepr() == "x[i]^a[i]"
+    assert (x[i] ** (a[i] + 1)).unicodeRepr() == "x[i]^(a[i] + 1)"
+    assert (2 ** x[i]).unicodeRepr() == "2^x[i]"
+    assert ((x[i] ** a[i]) ** 2).unicodeRepr() == "(x[i]^a[i])²"
+    assert gp.math.sqr(x[i] - 1).unicodeRepr() == "(x[i] - 1)²"
+    assert (x.l[i] ** 2).unicodeRepr() == "x.l[i]²"
+    assert gp.math.sqrt(x[i] + 1).unicodeRepr() == "√(x[i] + 1)"
+    assert gp.math.abs(x[i]).unicodeRepr() == "|x[i]|"
+    assert gp.math.floor(a[i]).unicodeRepr() == "⌊a[i]⌋"
+    assert gp.math.ceil(a[i]).unicodeRepr() == "⌈a[i]⌉"
+    assert gp.math.exp(x[i]).unicodeRepr() == "exp(x[i])"
+    assert gp.math.log(x[i]).unicodeRepr() == "ln(x[i])"
+    assert gp.math.log10(x[i]).unicodeRepr() == "log₁₀(x[i])"
+    assert gp.math.Max(x[i], a[i]).unicodeRepr() == "max(x[i],a[i])"
+    assert (a[i] % 3).unicodeRepr() == "mod(a[i],3)"
+    assert gp.math.same_as(i, "i_1").unicodeRepr() == "sameAs(i,'i_1')"
+
+
+def test_unicode_symbols():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i_1"])
+    t = gp.Set(m, "t", records=range(3))
+    a = gp.Parameter(m, "my_param", domain=i)
+    u = gp.Parameter(m, "u", domain="*")
+    x = gp.Variable(m, "x", domain=t)
+
+    # Names are not escaped and indices are bracketed
+    assert a.unicodeRepr() == "my_param"
+    assert a[i].unicodeRepr() == "my_param[i]"
+    assert a["i_1"].unicodeRepr() == "my_param['i_1']"
+    assert u[...].unicodeRepr() == "u['*']"
+    assert x.up[t].unicodeRepr() == "x.up[t]"
+    assert x[t.lag(1)].unicodeRepr() == "x[t - 1]"
+    assert x[t.lead(2, "circular")].unicodeRepr() == "x[t ++ 2]"
+    assert gp.Domain(i, t).unicodeRepr() == "i,t"
+    assert gp.UNIVERSE.unicodeRepr() == "*"
+
+    b = gp.Parameter(m, "b", domain=i)
+    b[i] = gp.sparse(a[i])
+    assert b._assignment.unicodeRepr() == "b[i] $= my_param[i]"
+
+
+def test_unicode_equations():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i1"])
+    j = gp.Set(m, "j", records=["j1"])
+    a = gp.Parameter(m, "a", domain=i)
+    p = gp.Parameter(m, "p")
+    x = gp.Variable(m, "x", domain=[i, j])
+
+    e = gp.Equation(m, "e", domain=i)
+    with pytest.raises(ValidationError):
+        e.unicodeRepr()
+
+    e[i].where[a[i] > 0] = gp.Sum(j, x[i, j]) <= 10
+    assert e.unicodeRepr() == "∑(j) x[i,j] ≤ 10  ∀ i | a[i] > 0"
+
+    f = gp.Equation(m, "f", domain=[i, j])
+    f[i, "j1"] = x[i, "j1"] >= 0
+    assert f.unicodeRepr() == "x[i,'j1'] ≥ 0  ∀ i | j = 'j1'"
+
+    g = gp.Equation(m, "g")
+    g[...].where[p > 0] = gp.Sum((i, j), x[i, j]) == p
+    assert g.unicodeRepr() == "∑(i,j) x[i,j] = p  if p > 0"
+
+
 def test_long_expressions_are_wrapped():
     from gamspy._algebra.expression import (
         GMS_MAX_LINE_LENGTH,

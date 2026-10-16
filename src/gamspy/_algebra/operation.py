@@ -12,6 +12,7 @@ import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
+from gamspy._notation import LATEX, UNICODE
 from gamspy._universe import is_universe
 from gamspy.exceptions import GamspyException, ValidationError
 
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
     import pandas as pd
 
     from gamspy._algebra.expression import Expression
+    from gamspy._notation import Notation
     from gamspy._symbols import Alias, Equation, Parameter, Set, Variable
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy._types import OperationIndexType, OperationRhsType
@@ -380,15 +382,31 @@ class Operation(operable.Operable):
         \sum_{i} a_{i}
 
         """
-        op_map = {
-            "sum": "\\sum",
-            "prod": "\\prod",
-            "smax": "\\max",
-            "smin": "\\min",
-            "sand": "\\bigwedge",
-            "sor": "\\bigvee",
-        }
+        return self._math_repr(LATEX)
 
+    def unicodeRepr(self) -> str:
+        """
+        Representation of this operation in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=range(3))
+        >>> a = gp.Parameter(m, "a", domain=i, records=np.array([3,5,7]))
+        >>> print(gp.Sum(i.where[a[i] > 4], a[i]).unicodeRepr())
+        ∑(i | a[i] > 4) a[i]
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
         indices = []
         conditions = []
         for index in self.op_domain:
@@ -398,15 +416,15 @@ class Operation(operable.Operable):
             else:
                 indices.append(index)
 
-        index_str = ",".join([index.latexRepr() for index in indices])
+        index_str = ",".join([index._math_repr(notation) for index in indices])
 
         if conditions:
             condition_strs = []
             for given_condition in conditions:
-                condition_str, condition_prec, _ = expression.latex_operand(
-                    given_condition
+                condition_str, condition_prec, _ = expression.math_operand(
+                    given_condition, notation
                 )
-                # The conditions of several indices are joined with \wedge.
+                # The conditions of several indices are joined with a logical and.
                 if (
                     len(conditions) > 1
                     and condition_prec < expression.PRECEDENCE["and"]
@@ -414,15 +432,16 @@ class Operation(operable.Operable):
                     condition_str = f"({condition_str})"
                 condition_strs.append(condition_str)
 
-            index_str += " ~ | ~ " + " \\wedge ".join(condition_strs)
+            and_str = f" {notation.operators['and']} "
+            index_str += notation.such_that + and_str.join(condition_strs)
 
-        expression_str, expression_prec, _ = expression.latex_operand(self.rhs)
+        expression_str, expression_prec, _ = expression.math_operand(self.rhs, notation)
 
         # A big operator binds tighter than + and -: sum_i (x_i + y_i)
         if expression_prec <= expression.PRECEDENCE["+"]:
             expression_str = f"({expression_str})"
 
-        return f"{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
+        return notation.big_operator(self._op_name, index_str, expression_str)
 
 
 class Sum(Operation):
@@ -861,7 +880,31 @@ class Ord(operable.Operable):
         \operatorname{ord}(i)
 
         """
-        return f"\\operatorname{{ord}}({self._symbol._latex_name})"
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Representation of Ord function in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> print(gp.Ord(i).unicodeRepr())
+        ord(i)
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
+        name = self._symbol._math_name(notation)
+        return f"{notation.operator_name('ord')}({name})"
 
 
 class Card(operable.Operable):
@@ -951,4 +994,28 @@ class Card(operable.Operable):
         \operatorname{card}(i)
 
         """
-        return f"\\operatorname{{card}}({self._symbol._latex_name})"
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Representation of Card function in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> print(gp.Card(i).unicodeRepr())
+        card(i)
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
+        name = self._symbol._math_name(notation)
+        return f"{notation.operator_name('card')}({name})"

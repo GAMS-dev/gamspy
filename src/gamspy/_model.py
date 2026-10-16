@@ -25,6 +25,7 @@ from gamspy._backend.backend import backend_factory
 from gamspy._convert import (
     GamsConverter,
     LatexConverter,
+    UnicodeConverter,
     get_convert_solver_options,
 )
 from gamspy._internals import ATTR_PREFIX, MODEL_ATTRIBUTE_MAP, DataSource
@@ -2114,3 +2115,67 @@ class Model:
 
         if generate_pdf:
             converter.to_pdf()
+
+    def toUnicode(
+        self,
+        path: str | Path | None = None,
+        rename: dict[str, str] | None = None,
+    ) -> str:
+        """
+        Generates the model definition in mathematical notation with Unicode
+        characters. If a path is given, it is also written to path/<model_name>.txt
+
+        Parameters
+        ----------
+        path : str | Path, optional
+            Path to the directory which will contain the .txt file.
+        rename: dict[str, str], optional
+            A dictionary to rename symbols in the output. Keys are GAMSPy symbol names
+            and values are the names that will be used in the output.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["seattle", "san-diego"], description="plants")
+        >>> a = gp.Parameter(m, "a", domain=i, description="supply of plant i")
+        >>> x = gp.Variable(m, "x", domain=i, type="positive", description="shipment")
+        >>> supply = gp.Equation(m, "supply", domain=i, description="supply limit")
+        >>> supply[i] = x[i] <= a[i]
+        >>> model = gp.Model(
+        ...     m,
+        ...     "shipment",
+        ...     problem="LP",
+        ...     equations=[supply],
+        ...     sense="max",
+        ...     objective=gp.Sum(i, x[i]),
+        ... )
+        >>> print(model.toUnicode())
+        Sets
+          i[*]  plants
+        <BLANKLINE>
+        Parameters
+          a[i]  supply of plant i
+        <BLANKLINE>
+        Variables
+          x[i]  shipment
+        <BLANKLINE>
+        Equations
+          supply[i]  supply limit
+        <BLANKLINE>
+        Model Definition
+          max ∑(i) x[i]
+          s.t.
+            supply[i]: x[i] ≤ a[i]  ∀ i
+            x[i] ≥ 0  ∀ i
+
+        """
+        converter = UnicodeConverter(self, rename)
+        if path is None:
+            return converter.generate()
+
+        return converter.convert(Path(path))

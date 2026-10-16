@@ -17,6 +17,7 @@ from gamspy._internals import (
     EQU_TYPE,
     TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
 )
+from gamspy._notation import LATEX, UNICODE
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import VarEquSymbol
 from gamspy.exceptions import ValidationError
@@ -29,6 +30,7 @@ if TYPE_CHECKING:
     from gamspy import Container, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitEquation, ImplicitParameter
     from gamspy._types import DomainType, IndexType, VarEquRecordsType
 
@@ -1040,12 +1042,44 @@ class Equation(VarEquSymbol):
         $
 
         """
-        return self._latex_repr()
+        return self._math_repr(LATEX)
 
-    def _latex_repr(self, matched_variables: Sequence[Variable] = ()) -> str:
+    def unicodeRepr(self) -> str:
+        """
+        Generates the representation of the equation definition in mathematical
+        notation with Unicode characters.
+
+        Returns
+        -------
+        str
+
+        Raises
+        ------
+        ValidationError
+            If the equation has not been defined (assigned).
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1'])
+        >>> j = gp.Set(m, "j", records=['j1'])
+        >>> c = gp.Parameter(m, "c", domain=[i, j])
+        >>> x = gp.Variable(m, "x", domain=[i, j])
+        >>> e = gp.Equation(m, "e", domain=[j])
+        >>> e[j] = gp.Sum(i, c[i, j] * x[i, j]) <= 10
+        >>> print(e.unicodeRepr())
+        ∑(i) c[i,j] · x[i,j] ≤ 10  ∀ j
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(
+        self, notation: Notation, matched_variables: Sequence[Variable] = ()
+    ) -> str:
         if self._definition is None:
             raise ValidationError(
-                "Equation must be defined to get its latex representation."
+                "Equation must be defined to get its mathematical representation."
             )
 
         # The LHS of an equation definition can either be an ImplicitEquation or a condition.
@@ -1063,41 +1097,44 @@ class Equation(VarEquSymbol):
         # e[i, "j1"] = ... holds for all i where j = 'j1'
         conditions = []
         for position, literal in left._scalar_domains:
-            declared = utils._get_domain_str([self.domain[position]], latex=True)[1:-1]
-            literal = literal.replace("_", r"\_")
-            conditions.append(f"{declared} = \\text{{`{literal}'}}")
+            declared = utils._get_domain_str(
+                [self.domain[position]], notation=notation
+            )[1:-1]
+            conditions.append(f"{declared} = {notation.quoted(literal)}")
 
         if where is not None:
-            where_str, where_prec, _ = expression.latex_operand(where)
+            where_str, where_prec, _ = expression.math_operand(where, notation)
             if conditions and where_prec < expression.PRECEDENCE["and"]:
                 where_str = f"({where_str})"
             conditions.append(where_str)
 
-        condition_str = " \\wedge ".join(conditions)
-        domain_str = utils._get_domain_str(left.domain, latex=True)[1:-1]
+        condition_str = f" {notation.operators['and']} ".join(conditions)
+        domain_str = utils._get_domain_str(left.domain, notation=notation)[1:-1]
         right_side = ""
         if domain_str:
-            right_side = f"\\hfill \\forall {domain_str}"
+            right_side = notation.forall + domain_str
             if condition_str:
-                right_side += f" ~ | ~ {condition_str}"
+                right_side += notation.such_that + condition_str
         elif condition_str:
-            right_side = f"\\hfill \\text{{if }} {condition_str}"
+            right_side = notation.condition_only + condition_str
 
         assert self._definition.right is not None
-        definition_str = expression.get_operand_latex_repr(self._definition.right)
+        definition_str = expression.get_operand_math_repr(
+            self._definition.right, notation
+        )
 
         if matched_variables:
             # Variables are matched to the equation position by position.
             positions = left._reference_domain()
             variable_strs = [
-                variable[positions].latexRepr()
+                variable[positions]._math_repr(notation)
                 if positions and variable.dimension == len(positions)
-                else variable.latexRepr()
+                else variable._math_repr(notation)
                 for variable in matched_variables
             ]
-            definition_str += " \\perp " + ",".join(variable_strs)
+            definition_str += notation.complementarity + ",".join(variable_strs)
 
-        return "$\n" + definition_str + right_side + "\n$"
+        return notation.math_block(definition_str + right_side)
 
     def getDeclaration(self) -> str:
         """

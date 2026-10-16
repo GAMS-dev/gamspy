@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal, final
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from gamspy._notation import Notation
+
 
 @final
 class Universe:
@@ -45,6 +47,12 @@ class Universe:
         return "*"
 
     def latexRepr(self) -> Literal["*"]:
+        return "*"
+
+    def unicodeRepr(self) -> Literal["*"]:
+        return "*"
+
+    def _math_repr(self, notation: Notation) -> Literal["*"]:
         return "*"
 
 

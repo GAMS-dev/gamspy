@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
     from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
+    from gamspy._notation import Notation
     from gamspy._types import ValidatedIndexType
 
 
@@ -212,11 +213,11 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         finally:
             del self.container._data[temp_name]
 
-    def latexRepr(self) -> str:
+    def _math_repr(self, notation: Notation) -> str:
         if is_universe_domain(self.domain):
-            return self._latex_name
+            return self._math_name(notation)
 
-        return super().latexRepr()
+        return super()._math_repr(notation)
 
     def gamsRepr(self) -> str:
         representation = self.name

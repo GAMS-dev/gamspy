@@ -276,6 +276,10 @@ def test_renaming(container, tmp_path):
 
     assert reference_tex == generated_tex
 
+    # Renaming only applies to the generated file.
+    assert supply.latexRepr() == "$\n\\sum_{j} x_{i,j} \\leq a_{i}\\hfill \\forall i\n$"
+    assert supply.unicodeRepr() == "∑(j) x[i,j] ≤ a[i]  ∀ i"
+
 
 def test_latex_repr(container):
     # Other tests are check the equivalency of the generated tex file and the reference tex file.
@@ -478,3 +482,86 @@ def test_to_latex_document(container, tmp_path):
         in content
     )
     assert r"&z_{i} \geq 0 ~ (\text{SOS1}) ~ \forall i&\\" in content
+
+
+TRANSPORT_UNICODE = """Sets
+  i[*]  canning plants
+  j[*]  markets
+
+Parameters
+  a[i]    capacity of plant i in cases
+  b[j]    demand at market j in cases
+  c[i,j]  transport cost in thousands of dollars per case
+
+Variables
+  x[i,j]  shipment quantities in cases
+
+Equations
+  supply[i]  observe supply limit at plant i
+  demand[j]  satisfy demand at market j
+
+Model Definition
+  min ∑(i,j) c[i,j] · x[i,j]
+  s.t.
+    supply[i]: ∑(j) x[i,j] ≤ a[i]  ∀ i
+    demand[j]: ∑(i) x[i,j] ≥ b[j]  ∀ j
+    x[i,j] ≥ 0  ∀ i,j"""
+
+
+def test_to_unicode(container, tmp_path, capsys):
+    transport = model_builders.lp_transport(container)
+
+    assert transport.toUnicode() == TRANSPORT_UNICODE
+    assert capsys.readouterr().out == ""
+
+    # The document is also written to a file if a path is given
+    output_path = tmp_path / "to_unicode"
+    assert transport.toUnicode(output_path) == TRANSPORT_UNICODE
+    assert "Unicode (.txt) file has been generated" in capsys.readouterr().out
+    with open(output_path / "transport.txt", encoding="utf-8") as file:
+        assert file.read() == TRANSPORT_UNICODE + "\n"
+
+    # Renaming only applies to the generated document
+    x = container["x"]
+    renamed = transport.toUnicode(rename={"x": "ρ"})  # noqa: RUF001
+    assert "    supply[i]: ∑(j) ρ[i,j] ≤ a[i]  ∀ i" in renamed.splitlines()  # noqa: RUF001
+    assert "  ρ[i,j]  shipment quantities in cases" in renamed.splitlines()  # noqa: RUF001
+    assert x[...].unicodeRepr() == "x[i,j]"
+
+    with pytest.raises(KeyError):
+        transport.toUnicode(rename={"missing": "y"})
+
+
+def test_to_unicode_variable_types(container):
+    m = container
+    i = Set(m, "i", records=["i1", "i2"])
+    types = ["binary", "integer", "negative", "sos1", "semicont", "semiint", "free"]
+    variables = [Variable(m, f"v_{type}", domain=i, type=type) for type in types]
+    s = Variable(m, "s", type="positive")
+    e = Equation(m, "e", domain=i)
+    e[i] = sum((variable[i] for variable in variables[1:]), variables[0][i]) + s >= 1
+    model = Model(m, "types", problem="MINLP", equations=[e])
+
+    # Without an objective, the definition is listed without s.t.
+    assert model.toUnicode().split("Model Definition\n")[1].splitlines() == [
+        "  e[i]: v_binary[i] + v_integer[i] + v_negative[i] + v_sos1[i]"
+        " + v_semicont[i] + v_semiint[i] + v_free[i] + s ≥ 1  ∀ i",
+        "  v_binary[i] ∈ {0,1}  ∀ i",
+        "  v_integer[i] ∈ {0,1,2,…}  ∀ i",
+        "  v_negative[i] ≤ 0  ∀ i",
+        "  v_sos1[i] ≥ 0 (SOS1)  ∀ i",
+        "  v_semicont[i] ∈ {0} ∪ [v_semicont.lo[i], v_semicont.up[i]]  ∀ i",  # noqa: RUF001
+        "  v_semiint[i] ∈ {0} ∪ ([v_semiint.lo[i], v_semiint.up[i]] ∩ ℤ)  ∀ i",  # noqa: RUF001
+        "  s ≥ 0",
+    ]
+
+
+def test_to_unicode_matches():
+    qp6 = model_builders.mcp_qp6()
+
+    lines = qp6.toUnicode().splitlines()
+    assert (
+        "  d_x[stocks]: ∑(d) m_wdef[d] · dev[s,d] ≥ m_retcon · mean[s] + m_budget"
+        " ⊥ x[s]  ∀ s"
+    ) in lines
+    assert "  budget: ∑(s) x[s] = 1.0 ⊥ m_budget" in lines

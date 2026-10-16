@@ -11,6 +11,7 @@ import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._container import Container
 from gamspy._internals import DataSource
+from gamspy._notation import LATEX, UNICODE
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy.exceptions import FatalError, ValidationError
 
@@ -23,6 +24,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._algebra.sparse import SparseAssignment
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import ConditionType, ImplicitSymbolType, SymbolType
     from gamspy.math import MathOp
@@ -327,11 +329,36 @@ class Condition(operable.Operable):
         'a_{i} ~ | ~ a_{i} > 2'
 
         """
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Representation of this condition in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> a = gp.Parameter(m, "a", domain=i)
+        >>> condition = a[i].where[a[i] >= 2]
+        >>> print(condition.unicodeRepr())
+        a[i] | a[i] ≥ 2
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
         conditioning_on_str, conditioning_on_prec, conditioning_on_open = (
-            expression.latex_operand(self.conditioning_on)
+            expression.math_operand(self.conditioning_on, notation)
         )
         if conditioning_on_prec < expression.LEAF_PRECEDENCE or conditioning_on_open:
             conditioning_on_str = f"({conditioning_on_str})"
 
-        condition_str = expression.get_operand_latex_repr(self.condition)
-        return f"{conditioning_on_str} ~ | ~ {condition_str}"
+        condition_str = expression.get_operand_math_repr(self.condition, notation)
+        return f"{conditioning_on_str}{notation.such_that}{condition_str}"

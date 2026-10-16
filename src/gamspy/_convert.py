@@ -3,11 +3,13 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 import gamspy._algebra.expression as expression
 import gamspy._symbols as syms
 import gamspy.utils as utils
+from gamspy._notation import LatexNotation, UnicodeNotation
 from gamspy._options import (
     EXECUTION_OPTIONS,
     INDICATOR_SOLVERS,
@@ -25,6 +27,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from gamspy import ConvertOptions, FileFormat, Model
+    from gamspy._notation import Notation
     from gamspy._types import SymbolType
 
 GAMS_JACOBIAN_TEMPLATE = """$onEmpty
@@ -546,12 +549,29 @@ LATEX_TEXT_ESCAPES = str.maketrans(
 )
 
 
-class LatexConverter:
-    def __init__(self, model: Model, path: Path, rename: dict[str, str] | None) -> None:
-        os.makedirs(path, exist_ok=True)
+def _write_document(file_path: str, content: str, kind: str) -> None:
+    with open(file_path, "w", encoding="utf-8") as file:
+        file.write(content)
+
+    print("=" * 80)
+    print(f"{kind} file has been generated under {file_path}")
+    print("=" * 80)
+
+
+class MathConverter(ABC):
+    """
+    Collects the contents of a document that represents a model in mathematical
+    notation: its symbols, its definition, and the domains of its variables.
+    Subclasses decide how the document is written.
+    """
+
+    notation_type: type[Notation]
+    # Separates the constraint that a variable type implies from its domain.
+    forall: str
+
+    def __init__(self, model: Model, rename: dict[str, str] | None) -> None:
         self.model = model
         self.container = model.container
-        self.path = path
         symbols = get_symbols(model)
         if self.model._limited_variables:
             for var in self.model._limited_variables:
@@ -576,6 +596,130 @@ class LatexConverter:
                     f"`{name}` does not exist in the Container. You can only rename symbols that already exist in the container."
                 )
 
+        # Renaming only applies to the generated document.
+        self.notation = self.notation_type(rename=self.rename)
+
+    @abstractmethod
+    def generate(self) -> str:
+        """Generates the document."""
+
+    @abstractmethod
+    def _variable_type_constraint(
+        self, variable_type: str, reference: str, bounds: str
+    ) -> str | None:
+        """
+        The constraint that the type of a variable implies, or None if its type
+        does not imply any.
+        """
+
+    def _domain_str(self, domain: Sequence) -> str:
+        return utils._get_domain_str(domain, notation=self.notation)[1:-1]
+
+    def _indexed_name(self, symbol: SymbolType, domain: Sequence) -> str:
+        name = symbol._math_name(self.notation)
+        domain_str = self._domain_str(domain)
+        if domain_str:
+            name = self.notation.indexed(name, [domain_str])
+
+        return name
+
+    def _symbols_of_type(self, symbol_type) -> list[tuple[SymbolType, Sequence]]:
+        """The symbols of the given type with the domains that they are used with."""
+        symbols: list[tuple[SymbolType, Sequence]] = []
+        for name in self.symbols:
+            symbol: SymbolType = self.container._data[name]
+
+            if isinstance(symbol, symbol_type):
+                domain = symbol.domain
+                if isinstance(symbol, syms.Variable) and self.model._limited_variables:
+                    for elem in self.model._limited_variables:
+                        if elem.name == symbol.name:
+                            domain = elem.domain
+
+                symbols.append((symbol, domain))
+
+        return symbols
+
+    def _objective(self) -> str | None:
+        objective = self.model._objective
+        if objective is None:
+            return None
+
+        if isinstance(objective, syms.Variable):
+            return objective._math_name(self.notation)
+
+        return objective._math_repr(self.notation)
+
+    def get_matched_variables(self) -> dict[str, list[syms.Variable]]:
+        matched_variables: dict[str, list[syms.Variable]] = {}
+        if self.model._matches is None:
+            return matched_variables
+
+        for key, value in self.model._matches.items():
+            equations = [key] if isinstance(key, syms.Equation) else key
+            variables = [value] if isinstance(value, syms.Variable) else value
+            for equation in equations:
+                matched_variables[equation.name] = list(variables)
+
+        return matched_variables
+
+    def _definitions(self) -> list[tuple[str, str]]:
+        """The names of the equations of the model and their definitions."""
+        matched_variables = self.get_matched_variables()
+        equations = list(self.model.equations)
+        if self.model._matches is not None:
+            for key in self.model._matches:
+                for equation in [key] if isinstance(key, syms.Equation) else key:
+                    if equation not in equations:
+                        equations.append(equation)
+
+        definitions: list[tuple[str, str]] = []
+        for equation in equations:
+            if equation.name in self.model._autogen_symbols:
+                continue
+
+            definition = equation._math_repr(
+                self.notation, matched_variables.get(equation.name, [])
+            )
+            definitions.append(
+                (self._indexed_name(equation, equation.domain), definition)
+            )
+
+        return definitions
+
+    def _variable_constraints(self) -> list[str]:
+        """The constraints that the types of the variables imply."""
+        constraints: list[str] = []
+        for name in self.symbols:
+            symbol = self.container._data[name]
+            if not isinstance(symbol, syms.Variable):
+                continue
+
+            reference = symbol[...]._math_repr(self.notation)
+            lower = symbol.lo._math_repr(self.notation)
+            upper = symbol.up._math_repr(self.notation)
+            constraint = self._variable_type_constraint(
+                symbol.type, reference, f"[{lower}, {upper}]"
+            )
+            if constraint is None:
+                continue
+
+            if symbol.domain:
+                constraint += self.forall + self._domain_str(symbol.domain)
+
+            constraints.append(constraint)
+
+        return constraints
+
+
+class LatexConverter(MathConverter):
+    notation_type = LatexNotation
+    forall = " ~ \\forall "
+
+    def __init__(self, model: Model, path: Path, rename: dict[str, str] | None) -> None:
+        os.makedirs(path, exist_ok=True)
+        super().__init__(model, rename)
+        self.path = path
         self.header = self.get_header()
         self.set_header = "\\subsection*{Sets}"
         self.param_header = "\\subsection*{Parameters}"
@@ -586,31 +730,11 @@ class LatexConverter:
         self.tex_path = os.path.join(path, model.name + ".tex")
 
     def convert(self) -> None:
-        # Renaming only applies to the generated file.
-        original_names = {}
-        for name, latex_name in self.rename.items():
-            symbol = self.container._data[name]
-            original_names[name] = symbol._latex_name
-            symbol._latex_name = latex_name
-
-        try:
-            latex_str = self._generate()
-        finally:
-            for name, latex_name in original_names.items():
-                self.container._data[name]._latex_name = latex_name
-
-        with open(self.tex_path, "w", encoding="utf-8") as file:  # Write the TEX file
-            file.write(latex_str)
-
-        print("=" * 80)
-        print(
-            f"LaTeX (.tex) file has been generated under {os.path.join(self.path, self.model.name + '.tex')}"
-        )
-        print("=" * 80)
-
+        latex_str = self.generate()
+        _write_document(self.tex_path, latex_str, "LaTeX (.tex)")
         self.latex_str = latex_str
 
-    def _generate(self) -> str:
+    def generate(self) -> str:
         latex_strs = [self.header]
 
         # Sets
@@ -631,17 +755,10 @@ class LatexConverter:
 
         # Definitions
         latex_strs.append(self.definitions_header)
-        if self.model._objective is None:
-            ...
-        elif isinstance(self.model._objective, syms.Variable):
-            var_name = self.model._objective._latex_name
+        objective = self._objective()
+        if objective is not None:
             latex_strs.append(
-                f"\\textbf{{{str(self.model.sense).lower()}}} ${var_name}$\\\\"
-            )
-            latex_strs.append("\\textbf{s.t.}")
-        else:
-            latex_strs.append(
-                f"\\textbf{{{str(self.model.sense).lower()}}} ${self.model._objective.latexRepr()}$\\\\"
+                f"\\textbf{{{str(self.model.sense).lower()}}} ${objective}$\\\\"
             )
             latex_strs.append("\\textbf{s.t.}")
 
@@ -678,105 +795,54 @@ class LatexConverter:
 
     def get_table(self, symbol_type) -> str:
         table = [TABLE_HEADER]
-        for name in self.symbols:
-            symbol: SymbolType = self.container._data[name]
+        for symbol, domain in self._symbols_of_type(symbol_type):
+            domain_str = self._domain_str(domain)
+            if domain_str:
+                domain_str = f"${domain_str}$"
 
-            if isinstance(symbol, symbol_type):
-                domain = symbol.domain
-                if isinstance(symbol, syms.Variable) and self.model._limited_variables:
-                    for elem in self.model._limited_variables:
-                        if elem.name == symbol.name:
-                            domain = elem.domain
-
-                domain_str = utils._get_domain_str(domain, latex=True)[1:-1]
-                if domain_str:
-                    domain_str = f"${domain_str}$"
-
-                description = symbol.description.translate(LATEX_TEXT_ESCAPES)
-                row = f"${symbol._latex_name}$ & {domain_str} & {description}\\\\"
-                table.append(row)
+            description = symbol.description.translate(LATEX_TEXT_ESCAPES)
+            name = symbol._math_name(self.notation)
+            row = f"${name}$ & {domain_str} & {description}\\\\"
+            table.append(row)
 
         table.append(TABLE_FOOTER)
 
         return "\n".join(table)
 
-    def get_matched_variables(self) -> dict[str, list[syms.Variable]]:
-        matched_variables: dict[str, list[syms.Variable]] = {}
-        if self.model._matches is None:
-            return matched_variables
-
-        for key, value in self.model._matches.items():
-            equations = [key] if isinstance(key, syms.Equation) else key
-            variables = [value] if isinstance(value, syms.Variable) else value
-            for equation in equations:
-                matched_variables[equation.name] = list(variables)
-
-        return matched_variables
-
     def get_definitions(self) -> str:
-        matched_variables = self.get_matched_variables()
-        equations = list(self.model.equations)
-        if self.model._matches is not None:
-            for key in self.model._matches:
-                for equation in [key] if isinstance(key, syms.Equation) else key:
-                    if equation not in equations:
-                        equations.append(equation)
-
-        definitions: list[str] = []
-        for equation in equations:
-            if equation.name in self.model._autogen_symbols:
-                continue
-
-            domain_str = utils._get_domain_str(equation.domain, latex=True)[1:-1]
-            header = "\\subsubsection*{$" + equation._latex_name
-            if domain_str:
-                header += f"_{{{domain_str}}}"
-            header += "$}\n"
-
-            footer = "\n\\vspace{5pt}\n\\hrule"
-            equation_str = equation._latex_repr(
-                matched_variables.get(equation.name, [])
-            )
-            definitions.append(f"{header}{equation_str}{footer}")
-
-        return "\n".join(definitions)
+        footer = "\n\\vspace{5pt}\n\\hrule"
+        return "\n".join(
+            f"\\subsubsection*{{${name}$}}\n{definition}{footer}"
+            for name, definition in self._definitions()
+        )
 
     def get_constraints(self) -> str:
         constraints = [r"\begin{flalign*}"]
-        for name in self.symbols:
-            symbol = self.container._data[name]
-            if not isinstance(symbol, syms.Variable):
-                continue
-
-            reference = symbol[...].latexRepr()
-            bounds = f"[{symbol.lo.latexRepr()}, {symbol.up.latexRepr()}]"
-            if symbol.type == "binary":
-                constraint = reference + r" \in \{0,1\}"
-            elif symbol.type == "integer":
-                constraint = reference + r" \in \mathbb{Z}_{\geq 0}"
-            elif symbol.type == "positive":
-                constraint = reference + r" \geq 0"
-            elif symbol.type == "negative":
-                constraint = reference + r" \leq 0"
-            elif symbol.type in ("sos1", "sos2"):
-                constraint = reference + rf" \geq 0 ~ (\text{{{symbol.type.upper()}}})"
-            elif symbol.type == "semicont":
-                constraint = reference + rf" \in \{{0\}} \cup {bounds}"
-            elif symbol.type == "semiint":
-                constraint = (
-                    reference + rf" \in \{{0\}} \cup ({bounds} \cap \mathbb{{Z}})"
-                )
-            else:
-                continue
-
-            if symbol.domain:
-                domain_str = utils._get_domain_str(symbol.domain, latex=True)[1:-1]
-                constraint += f" ~ \\forall {domain_str}"
-
-            constraints.append(f"&{constraint}&\\\\")
-
+        constraints += [
+            f"&{constraint}&\\\\" for constraint in self._variable_constraints()
+        ]
         constraints.append(r"\end{flalign*}")
         return "\n".join(constraints)
+
+    def _variable_type_constraint(
+        self, variable_type: str, reference: str, bounds: str
+    ) -> str | None:
+        if variable_type == "binary":
+            return reference + r" \in \{0,1\}"
+        if variable_type == "integer":
+            return reference + r" \in \mathbb{Z}_{\geq 0}"
+        if variable_type == "positive":
+            return reference + r" \geq 0"
+        if variable_type == "negative":
+            return reference + r" \leq 0"
+        if variable_type in ("sos1", "sos2"):
+            return reference + rf" \geq 0 ~ (\text{{{variable_type.upper()}}})"
+        if variable_type == "semicont":
+            return reference + rf" \in \{{0\}} \cup {bounds}"
+        if variable_type == "semiint":
+            return reference + rf" \in \{{0\}} \cup ({bounds} \cap \mathbb{{Z}})"
+
+        return None
 
     def get_header(self) -> str:
         header = r"""\documentclass[11pt]{article}
@@ -797,3 +863,82 @@ class LatexConverter:
 
 """
         return header
+
+
+UNICODE_INDENT = "  "
+
+
+class UnicodeConverter(MathConverter):
+    notation_type = UnicodeNotation
+    forall = "  ∀ "
+
+    def convert(self, path: Path) -> str:
+        unicode_str = self.generate()
+        os.makedirs(path, exist_ok=True)
+        file_path = os.path.join(path, self.model.name + ".txt")
+        _write_document(file_path, unicode_str + "\n", "Unicode (.txt)")
+
+        return unicode_str
+
+    def generate(self) -> str:
+        sections = []
+        for title, symbol_type in (
+            ("Sets", (syms.Set, syms.Alias)),
+            ("Parameters", syms.Parameter),
+            ("Variables", syms.Variable),
+            ("Equations", syms.Equation),
+        ):
+            rows = [
+                (self._indexed_name(symbol, domain), symbol.description)
+                for symbol, domain in self._symbols_of_type(symbol_type)
+            ]
+            if rows:
+                sections.append(self.get_table(title, rows))
+
+        sections.append(self.get_model_definition())
+
+        return "\n\n".join(sections)
+
+    def get_table(self, title: str, rows: list[tuple[str, str]]) -> str:
+        width = max(len(name) for name, _ in rows)
+        table = [title]
+        for name, description in rows:
+            table.append(f"{UNICODE_INDENT}{name.ljust(width)}  {description}".rstrip())
+
+        return "\n".join(table)
+
+    def get_model_definition(self) -> str:
+        lines = ["Model Definition"]
+        indent = UNICODE_INDENT
+        objective = self._objective()
+        if objective is not None:
+            lines.append(f"{indent}{str(self.model.sense).lower()} {objective}")
+            lines.append(f"{indent}s.t.")
+            indent *= 2
+
+        lines += [
+            f"{indent}{name}: {definition}" for name, definition in self._definitions()
+        ]
+        lines += [indent + constraint for constraint in self._variable_constraints()]
+
+        return "\n".join(lines)
+
+    def _variable_type_constraint(
+        self, variable_type: str, reference: str, bounds: str
+    ) -> str | None:
+        if variable_type == "binary":
+            return f"{reference} ∈ {{0,1}}"
+        if variable_type == "integer":
+            return f"{reference} ∈ {{0,1,2,…}}"
+        if variable_type == "positive":
+            return f"{reference} ≥ 0"
+        if variable_type == "negative":
+            return f"{reference} ≤ 0"
+        if variable_type in ("sos1", "sos2"):
+            return f"{reference} ≥ 0 ({variable_type.upper()})"
+        if variable_type == "semicont":
+            return f"{reference} ∈ {{0}} \N{UNION} {bounds}"
+        if variable_type == "semiint":
+            return f"{reference} ∈ {{0}} \N{UNION} ({bounds} ∩ \N{DOUBLE-STRUCK CAPITAL Z})"
+
+        return None

@@ -11,6 +11,7 @@ import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._container import Container
 from gamspy._internals import DataSource
+from gamspy._notation import LATEX, UNICODE
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -18,36 +19,13 @@ if TYPE_CHECKING:
 
     from gamspy import Alias, Parameter, Set, UniverseAlias
     from gamspy._algebra.expression import Expression
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits.implicit_symbol import ImplicitParameter, ImplicitSet
     from gamspy._types import ImplicitSymbolType, OperableType, SymbolType
 
 
-# Functions that have a dedicated LaTeX command. Note that log is the natural logarithm.
-LATEX_FUNCTIONS = {
-    "exp": "\\exp",
-    "log": "\\ln",
-    "log10": "\\log_{10}",
-    "log2": "\\log_{2}",
-    "sin": "\\sin",
-    "cos": "\\cos",
-    "tan": "\\tan",
-    "sinh": "\\sinh",
-    "cosh": "\\cosh",
-    "tanh": "\\tanh",
-    "arcsin": "\\arcsin",
-    "arccos": "\\arccos",
-    "arctan": "\\arctan",
-    "max": "\\max",
-    "min": "\\min",
-}
-
-LATEX_DELIMITERS = {
-    "abs": ("\\lvert", "\\rvert"),
-    "ceil": ("\\lceil", "\\rceil"),
-    "floor": ("\\lfloor", "\\rfloor"),
-}
-
-LATEX_POWERS = ("power", "rPower", "sqr")
+# Functions that are written as powers in mathematical notation.
+POWERS = ("power", "rPower", "sqr")
 
 
 class MathOp(operable.Operable):
@@ -252,32 +230,65 @@ class MathOp(operable.Operable):
         \operatorname{div}(a,5)
 
         """
-        if self.op_name in LATEX_POWERS:
-            base, base_prec, base_open = expression.latex_operand(self.elements[0])
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Representation of this MathOp in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, "a", records=5)
+        >>> print(gp.math.sqr(gp.math.abs(a)).unicodeRepr())
+        |a|²
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
+        if self.op_name in POWERS:
+            base, base_prec, base_open = expression.math_operand(
+                self.elements[0], notation
+            )
             # A superscripted base (x^{2}, x^{l}, 10^{3}) would get a double superscript.
-            if base_prec < expression.LEAF_PRECEDENCE or base_open or "^" in base:
+            if (
+                base_prec < expression.LEAF_PRECEDENCE
+                or base_open
+                or notation.is_superscripted(base)
+            ):
                 base = f"({base})"
 
-            exponent = (
-                "2"
-                if self.op_name == "sqr"
-                else _stringify(self.elements[1], latex=True)
+            if self.op_name == "sqr":
+                return notation.power(base, "2", True)
+
+            exponent = self.elements[1]
+            if isinstance(exponent, str):
+                return notation.power(base, _stringify(exponent, notation), True)
+
+            exponent_str, exponent_prec, exponent_open = expression.math_operand(
+                exponent, notation
             )
-            return f"{base}^{{{exponent}}}"
+            is_exponent_leaf = (
+                exponent_prec == expression.LEAF_PRECEDENCE and not exponent_open
+            )
+            return notation.power(base, exponent_str, is_exponent_leaf)
 
-        operands_str = ",".join(
-            [_stringify(elem, latex=True) for elem in self.elements]
-        )
+        operands_str = ",".join([_stringify(elem, notation) for elem in self.elements])
         if self.op_name == "sqrt":
-            return f"\\sqrt{{{operands_str}}}"
+            return notation.sqrt(operands_str)
 
-        if self.op_name in LATEX_DELIMITERS:
-            left, right = LATEX_DELIMITERS[self.op_name]
-            return f"{left} {operands_str} {right}"
+        if self.op_name in notation.delimiters:
+            left, right = notation.delimiters[self.op_name]
+            return f"{left}{operands_str}{right}"
 
-        op_name = self.op_name.replace("_", r"\_")
-        function = LATEX_FUNCTIONS.get(self.op_name, f"\\operatorname{{{op_name}}}")
-        return f"{function}({operands_str})"
+        return f"{notation.function_name(self.op_name)}({operands_str})"
 
     def __str__(self):
         return self.gamsRepr()
@@ -405,17 +416,17 @@ def aggregate(
 
 
 def _stringify(
-    x: str | int | float | SymbolType | ImplicitSymbolType, *, latex: bool = False
-):
+    x: str | int | float | SymbolType | ImplicitSymbolType,
+    notation: Notation | None = None,
+) -> str:
     if isinstance(x, str):
-        if latex:
-            x = x.replace("_", r"\_")
-            return f"\\text{{`{x}'}}"
+        if notation is not None:
+            return notation.quoted(x)
 
         return f'"{x}"'
 
-    if latex:
-        return expression.get_operand_latex_repr(x)
+    if notation is not None:
+        return expression.get_operand_math_repr(x, notation)
 
     if isinstance(x, (int, float)):
         x = utils._map_special_values(x)
