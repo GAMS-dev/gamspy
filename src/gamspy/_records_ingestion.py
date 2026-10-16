@@ -79,6 +79,13 @@ def _remap_special_values(column: pd.Series) -> pd.Series:
     return pd.Series(values, index=column.index, dtype=object)
 
 
+def _empty_texts(size: int) -> Any:
+    if isinstance(_STR_DTYPE, pd.StringDtype):
+        return pd.array([""], dtype=_STR_DTYPE).take(np.zeros(size, dtype=np.intp))
+
+    return np.full(size, "", dtype=object)
+
+
 def _as_floats(values: Any) -> np.ndarray | pd.Series:
     if _is_float_array(values):
         return values
@@ -150,18 +157,27 @@ class BaseIngestor:
                 )
             else:
                 codes, uniques = pd.factorize(col, sort=False)
-                uniques = np.asarray(uniques, dtype=object)
                 remap, new_categories = rstrip_categories(uniques)
 
-                if remap is not None:
-                    codes, uniques = (
-                        apply_remap(codes, remap),
-                        np.asarray(new_categories),
-                    )
+                if remap is None:
+                    categories = uniques
+                else:
+                    if len(new_categories) != len(uniques):
+                        codes = apply_remap(codes, remap)
+                    categories = new_categories
+
+                if not (
+                    isinstance(categories.dtype, pd.StringDtype)
+                    and categories.dtype == _STR_DTYPE
+                    and len(categories)
+                ):
+                    categories = np.asarray(categories)
 
                 records.isetitem(
                     i,
-                    assemble_categorical(codes, uniques, ordered=True, fastpath=True),
+                    assemble_categorical(
+                        codes, categories, ordered=True, fastpath=True
+                    ),
                 )
 
         return records
@@ -448,6 +464,15 @@ class SetIngestor(BaseIngestor):
             if col_labels is not None and not self.symbol._is_miro_symbol
             else self.symbol.domain_names
         )
+        has_texts = records.shape[1] > self.symbol.dimension
+        if not has_texts:
+            records.insert(
+                records.shape[1],
+                "element_text",
+                _empty_texts(records.shape[0]),
+                allow_duplicates=True,
+            )
+
         records.columns = (
             generate_unique_labels(labels, reserved=self.symbol._attributes)
             + self.symbol._attributes
@@ -455,7 +480,7 @@ class SetIngestor(BaseIngestor):
 
         # Skip the costly round trip when the column is already a NaN-free str column.
         element_text = records.iloc[:, -1]
-        if not (
+        if has_texts and not (
             isinstance(element_text.dtype, pd.StringDtype)
             and element_text.dtype == _STR_DTYPE
             and not element_text.hasnans
@@ -561,10 +586,7 @@ class SetIngestor(BaseIngestor):
         if records.shape[1] == 0:
             records = pd.DataFrame(columns=list(range(self.symbol.dimension)))
 
-        if records.shape[1] == self.symbol.dimension:
-            records = records.assign(element_text="")
-
-        if records.shape[1] - 1 != self.symbol.dimension:
+        if records.shape[1] not in (self.symbol.dimension, self.symbol.dimension + 1):
             raise ValueError(
                 "Dimensionality of records is inconsistent with set domain specification."
             )
