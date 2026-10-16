@@ -22,11 +22,11 @@ from gamspy._internals import (
     DomainStatus,
 )
 from gamspy._special_values import SpecialValues
-from gamspy._symbols.base import BaseSymbol, DomainSymbol
+from gamspy._symbols.base import BaseSymbol
 from gamspy.exceptions import GdxException, ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable
     from pathlib import Path
 
     from gams.core.numpy import Gams2Numpy
@@ -175,6 +175,29 @@ def _fetch_metadata(
     ]
 
 
+def link_domain(
+    container: Container,
+    symbol: Set | Parameter | Variable | Equation,
+    domain: Iterable[str],
+    resolve: Callable[[str], str | None],
+) -> None:
+    """
+    Sets the domain of `symbol`, linking each domain name that `resolve` maps
+    to the name of a symbol in `container`. Other names stay relaxed.
+    """
+    from gamspy._symbols import Equation, Variable
+
+    linked = []
+    for name in domain:
+        target = resolve(name) if name != "*" else None
+        linked.append(container._data[target] if target is not None else name)
+
+    symbol._domain = symbol._normalize_domain(container, linked)
+
+    if isinstance(symbol, (Variable, Equation)):
+        symbol._update_attr_domains()
+
+
 def load_missing_symbols(
     container: Container,
     load_from: str | Path,
@@ -182,7 +205,7 @@ def load_missing_symbols(
     *,
     declare_in_gams: bool = True,
 ) -> None:
-    from gamspy._symbols import Equation, Variable
+    from gamspy._symbols import Equation, Parameter, Set, Variable
 
     with open_gdx(
         container.system_directory, load_from, mode="r", load_uels=False
@@ -199,14 +222,15 @@ def load_missing_symbols(
     for md in metadata:
         if md.name not in container._data:
             create_symbol_from_metadata(container, md, declare_in_gams=declare_in_gams)
-            domain = md.domain
-            for n, elem in enumerate(domain):
-                if elem != "*" and elem in container._data:
-                    domain[n] = container._data[elem]
-
             symbol = container._data[md.name]
-            if isinstance(symbol, DomainSymbol):
-                symbol._domain = symbol._normalize_domain(container, domain)
+            if isinstance(symbol, (Set, Parameter, Variable, Equation)):
+                link_domain(
+                    container,
+                    symbol,
+                    md.domain,
+                    lambda name: name if name in container._data else None,
+                )
+                continue
 
         symbol = container._data[md.name]
         if isinstance(symbol, (Variable, Equation)):
@@ -348,15 +372,12 @@ def read(
         if not isinstance(symbol, (Set, Parameter, Variable, Equation)):
             continue
 
-        domain = md.domain
-        for n, dom_name in enumerate(domain):
-            if dom_name != "*" and dom_name in read_source_names:
-                domain[n] = container._data[to_gamspy_name(dom_name)]
-
-        symbol._domain = symbol._normalize_domain(container, domain)
-
-        if isinstance(symbol, (Variable, Equation)):
-            symbol._update_attr_domains()
+        link_domain(
+            container,
+            symbol,
+            md.domain,
+            lambda name: to_gamspy_name(name) if name in read_source_names else None,
+        )
 
     load_symbols = [md.name for _, md in symbols_with_records]
     symbol_str = " ".join(

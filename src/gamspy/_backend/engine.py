@@ -41,6 +41,9 @@ logger.addHandler(stream_handler)
 
 
 MAX_REQUEST_ATTEMPS = 3
+# (connect, read) timeouts in seconds for each request to GAMS Engine
+REQUEST_TIMEOUT = (30, 300)
+JOB_POLL_INTERVAL = 0.5
 ZIP_NAME = "data.zip"
 INEX_FILE_NAME = "inex.json"
 STATUS_MAP = {
@@ -184,6 +187,7 @@ class Auth(Endpoint):
                 f"{self.client._engine_config.host}/auth",
                 params=params,
                 headers=self.client.get_request_headers(),
+                timeout=REQUEST_TIMEOUT,
             )
 
             response_data = r.content.decode("utf-8", errors="replace")
@@ -240,6 +244,7 @@ class Auth(Endpoint):
             r = requests.post(
                 f"{self.client._engine_config.host}/auth/login",
                 data=payload,
+                timeout=REQUEST_TIMEOUT,
             )
 
             response_data = r.content.decode("utf-8", errors="replace")
@@ -274,6 +279,7 @@ class Auth(Endpoint):
             r = requests.post(
                 f"{self.client._engine_config.host}/auth/logout",
                 headers=self.client.get_request_headers(),
+                timeout=REQUEST_TIMEOUT,
             )
 
             if r.status_code == 200:
@@ -324,6 +330,7 @@ class Job(Endpoint):
             r = requests.get(
                 f"{self.client._engine_config.host}/jobs/{token}",
                 headers=self.client.get_request_headers(),
+                timeout=REQUEST_TIMEOUT,
             )
             response_data = r.content.decode("utf-8", errors="replace")
 
@@ -332,7 +339,7 @@ class Job(Endpoint):
                 job_status = int(info["status"])
                 return (
                     job_status,
-                    STATUS_MAP[job_status],
+                    STATUS_MAP.get(job_status, "unknown"),
                     info["process_status"],
                 )
             elif r.status_code == 403:
@@ -346,7 +353,7 @@ class Job(Endpoint):
                 raise EngineClientException("Internal error!")
 
         raise EngineClientException(
-            "Creating job on GAMS Engine failed after: "
+            "Getting job status from GAMS Engine failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
             + response_data
@@ -396,6 +403,7 @@ class Job(Endpoint):
                 params=query_params,
                 files=file_params,
                 headers=self.client.get_request_headers(),
+                timeout=REQUEST_TIMEOUT,
             )
             response_data = r.content.decode("utf-8", errors="replace")
             if r.status_code == 201:
@@ -451,6 +459,7 @@ class Job(Endpoint):
                 f"{self.client._engine_config.host}/jobs/{token}/result",
                 headers=self.client.get_request_headers(),
                 stream=True,
+                timeout=REQUEST_TIMEOUT,
             )
 
             if r.status_code == 200:
@@ -473,6 +482,7 @@ class Job(Endpoint):
                 logger.info(
                     f"Results have been extracted to your working directory: {working_directory}."
                 )
+                return
             elif r.status_code == 400:
                 raise EngineClientException("Bad request!")
             elif r.status_code == 401:
@@ -491,6 +501,12 @@ class Job(Endpoint):
                     f" Engine return code: {r.status_code}. Error message:"
                     f" {response_data}"
                 )
+
+        raise EngineClientException(
+            "Getting job results from GAMS Engine failed after: "
+            + str(MAX_REQUEST_ATTEMPS)
+            + " attempts."
+        )
 
     def delete_results(self, token: str):
         """
@@ -515,6 +531,7 @@ class Job(Endpoint):
             r = requests.delete(
                 f"{self.client._engine_config.host}/jobs/{token}/result",
                 headers=self.client.get_request_headers(),
+                timeout=REQUEST_TIMEOUT,
             )
             response_data = r.content.decode("utf-8", errors="replace")
 
@@ -566,6 +583,7 @@ class Job(Endpoint):
             r = requests.delete(
                 f"{self.client._engine_config.host}/jobs/{token}/unread-logs",
                 headers=self.client.get_request_headers(),
+                timeout=REQUEST_TIMEOUT,
             )
             response_data = r.content.decode("utf-8", errors="replace")
 
@@ -818,47 +836,21 @@ class GAMSEngine(backend.Backend):
             file.write(gams_string)
 
         try:
-            original_extra_files = copy.deepcopy(self.client.extra_model_files)
+            original_extra_files = self.client.extra_model_files
             self.client.extra_model_files = self._append_gamspy_files()
-            token = self.client.job.post(
-                self.container.working_directory,
-                self.gms_file,
-                self.pf_file,
-            )
-            self.client.extra_model_files = original_extra_files
+            try:
+                token = self.client.job.post(
+                    self.container.working_directory,
+                    self.gms_file,
+                    self.pf_file,
+                )
+            finally:
+                self.client.extra_model_files = original_extra_files
+
             self.client.tokens.append(token)
 
             if not self.is_async():
-                job_status, message, _ = self.client.job.get(token)
-
-                if job_status not in STATUS_MAP:
-                    raise EngineException(
-                        "Unknown job status code! Currently supported job"
-                        f" status codes: {STATUS_MAP.keys()}",
-                        return_code=job_status,
-                        status_code=job_status,
-                    )
-
-                if job_status in (-1, -3):
-                    raise EngineException(
-                        f"Could not get job results because the job is {message}.",
-                        return_code=job_status,
-                        status_code=job_status,
-                    )
-
-                while job_status in (-10, -2, 0):
-                    logger.info(f"Job status is {message}...")
-                    job_status, _, _ = self.client.job.get(token)
-
-                while job_status in (1, 2):
-                    message, is_finished = self.client.job.get_logs(token)
-
-                    if self.output is not None:
-                        self.output.write(message)
-
-                    if is_finished:
-                        job_status = 10
-
+                self._wait_for_job(token)
                 self.client.job.get_results(token, self.container.working_directory)
 
                 engine_output_path = os.path.join(
@@ -881,6 +873,44 @@ class GAMSEngine(backend.Backend):
         finally:
             self.container._unsaved_statements = []
             self.container._delete_autogenerated_symbols()
+
+    def _wait_for_job(self, token: str) -> None:
+        """Polls the job until it finishes and streams its log to the output."""
+        logs_finished = self.output is None
+        last_message = None
+
+        while True:
+            job_status, message, _ = self.client.job.get(token)
+
+            if job_status in (-1, -3):
+                raise EngineException(
+                    f"Could not get job results because the job is {message}.",
+                    return_code=job_status,
+                    status_code=job_status,
+                )
+
+            if job_status not in STATUS_MAP:
+                raise EngineException(
+                    "Unknown job status code! Currently supported job"
+                    f" status codes: {STATUS_MAP.keys()}",
+                    return_code=job_status,
+                    status_code=job_status,
+                )
+
+            # Logs of a finished job can still be fetched once.
+            if job_status in (1, 2, 10) and not logs_finished:
+                assert self.output is not None
+                logs, logs_finished = self.client.job.get_logs(token)
+                self.output.write(logs)
+
+            if job_status == 10 and logs_finished:
+                return
+
+            if job_status in (-10, -2, 0) and message != last_message:
+                logger.info(f"Job status is {message}...")
+                last_message = message
+
+            time.sleep(JOB_POLL_INTERVAL)
 
     def postprocess(self):
         if self.client.remove_results or self.model is None:
