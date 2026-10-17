@@ -15,10 +15,8 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
-    from types import FrameType
 
     from gamspy._container import Container
-    from gamspy._model import Problem
 
 SOLVE_LINK_MAP = {"disk": 2, "memory": 5}
 SOLVE_LINK_MAP_REVERSE = dict(
@@ -439,10 +437,7 @@ class Options(BaseModel):
     def model_post_init(self, context: Any) -> None:
         self._hidden_options: dict[str, Any] = {}
         self._extra_options: dict[str, Any] = {}
-        self._solver: str | None = None
-        self._problem: str | None = None
-        self._solver_options_file: str = "0"
-        self._frame: FrameType | None = None
+        self._solve_line: str | None = None
 
     @staticmethod
     def _cast_value(value: Any) -> Any:
@@ -624,18 +619,6 @@ class Options(BaseModel):
 
         return gams_options
 
-    def _set_model_info(
-        self, solver: str, problem: Problem, solver_options: dict | Path | None
-    ):
-        """Set the solver and the solver options"""
-        self._solver = solver
-        self._problem = str(problem)
-
-        if solver_options:
-            self._solver_options_file = "1"
-        else:
-            self._solver_options_file = "0"
-
     def _set_hidden_options(self, options: dict) -> None:
         """Set extra options of the backend"""
         self._hidden_options = options
@@ -669,7 +652,6 @@ class Options(BaseModel):
         >>> options.export("options.pf")
         >>> with open("options.pf") as file:
         ...     print(file.read())
-        optfile = "0"
         limcol = "0"
         limrow = "0"
         solprint = "0"
@@ -691,20 +673,13 @@ class Options(BaseModel):
         output : TextIO | None, optional
         """
         all_options = {}
-        # Solver options
-        if self._solver is not None:
-            all_options[self._problem] = self._solver
-
-        all_options["optfile"] = self._solver_options_file
 
         # Extra options
         all_options.update(self._hidden_options)
         all_options.update(self._extra_options)
 
-        if self._frame is not None:
-            filename = self._frame.f_code.co_filename
-            line_number = self._frame.f_lineno
-            all_options["GP_SolveLine"] = f"{filename} line {line_number}"
+        if self._solve_line is not None:
+            all_options["GP_SolveLine"] = self._solve_line
 
         # User options
         user_options = self._get_gams_compatible_options(output)
