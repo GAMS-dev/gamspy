@@ -5,6 +5,7 @@ import platform
 import signal
 import socket
 import subprocess
+import sys
 import threading
 import time
 import weakref
@@ -288,8 +289,8 @@ class SocketEngine(ExecutionEngine):
         if self._process is None:
             return
 
-        if platform.system() == "Windows":
-            os.kill(self._process.pid, signal.CTRL_C_EVENT)  # ty: ignore[unresolved-attribute]
+        if sys.platform == "win32":
+            os.kill(self._process.pid, signal.CTRL_C_EVENT)
         else:
             os.kill(self._process.pid, signal.SIGINT)
 
