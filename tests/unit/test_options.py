@@ -18,6 +18,7 @@ from gamspy import (
     Card,
     Container,
     Equation,
+    Loop,
     Model,
     Options,
     Ord,
@@ -106,7 +107,7 @@ def test_options(transport, tmp_path):
 
     assert (
         content
-        == 'optfile = "0"\nlimcol = "0"\nlimrow = "0"\nsolprint = "0"\nsolvelink = "2"\npreviouswork = "1"\nlogoption = "0"'
+        == 'limcol = "0"\nlimrow = "0"\nsolprint = "0"\nsolvelink = "2"\npreviouswork = "1"\nlogoption = "0"'
     )
 
 
@@ -310,6 +311,58 @@ def test_model_attr_options_reset_across_solves(transport):
     assert "mdl.iterlim = NA;" in statements
     assert "mdl.reslim = NA;" in statements
     assert "mdl.solveopt = NA;" in statements
+
+
+@pytest.mark.unit
+def test_solve_does_not_mutate_options(tmp_path):
+    m = Container()
+    x = Variable(m, "x")
+    e = Equation(m, "e")
+    e[...] = x >= 1
+    model = Model(m, "mdl", equations=[e], problem="LP", sense=Sense.MIN, objective=x)
+
+    user_options = Options(time_limit=10)
+    before = tmp_path / "before.pf"
+    user_options._export(str(before))
+
+    model.solve(solver="cplex", solver_options={"lpmethod": 2}, options=user_options)
+    after = tmp_path / "after.pf"
+    user_options._export(str(after))
+    assert before.read_text() == after.read_text()
+
+    model.solve(solver="cplex", solver_options={"lpmethod": 2})
+    container_pf = tmp_path / "container.pf"
+    m._options._export(str(container_pf))
+    content = container_pf.read_text()
+    assert "optfile" not in content
+    assert "LP =" not in content
+    assert "GP_SolveLine" not in content
+    m.close()
+
+
+@pytest.mark.unit
+def test_solver_per_solve_in_loop(tmp_path):
+    listing_file = str(tmp_path / "loop.lst")
+    m = Container(options=Options(listing_file=listing_file))
+    x = Variable(m, "x")
+    e = Equation(m, "e")
+    e[...] = x >= 1
+    model = Model(m, "mdl", equations=[e], problem="LP", sense=Sense.MIN, objective=x)
+
+    t = Set(m, "t", records=["t1"])
+    with Loop(t):
+        model.solve(solver="cplex", solver_options={"lpmethod": 2})
+        model.solve(solver="conopt")
+
+    with open(listing_file) as file:
+        content = file.read()
+
+    assert re.findall(r"^\s*SOLVER\s+(\S+)", content, re.MULTILINE) == [
+        "CPLEX",
+        "CONOPT4",
+    ]
+    assert re.findall(r"mdl\.optFile = (\d);", content) == ["1", "0"]
+    m.close()
 
 
 @pytest.mark.unit
@@ -1037,13 +1090,13 @@ def test_solver_options_twice(transport, tmp_path):
     with open(log_file_path) as file:
         content = file.read()
         assert "Solvelink=5" in content
-        assert "OptFile 1" in content
+        assert "Reading option file" in content
 
     transport.solve(options=Options(log_file=log_file_path))
     with open(log_file_path) as file:
         content = file.read()
         assert "Solvelink=2" in content
-        assert "OptFile 0" in content
+        assert "Reading option file" not in content
 
     transport2 = Model(
         m,

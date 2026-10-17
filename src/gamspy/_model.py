@@ -1858,13 +1858,19 @@ class Model:
         if options is None:
             options = self.container._options
 
+        options = options.model_copy()
+
         if isinstance(solver_options, (str, Path)):
             solver_options = Path(solver_options)
 
         # Only for local until GAMS Engine and NEOS Server backends adopt the new GP_SolveLine option.
         if backend == "local":
             frame = inspect.currentframe()
-            options._frame = frame.f_back if frame is not None else None
+            caller = frame.f_back if frame is not None else None
+            if caller is not None:
+                options._solve_line = (
+                    f"{caller.f_code.co_filename} line {caller.f_lineno}"
+                )
 
         indicators = self._get_indicators()
         self._indicator_file = None
@@ -1900,15 +1906,16 @@ class Model:
             return summary
 
         self._add_runtime_options(options, backend)
+        self.container._add_statement(f"option {self.problem} = {solver};")
+        self.container._add_statement(
+            f"{self.name}.optFile = {1 if solver_options else 0};"
+        )
         self.container._add_statement(
             self._generate_solve_string(scenario=scenario) + ";\n"
         )
         if self.container._in_loop:
             self._assign_model_attributes()
             self.container._models_solved_in_loop[self.name] = self
-        options._set_model_info(solver, self.problem, solver_options)
-
-        if self.container._in_loop:
             return None
 
         runner = backend_factory(
