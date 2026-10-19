@@ -180,42 +180,33 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             return None
 
         if isinstance(self.parent, (syms.Set, syms.Alias)):
-            temp_name = "autotemp" + utils._get_unique_name()
-            temp_param = syms.Parameter._constructor_bypass(
-                self.container, temp_name, [self.parent, UNIVERSE]
-            )
-            column_name = SET_ATTR_MAPPING[self.name.split(".")[1]]
-            temp_param[self.parent, column_name] = self
-            del self.container._data[temp_name]
+            with self.container._temp_symbol(
+                syms.Parameter, [self.parent, UNIVERSE]
+            ) as temp_param:
+                column_name = SET_ATTR_MAPPING[self.name.split(".")[1]]
+                temp_param[self.parent, column_name] = self
             return temp_param.records
         elif isinstance(self.parent, syms.Parameter):
-            temp_name = "autotemp" + utils._get_unique_name()
             given_domain, declaration_domain = self._get_temp_domain()
-            temp_param = syms.Parameter._constructor_bypass(
-                self.container, temp_name, declaration_domain
-            )
-
             if given_domain == []:
                 given_domain = [...]
 
-            temp_param[given_domain] = self[...]
-            del self.container._data[temp_name]
+            with self.container._temp_symbol(
+                syms.Parameter, declaration_domain
+            ) as temp_param:
+                temp_param[given_domain] = self[...]
 
-            recs = temp_param.records
-            return recs
+            return temp_param.records
         elif isinstance(self.parent, (syms.Variable, syms.Equation)):
             extension = self.name.split(".")[-1]
-            temp_name = "autotemp" + utils._get_unique_name()
             given_domain, declaration_domain = self._get_temp_domain()
-            temp_param = syms.Parameter._constructor_bypass(
-                self.container, temp_name, declaration_domain
-            )
-
             if given_domain == []:
                 given_domain = [...]
 
-            temp_param[given_domain] = self
-            del self.container._data[temp_name]
+            with self.container._temp_symbol(
+                syms.Parameter, declaration_domain
+            ) as temp_param:
+                temp_param[given_domain] = self
 
             recs = temp_param.records
             if recs is None:
@@ -266,16 +257,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         else:
             domain = list(self.domain)
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Parameter, domain) as temp_param:
             temp_param[domain if domain else [...]] = self
             return temp_param.toDense()
-        finally:
-            del self.container._data[temp_name]
 
     def toValue(self) -> float:
         """
@@ -310,16 +294,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         else:
             domain = list(self.domain)
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Parameter, domain) as temp_param:
             temp_param[domain if domain else [...]] = self
             return temp_param.toValue()
-        finally:
-            del self.container._data[temp_name]
 
     def toList(self) -> list:
         """
@@ -354,16 +331,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         else:
             domain = list(self.domain)
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Parameter, domain) as temp_param:
             temp_param[domain if domain else [...]] = self
             return temp_param.toList()
-        finally:
-            del self.container._data[temp_name]
 
     @property
     def T(self) -> ImplicitParameter:

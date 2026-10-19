@@ -2993,3 +2993,23 @@ def test_failed_lazy_load_is_retried(monkeypatch):
 
     assert p.toValue() == 2
     m.close()
+
+
+@pytest.mark.unit
+def test_failed_records_leave_no_temp_symbol():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    a = Parameter(m, "a", domain=i, records=[("i1", 1), ("i2", 0)])
+
+    for failing in (
+        1 / a[i],
+        Sum(i, 1 / a[i]),
+        (1 / a[i]).where[a[i] >= 0],
+    ):
+        with pytest.raises(GamspyException):
+            _ = failing.records
+
+    assert m.listParameters() == ["a"]
+    a[i] = 2
+    assert a.toList() == [("i1", 2.0), ("i2", 2.0)]
+    m.close()

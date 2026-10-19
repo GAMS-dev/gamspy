@@ -223,34 +223,26 @@ class Condition(operable.Operable):
             self.conditioning_on,
             (syms.Set, syms.Alias, implicits.ImplicitSet),
         ):
-            temp_name = "autotemp" + utils._get_unique_name()
-            temp_sym = syms.Set._constructor_bypass(
-                self.container,
-                temp_name,
+            with self.container._temp_symbol(
+                syms.Set,
                 self.domain,  # ty: ignore[invalid-argument-type]
-            )
-            temp_sym[...] = self
-            del self.container._data[temp_name]
+            ) as temp_set:
+                temp_set[...] = self
+            return temp_set.records
         elif isinstance(self.conditioning_on, domain.Domain):
-            temp_name = "autotemp" + utils._get_unique_name()
-            temp_sym = syms.Set._constructor_bypass(
-                self.container,
-                temp_name,
+            with self.container._temp_symbol(
+                syms.Set,
                 self.domain,  # ty: ignore[invalid-argument-type]
-            )
-            temp_sym[...].where[self.condition] = True  # ty: ignore[invalid-assignment]
-            del self.container._data[temp_name]
-        else:
-            temp_name = "autotemp" + utils._get_unique_name()
-            temp_sym = syms.Parameter._constructor_bypass(
-                self.container,
-                temp_name,
-                self.domain,  # ty: ignore[invalid-argument-type]
-            )
-            temp_sym[...] = self
-            del self.container._data[temp_name]
+            ) as temp_set:
+                temp_set[...].where[self.condition] = True  # ty: ignore[invalid-assignment]
+            return temp_set.records
 
-        return temp_sym.records
+        with self.container._temp_symbol(
+            syms.Parameter,
+            self.domain,  # ty: ignore[invalid-argument-type]
+        ) as temp_param:
+            temp_param[...] = self
+        return temp_param.records
 
     def gamsRepr(self) -> str:
         """

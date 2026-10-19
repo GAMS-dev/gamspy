@@ -260,8 +260,7 @@ class ParameterIngestor(BaseIngestor):
     ) -> None:
         records = self._remap_str_special_values(records)
 
-        if not isinstance(records.iloc[:, -1].dtype, float):
-            records.isetitem(-1, records.iloc[:, -1].astype(float))
+        records.isetitem(-1, records.iloc[:, -1].astype(float))
 
         labels = (
             col_labels
@@ -630,8 +629,7 @@ class VarEquIngestor(BaseIngestor):
                 f"Unrecognized attribute detected. Attributes must be {self.symbol._attributes}."
             )
 
-        for k, v in records.items():
-            records[k] = np.array(v, dtype=float)
+        records = {k: np.array(v, dtype=float) for k, v in records.items()}
 
         for k, arr in records.items():
             if self.symbol.dimension == 1 and arr.shape in (
@@ -811,8 +809,7 @@ class VarEquIngestor(BaseIngestor):
         for i in range(
             self.symbol.dimension, self.symbol.dimension + len(self.symbol._attributes)
         ):
-            if not isinstance(records.iloc[:, i].dtype, float):
-                records.isetitem(i, records.iloc[:, i].astype(float))
+            records.isetitem(i, records.iloc[:, i].astype(float))
 
         records.columns = (
             generate_unique_labels(

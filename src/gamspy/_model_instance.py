@@ -75,8 +75,8 @@ if TYPE_CHECKING:
 
     from gamspy import Container, Equation, Model, Parameter, Variable
     from gamspy._options import FreezeOptions, Options
+    from gamspy._symbols.base import DataSymbol
     from gamspy._symbols.implicits import ImplicitParameter
-    from gamspy._types import SymbolWithRecordsType
 
 logger = logging.getLogger("FROZEN MODEL")
 logger.setLevel(logging.INFO)
@@ -765,7 +765,7 @@ class ModelInstance:
             symbol._should_load_from = DataSource.NONE
             self._read_records(symbol)
 
-    def _read_records(self, symbol: SymbolWithRecordsType) -> None:
+    def _read_records(self, symbol: DataSymbol) -> None:
         if self._uels is None and symbol.dimension:
             self._uels = get_uel_list(self.container._gams2np, self.sync_db.gmd)
 

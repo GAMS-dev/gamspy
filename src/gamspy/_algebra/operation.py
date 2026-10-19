@@ -139,7 +139,6 @@ class Operation(operable.Operable):
                 "Could not discover the container from the operation. Therefore, cannot call .records on this operation."
             )
 
-        temp_name = "autotemp" + utils._get_unique_name()
         domain = []
         for elem in self.domain:
             if hasattr(elem, "dimension") and elem.dimension > 1:
@@ -147,11 +146,8 @@ class Operation(operable.Operable):
             else:
                 domain.append(elem)
 
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, domain
-        )
-        temp_param[...] = self
-        del self.container._data[temp_name]
+        with self.container._temp_symbol(syms.Parameter, domain) as temp_param:
+            temp_param[...] = self
         return temp_param.records
 
     def toValue(self) -> float:

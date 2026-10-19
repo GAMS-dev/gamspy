@@ -12,9 +12,10 @@ import traceback
 import warnings
 import weakref
 from collections.abc import Iterable
+from contextlib import contextmanager
 from difflib import get_close_matches
 from pathlib import Path
-from typing import TYPE_CHECKING, TextIO, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Protocol, TextIO, TypeVar, cast, overload
 
 import gams.transfer as gt
 import pandas as pd
@@ -46,8 +47,8 @@ from gamspy._workspace import Workspace
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
-    from typing import Any, Literal
+    from collections.abc import Callable, Generator, Sequence
+    from typing import Any, Literal, Self
 
     from pandas import DataFrame
 
@@ -80,6 +81,16 @@ MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
 is_windows = platform.system() == "Windows"
 
 _SymbolT = TypeVar("_SymbolT", bound="SymbolType")
+
+
+class _Bypassable(Protocol):
+    @classmethod
+    def _constructor_bypass(
+        cls, container: Container, name: str, *, domain: DomainType | None = None
+    ) -> Self: ...
+
+
+_TempT = TypeVar("_TempT", bound=_Bypassable)
 
 
 def add_sysdir_to_path(system_directory: str) -> None:
@@ -1385,6 +1396,17 @@ class Container:
             )
 
         return name
+
+    @contextmanager
+    def _temp_symbol(
+        self, cls: type[_TempT], domain: DomainType | None = None
+    ) -> Generator[_TempT]:
+        name = "autotemp" + utils._get_unique_name()
+        symbol = cls._constructor_bypass(self, name, domain=domain)
+        try:
+            yield symbol
+        finally:
+            del self._data[name]
 
     def _interrupt(self) -> None:
         self._execution_engine.interrupt()

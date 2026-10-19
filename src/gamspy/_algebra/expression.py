@@ -700,12 +700,8 @@ class Expression(operable.Operable):
                 "Could not discover the container from the expression. Therefore, cannot call .records on this expression."
             )
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = gp_syms.Parameter._constructor_bypass(
-            self.container, temp_name, self.domain
-        )
-        temp_param[...] = self
-        del self.container._data[temp_name]
+        with self.container._temp_symbol(gp_syms.Parameter, self.domain) as temp_param:
+            temp_param[...] = self
         return temp_param.records
 
     def toValue(self) -> float:
