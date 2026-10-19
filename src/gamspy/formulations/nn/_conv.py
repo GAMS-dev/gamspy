@@ -4,6 +4,7 @@ import functools
 import math
 import operator
 from abc import abstractmethod
+from typing import Generic, TypeVar
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
@@ -15,8 +16,11 @@ from gamspy.formulations.nn._weighted import _WeightedLayer
 from gamspy.formulations.result import FormulationResult
 from gamspy.math import dim
 
+_SizeT = TypeVar("_SizeT", bound=int | tuple[int, ...])
+_PaddingT = TypeVar("_PaddingT", bound=tuple[int, ...])
 
-class _ConvNd(_WeightedLayer):
+
+class _ConvNd(_WeightedLayer, Generic[_SizeT, _PaddingT]):
     """
     Convolution over `_n_spatial` spatial dimensions. Inputs are
     (batch x in_channels x *spatial) and weights are
@@ -27,9 +31,9 @@ class _ConvNd(_WeightedLayer):
     """
 
     _n_spatial: int
-    kernel_size: int | tuple[int, ...]
-    stride: int | tuple[int, ...]
-    padding: tuple[int, ...] | str
+    kernel_size: _SizeT
+    stride: _SizeT
+    padding: _PaddingT | str
 
     def __init__(
         self,

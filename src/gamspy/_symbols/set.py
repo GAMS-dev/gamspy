@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from gams.core.gdx import GMS_DT_SET
 
@@ -495,7 +495,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
 
     """
 
-    _default_domain: ClassVar[Literal["*"]] = "*"
+    _default_domain = "*"
 
     @classmethod
     def _constructor_bypass(

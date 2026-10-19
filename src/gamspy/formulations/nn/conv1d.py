@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from gamspy.formulations.result import FormulationResult
 
 
-class Conv1d(_ConvNd):
+class Conv1d(_ConvNd[int, tuple[int, int]]):
     """
     Formulation generator for 1D Convolution symbol in GAMS. It can
     be used to embed convolutional layers of trained neural networks
@@ -69,9 +69,6 @@ class Conv1d(_ConvNd):
     """
 
     _n_spatial = 1
-    kernel_size: int
-    stride: int
-    padding: tuple[int, int] | str
 
     def __init__(
         self,
