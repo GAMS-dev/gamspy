@@ -121,12 +121,8 @@ class MathOp(operable.Operable):
         if container is None:
             container = Container()
 
-        temp_name = "a" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            container, temp_name, self.domain
-        )
-        temp_param[...] = self
-        del container._data[temp_name]
+        with container._temp_symbol(syms.Parameter, self.domain) as temp_param:
+            temp_param[...] = self
         return temp_param.records
 
     def toValue(self) -> float:

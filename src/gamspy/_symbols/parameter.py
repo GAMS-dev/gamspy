@@ -11,9 +11,9 @@ import gamspy._algebra.operation as operation
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
-from gamspy._internals import DataSource
+from gamspy._internals import PARAMETER_ATTRIBUTES, DataSource
 from gamspy._records_ingestion import ParameterIngestor
-from gamspy._symbols.base import RecordSymbol
+from gamspy._symbols.base import NumericSymbol
 from gamspy._symbols.equals import equals_parameter
 from gamspy._symbols.generate_records import generate_records_parameter
 from gamspy._symbols.pivot import pivot_parameter
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     import pandas as pd
     from scipy.sparse import coo_matrix
 
-    from gamspy import Alias, Card, Container, Ord, Set
+    from gamspy import Card, Container, Ord
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.number import Number
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from gamspy.math.misc import MathOp
 
 
-class Parameter(operable.Operable, RecordSymbol):
+class Parameter(operable.Operable, NumericSymbol):
     """
     Represents a Parameter symbol in GAMS.
 
@@ -263,8 +263,8 @@ class Parameter(operable.Operable, RecordSymbol):
         return _transpose(self, "Parameter")  # ty: ignore[invalid-return-type]
 
     @property
-    def _attributes(self):
-        return ["value"]
+    def _attributes(self) -> list[str]:
+        return list(PARAMETER_ATTRIBUTES)
 
     @property
     def summary(self) -> dict:
@@ -330,7 +330,7 @@ class Parameter(operable.Operable, RecordSymbol):
 
         return toListParameter(self)
 
-    def toDict(self, orient: str | None = None) -> dict | None:
+    def toDict(self, orient: str | None = None) -> dict:
         """
         Converts the records of a non-scalar Parameter to a Python dictionary.
 
@@ -344,8 +344,8 @@ class Parameter(operable.Operable, RecordSymbol):
 
         Returns
         -------
-        dict | None
-            A dictionary containing the parameter's data, or None if there are no records.
+        dict
+            A dictionary containing the parameter's data. Returns an empty dict if there are no records.
 
         Raises
         ------
@@ -420,56 +420,10 @@ class Parameter(operable.Operable, RecordSymbol):
         [3. 4. 5.]
 
         """
-        if self.records is None:
-            return np.zeros(self.shape, dtype=float)
-
-        if self.is_scalar:
+        if self.is_scalar and self.records is not None:
             return self.records.to_numpy(dtype=float).reshape(self.shape)
 
-        if self.domain_type == "regular":
-            for symobj in cast("list[Set | Alias]", self.domain):
-                if symobj.records is None:
-                    raise ValidationError(
-                        f"The domain element `{symobj.name}` of `{self.name}` has no records. The domain symbols need to have records to get the dense representation."
-                    )
-
-                data_cats = symobj.records.iloc[:, 0].unique().tolist()
-                cats = symobj.records.iloc[:, 0].cat.categories.tolist()
-
-                if data_cats != cats[: len(data_cats)]:
-                    raise ValidationError(
-                        f"`toDense` requires that UEL data order of domain set `{symobj.name}` must be "
-                        "equal be equal to UEL category order (i.e., the order that set elements "
-                        "appear in rows of the dataframe and the order set elements are specified by the categorical). "
-                    )
-        else:
-            for n in range(self.dimension):
-                if any(code == -1 for code in self.records.iloc[:, n].cat.codes):
-                    raise ValidationError(
-                        f"Invalid category detected in dimension `{n}` (code == -1), "
-                        "cannot create array until all categories are properly resolved"
-                    )
-
-                data_cats = self.records.iloc[:, n].unique().tolist()
-                cats = self.records.iloc[:, n].cat.categories.tolist()
-
-                if data_cats != cats[: len(data_cats)]:
-                    raise ValidationError(
-                        "`toDense` requires (for 'relaxed' symbols) that UEL data order must be "
-                        "equal be equal to UEL category order (i.e., the order that set elements "
-                        "appear in rows of the dataframe and the order set elements are specified by the categorical). "
-                    )
-
-        idx = [
-            self._getDimensionCodes(self.records, dimension)
-            for dimension in range(self.dimension)
-        ]
-
-        a = np.zeros(self.shape)
-        val = self.records.iloc[:, -1].to_numpy(dtype=float)
-        a[tuple(idx)] = val
-
-        return a
+        return self._toDense("value", 0.0)
 
     def pivot(
         self,

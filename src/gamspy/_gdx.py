@@ -18,6 +18,7 @@ from gamspy._internals import (
     ATTR_PREFIX,
     GAMS_EQUATION_SUBTYPES,
     GAMS_VARIABLE_SUBTYPES,
+    SYMBOL_ATTRIBUTES,
     DataSource,
     DomainStatus,
 )
@@ -274,14 +275,7 @@ def get_records(
 
             # Retrieve attributes/domain_names to correctly format DataFrame columns
             if symobj is None:
-                if md.type == gdx.GMS_DT_PAR:
-                    attributes = ["value"]
-                elif md.type in (gdx.GMS_DT_VAR, gdx.GMS_DT_EQU):
-                    attributes = ["level", "marginal", "lower", "upper", "scale"]
-                elif md.type == gdx.GMS_DT_SET:
-                    attributes = ["element_text"]
-                else:
-                    attributes = []
+                attributes = list(SYMBOL_ATTRIBUTES.get(md.type, ()))
                 domain_names = md.domain
             else:
                 attributes = symobj._attributes

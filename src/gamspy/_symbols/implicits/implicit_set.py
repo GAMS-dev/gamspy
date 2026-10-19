@@ -72,17 +72,13 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         if self.parent.records is None:
             return None
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Set._constructor_bypass(
-            self.container, temp_name, self.parent.domain
-        )
         domain = list(self.domain)
         for i, d in self._scalar_domains:
             domain.insert(i, d)
 
-        temp_param[domain] = self
-        del self.container._data[temp_name]
-        return temp_param.records
+        with self.container._temp_symbol(syms.Set, self.parent.domain) as temp_set:
+            temp_set[domain] = self
+        return temp_set.records
 
     def toDense(self) -> np.ndarray:
         """
@@ -114,16 +110,9 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
 
         """
         domain = list(self.domain)
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Parameter, domain) as temp_param:
             temp_param[domain if domain else [...]] = self
             return temp_param.toDense()
-        finally:
-            del self.container._data[temp_name]
 
     def toValue(self) -> float:
         """
@@ -155,16 +144,9 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
 
         """
         domain = list(self.domain)
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Parameter, domain) as temp_param:
             temp_param[domain if domain else [...]] = self
             return temp_param.toValue()
-        finally:
-            del self.container._data[temp_name]
 
     def toList(self, *, include_element_text: bool = False) -> list:
         """
@@ -199,19 +181,13 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         if self.parent.records is None:
             return []
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_set = syms.Set._constructor_bypass(
-            self.container, temp_name, self.parent.domain
-        )
         domain = list(self.domain)
         for i, d in self._scalar_domains:
             domain.insert(i, d)
 
-        try:
+        with self.container._temp_symbol(syms.Set, self.parent.domain) as temp_set:
             temp_set[domain] = self
             return temp_set.toList(include_element_text=include_element_text)
-        finally:
-            del self.container._data[temp_name]
 
     def _math_repr(self, notation: Notation) -> str:
         if is_universe_domain(self.domain):

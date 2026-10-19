@@ -880,6 +880,11 @@ def test_variable_equation_todict():
     assert eq_dict[("A", "X")] == 10.0
     assert eq_dict[("B", "Y")] == 20.0
 
+    # No records
+    v_empty = gp.Variable(m, "v_empty", domain=[i])
+    assert v_empty.toDict() == {}
+    assert v_empty.toDict(orient="columns") == {}
+
     # Invalid: Scalar
     v_scalar = gp.Variable(m, "v_scalar")
     with pytest.raises(TypeError):
@@ -910,6 +915,20 @@ def test_variable_setrecords_array():
     # 1D array updates level
     v.setRecords(np.array([10.0, 20.0]))
     assert v.toList() == [("A", 10.0), ("B", 20.0)]
+
+
+def test_variable_setrecords_keeps_given_dict():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+    v = gp.Variable(m, "v", domain=[i])
+    level = np.array([[1, 2]])
+    upper = np.array([3, 4])
+    records = {"level": level, "upper": upper}
+
+    v.setRecords(records)
+    assert records["level"] is level and records["upper"] is upper
+    assert level.dtype == np.int64 and level.shape == (1, 2)
+    assert v.toList(["level", "upper"]) == [("A", 1.0, 3.0), ("B", 2.0, 4.0)]
 
 
 def test_variable_setrecords_dataframe():

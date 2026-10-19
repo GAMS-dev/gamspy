@@ -1,0 +1,1 @@
+Stop leaving temporary ``autotemp`` symbols in the container when evaluating the records of an expression, operation, condition or implicit symbol fails.

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy._internals import VAR_EQU_ATTRIBUTE_SUFFIXES
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
@@ -144,16 +145,14 @@ class ImplicitEquation(ImplicitSymbol):
         if self.parent.records is None:
             return None
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, self.parent.domain
-        )
         domain = list(self.domain)
         for i, d in self._scalar_domains:
             domain.insert(i, d)
 
-        temp_param[domain] = self.l
-        del self.container._data[temp_name]
+        with self.container._temp_symbol(
+            syms.Parameter, self.parent.domain
+        ) as temp_param:
+            temp_param[domain] = self.l
 
         recs = temp_param.records
         if recs is not None:
@@ -198,23 +197,8 @@ class ImplicitEquation(ImplicitSymbol):
         [2. 5.]
 
         """
-        if not isinstance(column, str):
-            raise TypeError("Argument 'column' must be type str")
-
-        columns = {
-            "level": "l",
-            "marginal": "m",
-            "lower": "lo",
-            "upper": "up",
-            "scale": "scale",
-        }
-
-        if column not in columns:
-            raise TypeError(
-                f"Argument 'column' must be one of the following: {list(columns)}"
-            )
-
-        return getattr(self, columns[column]).toDense()
+        column = self.parent._validate_column(column)
+        return getattr(self, VAR_EQU_ATTRIBUTE_SUFFIXES[column]).toDense()
 
     def toValue(self, column: str = "level") -> float:
         """
@@ -253,23 +237,8 @@ class ImplicitEquation(ImplicitSymbol):
         np.float64(2.0)
 
         """
-        if not isinstance(column, str):
-            raise TypeError("Argument 'column' must be type str")
-
-        columns = {
-            "level": "l",
-            "marginal": "m",
-            "lower": "lo",
-            "upper": "up",
-            "scale": "scale",
-        }
-
-        if column not in columns:
-            raise TypeError(
-                f"Argument 'column' must be one of the following: {list(columns)}"
-            )
-
-        return getattr(self, columns[column]).toValue()
+        column = self.parent._validate_column(column)
+        return getattr(self, VAR_EQU_ATTRIBUTE_SUFFIXES[column]).toValue()
 
     def toList(self, columns: str | list[str] | None = None) -> list:
         """
@@ -310,12 +279,7 @@ class ImplicitEquation(ImplicitSymbol):
             return []
 
         domain = list(self.domain)
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_eqn = syms.Equation._constructor_bypass(
-            self.container, temp_name, domain=domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Equation, domain) as temp_eqn:
             index = domain if domain else [...]
             temp_eqn.l[index] = self.l
             temp_eqn.m[index] = self.m
@@ -323,8 +287,6 @@ class ImplicitEquation(ImplicitSymbol):
             temp_eqn.up[index] = self.up
             temp_eqn.scale[index] = self.scale
             return temp_eqn.toList(columns)
-        finally:
-            del self.container._data[temp_name]
 
     def gamsRepr(self) -> str:
         representation = f"{self.name}"

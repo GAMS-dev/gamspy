@@ -9,8 +9,9 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
+from gamspy._internals import SET_ATTRIBUTES
 from gamspy._records_ingestion import SetIngestor
-from gamspy._symbols.base import DomainSymbol
+from gamspy._symbols.base import DataSymbol
 from gamspy._symbols.equals import equals_set
 from gamspy._symbols.generate_records import generate_records_set
 from gamspy._symbols.pivot import pivot_set
@@ -437,7 +438,7 @@ class SetMixin:
         return NotImplemented
 
 
-class Set(operable.Operable, DomainSymbol, SetMixin):
+class Set(operable.Operable, DataSymbol, SetMixin):
     """
     Represents a Set symbol in GAMS.
 
@@ -649,8 +650,8 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
                 )
 
     @property
-    def _attributes(self):
-        return ["element_text"]
+    def _attributes(self) -> list[str]:
+        return list(SET_ATTRIBUTES)
 
     @property
     def summary(self) -> dict:

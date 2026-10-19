@@ -8,6 +8,7 @@ import pandas as pd
 from gams.core import gmd
 
 from gamspy._algorithms import convert_to_categoricals_cat, generate_unique_labels
+from gamspy._internals import SYMBOL_ATTRIBUTES
 from gamspy._special_values import SpecialValues
 from gamspy.exceptions import GmdException
 
@@ -86,14 +87,7 @@ def get_records(
         if md.type == gmd.GMS_DT_ALIAS:
             continue
 
-        if md.type in (gmd.GMS_DT_VAR, gmd.GMS_DT_EQU):
-            attributes = ["level", "marginal", "lower", "upper", "scale"]
-        elif md.type == gmd.GMS_DT_PAR:
-            attributes = ["value"]
-        elif md.type == gmd.GMS_DT_SET:
-            attributes = ["element_text"]
-        else:
-            attributes = []
+        attributes = list(SYMBOL_ATTRIBUTES.get(md.type, ()))
 
         if md.number_records == 0:
             records_dict[md.name] = pd.DataFrame(
