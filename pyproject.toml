@@ -56,7 +56,7 @@ graph = ["graphviz>=0.20"]
 
 [tool.uv]
 exclude-newer = "3 days"
-exclude-newer-package = {gamspy_base = false, gamsapi = false, gamspy-highs = false, gamspy-ipopt = false, gamspy-ipopth = false, gamspy-knitro = false, gamspy-miles = false, gamspy-minos = false, gamspy-mosek = false, gamspy-mpsge = false, gamspy-pathnlp = false, gamspy-reshop = false, gamspy-scip = false, gamspy-shot = false, gamspy-snopt = false, gamspy-soplex = false, gamspy-xpress = false, gamspy-baron = false, gamspy-cbc = false, gamspy-conopt3 = false, gamspy-copt = false, gamspy-de = false, gamspy-dicopt = false, gamspy-examiner = false, gamspy-examiner2 = false, gamspy-gurobi = false, gamspy-arm-perf = false, gamspy-mkl = false}
+exclude-newer-package = {certifi = false, gamspy_base = false, gamsapi = false, gamspy-highs = false, gamspy-ipopt = false, gamspy-ipopth = false, gamspy-knitro = false, gamspy-miles = false, gamspy-minos = false, gamspy-mosek = false, gamspy-mpsge = false, gamspy-pathnlp = false, gamspy-reshop = false, gamspy-scip = false, gamspy-shot = false, gamspy-snopt = false, gamspy-soplex = false, gamspy-xpress = false, gamspy-baron = false, gamspy-cbc = false, gamspy-conopt3 = false, gamspy-copt = false, gamspy-de = false, gamspy-dicopt = false, gamspy-examiner = false, gamspy-examiner2 = false, gamspy-gurobi = false, gamspy-arm-perf = false, gamspy-mkl = false}
 
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu" }]

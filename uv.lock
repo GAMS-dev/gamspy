@@ -20,6 +20,41 @@ resolution-markers = [
     "python_full_version < '3.11.5' and sys_platform == 'darwin'",
 ]
 
+[options]
+exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
+exclude-newer-span = "P3D"
+
+[options.exclude-newer-package]
+certifi = false
+gamsapi = false
+gamspy-arm-perf = false
+gamspy-baron = false
+gamspy-base = false
+gamspy-cbc = false
+gamspy-conopt3 = false
+gamspy-copt = false
+gamspy-de = false
+gamspy-dicopt = false
+gamspy-examiner = false
+gamspy-examiner2 = false
+gamspy-gurobi = false
+gamspy-highs = false
+gamspy-ipopt = false
+gamspy-ipopth = false
+gamspy-knitro = false
+gamspy-miles = false
+gamspy-minos = false
+gamspy-mkl = false
+gamspy-mosek = false
+gamspy-mpsge = false
+gamspy-pathnlp = false
+gamspy-reshop = false
+gamspy-scip = false
+gamspy-shot = false
+gamspy-snopt = false
+gamspy-soplex = false
+gamspy-xpress = false
+
 [[package]]
 name = "accessible-pygments"
 version = "0.0.5"
