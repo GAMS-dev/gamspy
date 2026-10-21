@@ -581,6 +581,7 @@ def test_toGams_with_alias_as_domain(tmp_path):
         assert "Set i(*);" in content
 
 
+@pytest.mark.requires_solvers("cplex", "highs")
 def test_native_indicator(tmp_path):
     import gamspy as gp
 

@@ -338,6 +338,7 @@ def test_indicator_set_condition(kwargs):
     assert np.allclose(x.toDense(), [2, 10, 2])
 
 
+@pytest.mark.requires_solvers("cplex", "highs")
 def test_indicator_native(tmp_path):
     m = gp.Container()
     i = gp.Set(m, name="i", records=["a", "b", "c"])
