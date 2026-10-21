@@ -3,7 +3,7 @@ variables:
   UV_INSTALL_DIR: "$CI_PROJECT_DIR/.uv_bin"
   UV_LINK_MODE: "copy"
   # Pinned so that the toolchain cache below is deterministic. Bumped by the scheduled autoupgrade job.
-  UV_VERSION: "0.13.1"
+  UV_VERSION: "0.13.4"
 
 # PY_VERSIONS_KEY is part of the toolchain cache key, so it must change whenever PY_VERSIONS changes.
 .python_versions:
