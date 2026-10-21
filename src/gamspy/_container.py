@@ -47,7 +47,8 @@ from gamspy._workspace import Workspace
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Sequence
+    from collections.abc import Callable, Generator, Iterator, Sequence
+    from types import TracebackType
     from typing import Any, Literal, Self
 
     from pandas import DataFrame
@@ -65,6 +66,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._options import Options
+    from gamspy._symbols.base import DataSymbol
     from gamspy._symbols.implicits import ImplicitVariable
     from gamspy._types import (
         DomainType,
@@ -91,6 +93,10 @@ class _Bypassable(Protocol):
 
 
 _TempT = TypeVar("_TempT", bound=_Bypassable)
+
+
+class _Declarable(Protocol):
+    def getDeclaration(self) -> str: ...
 
 
 def add_sysdir_to_path(system_directory: str) -> None:
@@ -225,7 +231,7 @@ class Container:
         debugging_level: Literal["keep", "keep_on_error", "delete"] = "keep_on_error",
         options: Options | None = None,
         output: TextIO | None = None,
-    ):
+    ) -> None:
         import gams.core.numpy as gnp
 
         self.output = output
@@ -331,7 +337,12 @@ class Container:
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         key = (os.getpid(), threading.get_native_id())
         outer_contexts = self._outer_contexts.get(key)
         outer = outer_contexts.pop() if outer_contexts else None
@@ -355,19 +366,19 @@ class Container:
                 error_message += f" Did you mean `{matches[0]}`?"
             raise KeyError(error_message) from e
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[tuple[str, SymbolType]]:
         return iter(self._data.items())
 
     def __repr__(self) -> str:
         return f"Container(system_directory='{self.system_directory}', working_directory='{self.working_directory}', debugging_level='{self._debugging_level}')"
 
-    def __str__(self):
+    def __str__(self) -> str:
         if len(self):
             return f"<Container ({hex(id(self))}) with {len(self)} symbols: {self._data.keys()}>"
 
         return f"<Empty Container ({hex(id(self))})>"
 
-    def __contains__(self, sym) -> bool:
+    def __contains__(self, sym: str) -> bool:
         return sym in self._data
 
     def __len__(self) -> int:
@@ -522,7 +533,7 @@ class Container:
 
         return union_categories(cats_input, ignore_unused=ignore_unused).tolist()
 
-    def _assert_valid_records(self, symbols=None):
+    def _assert_valid_records(self, symbols: str | list[str] | None = None) -> None:
         symbols = self._resolve_symbols(symbols)
         for symobj in self.getSymbols(symbols):
             if not isinstance(symobj, gp.UniverseAlias):
@@ -1411,7 +1422,7 @@ class Container:
     def _interrupt(self) -> None:
         self._execution_engine.interrupt()
 
-    def _write_miro_files(self):
+    def _write_miro_files(self) -> None:
         # create conf_<model>/<model>_io.json
         try:
             encoder = MiroJSONEncoder(self)
@@ -1421,7 +1432,7 @@ class Container:
             traceback.print_exc(file=sys.stderr)
             os._exit(1)
 
-    def _add_statement(self, statement) -> None:
+    def _add_statement(self, statement: str | _Declarable) -> None:
         self._unsaved_statements.append(statement)
         self._open_if_chain = False
         if self._literal_bound_sets:
@@ -1558,11 +1569,11 @@ class Container:
         strings.extend(pre_load_statements)
 
         if symbol_names:
-            loadables = []
+            loadables: list[DataSymbol] = []
             for name in symbol_names:
                 symbol = self._data[name]
                 if type(symbol) in LOADABLE and not name.startswith(ATTR_PREFIX):
-                    loadables.append(symbol)
+                    loadables.append(cast("DataSymbol", symbol))
 
             if loadables:
                 strings.append(f"$gdxIn {gdx_in}")
@@ -1654,7 +1665,7 @@ class Container:
         load_from: gt.Container | Container,
         symbol_names: list[str] | None,
         mapping: dict[str, str] | None = None,
-    ):
+    ) -> None:
         read_symbol_names = (
             symbol_names if symbol_names is not None else list(load_from.data.keys())
         )
@@ -1943,7 +1954,7 @@ class Container:
         *,
         compress: bool = False,
         eps_to_zero: bool = True,
-    ):
+    ) -> None:
         symbols = (
             self._resolve_symbols(symbol_names) if symbol_names is not None else None
         )

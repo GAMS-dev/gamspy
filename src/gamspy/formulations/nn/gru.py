@@ -35,7 +35,7 @@ class GRU:
         container: gp.Container,
         input_size: int,
         hidden_size: int,
-    ):
+    ) -> None:
         if not isinstance(input_size, int) or input_size <= 0:
             raise ValidationError("input_size must be a positive integer")
 

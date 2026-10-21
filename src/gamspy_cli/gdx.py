@@ -9,7 +9,7 @@ import os
 import platform
 import re
 import subprocess
-from typing import Annotated
+from typing import Annotated, Never
 
 import typer
 
@@ -46,27 +46,27 @@ def _get_gdx_symbol_names(filename: str) -> set[str]:
     return symbol_names
 
 
-def complete_delim(ctx: typer.Context, incomplete: str):
+def complete_delim(ctx: typer.Context, incomplete: str) -> list[str]:
     return [d for d in VALID_DELIMS if d.startswith(incomplete)]
 
 
-def complete_decimalsep(ctx: typer.Context, incomplete: str):
+def complete_decimalsep(ctx: typer.Context, incomplete: str) -> list[str]:
     return [s for s in VALID_DECIMAL_SEP if s.startswith(incomplete)]
 
 
-def complete_format(ctx: typer.Context, incomplete: str):
+def complete_format(ctx: typer.Context, incomplete: str) -> list[str]:
     return [f for f in VALID_FORMATS if f.startswith(incomplete)]
 
 
-def complete_dformat(ctx: typer.Context, incomplete: str):
+def complete_dformat(ctx: typer.Context, incomplete: str) -> list[str]:
     return [f for f in VALID_DFORMATS if f.startswith(incomplete)]
 
 
-def complete_yes_no(ctx: typer.Context, incomplete: str):
+def complete_yes_no(ctx: typer.Context, incomplete: str) -> list[str]:
     return [v for v in VALID_YN if v.startswith(incomplete)]
 
 
-def complete_field(ctx: typer.Context, incomplete: str):
+def complete_field(ctx: typer.Context, incomplete: str) -> list[str]:
     return [f for f in VALID_FIELDS if f.startswith(incomplete)]
 
 
@@ -161,7 +161,7 @@ def dump(
     header: str | None = typer.Option(
         None, "--header", help="New header for CSV output"
     ),
-):
+) -> Never:
     import gamspy_base
 
     GDXDUMP_PATH = os.path.join(gamspy_base.directory, "gdxdump")
@@ -329,7 +329,7 @@ def diff(
             "--skip-regex", help="Regular expression pattern to skip identifiers"
         ),
     ] = None,
-):
+) -> Never:
     import gamspy_base
 
     GDXDIFF_PATH = os.path.join(gamspy_base.directory, "gdxdiff")

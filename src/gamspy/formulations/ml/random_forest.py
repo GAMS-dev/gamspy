@@ -13,6 +13,8 @@ from gamspy.formulations.ml.decision_tree_struct import DecisionTreeStruct
 from gamspy.formulations.ml.regression_tree import RegressionTree
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from sklearn.ensemble import RandomForestRegressor
     from sklearn.tree import DecisionTreeRegressor
 
@@ -82,13 +84,13 @@ class RandomForest:
         container: gp.Container,
         ensemble: RandomForestRegressor | list[DecisionTreeStruct],
         name_prefix: str | None = None,
-    ):
+    ) -> None:
         if not isinstance(container, gp.Container):
             raise ValidationError(f"{container} is not a gp.Container.")
 
         def _validate_ensemble(
-            ensemble,
-        ) -> list[DecisionTreeRegressor | DecisionTreeStruct]:
+            ensemble: RandomForestRegressor | list[DecisionTreeStruct],
+        ) -> Iterable[DecisionTreeRegressor | DecisionTreeStruct]:
             if isinstance(ensemble, list) and all(
                 isinstance(item, DecisionTreeStruct) for item in ensemble
             ):

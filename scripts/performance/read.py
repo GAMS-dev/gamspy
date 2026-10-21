@@ -14,7 +14,7 @@ def get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def write_gdx(N: int, m: gt.Container):
+def write_gdx(N: int, m: gt.Container) -> None:
     for idx in range(N):
         m.addSet(f"set{idx}", records=[f"i{i}" for i in range(N)])
 
@@ -29,27 +29,27 @@ def write_gdx(N: int, m: gt.Container):
     m.write("in.gdx")
 
 
-def run_gtp():  # read from a gdx file
+def run_gtp() -> None:  # read from a gdx file
     _ = gt.Container(system_directory=gamspy_base.directory, load_from="in.gdx")
 
 
-def run_gp():  # read from a gdx file
+def run_gp() -> None:  # read from a gdx file
     _ = gp.Container(load_from="in.gdx")
 
 
-def run_gtp2(m: gt.Container):  # read from a Container
+def run_gtp2(m: gt.Container) -> None:  # read from a Container
     _ = gt.Container(system_directory=gamspy_base.directory, load_from=m)
 
 
-def run_gp2(m: gt.Container):  # read from a gt.Container
+def run_gp2(m: gt.Container) -> None:  # read from a gt.Container
     _ = gp.Container(load_from=m)
 
 
-def run_gp2gp(m: gp.Container):  # read from a gp.Container
+def run_gp2gp(m: gp.Container) -> None:  # read from a gp.Container
     _ = gp.Container(load_from=m)
 
 
-def main():
+def main() -> None:
     args = get_args()
     N = args.num_iters
     R = 10

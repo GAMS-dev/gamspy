@@ -27,14 +27,14 @@ from gamspy._symbols.base import BaseSymbol
 from gamspy.exceptions import GdxException, ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Callable, Generator, Iterable
     from pathlib import Path
 
     from gams.core.numpy import Gams2Numpy
     from pandas import DataFrame
 
     from gamspy._container import Container
-    from gamspy._symbols import Equation, Parameter, Set, Variable
+    from gamspy._symbols import Alias, Equation, Parameter, Set, Variable
     from gamspy._types import SymbolWithRecordsType
 
 cached_system_directory: str | None = None
@@ -66,7 +66,7 @@ def open_gdx(
     *,
     compress: bool = False,
     load_uels: bool = True,
-):
+) -> Generator[object, None, None]:
     """Context manager to safely create, open, and close a GDX handle for reading or writing."""
     global cached_system_directory
     if cached_system_directory != system_directory:
@@ -147,7 +147,7 @@ def _get_symbol_names_from_gdx(
     return symbol_names
 
 
-def _set_special_values(gdx_handle, *, eps_to_zero: bool = False) -> None:
+def _set_special_values(gdx_handle: object, *, eps_to_zero: bool = False) -> None:
     """Sets GAMS special values (e.g., NA, EPS, INF) for the GDX handle."""
     specVals = gdx.doubleArray(gdx.GMS_SVIDX_MAX)
     specVals[gdx.GMS_SVIDX_UNDEF] = SpecialValues.UNDEF
@@ -161,7 +161,10 @@ def _set_special_values(gdx_handle, *, eps_to_zero: bool = False) -> None:
 
 
 def _fetch_metadata(
-    gams2np: Gams2Numpy, gdx_handle, symbols: Iterable[str] | None, encoding: str | None
+    gams2np: Gams2Numpy,
+    gdx_handle: object,
+    symbols: Iterable[str] | None,
+    encoding: str | None,
 ) -> list[GDXSymbolMetadata]:
     """Fetches and sorts symbol metadata from the GDX file."""
     if symbols is not None:
@@ -188,10 +191,12 @@ def link_domain(
     """
     from gamspy._symbols import Equation, Variable
 
-    linked = []
+    linked: list[Set | Alias | str] = []
     for name in domain:
         target = resolve(name) if name != "*" else None
-        linked.append(container._data[target] if target is not None else name)
+        linked.append(
+            cast("Set | Alias", container._data[target]) if target is not None else name
+        )
 
     symbol._domain = symbol._normalize_domain(container, linked)
 
@@ -455,7 +460,10 @@ def create_symbol_from_metadata(
 
 
 def gdx_get_metadata_by_number(
-    gams2np: Gams2Numpy, gdx_handle, symbol_number: int, encoding: str | None = None
+    gams2np: Gams2Numpy,
+    gdx_handle: object,
+    symbol_number: int,
+    encoding: str | None = None,
 ) -> GDXSymbolMetadata:
     """Retrieve metadata for a GDX symbol by its symbol number."""
     _, syid, dimen, typ = gdx.gdxSymbolInfo(gdx_handle, symbol_number)
@@ -492,7 +500,7 @@ def gdx_get_metadata_by_number(
 
 def gdx_get_metadata_by_names(
     gams2np: Gams2Numpy,
-    gdx_handle,
+    gdx_handle: object,
     symbol_names: Iterable[str],
     encoding: str | None = None,
 ) -> Iterable[GDXSymbolMetadata]:
@@ -558,7 +566,7 @@ def _validate_symbols(
 
 
 @contextlib.contextmanager
-def _temporarily_relax_domains(symobjs: list):
+def _temporarily_relax_domains(symobjs: list) -> Generator[None, None, None]:
     """Temporarily relaxes symbol domains if dependent domains aren't being written."""
     was_relaxed = {}
     try:
@@ -581,8 +589,8 @@ def _temporarily_relax_domains(symobjs: list):
 
 
 def _write_symbols_to_gdx(
-    gdx_handle, container: Container, symnames: list[str], symobjs: list
-):
+    gdx_handle: object, container: Container, symnames: list[str], symobjs: list
+) -> None:
     """Iterates through symbols and executes the appropriate GDX write commands."""
     from gamspy._symbols import Alias, Equation, UniverseAlias
 
@@ -639,7 +647,7 @@ def write(
 
 
 def power_write_symbol_no_records(
-    gdx_handle, symobj: SymbolWithRecordsType, subtype: int
+    gdx_handle: object, symobj: SymbolWithRecordsType, subtype: int
 ) -> None:
     gdx.gdxDataWriteStrStart(
         gdx_handle,
@@ -661,7 +669,7 @@ def power_write_symbol_no_records(
 
 
 def power_write_symbol_scalar_record(
-    gdx_handle, symobj: SymbolWithRecordsType, subtype: int
+    gdx_handle: object, symobj: SymbolWithRecordsType, subtype: int
 ) -> None:
     gdx.gdxDataWriteStrStart(
         gdx_handle,
@@ -690,7 +698,10 @@ def power_write_symbol_scalar_record(
 
 
 def power_write_category(
-    container: Container, gdx_handle, symobj: SymbolWithRecordsType, subtype: int
+    container: Container,
+    gdx_handle: object,
+    symobj: SymbolWithRecordsType,
+    subtype: int,
 ) -> None:
     from gamspy import Set
 

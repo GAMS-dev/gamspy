@@ -158,7 +158,7 @@ class Loop(_LoopBlock):
 
     _kind = "loop"
 
-    def __init__(self, indices: OperationIndexType):
+    def __init__(self, indices: OperationIndexType) -> None:
         self.indices = indices
         self._loop_number = -1
         self.container = self._find_container()
@@ -340,7 +340,7 @@ class For(_LoopBlock):
         | Operation
         | MathOp = 1,
         direction: Literal["to", "downto"] = "to",
-    ):
+    ) -> None:
         if not isinstance(index, gp.Parameter):
             raise TypeError(
                 f"`index` must be a scalar Parameter but given {type(index)}"
@@ -467,7 +467,7 @@ class While(_LoopBlock):
 
     _kind = "while"
 
-    def __init__(self, condition: ConditionType):
+    def __init__(self, condition: ConditionType) -> None:
         self.condition = condition
 
         if not isinstance(condition.container, gp.Container):
@@ -675,7 +675,9 @@ class If:
 
     """
 
-    def __init__(self, condition: ConditionType, container: Container | None = None):
+    def __init__(
+        self, condition: ConditionType, container: Container | None = None
+    ) -> None:
         self.condition = condition
         self.container = _resolve_if_container(condition, container, "gp.If")
         self._is_outermost = False
@@ -719,7 +721,9 @@ class ElseIf:
         cannot be deduced from the condition.
     """
 
-    def __init__(self, condition: ConditionType, container: Container | None = None):
+    def __init__(
+        self, condition: ConditionType, container: Container | None = None
+    ) -> None:
         self.condition = condition
         self.container = _resolve_if_container(condition, container, "gp.ElseIf")
         self._is_outermost = False

@@ -29,7 +29,7 @@ class DictFormat(Enum):
     NATURAL = 1
 
     @classmethod
-    def _missing_(cls, value):
+    def _missing_(cls, value: object) -> DictFormat:
         return DictFormat.UNKNOWN
 
 
@@ -40,7 +40,7 @@ DICT_FORMAT = {
 AXES = ["index", "columns"]
 
 
-def _get_implied_dimension_from_axes(records):
+def _get_implied_dimension_from_axes(records: pd.DataFrame | pd.Series) -> int:
     return sum([axis.nlevels for axis in records.axes])
 
 

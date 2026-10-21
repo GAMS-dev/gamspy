@@ -59,7 +59,7 @@ class MathOp(operable.Operable):
         elements: tuple,
         *,
         safe_cancel: bool = False,
-    ):
+    ) -> None:
         self.op_name = op_name
         self.elements = list(elements)
         self.safe_cancel = safe_cancel
@@ -72,16 +72,16 @@ class MathOp(operable.Operable):
 
         self.where = condition.Condition(self)
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
-    def __len__(self):
+    def __len__(self) -> int:
         if self.records is not None:
             return len(self.records.index)
 
@@ -286,7 +286,7 @@ class MathOp(operable.Operable):
 
         return f"{notation.function_name(self.op_name)}({operands_str})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.gamsRepr()
 
 
@@ -634,7 +634,7 @@ def fractional(x: OperableType) -> MathOp:
     return MathOp("frac", (x,))
 
 
-def Min(*values) -> MathOp:
+def Min(*values: OperableType) -> MathOp:
     """
     Minimum value of the values, where the number of values may vary.
 
@@ -658,7 +658,7 @@ def Min(*values) -> MathOp:
     return MathOp("min", values)
 
 
-def Max(*values) -> MathOp:
+def Max(*values: OperableType) -> MathOp:
     """
     Maximum value of the values, where the number of values may vary.
 
@@ -976,7 +976,7 @@ def regularized_gamma(x: int | float, a: int | float) -> MathOp:
     return MathOp("gammaReg", (x, a))
 
 
-def lse_max(*xs) -> MathOp:
+def lse_max(*xs: OperableType) -> MathOp:
     """
     Smoothed Max via the Logarithm of the Sum of Exponentials: ``ln(exp(x1) + exp(x2) + ... + exp(xn))``
 
@@ -1001,7 +1001,7 @@ def lse_max(*xs) -> MathOp:
     return MathOp("lseMax", xs)
 
 
-def lse_max_sc(t, *xs) -> MathOp:
+def lse_max_sc(t: OperableType, *xs: OperableType) -> MathOp:
     """
     Scaled smoothed Max via the Logarithm of the Sum of Exponentials: ``lse_max_sc(T,x) = lse_max(Tx)/T``
 
@@ -1026,7 +1026,7 @@ def lse_max_sc(t, *xs) -> MathOp:
     return MathOp("lseMaxSc", (t,) + xs)
 
 
-def lse_min(*xs) -> MathOp:
+def lse_min(*xs: OperableType) -> MathOp:
     """
     Smoothed Min via the Logarithm of the Sum of Exponentials: ``-ln(exp(-x1) + exp(-x2) + ... + exp(-xn))``
 
@@ -1051,7 +1051,7 @@ def lse_min(*xs) -> MathOp:
     return MathOp("lseMin", xs)
 
 
-def lse_min_sc(t, *xs) -> MathOp:
+def lse_min_sc(t: OperableType, *xs: OperableType) -> MathOp:
     """
     Scaled smoothed Min via the Logarithm of the Sum of Exponentials: ``lse_min_sc(T,x) = lse_min(Tx)/T``
 
@@ -1200,7 +1200,7 @@ def ncpVUsin(r: OperableType, s: OperableType, mu: int | float = 0) -> MathOp:
     return MathOp("ncpVUsin", (r, s, mu))
 
 
-def poly(x, *args) -> MathOp:
+def poly(x: OperableType, *args: OperableType) -> MathOp:
     """
     Polynomial function: ``p(x) = A[0] + A[1]*x + A[2]*x^2 + ... + A[n-1]*x^(n-1)``
 

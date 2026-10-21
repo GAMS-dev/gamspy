@@ -8,6 +8,8 @@ import gamspy as gp
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     import torch
 
 
@@ -75,17 +77,26 @@ def convert_conv2d(m: gp.Container, layer: torch.nn.Conv2d) -> gp.formulations.C
     return l
 
 
-def convert_relu(m: gp.Container, layer: torch.nn.ReLU):
+def convert_relu(
+    m: gp.Container, layer: torch.nn.ReLU
+) -> Callable[..., gp.formulations.FormulationResult]:
     return gp.math.relu_with_binary_var
 
 
-def convert_leaky_relu(m: gp.Container, layer: torch.nn.LeakyReLU):
-    return partial(
-        gp.math.leaky_relu_with_binary_var, negative_slope=layer.negative_slope
+def convert_leaky_relu(
+    m: gp.Container, layer: torch.nn.LeakyReLU
+) -> Callable[..., tuple[gp.Variable, list[gp.Equation]]]:
+    return typing.cast(
+        "Callable[..., tuple[gp.Variable, list[gp.Equation]]]",
+        partial(
+            gp.math.leaky_relu_with_binary_var, negative_slope=layer.negative_slope
+        ),
     )
 
 
-def convert_pool2d(m: gp.Container, layer: torch.nn.MaxPool2d | torch.nn.AvgPool2d):
+def convert_pool2d(
+    m: gp.Container, layer: torch.nn.MaxPool2d | torch.nn.AvgPool2d
+) -> gp.formulations.MaxPool2d | gp.formulations.AvgPool2d:
     clz = layer.__class__.__name__
     if clz == "MaxPool2d":
         max_layer = typing.cast("torch.nn.MaxPool2d", layer)
@@ -243,7 +254,7 @@ class TorchSequential:
         container: gp.Container,
         network: torch.nn.Sequential,
         layer_converters: dict | None = None,
-    ):
+    ) -> None:
         try:
             import torch
         except ModuleNotFoundError as e:
@@ -265,7 +276,11 @@ class TorchSequential:
                     "network must be an instance of torch.nn.Sequential"
                 )
 
-    def _convert_layer(self, container: gp.Container, layer):
+    def _convert_layer(
+        self, container: gp.Container, layer: torch.nn.Module
+    ) -> Callable[
+        ..., gp.formulations.FormulationResult | tuple[gp.Variable, list[gp.Equation]]
+    ]:
         clz = layer.__class__.__name__
         if clz not in self._layer_converters:
             raise ValidationError(f"Formulation for {clz} not implemented!")
@@ -275,7 +290,7 @@ class TorchSequential:
 
     def _update_dict_layered(
         self, large: dict[str, typing.Any], small: dict[str, typing.Any], layer_num: int
-    ):
+    ) -> None:
         for key, value in small.items():
             large[f"{layer_num}.{key}"] = value
 

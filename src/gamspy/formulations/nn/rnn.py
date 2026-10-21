@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, cast
 
 import numpy as np
 
@@ -62,7 +62,7 @@ class RNN:
         input_size: int,
         hidden_size: int,
         activation: Literal["tanh", "relu", "linear"] = "tanh",
-    ):
+    ) -> None:
         if not isinstance(input_size, int) or input_size <= 0:
             raise ValidationError("input_size must be a positive integer")
 
@@ -465,7 +465,7 @@ class RNN:
                 self.container,
                 domain=h_out.domain,
             )
-            link_eq[...] = h_out == relu_res.result
+            link_eq[...] = h_out == cast("gp.Variable", relu_res.result)
 
             result.equations_created.update(
                 {

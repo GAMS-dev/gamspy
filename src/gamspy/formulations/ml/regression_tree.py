@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import importlib
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -13,6 +13,8 @@ from gamspy.exceptions import ValidationError
 from gamspy.formulations.ml.decision_tree_struct import DecisionTreeStruct
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from sklearn.tree import DecisionTreeRegressor
 
 
@@ -69,7 +71,7 @@ class RegressionTree:
         container: gp.Container,
         regressor: DecisionTreeRegressor | DecisionTreeStruct,
         name_prefix: str | None = None,
-    ):
+    ) -> None:
         if not isinstance(container, gp.Container):
             raise ValidationError(f"{container} is not a gp.Container.")
 
@@ -96,7 +98,7 @@ class RegressionTree:
 
         self._name_prefix = name_prefix
 
-    def _initialize_from_sklearn(self, regressor: DecisionTreeRegressor):
+    def _initialize_from_sklearn(self, regressor: DecisionTreeRegressor) -> None:
         """
         Initializes the tree attributes from a fitted scikit-learn DecisionTreeRegressor.
         """
@@ -115,7 +117,9 @@ class RegressionTree:
         self.capacity = regressor.tree_.capacity
         self.n_features = regressor.tree_.n_features
 
-    def _initialize_from_decision_tree_struct(self, regressor: DecisionTreeStruct):
+    def _initialize_from_decision_tree_struct(
+        self, regressor: DecisionTreeStruct
+    ) -> None:
         """
         Initializes the tree attributes from DecisionTreeStruct.
         """
@@ -127,7 +131,7 @@ class RegressionTree:
         self.capacity = regressor.capacity
         self.n_features = regressor.n_features
 
-    def _check_tree(self):
+    def _check_tree(self) -> None:
         """
         Validates that the core tree attributes are populated and have valid basic properties.
 
@@ -149,7 +153,7 @@ class RegressionTree:
         if self.capacity <= 0:
             raise ValidationError("'capacity' must be a positive integer.")
 
-    def _node_bounds(self):
+    def _node_bounds(self) -> tuple[np.ndarray, np.ndarray]:
         """Traverse the tree using DFS and extract bound information for each node."""
         node_lb = np.empty((self.n_features, self.capacity))
         node_lb.fill(-np.inf)
@@ -181,7 +185,7 @@ class RegressionTree:
         self,
         input: gp.Parameter | gp.Variable,
         M: float | None = None,
-    ):
+    ) -> Generator[Any]:
         leafs = self.children_left < 0
         leafs = leafs.nonzero()[0]
         nleafs = len(leafs)

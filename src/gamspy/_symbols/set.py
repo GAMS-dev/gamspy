@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Literal, cast, overload
 
 from gams.core.gdx import GMS_DT_SET
 
@@ -422,7 +422,11 @@ class SetMixin:
         assert isinstance(other, (gp.Set, gp.Alias, str))
         return gp.math.same_as(self, other)
 
-    def __eq__(self: Set | Alias, other):
+    @overload
+    def __eq__(self: Set | Alias, other: str) -> MathOp: ...
+    @overload
+    def __eq__(self: Set | Alias, other: object) -> bool: ...
+    def __eq__(self: Set | Alias, other: object) -> MathOp | bool:
         # i == "i1" is sugar for i.sameAs("i1"). Any string is an element label.
         # For other types, fall back to identity semantics by returning NotImplemented.
         if isinstance(other, str):
@@ -430,7 +434,11 @@ class SetMixin:
 
         return NotImplemented
 
-    def __ne__(self: Set | Alias, other):
+    @overload
+    def __ne__(self: Set | Alias, other: str) -> Expression: ...
+    @overload
+    def __ne__(self: Set | Alias, other: object) -> bool: ...
+    def __ne__(self: Set | Alias, other: object) -> Expression | bool:
         # Follows the same logic with __eq__.
         if isinstance(other, str):
             return ~gp.math.same_as(self, other)
@@ -536,7 +544,7 @@ class Set(operable.Operable, DataSymbol, SetMixin):
         uels_on_axes: bool = False,
         is_miro_input: bool = False,
         is_miro_output: bool = False,
-    ):
+    ) -> None:
         if self.is_singleton != is_singleton:
             raise ValueError(
                 "Cannot overwrite symbol in container unless"
@@ -564,7 +572,7 @@ class Set(operable.Operable, DataSymbol, SetMixin):
         uels_on_axes: bool = False,
         is_miro_input: bool = False,
         is_miro_output: bool = False,
-    ):
+    ) -> None:
         container, name = self._resolve_container_and_name(
             container,
             name,
@@ -618,7 +626,7 @@ class Set(operable.Operable, DataSymbol, SetMixin):
         | bool
         | str
         | SparseAssignment,
-    ):
+    ) -> None:
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
         assign(
@@ -631,7 +639,7 @@ class Set(operable.Operable, DataSymbol, SetMixin):
     def __repr__(self) -> str:
         return f"Set(name='{self.name}', domain={self.domain})"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def _singleton_check(
@@ -639,7 +647,7 @@ class Set(operable.Operable, DataSymbol, SetMixin):
         is_singleton: bool,
         records: SetRecordsType | None,
         domain: NormalizedDomainType,
-    ):
+    ) -> None:
         if is_singleton:
             if records is not None and len(records) != 1:
                 raise ValidationError("Singleton set records size must be one.")
@@ -821,10 +829,12 @@ class Set(operable.Operable, DataSymbol, SetMixin):
         return self._get_records()
 
     @records.setter
-    def records(self, records: pd.DataFrame | None):
+    def records(self, records: pd.DataFrame | None) -> None:
         self._assign_records(records)
 
-    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+    def _setRecords(
+        self, records: SetRecordsType, *, uels_on_axes: bool = False
+    ) -> None:
         SetIngestor(self).ingest(records, uels_on_axes=uels_on_axes)
         self._handle_domain_violations()
 

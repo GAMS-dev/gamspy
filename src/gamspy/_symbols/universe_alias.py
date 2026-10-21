@@ -82,7 +82,9 @@ class UniverseAlias(BaseSymbol):
     ) -> None:
         return
 
-    def __init__(self, container: Container | None = None, name: str = "universe"):
+    def __init__(
+        self, container: Container | None = None, name: str = "universe"
+    ) -> None:
         container, self.name = self._resolve_container_and_name(
             container, name, prefix="u"
         )
@@ -169,7 +171,7 @@ class UniverseAlias(BaseSymbol):
         return ["uni"]
 
     @domain_labels.setter
-    def domain_labels(self, value) -> None: ...
+    def domain_labels(self, value: list[str] | str) -> None: ...
 
     @property
     def domain(self) -> Literal["*"]:
@@ -356,7 +358,7 @@ class UniverseAlias(BaseSymbol):
         return pd.DataFrame(uels[1:], columns=["uni"])
 
     @records.setter
-    def records(self, value) -> None: ...
+    def records(self, value: pd.DataFrame | None) -> None: ...
 
     def gamsRepr(self) -> str:
         """

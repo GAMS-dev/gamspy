@@ -101,7 +101,7 @@ class Backend(ABC):
         solver: str | None,
         solver_options: dict | Path | None,
         output: TextIO | None,
-    ):
+    ) -> None:
         self.backend_type = backend_type
         self.container = container
         self.options = options
@@ -117,12 +117,12 @@ class Backend(ABC):
         self.trace_file = self.job_name + ".txt"
 
     @abstractmethod
-    def is_async(self): ...
+    def is_async(self) -> bool: ...
 
     @abstractmethod
-    def run(self): ...
+    def run(self) -> pd.DataFrame | None: ...
 
-    def get_job_name(self):
+    def get_job_name(self) -> str:
         job_name = self.container._job
 
         if self.container._debugging_level == "keep":
@@ -136,7 +136,7 @@ class Backend(ABC):
 
         return job_name
 
-    def preprocess(self):
+    def preprocess(self) -> str:
         symbol_names = self.container._symbols_to_unload()
 
         if len(symbol_names) != 0:

@@ -56,9 +56,9 @@ class DecisionTreeStruct:
     capacity: int = 0
     n_features: int = 0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Helper to set attributes while respecting frozen=True
-        def init_if_none(attr_name: str):
+        def init_if_none(attr_name: str) -> None:
             if getattr(self, attr_name) is None:
                 object.__setattr__(self, attr_name, np.array([]))
 
@@ -68,8 +68,8 @@ class DecisionTreeStruct:
         init_if_none("threshold")
         init_if_none("value")
 
-    def __repr__(self):
-        def arr_info(arr):
+    def __repr__(self) -> str:
+        def arr_info(arr: np.ndarray) -> str:
             return f"shape={arr.shape}, dtype={arr.dtype}" if arr.size else "empty"
 
         return (
@@ -83,7 +83,7 @@ class DecisionTreeStruct:
             f"n_features={self.n_features})"
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"{self.__class__.__name__}: "
             f"{self.capacity} nodes, {self.n_features} features, "

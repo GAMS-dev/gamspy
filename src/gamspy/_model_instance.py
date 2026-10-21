@@ -131,7 +131,7 @@ class GamsModifier:
         update_action: int | None = None,
         data_symbol: GamsParameter | None = None,
         update_type: int = 3,
-    ):
+    ) -> None:
         self.update_action = None
         self.gams_symbol = gams_symbol
         self.update_type = update_type
@@ -151,7 +151,7 @@ class GamsModifier:
                 "Wrong combination of parameters. Specifying only update_action or data_symbol is not allowed."
             )
 
-    def _validate_update_action(self, update_action: int):
+    def _validate_update_action(self, update_action: int) -> None:
         if update_action in (1, 2, 3):
             if not isinstance(self.gams_symbol, GamsVariable):
                 raise GamspyException(
@@ -189,7 +189,7 @@ class ModelInstance:
         freeze_options: Options,
         output: TextIO | None,
         hibernate: bool = False,
-    ):
+    ) -> None:
         self.container = container
         self.job_name = container._job
         self.gms_file = self.job_name + ".gms"
@@ -243,7 +243,7 @@ class ModelInstance:
         self.summary = pd.DataFrame(index=range(1), columns=HEADER)
 
     @staticmethod
-    def cleanup(gmo, gev) -> None:
+    def cleanup(gmo: object, gev: object) -> None:
         gmoFree(gmo)
         gevFree(gev)
 
@@ -270,7 +270,9 @@ class ModelInstance:
                 update_action = UPDATE_ACTION_MAP[attribute]
 
                 try:
-                    sync_db_symbol = self.sync_db[symbol.parent.name]
+                    sync_db_symbol = cast(
+                        "GamsVariable | GamsEquation", self.sync_db[symbol.parent.name]
+                    )
                 except KeyError:
                     if isinstance(symbol.parent, gp.Variable):
                         sync_db_symbol = self.sync_db.add_variable(
@@ -749,7 +751,7 @@ class ModelInstance:
 
     def _discard_pending_records(self) -> None:
         for name in self._solution_symbols:
-            symbol = self.container._data.get(name)
+            symbol = cast("DataSymbol | None", self.container._data.get(name))
             if symbol is None or symbol._should_load_from is not self:
                 continue
 
@@ -758,7 +760,7 @@ class ModelInstance:
 
     def _read_pending_records(self) -> None:
         for name in self._solution_symbols:
-            symbol = self.container._data.get(name)
+            symbol = cast("DataSymbol | None", self.container._data.get(name))
             if symbol is None or symbol._should_load_from is not self:
                 continue
 

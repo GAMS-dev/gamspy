@@ -3,7 +3,7 @@ from __future__ import annotations
 import contextlib
 import os
 from difflib import get_close_matches
-from typing import TYPE_CHECKING, Any, Literal, cast, get_args
+from typing import TYPE_CHECKING, Any, Literal, cast, get_args, overload
 
 from gamspy.exceptions import ValidationError
 
@@ -144,7 +144,31 @@ def _temporary_options(options: dict[OptionName, Any]) -> Generator[None]:
         set_options(cast("dict[OptionName, Any]", previous))
 
 
-def get_option(name: str) -> Any:
+@overload
+def get_option(
+    name: Literal[
+        "GAMS_SYSDIR",
+        "LICENSE_PATH",
+        "USE_PY_VAR_NAME",
+        "ALLOW_AMBIGUOUS_EQUATIONS",
+    ],
+) -> str: ...
+@overload
+def get_option(
+    name: Literal[
+        "VALIDATION",
+        "DOMAIN_VALIDATION",
+        "SOLVER_VALIDATION",
+        "SOLVER_OPTION_VALIDATION",
+        "MAP_SPECIAL_VALUES",
+        "ASSUME_VARIABLE_SUFFIX",
+        "DROP_DOMAIN_VIOLATIONS",
+        "STRICT_POWER_OPERATOR",
+    ],
+) -> int: ...
+@overload
+def get_option(name: str) -> str | int: ...
+def get_option(name: str) -> str | int:
     """
     Returns the requested option.
 
@@ -155,7 +179,7 @@ def get_option(name: str) -> Any:
 
     Returns
     -------
-    Any
+    str | int
         The value of the option.
 
     Raises

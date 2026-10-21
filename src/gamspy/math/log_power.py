@@ -232,13 +232,13 @@ def power(base: float | Operable, exponent: OperableType) -> MathOp:
     return MathOp("power", (base, exponent))
 
 
-def cv_power(base: float, exponent: OperableType) -> MathOp:
+def cv_power(base: OperableType, exponent: OperableType) -> MathOp:
     """
     Real power (i.e. ``base ^ exponent`` where ``base >= 0``; error for ``base < 0``)
 
     Parameters
     ----------
-    base : float
+    base : OperableType
     exponent : OperableType
 
     Returns
@@ -255,16 +255,10 @@ def cv_power(base: float, exponent: OperableType) -> MathOp:
     >>> b[...] = cv_power(3, a)
 
     """
-    if not isinstance(base, (float, int)):
-        raise ValueError("Base must be a number")
-
-    if base < 0:
-        raise ValueError("Base must be greater than or equal to 0")
-
     return MathOp("cvPower", (base, exponent))
 
 
-def rpower(base: OperableType | Operable, exponent: OperableType):
+def rpower(base: OperableType | Operable, exponent: OperableType) -> MathOp:
     """
     Returns ``x^y`` for ``x > 0`` and also for ``x = 0`` and restricted values of ``y`` (Error if ``x < 0``)
 
@@ -291,14 +285,14 @@ def rpower(base: OperableType | Operable, exponent: OperableType):
     return MathOp("rPower", (base, exponent))
 
 
-def sign_power(base: OperableType, exponent: float):
+def sign_power(base: OperableType, exponent: OperableType) -> MathOp:
     """
     Signed power: ``sign(base) * |base|^exponent``, for ``exponent > 0``
 
     Parameters
     ----------
     base : OperableType
-    exponent : float
+    exponent : OperableType
 
     Returns
     -------
@@ -315,12 +309,6 @@ def sign_power(base: OperableType, exponent: float):
     >>> b[i] = sign_power(a[i], 5)
 
     """
-    if not isinstance(exponent, (float, int)):
-        raise ValueError("Exponent must be a number")
-
-    if exponent <= 0:
-        raise ValueError("Exponent must be greater than 0")
-
     return MathOp("signPower", (base, exponent))
 
 
@@ -382,7 +370,7 @@ def sqlog10(x: OperableType, S: int | float = 1.0e-150) -> MathOp:
     return MathOp("sqlog10", (x, S))
 
 
-def vc_power(base: OperableType, exponent: OperableType):
+def vc_power(base: OperableType, exponent: OperableType) -> MathOp:
     """
     Returns ``x^y`` for ``x >= 0`` (error for ``x < 0``)
 

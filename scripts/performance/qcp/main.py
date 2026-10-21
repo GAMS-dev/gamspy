@@ -16,7 +16,7 @@ import gamspy as gp
 logging.disable(logging.WARNING)
 
 
-def solve_facility_poi(m, G, F, time_limit=0):
+def solve_facility_poi(m: ipopt.Model, G: int, F: int, time_limit: float = 0) -> float:
     # Create variables
     y = m.add_m_variables((F, 2), lb=0.0, ub=1.0)
     s = m.add_m_variables((G + 1, G + 1, F), lb=0.0)
@@ -56,7 +56,7 @@ def solve_facility_poi(m, G, F, time_limit=0):
     return objective_value
 
 
-def solve_facility_gamspy(G, F, time_limit=0):
+def solve_facility_gamspy(G: int, F: int, time_limit: float = 0) -> float:
     M = 2 * 1.414
     with gp.Container() as m:
         grid = gp.Set(records=range(G + 1))
@@ -107,7 +107,7 @@ def solve_facility_gamspy(G, F, time_limit=0):
         return model.objective_value
 
 
-def main(Ns):
+def main(Ns: list[int]) -> None:
     # sanity check with a small size
     model = ipopt.Model()
     poi_objective = solve_facility_poi(model, 10, 10, time_limit=1e-10)

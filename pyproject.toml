@@ -241,6 +241,7 @@ select = [
     "PLC0208",  # iteration-over-set
     "PLE",      # Pylint error rules
     "PGH003",   # blanket-type-ignore
+    "ANN",      # flake8-annotations
 ]
 ignore = [
     "E501",   # line-too-long
@@ -251,7 +252,6 @@ ignore = [
     "RUF005", # collection-literal-concatenation
     "RUF022", # unsorted-dunder-all
     "B905",   # zip-without-explicit-strict
-    "ANN401", # any-type
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
@@ -260,6 +260,9 @@ unfixable = []
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ANN"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

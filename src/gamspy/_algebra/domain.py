@@ -8,7 +8,7 @@ from gamspy._notation import LATEX, UNICODE
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Set, UniverseAlias
+    from gamspy import Alias, Container, Set, UniverseAlias
     from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy._universe import Universe
@@ -53,7 +53,7 @@ class Domain:
     def __repr__(self) -> str:
         return f"Domain(sets={self.sets})"
 
-    def _sanity_check(self, sets: tuple[DomainElementType, ...]):
+    def _sanity_check(self, sets: tuple[DomainElementType, ...]) -> None:
         if len(sets) < 1:
             error_message = f"Domain requires at least one set but found {len(sets)}. "
             raise ValidationError(error_message)
@@ -63,10 +63,10 @@ class Domain:
                 "At least one of the sets in the domain must be a Set or Alias"
             )
 
-    def _find_container(self):
+    def _find_container(self) -> Container | None:
         for set in self.sets:
             if hasattr(set, "container"):
-                return set.container
+                return set.container  # ty: ignore[invalid-return-type]
 
     def gamsRepr(self) -> str:
         """

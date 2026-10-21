@@ -356,7 +356,7 @@ def get_convert_solver_options(
     return solver_options
 
 
-def get_symbols(model) -> list[str]:
+def get_symbols(model: Model) -> list[str]:
     all_symbols = []
     for equation in model.equations:
         symbols = expression.find_symbols(equation._definition)
@@ -367,7 +367,7 @@ def get_symbols(model) -> list[str]:
 
     if model._matches:
         for equation in model._matches:
-            symbols = expression.find_symbols(equation._definition)
+            symbols = expression.find_symbols(equation._definition)  # ty: ignore[unresolved-attribute]
             for symbol in symbols:
                 if symbol not in all_symbols:
                     all_symbols.append(symbol)
@@ -623,7 +623,9 @@ class MathConverter(ABC):
 
         return name
 
-    def _symbols_of_type(self, symbol_type) -> list[tuple[SymbolType, Sequence]]:
+    def _symbols_of_type(
+        self, symbol_type: type[SymbolType] | tuple[type[SymbolType], ...]
+    ) -> list[tuple[SymbolType, Sequence]]:
         """The symbols of the given type with the domains that they are used with."""
         symbols: list[tuple[SymbolType, Sequence]] = []
         for name in self.symbols:
@@ -793,7 +795,9 @@ class LatexConverter(MathConverter):
         except subprocess.CalledProcessError as e:
             raise LatexException(f"Could not generate pdf file: {e}") from e
 
-    def get_table(self, symbol_type) -> str:
+    def get_table(
+        self, symbol_type: type[SymbolType] | tuple[type[SymbolType], ...]
+    ) -> str:
         table = [TABLE_HEADER]
         for symbol, domain in self._symbols_of_type(symbol_type):
             domain_str = self._domain_str(domain)

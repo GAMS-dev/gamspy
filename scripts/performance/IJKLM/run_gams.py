@@ -10,7 +10,16 @@ import gamspy as gp
 
 
 ########## GAMS ##########
-def data_to_gdx(I, J, K, L, M, ijk, jkl, klm):
+def data_to_gdx(
+    I: list[str],
+    J: list[str],
+    K: list[str],
+    L: list[str],
+    M: list[str],
+    ijk: pd.DataFrame,
+    jkl: pd.DataFrame,
+    klm: pd.DataFrame,
+) -> None:
     c = gt.Container(system_directory=gamspy_base.directory)
 
     # create sets
@@ -34,7 +43,7 @@ def data_to_gdx(I, J, K, L, M, ijk, jkl, klm):
     c.write(os.path.join(os.path.dirname(__file__), "data", "data.gdx"))
 
 
-def run_gams(N, repeats, number):
+def run_gams(N: int, repeats: int, number: int) -> pd.DataFrame:
     process = subprocess.run(
         [
             os.path.join(gamspy_base.directory, "gams"),

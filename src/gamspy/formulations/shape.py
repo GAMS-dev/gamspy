@@ -55,7 +55,7 @@ def _generate_index_matching_statement(
     return base_txt.format(matching_set.name, domains_str, flattened.name)
 
 
-def _propagate_bounds(x, out):
+def _propagate_bounds(x: gp.Variable, out: gp.Variable) -> None:
     """Propagate bounds from the input to the output variable"""
 
     m = x.container

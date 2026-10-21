@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 from gams.core.gdx import GMS_DT_PAR
@@ -34,7 +34,12 @@ if TYPE_CHECKING:
     from gamspy._algebra.sparse import SparseAssignment
     from gamspy._extrinsic import ExtrinsicFunction
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import DomainType, IndexType, ParameterRecordsType
+    from gamspy._types import (
+        DomainType,
+        IndexType,
+        OperableType,
+        ParameterRecordsType,
+    )
     from gamspy.math.misc import MathOp
 
 
@@ -117,7 +122,7 @@ class Parameter(operable.Operable, NumericSymbol):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
         is_miro_table: bool = False,
-    ):
+    ) -> None:
         self._redefine_symbol(
             domain,
             domain_forwarding=domain_forwarding,
@@ -140,7 +145,7 @@ class Parameter(operable.Operable, NumericSymbol):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
         is_miro_table: bool = False,
-    ):
+    ) -> None:
         container, name = self._resolve_container_and_name(
             container,
             name,
@@ -161,7 +166,9 @@ class Parameter(operable.Operable, NumericSymbol):
         )
         self._init_records(records, uels_on_axes=uels_on_axes)
 
-    def _init_records(self, records: Any, *, uels_on_axes: bool) -> None:
+    def _init_records(
+        self, records: ParameterRecordsType | None, *, uels_on_axes: bool
+    ) -> None:
         if records is None:
             super()._init_records(records, uels_on_axes=uels_on_axes)
             return
@@ -195,7 +202,7 @@ class Parameter(operable.Operable, NumericSymbol):
         | Number
         | ExtrinsicFunction
         | SparseAssignment,
-    ):
+    ) -> None:
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
         assign(
@@ -205,7 +212,7 @@ class Parameter(operable.Operable, NumericSymbol):
             domain,
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         op = "eq"
         if isinstance(
             other,
@@ -218,7 +225,7 @@ class Parameter(operable.Operable, NumericSymbol):
             op = "=e="
         return expression.Expression(self, op, other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
     def __repr__(self) -> str:
@@ -556,13 +563,15 @@ class Parameter(operable.Operable, NumericSymbol):
         return self._get_records()
 
     @records.setter
-    def records(self, records: pd.DataFrame | None):
+    def records(self, records: pd.DataFrame | None) -> None:
         self._assign_records(records)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
-    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+    def _setRecords(
+        self, records: ParameterRecordsType, *, uels_on_axes: bool = False
+    ) -> None:
         ParameterIngestor(self).ingest(records, uels_on_axes=uels_on_axes)
         self._handle_domain_violations()
 

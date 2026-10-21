@@ -116,7 +116,7 @@ def update_changelog(args: Namespace) -> None:
     )
 
 
-def main():
+def main() -> None:
     parser = ArgumentParser()
     parser.add_argument("new_version")
     args = parser.parse_args()

@@ -64,7 +64,7 @@ class ImplicitSymbol(ABC):
     def _math_name(self: ImplicitSymbolType, notation: Notation) -> str:
         return self.parent._math_name(notation)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         raise ValidationError("A symbol cannot be used as a truth value.")
 
     def __len__(self: ImplicitSymbolType) -> int:
@@ -104,7 +104,7 @@ class ImplicitSymbol(ABC):
         self._scalar_domains = scalars
 
     @no_type_check
-    def fix_permutation(self):
+    def fix_permutation(self) -> None:
         numbers_pos = list(
             zip(self.permutation, range(len(self.permutation)), strict=False)
         )
@@ -142,7 +142,7 @@ class ImplicitSymbol(ABC):
         return given_domain, declaration_domain
 
     @abstractmethod
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """Representation of the implicit symbol in GAMS"""
 
     def _reference_domain(self: ImplicitSymbolType) -> list:

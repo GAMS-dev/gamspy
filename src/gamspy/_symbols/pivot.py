@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, cast
 
 import pandas as pd
 
@@ -12,7 +12,9 @@ if TYPE_CHECKING:
 
 
 def _validate_axes(
-    symbol: Any, index: str | list | None, columns: str | list | None
+    symbol: Set | Parameter | Variable | Equation,
+    index: str | list | None,
+    columns: str | list | None,
 ) -> tuple[list, list]:
     """Helper function to validate and set default index and columns for pivoting."""
     if symbol.dimension < 2:
@@ -24,8 +26,10 @@ def _validate_axes(
     if not isinstance(index, (str, list, type(None))):
         raise TypeError("Argument 'index' must be type str, list or NoneType")
 
+    records = cast("pd.DataFrame", symbol.records)
+
     if index is None:
-        index = symbol.records.columns[: symbol.dimension - 1].tolist()
+        index = records.columns[: symbol.dimension - 1].tolist()
     elif isinstance(index, str):
         index = [index]
 
@@ -33,9 +37,7 @@ def _validate_axes(
         raise TypeError("Argument 'columns' must be type str, list, or NoneType")
 
     if columns is None:
-        columns = symbol.records.columns[
-            symbol.dimension - 1 : symbol.dimension
-        ].tolist()
+        columns = records.columns[symbol.dimension - 1 : symbol.dimension].tolist()
     elif isinstance(columns, str):
         columns = [columns]
 
@@ -48,7 +50,7 @@ def _validate_axes(
     return index, columns
 
 
-def _fill_missing_values(df: pd.DataFrame, fill_value: Any) -> None:
+def _fill_missing_values(df: pd.DataFrame, fill_value: int | float | str) -> None:
     """Helper function to fill NA values safely across different Pandas versions."""
     major, *_ = pd.__version__.split(".")
     if int(major) >= 3:
@@ -65,7 +67,7 @@ def _restore_special_values(
     index: list,
     columns: list,
     value_col: str,
-    stored_columns: Any,
+    stored_columns: pd.Index,
 ) -> pd.DataFrame:
     """Helper function to find and restore special values (NA, UNDEF) to the pivoted dataframe."""
     specnans = symbol.findSpecialValues(

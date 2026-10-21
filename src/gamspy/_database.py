@@ -41,7 +41,7 @@ _spec_values[3] = float("-inf")
 _spec_values[4] = SV_EPS
 
 
-def _int_value_and_free(intP):
+def _int_value_and_free(intP: object) -> int:
     intp_val = intp_value(intP)
     delete_intp(intP)
     return intp_val
@@ -61,7 +61,7 @@ class GamsSymbol:
         symbol_type: int,
         user_info: int,
         explanatory_text: str,
-    ):
+    ) -> None:
         self.database = database
         self.name = name
         self.dimension = dimension
@@ -83,10 +83,10 @@ class GamsSymbol:
             _int_value_and_free(rc), self.database.workspace
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.get_number_records()
 
-    def get_number_records(self):
+    def get_number_records(self) -> int:
         ret = gmdSymbolInfo(self.database.gmd, self.sym_ptr, GMD_NRRECORDS)
         self.database._check_for_gmd_error(ret[0], self.database.workspace)
         return ret[1]
@@ -102,7 +102,7 @@ class GamsSet(GamsSymbol):
         dimension: int,
         explanatory_text: str = "",
         settype: int = 0,
-    ):
+    ) -> None:
         self.settype = settype
         super().__init__(database, name, dimension, dt_set, settype, explanatory_text)
 
@@ -116,7 +116,7 @@ class GamsParameter(GamsSymbol):
         name: str,
         dimension: int,
         explanatory_text: str = "",
-    ):
+    ) -> None:
         super().__init__(database, name, dimension, dt_par, 0, explanatory_text)
 
 
@@ -130,7 +130,7 @@ class GamsVariable(GamsSymbol):
         dimension: int,
         vartype: int,
         explanatory_text: str = "",
-    ):
+    ) -> None:
         super().__init__(database, name, dimension, dt_var, vartype, explanatory_text)
 
 
@@ -144,15 +144,15 @@ class GamsEquation(GamsSymbol):
         dimension: int,
         equtype: int,
         explanatory_text: str = "",
-    ):
+    ) -> None:
         super().__init__(database, name, dimension, dt_equ, equtype, explanatory_text)
 
 
 class Database:
     """Communicates data between Python and GAMS"""
 
-    def __init__(self, ws: Workspace):
-        self.symbols: dict = {}
+    def __init__(self, ws: Workspace) -> None:
+        self.symbols: dict[str, GamsSymbol] = {}
         self.workspace = ws
         self.gmd = new_gmdHandle_tp()
 
@@ -166,16 +166,16 @@ class Database:
         weakref.finalize(self, self.cleanup, self.gmd)
 
     @staticmethod
-    def cleanup(gmd):
+    def cleanup(gmd: object) -> None:
         gmdFree(gmd)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.symbols)
 
-    def __getitem__(self, symbol_name: str):
+    def __getitem__(self, symbol_name: str) -> GamsSymbol:
         return self.symbols[symbol_name]
 
-    def _check_for_gmd_error(self, rc, workspace: Workspace):
+    def _check_for_gmd_error(self, rc: int, workspace: Workspace) -> None:
         if not rc:
             msg = gmdGetLastError(self.gmd)[1]
             workspace._errors.append(msg)

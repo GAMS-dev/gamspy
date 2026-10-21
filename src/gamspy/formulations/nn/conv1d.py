@@ -81,7 +81,7 @@ class Conv1d(_ConvNd[int, tuple[int, int]]):
         name_prefix: str | None = None,
         *,
         bias: bool = True,
-    ):
+    ) -> None:
         if isinstance(kernel_size, tuple) and len(kernel_size) == 1:
             kernel_size = kernel_size[0]
 

@@ -49,7 +49,7 @@ class AvgPool2d:
         stride: int | tuple[int, int] | None = None,
         padding: int | tuple[int, int] = 0,
         name_prefix: str | None = None,
-    ):
+    ) -> None:
         _kernel_size = utils._check_tuple_int(kernel_size, "kernel_size")
         if stride is None:
             stride = kernel_size
