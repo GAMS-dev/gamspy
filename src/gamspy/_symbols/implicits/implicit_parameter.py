@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.sparse import SparseAssignment
     from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitSet
-    from gamspy._types import IndexType, ValidatedIndexType
+    from gamspy._types import IndexType, OperableType, ValidatedIndexType
     from gamspy.math.misc import MathOp
 
 logger = logging.getLogger("GAMSPy")
@@ -156,7 +156,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             domain,
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         op = "eq"
         if isinstance(
             other,
@@ -165,10 +165,10 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             op = "=e="
         return expression.Expression(self, op, other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def __repr__(self) -> str:

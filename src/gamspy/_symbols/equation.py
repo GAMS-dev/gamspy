@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, ClassVar, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 
 from gams.core.gdx import GMS_DT_EQU
 
@@ -32,7 +32,12 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitEquation, ImplicitParameter
-    from gamspy._types import DomainType, IndexType, VarEquRecordsType
+    from gamspy._types import (
+        DomainType,
+        IndexType,
+        ValidatedIndexType,
+        VarEquRecordsType,
+    )
 
 
 EQ_TYPES = ["=e=", "=l=", "=g=", "=n=", "=x=", "=b="]
@@ -101,7 +106,7 @@ class EquationType(StrEnum):
     """Boolean equations."""
 
     @classmethod
-    def values(cls):
+    def values(cls) -> list[str]:
         """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
 
@@ -221,7 +226,7 @@ class Equation(VarEquSymbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
         definition_domain: list | None = None,
-    ):
+    ) -> None:
         type = cast_type(type)
         if self.type != type.casefold():
             raise TypeError(
@@ -259,7 +264,7 @@ class Equation(VarEquSymbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
         definition_domain: list | None = None,
-    ):
+    ) -> None:
         container, name = self._resolve_container_and_name(
             container, name, prefix="e", is_miro=is_miro_output
         )
@@ -299,13 +304,15 @@ class Equation(VarEquSymbol):
 
         return info
 
-    def _deserialize_value(self, key: str, value: Any) -> Any:
+    def _deserialize_value(self, key: str, value: object) -> object:
         if key == "_definition":
-            left, right = value.split(" .. ")
+            left, right = cast("str", value).split(" .. ")
             return expression.Expression(left, "..", right[:-1])
 
         if key == "_indicator":
-            binary_name, positions, indicator_value, generation_name = value
+            binary_name, positions, indicator_value, generation_name = cast(
+                "list", value
+            )
             return (
                 self._container[binary_name],
                 tuple(positions),
@@ -325,7 +332,7 @@ class Equation(VarEquSymbol):
             domain=domain,
         )
 
-    def __setitem__(self, indices: IndexType, rhs: Expression):
+    def __setitem__(self, indices: IndexType, rhs: Expression) -> None:
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 
@@ -339,17 +346,21 @@ class Equation(VarEquSymbol):
     def _init_definition(
         self,
         assignment: Variable | Operation | Expression | None = None,
-    ):
+    ) -> None:
         if assignment is None:
             return None
 
-        domain = self.domain
+        domain = cast("list[ValidatedIndexType]", self.domain)
         if self._definition_domain is not None:
             domain = validation.validate_domain(self, self._definition_domain)
 
         self._set_definition(domain, assignment)
 
-    def _set_definition(self, domain, rhs):
+    def _set_definition(
+        self,
+        domain: list[ValidatedIndexType],
+        rhs: Variable | Operation | Expression,
+    ) -> None:
         # self[domain] = rhs
         if isinstance(rhs, sparse.SparseAssignment):
             raise ValidationError(
@@ -432,7 +443,7 @@ class Equation(VarEquSymbol):
                 break  # pragma: no cover
 
     @property
-    def l(self):
+    def l(self) -> ImplicitParameter:
         """
         The Level of the equation (its current value).
 
@@ -462,11 +473,11 @@ class Equation(VarEquSymbol):
         return self._l
 
     @l.setter
-    def l(self, value: int | float | Expression):
+    def l(self, value: int | float | Expression) -> None:
         self._l[...] = value
 
     @property
-    def m(self):
+    def m(self) -> ImplicitParameter:
         """
         The Marginal (dual) value of the equation.
 
@@ -496,11 +507,11 @@ class Equation(VarEquSymbol):
         return self._m
 
     @m.setter
-    def m(self, value: int | float | Expression):
+    def m(self, value: int | float | Expression) -> None:
         self._m[...] = value
 
     @property
-    def lo(self):
+    def lo(self) -> ImplicitParameter:
         """
         The Lower Bound of the equation.
 
@@ -527,11 +538,11 @@ class Equation(VarEquSymbol):
         return self._lo
 
     @lo.setter
-    def lo(self, value: int | float | Expression):
+    def lo(self, value: int | float | Expression) -> None:
         self._lo[...] = value
 
     @property
-    def up(self):
+    def up(self) -> ImplicitParameter:
         """
         The Upper Bound of the equation.
 
@@ -558,11 +569,11 @@ class Equation(VarEquSymbol):
         return self._up
 
     @up.setter
-    def up(self, value: int | float | Expression):
+    def up(self, value: int | float | Expression) -> None:
         self._up[...] = value
 
     @property
-    def scale(self):
+    def scale(self) -> ImplicitParameter:
         """
         The Scale factor of the equation.
 
@@ -592,11 +603,11 @@ class Equation(VarEquSymbol):
         return self._s
 
     @scale.setter
-    def scale(self, value: int | float | Expression):
+    def scale(self, value: int | float | Expression) -> None:
         self._s[...] = value
 
     @property
-    def stage(self):
+    def stage(self) -> ImplicitParameter:
         """
         The Stage of the equation.
 
@@ -626,11 +637,11 @@ class Equation(VarEquSymbol):
         return self._stage
 
     @stage.setter
-    def stage(self, value: int | float | Expression):
+    def stage(self, value: int | float | Expression) -> None:
         self._stage[...] = value
 
     @property
-    def range(self):
+    def range(self) -> ImplicitParameter:
         """
         The Range of the equation.
 
@@ -660,7 +671,7 @@ class Equation(VarEquSymbol):
         return self._range
 
     @property
-    def slacklo(self):
+    def slacklo(self) -> ImplicitParameter:
         """
         The lower bound slack of the equation.
 
@@ -687,7 +698,7 @@ class Equation(VarEquSymbol):
         return self._slacklo
 
     @property
-    def slackup(self):
+    def slackup(self) -> ImplicitParameter:
         """
         The upper bound slack of the equation.
 
@@ -714,7 +725,7 @@ class Equation(VarEquSymbol):
         return self._slackup
 
     @property
-    def slack(self):
+    def slack(self) -> ImplicitParameter:
         """
         The Slack of the equation.
 
@@ -744,7 +755,7 @@ class Equation(VarEquSymbol):
         return self._slack
 
     @property
-    def infeas(self):
+    def infeas(self) -> ImplicitParameter:
         """
         The Infeasibility of the equation.
 
@@ -872,7 +883,7 @@ class Equation(VarEquSymbol):
                 if matches == len(sets):
                     listings.append(listing)
 
-        def infeasibility_filter(listing):
+        def infeasibility_filter(listing: str) -> bool:
             infeasibility = listing.split("INFES = ")
 
             if infeasibility_threshold is None:
@@ -911,10 +922,10 @@ class Equation(VarEquSymbol):
         return self._get_records()
 
     @records.setter
-    def records(self, records: pd.DataFrame | None):
+    def records(self, records: pd.DataFrame | None) -> None:
         self._assign_records(records)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def setRecords(
@@ -956,7 +967,7 @@ class Equation(VarEquSymbol):
         return EQU_DEFAULT_VALUES[self._type]
 
     @property
-    def type(self):
+    def type(self) -> str:
         """
         The type of the equation.
 
@@ -985,7 +996,7 @@ class Equation(VarEquSymbol):
         return self._type
 
     @type.setter
-    def type(self, eq_type: str | EquationType):
+    def type(self, eq_type: str | EquationType) -> None:
         given_type = cast_type(eq_type)
         self._type = given_type
 

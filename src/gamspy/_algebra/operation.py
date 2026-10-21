@@ -19,13 +19,14 @@ from gamspy.exceptions import GamspyException, ValidationError
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    import graphviz
     import pandas as pd
 
     from gamspy._algebra.expression import Expression
     from gamspy._notation import Notation
     from gamspy._symbols import Alias, Equation, Parameter, Set, Variable
     from gamspy._symbols.implicits import ImplicitSet
-    from gamspy._types import OperationIndexType, OperationRhsType
+    from gamspy._types import OperableType, OperationIndexType, OperationRhsType
 
 
 class Operation(operable.Operable):
@@ -60,7 +61,9 @@ class Operation(operable.Operable):
 
     """
 
-    def __init__(self, domain: OperationIndexType, rhs: OperationRhsType, op_name: str):
+    def __init__(
+        self, domain: OperationIndexType, rhs: OperationRhsType, op_name: str
+    ) -> None:
         self.op_domain = utils._to_list(domain)  # ty: ignore[invalid-argument-type]
         if len(self.op_domain) < 1:
             raise ValidationError("Operation requires at least one index.")
@@ -283,13 +286,13 @@ class Operation(operable.Operable):
 
         return "(" + ",".join([index.gamsRepr() for index in self.op_domain]) + ")"
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def gamsRepr(self) -> str:
@@ -336,7 +339,7 @@ class Operation(operable.Operable):
 
         return output
 
-    def toGraph(self):
+    def toGraph(self) -> graphviz.Digraph:
         """
         Return a ``graphviz.Digraph`` of this operation's tree.
 
@@ -469,14 +472,16 @@ class Sum(Operation):
 
     """
 
-    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
+    def __init__(
+        self, domain: OperationIndexType, expression: OperationRhsType
+    ) -> None:
         super().__init__(domain, expression, "sum")
 
     def __repr__(self) -> str:
         return f"Sum(domain={self.domain}, expression={self.rhs})"
 
     @override
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """
         Representation of the Sum operation in GAMS language.
 
@@ -528,14 +533,16 @@ class Product(Operation):
 
     """
 
-    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
+    def __init__(
+        self, domain: OperationIndexType, expression: OperationRhsType
+    ) -> None:
         super().__init__(domain, expression, "prod")
 
     def __repr__(self) -> str:
         return f"Product(domain={self.domain}, expression={self.rhs})"
 
     @override
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """
         Representation of the Product operation in GAMS language.
 
@@ -587,14 +594,16 @@ class Smin(Operation):
 
     """
 
-    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
+    def __init__(
+        self, domain: OperationIndexType, expression: OperationRhsType
+    ) -> None:
         super().__init__(domain, expression, "smin")
 
     def __repr__(self) -> str:
         return f"Smin(domain={self.domain}, expression={self.rhs})"
 
     @override
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """
         Representation of the Smin operation in GAMS language.
 
@@ -646,14 +655,16 @@ class Smax(Operation):
 
     """
 
-    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
+    def __init__(
+        self, domain: OperationIndexType, expression: OperationRhsType
+    ) -> None:
         super().__init__(domain, expression, "smax")
 
     def __repr__(self) -> str:
         return f"Smax(domain={self.domain}, expression={self.rhs})"
 
     @override
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """
         Representation of the Smax operation in GAMS language.
 
@@ -705,14 +716,16 @@ class Sand(Operation):
 
     """
 
-    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
+    def __init__(
+        self, domain: OperationIndexType, expression: OperationRhsType
+    ) -> None:
         super().__init__(domain, expression, "sand")
 
     def __repr__(self) -> str:
         return f"Sand(domain={self.domain}, expression={self.rhs})"
 
     @override
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """
         Representation of the Sand operation in GAMS language.
 
@@ -763,7 +776,9 @@ class Sor(Operation):
 
     """
 
-    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
+    def __init__(
+        self, domain: OperationIndexType, expression: OperationRhsType
+    ) -> None:
         super().__init__(domain, expression, "sor")
 
     def __repr__(self) -> str:
@@ -810,7 +825,7 @@ class Ord(operable.Operable):
 
     """
 
-    def __new__(cls, symbol: Set | Alias):
+    def __new__(cls, symbol: Set | Alias) -> Ord | int:
         if not isinstance(symbol, (syms.Set, syms.Alias)):
             raise ValidationError("Ord operation is only for Set and Alias objects!")
 
@@ -819,25 +834,25 @@ class Ord(operable.Operable):
 
         return super().__new__(cls)
 
-    def __init__(self, symbol: Set | Alias):
+    def __init__(self, symbol: Set | Alias) -> None:
         self._symbol = symbol
         self.container = symbol.container
         self.domain: list[Set | Alias] = []
         self.where = condition.Condition(self)
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "eq", other)
 
-    def __ge__(self, other):
+    def __ge__(self, other: OperableType) -> Expression:
         return expression.Expression(self, ">=", other)
 
-    def __le__(self, other):
+    def __le__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "<=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def gamsRepr(self) -> str:
@@ -934,22 +949,22 @@ class Card(operable.Operable):
         self.domain: list[Set | Alias] = []
         self.where = condition.Condition(self)
 
-    def __eq__(self, other) -> Expression:
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "eq", other)
 
-    def __ge__(self, other):
+    def __ge__(self, other: OperableType) -> Expression:
         return expression.Expression(self, ">=", other)
 
-    def __le__(self, other):
+    def __le__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "<=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         raise ValidationError(
             "Card operation cannot be used as a truth value. Use len(<symbol>.records) instead."
         )

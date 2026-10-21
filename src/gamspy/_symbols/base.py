@@ -42,8 +42,9 @@ from gamspy._universe import UNIVERSE, Universe, is_universe
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Sequence
+    from collections.abc import Callable, Generator, Iterable, Sequence
 
+    import graphviz
     from scipy.sparse import coo_matrix
 
     from gamspy import (
@@ -69,6 +70,7 @@ if TYPE_CHECKING:
         DomainType,
         NormalizedDomainType,
         RecordsSourceType,
+        VarEquRecordsType,
     )
 
 
@@ -93,7 +95,7 @@ def _deserialize_assignment(declaration: str) -> Expression:
 class SymbolConstructor(type):
     """Resolves Symbol(container, name) to an already-declared symbol."""
 
-    def __call__(cls: type[T], *args: Any, **kwargs: Any) -> T:
+    def __call__(cls: type[T], *args: Any, **kwargs: Any) -> T:  # noqa: ANN401
         container = args[0] if args else kwargs.get("container")
         name = args[1] if len(args) > 1 else kwargs.get("name")
 
@@ -165,16 +167,16 @@ class BaseSymbol(metaclass=SymbolConstructor):
         name = validation.validate_name(name)
         return container, name.lower() if is_miro else name
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         raise ValidationError("A symbol cannot be used as a truth value.")
 
-    def __len__(self):
+    def __len__(self) -> int:
         if self.records is not None:
             return len(self.records.index)
 
         return 0
 
-    def latexRepr(self):
+    def latexRepr(self) -> str:
         """
         Representation of symbol in Latex.
 
@@ -218,7 +220,7 @@ class BaseSymbol(metaclass=SymbolConstructor):
     def _math_repr(self, notation: Notation) -> str:
         return self._math_name(notation)
 
-    def toGraph(self):
+    def toGraph(self) -> graphviz.Digraph:
         """
         Return a ``graphviz.Digraph`` of this symbol's expression tree.
 
@@ -559,10 +561,14 @@ class DataSymbol(BaseSymbol):
     def _attributes(self) -> list[str]: ...
 
     @abstractmethod
-    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None: ...
+    def _setRecords(
+        self, records: VarEquRecordsType, *, uels_on_axes: bool = False
+    ) -> None: ...
 
     @abstractmethod
-    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None: ...
+    def setRecords(
+        self, records: VarEquRecordsType | None, uels_on_axes: bool = False
+    ) -> None: ...
 
     def _init_symbol(
         self: Set | Parameter | Variable | Equation,
@@ -627,7 +633,7 @@ class DataSymbol(BaseSymbol):
 
     def _init_records(
         self,
-        records: Any,
+        records: VarEquRecordsType | None,
         *,
         uels_on_axes: bool,
     ) -> None:
@@ -679,7 +685,7 @@ class DataSymbol(BaseSymbol):
 
     def _redefine_records(
         self,
-        records: Any,
+        records: VarEquRecordsType | None,
         *,
         uels_on_axes: bool,
     ) -> None:
@@ -720,10 +726,10 @@ class DataSymbol(BaseSymbol):
 
         self._domain = new_domain
 
-    def _deserialize_value(self, key: str, value: Any) -> Any:
+    def _deserialize_value(self, key: str, value: object) -> object:
         """Rebuilds the value of a serialized attribute."""
         if key == "_assignment":
-            return _deserialize_assignment(value)
+            return _deserialize_assignment(cast("str", value))
 
         return value
 
@@ -759,7 +765,7 @@ class DataSymbol(BaseSymbol):
 
     def _update_records(
         self,
-        records: Any,
+        records: VarEquRecordsType | None,
         *,
         uels_on_axes: bool,
     ) -> None:
@@ -777,7 +783,7 @@ class DataSymbol(BaseSymbol):
         self._container._synch_with_gams()
 
     @contextlib.contextmanager
-    def _miro_unprotected(self):
+    def _miro_unprotected(self) -> Generator[None]:
         options = self._container._options
         previous_state = options.miro_protect
         options.miro_protect = False
@@ -874,7 +880,7 @@ class DataSymbol(BaseSymbol):
         return self.records.columns.tolist()[: self.dimension]
 
     @domain_labels.setter
-    def domain_labels(self, labels):
+    def domain_labels(self, labels: list[str] | str) -> None:
         if not isinstance(labels, list):
             labels = [labels]
 
@@ -1170,12 +1176,12 @@ class DataSymbol(BaseSymbol):
         self.records.drop(index=violations.index, inplace=True)  # ty: ignore[unresolved-attribute]
 
     @property
-    def domain_type(self):
+    def domain_type(self) -> str:
         """State of the domain links"""
         return self._domain_status.name
 
     @property
-    def _domain_status(self):
+    def _domain_status(self) -> DomainStatus:
         AnyContainerDomainSymbol = (gp.Set, gp.Alias, gp.UniverseAlias)
 
         if (
@@ -1188,7 +1194,7 @@ class DataSymbol(BaseSymbol):
 
         return DomainStatus.relaxed
 
-    def _assert_valid_records(self):
+    def _assert_valid_records(self) -> None:
         if self.records is None:
             return None
 
@@ -2143,7 +2149,7 @@ class VarEquSymbol(NumericSymbol):
         return list(VAR_EQU_ATTRIBUTES)
 
     @property
-    def summary(self):
+    def summary(self) -> dict:
         return {
             "name": self.name,
             "description": self.description,
@@ -2340,7 +2346,9 @@ class VarEquSymbol(NumericSymbol):
         return toDictVariableEquation(self, columns=columns, orient=orient)
 
     def _setRecords(
-        self: Variable | Equation, records, uels_on_axes: bool = False
+        self: Variable | Equation,
+        records: VarEquRecordsType,
+        uels_on_axes: bool = False,
     ) -> None:
         VarEquIngestor(self).ingest(records, uels_on_axes=uels_on_axes)
         self._handle_domain_violations()

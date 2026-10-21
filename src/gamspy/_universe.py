@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, final
+from typing import TYPE_CHECKING, ClassVar, Literal, final
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -34,7 +34,7 @@ class Universe:
     def __str__(self) -> str:
         return "*"
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Universe):
             return True
 
@@ -59,7 +59,7 @@ class Universe:
 UNIVERSE = Universe()
 
 
-def is_universe(elem) -> bool:
+def is_universe(elem: object) -> bool:
     if isinstance(elem, str):
         return elem == "*"
 

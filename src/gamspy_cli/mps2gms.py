@@ -4,7 +4,7 @@ import os
 import platform
 import subprocess
 from pathlib import Path  # noqa: TC003
-from typing import Annotated
+from typing import Annotated, Never
 
 import typer
 
@@ -16,19 +16,19 @@ VALID_CONVERTSENSE = {"0", "N", "1", "Y", "MIN", "-1", "MAX"}
 
 
 # Completion functions for Typer
-def complete_yn(ctx: typer.Context, incomplete: str):
+def complete_yn(ctx: typer.Context, incomplete: str) -> list[str]:
     return [v for v in VALID_YN if v.lower().startswith(incomplete.lower())]
 
 
-def complete_duplicates(ctx: typer.Context, incomplete: str):
+def complete_duplicates(ctx: typer.Context, incomplete: str) -> list[str]:
     return [v for v in VALID_DUPLICATES if v.lower().startswith(incomplete.lower())]
 
 
-def complete_orignames(ctx: typer.Context, incomplete: str):
+def complete_orignames(ctx: typer.Context, incomplete: str) -> list[str]:
     return [v for v in VALID_ORIGNAMES if v.lower().startswith(incomplete.lower())]
 
 
-def complete_convertsense(ctx: typer.Context, incomplete: str):
+def complete_convertsense(ctx: typer.Context, incomplete: str) -> list[str]:
     return [v for v in VALID_CONVERTSENSE if v.lower().startswith(incomplete.lower())]
 
 
@@ -83,7 +83,7 @@ def mps2gms(
             autocompletion=complete_convertsense,
         ),
     ] = None,
-):
+) -> Never:
     """
     Translates an MPS or LP file into equivalent generic GAMS and GAMSPy programs.
     Defaults to writing .py and .gdx files if no outputs are specified.

@@ -125,7 +125,7 @@ class Problem(StrEnum):
     """Extended Mathematical Program"""
 
     @classmethod
-    def values(cls):
+    def values(cls) -> list[str]:
         """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
 
@@ -162,7 +162,7 @@ class Sense(StrEnum):
     """Assess feasibility."""
 
     @classmethod
-    def values(cls):
+    def values(cls) -> list[str]:
         """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
 
@@ -417,7 +417,7 @@ class Model:
         | None = None,
         limited_variables: Sequence[ImplicitVariable] | None = None,
         external_module: str | None = None,
-    ):
+    ) -> None:
         if container is not None and not isinstance(container, gp.Container):
             raise TypeError(
                 f"Container must of type `Container` but found {type(container)}"
@@ -1027,7 +1027,7 @@ class Model:
         return self._external_module
 
     @external_module.setter
-    def external_module(self, value: str | None):
+    def external_module(self, value: str | None) -> None:
         if self._external_module_file is not None:
             self.container._add_statement(f"putclose {self._external_module_file};")
 
@@ -1334,7 +1334,7 @@ class Model:
                 ]
 
                 for name in var_names:
-                    variable: Variable = self.container._data[name]
+                    variable = cast("Variable", self.container._data[name])
                     infeas_rows = utils._calculate_infeasibilities(variable)
                     infeas_dict[variable.name] = infeas_rows
 

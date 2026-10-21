@@ -53,7 +53,7 @@ class Linear(_WeightedLayer):
         name_prefix: str | None = None,
         *,
         bias: bool = True,
-    ):
+    ) -> None:
         if not isinstance(in_features, int) or in_features <= 0:
             raise ValidationError("in_features must be a positive integer")
 

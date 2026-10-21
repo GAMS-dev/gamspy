@@ -7,7 +7,14 @@ import xarray as xr
 
 
 ########## Linopy ##########
-def run_linopy(I, IJK, JKL, KLM, repeats, number):
+def run_linopy(
+    I: list[str],
+    IJK: pd.DataFrame,
+    JKL: pd.DataFrame,
+    KLM: pd.DataFrame,
+    repeats: int,
+    number: int,
+) -> pd.DataFrame:
     setup = {
         "IJK": IJK[IJK["value"] == 1][["i", "j", "k"]],
         "JKL": JKL[JKL["value"] == 1][["j", "k", "l"]],
@@ -35,7 +42,7 @@ def run_linopy(I, IJK, JKL, KLM, repeats, number):
     return result
 
 
-def linopy_model(IJK, JKL, KLM):
+def linopy_model(IJK: pd.DataFrame, JKL: pd.DataFrame, KLM: pd.DataFrame) -> None:
     ijklm = IJK.merge(JKL, on=["j", "k"]).merge(KLM, on=["k", "l"])
 
     model = linopy.Model()

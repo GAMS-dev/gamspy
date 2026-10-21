@@ -65,7 +65,7 @@ def license(
     use_uv: bool = typer.Option(
         False, "--use-uv", help="Use uv instead of pip to install solvers."
     ),
-):
+) -> None:
     import json
 
     import requests
@@ -284,7 +284,7 @@ def _add_installed_addon(addons_path: str, solver_name: str) -> None:
         file.write("\n".join(installed) + "\n")
 
 
-def complete_solver_names(ctx: typer.Context, incomplete: str):
+def complete_solver_names(ctx: typer.Context, incomplete: str) -> list[str]:
     import gamspy.utils as utils
 
     return [
@@ -333,7 +333,7 @@ def solver(
     use_uv: bool = typer.Option(
         False, "--use-uv", help="Use uv instead of pip to install solvers."
     ),
-):
+) -> None:
     import gamspy_base
 
     import gamspy.utils as utils
@@ -358,7 +358,7 @@ def solver(
     if "CURL_CA_BUNDLE" not in environment_variables:
         environment_variables["CURL_CA_BUNDLE"] = certifi.where()
 
-    def install_addons(addons: Iterable[str]):
+    def install_addons(addons: Iterable[str]) -> None:
         for item in addons:
             solver_name = item.lower()
 

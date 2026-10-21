@@ -25,6 +25,9 @@ from gamspy._symbols.utils import (
 )
 
 if TYPE_CHECKING:
+    from pandas.api.extensions import ExtensionArray
+    from typing_extensions import TypeIs
+
     from gamspy._symbols import Alias, Equation, Parameter, Set, UniverseAlias, Variable
     from gamspy._types import (
         ParameterRecordsType,
@@ -42,11 +45,11 @@ STR_SPECIAL_VALUES = (
 )
 
 
-def _is_float_array(values: Any) -> bool:
+def _is_float_array(values: object) -> TypeIs[np.ndarray]:
     return isinstance(values, np.ndarray) and values.dtype == np.float64
 
 
-def _is_numeric(dtype: Any) -> bool:
+def _is_numeric(dtype: object) -> bool:
     return isinstance(dtype, np.dtype) and dtype.kind in "biuf"
 
 
@@ -79,14 +82,16 @@ def _remap_special_values(column: pd.Series) -> pd.Series:
     return pd.Series(values, index=column.index, dtype=object)
 
 
-def _empty_texts(size: int) -> Any:
+def _empty_texts(size: int) -> ExtensionArray | np.ndarray:
     if isinstance(_STR_DTYPE, pd.StringDtype):
         return pd.array([""], dtype=_STR_DTYPE).take(np.zeros(size, dtype=np.intp))
 
     return np.full(size, "", dtype=object)
 
 
-def _as_floats(values: Any) -> np.ndarray | pd.Series:
+def _as_floats(
+    values: np.ndarray | pd.Series | ExtensionArray,
+) -> np.ndarray | pd.Series:
     if _is_float_array(values):
         return values
 
@@ -111,7 +116,7 @@ def _as_floats(values: Any) -> np.ndarray | pd.Series:
 class BaseIngestor:
     """Base strategy for ingesting records into GAMSPy symbols."""
 
-    def __init__(self, symbol: SymbolWithRecordsType):
+    def __init__(self, symbol: SymbolWithRecordsType) -> None:
         self.symbol = symbol
 
     def ingest(
@@ -248,7 +253,9 @@ class BaseIngestor:
     def _from_dict(self, records: dict) -> None:  # pragma: no cover
         raise NotImplementedError
 
-    def _from_else(self, records: Any) -> None:  # pragma: no cover
+    def _from_else(
+        self, records: SetRecordsType | ParameterRecordsType | VarEquRecordsType
+    ) -> None:  # pragma: no cover
         raise NotImplementedError
 
 
@@ -273,7 +280,11 @@ class ParameterIngestor(BaseIngestor):
         )
         self.symbol.records = records
 
-    def _store(self, domain_columns: list[Any], values: Any) -> None:
+    def _store(
+        self,
+        domain_columns: list[Any],
+        values: np.ndarray | pd.Series | ExtensionArray,
+    ) -> None:
         attributes = self.symbol._attributes
         names = (
             generate_unique_labels(self.symbol.domain_names, reserved=attributes)

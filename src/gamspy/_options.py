@@ -4,7 +4,7 @@ import contextlib
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, TextIO
+from typing import TYPE_CHECKING, Any, Literal, TextIO, TypeVar, cast
 
 from pydantic import BaseModel, ConfigDict
 from typing_extensions import override
@@ -24,6 +24,8 @@ SOLVE_LINK_MAP_REVERSE = dict(
 )
 
 SOLVE_OPT_MAP = {"replace": 0, "merge": 1, "clear": 2}
+
+_T = TypeVar("_T")
 
 # GAMSPy to GAMS option mapping
 OPTION_MAP = {
@@ -129,10 +131,10 @@ CONTAINER_FORBIDDEN_OPTIONS = (
 )
 
 
-def _format_model_attr_value(key: str, value: Any) -> str:
+def _format_model_attr_value(key: str, value: str | float) -> str:
     """Formats an option value for a GAMS model attribute assignment."""
     if key == "merge_strategy":
-        return str(SOLVE_OPT_MAP[value])
+        return str(SOLVE_OPT_MAP[cast("str", value)])
 
     if isinstance(value, bool):
         return str(int(value))
@@ -440,7 +442,7 @@ class Options(BaseModel):
         self._solve_line: str | None = None
 
     @staticmethod
-    def _cast_value(value: Any) -> Any:
+    def _cast_value(value: _T) -> _T | bool | int | float:
         """Casts raw string values from GAMS into appropriate Python types."""
         if isinstance(value, str):
             val_lower = value.lower()
@@ -920,7 +922,7 @@ def get_options_file_name(solver: str, file_number: int) -> str:
     return f"{solver}.{file_number}"
 
 
-def _format_scip_value(value: Any) -> Any:
+def _format_scip_value(value: _T) -> _T | str:
     """
     SCIP's option file parser requires the value of a string parameter to be
     enclosed in double quotes (e.g. `lp/solver = "highs"`) whereas the values of

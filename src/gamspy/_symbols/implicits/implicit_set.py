@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
     from gamspy._notation import Notation
-    from gamspy._types import ValidatedIndexType
+    from gamspy._types import OperableType, ValidatedIndexType
 
 
 class ImplicitSet(ImplicitSymbol, operable.Operable):
@@ -47,10 +47,10 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
 
         super().__init__(name, domain, parent_scalar_domains=scalar_domains)
 
-    def __ge__(self, other) -> Expression:
+    def __ge__(self, other: OperableType) -> Expression:
         return expression.Expression(self, ">=", other)
 
-    def __le__(self, other) -> Expression:
+    def __le__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "<=", other)
 
     def __repr__(self) -> str:

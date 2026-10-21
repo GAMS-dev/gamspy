@@ -62,7 +62,10 @@ class SpecialValues:
     NEGINF = float("-inf")
 
     @staticmethod
-    def _convertNPfloat64(records, sv_name) -> np.ndarray:
+    def _convertNPfloat64(
+        records: int | float | str | np.ndarray | pd.Series | pd.DataFrame,
+        sv_name: str,
+    ) -> np.ndarray:
         if not (
             isinstance(records, np.ndarray) and np.issubdtype(records.dtype, np.float64)
         ):

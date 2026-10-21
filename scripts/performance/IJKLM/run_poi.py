@@ -8,7 +8,14 @@ from pyoptinterface import highs
 
 
 ########## PyOptInterface ##########
-def run_poi(I, ijk, jkl, klm, repeats, number):
+def run_poi(
+    I: list[str],
+    ijk: dict[tuple[str, str], list[str]],
+    jkl: dict[tuple[str, str], list[str]],
+    klm: dict[tuple[str, str], list[str]],
+    repeats: int,
+    number: int,
+) -> pd.DataFrame:
     setup = {
         "I": I,
         "ijk": ijk,
@@ -37,7 +44,12 @@ def run_poi(I, ijk, jkl, klm, repeats, number):
     return result
 
 
-def poi_model(I, ijk, jkl, klm):
+def poi_model(
+    I: list[str],
+    ijk: dict[tuple[str, str], list[str]],
+    jkl: dict[tuple[str, str], list[str]],
+    klm: dict[tuple[str, str], list[str]],
+) -> None:
     model = highs.Model()
     model.set_model_attribute(poi.ModelAttribute.Silent, True)
 

@@ -25,7 +25,7 @@ class Operable:
     to be used in Expressions
     """
 
-    def __iter__(self):
+    def __iter__(self) -> typing.NoReturn:
         raise ValidationError(
             "GAMSPy symbols are not iterable. If you want to iterate on records, iterate over <symbol>.records."
         )
@@ -143,7 +143,7 @@ class Operable:
 
         return gamspy_math.rpower(self, other)
 
-    def __rpow__(self, other: int | float) -> Expression:
+    def __rpow__(self, other: int | float) -> MathOp:
         # e.g. 2 ** a[i] -> where 2 is other and a[i] is self.
         return gamspy_math.rpower(other, self)
 
@@ -201,7 +201,7 @@ class Operable:
         left_domain, right_domain, sum_domain = _validate_matrix_mult_dims(self, other)
         return operation.Sum([sum_domain], self[left_domain] * other[right_domain])
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.gamsRepr()
 
     @abstractmethod

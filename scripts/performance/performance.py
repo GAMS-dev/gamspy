@@ -20,7 +20,7 @@ usual_suspects = [
 ]
 
 
-def load_pstats_as_dict(file_path):
+def load_pstats_as_dict(file_path: str) -> dict[str, float]:
     stats = pstats.Stats(file_path)  # Load the .pstats file
     stats_data = {}
 
@@ -33,7 +33,7 @@ def load_pstats_as_dict(file_path):
     return stats_data
 
 
-def main():
+def main() -> None:
     all_models = glob.glob(
         os.path.join(base_dir, "tests", "integration", "models", "*.py")
     )

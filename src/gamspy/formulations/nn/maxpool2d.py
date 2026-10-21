@@ -51,7 +51,7 @@ class MaxPool2d(_MPool2d):
         stride: int | tuple[int, int] | None = None,
         padding: int | tuple[int, int] = 0,
         name_prefix: str | None = None,
-    ):
+    ) -> None:
         self._init_kwargs = {
             k: v
             for k, v in locals().items()

@@ -18,6 +18,8 @@ from gamspy._execution.base import ExecutionEngine
 from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
 if TYPE_CHECKING:
+    from types import FrameType
+
     from gamspy import Container, Model, Options
 
 
@@ -175,7 +177,7 @@ class SocketEngine(ExecutionEngine):
                 f"Error while reading the port! {port_info + process.stdout.read()}"  # ty: ignore[unresolved-attribute]
             ) from e
 
-        def handler(signum, frame):  # pragma: no cover
+        def handler(signum: int, frame: FrameType | None) -> None:  # pragma: no cover
             if platform.system() != "Windows":
                 os.kill(process.pid, signal.SIGINT)
 

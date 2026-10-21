@@ -26,13 +26,14 @@ from gamspy.math.misc import MathOp
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
+    import graphviz
     import numpy as np
     import pandas as pd
 
     from gamspy import Alias, Container, Set
     from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitEquation
-    from gamspy._types import OperableType
+    from gamspy._types import IndexType, OperableType
 
 GMS_MAX_LINE_LENGTH = 80000
 LINE_LENGTH_OFFSET = 79000
@@ -119,9 +120,9 @@ def split_assignment(declaration: str) -> tuple[str, str, str]:
     raise ValidationError(f"`{declaration}` is not a valid GAMS assignment.")
 
 
-def get_operand_gams_repr(operand) -> str:
+def get_operand_gams_repr(operand: object) -> str:
     if hasattr(operand, "gamsRepr"):
-        return operand.gamsRepr()
+        return operand.gamsRepr()  # ty: ignore[call-non-callable]
 
     representation = str(operand)
 
@@ -173,7 +174,7 @@ def _math_number(value: int | float, notation: Notation) -> tuple[str, float]:
     return representation, precedence
 
 
-def math_operand(operand, notation: Notation) -> tuple[str, float, bool]:
+def math_operand(operand: object, notation: Notation) -> tuple[str, float, bool]:
     """
     Returns the representation of an operand in the given notation, its
     precedence, and whether it ends with a big operator (e.g. a sum) whose
@@ -199,16 +200,16 @@ def math_operand(operand, notation: Notation) -> tuple[str, float, bool]:
         return operand._math_repr(notation), CONDITION_PRECEDENCE, False
 
     if hasattr(operand, "_math_repr"):
-        return operand._math_repr(notation), LEAF_PRECEDENCE, False
+        return operand._math_repr(notation), LEAF_PRECEDENCE, False  # ty: ignore[call-non-callable]
 
     return str(operand), LEAF_PRECEDENCE, False
 
 
-def get_operand_math_repr(operand, notation: Notation) -> str:
+def get_operand_math_repr(operand: object, notation: Notation) -> str:
     return math_operand(operand, notation)[0]
 
 
-def get_logical_gams_repr(operand) -> str:
+def get_logical_gams_repr(operand: object) -> str:
     if isinstance(operand, Expression):
         return create_gams_expression(operand, logical=True)
 
@@ -398,7 +399,9 @@ def _create_math_expression(
     return eval_stack[0]
 
 
-def _describe_graph_node(node):
+def _describe_graph_node(
+    node: object,
+) -> tuple[str, str, list[tuple[object, str | None]]]:
     """
     Return (label, shape, children) for a single node of an expression
     tree. children is a list of (child, edge_label) tuples; leaves
@@ -445,7 +448,7 @@ def _describe_graph_node(node):
     return get_operand_gams_repr(node), LEAF_SHAPE, []
 
 
-def find_symbols(root_node) -> Iterator[str]:
+def find_symbols(root_node: object) -> Iterator[str]:
     """
     Yields the names of all symbols that root_node refers to, including the
     sets in their domains, with a stack-based traversal (O(N)).
@@ -467,17 +470,17 @@ def find_symbols(root_node) -> Iterator[str]:
 
             stack.extend(
                 elem
-                for elem in node.domain
+                for elem in node.domain  # ty: ignore[unresolved-attribute]
                 if not isinstance(elem, str) and elem.name != node.name
             )
         elif isinstance(node, ImplicitSymbol):
-            stack.append(node.parent)
+            stack.append(node.parent)  # ty: ignore[unresolved-attribute]
             stack.extend(node.domain)
         else:
             stack.extend(child for child, _ in _describe_graph_node(node)[2])
 
 
-def find_symbols_in_conditions(root_node) -> Iterator[str]:
+def find_symbols_in_conditions(root_node: object) -> Iterator[str]:
     """
     Yields the names of all symbols that are used in a condition anywhere in
     root_node.
@@ -500,7 +503,7 @@ def find_symbols_in_conditions(root_node) -> Iterator[str]:
         stack.extend(child for child, _ in _describe_graph_node(node)[2])
 
 
-def create_graph(root_node):
+def create_graph(root_node: object) -> graphviz.Digraph:
     """
     Build a graphviz.Digraph representing the tree structure of ``root_node``
     (an ``Expression``, ``Operation``, or ``Condition``). Every node in the tree
@@ -575,7 +578,7 @@ class Expression(operable.Operable):
         left: OperableType | ImplicitEquation | str | None,
         operator: str,
         right: OperableType | str | None,
-    ):
+    ) -> None:
         self.left = utils._map_special_values(left) if isinstance(left, float) else left
         self.operator = operator
         self.right = (
@@ -606,7 +609,7 @@ class Expression(operable.Operable):
 
         return self._representation
 
-    def _create_domain(self):
+    def _create_domain(self) -> None:
         left = self.left
         if isinstance(left, condition.Condition):
             left = left.conditioning_on
@@ -659,7 +662,7 @@ class Expression(operable.Operable):
         self.domain = list(set_to_index)
         self.dimension = validation.get_dimension(self.domain)
 
-    def __getitem__(self, indices):
+    def __getitem__(self, indices: IndexType) -> Expression:
         indices = validation.validate_domain(self, indices)
         left_domain = list(self._left_domain)
         right_domain = list(self._right_domain)
@@ -767,16 +770,16 @@ class Expression(operable.Operable):
 
         return []
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         return Expression(self, "=e=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         raise ValidationError(
             "An expression cannot be used as a truth value. If you are "
             "trying to generate an expression, use binary operators "
@@ -854,7 +857,7 @@ class Expression(operable.Operable):
         """
         return self.representation
 
-    def toGraph(self):
+    def toGraph(self) -> graphviz.Digraph:
         """
         Return a ``graphviz.Digraph`` of this expression's tree.
 
@@ -913,7 +916,7 @@ class Expression(operable.Operable):
         _validate_controlled(self.right, control_stack)
 
 
-def _is_acting_like_set(operand) -> bool:
+def _is_acting_like_set(operand: object) -> bool:
     """True if the operand acts as a set in GAMS set algebra."""
     if isinstance(operand, ImplicitSet):
         return True
@@ -946,7 +949,7 @@ class SetExpression(Expression):
         left: OperableType | None,
         data: Literal["+", "-", "*", "not"],
         right: OperableType,
-    ):
+    ) -> None:
         super().__init__(left, data, right)
         self._acting_like_set = True
         self._adjust_left_right()
@@ -1093,14 +1096,14 @@ class ShiftExpression(Expression):
 
         return f"({representation})"
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         # A shift is an index and not a value. Identity check instead of building expression.
         return self is other
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         return self is not other
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def __add__(self, other: OperableType) -> Expression:
@@ -1165,7 +1168,7 @@ class ShiftExpression(Expression):
     def __le__(self, other: OperableType) -> Expression:
         return Expression(self, "<=", other)
 
-    def __getitem__(self, indices) -> None:
+    def __getitem__(self, indices: IndexType) -> None:
         raise ValidationError(
             f"`{self.gamsRepr()}` is a lag/lead operation and cannot be indexed."
         )
@@ -1364,7 +1367,9 @@ def _check_uncontrolled_indices(
             )
 
 
-def _validate_controlled(node, control_stack: list[Set | Alias | ImplicitSet]) -> None:
+def _validate_controlled(
+    node: object, control_stack: list[Set | Alias | ImplicitSet]
+) -> None:
     """
     Walk a right-hand-side value expression and ensure every set used as an index is
     controlled by control_stack.

@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
     from gamspy import Container
     from gamspy._notation import Notation
+    from gamspy._types import OperableType
 
 
 class ExtrinsicFunction(operable.Operable):
@@ -22,14 +23,14 @@ class ExtrinsicFunction(operable.Operable):
     are limited to 20 scalar arguments and return a scalar value.
     """
 
-    def __init__(self, container: Container, name: str):
+    def __init__(self, container: Container, name: str) -> None:
         self.container = container
         self.name = name
         self.args: tuple = ()
         self.domain: list = []
         self.dimension = 0
 
-    def __len__(self):
+    def __len__(self) -> int:
         if self.records is not None:
             return len(self.records.index)
 
@@ -65,16 +66,16 @@ class ExtrinsicFunction(operable.Operable):
 
         return records["value"][0]
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> expression.Expression:
         return expression.Expression(self, "=e=", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> expression.Expression:
         return expression.Expression(self, "ne", other)
 
-    def __call__(self, *args, **kwds) -> ExtrinsicFunction:
+    def __call__(self, *args: OperableType | str, **kwds: object) -> ExtrinsicFunction:
         if kwds:
             raise ValidationError("External functions do not accept keyword arguments")
 
@@ -173,7 +174,9 @@ class ExtrinsicLibrary:
         Functions to be imported from the extrinsic library.
     """
 
-    def __init__(self, container: Container, path: str, functions: dict[str, str]):
+    def __init__(
+        self, container: Container, path: str, functions: dict[str, str]
+    ) -> None:
         self.container = container
         self.name = "ext" + utils._get_unique_name()
         self.path = path
@@ -194,7 +197,7 @@ class ExtrinsicLibrary:
 
         return library_str
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> ExtrinsicFunction:
         if name in self.functions:
             return ExtrinsicFunction(self.container, name)
 

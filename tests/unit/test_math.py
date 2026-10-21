@@ -46,18 +46,14 @@ def test_math(transport):
     assert op2.gamsRepr() == "centropy(v(i),b(i),1e-20)"
     op2 = gams_math.centropy(v[i], b[i], 1e-15)
     assert op2.gamsRepr() == "centropy(v(i),b(i),1e-15)"
-    with pytest.raises(ValueError):
-        gams_math.centropy(v[i], b[i], -1)
-    with pytest.raises(TypeError):
-        gams_math.centropy(v[i], b[i], s1)
+    op2 = gams_math.centropy(v[i], b[i], s1)
+    assert op2.gamsRepr() == "centropy(v(i),b(i),s1)"
 
     # cvPower
     op2 = gams_math.cv_power(3, b[i])
     assert op2.gamsRepr() == "cvPower(3,b(i))"
-    with pytest.raises(ValueError):
-        gams_math.cv_power(s1, b[i])
-    with pytest.raises(ValueError):
-        gams_math.cv_power(-1, b[i])
+    op2 = gams_math.cv_power(s1, b[i])
+    assert op2.gamsRepr() == "cvPower(s1,b(i))"
 
     # rPower
     op2 = gams_math.rpower(b[i], 3)
@@ -66,10 +62,10 @@ def test_math(transport):
     # signPower
     op2 = gams_math.sign_power(b[i], 3)
     assert op2.gamsRepr() == "signPower(b(i),3)"
-    with pytest.raises(ValueError):
-        gams_math.sign_power(b[i], s1)
-    with pytest.raises(ValueError):
-        gams_math.sign_power(b[i], -5)
+    op2 = gams_math.sign_power(b[i], s1)
+    assert op2.gamsRepr() == "signPower(b(i),s1)"
+    op2 = gams_math.sign_power(b[i], -5)
+    assert op2.gamsRepr() == "signPower(b(i),-5)"
 
     # vcPower
     op2 = gams_math.vc_power(b[i], 3)

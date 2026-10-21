@@ -106,7 +106,7 @@ def miro(
     subprocess.run([miro_path], env=subprocess_env, check=True)
 
 
-def discover_miro():
+def discover_miro() -> str | None:
     system = platform.system()
     if system == "Linux":
         return None

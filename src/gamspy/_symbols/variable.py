@@ -21,7 +21,12 @@ if TYPE_CHECKING:
     from gamspy import Container
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
-    from gamspy._types import DomainType, IndexType, VarEquRecordsType
+    from gamspy._types import (
+        DomainType,
+        IndexType,
+        OperableType,
+        VarEquRecordsType,
+    )
 
 VAR_DEFAULT_VALUES = {
     "binary": {
@@ -123,7 +128,7 @@ class VariableType(StrEnum):
     """Semi-integer, must be zero or above a given minimum level and integer."""
 
     @classmethod
-    def values(cls):
+    def values(cls) -> list[str]:
         """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
 
@@ -225,7 +230,7 @@ class Variable(operable.Operable, VarEquSymbol):
         description: str = "",
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
-    ):
+    ) -> None:
         if self.type != cast_type(type):
             raise TypeError(
                 "Cannot overwrite symbol in container unless variable"
@@ -254,7 +259,7 @@ class Variable(operable.Operable, VarEquSymbol):
         description: str = "",
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
-    ):
+    ) -> None:
         container, name = self._resolve_container_and_name(
             container, name, prefix="v", is_miro=is_miro_output
         )
@@ -278,10 +283,10 @@ class Variable(operable.Operable, VarEquSymbol):
 
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
     def __repr__(self) -> str:
@@ -352,7 +357,7 @@ class Variable(operable.Operable, VarEquSymbol):
         return self._l
 
     @l.setter
-    def l(self, value: int | float | Expression):
+    def l(self, value: int | float | Expression) -> None:
         self._l[...] = value
 
     @property
@@ -382,7 +387,7 @@ class Variable(operable.Operable, VarEquSymbol):
         return self._m
 
     @m.setter
-    def m(self, value: int | float | Expression):
+    def m(self, value: int | float | Expression) -> None:
         self._m[...] = value
 
     @property
@@ -412,7 +417,7 @@ class Variable(operable.Operable, VarEquSymbol):
         return self._lo
 
     @lo.setter
-    def lo(self, value: int | float | Expression):
+    def lo(self, value: int | float | Expression) -> None:
         self._lo[...] = value
 
     @property
@@ -442,7 +447,7 @@ class Variable(operable.Operable, VarEquSymbol):
         return self._up
 
     @up.setter
-    def up(self, value: int | float | Expression):
+    def up(self, value: int | float | Expression) -> None:
         self._up[...] = value
 
     @property
@@ -473,7 +478,7 @@ class Variable(operable.Operable, VarEquSymbol):
         return self._s
 
     @scale.setter
-    def scale(self, value: int | float | Expression):
+    def scale(self, value: int | float | Expression) -> None:
         if self.type in ("integer", "binary"):
             raise ValidationError("Scales cannot be applied to discrete variables.")
 
@@ -507,7 +512,7 @@ class Variable(operable.Operable, VarEquSymbol):
         return self._fx
 
     @fx.setter
-    def fx(self, value: int | float | Expression):
+    def fx(self, value: int | float | Expression) -> None:
         self._fx[...] = value
 
     @property
@@ -538,7 +543,7 @@ class Variable(operable.Operable, VarEquSymbol):
         return self._prior
 
     @prior.setter
-    def prior(self, value: int | float | Expression):
+    def prior(self, value: int | float | Expression) -> None:
         if self.type not in ("integer", "binary"):
             raise ValidationError("Priorities can only be used on discrete variables.")
 
@@ -572,7 +577,7 @@ class Variable(operable.Operable, VarEquSymbol):
         return self._stage
 
     @stage.setter
-    def stage(self, value: int | float | Expression):
+    def stage(self, value: int | float | Expression) -> None:
         self._stage[...] = value
 
     def computeInfeasibilities(self) -> pd.DataFrame | None:
@@ -710,10 +715,10 @@ class Variable(operable.Operable, VarEquSymbol):
         return self._get_records()
 
     @records.setter
-    def records(self, records: pd.DataFrame | None):
+    def records(self, records: pd.DataFrame | None) -> None:
         self._assign_records(records)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def setRecords(
@@ -759,7 +764,7 @@ class Variable(operable.Operable, VarEquSymbol):
         return self._type
 
     @type.setter
-    def type(self, var_type: str | VariableType):
+    def type(self, var_type: str | VariableType) -> None:
         """
         The type of variable; [binary, integer, positive, negative, free, sos1, sos2, semicont, semiint]
 

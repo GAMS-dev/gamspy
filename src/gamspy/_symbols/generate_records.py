@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pandas as pd
@@ -69,7 +69,7 @@ def _validate_density_and_domain(
     return density, is_empty
 
 
-def _set_empty_records(symbol: Any) -> None:
+def _set_empty_records(symbol: Set | Parameter | Variable | Equation) -> None:
     """Helper function to initialize empty records for a symbol."""
     attributes = getattr(symbol, "_attributes", [])
     symbol.records = pd.DataFrame(
@@ -78,9 +78,10 @@ def _set_empty_records(symbol: Any) -> None:
 
     symbol.domain_labels = symbol.domain_names
 
+    records = cast("pd.DataFrame", symbol.records)
     for x in range(len(symbol.domain)):
-        symbol.records.isetitem(
-            x, symbol.records.iloc[:, x].astype(CategoricalDtype([], ordered=True))
+        records.isetitem(
+            x, records.iloc[:, x].astype(CategoricalDtype([], ordered=True))
         )
 
 

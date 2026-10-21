@@ -26,7 +26,12 @@ if TYPE_CHECKING:
     from gamspy._algebra.sparse import SparseAssignment
     from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import ConditionType, ImplicitSymbolType, SymbolType
+    from gamspy._types import (
+        ConditionType,
+        ImplicitSymbolType,
+        OperableType,
+        SymbolType,
+    )
     from gamspy.math import MathOp
 
 
@@ -59,7 +64,7 @@ class Condition(operable.Operable):
         | Ord
         | MathOp,
         condition: ConditionType | Number | bool | int | float | None = None,
-    ):
+    ) -> None:
         self.conditioning_on = conditioning_on
         self.condition = condition
         self._where = None
@@ -76,13 +81,13 @@ class Condition(operable.Operable):
         if hasattr(conditioning_on, "domain"):
             self.domain = conditioning_on.domain
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def __getitem__(
@@ -105,7 +110,7 @@ class Condition(operable.Operable):
         | ImplicitParameter
         | ImplicitSet
         | SparseAssignment,
-    ):
+    ) -> None:
         if not isinstance(self.container, Container):
             raise FatalError("Cannot determine the container of the expression!")
 
@@ -161,7 +166,7 @@ class Condition(operable.Operable):
     def __repr__(self) -> str:
         return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"
 
-    def __len__(self):
+    def __len__(self) -> int:
         if self.records is not None:
             return len(self.records.index)
 

@@ -307,7 +307,7 @@ def _is_literal_bound(given: Set | Alias | ImplicitSet) -> bool:
 def validate_one_dimensional_sets(
     given: Set | Alias | ImplicitSet,
     actual: str | Set | Alias,
-):
+) -> None:
     if type(actual) not in (symbols.Set, symbols.Alias):
         return
 
@@ -340,7 +340,7 @@ def validate_one_dimensional_sets(
     )
 
 
-def validate_type(domain):
+def validate_type(domain: Iterable[object]) -> None:
     for given in domain:
         if type(given) not in (
             symbols.Set,
@@ -361,7 +361,10 @@ def validate_type(domain):
             )
 
 
-def _get_ellipsis_range(domain, given_domain):
+def _get_ellipsis_range(
+    domain: Sequence[Set | Alias | UniverseAlias | Universe | str],
+    given_domain: Sequence[Set | Alias | str | EllipsisType | slice],
+) -> tuple[int, int]:
     start = 0
     end = len(domain)
 
@@ -483,7 +486,7 @@ def validate_container(
     | Operation
     | Expression,
     given_indices: Sequence[str | Set | Alias | UniverseAlias | Universe],
-):
+) -> None:
     for set in given_indices:
         if (
             isinstance(set, (symbols.Set, symbols.Alias, symbols.UniverseAlias))

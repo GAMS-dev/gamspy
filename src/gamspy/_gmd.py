@@ -33,7 +33,7 @@ class SymbolMetadata:
 
 
 def get_uel_list(
-    gams2np: Gams2Numpy, load_from, encoding: str | None = None
+    gams2np: Gams2Numpy, load_from: object, encoding: str | None = None
 ) -> list[str]:
     uels = gams2np.gmdGetUelList(load_from, encoding=encoding)
     uels[0] = "*"
@@ -43,7 +43,7 @@ def get_uel_list(
 
 def get_records(
     gams2np: Gams2Numpy,
-    load_from,
+    load_from: object,
     symbols: list[str] | None = None,
     encoding: str | None = None,
     uels: list[str] | None = None,
@@ -157,7 +157,7 @@ def get_records(
     return records_dict
 
 
-def get_variable_equation_names(load_from) -> list[str]:
+def get_variable_equation_names(load_from: object) -> list[str]:
     """
     Return the names of all variable and equation symbols in a GMD handle.
 
@@ -181,7 +181,11 @@ def get_variable_equation_names(load_from) -> list[str]:
 
 
 def gmd_get_metadata_by_number(
-    gams2np: Gams2Numpy, load_from, symbol_number: int, encoding: str | None, status
+    gams2np: Gams2Numpy,
+    load_from: object,
+    symbol_number: int,
+    encoding: str | None,
+    status: object,
 ) -> SymbolMetadata:
     symptr = gmd.gmdGetSymbolByNumberPy(load_from, symbol_number, status)
     ret = gmd.gmdSymbolInfo(load_from, symptr, gmd.GMD_NAME)
@@ -221,7 +225,7 @@ def gmd_get_metadata_by_number(
     )
 
 
-def _set_special_values(write_to, *, eps_to_zero: bool):
+def _set_special_values(write_to: object, *, eps_to_zero: bool) -> gmd.doubleArray:
     """
     Returns the special values that were set on the handle before this call so
     they can be restored with `_reset_special_values`.
@@ -244,7 +248,9 @@ def _set_special_values(write_to, *, eps_to_zero: bool):
     return default_special_values
 
 
-def _reset_special_values(write_to, default_special_values) -> None:
+def _reset_special_values(
+    write_to: object, default_special_values: gmd.doubleArray
+) -> None:
     """Restore the special values returned by a prior `_set_special_values` call."""
     gmd.gmdSetSpecialValues(write_to, default_special_values)
 
@@ -275,8 +281,8 @@ def _param_keys_values_major(
 
 def update_parameter_records(
     gams2np: Gams2Numpy,
-    gmd_handle,
-    sym_ptr,
+    gmd_handle: object,
+    sym_ptr: object,
     records: DataFrame | None,
     dimension: int,
     *,

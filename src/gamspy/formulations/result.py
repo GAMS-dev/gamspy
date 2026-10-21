@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeAlias
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 
     import gamspy as gp
 
@@ -77,11 +77,13 @@ class FormulationResult:
         # try to use other when you can
         self.extra_return = extra_return
 
-    def __len__(self):
+    def __len__(self) -> int:
         # For backwards compat
         return 2 + (self.extra_return is not None)
 
-    def __iter__(self):
+    def __iter__(
+        self,
+    ) -> Iterator[gp.Variable | gp.Parameter | MatchesType | list[gp.Equation] | None]:
         # For backwards compat
         if self.extra_return is None:
             return [

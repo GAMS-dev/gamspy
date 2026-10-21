@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from gamspy._symbols import Alias, Equation, Parameter, Set, Variable
 
 
-def _get_lb(x: Variable, default_lb: float):
+def _get_lb(x: Variable, default_lb: float) -> Parameter:
     lb = x.container.addParameter(
         utils._get_unique_name("lb"),
         domain=x.domain,
@@ -28,7 +28,7 @@ def _get_lb(x: Variable, default_lb: float):
     return lb
 
 
-def _get_ub(x: Variable, default_ub: float):
+def _get_ub(x: Variable, default_ub: float) -> Parameter:
     ub = x.container.addParameter(
         utils._get_unique_name("ub"),
         domain=x.domain,
@@ -79,6 +79,9 @@ def relu_with_sos1_var(
     ),
     *,
     return_slack_var: bool = False,
+) -> (
+    tuple[implicits.ImplicitVariable, list[Equation]]
+    | tuple[implicits.ImplicitVariable, implicits.ImplicitVariable, list[Equation]]
 ):
     """
     Implements the ReLU activation function using
@@ -174,7 +177,7 @@ def leaky_relu_with_binary_var(
     default_ub: float = 10**6,
     *,
     return_binary_var: bool = False,
-):
+) -> tuple[Variable, list[Equation]] | tuple[Variable, Variable, list[Equation]]:
     """
     Implements the LeakyReLU activation function using binary variables. The LeakyReLU
     function is defined as LeakyReLU(x, negative_slope) = max(x, 0) + negative_slope * min(0, x).
@@ -513,7 +516,7 @@ def relu_with_complementarity_var(
         | Expression
         | Operation
     ),
-):
+) -> tuple[Variable, list[Equation]]:
     """
     Implements the ReLU activation function using complementarity conditions.
     The ReLU function is defined as ReLU(x) = max(x, 0). This implementation
@@ -578,7 +581,9 @@ def relu_with_complementarity_var(
     return y, eq
 
 
-def log_softmax(x: Variable, dim: int = -1, *, skip_intrinsic: bool = False):
+def log_softmax(
+    x: Variable, dim: int = -1, *, skip_intrinsic: bool = False
+) -> tuple[Variable, list[Equation]]:
     """
     Implements the log_softmax activation function. This function strictly
     requires a GAMSPy Variable, `y = log_softmax(x)`. The ``dim`` parameter
@@ -668,7 +673,7 @@ def log_softmax(x: Variable, dim: int = -1, *, skip_intrinsic: bool = False):
 
 def softplus(
     x: Variable,
-    beta=1.0,
+    beta: float = 1.0,
     *,
     skip_intrinsic: bool = False,
 ) -> tuple[Variable, list[Equation]]:
@@ -727,7 +732,7 @@ def softplus(
     return y, [eq]
 
 
-def softmax(x: Variable, dim: int = -1):
+def softmax(x: Variable, dim: int = -1) -> tuple[Variable, list[Equation]]:
     """
     Implements the softmax activation function. This function strictly requires
     a GAMSPy Variable, `y = softmax(x)`. The ``dim`` parameter specifies the

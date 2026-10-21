@@ -11,7 +11,9 @@ import gamspy as gp
 logging.disable(logging.WARNING)
 
 
-def solve_poi_model(Model, N, time_limit):
+def solve_poi_model(
+    Model: type[highs.Model], N: int, time_limit: float | None
+) -> float:
     m = Model()
     x = m.add_m_variables((N, N))
     y = m.add_m_variables((N, N))
@@ -37,7 +39,7 @@ def solve_poi_model(Model, N, time_limit):
     return objective_value
 
 
-def solve_gamspy_model(N, time_limit=None):
+def solve_gamspy_model(N: int, time_limit: float | None = None) -> float:
     with gp.Container() as m:
         i = gp.Set(records=range(N))
         j = gp.Alias(alias_with=i)
@@ -66,7 +68,7 @@ def solve_gamspy_model(N, time_limit=None):
     return model.objective_value
 
 
-def bench(N, time_limit):
+def bench(N: int, time_limit: float | None) -> tuple[dict[str, float], float, float]:
     results = {}
 
     t0 = time.time()
@@ -82,7 +84,7 @@ def bench(N, time_limit):
     return results, poi_objective, gamspy_objective
 
 
-def main():
+def main() -> None:
     # sanity check with a small size
     results, poi_objective, gamspy_objective = bench(10, time_limit=0)
     assert math.isclose(poi_objective, gamspy_objective, abs_tol=1e-6), (

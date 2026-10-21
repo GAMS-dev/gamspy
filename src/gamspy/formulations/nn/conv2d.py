@@ -81,7 +81,7 @@ class Conv2d(_ConvNd[tuple[int, int], tuple[int, int, int, int]]):
         name_prefix: str | None = None,
         *,
         bias: bool = True,
-    ):
+    ) -> None:
         _kernel_size = utils._check_tuple_int(kernel_size, "kernel_size")
         _stride = utils._check_tuple_int(stride, "stride")
 

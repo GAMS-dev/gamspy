@@ -217,7 +217,7 @@ def _generate_dims(m: Container, dims: Sequence[int]) -> list[Alias | Set]:
     sets_so_far = []
     for x in dims:
         expected_name = f"DenseDim{x}_1"
-        find_x: Set | Alias | None = m._data.get(expected_name, None)
+        find_x = cast("Set | Alias | None", m._data.get(expected_name, None))
         if find_x is None:
             find_x = m.addSet(
                 name=expected_name, records=range(x), is_singleton=(x == 1)
@@ -394,11 +394,20 @@ def _transpose(
 
 
 def _validate_matrix_mult_dims(
-    left, right
+    left: Parameter
+    | Variable
+    | implicits.ImplicitParameter
+    | implicits.ImplicitVariable,
+    right: Parameter
+    | Variable
+    | implicits.ImplicitParameter
+    | implicits.ImplicitVariable,
 ) -> tuple[Sequence[Set | Alias], Sequence[Set | Alias], Set | Alias]:
     """Validates the dimensions for the matrix multiplication"""
-    left_len = len(left.domain)
-    right_len = len(right.domain)
+    left_sets = cast("list[Set | Alias]", left.domain)
+    right_sets = cast("list[Set | Alias]", right.domain)
+    left_len = len(left_sets)
+    right_len = len(right_sets)
 
     dim_no_match_err = "Matrix multiplication dimensions do not match"
 
@@ -420,25 +429,25 @@ def _validate_matrix_mult_dims(
 
     if lr == (1, 1):
         # Dot product
-        if not utils.setBaseEqual(left.domain[0], right.domain[0]):
+        if not utils.setBaseEqual(left_sets[0], right_sets[0]):
             raise ValidationError("Dot product requires same domain")
 
-        sum_domain = left.domain[0]
+        sum_domain = left_sets[0]
         while sum_domain in controlled_domain:
             sum_domain = next_alias(sum_domain)
 
         return [sum_domain], [sum_domain], sum_domain
     elif lr == (2, 2):
         # Matrix multiplication
-        if not utils.setBaseEqual(left.domain[1], right.domain[0]):
+        if not utils.setBaseEqual(left_sets[1], right_sets[0]):
             raise ValidationError(dim_no_match_err)
 
-        left_domain = left.domain[0]
-        right_domain = right.domain[1]
+        left_domain = left_sets[0]
+        right_domain = right_sets[1]
         if left_domain == right_domain:
             left_domain = next_alias(left_domain)
 
-        sum_domain = left.domain[1]
+        sum_domain = left_sets[1]
         while (
             sum_domain in (left_domain, right_domain) or sum_domain in controlled_domain
         ):
@@ -451,11 +460,11 @@ def _validate_matrix_mult_dims(
         )
     elif lr == (1, 2):
         # Vector matrix, vector 1-prepended
-        if not utils.setBaseEqual(left.domain[0], right.domain[0]):
+        if not utils.setBaseEqual(left_sets[0], right_sets[0]):
             raise ValidationError(dim_no_match_err)
 
-        sum_domain = left.domain[0]
-        right_domain = right.domain[1]
+        sum_domain = left_sets[0]
+        right_domain = right_sets[1]
 
         while right_domain in controlled_domain:
             right_domain = next_alias(right_domain)
@@ -466,53 +475,53 @@ def _validate_matrix_mult_dims(
         return [sum_domain], [sum_domain, right_domain], sum_domain
     elif lr == (2, 1):
         # Matrix vector, ordinary
-        if not utils.setBaseEqual(left.domain[1], right.domain[0]):
+        if not utils.setBaseEqual(left_sets[1], right_sets[0]):
             raise ValidationError(dim_no_match_err)
 
-        sum_domain = left.domain[1]
-        while left.domain[0] == sum_domain or sum_domain in controlled_domain:
+        sum_domain = left_sets[1]
+        while left_sets[0] == sum_domain or sum_domain in controlled_domain:
             sum_domain = next_alias(sum_domain)
 
-        return [left.domain[0], sum_domain], [sum_domain], sum_domain
+        return [left_sets[0], sum_domain], [sum_domain], sum_domain
     elif left_len == 1 and right_len > 2:
         # Vector batched-matrix, vector 1-prepended
-        if not utils.setBaseEqual(left.domain[0], right.domain[-2]):
+        if not utils.setBaseEqual(left_sets[0], right_sets[-2]):
             raise ValidationError(dim_no_match_err)
 
-        sum_domain = left.domain[0]
+        sum_domain = left_sets[0]
         while (
-            sum_domain in right.domain[:-2]
-            or sum_domain == right.domain[-1]
+            sum_domain in right_sets[:-2]
+            or sum_domain == right_sets[-1]
             or sum_domain in controlled_domain
         ):
             sum_domain = next_alias(sum_domain)
 
         return (
             [sum_domain],
-            [*right.domain[:-2], sum_domain, right.domain[-1]],
+            [*right_sets[:-2], sum_domain, right_sets[-1]],
             sum_domain,
         )
     elif left_len > 2 and right_len == 1:
         # batched-matrix vector, ordinary
-        if not utils.setBaseEqual(left.domain[-1], right.domain[0]):
+        if not utils.setBaseEqual(left_sets[-1], right_sets[0]):
             raise ValidationError(dim_no_match_err)
 
-        sum_domain = left.domain[-1]
-        while sum_domain in left.domain[:-1] or sum_domain in controlled_domain:
+        sum_domain = left_sets[-1]
+        while sum_domain in left_sets[:-1] or sum_domain in controlled_domain:
             sum_domain = next_alias(sum_domain)
 
         return (
-            [*left.domain[:-1], sum_domain],
+            [*left_sets[:-1], sum_domain],
             [sum_domain],
             sum_domain,
         )
     elif left_len >= 2 and right_len >= 2:
         # batched-matrix batched-matrix
-        if not utils.setBaseEqual(left.domain[-1], right.domain[-2]):
+        if not utils.setBaseEqual(left_sets[-1], right_sets[-2]):
             raise ValidationError(dim_no_match_err)
 
-        batch_dim_1 = left.domain[:-2]
-        batch_dim_2 = right.domain[:-2]
+        batch_dim_1 = left_sets[:-2]
+        batch_dim_2 = right_sets[:-2]
 
         if len(batch_dim_1) > 0 and len(batch_dim_2) > 0:
             if len(batch_dim_1) != len(batch_dim_2):
@@ -521,26 +530,26 @@ def _validate_matrix_mult_dims(
             if any(x != y for x, y in zip(batch_dim_1, batch_dim_2, strict=False)):
                 raise ValidationError("Batch dimensions do not match")
 
-        left_domain = left.domain[-2]
-        right_domain = right.domain[-1]
+        left_domain = left_sets[-2]
+        right_domain = right_sets[-1]
         while right_domain == left_domain or right_domain in batch_dim_1:
             right_domain = next_alias(right_domain)
 
         while left_domain == right_domain or left_domain in batch_dim_2:
             left_domain = next_alias(left_domain)
 
-        sum_domain = left.domain[-1]
+        sum_domain = left_sets[-1]
         while (
-            sum_domain in left.domain[:-1]
-            or sum_domain in right.domain[:-2]
+            sum_domain in left_sets[:-1]
+            or sum_domain in right_sets[:-2]
             or sum_domain in (right_domain, left_domain)
             or sum_domain in controlled_domain
         ):
             sum_domain = next_alias(sum_domain)
 
         return (
-            [*left.domain[:-2], left_domain, sum_domain],
-            [*right.domain[:-2], sum_domain, right_domain],
+            [*left_sets[:-2], left_domain, sum_domain],
+            [*right_sets[:-2], sum_domain, right_domain],
             sum_domain,
         )
 

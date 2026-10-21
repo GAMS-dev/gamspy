@@ -157,7 +157,7 @@ def license(
 
 
 @app.command(short_help="Shows the path of gamspy_base.")
-def base():
+def base() -> None:
     import gamspy_base
 
     print(gamspy_base.directory)

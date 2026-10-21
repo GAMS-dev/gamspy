@@ -28,6 +28,8 @@ from gamspy.exceptions import (
 if TYPE_CHECKING:
     from pathlib import Path
 
+    import pandas as pd
+
     from gamspy import Container, Model
 
 
@@ -94,14 +96,14 @@ class EngineConfiguration:
 
     def __init__(
         self, host: str, username: str, password: str, jwt: str, namespace: str
-    ):
+    ) -> None:
         self.jwt = jwt
         self.username = username
         self.password = password
         self.namespace = namespace
         self.host = self._verify_host(host)
 
-    def _verify_host(self, host: str):
+    def _verify_host(self, host: str) -> str:
         validated_url = urllib.parse.urlparse(host)
         if validated_url.scheme not in ("http", "https"):
             raise ValidationError(
@@ -117,7 +119,7 @@ class EngineConfiguration:
 
         return host
 
-    def _get_auth_header(self):
+    def _get_auth_header(self) -> str:
         """Returns authentication header"""
         if not self.username:
             if not self.jwt:
@@ -431,7 +433,7 @@ class Job(Endpoint):
             + response_data
         )
 
-    def get_results(self, token: str, working_directory: str):
+    def get_results(self, token: str, working_directory: str) -> None:
         """
         Get request to /jobs/{token}/result which downloads the job results.
         Downloaded results are unpacked to working directory.
@@ -508,7 +510,7 @@ class Job(Endpoint):
             + " attempts."
         )
 
-    def delete_results(self, token: str):
+    def delete_results(self, token: str) -> None:
         """
         Delete request to /jobs/{token} which deletes the job results.
         Refer to https://engine.gams.com/api/ for more details.
@@ -636,7 +638,9 @@ class Job(Endpoint):
 
         return model_data_zip
 
-    def _get_params(self, model_data_zip, gms_file, pf_file: str | None):
+    def _get_params(
+        self, model_data_zip: io.BytesIO, gms_file: str, pf_file: str | None
+    ) -> tuple[dict, dict]:
         file_params = {}
         query_params = copy.deepcopy(self.engine_options) if self.engine_options else {}
 
@@ -739,7 +743,7 @@ class EngineClient:
         *,
         remove_results: bool = False,
         is_blocking: bool = True,
-    ):
+    ) -> None:
         self.host = host
         self.username = username
         self.password = password
@@ -765,7 +769,7 @@ class EngineClient:
         self.job = Job(self)
         self.auth = Auth(self)
 
-    def get_request_headers(self):
+    def get_request_headers(self) -> dict[str, str]:
         return {
             "Authorization": self._engine_config._get_auth_header(),
             "User-Agent": "GAMSPy EngineClient",
@@ -798,10 +802,10 @@ class GAMSEngine(backend.Backend):
         self.model = model
         self.client = client
 
-    def is_async(self):
+    def is_async(self) -> bool:
         return not self.client.is_blocking
 
-    def run(self):
+    def run(self) -> pd.DataFrame | None:
         # Run a dummy job to get the restart file to be sent to GAMS Engine
         self._create_restart_file()
 
@@ -822,7 +826,7 @@ class GAMSEngine(backend.Backend):
 
         return summary
 
-    def execute_gams(self, gams_string: str):
+    def execute_gams(self, gams_string: str) -> None:
         hidden_options = {
             "gdx": os.path.basename(self.container._gdx_out),
             "gdxSymbols": "newOrChanged",
@@ -912,7 +916,7 @@ class GAMSEngine(backend.Backend):
 
             time.sleep(JOB_POLL_INTERVAL)
 
-    def postprocess(self):
+    def postprocess(self) -> pd.DataFrame | None:
         if self.client.remove_results or self.model is None:
             return None
 
@@ -941,7 +945,7 @@ class GAMSEngine(backend.Backend):
 
         return hidden_options
 
-    def _create_restart_file(self):
+    def _create_restart_file(self) -> None:
         with open(self.gms_file, "w", encoding="utf-8") as gams_file:
             gams_file.write("")
 
@@ -958,7 +962,7 @@ class GAMSEngine(backend.Backend):
 
         engine.send_job(self.job_name, self.pf_file)
 
-    def _sync(self):
+    def _sync(self) -> None:
         symbols = gdxio._get_symbol_names_from_gdx(
             self.container.system_directory, self.container._gdx_out
         )
@@ -987,7 +991,7 @@ class GAMSEngine(backend.Backend):
                 extra_model_files.append(self.model._indicator_file)
 
         if self.options.loadpoint is not None:
-            extra_model_files.append(self.options.loadpoint)
+            extra_model_files.append(str(self.options.loadpoint))
 
         if self.model.external_module is not None:
             extra_model_files.append(self.model.external_module)
