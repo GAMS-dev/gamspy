@@ -515,6 +515,17 @@ def test_alternative_syntax():
     v[i].stage = 5
     assert v.getAssignment() == "v.stage(i) = 5;"
 
+    j = Set(m, "j", records=["j1", "j2"])
+    k = gp.Alias(m, "k", i)
+    x = Variable(m, "x", domain=[i, j])
+    x["i1", j].l = 5
+    assert x.getAssignment() == 'x.l("i1",j) = 5;'
+    x.t()[j, i].up = 3
+    assert x.getAssignment() == "x.up(i,j) = 3;"
+    z = Variable(m, "z", domain=[i, i])
+    z.t()[k, i].fx = 1
+    assert z.getAssignment() == "z.fx(i,k) = 1;"
+
 
 def test_alternative_operation_syntax():
     m = Container()
