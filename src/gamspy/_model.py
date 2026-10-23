@@ -41,6 +41,7 @@ from gamspy._options import (
     get_indicator_file_name,
     write_solver_options,
 )
+from gamspy._symbols.utils import _quote_description
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -2029,7 +2030,7 @@ class Model:
 
         model_str = f"Model {self.name}"
         if self.description:
-            model_str += ' "' + self.description + '"'
+            model_str += " " + _quote_description(self.description)
 
         if equations_str != "":
             model_str += f" / {equations_str} /"

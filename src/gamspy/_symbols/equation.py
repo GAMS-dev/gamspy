@@ -20,6 +20,7 @@ from gamspy._internals import (
 from gamspy._notation import LATEX, UNICODE
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import VarEquSymbol
+from gamspy._symbols.utils import _quote_description
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -1175,7 +1176,7 @@ class Equation(VarEquSymbol):
             output += self._get_domain_str(self._domain_forwarding)
 
         if self.description:
-            output += ' "' + self.description + '"'
+            output += " " + _quote_description(self.description)
 
         if self._records is None:
             output += " / /"

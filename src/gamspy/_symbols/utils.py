@@ -40,6 +40,13 @@ DICT_FORMAT = {
 AXES = ["index", "columns"]
 
 
+def _quote_description(description: str) -> str:
+    if '"' in description:
+        return f"'{description}'"
+
+    return f'"{description}"'
+
+
 def _get_implied_dimension_from_axes(records: pd.DataFrame | pd.Series) -> int:
     return sum([axis.nlevels for axis in records.axes])
 

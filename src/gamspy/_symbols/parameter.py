@@ -17,7 +17,7 @@ from gamspy._symbols.base import NumericSymbol
 from gamspy._symbols.equals import equals_parameter
 from gamspy._symbols.generate_records import generate_records_parameter
 from gamspy._symbols.pivot import pivot_parameter
-from gamspy._symbols.utils import assign
+from gamspy._symbols.utils import _quote_description, assign
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -670,7 +670,7 @@ class Parameter(operable.Operable, NumericSymbol):
         output = f"Parameter {self.gamsRepr()}"
 
         if self.description:
-            output += ' "' + self.description + '"'
+            output += " " + _quote_description(self.description)
 
         if self._records is None:
             output += " / /"

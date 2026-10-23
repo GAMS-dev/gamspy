@@ -13,6 +13,7 @@ import gamspy.utils as utils
 from gamspy._internals import TRANSFER_TO_GAMS_VARIABLE_SUBTYPES
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import VarEquSymbol
+from gamspy._symbols.utils import _quote_description
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -839,7 +840,7 @@ class Variable(operable.Operable, VarEquSymbol):
         output += f"Variable {self.gamsRepr()}"
 
         if self.description:
-            output += ' "' + self.description + '"'
+            output += " " + _quote_description(self.description)
 
         if self._records is None:
             output += " / /"
