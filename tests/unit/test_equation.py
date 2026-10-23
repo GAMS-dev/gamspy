@@ -1093,6 +1093,13 @@ def test_alternative_syntax():
     e[i].stage = 5
     assert e.getAssignment() == "e.stage(i) = 5;"
 
+    j = Set(m, "j", records=["j1", "j2"])
+    e2 = Equation(m, "e2", domain=[i, j])
+    e2["i1", j].m = 5
+    assert e2.getAssignment() == 'e2.m("i1",j) = 5;'
+    e2["i2", "j2"].l = 2
+    assert e2.getAssignment() == 'e2.l("i2","j2") = 2;'
+
 
 def test_equation_tolist():
     m = gp.Container()
