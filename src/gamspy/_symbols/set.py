@@ -15,7 +15,7 @@ from gamspy._symbols.base import DataSymbol
 from gamspy._symbols.equals import equals_set
 from gamspy._symbols.generate_records import generate_records_set
 from gamspy._symbols.pivot import pivot_set
-from gamspy._symbols.utils import assign
+from gamspy._symbols.utils import _quote_description, assign
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -917,7 +917,7 @@ class Set(operable.Operable, DataSymbol, SetMixin):
         output += self._get_domain_str(self._domain_forwarding)
 
         if self.description:
-            output += f' "{self.description}"'
+            output += " " + _quote_description(self.description)
 
         if self._records is None:
             output += " / /"
