@@ -249,13 +249,13 @@ def test_lazy_records(transport, monkeypatch):
     )
 
     reads = []
-    original = gp._model_instance.get_records
+    original = gp._frozen_model.get_records
 
     def spy(*args, symbols=None, **kwargs):
         reads.append(symbols)
         return original(*args, symbols=symbols, **kwargs)
 
-    monkeypatch.setattr(gp._model_instance, "get_records", spy)
+    monkeypatch.setattr(gp._frozen_model, "get_records", spy)
 
     transport.freeze(modifiables=[bmult])
     # the companion variable of a modifiable parameter is created by freeze
@@ -296,7 +296,7 @@ def test_lazy_records(transport, monkeypatch):
 
     # unfreeze reads whatever is still pending and releases the instance
     transport.unfreeze()
-    assert transport.instance is None
+    assert transport._frozen_model is None
     # everything except `z`, which was read after the last solve
     assert sorted(name for (name,) in reads[4:]) == [
         "bmult_var",
@@ -368,7 +368,7 @@ def test_solve_after_container_close(transport):
         c[i] = 42
 
     model.unfreeze()
-    assert model.instance is None
+    assert model._frozen_model is None
 
 
 @pytest.mark.integration
@@ -431,7 +431,7 @@ def test_unfreeze_without_loading_records(transport):
     levels = x.toList()
     model.unfreeze(load_records=False)
 
-    assert model.instance is None
+    assert model._frozen_model is None
     assert x.toList() == levels  # what was read is kept
     assert e.records is None  # what was not read is dropped
     assert math.isclose(model.objective_value, 1.0, rel_tol=1e-6)
@@ -1102,7 +1102,7 @@ def test_reserved_var_suffix():
         model.freeze(modifiables=[rhs])
 
     assert not model._is_frozen
-    assert model.instance is None
+    assert model._frozen_model is None
 
     # The companion variable that the frozen solve creates itself is allowed.
     m2 = gp.Container()
@@ -1151,7 +1151,7 @@ def test_companion_name_clash(clashing):
         model.freeze(modifiables=[rhs])
 
     assert not model._is_frozen
-    assert model.instance is None
+    assert model._frozen_model is None
     assert m._frozen_modifiables == set()
 
     # The container must still be usable, the clash was caught before GAMS ran.

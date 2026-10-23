@@ -1,0 +1,1 @@
+Fix ``gp.math.trace`` modifying the domain of its input symbol.

@@ -112,7 +112,7 @@ class DomainStatus(Enum):
 class DataSource(Enum):
     """
     Where the records of a symbol must be read from. A frozen model is not a
-    member because the symbol stores the ModelInstance to read from itself:
+    member because the symbol stores the FrozenModel to read from itself:
     a container can hold more than one frozen model of the same symbol.
     """
 

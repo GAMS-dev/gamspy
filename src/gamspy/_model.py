@@ -28,8 +28,8 @@ from gamspy._convert import (
     UnicodeConverter,
     get_convert_solver_options,
 )
+from gamspy._frozen_model import FrozenModel
 from gamspy._internals import ATTR_PREFIX, MODEL_ATTRIBUTE_MAP, DataSource
-from gamspy._model_instance import ModelInstance
 from gamspy._options import (
     EXECUTION_OPTIONS,
     INDICATOR_SOLVERS,
@@ -489,7 +489,7 @@ class Model:
 
         # allow freezing
         self._is_frozen: bool = False
-        self.instance: ModelInstance | None = None
+        self._frozen_model: FrozenModel | None = None
         self._modifiable_names: set[str] = set()
 
         # Attributes
@@ -1542,7 +1542,7 @@ class Model:
         if options is None:
             options = self.container._options
 
-        self.instance = ModelInstance(
+        self._frozen_model = FrozenModel(
             self.container,
             self,
             modifiables,
@@ -1558,7 +1558,7 @@ class Model:
             symbol.parent.name
             if isinstance(symbol, implicits.ImplicitParameter)
             else symbol.name
-            for symbol in self.instance.modifiables
+            for symbol in self._frozen_model.modifiables
         }
         self.container._frozen_modifiables |= self._modifiable_names
 
@@ -1594,22 +1594,22 @@ class Model:
         >>> model.unfreeze()
 
         """
-        if self.instance is None:
+        if self._frozen_model is None:
             raise ValidationError(
                 f"Model `{self.name}` is not frozen. `unfreeze` requires a `freeze` first."
             )
 
         if load_records:
-            self.instance._read_pending_records()
+            self._frozen_model._read_pending_records()
         else:
-            self.instance._discard_pending_records()
+            self._frozen_model._discard_pending_records()
 
-        self.instance.close_license_session()
+        self._frozen_model.close_license_session()
 
         self.container._frozen_modifiables -= self._modifiable_names
         self._modifiable_names = set()
         self._is_frozen = False
-        self.instance = None
+        self._frozen_model = None
 
         # The database of the instance is gone now. That might be gigabytes of memory.
         gc.collect()
@@ -1901,7 +1901,7 @@ class Model:
             if freeze_options is not None:
                 instance_options = freeze_options
 
-            summary = self.instance.solve(  # ty: ignore[unresolved-attribute]
+            summary = self._frozen_model.solve(  # ty: ignore[unresolved-attribute]
                 solver, instance_options, solver_options, output
             )
             return summary

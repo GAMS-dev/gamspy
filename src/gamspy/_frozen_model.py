@@ -166,9 +166,9 @@ class GamsModifier:
             raise GamspyException(f"Unknown update action {update_action}")
 
 
-class ModelInstance:
+class FrozenModel:
     """
-    ModelInstance class provides a controlled way of modifying a model instance
+    FrozenModel class provides a controlled way of modifying a model instance
     and solving the resulting problem in the most efficient way, by communicating
     only the changes of the model to the solver and doing a hot start (in case of
     a continuous model like LP) without the use of disk IO.

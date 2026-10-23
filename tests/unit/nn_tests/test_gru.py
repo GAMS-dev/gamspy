@@ -397,3 +397,43 @@ def test_gru_with_h0_time_step_k(gru_data):
     expected = get_output(x.toDense().flatten(), h_prev=float(h0.toDense()[0][0]))
 
     assert np.allclose(h_out.toDense(), expected), "Unexpected h_out value."
+
+
+@pytest.mark.skipif(TORCH_AVAILABLE is False, reason="Requires PyTorch installed")
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "batch, time, input_size, hidden_size",
+    [(2, 3, 4, 5), (5, 3, 4, 5), (2, 5, 4, 5), (1, 1, 4, 1), (3, 1, 2, 3)],
+)
+def test_gru_matches_torch(batch, time, input_size, hidden_size):
+    torch.manual_seed(0)
+    torch_gru = torch.nn.GRU(input_size, hidden_size, batch_first=True).double()
+    x_tensor = torch.rand(batch, time, input_size, dtype=torch.float64) * 2 - 1
+    h0_tensor = torch.rand(1, batch, hidden_size, dtype=torch.float64) * 2 - 1
+
+    with torch.no_grad():
+        torch_out, _ = torch_gru(x_tensor, h0_tensor)
+
+    m = gp.Container()
+    gru = GRU(m, input_size, hidden_size)
+    gru.load_weights(
+        torch_gru.weight_ih_l0.detach().numpy(),
+        torch_gru.weight_hh_l0.detach().numpy(),
+        torch_gru.bias_ih_l0.detach().numpy(),
+        torch_gru.bias_hh_l0.detach().numpy(),
+    )
+    x = gp.Parameter(m, domain=dim([batch, time, input_size]), records=x_tensor.numpy())
+    h0 = gp.Parameter(m, domain=dim([batch, hidden_size]), records=h0_tensor[0].numpy())
+    h_out = gru(x, h0=h0).result
+
+    model = gp.Model(
+        m,
+        equations=m.getEquations(),
+        problem="NLP",
+        sense="min",
+        objective=gp.Sum(h_out.domain, h_out),
+    )
+    model.solve()
+
+    assert np.allclose(h_out.toDense(), torch_out.numpy(), atol=1e-6)
+    m.close()
