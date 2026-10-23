@@ -4,6 +4,7 @@ import math
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
+import pandas as pd
 
 import gamspy as gp
 from gamspy.exceptions import ValidationError
@@ -181,3 +182,39 @@ def _next_domains(
         names.add(domain.name)
 
     return output
+
+
+def _window_subset(
+    container: gp.Container,
+    name: str,
+    out_domain: Sequence[gp.Set | gp.Alias],
+    kernel_domain: Sequence[gp.Set | gp.Alias],
+    in_domain: Sequence[gp.Set | gp.Alias],
+    stride: Sequence[int],
+    padding: Sequence[int],
+) -> gp.Set:
+    """
+    Set over (*out, *kernel, *in) that maps each output position and kernel
+    offset to the input position it reads. Offsets that fall into the padding
+    have no record. `padding` starts with the leading paddings.
+    """
+    n = len(out_domain)
+    grid = np.indices([len(s) for s in (*out_domain, *kernel_domain)]).reshape(
+        2 * n, -1
+    )
+    in_pos = (
+        np.array(stride)[:, None] * grid[:n] - np.array(padding[:n])[:, None] + grid[n:]
+    )
+    in_sizes = np.array([len(s) for s in in_domain])[:, None]
+    positions = np.vstack([grid, in_pos])[
+        :, ((in_pos >= 0) & (in_pos < in_sizes)).all(axis=0)
+    ]
+
+    domain = [*out_domain, *kernel_domain, *in_domain]
+    records = pd.DataFrame(
+        {
+            i: pd.Categorical.from_codes(codes, categories=s.toList())
+            for i, (s, codes) in enumerate(zip(domain, positions))
+        }
+    )
+    return gp.Set(container, name=name, domain=domain, records=records)

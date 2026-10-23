@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import functools
 import math
-import operator
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
@@ -175,14 +173,6 @@ class _ConvNd(_WeightedLayer, Generic[_SizeT, _PaddingT]):
             name=utils._generate_name("e", self._name_prefix, "set_output"),
         )
 
-        padding = self._resolved_padding()
-
-        # First input position of the window that produces each output position
-        starts = [
-            (stride * (gp.Ord(s_out) - 1)) - pad + 1
-            for stride, s_out, pad in zip(self._stride_dims, S_out, padding)
-        ]
-
         _, _, *F = utils._get_domain(self.weight)
         C_in, *rest = utils._next_domains(
             [C_in, *F, *S_in],
@@ -190,20 +180,15 @@ class _ConvNd(_WeightedLayer, Generic[_SizeT, _PaddingT]):
         )
         F, S_in = rest[:n], rest[n:]
 
-        subset = gp.Set(
+        subset = utils._window_subset(
             self.container,
-            domain=[*S_out, *F, *S_in],
-            name=utils._generate_name("s", self._name_prefix, "conv_subset"),
+            utils._generate_name("s", self._name_prefix, "conv_subset"),
+            S_out,
+            F,
+            S_in,
+            self._stride_dims,
+            self._resolved_padding(),
         )
-        subset[(*S_out, *F, *S_in)].where[
-            functools.reduce(
-                operator.and_,
-                [
-                    gp.Ord(s_in) == (start + gp.Ord(f) - 1)
-                    for s_in, start, f in zip(S_in, starts, F)
-                ],
-            )
-        ] = True
 
         expr = gp.Sum(
             [C_in],
