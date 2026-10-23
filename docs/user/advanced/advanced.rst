@@ -17,7 +17,7 @@ fundamental GAMSPy ideas and philosophy.
    ./performance
    ./special_features
    ./miro
-   ./model_instance
+   ./frozen_model
    ./external_equations
    ./extrinsic_functions
    ./formulations

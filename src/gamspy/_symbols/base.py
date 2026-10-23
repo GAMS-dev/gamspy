@@ -63,7 +63,7 @@ if TYPE_CHECKING:
         Variable,
     )
     from gamspy._algebra.expression import Expression
-    from gamspy._model_instance import ModelInstance
+    from gamspy._frozen_model import FrozenModel
     from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitParameter
     from gamspy._types import (
@@ -797,7 +797,7 @@ class DataSymbol(BaseSymbol):
         if source is not DataSource.GAMS:
             self._should_load_from = DataSource.NONE
             try:
-                cast("ModelInstance", source)._read_records(self)
+                cast("FrozenModel", source)._read_records(self)
             except BaseException:
                 # The records are still stale, so they are loaded on the next access.
                 self._should_load_from = source

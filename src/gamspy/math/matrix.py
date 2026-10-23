@@ -282,7 +282,7 @@ def trace(
             f"All elements of the domain of `{x}` must be either a set or an alias to perform this operation."
         )
 
-    domain = cast("list[Set | Alias]", x.domain)
+    domain = cast("list[Set | Alias]", list(x.domain))
     if not utils.setBaseEqual(domain[axis1], domain[axis2]):
         raise ValidationError("Matrix dimensions are not equal")
 

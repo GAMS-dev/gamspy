@@ -1,4 +1,4 @@
-.. _model_instance:
+.. _frozen_model:
 
 *************
 Frozen Models
