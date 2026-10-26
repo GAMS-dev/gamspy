@@ -20,12 +20,61 @@ from gamspy.formulations.pwl_curve import PWLCurve, _normalize_curve_data
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from gamspy._algebra.expression import Expression
+    from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
+    from gamspy._types import IndexType
+
+    Condition: typing.TypeAlias = Expression | ImplicitSet
+
+
+def _and_condition(
+    input_condition: Condition | None, condition: Condition
+) -> Condition:
+    """
+    Combine an optional input restriction with another condition.
+    """
+    return condition if input_condition is None else input_condition & condition
+
+
+def _define(
+    equation: gp.Equation,
+    index: IndexType,
+    definition: Expression,
+    condition: Condition | None,
+) -> None:
+    """
+    Define equation[index], adding a where-condition only when restricted.
+    Unrestricted formulations then generate the same code as before.
+    """
+    if condition is None:
+        equation[index] = definition
+    else:
+        equation[index].where[condition] = definition
+
+
+def _assign(
+    attribute: ImplicitParameter,
+    index: IndexType,
+    value: Expression | float,
+    condition: Condition | None,
+) -> None:
+    """
+    Assign a variable attribute such as bounds, honoring an optional restriction.
+    """
+    if condition is None:
+        attribute[index] = value
+    else:
+        attribute[index].where[condition] = value
+
 
 def _validate_multivalued_data(
     data: _PwlData,
     allow_multivalued: bool,
     formulation: typing.Literal["interval", "convexity", "dlog"],
 ) -> None:
+    """
+    Apply multivalued warnings and overlap restrictions to normalized curves.
+    """
     multivalued = _classify_multivalued_rows(data.rows)
 
     if multivalued.overlaps:
@@ -89,7 +138,11 @@ def _generate_gray_code(n: int, n_bits: int) -> np.ndarray:
     return numbers_in_bit_array
 
 
-def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
+def _enforce_sos2_with_binary(
+    lambda_var: gp.Variable,
+    *,
+    restrict: gp.Set | None = None,
+) -> list[gp.Equation]:
     """
     Enforces SOS2 constraints using binary variables. This function is not suitable
     for generic SOS2 implementation since it restricts the lambda_var values to be
@@ -102,16 +155,17 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
     equations: list[gp.Equation] = []
     m = lambda_var.container
     lambda_domain = gp.formulations.utils._get_domain(lambda_var)
+    previous_domains = lambda_domain[:-1]
+    input_condition = restrict[previous_domains] if restrict is not None else None
     count_x = len(lambda_domain[-1])
     # edge case
-    lambda_var.lo[...] = 0
-    lambda_var.up[...] = 1
+    _assign(lambda_var.lo, lambda_domain, 0, input_condition)
+    _assign(lambda_var.up, lambda_domain, 1, input_condition)
     if count_x == 2:
         # if there are only 2 elements, it is already sos2
         return equations
 
     J = lambda_domain[-1]
-    previous_domains = lambda_domain[:-1]
 
     l_len = math.ceil(math.log2(count_x - 1))
     I, L = gp.math._generate_dims(
@@ -138,16 +192,22 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
     use_set_2[L, J].where[gp.Smax(JI[J, I], B[I, L]) == 0] = 1
 
     sos2_eq_1 = m.addEquation(domain=[*previous_domains, L])
-    sos2_eq_1[[*previous_domains, L]] = (
+    _define(
+        sos2_eq_1,
+        [*previous_domains, L],
         gp.Sum(use_set_1[L, J], lambda_var[[*previous_domains, J]])
-        <= bin_var[[*previous_domains, L]]
+        <= bin_var[[*previous_domains, L]],
+        input_condition,
     )
     equations.append(sos2_eq_1)
 
     sos2_eq_2 = m.addEquation(domain=[*previous_domains, L])
-    sos2_eq_2[[*previous_domains, L]] = (
+    _define(
+        sos2_eq_2,
+        [*previous_domains, L],
         gp.Sum(use_set_2[L, J], lambda_var[[*previous_domains, J]])
-        <= 1 - bin_var[[*previous_domains, L]]
+        <= 1 - bin_var[[*previous_domains, L]],
+        input_condition,
     )
     equations.append(sos2_eq_2)
 
@@ -157,12 +217,19 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
 def _enforce_discontinuity(
     lambda_var: gp.Variable,
     combined_indices: typing.Sequence[int],
+    *,
+    restrict: gp.Set | None = None,
 ) -> list[gp.Equation]:
+    """
+    Prevent Convexity weights from connecting points across a separator.
+    Used for scalar or broadcast curves with one shared separator layout.
+    """
     equations: list[gp.Equation] = []
 
     lambda_domain = gp.formulations.utils._get_domain(lambda_var)
     len_x_points = len(lambda_domain[-1])
     previous_domains = lambda_domain[:-1]
+    input_condition = restrict[previous_domains] if restrict is not None else None
 
     m = lambda_var.container
     J, J2, SB = gp.math._generate_dims(
@@ -177,16 +244,23 @@ def _enforce_discontinuity(
 
     select_set = m.addSet(domain=[SB, J, J2], records=di_param)
     select_var = m.addVariable(domain=[*previous_domains, SB], type="binary")
+    separator_index = [*previous_domains, select_set[SB, J, J2]]
 
     select_equation = m.addEquation(domain=[*previous_domains, SB, J, J2])
-    select_equation[[*previous_domains, select_set[SB, J, J2]]] = (
-        lambda_var[[*previous_domains, J]] <= select_var[[*previous_domains, SB]]
+    _define(
+        select_equation,
+        separator_index,
+        lambda_var[[*previous_domains, J]] <= select_var[[*previous_domains, SB]],
+        input_condition,
     )
     equations.append(select_equation)
 
     select_equation_2 = m.addEquation(domain=[*previous_domains, SB, J, J2])
-    select_equation_2[[*previous_domains, select_set[SB, J, J2]]] = (
-        lambda_var[[*previous_domains, J2]] <= 1 - select_var[[*previous_domains, SB]]
+    _define(
+        select_equation_2,
+        separator_index,
+        lambda_var[[*previous_domains, J2]] <= 1 - select_var[[*previous_domains, SB]],
+        input_condition,
     )
     equations.append(select_equation_2)
 
@@ -197,13 +271,19 @@ def _enforce_indexed_discontinuity(
     lambda_var: gp.Variable,
     rows: tuple[_PwlRow, ...],
     curve_domain: tuple[gp.Set | gp.Alias, ...],
+    *,
+    restrict: gp.Set | None = None,
 ) -> list[gp.Equation]:
+    """
+    Enforce Convexity separators that differ between indexed curves.
+    """
     max_separators = max(len(row.separator_indices) for row in rows)
     if not max_separators:
         return []
 
     m = lambda_var.container
     previous_domains = typing.cast("list[gp.Set]", list(lambda_var.domain[:-1]))
+    input_condition = restrict[previous_domains] if restrict is not None else None
     curve_index = [*curve_domain]
     J = typing.cast("gp.Set", lambda_var.domain[-1])
     # Separator counts differ by row, so use rectangular slots and mask the
@@ -236,16 +316,22 @@ def _enforce_indexed_discontinuity(
     active_data_index = [*curve_index, SB]
     separator_index = [*previous_domains, SB, J, J2]
     separator_data_index = [*curve_index, SB, J, J2]
+    inactive_separators = _and_condition(
+        input_condition, ~active_separators[active_data_index]
+    )
+    separator_condition = _and_condition(
+        input_condition, separator_map[separator_data_index]
+    )
     # Inactive selectors must not introduce free binary decisions.
-    select_var.fx[active_index].where[~active_separators[active_data_index]] = 0
+    select_var.fx[active_index].where[inactive_separators] = 0
 
     select_equation = m.addEquation(domain=[*previous_domains, SB, J, J2])
-    select_equation[separator_index].where[separator_map[separator_data_index]] = (
+    select_equation[separator_index].where[separator_condition] = (
         lambda_var[[*previous_domains, J]] <= select_var[active_index]
     )
 
     select_equation_2 = m.addEquation(domain=[*previous_domains, SB, J, J2])
-    select_equation_2[separator_index].where[separator_map[separator_data_index]] = (
+    select_equation_2[separator_index].where[separator_condition] = (
         lambda_var[[*previous_domains, J2]] <= 1 - select_var[active_index]
     )
 
@@ -253,19 +339,30 @@ def _enforce_indexed_discontinuity(
 
 
 def _generate_ray(
-    container: gp.Container, domain: typing.Sequence[gp.Set | gp.Alias]
+    container: gp.Container,
+    domain: typing.Sequence[gp.Set | gp.Alias],
+    *,
+    condition: Expression | None = None,
 ) -> tuple[gp.Variable, gp.Variable, list[gp.Equation]]:
-    # if b_var == 0 => x_var = 0 o.w x_var >= 0
-    # effectively x_var <= bigM * b_var without bigM
+    """
+    Create nonnegative ray movement and a binary activation selector.
+    An optional condition limits the generated activation equations.
+    """
     x_var = container.addVariable(domain=domain, type="positive")
     b_var = container.addVariable(domain=domain, type="binary")
-    eqs = indicator(b_var, 0, x_var <= 0).equations_created
+    expr = x_var <= 0
+    eqs = indicator(
+        b_var, 0, expr if condition is None else expr.where[condition]
+    ).equations_created
     return x_var, b_var, list(eqs.values())
 
 
 def _get_interval_segment_data(
     row: _PwlRow,
 ) -> list[tuple[str, float, float, float, float]]:
+    """
+    Prepare (slot, lower x, upper x, slope, offset) records for Interval builders.
+    """
     segment_data = []
     for index, segment in enumerate(row.segments):
         if segment.left.x == segment.right.x:
@@ -293,6 +390,9 @@ def _get_interval_segment_data(
 def _get_dlog_segment_data(
     row: _PwlRow,
 ) -> list[tuple[str, float, float, float, float]]:
+    """
+    Prepare (slot, left x, right x, left y, right y) records for DLog builders.
+    """
     return [
         (
             str(index),
@@ -310,7 +410,11 @@ def _set_pwl_output_bounds(
     rows: tuple[_PwlRow, ...],
     *,
     curve_domain: tuple[gp.Set | gp.Alias, ...],
+    restrict: gp.Set | None = None,
 ) -> None:
+    """
+    Set output bounds from finite y-values, leaving ray-unbounded sides free.
+    """
     row_bounds: list[tuple[_PwlRow, float | None, float | None]] = []
     for row in rows:
         lower_bound: float | None = min(point.y for point in row.ordered_points)
@@ -324,15 +428,17 @@ def _set_pwl_output_bounds(
                 upper_bound = None
         row_bounds.append((row, lower_bound, upper_bound))
 
+    input_domain = typing.cast("list[gp.Set]", list(out_y.domain))
+    input_index = input_domain if input_domain else [...]
+    input_condition = restrict[input_domain] if restrict is not None else None
     if not curve_domain:
         _, lower_bound, upper_bound = row_bounds[0]
         if lower_bound is not None:
-            out_y.lo[...] = lower_bound
+            _assign(out_y.lo, input_index, lower_bound, input_condition)
         if upper_bound is not None:
-            out_y.up[...] = upper_bound
+            _assign(out_y.up, input_index, upper_bound, input_condition)
         return
 
-    input_domain = typing.cast("list[gp.Set]", list(out_y.domain))
     curve_index = [*curve_domain]
     # Rays can remove only one side, so lower and upper bounds need separate
     # row masks.
@@ -350,9 +456,10 @@ def _set_pwl_output_bounds(
             domain=curve_index,
             records=[(*row.key, lower_bound) for row, lower_bound in lower_bounds],
         )
-        out_y.lo[input_domain].where[lower_bounded_rows[curve_index]] = lower_y[
-            curve_index
-        ]
+        lower_condition = _and_condition(
+            input_condition, lower_bounded_rows[curve_index]
+        )
+        out_y.lo[input_domain].where[lower_condition] = lower_y[curve_index]
 
     upper_bounds = [
         (row, upper_bound)
@@ -368,15 +475,19 @@ def _set_pwl_output_bounds(
             domain=curve_index,
             records=[(*row.key, upper_bound) for row, upper_bound in upper_bounds],
         )
-        out_y.up[input_domain].where[upper_bounded_rows[curve_index]] = upper_y[
-            curve_index
-        ]
+        upper_condition = _and_condition(
+            input_condition, upper_bounded_rows[curve_index]
+        )
+        out_y.up[input_domain].where[upper_condition] = upper_y[curve_index]
 
 
 def _build_scalar_interval_formulation(
     input_x: gp.Variable,
     row: _PwlRow,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
+    """
+    Build Interval equations for a normalized curve and scalar input.
+    """
     m = input_x.container
     equations: list[gp.Equation] = []
     segment_selector_term = gp.Number(0)
@@ -449,11 +560,22 @@ def _build_indexed_interval_formulation(
     input_x: gp.Variable,
     data: _PwlData,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
+    """
+    Build Interval equations for indexed inputs using normalized curve data.
+    """
     m = input_x.container
     rows = data.rows
     input_domain = typing.cast("list[gp.Set]", list(input_x.domain))
     input_index = [*input_domain]
     curve_domain = [*data.curve_domain]
+    # Copy the selected keys so later changes to the user's Set do not change
+    # this formulation.
+    active_inputs = (
+        m.addSet(domain=input_domain, records=data.input_keys)
+        if data.input_keys is not None
+        else None
+    )
+    input_condition = active_inputs[input_index] if active_inputs is not None else None
     equations: list[gp.Equation] = []
     segment_selector_term = gp.Number(0)
     x_term = gp.Number(0)
@@ -498,23 +620,22 @@ def _build_indexed_interval_formulation(
         bin_var = m.addVariable(domain=segment_domain, type="binary")
         segment_x = m.addVariable(domain=segment_domain)
 
+        segment_exists = active_segments[segment_data_index]
+        segment_condition = _and_condition(input_condition, segment_exists)
+        inactive_segments = _and_condition(input_condition, ~segment_exists)
         # Fix unused rectangular slots so they cannot affect the model.
-        bin_var.fx[segment_index].where[~active_segments[segment_data_index]] = 0
-        segment_x.fx[segment_index].where[~active_segments[segment_data_index]] = 0
+        bin_var.fx[segment_index].where[inactive_segments] = 0
+        segment_x.fx[segment_index].where[inactive_segments] = 0
 
         set_segment_lowerbound = m.addEquation(domain=segment_domain)
-        set_segment_lowerbound[segment_index].where[
-            active_segments[segment_data_index]
-        ] = (
+        set_segment_lowerbound[segment_index].where[segment_condition] = (
             lowerbounds[segment_data_index] * bin_var[segment_index]
             <= segment_x[segment_index]
         )
         equations.append(set_segment_lowerbound)
 
         set_segment_upperbound = m.addEquation(domain=segment_domain)
-        set_segment_upperbound[segment_index].where[
-            active_segments[segment_data_index]
-        ] = (
+        set_segment_upperbound[segment_index].where[segment_condition] = (
             upperbounds[segment_data_index] * bin_var[segment_index]
             >= segment_x[segment_index]
         )
@@ -542,6 +663,7 @@ def _build_indexed_interval_formulation(
         out_y,
         rows,
         curve_domain=data.curve_domain,
+        restrict=active_inputs,
     )
 
     ray_selector_term = gp.Number(0)
@@ -575,11 +697,19 @@ def _build_indexed_interval_formulation(
         base_y = m.addParameter(domain=ray_data_domain, records=base_y_records)
         direction = m.addParameter(domain=ray_data_domain, records=direction_records)
         gradient = m.addParameter(domain=ray_data_domain, records=gradient_records)
-        movement, ray_selector, ray_equations = _generate_ray(m, ray_domain)
+        ray_exists = active_rays[ray_data_index]
+        # Without a restriction, ray activations stay unconditioned.
+        ray_condition = (
+            None if input_condition is None else input_condition & ray_exists
+        )
+        movement, ray_selector, ray_equations = _generate_ray(
+            m, ray_domain, condition=ray_condition
+        )
         equations.extend(ray_equations)
 
-        movement.fx[ray_index].where[~active_rays[ray_data_index]] = 0
-        ray_selector.fx[ray_index].where[~active_rays[ray_data_index]] = 0
+        inactive_rays = _and_condition(input_condition, ~ray_exists)
+        movement.fx[ray_index].where[inactive_rays] = 0
+        ray_selector.fx[ray_index].where[inactive_rays] = 0
 
         ray_selector_term = gp.Sum(
             R,
@@ -605,15 +735,20 @@ def _build_indexed_interval_formulation(
         )
 
     pick_one = m.addEquation(domain=input_domain)
-    pick_one[input_index] = segment_selector_term + ray_selector_term == 1
+    _define(
+        pick_one,
+        input_index,
+        segment_selector_term + ray_selector_term == 1,
+        input_condition,
+    )
     equations.append(pick_one)
 
     set_x = m.addEquation(domain=input_domain)
-    set_x[input_index] = input_x[input_index] == x_term
+    _define(set_x, input_index, input_x[input_index] == x_term, input_condition)
     equations.append(set_x)
 
     set_y = m.addEquation(domain=input_domain)
-    set_y[input_index] = out_y[input_index] == y_term
+    _define(set_y, input_index, out_y[input_index] == y_term, input_condition)
     equations.append(set_y)
 
     return out_y, equations
@@ -623,7 +758,9 @@ def _build_interval_formulation(
     input_x: gp.Variable,
     data: _PwlData,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
-    if input_x.dimension == 0:
+    if data.input_keys == ():
+        return input_x.container.addVariable(domain=input_x.domain), []
+    elif input_x.dimension == 0:
         return _build_scalar_interval_formulation(input_x, data.rows[0])
     else:
         return _build_indexed_interval_formulation(input_x, data)
@@ -637,6 +774,7 @@ def pwl_interval_formulation(
     bound_left: bool = True,
     bound_right: bool = True,
     allow_multivalued: bool = False,
+    restrict: gp.Set | None = None,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     """
     Create a piecewise-linear relationship using the Interval formulation.
@@ -692,6 +830,11 @@ def pwl_interval_formulation(
     allow_multivalued : bool = False
         Whether to explicitly allow multivalued curves. If False, point
         discontinuities issue a warning and overlapping chains are rejected.
+    restrict : gp.Set | None, optional
+        Set of indexed input entries for which to build PWL equations
+        and output bounds. Its domains must match `input_x.domain` in
+        the same order. If None, all entries are used. An empty Set
+        returns `y` without equations.
 
     Returns
     -------
@@ -730,6 +873,7 @@ def pwl_interval_formulation(
         y_points,
         bound_left=bound_left,
         bound_right=bound_right,
+        restrict=restrict,
     )
     _validate_multivalued_data(data, allow_multivalued, "interval")
 
@@ -740,6 +884,9 @@ def _build_scalar_dlog_formulation(
     input_x: gp.Variable,
     row: _PwlRow,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
+    """
+    Build DLog equations for a normalized curve and scalar input.
+    """
     m = input_x.container
     equations: list[gp.Equation] = []
     segment_count = len(row.segments)
@@ -878,11 +1025,20 @@ def _build_indexed_dlog_formulation(
     input_x: gp.Variable,
     data: _PwlData,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
+    """
+    Build DLog equations for indexed inputs with row-specific selectable units.
+    """
     m = input_x.container
     rows = data.rows
     input_domain = typing.cast("list[gp.Set]", list(input_x.domain))
     input_index = [*input_domain]
     curve_domain = [*data.curve_domain]
+    active_inputs = (
+        m.addSet(domain=input_domain, records=data.input_keys)
+        if data.input_keys is not None
+        else None
+    )
+    input_condition = active_inputs[input_index] if active_inputs is not None else None
     equations: list[gp.Equation] = []
 
     max_segments = max(len(row.segments) for row in rows)
@@ -939,8 +1095,11 @@ def _build_indexed_dlog_formulation(
         gamma_right = m.addVariable(domain=segment_domain, type="positive")
 
         # Shorter rows occupy a prefix of the rectangular segment dimension.
-        gamma_left.fx[segment_index].where[~active_segments[segment_data_index]] = 0
-        gamma_right.fx[segment_index].where[~active_segments[segment_data_index]] = 0
+        inactive_segments = _and_condition(
+            input_condition, ~active_segments[segment_data_index]
+        )
+        gamma_left.fx[segment_index].where[inactive_segments] = 0
+        gamma_right.fx[segment_index].where[inactive_segments] = 0
 
         segment_weight_term = gp.Sum(
             J,
@@ -992,11 +1151,19 @@ def _build_indexed_dlog_formulation(
         base_y = m.addParameter(domain=ray_data_domain, records=base_y_records)
         direction = m.addParameter(domain=ray_data_domain, records=direction_records)
         gradient = m.addParameter(domain=ray_data_domain, records=gradient_records)
-        movement, ray_weight, ray_equations = _generate_ray(m, ray_domain)
+        ray_exists = active_rays[ray_data_index]
+        # Without a restriction, ray activations stay unconditioned.
+        ray_condition = (
+            None if input_condition is None else input_condition & ray_exists
+        )
+        movement, ray_weight, ray_equations = _generate_ray(
+            m, ray_domain, condition=ray_condition
+        )
         equations.extend(ray_equations)
 
-        movement.fx[ray_index].where[~active_rays[ray_data_index]] = 0
-        ray_weight.fx[ray_index].where[~active_rays[ray_data_index]] = 0
+        inactive_rays = _and_condition(input_condition, ~ray_exists)
+        movement.fx[ray_index].where[inactive_rays] = 0
+        ray_weight.fx[ray_index].where[inactive_rays] = 0
 
         ray_weight_term = gp.Sum(
             R,
@@ -1026,18 +1193,24 @@ def _build_indexed_dlog_formulation(
         out_y,
         rows,
         curve_domain=data.curve_domain,
+        restrict=active_inputs,
     )
 
     pick_one = m.addEquation(domain=input_domain)
-    pick_one[input_index] = segment_weight_term + ray_weight_term == 1
+    _define(
+        pick_one,
+        input_index,
+        segment_weight_term + ray_weight_term == 1,
+        input_condition,
+    )
     equations.append(pick_one)
 
     set_x = m.addEquation(domain=input_domain)
-    set_x[input_index] = input_x[input_index] == x_term
+    _define(set_x, input_index, input_x[input_index] == x_term, input_condition)
     equations.append(set_x)
 
     set_y = m.addEquation(domain=input_domain)
-    set_y[input_index] = out_y[input_index] == y_term
+    _define(set_y, input_index, out_y[input_index] == y_term, input_condition)
     equations.append(set_y)
 
     if bit_count:
@@ -1095,7 +1268,12 @@ def _build_indexed_dlog_formulation(
         bit_index = [*input_domain, L]
         select_bit = m.addVariable(domain=bit_domain, type="binary")
         select_address = m.addEquation(domain=bit_domain)
-        select_address[bit_index] = address_term == select_bit[bit_index]
+        _define(
+            select_address,
+            bit_index,
+            address_term == select_bit[bit_index],
+            input_condition,
+        )
         equations.append(select_address)
 
     return out_y, equations
@@ -1105,7 +1283,9 @@ def _build_dlog_formulation(
     input_x: gp.Variable,
     data: _PwlData,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
-    if input_x.dimension == 0:
+    if data.input_keys == ():
+        return input_x.container.addVariable(domain=input_x.domain), []
+    elif input_x.dimension == 0:
         return _build_scalar_dlog_formulation(input_x, data.rows[0])
     else:
         return _build_indexed_dlog_formulation(input_x, data)
@@ -1119,6 +1299,7 @@ def pwl_dlog_formulation(
     bound_left: bool = True,
     bound_right: bool = True,
     allow_multivalued: bool = False,
+    restrict: gp.Set | None = None,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     """
     This function implements a piecewise linear function using the
@@ -1166,6 +1347,11 @@ def pwl_dlog_formulation(
     allow_multivalued : bool = False
         Whether to explicitly allow multivalued curves. If False, point
         discontinuities issue a warning and overlapping chains are rejected.
+    restrict : gp.Set | None, optional
+        Set of indexed input entries for which to build PWL equations
+        and output bounds. Its domains must match `input_x.domain` in
+        the same order. If None, all entries are used. An empty Set
+        returns `y` without equations.
 
     Returns
     -------
@@ -1198,6 +1384,7 @@ def pwl_dlog_formulation(
         y_points,
         bound_left=bound_left,
         bound_right=bound_right,
+        restrict=restrict,
     )
     _validate_multivalued_data(data, allow_multivalued, "dlog")
 
@@ -1205,6 +1392,10 @@ def pwl_dlog_formulation(
 
 
 def _validate_convexity_rows(rows: tuple[_PwlRow, ...]) -> None:
+    """
+    Check Convexity-specific ordering and ray limitations on normalized rows.
+    Run after multivalued checks and before creating formulation symbols.
+    """
     for row in rows:
         row_location = f" in row {row.key}" if row.key else ""
         if len(row.ordered_points) == 1 and len(row.rays) == 2:
@@ -1233,11 +1424,25 @@ def _build_convexity_formulation(
     data: _PwlData,
     using: typing.Literal["binary", "sos2"],
 ) -> tuple[gp.Variable, list[gp.Equation]]:
+    """
+    Build Convexity equations using native SOS2 or binary adjacency constraints.
+    """
     m = input_x.container
+    if data.input_keys == ():
+        return m.addVariable(domain=input_x.domain), []
+
     rows = data.rows
     input_domain = typing.cast("list[gp.Set]", list(input_x.domain))
+    input_index = input_domain if input_domain else [...]
     curve_domain = [*data.curve_domain]
     broadcast = data.is_broadcast
+
+    active_inputs = (
+        m.addSet(domain=input_domain, records=data.input_keys)
+        if data.input_keys is not None
+        else None
+    )
+    input_condition = active_inputs[input_index] if active_inputs is not None else None
     equations: list[gp.Equation] = []
 
     # Lambda variables are rectangular; active_points trims the unused tail of
@@ -1276,18 +1481,20 @@ def _build_convexity_formulation(
         domain=point_domain,
         type="free" if using == "binary" else "sos2",
     )
-    lambda_var.lo[...] = 0
-    lambda_var.up[...] = 1
-    # The binary helper resets lambda bounds, so apply the row mask afterwards.
     if using == "binary" and max_points > 1:
-        equations.extend(_enforce_sos2_with_binary(lambda_var))
-    lambda_var.fx[point_index].where[~active_points[point_data_index]] = 0
+        equations.extend(_enforce_sos2_with_binary(lambda_var, restrict=active_inputs))
+    else:
+        _assign(lambda_var.lo, point_index, 0, input_condition)
+        _assign(lambda_var.up, point_index, 1, input_condition)
+    inactive_points = _and_condition(input_condition, ~active_points[point_data_index])
+    lambda_var.fx[point_index].where[inactive_points] = 0
 
     out_y = m.addVariable(domain=input_domain)
     _set_pwl_output_bounds(
         out_y,
         rows,
         curve_domain=data.curve_domain,
+        restrict=active_inputs,
     )
 
     x_term = gp.Sum(
@@ -1340,16 +1547,27 @@ def _build_convexity_formulation(
             domain=ray_endpoint_domain,
             records=endpoint_records,
         )
-        movement, ray_selector, ray_equations = _generate_ray(m, ray_domain)
+        ray_exists = active_rays[ray_data_index]
+        # Without a restriction, ray activations stay unconditioned.
+        ray_condition = (
+            None if input_condition is None else input_condition & ray_exists
+        )
+        movement, ray_selector, ray_equations = _generate_ray(
+            m, ray_domain, condition=ray_condition
+        )
         equations.extend(ray_equations)
 
-        movement.fx[ray_index].where[~active_rays[ray_data_index]] = 0
-        ray_selector.fx[ray_index].where[~active_rays[ray_data_index]] = 0
+        inactive_rays = _and_condition(input_condition, ~ray_exists)
+        movement.fx[ray_index].where[inactive_rays] = 0
+        ray_selector.fx[ray_index].where[inactive_rays] = 0
 
         # A ray can activate only with lambda weight at its finite base point.
         limit_ray = m.addEquation(domain=[*input_domain, R, J])
         limit_index = [*input_domain, R, J]
-        limit_ray[limit_index].where[ray_endpoints[ray_endpoint_index]] = (
+        endpoint_condition = _and_condition(
+            input_condition, ray_endpoints[ray_endpoint_index]
+        )
+        limit_ray[limit_index].where[endpoint_condition] = (
             ray_selector[ray_index] <= lambda_var[point_index]
         )
         equations.append(limit_ray)
@@ -1369,21 +1587,24 @@ def _build_convexity_formulation(
         )
 
     lambda_sum = m.addEquation(domain=input_domain)
-    lambda_sum[...] = (
+    _define(
+        lambda_sum,
+        input_index,
         gp.Sum(
             J,
             active_points[point_data_index] * lambda_var[point_index],
         )
-        == 1
+        == 1,
+        input_condition,
     )
     equations.append(lambda_sum)
 
     set_x = m.addEquation(domain=input_domain)
-    set_x[...] = input_x == x_term
+    _define(set_x, input_index, input_x[input_index] == x_term, input_condition)
     equations.append(set_x)
 
     set_y = m.addEquation(domain=input_domain)
-    set_y[...] = out_y == y_term
+    _define(set_y, input_index, out_y[input_index] == y_term, input_condition)
     equations.append(set_y)
 
     # Broadcast data has one separator layout; Parameter rows need their own
@@ -1391,7 +1612,11 @@ def _build_convexity_formulation(
     if broadcast:
         if rows[0].separator_indices:
             equations.extend(
-                _enforce_discontinuity(lambda_var, rows[0].separator_indices)
+                _enforce_discontinuity(
+                    lambda_var,
+                    rows[0].separator_indices,
+                    restrict=active_inputs,
+                )
             )
     else:
         equations.extend(
@@ -1399,6 +1624,7 @@ def _build_convexity_formulation(
                 lambda_var,
                 rows,
                 data.curve_domain,
+                restrict=active_inputs,
             )
         )
 
@@ -1414,6 +1640,7 @@ def pwl_convexity_formulation(
     bound_left: bool = True,
     bound_right: bool = True,
     allow_multivalued: bool = False,
+    restrict: gp.Set | None = None,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     """
     Create a piecewise-linear relationship using the Convexity formulation.
@@ -1476,6 +1703,11 @@ def pwl_convexity_formulation(
         Whether to acknowledge point discontinuities and suppress their warning.
         Overlapping chains are unsupported by the Convexity formulation and are
         rejected regardless of this argument.
+    restrict : gp.Set | None, optional
+        Set of indexed input entries for which to build PWL equations
+        and output bounds. Its domains must match `input_x.domain` in
+        the same order. If None, all entries are used. An empty Set
+        returns `y` without equations.
 
     Returns
     -------
@@ -1519,6 +1751,7 @@ def pwl_convexity_formulation(
         y_points,
         bound_left=bound_left,
         bound_right=bound_right,
+        restrict=restrict,
     )
 
     _validate_multivalued_data(data, allow_multivalued, "convexity")
@@ -1539,6 +1772,7 @@ def pwlinear(
     method: typing.Literal["interval", "convexity", "dlog"] = "interval",
     using: typing.Literal["binary", "sos2"] | None = None,
     allow_multivalued: bool = False,
+    restrict: gp.Set | None = None,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     """Create a piecewise-linear relationship from a PWLCurve.
 
@@ -1548,6 +1782,7 @@ def pwlinear(
         Independent variable of the piecewise-linear function.
     curve : PWLCurve | Mapping[str | tuple[str, ...], PWLCurve]
         One shared curve, or a dictionary of domain keys and curves.
+        With `restrict`, curves for unselected entries may be omitted.
     curve_domain : Sequence[gp.Set | gp.Alias] | None, optional
         Input domains represented by the dictionary keys. They must be an ordered
         subset of `input_x.domain`; the curves are broadcast over omitted
@@ -1561,6 +1796,11 @@ def pwlinear(
     allow_multivalued : bool, optional
         Whether to explicitly allow multivalued curves. If False, point
         discontinuities issue a warning and overlapping chains are rejected.
+    restrict : gp.Set | None, optional
+        Set of indexed input entries for which to build PWL equations
+        and output bounds. Its domains must match `input_x.domain` in
+        the same order. If None, all entries are used. An empty Set
+        returns `y` without equations.
 
     Returns
     -------
@@ -1590,7 +1830,7 @@ def pwlinear(
         )
         using = None
 
-    data = _normalize_curve_data(input_x, curve, curve_domain)
+    data = _normalize_curve_data(input_x, curve, curve_domain, restrict=restrict)
     _validate_multivalued_data(data, allow_multivalued, method)
 
     if method == "convexity":

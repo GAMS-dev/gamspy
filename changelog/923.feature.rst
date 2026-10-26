@@ -1,0 +1,1 @@
+Add an optional ``restrict`` argument to piecewise linear formulations and ``pwlinear`` to apply PWL relationships only to selected indexed entries.

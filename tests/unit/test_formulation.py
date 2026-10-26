@@ -21,6 +21,10 @@ from gamspy.formulations import (
     pwl_interval_formulation,
     pwlinear,
 )
+from gamspy.formulations._piecewise_data import (
+    _normalize_paired_data,
+    _normalize_restriction,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -895,6 +899,304 @@ def test_pwl_decreasing_ray_output_bounds(fct):
 
     assert right_y.lo.toDense() == gp.SpecialValues.NEGINF
     assert right_y.up.toDense() == 2
+
+
+def test_pwl_restriction_snapshot():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i0", "i1"])
+    j = gp.Set(m, "j", records=["j0", "j1"])
+    input_x = gp.Variable(m, "input_x", domain=[i, j])
+    s = gp.Set(m, "s", domain=[i, j], records=[("i0", "j1")])
+    empty_s = gp.Set(m, "empty_s", domain=[i, j])
+    symbols_before = list(m.data)
+
+    assert _normalize_restriction(input_x, None) is None
+    assert _normalize_restriction(input_x, empty_s) == ()
+    keys = _normalize_restriction(input_x, s)
+    assert keys == (("i0", "j1"),)
+
+    s.setRecords([("i1", "j0")])
+
+    assert keys == (("i0", "j1"),)
+    assert _normalize_restriction(input_x, s) != keys
+    assert list(m.data) == symbols_before
+
+
+@pytest.mark.parametrize("fct", fcts_to_test)
+def test_pwl_restricted_parameter_case_insensitivity(fct):
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A"])
+    breakpoint = gp.Set(m, "breakpoint", records=["P0", "P1", "P2"])
+    input_x = gp.Variable(m, "input_x", domain=i)
+    s = gp.Set(m, "s", domain=i, records=["a"])
+    x_points = gp.Parameter(
+        m,
+        "x_points",
+        domain=[i, breakpoint],
+        records=[("A", "p0", 0), ("A", "p1", 2), ("A", "p2", 4)],
+    )
+    y_points = gp.Parameter(
+        m,
+        "y_points",
+        domain=[i, breakpoint],
+        records=[("a", "P0", 0), ("a", "P1", 4), ("a", "P2", 8)],
+    )
+
+    output_y, equations = fct(input_x, x_points, y_points, restrict=s)
+    input_x.fx[i] = 3
+    model = gp.Model(m, equations=equations, problem="mip", sense="feasibility")
+
+    model.solve()
+
+    assert model.status == gp.ModelStatus.OptimalGlobal
+    assert np.allclose(output_y.toDense(), [6])
+
+
+def test_pwl_restricted_parameter_data():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i0", "i1"])
+    j = gp.Set(m, "j", records=["bounded", "rays", "unused"])
+    breakpoint = gp.Set(m, "breakpoint", records=[f"p{k}" for k in range(7)])
+    input_x = gp.Variable(m, "input_x", domain=[i, j])
+    na = gp.SpecialValues.NA
+    x_points = gp.Parameter(
+        m,
+        "x_points",
+        domain=[j, breakpoint],
+        records=np.array(
+            [
+                [0, 2, na, 4, 6, na, na],
+                [-math.inf, 0, 2, math.inf, na, na, na],
+                [na] * 7,
+            ]
+        ),
+    )
+    y_points = gp.Parameter(
+        m,
+        "y_points",
+        domain=[j, breakpoint],
+        records=np.array(
+            [
+                [gp.SpecialValues.EPS, 4, na, 8, 12, na, na],
+                [3, 0, 4, -1, na, na, na],
+                [na] * 7,
+            ]
+        ),
+    )
+    s = gp.Set(
+        m,
+        "s",
+        domain=[i, j],
+        records=[("i0", "bounded"), ("i1", "bounded"), ("i1", "rays")],
+    )
+    data = _normalize_paired_data(
+        input_x, x_points, y_points, bound_left=True, bound_right=True, restrict=s
+    )
+    assert data.curve_domain == (j,)
+    assert [row.key for row in data.rows] == [("bounded",), ("rays",)]
+
+
+@pytest.mark.parametrize(
+    ("fct", "kwargs"),
+    [
+        (pwl_interval_formulation, {}),
+        (pwl_convexity_formulation, {"using": "binary"}),
+        (pwl_convexity_formulation, {"using": "sos2"}),
+        (pwl_dlog_formulation, {}),
+    ],
+    ids=["interval", "convexity-binary", "convexity-sos2", "dlog"],
+)
+def test_pwl_restricted_solve(fct, kwargs):
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i0", "i1"])
+    j = gp.Set(m, "j", records=["j0", "j1"])
+    input_x = gp.Variable(m, "input_x", domain=[i, j])
+    s = gp.Set(m, "s", domain=[i, j], records=[("i0", "j1")])
+
+    output_y, eqs = fct(input_x, [0, 2, 4], [0, 4, 8], restrict=s, **kwargs)
+
+    assert output_y.records[["i", "j", "lower", "upper"]].values.tolist() == [
+        ["i0", "j1", 0, 8]
+    ]
+    input_x.fx[i, j] = 3
+    # Changing the caller's Set must not change the selected row.
+    s.setRecords([("i1", "j0")])
+    model = gp.Model(
+        m,
+        equations=eqs,
+        problem="mip",
+        sense="feasibility",
+    )
+
+    model.solve()
+
+    assert model.status == gp.ModelStatus.OptimalGlobal
+    assert np.allclose(output_y.toDense(), [[0, 6], [0, 0]])
+    for equation in eqs:
+        assert set(equation.records[["i", "j"]].itertuples(index=False, name=None)) == {
+            ("i0", "j1")
+        }
+
+    empty_s = gp.Set(m, "empty_s", domain=[i, j])
+    variables_before = set(m.getVariables())
+    empty_y, empty_equations = fct(
+        input_x, [0, 2, 4], [0, 4, 8], restrict=empty_s, **kwargs
+    )
+    assert empty_equations == []
+    assert set(m.getVariables()) - variables_before == {empty_y}
+
+
+@pytest.mark.parametrize(
+    "fct",
+    [
+        *fcts_to_test,
+        lambda x, xs, ys, **kwargs: pwlinear(x, PWLCurve(list(zip(xs, ys))), **kwargs),
+    ],
+    ids=["convexity", "dlog", "interval", "pwlinear"],
+)
+def test_pwl_restriction_validation(fct):
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i0", "i1"])
+    j = gp.Set(m, "j", records=["j0", "j1"])
+    i_alias = gp.Alias(m, "i_alias", i)
+    input_x = gp.Variable(m, "input_x", domain=[i, j])
+    invalid_types = ["i0", i_alias]
+    invalid_domains = [
+        gp.Set(m, "fewer_domains", domain=i),
+        gp.Set(m, "swapped_domains", domain=[j, i]),
+        gp.Set(m, "alias_domain", domain=[i_alias, j]),
+        gp.Set(m, "universe_domain", domain=["*", "*"]),
+    ]
+    symbols_before = list(m.data)
+
+    for restrict in invalid_types:
+        with pytest.raises(ValidationError, match="restrict must be a Set or None"):
+            fct(input_x, [0, 2, 4], [0, 4, 8], restrict=restrict)
+
+    for restrict in invalid_domains:
+        with pytest.raises(
+            ValidationError,
+            match="restrict domain must exactly match input_x domains in order",
+        ):
+            fct(input_x, [0, 2, 4], [0, 4, 8], restrict=restrict)
+
+    assert list(m.data) == symbols_before
+
+
+@pytest.mark.parametrize(
+    ("fct", "kwargs"),
+    [
+        (pwl_interval_formulation, {}),
+        (pwl_convexity_formulation, {"using": "binary"}),
+        (pwl_convexity_formulation, {"using": "sos2"}),
+        (pwl_dlog_formulation, {}),
+    ],
+    ids=["interval", "convexity-binary", "convexity-sos2", "dlog"],
+)
+@pytest.mark.parametrize("data_form", ["sequence", "parameter"])
+def test_pwl_restricted_rays_and_discontinuity(fct, kwargs, data_form):
+    m = gp.Container()
+    w = gp.Set(m, "w", records=["w0", "w1"])
+    i = gp.Set(m, "i", records=["left", "jump", "right", "bounded"])
+    input_x = gp.Variable(m, "input_x", domain=[w, i])
+    # Every curve is used by a selected w0 entry and an unselected w1 entry.
+    s = gp.Set(m, "s", domain=[w, i], records=[("w0", row) for row in i.toList()])
+    # Rays have gradients 2 (left) and 1 (right); y jumps from 4 to 10 at x = 2.
+    if data_form == "sequence":
+        # Shared data uses one separator layout for every entry.
+        x_points = [0, 2, 2, 4]
+        y_points = [0, 4, 10, 12]
+        bounds = {"bound_left": False, "bound_right": False}
+    else:
+        # Curves indexed by i are broadcast over w and use row-specific
+        # separators. The "bounded" curve has no rays, so it gets finite bounds.
+        na = gp.SpecialValues.NA
+        breakpoint = gp.Set(m, "breakpoint", records=[f"p{k}" for k in range(6)])
+        ray_x = [-math.inf, 0, 2, 2, 4, math.inf]
+        ray_y = [2, 0, 4, 10, 12, 1]
+        x_points = gp.Parameter(
+            m,
+            "x_points",
+            domain=[i, breakpoint],
+            records=np.array([ray_x, ray_x, ray_x, [0, 2, 2, 4, na, na]]),
+        )
+        y_points = gp.Parameter(
+            m,
+            "y_points",
+            domain=[i, breakpoint],
+            records=np.array([ray_y, ray_y, ray_y, [0, 4, 10, 12, na, na]]),
+        )
+        bounds = {}
+
+    output_y, eqs = fct(
+        input_x,
+        x_points,
+        y_points,
+        allow_multivalued=True,
+        restrict=s,
+        **bounds,
+        **kwargs,
+    )
+    input_x.fx[w, "left"] = -3
+    input_x.fx[w, "jump"] = 3
+    input_x.fx[w, "right"] = 7
+    input_x.fx[w, "bounded"] = 1
+    model = gp.Model(m, equations=eqs, problem="mip", sense="feasibility")
+
+    model.solve()
+
+    assert model.status == gp.ModelStatus.OptimalGlobal
+    records = output_y.records.set_index(["w", "i"])
+    selected = records.loc["w0"].loc[["left", "jump", "right", "bounded"]]
+    assert np.allclose(selected["level"], [-6, 11, 15, 2])
+    expected_bounds = [[-math.inf, math.inf]] * 3
+    if data_form == "parameter":
+        expected_bounds.append([0, 12])
+    else:
+        expected_bounds.append([-math.inf, math.inf])
+    assert selected[["lower", "upper"]].values.tolist() == expected_bounds
+    # Unselected entries keep default values, so they have no records, and
+    # get no equations.
+    assert "w1" not in set(records.index.get_level_values("w"))
+    for equation in eqs:
+        assert "w1" not in set(equation.records["w"])
+
+
+@pytest.mark.parametrize(
+    ("fct", "kwargs"),
+    [
+        (pwl_interval_formulation, {}),
+        (pwl_convexity_formulation, {"using": "binary"}),
+        (pwl_convexity_formulation, {"using": "sos2"}),
+        (pwl_dlog_formulation, {}),
+    ],
+    ids=["interval", "convexity-binary", "convexity-sos2", "dlog"],
+)
+@pytest.mark.parametrize("indexed", [False, True], ids=["scalar", "indexed"])
+def test_pwl_unrestricted_definitions_have_no_input_condition(fct, kwargs, indexed):
+    m = gp.Container()
+    if indexed:
+        i = gp.Set(m, "i", records=["i0", "i1"])
+        input_x = gp.Variable(m, "input_x", domain=i)
+    else:
+        input_x = gp.Variable(m, "input_x")
+
+    _, eqs = fct(
+        input_x,
+        [0, 2, 2, 4],
+        [0, 4, 10, 12],
+        bound_left=False,
+        bound_right=False,
+        allow_multivalued=True,
+        **kwargs,
+    )
+
+    # Without restrict, definitions must not carry a placeholder condition
+    # such as "$ (1)" or "$ (1 and ...)".
+    for equation in eqs:
+        definition = equation.getDefinition()
+        assert "$ (1)" not in definition
+        assert "(1 and " not in definition
 
 
 @pytest.mark.parametrize("fct", fcts_to_test)
@@ -1782,6 +2084,95 @@ def test_pwlinear_partial_curve_mapping(method):
     assert np.allclose(output_y.toDense(), [[2, -6], [8, 2]])
 
 
+@pytest.mark.parametrize(
+    ("method", "using"),
+    [
+        ("interval", None),
+        ("convexity", "binary"),
+        ("convexity", "sos2"),
+        ("dlog", None),
+    ],
+)
+def test_pwlinear_restricted_solve(method, using):
+    m = gp.Container()
+    warehouse = gp.Set(m, "warehouse", records=["north", "south"])
+    product = gp.Set(m, "product", records=["basic", "premium"])
+    input_x = gp.Variable(m, "input_x", domain=[warehouse, product])
+    selected_keys = {("north", "basic"), ("south", "basic")}
+    s = gp.Set(m, "s", domain=[warehouse, product], records=sorted(selected_keys))
+    # Unselected products do not need a curve.
+    curves = {
+        "basic": PWLCurve([(0, 0), (2, 4), (4, 8)], left_gradient=3, right_gradient=-1)
+    }
+
+    output_y, eqs = pwlinear(
+        input_x,
+        curves,
+        curve_domain=[product],
+        method=method,
+        using=using,
+        restrict=s,
+    )
+    input_x.fx[warehouse, product] = 3
+    input_x.fx["north", "basic"] = -2
+    input_x.fx["south", "basic"] = 6
+    s.setRecords([("north", "premium")])
+    model = gp.Model(m, equations=eqs, problem="mip", sense="feasibility")
+
+    model.solve()
+
+    assert model.status == gp.ModelStatus.OptimalGlobal
+    assert np.allclose(output_y.toDense(), [[-6, 0], [6, 0]])
+    for equation in eqs:
+        keys = set(
+            equation.records[["warehouse", "product"]].itertuples(
+                index=False, name=None
+            )
+        )
+        assert keys == selected_keys
+
+    empty_s = gp.Set(m, "empty_s", domain=[warehouse, product])
+    symbols_before = set(m.data)
+    empty_y, empty_equations = pwlinear(
+        input_x,
+        {},
+        curve_domain=[product],
+        method=method,
+        using=using,
+        restrict=empty_s,
+    )
+    assert empty_equations == []
+    assert set(m.data) - symbols_before == {empty_y.name}
+
+
+@pytest.mark.parametrize("method", ["interval", "convexity", "dlog"])
+def test_pwlinear_curve_key_case_insensitivity(method):
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["A", "B"])
+    input_x = gp.Variable(m, "input_x", domain=i)
+    s = gp.Set(m, "s", domain=i, records=["a"])
+    curve = PWLCurve([(0, 0), (2, 4), (4, 8)])
+
+    output_y, equations = pwlinear(
+        input_x,
+        {"A": curve, "b": curve},
+        method=method,
+        restrict=s,
+    )
+    input_x.fx[i] = 3
+    model = gp.Model(m, equations=equations, problem="mip", sense="feasibility")
+
+    model.solve()
+
+    assert model.status == gp.ModelStatus.OptimalGlobal
+    assert np.allclose(output_y.toDense(), [6, 0])
+
+    with pytest.raises(
+        ValidationError, match=r"keys are case-insensitive\. Supplied 'A' and 'a'\."
+    ):
+        pwlinear(input_x, {"A": curve, "a": curve}, method=method, restrict=s)
+
+
 def test_pwlinear_validation():
     m = gp.Container()
     input_x = gp.Variable(m)
@@ -1845,12 +2236,12 @@ def test_pwlinear_validation():
     symbols_before = list(m.data)
     with pytest.raises(ValidationError, match="missing keys: 'premium'"):
         pwlinear(indexed_x, {"basic": curve})
-    with pytest.raises(ValidationError, match="extra keys: 'other'"):
+    with pytest.raises(ValidationError, match="invalid keys: 'other'"):
         pwlinear(
             indexed_x,
             {"basic": curve, "premium": curve, "other": curve},
         )
-    with pytest.raises(ValidationError, match="key 'premium' must be a PWLCurve"):
+    with pytest.raises(ValidationError, match=r"curve\['premium'\] must be a PWLCurve"):
         pwlinear(
             indexed_x,
             {"basic": curve, "premium": [(0, 0), (1, 1)]},

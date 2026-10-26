@@ -3,15 +3,17 @@ from __future__ import annotations
 import math
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from itertools import product
 from typing import cast
 
 import gamspy as gp
 from gamspy.exceptions import ValidationError
 from gamspy.formulations._piecewise_data import (
     _copy_row_with_key,
+    _get_curve_row_keys,
     _get_explicit_domain_symbols,
     _match_curve_domain,
+    _normalize_label_key,
+    _normalize_restriction,
     _normalize_sequence_data,
     _PwlData,
     _PwlRow,
@@ -49,6 +51,9 @@ class PWLCurve:
     _normalized_row: _PwlRow = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
+        """
+        Validate and freeze curve data when a PWLCurve is created.
+        """
         points = _normalize_points(self.points)
         left_gradient = _normalize_gradient(self.left_gradient, "left_gradient", 0)
         right_gradient = _normalize_gradient(
@@ -81,10 +86,17 @@ def _normalize_curve_data(
     input_x: object,
     curve: object,
     curve_domain: object = None,
+    *,
+    restrict: gp.Set | None = None,
 ) -> _PwlData:
+    """
+    Prepare a shared PWLCurve or an indexed curve dictionary for pwlinear.
+    Dictionary keys follow curve_domain; omitted input domains are broadcast.
+    """
     if not isinstance(input_x, gp.Variable):
         raise ValidationError("input_x is expected to be a Variable")
 
+    input_keys = _normalize_restriction(input_x, restrict)
     if input_x.dimension == 0:
         if curve_domain is not None:
             raise ValidationError(
@@ -99,7 +111,9 @@ def _normalize_curve_data(
         elif not isinstance(curve, PWLCurve):
             raise ValidationError("curve must be a PWLCurve")
         else:
-            return _PwlData(rows=(curve._normalized_row,), curve_domain=())
+            return _PwlData(
+                rows=(curve._normalized_row,), curve_domain=(), input_keys=input_keys
+            )
 
     # A shared curve does not require expansion of the input row keys.
     input_domain = _get_explicit_domain_symbols(
@@ -110,7 +124,9 @@ def _normalize_curve_data(
             raise ValidationError(
                 "curve_domain can only be used with a curve dictionary"
             )
-        return _PwlData(rows=(curve._normalized_row,), curve_domain=())
+        return _PwlData(
+            rows=(curve._normalized_row,), curve_domain=(), input_keys=input_keys
+        )
 
     if not isinstance(curve, Mapping):
         raise ValidationError(
@@ -133,36 +149,70 @@ def _normalize_curve_data(
             )
         normalized_curve_domain = _match_curve_domain(input_domain, curve_domain)
 
-    row_keys = tuple(product(*(domain.toList() for domain in normalized_curve_domain)))
+    row_keys = _get_curve_row_keys(input_domain, normalized_curve_domain, input_keys)
     curve_mapping = cast("Mapping[object, object]", curve)
     mapping_keys = tuple(
         key[0] if len(normalized_curve_domain) == 1 else key for key in row_keys
     )
-    expected_keys = set(mapping_keys)
-    provided_keys = set(curve_mapping)
-    missing_keys = expected_keys - provided_keys
-    extra_keys = provided_keys - expected_keys
-    if missing_keys or extra_keys:
-        details = []
-        if missing_keys:
-            details.append(f"missing keys: {_format_keys(missing_keys)}")
-        if extra_keys:
-            details.append(f"extra keys: {_format_keys(extra_keys)}")
+    expected_keys = {_normalize_label_key(key) for key in mapping_keys}
+    provided_keys: dict[object, object] = {}
+    for key in curve_mapping:
+        normalized_key = _normalize_label_key(key)
+        if normalized_key in provided_keys:
+            raise ValidationError(
+                "curve dictionary keys are case-insensitive. "
+                f"Supplied {provided_keys[normalized_key]!r} and {key!r}."
+            )
+        provided_keys[normalized_key] = key
+    missing_keys = {
+        key for key in mapping_keys if _normalize_label_key(key) not in provided_keys
+    }
+    extra_keys = provided_keys.keys() - expected_keys
+    if input_keys is not None:
+        # Unselected curves may remain in the dictionary, but their keys must
+        # still belong to the declared curve domains.
+        domain_labels = [
+            {label.casefold() for label in domain.toList()}
+            for domain in normalized_curve_domain
+        ]
+        extra_keys = set()
+        for mapping_key in provided_keys.keys() - expected_keys:
+            key = (mapping_key,) if len(domain_labels) == 1 else mapping_key
+            if (
+                not isinstance(key, tuple)
+                or len(key) != len(domain_labels)
+                or any(
+                    label not in labels
+                    for label, labels in zip(key, domain_labels, strict=True)
+                )
+            ):
+                extra_keys.add(mapping_key)
+
+    if missing_keys:
+        raise ValidationError(f"curve is missing keys: {_format_keys(missing_keys)}")
+    if extra_keys:
         raise ValidationError(
-            "curve dictionary keys must exactly match curve_domain; "
-            + "; ".join(details)
+            "curve contains invalid keys: "
+            f"{_format_keys(provided_keys[key] for key in extra_keys)}"
         )
 
-    rows: list[_PwlRow] = []
-    for row_key, mapping_key in zip(row_keys, mapping_keys, strict=True):
-        row_curve = curve_mapping[mapping_key]
+    for mapping_key, row_curve in curve_mapping.items():
         if not isinstance(row_curve, PWLCurve):
-            raise ValidationError(
-                f"curve dictionary value for key {mapping_key!r} must be a PWLCurve"
-            )
-        rows.append(_copy_row_with_key(row_curve._normalized_row, row_key))
+            raise ValidationError(f"curve[{mapping_key!r}] must be a PWLCurve")
 
-    return _PwlData(rows=tuple(rows), curve_domain=normalized_curve_domain)
+    curve_mapping = cast("Mapping[object, PWLCurve]", curve_mapping)
+    rows = tuple(
+        _copy_row_with_key(
+            curve_mapping[
+                provided_keys[_normalize_label_key(mapping_key)]
+            ]._normalized_row,
+            row_key,
+        )
+        for row_key, mapping_key in zip(row_keys, mapping_keys, strict=True)
+    )
+    return _PwlData(
+        rows=rows, curve_domain=normalized_curve_domain, input_keys=input_keys
+    )
 
 
 def _format_keys(keys: Iterable[object]) -> str:
@@ -172,6 +222,10 @@ def _format_keys(keys: Iterable[object]) -> str:
 def _normalize_points(
     points: Sequence[Sequence[float] | None],
 ) -> tuple[tuple[float, float] | None, ...]:
+    """
+    Copy PWLCurve points into immutable pairs with finite coordinates.
+    Rays are specified separately through the gradient arguments.
+    """
     if isinstance(points, (str, bytes)) or not isinstance(points, Sequence):
         raise ValidationError("points must be a list or tuple")
 
