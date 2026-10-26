@@ -705,7 +705,7 @@ class FreezeOptions(BaseModel):
     debug : bool, optional
         Enables debug mode. Default is False.
     update_type : Literal["0", "base_case", "accumulate", "inherit"], optional
-        Specifies the update type for the model instance.
+        Specifies the update type for the frozen solve.
 
         - "base_case": Update from the base case.
 

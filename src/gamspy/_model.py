@@ -1510,7 +1510,7 @@ class Model:
         hibernate: bool = False,
     ) -> None:
         """
-        Instantiates a model instance. After calling freeze, only modifiables can be modified.
+        Instantiates a frozen model. After calling freeze, only modifiables can be modified.
 
         Parameters
         ----------
@@ -1519,11 +1519,11 @@ class Model:
         options : Options | None, optional
             GAMSPy options, by default None
         hibernate : bool, optional
-            Whether to stop the GAMS execution engine once the model instance has
-            been generated. The engine is not needed after building the model instance.
-            Its state is saved first and restored by the next statement that needs it,
-            which is only worth it for a model that is large enough to pay for saving and
-            restarting. Local backend only. Default is False.
+            Whether to stop the GAMS execution engine once the model is frozen.
+            The engine is not needed after freezing the model. Its state is saved first
+            and restored by the next statement that needs it, which is only worth it
+            for a model that is large enough to pay for saving and restarting. Local
+            backend only. Default is False.
 
         Examples
         --------
@@ -1564,16 +1564,16 @@ class Model:
 
     def unfreeze(self, *, load_records: bool = True) -> None:
         """
-        Unfreezes the model and releases the resources of its model instance.
+        Unfreezes the model.
 
         Parameters
         ----------
         load_records : bool, optional
-            Whether to read the solution of the last frozen solve before the
-            model instance is released. Only the records that were not accessed
-            yet are read, since they exist nowhere else. For a large model this
-            can be a lot of data that may not be needed, in which case False
-            discards them and only the memory of the instance is left. Default is True.
+            Whether to read the solution records of the last frozen solve before
+            unfreezing the model. Only the records that were not accessed yet are
+            read, since they exist nowhere else. For a large model this can be a
+            lot of data that may not be needed, in which case False discards them.
+            Default is True.
 
         Raises
         ------

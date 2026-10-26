@@ -31,6 +31,7 @@ from gamspy._categoricals import codes_and_categories, union_categories
 from gamspy._config import get_option
 from gamspy._execution import create_execution_engine
 from gamspy._extrinsic import ExtrinsicLibrary
+from gamspy._frozen_model import FrozenModel
 from gamspy._internals import (
     ATTR_PREFIX,
     EQU_TYPE,
@@ -1474,6 +1475,10 @@ class Container:
         seen_add = seen.add
 
         for name, symbol in self._data.items():
+            # GAMS still has the values from before the frozen solve.
+            if isinstance(symbol._should_load_from, FrozenModel):
+                cast("DataSymbol", symbol)._load_records()
+
             if not symbol._should_unload_to_gams:
                 continue
 
