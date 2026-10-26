@@ -351,7 +351,6 @@ class FrozenModel:
         self.sync_db._check_for_gmd_error(rc, self.workspace)
 
         self._solution_symbols = get_variable_equation_names(self.sync_db.gmd)
-        self._validate_reserved_suffix()
         self._create_companion_variables()
 
     def _validate_companion_names(self) -> None:
@@ -373,33 +372,6 @@ class FrozenModel:
                 " of its modifiable parameters, and the container already has a symbol"
                 f" under that name: {', '.join(clashes)}. One symbol of each pair must be"
                 " renamed to freeze the model."
-            )
-
-    def _validate_reserved_suffix(self) -> None:
-        """
-        A model instance keeps a modifiable parameter's value in a fixed variable named
-        <parameter>_var. GAMS treats every variable of the model instance with that
-        suffix as such a companion, hence it fixes the ones that do not belong to a
-        modifiable parameter to zero instead of solving for them.
-        """
-        companions = {
-            symbol.name.casefold() + "_var"
-            for symbol in self.modifiables
-            if isinstance(symbol, gp.Parameter)
-        }
-
-        reserved = [
-            name
-            for name in self._solution_symbols
-            if name.casefold().endswith("_var")
-            and name.casefold() not in companions
-            and isinstance(self.container._data.get(name), gp.Variable)
-        ]
-
-        if reserved:
-            raise ValidationError(
-                f"Variable name(s) {reserved} of model `{self.model.name}` end with `_var`"
-                " which is a suffix reserved by the frozen solve. They must be renamed to freeze the model."
             )
 
     def _create_companion_variables(self) -> None:
@@ -780,3 +752,4 @@ class FrozenModel:
 
         symbol._records = records_dict[symbol.name]
         symbol.domain_labels = symbol.domain_names
+        symbol._should_unload_to_gams = True
