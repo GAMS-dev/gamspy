@@ -105,6 +105,18 @@ GAMSPy will use the default solver, problem type, sense and options for your pro
 The function returns a Pandas DataFrame summarizing the run, including the name of the solver, 
 solver status, objective value, and solve time.
 
+.. warning::
+
+    Check :meth:`model.status <gamspy.Model.status>` before using variable
+    values. The model status indicates whether a feasible or optimal solution
+    was found. Calling ``solve()`` without an error does not guarantee that a
+    solution was found.
+
+    If no feasible solution is found, variable levels may remain unchanged:
+    they can still contain initial values, including zero, or values from a
+    previous solve. A solver may also return an infeasible point and update the
+    levels. These values must not be treated as a feasible solution.
+
 For example, the aformentioned knapsack problem would look like the following with the solve statement: ::
 
     import gamspy as gp
@@ -132,6 +144,17 @@ For example, the aformentioned knapsack problem would look like the following wi
     The data for the model was omitted on purpose to show that GAMSPy does not need data to define the model. 
     See the full implementation with example data here: 
     https://github.com/GAMS-dev/gamspy-examples/blob/master/models/knapsack/knapsack.py
+
+For this MIP example, the following code uses the results only if a globally
+optimal solution was found: ::
+
+    print(knapsack.status)
+    print(knapsack.solve_status)
+
+    if knapsack.status == gp.ModelStatus.OptimalGlobal:
+        print(x.l.records)
+    else:
+        print("No globally optimal solution was reported. Check the solver log.")
 
 
 Specifying A Solver

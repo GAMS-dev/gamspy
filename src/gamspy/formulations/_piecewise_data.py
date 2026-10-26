@@ -11,6 +11,15 @@ import gamspy as gp
 from gamspy.exceptions import ValidationError
 
 
+def _normalize_label_key(key: object) -> object:
+    """Normalize string or tuple keys for case-insensitive label lookups."""
+    if isinstance(key, str):
+        return key.casefold()
+    elif isinstance(key, tuple):
+        return tuple(_normalize_label_key(label) for label in key)
+    return key
+
+
 @dataclass(frozen=True)
 class _PwlPoint:
     x: float
@@ -43,6 +52,7 @@ class _PwlRow:
 class _PwlData:
     rows: tuple[_PwlRow, ...]
     curve_domain: tuple[gp.Set | gp.Alias, ...]
+    input_keys: tuple[tuple[str, ...], ...] | None = None
 
     @property
     def is_broadcast(self) -> bool:
@@ -82,6 +92,10 @@ def _copy_row_with_key(row: _PwlRow, key: tuple[str, ...]) -> _PwlRow:
 def _classify_multivalued_rows(
     rows: tuple[_PwlRow, ...],
 ) -> _PwlMultivaluedInfo:
+    """
+    Collect discontinuities and overlapping ranges across normalized rows.
+    Public APIs use the result for multivalued warnings and errors.
+    """
     discontinuities: list[_PwlDiscontinuity] = []
     overlaps: list[_PwlOverlap] = []
     for row in rows:
@@ -93,6 +107,10 @@ def _classify_multivalued_rows(
 
 
 def _classify_multivalued_row(row: _PwlRow) -> _PwlMultivaluedInfo:
+    """
+    Compare independent chain domains, including their rays.
+    Distinguish overlapping ranges from shared endpoints with different y-values.
+    """
     chains = _split_point_chains(row)
     chain_ranges = [_get_chain_x_range(chain, row.rays) for chain in chains]
     point_values: dict[float, set[float]] = {}
@@ -195,6 +213,10 @@ def _merge_overlap_ranges(
 def _get_explicit_domain_symbols(
     input_x: gp.Variable, *, context: str
 ) -> tuple[gp.Set | gp.Alias, ...]:
+    """
+    Validate and return nonempty Set or Alias domains for curve preparation.
+    Scalar inputs return an empty tuple.
+    """
     domains: list[gp.Set | gp.Alias] = []
     for domain in input_x.domain:
         if not isinstance(domain, (gp.Set, gp.Alias)):
@@ -208,66 +230,82 @@ def _get_explicit_domain_symbols(
     return tuple(domains)
 
 
+def _normalize_restriction(
+    input_x: gp.Variable,
+    restrict: object,
+) -> tuple[tuple[str, ...], ...] | None:
+    """
+    Validate restriction domains and snapshot the selected input row keys.
+    None means unrestricted; an empty tuple means no rows are selected.
+    """
+    if restrict is None:
+        return None
+    elif not isinstance(restrict, gp.Set):
+        raise ValidationError("restrict must be a Set or None")
+
+    domain_check = restrict.dimension != input_x.dimension or any(
+        restrict_domain is not input_domain
+        for restrict_domain, input_domain in zip(
+            restrict.domain, input_x.domain, strict=True
+        )
+    )
+    if domain_check:
+        raise ValidationError(
+            "restrict domain must exactly match input_x domains in order"
+        )
+
+    return tuple(
+        (key,) if restrict.dimension == 1 else key for key in restrict.toList()
+    )
+
+
 def _normalize_paired_data(
-    input_x: object,
+    input_x: gp.Variable,
     x_points: object,
     y_points: object,
     *,
     bound_left: bool,
     bound_right: bool,
+    restrict: gp.Set | None = None,
 ) -> _PwlData:
-    if not isinstance(input_x, gp.Variable):
-        raise ValidationError("input_x is expected to be a Variable")
+    """
+    Prepare paired point data for the Interval, Convexity, and DLog APIs.
+    The public caller must already validate input_x and the bound flags.
+    """
+    input_domain = _get_explicit_domain_symbols(
+        input_x, context="piecewise linear formulations"
+    )
+    input_keys = _normalize_restriction(input_x, restrict)
 
-    if input_x.dimension:
-        _get_explicit_domain_symbols(input_x, context="piecewise linear formulations")
+    if isinstance(x_points, gp.Parameter) or isinstance(y_points, gp.Parameter):
+        x_points, y_points = _validate_parameter_pair(input_x, x_points, y_points)
 
-    x_is_parameter = isinstance(x_points, gp.Parameter)
-    y_is_parameter = isinstance(y_points, gp.Parameter)
+        if input_x.dimension == 0 and (
+            x_points.dimension != 1 or y_points.dimension != 1
+        ):
+            raise ValidationError(
+                "x_points and y_points must be one-dimensional Parameters for scalar input_x"
+            )
 
-    if input_x.dimension == 0:
-        if x_is_parameter or y_is_parameter:
-            return _normalize_scalar_parameter_data(
-                input_x,
+        # One-dimensional Parameters describe one curve and broadcast like sequences.
+        if x_points.dimension == 1 and y_points.dimension == 1:
+            data = _normalize_one_dimensional_parameter_data(
                 x_points,
                 y_points,
                 bound_left=bound_left,
                 bound_right=bound_right,
             )
         else:
-            return _PwlData(
-                rows=_normalize_sequence_data(
-                    x_points,
-                    y_points,
-                    bound_left=bound_left,
-                    bound_right=bound_right,
-                ),
-                curve_domain=(),
+            data = _normalize_indexed_parameter_data(
+                input_domain,
+                x_points,
+                y_points,
+                bound_left=bound_left,
+                bound_right=bound_right,
+                input_keys=input_keys,
             )
-    # One-dimensional Parameters describe one graph and broadcast like sequences.
-    elif (
-        x_is_parameter
-        and y_is_parameter
-        and x_points.dimension == 1
-        and y_points.dimension == 1
-    ):
-        return _normalize_broadcast_parameter_data(
-            input_x,
-            x_points,
-            y_points,
-            bound_left=bound_left,
-            bound_right=bound_right,
-        )
-    elif x_is_parameter or y_is_parameter:
-        return _normalize_indexed_parameter_data(
-            input_x,
-            x_points,
-            y_points,
-            bound_left=bound_left,
-            bound_right=bound_right,
-        )
     else:
-        return _PwlData(
+        data = _PwlData(
             rows=_normalize_sequence_data(
                 x_points,
                 y_points,
@@ -276,6 +314,12 @@ def _normalize_paired_data(
             ),
             curve_domain=(),
         )
+
+    return _PwlData(
+        rows=data.rows,
+        curve_domain=data.curve_domain,
+        input_keys=input_keys,
+    )
 
 
 def _normalize_sequence_data(
@@ -286,12 +330,10 @@ def _normalize_sequence_data(
     bound_right: bool,
     row_keys: Sequence[tuple[str, ...]] = ((),),
 ) -> tuple[_PwlRow, ...]:
-    if not isinstance(bound_left, bool):
-        raise ValidationError("bound_left is expected to be a boolean")
-
-    if not isinstance(bound_right, bool):
-        raise ValidationError("bound_right is expected to be a boolean")
-
+    """
+    Normalize shared point sequences once and assign the requested row keys.
+    Used for sequence inputs and converted Parameter or PWLCurve data.
+    """
     x_values = _to_point_sequence(x_points, "x_points")
     y_values = _to_point_sequence(y_points, "y_points")
     row = _normalize_sequence_row(
@@ -301,68 +343,20 @@ def _normalize_sequence_data(
         bound_right=bound_right,
     )
 
-    # Shared sequence data is normalized once and copied to every input row.
     return tuple(_copy_row_with_key(row, key) for key in row_keys)
 
 
-def _normalize_scalar_parameter_data(
-    input_x: object,
-    x_points: object,
-    y_points: object,
-    *,
-    bound_left: bool,
-    bound_right: bool,
-) -> _PwlData:
-    if not isinstance(input_x, gp.Variable) or input_x.dimension != 0:
-        raise ValidationError("input_x is expected to be a scalar Variable")
-
-    return _normalize_one_dimensional_parameter_data(
-        input_x,
-        x_points,
-        y_points,
-        context="scalar input_x",
-        bound_left=bound_left,
-        bound_right=bound_right,
-    )
-
-
-def _normalize_broadcast_parameter_data(
-    input_x: object,
-    x_points: object,
-    y_points: object,
-    *,
-    bound_left: bool,
-    bound_right: bool,
-) -> _PwlData:
-    if not isinstance(input_x, gp.Variable) or input_x.dimension == 0:
-        raise ValidationError("input_x is expected to be an indexed Variable")
-
-    return _normalize_one_dimensional_parameter_data(
-        input_x,
-        x_points,
-        y_points,
-        context="indexed input_x broadcasting",
-        bound_left=bound_left,
-        bound_right=bound_right,
-    )
-
-
 def _normalize_one_dimensional_parameter_data(
-    input_x: gp.Variable,
-    x_points: object,
-    y_points: object,
+    x_points: gp.Parameter,
+    y_points: gp.Parameter,
     *,
-    context: str,
     bound_left: bool,
     bound_right: bool,
 ) -> _PwlData:
-    x_points, y_points = _validate_parameter_pair(input_x, x_points, y_points)
-
-    if x_points.dimension != 1 or y_points.dimension != 1:
-        raise ValidationError(
-            f"x_points and y_points must be one-dimensional Parameters for {context}"
-        )
-
+    """
+    Normalize breakpoint-only Parameters into one shared curve.
+    Used for scalar inputs or broadcasting to every indexed input row.
+    """
     if x_points.domain[0] is not y_points.domain[0]:
         raise ValidationError("y_points domain must exactly match x_points domain")
 
@@ -385,18 +379,18 @@ def _normalize_one_dimensional_parameter_data(
 
 
 def _normalize_indexed_parameter_data(
-    input_x: object,
-    x_points: object,
-    y_points: object,
+    input_domain: tuple[gp.Set | gp.Alias, ...],
+    x_points: gp.Parameter,
+    y_points: gp.Parameter,
     *,
     bound_left: bool,
     bound_right: bool,
+    input_keys: tuple[tuple[str, ...], ...] | None = None,
 ) -> _PwlData:
-    if not isinstance(input_x, gp.Variable) or input_x.dimension == 0:
-        raise ValidationError("input_x is expected to be an indexed Variable")
-
-    x_points, y_points = _validate_parameter_pair(input_x, x_points, y_points)
-
+    """
+    Normalize Parameter curves over all or part of the input domain.
+    Restricted input keys select the curves to normalize without dense expansion.
+    """
     if x_points.dimension != y_points.dimension:
         raise ValidationError("x_points and y_points must have matching dimensions")
 
@@ -415,14 +409,44 @@ def _normalize_indexed_parameter_data(
     if x_points.shape != y_points.shape:
         raise ValidationError("x_points and y_points must have the same shape")
 
-    input_domain = _get_explicit_domain_symbols(input_x, context="indexed Parameters")
     curve_domain = _match_curve_domain(input_domain, x_points.domain[:-1])
 
-    # Parameter data follows domain order. Flatten the curve dimensions into
-    # row keys and keep the final breakpoint dimension intact.
-    row_keys = tuple(product(*(domain.toList() for domain in curve_domain)))
-    x_values = x_points.toDense().reshape((len(row_keys), x_points.shape[-1]))
-    y_values = y_points.toDense().reshape((len(row_keys), y_points.shape[-1]))
+    row_keys = _get_curve_row_keys(input_domain, curve_domain, input_keys)
+    if input_keys is None:
+        # Flatten the curve dimensions and keep the breakpoint dimension intact.
+        x_values = x_points.toDense().reshape((len(row_keys), x_points.shape[-1]))
+        y_values = y_points.toDense().reshape((len(row_keys), y_points.shape[-1]))
+    else:
+        # Read selected curves from sparse records. Missing records remain zero,
+        # as in toDense, without allocating every possible curve row.
+        breakpoint_domain = x_points.domain[-1]
+        breakpoint_keys = (
+            breakpoint_domain.toList()
+            if isinstance(breakpoint_domain, (gp.Set, gp.Alias))
+            else x_points._getUELs(x_points.dimension - 1)
+        )
+        x_records = {
+            _normalize_label_key(key): value
+            for key, value in (x_points.toDict() or {}).items()
+        }
+        y_records = {
+            _normalize_label_key(key): value
+            for key, value in (y_points.toDict() or {}).items()
+        }
+        x_values = [
+            [
+                x_records.get(_normalize_label_key((*key, breakpoint)), 0.0)
+                for breakpoint in breakpoint_keys
+            ]
+            for key in row_keys
+        ]
+        y_values = [
+            [
+                y_records.get(_normalize_label_key((*key, breakpoint)), 0.0)
+                for breakpoint in breakpoint_keys
+            ]
+            for key in row_keys
+        ]
 
     return _PwlData(
         rows=tuple(
@@ -440,10 +464,43 @@ def _normalize_indexed_parameter_data(
     )
 
 
+def _get_curve_row_keys(
+    input_domain: tuple[gp.Set | gp.Alias, ...],
+    curve_domain: tuple[gp.Set | gp.Alias, ...],
+    input_keys: tuple[tuple[str, ...], ...] | None,
+) -> tuple[tuple[str, ...], ...]:
+    """
+    Return all curve keys, or project restricted input keys onto curve_domain.
+    Deduplicate shared curves when their data omits broadcast dimensions.
+    """
+    if input_keys is None:
+        return tuple(product(*(domain.toList() for domain in curve_domain)))
+
+    positions: list[int] = []
+    input_position = 0
+    for domain in curve_domain:
+        while input_domain[input_position] is not domain:
+            input_position += 1
+        positions.append(input_position)
+        input_position += 1
+
+    row_keys: dict[object, tuple[str, ...]] = {}
+    for key in input_keys:
+        row_key = tuple(key[position] for position in positions)
+        normalized_key = _normalize_label_key(row_key)
+        if normalized_key not in row_keys:
+            row_keys[normalized_key] = row_key
+    return tuple(row_keys.values())
+
+
 def _match_curve_domain(
     input_domain: tuple[gp.Set | gp.Alias, ...],
     parameter_domain: Sequence[object],
 ) -> tuple[gp.Set | gp.Alias, ...]:
+    """
+    Match curve domains to an ordered subset of input domains by symbol identity.
+    Parameter pairs and curve dictionaries broadcast over the omitted domains.
+    """
     curve_domain: list[gp.Set | gp.Alias] = []
     input_position = 0
     for domain in parameter_domain:
@@ -490,8 +547,10 @@ def _normalize_parameter_row(
     bound_left: bool,
     bound_right: bool,
 ) -> _PwlRow:
-    # Convert paired NA values to the sequence representation. Interior pairs
-    # remain holes; only an indexed row's trailing suffix is trimmed below.
+    """
+    Convert one Parameter row for the shared point parser, retaining its key.
+    Paired NA values mark gaps; only indexed rows trim trailing NA padding.
+    """
     normalized_x: list[object] = []
     normalized_y: list[object] = []
     for position, (x_value, y_value) in enumerate(zip(x_values, y_values, strict=True)):
@@ -547,6 +606,10 @@ def _normalize_sequence_row(
     bound_left: bool,
     bound_right: bool,
 ) -> _PwlRow:
+    """
+    Parse paired coordinates into finite points, separators, segments, and rays.
+    All input forms reach this parser before formulation symbols are created.
+    """
     if len(x_values) < 2:
         raise ValidationError("piecewise linear functions require at least 2 points")
 
@@ -730,6 +793,10 @@ def _is_infinity(value: object, direction: Literal[-1, 1]) -> bool:
 def _build_segments(
     points: Sequence[_PwlPoint], separator_indices: Sequence[int]
 ) -> tuple[_PwlSegment, ...]:
+    """
+    Build selectable segments without connecting points across separators.
+    Isolated points become zero-length segments so they remain selectable.
+    """
     if len(points) < 2:
         return ()
 
