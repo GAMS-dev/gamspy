@@ -650,6 +650,9 @@ class Expression(operable.Operable):
                 if isinstance(d, str) or is_universe(d):
                     continue
 
+                if isinstance(d, ShiftExpression):
+                    d = d.parent
+
                 indices = set_to_index.get(d)
                 if indices is None:
                     set_to_index[d] = [(domain_char, i)]

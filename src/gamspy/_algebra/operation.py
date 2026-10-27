@@ -82,6 +82,9 @@ class Operation(operable.Operable):
 
         if not isinstance(rhs, (bool, float, int)):
             for i, x in enumerate(rhs.domain):  # ty: ignore[invalid-argument-type]
+                if isinstance(x, expression.ShiftExpression):
+                    x = x.parent
+
                 sum_index = -1
                 for idx, elem in enumerate(self._bare_op_domain):
                     if elem is x:

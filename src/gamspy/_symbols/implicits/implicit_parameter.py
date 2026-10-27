@@ -102,7 +102,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         return name
 
     def __getitem__(self, indices: IndexType) -> ImplicitParameter:
-        domain = validation.validate_domain(self, indices)
+        domain = self._reindex(indices)
 
         return ImplicitParameter(
             parent=self.parent,

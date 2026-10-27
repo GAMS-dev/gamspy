@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Any, no_type_check
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
+import gamspy._algebra.expression as expression
+import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._notation import LATEX, UNICODE
 from gamspy._universe import is_universe, is_universe_domain
@@ -29,7 +31,7 @@ if TYPE_CHECKING:
         ImplicitSet,
         ImplicitVariable,
     )
-    from gamspy._types import ImplicitSymbolType
+    from gamspy._types import ImplicitSymbolType, IndexType, ValidatedIndexType
 
 
 class ImplicitSymbol(ABC):
@@ -114,6 +116,41 @@ class ImplicitSymbol(ABC):
             new_perm[pos] = i
 
         self.permutation = new_perm
+
+    def _reindex(
+        self: ImplicitSet | ImplicitParameter | ImplicitVariable, indices: IndexType
+    ) -> list[ValidatedIndexType]:
+        domain = validation.validate_domain(self, indices)
+        for elem in self.domain:
+            if isinstance(elem, expression.ShiftExpression):
+                break
+        else:
+            return domain
+
+        position = 0
+        for i, index in enumerate(domain):
+            width = getattr(index, "dimension", 1)
+            replaced = self.domain[position : position + width]
+            position += width
+
+            shifts = [
+                elem
+                for elem in replaced
+                if isinstance(elem, expression.ShiftExpression)
+            ]
+            if not shifts or (width == 1 and index is shifts[0]):
+                continue
+
+            if width != 1 or not isinstance(index, (gp.Set, gp.Alias)):
+                raise ValidationError(
+                    f"`{shifts[0].gamsRepr()}` in `{self.gamsRepr()}` can only be"
+                    " re-indexed with a set or an alias."
+                )
+
+            shift = shifts[0]
+            domain[i] = expression.ShiftExpression(index, shift.operator, shift.jump)
+
+        return domain
 
     @property
     def dimension(self: ImplicitSymbolType) -> int:

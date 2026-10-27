@@ -6,7 +6,6 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
-import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._internals import VAR_EQU_ATTRIBUTE_SUFFIXES
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
@@ -51,7 +50,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     def __getitem__(
         self, indices: Sequence | str | EllipsisType | slice
     ) -> ImplicitVariable:
-        domain = validation.validate_domain(self, indices)
+        domain = self._reindex(indices)
         return ImplicitVariable(
             parent=self.parent,
             name=self.name,
