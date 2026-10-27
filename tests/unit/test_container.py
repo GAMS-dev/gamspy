@@ -675,6 +675,34 @@ def test_copy(transport, tmp_path):
 
 
 @pytest.mark.unit
+def test_data_copy():
+    m = Container()
+    i = Set(m, "i", records=["a", "b"])
+    _ = Set(m, "j")
+
+    data = m.data.copy()
+    assert data["I"] is i
+    assert list(data.keys()) == ["i", "j"]
+
+    del data["j"]
+    assert "j" in m.data
+    assert "j" not in data
+
+    shallow = copy.copy(m.data)
+    shallow.popitem()
+    assert "J" not in shallow
+    assert "J" in m.data
+
+    shallow.clear()
+    assert "I" not in shallow
+    assert "I" in m.data
+
+    assert m.data.pop("zz", None) is None
+    with pytest.raises(KeyError):
+        m.data.pop("zz")
+
+
+@pytest.mark.unit
 def test_generate_gams_string():
     m = Container(debugging_level="keep")
     i = Set(m, "i")

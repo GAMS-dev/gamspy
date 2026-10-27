@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import copy
 import itertools
 from collections import UserDict
 from enum import Enum
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, overload
 
 from gams.core.gdx import (
     GMS_DT_EQU,
@@ -41,6 +40,9 @@ GAMS_MAX_INDEX_DIM = GMS_MAX_INDEX_DIM
 
 
 _VT = TypeVar("_VT")
+_T = TypeVar("_T")
+
+_MISSING = object()
 
 
 class CasePreservingDict(UserDict[str, _VT]):
@@ -67,9 +69,19 @@ class CasePreservingDict(UserDict[str, _VT]):
     def __getitem__(self, key: str) -> _VT:
         return self.data[self._casefolded_key_map[key.casefold()]]
 
-    def pop(self, key: str) -> _VT:
-        a = self.data.pop(self._casefolded_key_map[key.casefold()])
-        del self._casefolded_key_map[key.casefold()]
+    @overload
+    def pop(self, key: str) -> _VT: ...
+    @overload
+    def pop(self, key: str, default: _VT | _T) -> _VT | _T: ...
+    def pop(self, key: str, default: object = _MISSING) -> object:
+        key_cf = key.casefold()
+        if key_cf not in self._casefolded_key_map:
+            if default is _MISSING:
+                raise KeyError(key)
+            return default
+
+        a = self.data.pop(self._casefolded_key_map[key_cf])
+        del self._casefolded_key_map[key_cf]
         return a
 
     def get(self, key: str, default: _VT | None = None) -> _VT | None:
@@ -79,7 +91,14 @@ class CasePreservingDict(UserDict[str, _VT]):
             return default
 
     def copy(self) -> CasePreservingDict[_VT]:
-        return copy.deepcopy(self)
+        return CasePreservingDict(self.data)
+
+    def __copy__(self) -> CasePreservingDict[_VT]:
+        return self.copy()
+
+    def clear(self) -> None:
+        self.data.clear()
+        self._casefolded_key_map.clear()
 
     def setdefault(self, key: str, default: _VT) -> _VT:
         key_cf = key.casefold()
@@ -90,7 +109,9 @@ class CasePreservingDict(UserDict[str, _VT]):
             return self.data[self._casefolded_key_map[key_cf]]
 
     def popitem(self) -> tuple[str, _VT]:
-        return self.data.popitem()
+        key, item = self.data.popitem()
+        del self._casefolded_key_map[key.casefold()]
+        return key, item
 
     def items(self) -> ItemsView[str, _VT]:
         return self.data.items()
