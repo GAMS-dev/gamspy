@@ -72,7 +72,7 @@ class Operation(operable.Operable):
         self._op_name = op_name
         self.raw_domain = self._get_raw_domain()
 
-        self._bare_op_domain = utils._get_set(self.op_domain)
+        self._bare_op_domain = utils._get_set(self.raw_domain)
         self.container = self.raw_domain[0].container
         self.domain: list[Set | Alias] = []
 

@@ -790,7 +790,9 @@ def _invert_permutation(dims: list[int]) -> list[int]:
     return inverse
 
 
-def _get_set(domain: Sequence[Set | Alias | Domain | Expression]) -> list:
+def _get_set(
+    domain: Sequence[Set | Alias | ImplicitSet | Domain | Expression],
+) -> list:
     from gamspy import Domain
     from gamspy._algebra.expression import ShiftExpression
 

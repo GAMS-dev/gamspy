@@ -464,6 +464,28 @@ def test_mathop_as_operation_index():
     )
 
 
+def test_conditioned_operation_index():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2", "i3"])
+    j = Set(m, "j", records=["j1", "j2"])
+    a = Parameter(m, "a", domain=i, records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    b = Parameter(m, "b", domain=[i, j], records=[("i1", "j1", 1), ("i2", "j2", 2)])
+    c = Parameter(m, "c", domain=i, records=[("i1", 1), ("i3", 1)])
+
+    op = Sum(i.where[c[i] > 0], a[i])
+    assert op.domain == []
+    assert op.controlled_domain == [i]
+    assert op.toValue() == 5
+
+    op = Sum(i.where[c[i] > 0], b[i, j])
+    assert op.domain == [j]
+    assert op.toList() == [["j1", 1.0]]
+
+    op = Sum(Domain(i, j).where[c[i] > 0], b[i, j])
+    assert op.domain == []
+    assert op.toValue() == 1
+
+
 def test_number():
     m = Container()
 
