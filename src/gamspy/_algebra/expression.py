@@ -237,12 +237,16 @@ def create_gams_expression(root_node: Expression, *, logical: bool = False) -> s
         node, is_logical = s1.pop()
         post_order_nodes.append((node, is_logical))
         if isinstance(node, Expression):
+            if node.operator in STATEMENT_OPERATORS:
+                left_logical = is_logical
+                right_logical = is_logical or node.operator in ASSIGNMENT_OPERATORS
+            else:
+                left_logical = right_logical = True
+
             if node.left is not None:
-                s1.append((node.left, is_logical))
+                s1.append((node.left, left_logical))
             if node.right is not None:
-                s1.append(
-                    (node.right, is_logical or node.operator in ASSIGNMENT_OPERATORS)
-                )
+                s1.append((node.right, right_logical))
 
     # 2. Build the GAMS expression
     eval_stack: list[tuple[str, float]] = []

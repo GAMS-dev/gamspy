@@ -1302,3 +1302,25 @@ def test_implicit_equation_toList():
 
     # The temporary parameters used internally must not leak into the container.
     assert set(m.data) == {"i", "j", "p", "v", "e", "f"}
+
+
+def test_nested_relation_in_definition():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    a = Parameter(m, "a", domain=i, records=[("i1", 2)])
+    x = Variable(m, "x", domain=i)
+    z = Variable(m, "z")
+
+    e = Equation(m, "e", domain=i)
+    e[i] = (a[i] >= 1) * x[i] == 2
+    assert e.getDefinition() == "e(i) .. (a(i) >= 1) * x(i) =e= 2;"
+
+    e[i] = x[i] - (a[i] <= 1) >= 0
+    assert e.getDefinition() == "e(i) .. x(i) - (a(i) <= 1) =g= 0;"
+
+    e[i] = x[i] == (a[i] >= 1)
+    assert e.getDefinition() == "e(i) .. x(i) =e= (a(i) >= 1);"
+
+    f = Equation(m, "f")
+    f[...] = Sum(i, (a[i] >= 1) * x[i]) == z
+    assert f.getDefinition() == "f .. sum(i,(a(i) >= 1) * x(i)) =e= z;"
