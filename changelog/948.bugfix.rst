@@ -1,1 +1,0 @@
-Fix keeping the pre-freeze values of certain variables and equations after a frozen solve.

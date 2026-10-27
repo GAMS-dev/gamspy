@@ -1,1 +1,0 @@
-Fix compilation errors for symbol and model descriptions that contain double quotes.

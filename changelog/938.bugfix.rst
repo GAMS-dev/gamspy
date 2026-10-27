@@ -1,2 +1,0 @@
-Discard the statements of context managers such as ``gp.Loop``, ``gp.For`` etc. 
-that raised an exception instead of executing them later.
