@@ -90,6 +90,11 @@ class MathOp(operable.Operable):
     def __hash__(self) -> int:
         return id(self)
 
+    def __bool__(self) -> bool:
+        raise ValidationError(
+            "A math operation cannot be used as a truth value. Use toValue() instead."
+        )
+
     def __len__(self) -> int:
         if self.records is not None:
             return len(self.records.index)

@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy.math as gamspy_math
 from gamspy import (
     Alias,
     Card,
@@ -230,6 +231,16 @@ def test_truth_value(transport):
     with pytest.raises(ValidationError):
         if Card(i):
             ...
+
+    with pytest.raises(ValidationError):
+        if Ord(i):
+            ...
+
+    b = Parameter(m, "b", domain=i)
+    for operand in (Sum(i, b[i]), b[i].where[b[i] > 0], gamspy_math.sqr(b["i1"])):
+        with pytest.raises(ValidationError):
+            if operand:
+                ...
 
     with pytest.raises(ValidationError):
         if i:

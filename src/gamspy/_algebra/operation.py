@@ -113,6 +113,11 @@ class Operation(operable.Operable):
 
         return Operation(self.op_domain, self.rhs[domain], self._op_name)  # ty: ignore[invalid-argument-type, not-subscriptable]
 
+    def __bool__(self) -> bool:
+        raise ValidationError(
+            "An operation cannot be used as a truth value. Use toValue() instead."
+        )
+
     def __len__(self) -> int:
         if self.records is not None:
             return len(self.records.index)
@@ -857,6 +862,9 @@ class Ord(operable.Operable):
 
     def __hash__(self) -> int:
         return id(self)
+
+    def __bool__(self) -> bool:
+        raise ValidationError("Ord operation cannot be used as a truth value.")
 
     def gamsRepr(self) -> str:
         """

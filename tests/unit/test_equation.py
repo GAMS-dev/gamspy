@@ -1324,3 +1324,28 @@ def test_nested_relation_in_definition():
     f = Equation(m, "f")
     f[...] = Sum(i, (a[i] >= 1) * x[i]) == z
     assert f.getDefinition() == "f .. sum(i,(a(i) >= 1) * x(i)) =e= z;"
+
+
+def test_parameter_eq_variable_in_definition():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    p = Parameter(m, "p", records=2)
+    q = Parameter(m, "q", domain=i, records=[("i1", 2)])
+    z = Variable(m, "z")
+    x = Variable(m, "x", domain=i)
+
+    e = Equation(m, "e")
+    e[...] = p == z
+    assert e.getDefinition() == "e .. p =e= z;"
+
+    e[...] = p == sqr(z)
+    assert e.getDefinition() == "e .. p =e= sqr(z);"
+
+    f = Equation(m, "f", domain=i)
+    f[i] = q[i] == sqr(x[i])
+    assert f.getDefinition() == "f(i) .. q(i) =e= sqr(x(i));"
+
+    r = Parameter(m, "r", domain=i)
+    r[i] = q[i] == p
+    assert r.getAssignment() == "r(i) = q(i) eq p;"
+    assert r.toList() == [("i1", 1.0)]

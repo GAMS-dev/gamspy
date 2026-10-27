@@ -166,6 +166,9 @@ class Condition(operable.Operable):
     def __repr__(self) -> str:
         return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"
 
+    def __bool__(self) -> bool:
+        raise ValidationError("A condition cannot be used as a truth value.")
+
     def __len__(self) -> int:
         if self.records is not None:
             return len(self.records.index)

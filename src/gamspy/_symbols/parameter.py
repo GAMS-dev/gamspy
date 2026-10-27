@@ -8,8 +8,10 @@ from gams.core.gdx import GMS_DT_PAR
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
+import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
+import gamspy.math.misc as misc
 import gamspy.utils as utils
 from gamspy._internals import PARAMETER_ATTRIBUTES, DataSource
 from gamspy._records_ingestion import ParameterIngestor
@@ -217,9 +219,11 @@ class Parameter(operable.Operable, NumericSymbol):
         if isinstance(
             other,
             (
+                syms.Variable,
                 implicits.ImplicitVariable,
                 expression.Expression,
                 operation.Operation,
+                misc.MathOp,
             ),
         ):
             op = "=e="
