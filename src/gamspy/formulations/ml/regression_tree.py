@@ -318,7 +318,7 @@ class RegressionTree:
             self.container,
             name=utils._generate_name("s", self._name_prefix, "subset_of_paths"),
             description="Dynamic subset of possible paths",
-            domain=uni_domain,
+            domain=uni_domain + [cons_type],
         )
 
         feat_thresh = gp.Parameter._constructor_bypass(
@@ -422,7 +422,8 @@ class RegressionTree:
             & mask
             & (feat_par[..., ub] < np.inf)
         )
-        s[...].where[mask_lo | mask_up] = True
+        s[..., ge].where[mask_lo] = True
+        s[..., le].where[mask_up] = True
 
         self.container._add_statement(
             expression.Expression(
@@ -451,7 +452,7 @@ class RegressionTree:
 
         self.container._add_statement(
             expression.Expression(
-                _bound_big_m[s[uni_domain], ge].where[mask_lo],
+                _bound_big_m[..., ge].where[s[..., ge]],
                 "=",
                 (
                     M
@@ -466,7 +467,7 @@ class RegressionTree:
 
         self.container._add_statement(
             expression.Expression(
-                _bound_big_m[s[uni_domain], le].where[mask_up],
+                _bound_big_m[..., le].where[s[..., le]],
                 "=",
                 (
                     M
@@ -488,7 +489,7 @@ class RegressionTree:
         )
 
         definition = expression.Expression(
-            ge_cons[uni_domain].where[(feat_thresh[..., ge] != 0) & s[uni_domain]],
+            ge_cons[uni_domain].where[s[..., ge]],
             "..",
             feat_vars
             >= feat_thresh[..., ge] - _bound_big_m[..., ge] * (1 - indicator_vars),
@@ -496,10 +497,9 @@ class RegressionTree:
         self.container._add_statement(definition)
         ge_cons._definition = definition
 
-        le_cons[uni_domain].where[(feat_thresh[..., le] != 0) & s[uni_domain]] = (
-            feat_vars
-            <= feat_thresh[..., le] + _bound_big_m[..., le] * (1 - indicator_vars)
-        )
+        le_cons[uni_domain].where[s[..., le]] = feat_vars <= feat_thresh[
+            ..., le
+        ] + _bound_big_m[..., le] * (1 - indicator_vars)
 
         eqns = [
             assign_one_output,
