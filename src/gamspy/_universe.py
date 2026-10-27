@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, final
+from typing import TYPE_CHECKING, ClassVar, Literal, final
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from gamspy._notation import Notation
 
 
 @final
@@ -32,7 +34,7 @@ class Universe:
     def __str__(self) -> str:
         return "*"
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Universe):
             return True
 
@@ -47,11 +49,17 @@ class Universe:
     def latexRepr(self) -> Literal["*"]:
         return "*"
 
+    def unicodeRepr(self) -> Literal["*"]:
+        return "*"
+
+    def _math_repr(self, notation: Notation) -> Literal["*"]:
+        return "*"
+
 
 UNIVERSE = Universe()
 
 
-def is_universe(elem) -> bool:
+def is_universe(elem: object) -> bool:
     if isinstance(elem, str):
         return elem == "*"
 

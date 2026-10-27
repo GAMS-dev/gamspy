@@ -1,9 +1,17 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import gamspy._algebra.condition as condition
 import gamspy._algebra.operable as operable
 from gamspy._algebra import expression
+from gamspy._notation import LATEX, UNICODE
 from gamspy._special_values import SpecialValues
+
+if TYPE_CHECKING:
+    from gamspy._algebra.expression import Expression
+    from gamspy._notation import Notation
+    from gamspy._types import OperableType
 
 
 class Number(operable.Operable):
@@ -24,7 +32,7 @@ class Number(operable.Operable):
 
     """
 
-    def __init__(self, value: int | float):
+    def __init__(self, value: int | float) -> None:
         if not isinstance(value, (int, float)):
             raise TypeError(
                 f"Number should be of type int or float but given value has type `{type(value)}`"
@@ -34,13 +42,13 @@ class Number(operable.Operable):
         self.domain: list = []
         self.where = condition.Condition(self)
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def __repr__(self) -> str:
@@ -93,4 +101,25 @@ class Number(operable.Operable):
         -1.5 \cdot 10^{-7}
 
         """
-        return expression.get_operand_latex_repr(self)
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Representation of this Number in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> print(gp.Number(-1.5e-7).unicodeRepr())
+        -1.5 · 10⁻⁷
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
+        return expression.get_operand_math_repr(self, notation)

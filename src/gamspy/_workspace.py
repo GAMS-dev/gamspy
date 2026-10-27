@@ -15,7 +15,7 @@ MAX_PATH_LENGTH = 204
 def validate_arguments(
     working_directory: str | None,
     debugging_level: str,
-):
+) -> None:
     # Validate working_directory
     if working_directory == "":
         raise ValidationError("`working_directory` cannot be an empty string.")
@@ -38,7 +38,7 @@ class Workspace:
         self,
         debugging_level: str,
         working_directory: str | Path | None = None,
-    ):
+    ) -> None:
         if isinstance(working_directory, Path):
             working_directory = os.fspath(working_directory)
 
@@ -70,7 +70,7 @@ class Workspace:
         debugging_level: str,
         working_directory: str,
         errors: list[str],
-    ):
+    ) -> None:
         if using_tmp_working_dir:
             try:  # in case working directory has already been deleted.
                 if debugging_level == "delete":

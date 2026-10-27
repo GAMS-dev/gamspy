@@ -11,6 +11,7 @@ import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._container import Container
 from gamspy._internals import DataSource
+from gamspy._notation import LATEX, UNICODE
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy.exceptions import FatalError, ValidationError
 
@@ -23,8 +24,14 @@ if TYPE_CHECKING:
     from gamspy._algebra.number import Number
     from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._algebra.sparse import SparseAssignment
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import ConditionType, ImplicitSymbolType, SymbolType
+    from gamspy._types import (
+        ConditionType,
+        ImplicitSymbolType,
+        OperableType,
+        SymbolType,
+    )
     from gamspy.math import MathOp
 
 
@@ -57,7 +64,7 @@ class Condition(operable.Operable):
         | Ord
         | MathOp,
         condition: ConditionType | Number | bool | int | float | None = None,
-    ):
+    ) -> None:
         self.conditioning_on = conditioning_on
         self.condition = condition
         self._where = None
@@ -74,13 +81,13 @@ class Condition(operable.Operable):
         if hasattr(conditioning_on, "domain"):
             self.domain = conditioning_on.domain
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def __getitem__(
@@ -103,7 +110,7 @@ class Condition(operable.Operable):
         | ImplicitParameter
         | ImplicitSet
         | SparseAssignment,
-    ):
+    ) -> None:
         if not isinstance(self.container, Container):
             raise FatalError("Cannot determine the container of the expression!")
 
@@ -159,7 +166,10 @@ class Condition(operable.Operable):
     def __repr__(self) -> str:
         return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"
 
-    def __len__(self):
+    def __bool__(self) -> bool:
+        raise ValidationError("A condition cannot be used as a truth value.")
+
+    def __len__(self) -> int:
         if self.records is not None:
             return len(self.records.index)
 
@@ -221,34 +231,26 @@ class Condition(operable.Operable):
             self.conditioning_on,
             (syms.Set, syms.Alias, implicits.ImplicitSet),
         ):
-            temp_name = "autotemp" + utils._get_unique_name()
-            temp_sym = syms.Set._constructor_bypass(
-                self.container,
-                temp_name,
+            with self.container._temp_symbol(
+                syms.Set,
                 self.domain,  # ty: ignore[invalid-argument-type]
-            )
-            temp_sym[...] = self
-            del self.container._data[temp_name]
+            ) as temp_set:
+                temp_set[...] = self
+            return temp_set.records
         elif isinstance(self.conditioning_on, domain.Domain):
-            temp_name = "autotemp" + utils._get_unique_name()
-            temp_sym = syms.Set._constructor_bypass(
-                self.container,
-                temp_name,
+            with self.container._temp_symbol(
+                syms.Set,
                 self.domain,  # ty: ignore[invalid-argument-type]
-            )
-            temp_sym[...].where[self.condition] = True  # ty: ignore[invalid-assignment]
-            del self.container._data[temp_name]
-        else:
-            temp_name = "autotemp" + utils._get_unique_name()
-            temp_sym = syms.Parameter._constructor_bypass(
-                self.container,
-                temp_name,
-                self.domain,  # ty: ignore[invalid-argument-type]
-            )
-            temp_sym[...] = self
-            del self.container._data[temp_name]
+            ) as temp_set:
+                temp_set[...].where[self.condition] = True  # ty: ignore[invalid-assignment]
+            return temp_set.records
 
-        return temp_sym.records
+        with self.container._temp_symbol(
+            syms.Parameter,
+            self.domain,  # ty: ignore[invalid-argument-type]
+        ) as temp_param:
+            temp_param[...] = self
+        return temp_param.records
 
     def gamsRepr(self) -> str:
         """
@@ -327,11 +329,36 @@ class Condition(operable.Operable):
         'a_{i} ~ | ~ a_{i} > 2'
 
         """
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Representation of this condition in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> a = gp.Parameter(m, "a", domain=i)
+        >>> condition = a[i].where[a[i] >= 2]
+        >>> print(condition.unicodeRepr())
+        a[i] | a[i] ≥ 2
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
         conditioning_on_str, conditioning_on_prec, conditioning_on_open = (
-            expression.latex_operand(self.conditioning_on)
+            expression.math_operand(self.conditioning_on, notation)
         )
         if conditioning_on_prec < expression.LEAF_PRECEDENCE or conditioning_on_open:
             conditioning_on_str = f"({conditioning_on_str})"
 
-        condition_str = expression.get_operand_latex_repr(self.condition)
-        return f"{conditioning_on_str} ~ | ~ {condition_str}"
+        condition_str = expression.get_operand_math_repr(self.condition, notation)
+        return f"{conditioning_on_str}{notation.such_that}{condition_str}"

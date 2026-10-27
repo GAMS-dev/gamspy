@@ -4,12 +4,13 @@ import math
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
+import pandas as pd
 
 import gamspy as gp
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     from gamspy._types import SymbolWithRecordsType
     from gamspy._universe import Universe
@@ -36,6 +37,20 @@ def _decode_complex_array(z: np.ndarray) -> np.ndarray:
     real[z.imag > 0] = np.inf
     real[z.imag < 0] = -np.inf
     return real
+
+
+def _apply_real_linear(
+    fn: Callable[[np.ndarray], np.ndarray], x: np.ndarray
+) -> np.ndarray:
+    """
+    Apply a linear map with real coefficients to `x`. Complex (infinity
+    encoded) inputs are split into two real products, which is several
+    times faster than complex BLAS and avoids its multi-threading.
+    """
+    if np.iscomplexobj(x):
+        return fn(x.real) + 1j * fn(x.imag)
+
+    return fn(x)
 
 
 def _generate_name(sym_type: str, prefix: str, name: str) -> str:
@@ -94,52 +109,33 @@ def _check_padding(value: int | tuple[int, int]) -> tuple[int, int, int, int]:
     return padding
 
 
-def _calc_same_padding_2d(
-    kernel_size: tuple[int, int],
-) -> tuple[int, int, int, int]:
-    # assumes stride = 1
-    pad_h_total = max(kernel_size[0] - 1, 0)
-    pad_w_total = max(kernel_size[1] - 1, 0)
-
-    # Calculate padding for height
-    pad_top = pad_h_total // 2
-    pad_bottom = pad_h_total - pad_top
-
-    # Calculate padding for width
-    pad_left = pad_w_total // 2
-    pad_right = pad_w_total - pad_left
-
-    return (pad_top, pad_left, pad_bottom, pad_right)
+def _calc_same_padding(kernel_size: Sequence[int]) -> tuple[int, ...]:
+    """
+    Padding that keeps the spatial size with stride 1, laid out as all
+    leading paddings followed by all trailing paddings, e.g. (top, left, bottom, right).
+    """
+    before = tuple(max(k - 1, 0) // 2 for k in kernel_size)
+    after = tuple(max(k - 1, 0) - b for k, b in zip(kernel_size, before))
+    return before + after
 
 
-def _calc_same_padding_1d(
-    kernel_size: int,
-) -> tuple[int, int]:
-    # assumes stride = 1
-    pad_w_total = max(kernel_size - 1, 0)
-
-    # Calculate padding for width
-    pad_left = pad_w_total // 2
-    pad_right = pad_w_total - pad_left
-
-    return (pad_left, pad_right)
-
-
-def _calc_w(
-    padding: tuple[int, int] | str,
-    kernel_size: int,
-    stride: int,
-    w_in: int,
-) -> int:
-    # same padding
-    if isinstance(padding, str):
-        return w_in
-
-    w_out = math.floor(
-        1 + ((w_in + (padding[0] + padding[1]) - (kernel_size - 1) - 1) / stride)
+def _calc_output_size(
+    padding: Sequence[int],
+    kernel_size: Sequence[int],
+    stride: Sequence[int],
+    sizes: Sequence[int],
+) -> tuple[int, ...]:
+    n = len(sizes)
+    return tuple(
+        math.floor(
+            1
+            + (
+                (sizes[d] + (padding[d] + padding[n + d]) - (kernel_size[d] - 1) - 1)
+                / stride[d]
+            )
+        )
+        for d in range(n)
     )
-
-    return w_out
 
 
 def _calc_hw(
@@ -156,13 +152,7 @@ def _calc_hw(
         # padding is represented as (top, left, bottom, right)
         padding = (padding[0], padding[1], padding[0], padding[1])
 
-    h_out = math.floor(
-        1 + ((h_in + (padding[0] + padding[2]) - (kernel_size[0] - 1) - 1) / stride[0])
-    )
-    w_out = math.floor(
-        1 + ((w_in + (padding[1] + padding[3]) - (kernel_size[1] - 1) - 1) / stride[1])
-    )
-
+    h_out, w_out = _calc_output_size(padding, kernel_size, stride, (h_in, w_in))
     return h_out, w_out
 
 
@@ -192,3 +182,39 @@ def _next_domains(
         names.add(domain.name)
 
     return output
+
+
+def _window_subset(
+    container: gp.Container,
+    name: str,
+    out_domain: Sequence[gp.Set | gp.Alias],
+    kernel_domain: Sequence[gp.Set | gp.Alias],
+    in_domain: Sequence[gp.Set | gp.Alias],
+    stride: Sequence[int],
+    padding: Sequence[int],
+) -> gp.Set:
+    """
+    Set over (*out, *kernel, *in) that maps each output position and kernel
+    offset to the input position it reads. Offsets that fall into the padding
+    have no record. `padding` starts with the leading paddings.
+    """
+    n = len(out_domain)
+    grid = np.indices([len(s) for s in (*out_domain, *kernel_domain)]).reshape(
+        2 * n, -1
+    )
+    in_pos = (
+        np.array(stride)[:, None] * grid[:n] - np.array(padding[:n])[:, None] + grid[n:]
+    )
+    in_sizes = np.array([len(s) for s in in_domain])[:, None]
+    positions = np.vstack([grid, in_pos])[
+        :, ((in_pos >= 0) & (in_pos < in_sizes)).all(axis=0)
+    ]
+
+    domain = [*out_domain, *kernel_domain, *in_domain]
+    records = pd.DataFrame(
+        {
+            i: pd.Categorical.from_codes(codes, categories=s.toList())
+            for i, (s, codes) in enumerate(zip(domain, positions))
+        }
+    )
+    return gp.Set(container, name=name, domain=domain, records=records)

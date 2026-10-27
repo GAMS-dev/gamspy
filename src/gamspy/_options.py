@@ -4,7 +4,7 @@ import contextlib
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, TextIO
+from typing import TYPE_CHECKING, Any, Literal, TextIO, TypeVar, cast
 
 from pydantic import BaseModel, ConfigDict
 from typing_extensions import override
@@ -15,10 +15,8 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
-    from types import FrameType
 
     from gamspy._container import Container
-    from gamspy._model import Problem
 
 SOLVE_LINK_MAP = {"disk": 2, "memory": 5}
 SOLVE_LINK_MAP_REVERSE = dict(
@@ -26,6 +24,8 @@ SOLVE_LINK_MAP_REVERSE = dict(
 )
 
 SOLVE_OPT_MAP = {"replace": 0, "merge": 1, "clear": 2}
+
+_T = TypeVar("_T")
 
 # GAMSPy to GAMS option mapping
 OPTION_MAP = {
@@ -131,10 +131,10 @@ CONTAINER_FORBIDDEN_OPTIONS = (
 )
 
 
-def _format_model_attr_value(key: str, value: Any) -> str:
+def _format_model_attr_value(key: str, value: str | float) -> str:
     """Formats an option value for a GAMS model attribute assignment."""
     if key == "merge_strategy":
-        return str(SOLVE_OPT_MAP[value])
+        return str(SOLVE_OPT_MAP[cast("str", value)])
 
     if isinstance(value, bool):
         return str(int(value))
@@ -439,13 +439,10 @@ class Options(BaseModel):
     def model_post_init(self, context: Any) -> None:
         self._hidden_options: dict[str, Any] = {}
         self._extra_options: dict[str, Any] = {}
-        self._solver: str | None = None
-        self._problem: str | None = None
-        self._solver_options_file: str = "0"
-        self._frame: FrameType | None = None
+        self._solve_line: str | None = None
 
     @staticmethod
-    def _cast_value(value: Any) -> Any:
+    def _cast_value(value: _T) -> _T | bool | int | float:
         """Casts raw string values from GAMS into appropriate Python types."""
         if isinstance(value, str):
             val_lower = value.lower()
@@ -624,18 +621,6 @@ class Options(BaseModel):
 
         return gams_options
 
-    def _set_model_info(
-        self, solver: str, problem: Problem, solver_options: dict | Path | None
-    ):
-        """Set the solver and the solver options"""
-        self._solver = solver
-        self._problem = str(problem)
-
-        if solver_options:
-            self._solver_options_file = "1"
-        else:
-            self._solver_options_file = "0"
-
     def _set_hidden_options(self, options: dict) -> None:
         """Set extra options of the backend"""
         self._hidden_options = options
@@ -669,7 +654,6 @@ class Options(BaseModel):
         >>> options.export("options.pf")
         >>> with open("options.pf") as file:
         ...     print(file.read())
-        optfile = "0"
         limcol = "0"
         limrow = "0"
         solprint = "0"
@@ -691,20 +675,13 @@ class Options(BaseModel):
         output : TextIO | None, optional
         """
         all_options = {}
-        # Solver options
-        if self._solver is not None:
-            all_options[self._problem] = self._solver
-
-        all_options["optfile"] = self._solver_options_file
 
         # Extra options
         all_options.update(self._hidden_options)
         all_options.update(self._extra_options)
 
-        if self._frame is not None:
-            filename = self._frame.f_code.co_filename
-            line_number = self._frame.f_lineno
-            all_options["GP_SolveLine"] = f"{filename} line {line_number}"
+        if self._solve_line is not None:
+            all_options["GP_SolveLine"] = self._solve_line
 
         # User options
         user_options = self._get_gams_compatible_options(output)
@@ -728,7 +705,7 @@ class FreezeOptions(BaseModel):
     debug : bool, optional
         Enables debug mode. Default is False.
     update_type : Literal["0", "base_case", "accumulate", "inherit"], optional
-        Specifies the update type for the model instance.
+        Specifies the update type for the frozen solve.
 
         - "base_case": Update from the base case.
 
@@ -945,7 +922,7 @@ def get_options_file_name(solver: str, file_number: int) -> str:
     return f"{solver}.{file_number}"
 
 
-def _format_scip_value(value: Any) -> Any:
+def _format_scip_value(value: _T) -> _T | str:
     """
     SCIP's option file parser requires the value of a string parameter to be
     enclosed in double quotes (e.g. `lp/solver = "highs"`) whereas the values of

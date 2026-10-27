@@ -46,18 +46,14 @@ def test_math(transport):
     assert op2.gamsRepr() == "centropy(v(i),b(i),1e-20)"
     op2 = gams_math.centropy(v[i], b[i], 1e-15)
     assert op2.gamsRepr() == "centropy(v(i),b(i),1e-15)"
-    with pytest.raises(ValueError):
-        gams_math.centropy(v[i], b[i], -1)
-    with pytest.raises(TypeError):
-        gams_math.centropy(v[i], b[i], s1)
+    op2 = gams_math.centropy(v[i], b[i], s1)
+    assert op2.gamsRepr() == "centropy(v(i),b(i),s1)"
 
     # cvPower
     op2 = gams_math.cv_power(3, b[i])
     assert op2.gamsRepr() == "cvPower(3,b(i))"
-    with pytest.raises(ValueError):
-        gams_math.cv_power(s1, b[i])
-    with pytest.raises(ValueError):
-        gams_math.cv_power(-1, b[i])
+    op2 = gams_math.cv_power(s1, b[i])
+    assert op2.gamsRepr() == "cvPower(s1,b(i))"
 
     # rPower
     op2 = gams_math.rpower(b[i], 3)
@@ -66,10 +62,10 @@ def test_math(transport):
     # signPower
     op2 = gams_math.sign_power(b[i], 3)
     assert op2.gamsRepr() == "signPower(b(i),3)"
-    with pytest.raises(ValueError):
-        gams_math.sign_power(b[i], s1)
-    with pytest.raises(ValueError):
-        gams_math.sign_power(b[i], -5)
+    op2 = gams_math.sign_power(b[i], s1)
+    assert op2.gamsRepr() == "signPower(b(i),s1)"
+    op2 = gams_math.sign_power(b[i], -5)
+    assert op2.gamsRepr() == "signPower(b(i),-5)"
 
     # vcPower
     op2 = gams_math.vc_power(b[i], 3)
@@ -1161,3 +1157,29 @@ def test_strict_power_operator():
         gp.set_options({"STRICT_POWER_OPERATOR": old})
 
     assert (a[i] ** 3).gamsRepr() == "power(a(i),3)"
+
+
+def test_mathop_domain_from_all_arguments():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1"])
+    t = Set(m, "t", records=["t1", "t2"])
+    a = Parameter(m, "a", domain=i, records=[("i1", 3), ("i2", -1)])
+    b = Parameter(m, "b", domain=j, records=[("j1", 2)])
+    c = Parameter(m, "c", domain=t)
+    x = Variable(m, "x", domain=i)
+
+    assert gams_math.Max(1, a[i]).domain == [i]
+    assert gams_math.Max(1, a[i]).toList() == [["i1", 3.0], ["i2", 1.0]]
+
+    op = gams_math.Max(a[i], b[j])
+    assert op.domain == [i, j]
+    assert op.toList() == [["i1", "j1", 3.0], ["i2", "j1", 2.0]]
+
+    assert gams_math.Max(a[i], a[i] + 1).domain == [i]
+    assert gams_math.ifthen(a[i] > 0, 1, b[j]).domain == [i, j]
+    assert gams_math.Max(1, c[t.lag(1)]).domain == [t]
+
+    e = Equation(m, "e", domain=i)
+    e[...] = gams_math.power(2, x[i]) >= 1
+    assert e.getDefinition() == "e(i) .. power(2,x(i)) =g= 1;"

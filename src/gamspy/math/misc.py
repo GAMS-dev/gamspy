@@ -11,6 +11,8 @@ import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._container import Container
 from gamspy._internals import DataSource
+from gamspy._notation import LATEX, UNICODE
+from gamspy._universe import is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -18,36 +20,13 @@ if TYPE_CHECKING:
 
     from gamspy import Alias, Parameter, Set, UniverseAlias
     from gamspy._algebra.expression import Expression
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits.implicit_symbol import ImplicitParameter, ImplicitSet
     from gamspy._types import ImplicitSymbolType, OperableType, SymbolType
 
 
-# Functions that have a dedicated LaTeX command. Note that log is the natural logarithm.
-LATEX_FUNCTIONS = {
-    "exp": "\\exp",
-    "log": "\\ln",
-    "log10": "\\log_{10}",
-    "log2": "\\log_{2}",
-    "sin": "\\sin",
-    "cos": "\\cos",
-    "tan": "\\tan",
-    "sinh": "\\sinh",
-    "cosh": "\\cosh",
-    "tanh": "\\tanh",
-    "arcsin": "\\arcsin",
-    "arccos": "\\arccos",
-    "arctan": "\\arctan",
-    "max": "\\max",
-    "min": "\\min",
-}
-
-LATEX_DELIMITERS = {
-    "abs": ("\\lvert", "\\rvert"),
-    "ceil": ("\\lceil", "\\rceil"),
-    "floor": ("\\lfloor", "\\rfloor"),
-}
-
-LATEX_POWERS = ("power", "rPower", "sqr")
+# Functions that are written as powers in mathematical notation.
+POWERS = ("power", "rPower", "sqr")
 
 
 class MathOp(operable.Operable):
@@ -81,29 +60,42 @@ class MathOp(operable.Operable):
         elements: tuple,
         *,
         safe_cancel: bool = False,
-    ):
+    ) -> None:
         self.op_name = op_name
         self.elements = list(elements)
         self.safe_cancel = safe_cancel
         self.container: Container | None = self._find_container()
         self.domain: list[Set | Alias] = []
-        self.dimension = 0
-        if hasattr(elements[0], "domain"):
-            self.domain: list[Set | Alias] = elements[0].domain
-            self.dimension = validation.get_dimension(self.domain)
+        for elem in elements:
+            for d in getattr(elem, "domain", []):
+                if isinstance(d, expression.ShiftExpression):
+                    d = d.parent
+
+                if isinstance(d, str) or is_universe(d):
+                    continue
+
+                if not any(d is seen for seen in self.domain):
+                    self.domain.append(d)
+
+        self.dimension = validation.get_dimension(self.domain)
 
         self.where = condition.Condition(self)
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
-    def __len__(self):
+    def __bool__(self) -> bool:
+        raise ValidationError(
+            "A math operation cannot be used as a truth value. Use toValue() instead."
+        )
+
+    def __len__(self) -> int:
         if self.records is not None:
             return len(self.records.index)
 
@@ -143,12 +135,8 @@ class MathOp(operable.Operable):
         if container is None:
             container = Container()
 
-        temp_name = "a" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            container, temp_name, self.domain
-        )
-        temp_param[...] = self
-        del container._data[temp_name]
+        with container._temp_symbol(syms.Parameter, self.domain) as temp_param:
+            temp_param[...] = self
         return temp_param.records
 
     def toValue(self) -> float:
@@ -252,34 +240,67 @@ class MathOp(operable.Operable):
         \operatorname{div}(a,5)
 
         """
-        if self.op_name in LATEX_POWERS:
-            base, base_prec, base_open = expression.latex_operand(self.elements[0])
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Representation of this MathOp in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, "a", records=5)
+        >>> print(gp.math.sqr(gp.math.abs(a)).unicodeRepr())
+        |a|²
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
+        if self.op_name in POWERS:
+            base, base_prec, base_open = expression.math_operand(
+                self.elements[0], notation
+            )
             # A superscripted base (x^{2}, x^{l}, 10^{3}) would get a double superscript.
-            if base_prec < expression.LEAF_PRECEDENCE or base_open or "^" in base:
+            if (
+                base_prec < expression.LEAF_PRECEDENCE
+                or base_open
+                or notation.is_superscripted(base)
+            ):
                 base = f"({base})"
 
-            exponent = (
-                "2"
-                if self.op_name == "sqr"
-                else _stringify(self.elements[1], latex=True)
+            if self.op_name == "sqr":
+                return notation.power(base, "2", True)
+
+            exponent = self.elements[1]
+            if isinstance(exponent, str):
+                return notation.power(base, _stringify(exponent, notation), True)
+
+            exponent_str, exponent_prec, exponent_open = expression.math_operand(
+                exponent, notation
             )
-            return f"{base}^{{{exponent}}}"
+            is_exponent_leaf = (
+                exponent_prec == expression.LEAF_PRECEDENCE and not exponent_open
+            )
+            return notation.power(base, exponent_str, is_exponent_leaf)
 
-        operands_str = ",".join(
-            [_stringify(elem, latex=True) for elem in self.elements]
-        )
+        operands_str = ",".join([_stringify(elem, notation) for elem in self.elements])
         if self.op_name == "sqrt":
-            return f"\\sqrt{{{operands_str}}}"
+            return notation.sqrt(operands_str)
 
-        if self.op_name in LATEX_DELIMITERS:
-            left, right = LATEX_DELIMITERS[self.op_name]
-            return f"{left} {operands_str} {right}"
+        if self.op_name in notation.delimiters:
+            left, right = notation.delimiters[self.op_name]
+            return f"{left}{operands_str}{right}"
 
-        op_name = self.op_name.replace("_", r"\_")
-        function = LATEX_FUNCTIONS.get(self.op_name, f"\\operatorname{{{op_name}}}")
-        return f"{function}({operands_str})"
+        return f"{notation.function_name(self.op_name)}({operands_str})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.gamsRepr()
 
 
@@ -405,17 +426,17 @@ def aggregate(
 
 
 def _stringify(
-    x: str | int | float | SymbolType | ImplicitSymbolType, *, latex: bool = False
-):
+    x: str | int | float | SymbolType | ImplicitSymbolType,
+    notation: Notation | None = None,
+) -> str:
     if isinstance(x, str):
-        if latex:
-            x = x.replace("_", r"\_")
-            return f"\\text{{`{x}'}}"
+        if notation is not None:
+            return notation.quoted(x)
 
         return f'"{x}"'
 
-    if latex:
-        return expression.get_operand_latex_repr(x)
+    if notation is not None:
+        return expression.get_operand_math_repr(x, notation)
 
     if isinstance(x, (int, float)):
         x = utils._map_special_values(x)
@@ -627,7 +648,7 @@ def fractional(x: OperableType) -> MathOp:
     return MathOp("frac", (x,))
 
 
-def Min(*values) -> MathOp:
+def Min(*values: OperableType) -> MathOp:
     """
     Minimum value of the values, where the number of values may vary.
 
@@ -651,7 +672,7 @@ def Min(*values) -> MathOp:
     return MathOp("min", values)
 
 
-def Max(*values) -> MathOp:
+def Max(*values: OperableType) -> MathOp:
     """
     Maximum value of the values, where the number of values may vary.
 
@@ -969,7 +990,7 @@ def regularized_gamma(x: int | float, a: int | float) -> MathOp:
     return MathOp("gammaReg", (x, a))
 
 
-def lse_max(*xs) -> MathOp:
+def lse_max(*xs: OperableType) -> MathOp:
     """
     Smoothed Max via the Logarithm of the Sum of Exponentials: ``ln(exp(x1) + exp(x2) + ... + exp(xn))``
 
@@ -994,7 +1015,7 @@ def lse_max(*xs) -> MathOp:
     return MathOp("lseMax", xs)
 
 
-def lse_max_sc(t, *xs) -> MathOp:
+def lse_max_sc(t: OperableType, *xs: OperableType) -> MathOp:
     """
     Scaled smoothed Max via the Logarithm of the Sum of Exponentials: ``lse_max_sc(T,x) = lse_max(Tx)/T``
 
@@ -1019,7 +1040,7 @@ def lse_max_sc(t, *xs) -> MathOp:
     return MathOp("lseMaxSc", (t,) + xs)
 
 
-def lse_min(*xs) -> MathOp:
+def lse_min(*xs: OperableType) -> MathOp:
     """
     Smoothed Min via the Logarithm of the Sum of Exponentials: ``-ln(exp(-x1) + exp(-x2) + ... + exp(-xn))``
 
@@ -1044,7 +1065,7 @@ def lse_min(*xs) -> MathOp:
     return MathOp("lseMin", xs)
 
 
-def lse_min_sc(t, *xs) -> MathOp:
+def lse_min_sc(t: OperableType, *xs: OperableType) -> MathOp:
     """
     Scaled smoothed Min via the Logarithm of the Sum of Exponentials: ``lse_min_sc(T,x) = lse_min(Tx)/T``
 
@@ -1193,7 +1214,7 @@ def ncpVUsin(r: OperableType, s: OperableType, mu: int | float = 0) -> MathOp:
     return MathOp("ncpVUsin", (r, s, mu))
 
 
-def poly(x, *args) -> MathOp:
+def poly(x: OperableType, *args: OperableType) -> MathOp:
     """
     Polynomial function: ``p(x) = A[0] + A[1]*x + A[2]*x^2 + ... + A[n-1]*x^(n-1)``
 

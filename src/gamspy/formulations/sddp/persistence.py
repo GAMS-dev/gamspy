@@ -201,7 +201,7 @@ def _reattach_sddp(container: gp.Container, metadata: dict[str, Any]) -> SDDP:
     state_specs = metadata["state_vars"]
     noise_spec = metadata["noise"]
 
-    def _lookup(name: str) -> Any:
+    def _lookup(name: str) -> Any:  # noqa: ANN401
         if name not in container.data:
             raise ValidationError(
                 f"Loaded container is missing symbol `{name}` - the saved "

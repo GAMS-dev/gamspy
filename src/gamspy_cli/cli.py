@@ -18,7 +18,7 @@ app.add_typer(uninstall.app, name="uninstall")
 app.command(name="mps2gms")(mps2gms.mps2gms)
 
 
-def version_callback(value: bool):
+def version_callback(value: bool) -> None:
     if value:
         import gams
 
@@ -56,7 +56,7 @@ def callback(
     """
 
 
-def main():
+def main() -> None:
     """
     Entry point for gamspy command line application.
     """

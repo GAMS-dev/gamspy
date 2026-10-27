@@ -813,3 +813,157 @@ def test_loading_records_in_a_loop():
         with gp.For(s, -3.8, -0.1, 1.4):
             p[...] = s
             _ = p.records
+
+
+def test_exception_discards_block():
+    m = gp.Container()
+    i = gp.Set(m, records=["i1", "i2"])
+    s = gp.Parameter(m)
+    x = gp.Parameter(m, records=1)
+    cnt = gp.Parameter(m, records=0)
+
+    blocks = [
+        lambda: gp.Loop(i),
+        lambda: gp.For(s, 1, 2),
+        lambda: gp.While(x < 2),
+        lambda: gp.If(x == 1),
+    ]
+    for block in blocks:
+        with pytest.raises(RuntimeError):
+            with block():
+                cnt[...] += 1
+                raise RuntimeError
+
+        assert m._unsaved_statements == []
+        assert m._in_loop == 0
+        assert cnt.toValue() == 0
+
+    with pytest.raises(RuntimeError), gp.Loop(i), gp.If(x == 1):
+        cnt[...] += 1
+        raise RuntimeError
+
+    assert m._unsaved_statements == []
+    assert cnt.toValue() == 0
+
+
+def test_exception_caught_in_loop():
+    m = gp.Container()
+    i = gp.Set(m, records=["i1", "i2", "i3"])
+    j = gp.Set(m, records=["j1", "j2"])
+    cnt = gp.Parameter(m, records=0)
+
+    with gp.Loop(i):
+        cnt[...] += 1
+        with pytest.raises(RuntimeError), gp.Loop(j):
+            cnt[...] += 100
+            raise RuntimeError
+
+    assert cnt.toValue() == 3
+
+    # A failed ElseIf is dropped and Else continues the chain of the If.
+    cnt[...] = 0
+    with gp.Loop(i):
+        with gp.If(gp.Ord(i) == 1):
+            cnt[...] += 1
+        with pytest.raises(RuntimeError), gp.ElseIf(gp.Ord(i) == 2):
+            cnt[...] += 100
+            raise RuntimeError
+        with gp.Else():
+            cnt[...] += 10
+
+    assert cnt.toValue() == 21
+
+    # A failed If cannot be continued.
+    with gp.Loop(i):
+        with gp.Loop(j):
+            cnt[...] += 1
+        with pytest.raises(RuntimeError), gp.If(gp.Ord(i) == 1):
+            raise RuntimeError
+        with pytest.raises(ValidationError, match="must follow"):
+            gp.Else().__enter__()
+
+
+def test_exception_in_outermost_if_chain():
+    m = gp.Container()
+    x = gp.Parameter(m, records=1)
+    res = gp.Parameter(m, records=0)
+
+    with pytest.raises(RuntimeError), gp.If(x > 1):
+        res[...] = 1
+        raise RuntimeError
+
+    with pytest.raises(ValidationError, match="must follow"):
+        gp.Else().__enter__()
+
+    with gp.If(x > 1):
+        res[...] = 1
+    with pytest.raises(RuntimeError), gp.ElseIf(x < 1):
+        res[...] = 2
+        raise RuntimeError
+    with gp.Else():
+        res[...] = 3
+
+    assert m._in_loop == 0
+    assert res.toValue() == 3
+
+
+def test_exception_drops_solve():
+    m = gp.Container()
+    i = gp.Set(m, records=["i1", "i2"])
+    v = gp.Variable(m)
+    e = gp.Equation(m, definition=v >= 1)
+    model = gp.Model(m, equations=[e], problem="LP", sense="min", objective=v)
+
+    with gp.Loop(i):
+        with pytest.raises(RuntimeError), gp.If(gp.Ord(i) == 1):
+            model.solve()
+            raise RuntimeError
+
+    assert m._models_solved_in_loop == {}
+    with pytest.raises(ValidationError, match="not solved yet"):
+        _ = model.objective_value
+
+
+def test_exception_in_enter():
+    m = gp.Container()
+    s = gp.Parameter(m)
+    p = gp.Parameter(m, records=0)
+
+    with pytest.raises(AttributeError):
+        with gp.For(s, "1", 3):  # ty: ignore[invalid-argument-type]
+            pass
+
+    assert m._in_loop == 0
+    p[...] = 1
+    assert p.toValue() == 1
+
+
+def test_else_after_nested_loop():
+    m = gp.Container()
+    i = gp.Set(m, records=["i1", "i2"])
+    j = gp.Set(m, records=["j1"])
+    s = gp.Parameter(m)
+    x = gp.Parameter(m, records=1)
+    cnt = gp.Parameter(m, records=0)
+
+    blocks = [lambda: gp.Loop(j), lambda: gp.For(s, 1, 1), lambda: gp.While(x < 1)]
+    for block in blocks:
+        for chained in [lambda: gp.Else(), lambda: gp.ElseIf(x == 1)]:
+            with pytest.raises(ValidationError, match="must follow"), gp.Loop(i):
+                with gp.If(gp.Ord(i) == 1):
+                    cnt[...] += 1
+                with block():
+                    cnt[...] += 10
+                with chained():
+                    cnt[...] += 100
+
+            assert m._unsaved_statements == []
+            assert cnt.toValue() == 0
+
+    with gp.Loop(i):
+        with gp.If(gp.Ord(i) == 1), gp.Loop(j):
+            cnt[...] += 1
+        with gp.Else():
+            cnt[...] += 10
+
+    assert cnt.toValue() == 11

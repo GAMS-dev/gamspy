@@ -4,10 +4,12 @@ from typing import TYPE_CHECKING, TypeAlias
 
 import gamspy._algebra.condition as condition
 import gamspy.utils as utils
+from gamspy._notation import LATEX, UNICODE
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Set, UniverseAlias
+    from gamspy import Alias, Container, Set, UniverseAlias
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy._universe import Universe
 
@@ -51,7 +53,7 @@ class Domain:
     def __repr__(self) -> str:
         return f"Domain(sets={self.sets})"
 
-    def _sanity_check(self, sets: tuple[DomainElementType, ...]):
+    def _sanity_check(self, sets: tuple[DomainElementType, ...]) -> None:
         if len(sets) < 1:
             error_message = f"Domain requires at least one set but found {len(sets)}. "
             raise ValidationError(error_message)
@@ -61,10 +63,10 @@ class Domain:
                 "At least one of the sets in the domain must be a Set or Alias"
             )
 
-    def _find_container(self):
+    def _find_container(self) -> Container | None:
         for set in self.sets:
             if hasattr(set, "container"):
-                return set.container
+                return set.container  # ty: ignore[invalid-return-type]
 
     def gamsRepr(self) -> str:
         """
@@ -104,4 +106,28 @@ class Domain:
         x,y
 
         """
-        return utils._get_domain_str(self.sets, latex=True)[1:-1]
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Representation of this Domain in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> from gamspy import Container, Domain, Set
+        >>> m = Container()
+        >>> X = Set(m, name="x", records=[f"I{i}" for i in range(1, 22)])
+        >>> Y = Set(m, name="y", records=[f"J{j}" for j in range(1, 22)])
+        >>> print(Domain(X, Y).unicodeRepr())
+        x,y
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
+        return utils._get_domain_str(self.sets, notation=notation)[1:-1]

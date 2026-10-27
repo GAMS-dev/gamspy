@@ -9,6 +9,8 @@ from gamspy.exceptions import GamspyException, _customize_exception
 if TYPE_CHECKING:
     from pathlib import Path
 
+    import pandas as pd
+
     from gamspy import Container, Model, Options
 
 
@@ -32,10 +34,10 @@ class Local(backend.Backend):
         )
         self.model = model
 
-    def is_async(self):
+    def is_async(self) -> bool:
         return False
 
-    def run(self):
+    def run(self) -> pd.DataFrame | None:
         if self.model is not None:
             self.model._assign_model_attributes()
 
@@ -50,7 +52,7 @@ class Local(backend.Backend):
 
         return summary
 
-    def execute_gams(self, gams_string: str):
+    def execute_gams(self, gams_string: str) -> None:
         try:
             self.container._execution_engine.execute(
                 gams_string, self.options, self.job_name, self.model, self.output
@@ -72,7 +74,7 @@ class Local(backend.Backend):
         finally:
             self.container._unsaved_statements = []
 
-    def postprocess(self):
+    def postprocess(self) -> pd.DataFrame | None:
         miro.load_miro_symbol_records(self.container)
 
         if self.model is not None:

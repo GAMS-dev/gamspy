@@ -35,7 +35,9 @@ class SolverInfo:
         )
 
 
-def add_solver_entry(system_directory: str, solver_name: str, verbatims: list[str]):
+def add_solver_entry(
+    system_directory: str, solver_name: str, verbatims: list[str]
+) -> None:
     import gamspy.utils as utils
 
     capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
@@ -84,7 +86,7 @@ def find_bounds(system_directory: str, solver_name: str) -> tuple[int, int]:
     return start_idx, line_count
 
 
-def remove_solver_entry(system_directory: str, solver_name: str):
+def remove_solver_entry(system_directory: str, solver_name: str) -> None:
     import gamspy.utils as utils
 
     capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)

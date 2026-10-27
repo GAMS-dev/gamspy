@@ -35,7 +35,7 @@ class GRU:
         container: gp.Container,
         input_size: int,
         hidden_size: int,
-    ):
+    ) -> None:
         if not isinstance(input_size, int) or input_size <= 0:
             raise ValidationError("input_size must be a positive integer")
 
@@ -176,11 +176,13 @@ class GRU:
                 f"Last dimension of Input sequence does not match. Expected {self.input_size}, got {len(I_set)}."
             )
 
-        lin_in_r = input_seq @ self.w_ih["r"].t() + self.b_ih["r"]
-        lin_in_z = input_seq @ self.w_ih["z"].t() + self.b_ih["z"]
-        lin_in_n = input_seq @ self.w_ih["n"].t() + self.b_ih["n"]
-
+        lin_in_r = input_seq @ self.w_ih["r"].t()
         H_set = lin_in_r.domain[-1]
+
+        lin_in_r = lin_in_r + self.b_ih["r"][H_set]
+        lin_in_z = input_seq @ self.w_ih["z"].t() + self.b_ih["z"][H_set]
+        lin_in_n = input_seq @ self.w_ih["n"].t() + self.b_ih["n"][H_set]
+
         _, H_prev = utils._get_domain(self.w_hh["r"])
         out_domain = [N_set, T_set, H_set]
 
@@ -194,21 +196,21 @@ class GRU:
             if h0 is not None:
                 hid_r = (
                     gp.Sum(H_prev, h0[N_set, H_prev] * self.w_hh["r"][H_set, H_prev])
-                    + self.b_hh["r"]
+                    + self.b_hh["r"][H_set]
                 )
                 hid_z = (
                     gp.Sum(H_prev, h0[N_set, H_prev] * self.w_hh["z"][H_set, H_prev])
-                    + self.b_hh["z"]
+                    + self.b_hh["z"][H_set]
                 )
                 hid_n = (
                     gp.Sum(H_prev, h0[N_set, H_prev] * self.w_hh["n"][H_set, H_prev])
-                    + self.b_hh["n"]
+                    + self.b_hh["n"][H_set]
                 )
                 h_prev_H_term = h0[N_set, H_set]
             else:
-                hid_r = self.b_hh["r"]
-                hid_z = self.b_hh["z"]
-                hid_n = self.b_hh["n"]
+                hid_r = self.b_hh["r"][H_set]
+                hid_z = self.b_hh["z"][H_set]
+                hid_n = self.b_hh["n"][H_set]
                 h_prev_H_term = 0
         else:
             h_prev_term = h_out[N_set, T_set.lag(1), H_prev]
@@ -222,15 +224,15 @@ class GRU:
 
             hid_r = (
                 gp.Sum(H_prev, h_prev_term * self.w_hh["r"][H_set, H_prev])
-                + self.b_hh["r"]
+                + self.b_hh["r"][H_set]
             )
             hid_z = (
                 gp.Sum(H_prev, h_prev_term * self.w_hh["z"][H_set, H_prev])
-                + self.b_hh["z"]
+                + self.b_hh["z"][H_set]
             )
             hid_n = (
                 gp.Sum(H_prev, h_prev_term * self.w_hh["n"][H_set, H_prev])
-                + self.b_hh["n"]
+                + self.b_hh["n"][H_set]
             )
 
         # Equations

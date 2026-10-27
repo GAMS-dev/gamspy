@@ -8,6 +8,7 @@ import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
 import gamspy._validation as validation
+import gamspy.math.misc as misc
 import gamspy.utils as utils
 from gamspy._internals import DataSource
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
@@ -26,8 +27,9 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._algebra.sparse import SparseAssignment
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitSet
-    from gamspy._types import IndexType, ValidatedIndexType
+    from gamspy._types import IndexType, OperableType, ValidatedIndexType
     from gamspy.math.misc import MathOp
 
 logger = logging.getLogger("GAMSPy")
@@ -91,18 +93,17 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         super().__init__(name, domain, permutation, scalar_domains)
         self._assignment = None
 
-    @property
-    def _latex_name(self) -> str:
-        # Attributes such as x.l or i.pos are rendered as a superscript: x^{l}
-        name = self.parent._latex_name
+    def _math_name(self, notation: Notation) -> str:
+        # Attributes such as x.l or i.pos are written with the notation of attributes: x^{l}
+        name = self.parent._math_name(notation)
         _, separator, attribute = self.name.rpartition(".")
         if separator:
-            name = f"{{{name}}}^{{\\mathrm{{{attribute}}}}}"
+            name = notation.attribute(name, attribute)
 
         return name
 
     def __getitem__(self, indices: IndexType) -> ImplicitParameter:
-        domain = validation.validate_domain(self, indices)
+        domain = self._reindex(indices)
 
         return ImplicitParameter(
             parent=self.parent,
@@ -156,19 +157,25 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             domain,
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         op = "eq"
         if isinstance(
             other,
-            (ImplicitVariable, expression.Expression, operation.Operation),
+            (
+                syms.Variable,
+                ImplicitVariable,
+                expression.Expression,
+                operation.Operation,
+                misc.MathOp,
+            ),
         ):
             op = "=e="
         return expression.Expression(self, op, other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def __repr__(self) -> str:
@@ -180,42 +187,33 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             return None
 
         if isinstance(self.parent, (syms.Set, syms.Alias)):
-            temp_name = "autotemp" + utils._get_unique_name()
-            temp_param = syms.Parameter._constructor_bypass(
-                self.container, temp_name, [self.parent, UNIVERSE]
-            )
-            column_name = SET_ATTR_MAPPING[self.name.split(".")[1]]
-            temp_param[self.parent, column_name] = self
-            del self.container._data[temp_name]
+            with self.container._temp_symbol(
+                syms.Parameter, [self.parent, UNIVERSE]
+            ) as temp_param:
+                column_name = SET_ATTR_MAPPING[self.name.split(".")[1]]
+                temp_param[self.parent, column_name] = self
             return temp_param.records
         elif isinstance(self.parent, syms.Parameter):
-            temp_name = "autotemp" + utils._get_unique_name()
             given_domain, declaration_domain = self._get_temp_domain()
-            temp_param = syms.Parameter._constructor_bypass(
-                self.container, temp_name, declaration_domain
-            )
-
             if given_domain == []:
                 given_domain = [...]
 
-            temp_param[given_domain] = self[...]
-            del self.container._data[temp_name]
+            with self.container._temp_symbol(
+                syms.Parameter, declaration_domain
+            ) as temp_param:
+                temp_param[given_domain] = self[...]
 
-            recs = temp_param.records
-            return recs
+            return temp_param.records
         elif isinstance(self.parent, (syms.Variable, syms.Equation)):
             extension = self.name.split(".")[-1]
-            temp_name = "autotemp" + utils._get_unique_name()
             given_domain, declaration_domain = self._get_temp_domain()
-            temp_param = syms.Parameter._constructor_bypass(
-                self.container, temp_name, declaration_domain
-            )
-
             if given_domain == []:
                 given_domain = [...]
 
-            temp_param[given_domain] = self
-            del self.container._data[temp_name]
+            with self.container._temp_symbol(
+                syms.Parameter, declaration_domain
+            ) as temp_param:
+                temp_param[given_domain] = self
 
             recs = temp_param.records
             if recs is None:
@@ -266,16 +264,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         else:
             domain = list(self.domain)
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Parameter, domain) as temp_param:
             temp_param[domain if domain else [...]] = self
             return temp_param.toDense()
-        finally:
-            del self.container._data[temp_name]
 
     def toValue(self) -> float:
         """
@@ -310,16 +301,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         else:
             domain = list(self.domain)
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Parameter, domain) as temp_param:
             temp_param[domain if domain else [...]] = self
             return temp_param.toValue()
-        finally:
-            del self.container._data[temp_name]
 
     def toList(self) -> list:
         """
@@ -354,16 +338,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         else:
             domain = list(self.domain)
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Parameter, domain) as temp_param:
             temp_param[domain if domain else [...]] = self
             return temp_param.toList()
-        finally:
-            del self.container._data[temp_name]
 
     @property
     def T(self) -> ImplicitParameter:

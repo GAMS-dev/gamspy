@@ -12,18 +12,21 @@ import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
+from gamspy._notation import LATEX, UNICODE
 from gamspy._universe import is_universe
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    import graphviz
     import pandas as pd
 
     from gamspy._algebra.expression import Expression
+    from gamspy._notation import Notation
     from gamspy._symbols import Alias, Equation, Parameter, Set, Variable
     from gamspy._symbols.implicits import ImplicitSet
-    from gamspy._types import OperationIndexType, OperationRhsType
+    from gamspy._types import OperableType, OperationIndexType, OperationRhsType
 
 
 class Operation(operable.Operable):
@@ -58,7 +61,9 @@ class Operation(operable.Operable):
 
     """
 
-    def __init__(self, domain: OperationIndexType, rhs: OperationRhsType, op_name: str):
+    def __init__(
+        self, domain: OperationIndexType, rhs: OperationRhsType, op_name: str
+    ) -> None:
         self.op_domain = utils._to_list(domain)  # ty: ignore[invalid-argument-type]
         if len(self.op_domain) < 1:
             raise ValidationError("Operation requires at least one index.")
@@ -67,7 +72,7 @@ class Operation(operable.Operable):
         self._op_name = op_name
         self.raw_domain = self._get_raw_domain()
 
-        self._bare_op_domain = utils._get_set(self.op_domain)
+        self._bare_op_domain = utils._get_set(self.raw_domain)
         self.container = self.raw_domain[0].container
         self.domain: list[Set | Alias] = []
 
@@ -77,6 +82,9 @@ class Operation(operable.Operable):
 
         if not isinstance(rhs, (bool, float, int)):
             for i, x in enumerate(rhs.domain):  # ty: ignore[invalid-argument-type]
+                if isinstance(x, expression.ShiftExpression):
+                    x = x.parent
+
                 sum_index = -1
                 for idx, elem in enumerate(self._bare_op_domain):
                     if elem is x:
@@ -104,6 +112,11 @@ class Operation(operable.Operable):
             return Operation(self.op_domain, self.rhs, self._op_name)
 
         return Operation(self.op_domain, self.rhs[domain], self._op_name)  # ty: ignore[invalid-argument-type, not-subscriptable]
+
+    def __bool__(self) -> bool:
+        raise ValidationError(
+            "An operation cannot be used as a truth value. Use toValue() instead."
+        )
 
     def __len__(self) -> int:
         if self.records is not None:
@@ -137,7 +150,6 @@ class Operation(operable.Operable):
                 "Could not discover the container from the operation. Therefore, cannot call .records on this operation."
             )
 
-        temp_name = "autotemp" + utils._get_unique_name()
         domain = []
         for elem in self.domain:
             if hasattr(elem, "dimension") and elem.dimension > 1:
@@ -145,11 +157,8 @@ class Operation(operable.Operable):
             else:
                 domain.append(elem)
 
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, domain
-        )
-        temp_param[...] = self
-        del self.container._data[temp_name]
+        with self.container._temp_symbol(syms.Parameter, domain) as temp_param:
+            temp_param[...] = self
         return temp_param.records
 
     def toValue(self) -> float:
@@ -285,13 +294,13 @@ class Operation(operable.Operable):
 
         return "(" + ",".join([index.gamsRepr() for index in self.op_domain]) + ")"
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def gamsRepr(self) -> str:
@@ -338,7 +347,7 @@ class Operation(operable.Operable):
 
         return output
 
-    def toGraph(self):
+    def toGraph(self) -> graphviz.Digraph:
         """
         Return a ``graphviz.Digraph`` of this operation's tree.
 
@@ -380,15 +389,31 @@ class Operation(operable.Operable):
         \sum_{i} a_{i}
 
         """
-        op_map = {
-            "sum": "\\sum",
-            "prod": "\\prod",
-            "smax": "\\max",
-            "smin": "\\min",
-            "sand": "\\bigwedge",
-            "sor": "\\bigvee",
-        }
+        return self._math_repr(LATEX)
 
+    def unicodeRepr(self) -> str:
+        """
+        Representation of this operation in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=range(3))
+        >>> a = gp.Parameter(m, "a", domain=i, records=np.array([3,5,7]))
+        >>> print(gp.Sum(i.where[a[i] > 4], a[i]).unicodeRepr())
+        ∑(i | a[i] > 4) a[i]
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
         indices = []
         conditions = []
         for index in self.op_domain:
@@ -398,15 +423,15 @@ class Operation(operable.Operable):
             else:
                 indices.append(index)
 
-        index_str = ",".join([index.latexRepr() for index in indices])
+        index_str = ",".join([index._math_repr(notation) for index in indices])
 
         if conditions:
             condition_strs = []
             for given_condition in conditions:
-                condition_str, condition_prec, _ = expression.latex_operand(
-                    given_condition
+                condition_str, condition_prec, _ = expression.math_operand(
+                    given_condition, notation
                 )
-                # The conditions of several indices are joined with \wedge.
+                # The conditions of several indices are joined with a logical and.
                 if (
                     len(conditions) > 1
                     and condition_prec < expression.PRECEDENCE["and"]
@@ -414,15 +439,16 @@ class Operation(operable.Operable):
                     condition_str = f"({condition_str})"
                 condition_strs.append(condition_str)
 
-            index_str += " ~ | ~ " + " \\wedge ".join(condition_strs)
+            and_str = f" {notation.operators['and']} "
+            index_str += notation.such_that + and_str.join(condition_strs)
 
-        expression_str, expression_prec, _ = expression.latex_operand(self.rhs)
+        expression_str, expression_prec, _ = expression.math_operand(self.rhs, notation)
 
         # A big operator binds tighter than + and -: sum_i (x_i + y_i)
         if expression_prec <= expression.PRECEDENCE["+"]:
             expression_str = f"({expression_str})"
 
-        return f"{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
+        return notation.big_operator(self._op_name, index_str, expression_str)
 
 
 class Sum(Operation):
@@ -454,14 +480,16 @@ class Sum(Operation):
 
     """
 
-    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
+    def __init__(
+        self, domain: OperationIndexType, expression: OperationRhsType
+    ) -> None:
         super().__init__(domain, expression, "sum")
 
     def __repr__(self) -> str:
         return f"Sum(domain={self.domain}, expression={self.rhs})"
 
     @override
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """
         Representation of the Sum operation in GAMS language.
 
@@ -513,14 +541,16 @@ class Product(Operation):
 
     """
 
-    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
+    def __init__(
+        self, domain: OperationIndexType, expression: OperationRhsType
+    ) -> None:
         super().__init__(domain, expression, "prod")
 
     def __repr__(self) -> str:
         return f"Product(domain={self.domain}, expression={self.rhs})"
 
     @override
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """
         Representation of the Product operation in GAMS language.
 
@@ -572,14 +602,16 @@ class Smin(Operation):
 
     """
 
-    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
+    def __init__(
+        self, domain: OperationIndexType, expression: OperationRhsType
+    ) -> None:
         super().__init__(domain, expression, "smin")
 
     def __repr__(self) -> str:
         return f"Smin(domain={self.domain}, expression={self.rhs})"
 
     @override
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """
         Representation of the Smin operation in GAMS language.
 
@@ -631,14 +663,16 @@ class Smax(Operation):
 
     """
 
-    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
+    def __init__(
+        self, domain: OperationIndexType, expression: OperationRhsType
+    ) -> None:
         super().__init__(domain, expression, "smax")
 
     def __repr__(self) -> str:
         return f"Smax(domain={self.domain}, expression={self.rhs})"
 
     @override
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """
         Representation of the Smax operation in GAMS language.
 
@@ -690,14 +724,16 @@ class Sand(Operation):
 
     """
 
-    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
+    def __init__(
+        self, domain: OperationIndexType, expression: OperationRhsType
+    ) -> None:
         super().__init__(domain, expression, "sand")
 
     def __repr__(self) -> str:
         return f"Sand(domain={self.domain}, expression={self.rhs})"
 
     @override
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """
         Representation of the Sand operation in GAMS language.
 
@@ -748,7 +784,9 @@ class Sor(Operation):
 
     """
 
-    def __init__(self, domain: OperationIndexType, expression: OperationRhsType):
+    def __init__(
+        self, domain: OperationIndexType, expression: OperationRhsType
+    ) -> None:
         super().__init__(domain, expression, "sor")
 
     def __repr__(self) -> str:
@@ -795,7 +833,7 @@ class Ord(operable.Operable):
 
     """
 
-    def __new__(cls, symbol: Set | Alias):
+    def __new__(cls, symbol: Set | Alias) -> Ord | int:
         if not isinstance(symbol, (syms.Set, syms.Alias)):
             raise ValidationError("Ord operation is only for Set and Alias objects!")
 
@@ -804,26 +842,29 @@ class Ord(operable.Operable):
 
         return super().__new__(cls)
 
-    def __init__(self, symbol: Set | Alias):
+    def __init__(self, symbol: Set | Alias) -> None:
         self._symbol = symbol
         self.container = symbol.container
         self.domain: list[Set | Alias] = []
         self.where = condition.Condition(self)
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "eq", other)
 
-    def __ge__(self, other):
+    def __ge__(self, other: OperableType) -> Expression:
         return expression.Expression(self, ">=", other)
 
-    def __le__(self, other):
+    def __le__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "<=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
+
+    def __bool__(self) -> bool:
+        raise ValidationError("Ord operation cannot be used as a truth value.")
 
     def gamsRepr(self) -> str:
         """
@@ -861,7 +902,31 @@ class Ord(operable.Operable):
         \operatorname{ord}(i)
 
         """
-        return f"\\operatorname{{ord}}({self._symbol._latex_name})"
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Representation of Ord function in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> print(gp.Ord(i).unicodeRepr())
+        ord(i)
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
+        name = self._symbol._math_name(notation)
+        return f"{notation.operator_name('ord')}({name})"
 
 
 class Card(operable.Operable):
@@ -895,22 +960,22 @@ class Card(operable.Operable):
         self.domain: list[Set | Alias] = []
         self.where = condition.Condition(self)
 
-    def __eq__(self, other) -> Expression:
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "eq", other)
 
-    def __ge__(self, other):
+    def __ge__(self, other: OperableType) -> Expression:
         return expression.Expression(self, ">=", other)
 
-    def __le__(self, other):
+    def __le__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "<=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         raise ValidationError(
             "Card operation cannot be used as a truth value. Use len(<symbol>.records) instead."
         )
@@ -951,4 +1016,28 @@ class Card(operable.Operable):
         \operatorname{card}(i)
 
         """
-        return f"\\operatorname{{card}}({self._symbol._latex_name})"
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self) -> str:
+        """
+        Representation of Card function in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> print(gp.Card(i).unicodeRepr())
+        card(i)
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self, notation: Notation) -> str:
+        name = self._symbol._math_name(notation)
+        return f"{notation.operator_name('card')}({name})"

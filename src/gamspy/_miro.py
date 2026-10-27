@@ -11,7 +11,16 @@ from gamspy._internals import DataSource
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Container, Equation, Parameter, Set, Variable
+    from gamspy import (
+        Alias,
+        Container,
+        Equation,
+        Parameter,
+        Set,
+        UniverseAlias,
+        Variable,
+    )
+    from gamspy._universe import Universe
 
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
@@ -34,7 +43,7 @@ def get_unload_output_str(container: Container) -> str:
     return f"execute_unload '{MIRO_GDX_OUT}' {unload_str}"
 
 
-def load_miro_symbol_records(container: Container):
+def load_miro_symbol_records(container: Container) -> None:
     # Load records of miro input symbols
     if MIRO_GDX_IN and container._miro_input_symbols:
         names: list[str] = []
@@ -87,7 +96,7 @@ class MiroJSONEncoder:
     def __init__(
         self,
         container: Container,
-    ):
+    ) -> None:
         self.container = container
         self.model_title = "GAMSPy App"
         self.input_symbols = container._miro_input_symbols
@@ -177,7 +186,11 @@ class MiroJSONEncoder:
 
         return sp_scalars_dict, ve_scalars_dict
 
-    def validate_table(self, symbol: Set | Parameter | Variable | Equation, last_item):
+    def validate_table(
+        self,
+        symbol: Set | Parameter | Variable | Equation,
+        last_item: Set | Alias | UniverseAlias | Universe | str,
+    ) -> None:
         if not gp.get_option("VALIDATION"):
             return
 
@@ -208,7 +221,9 @@ class MiroJSONEncoder:
                 "The last column of miro table cannot be a miro input!"
             )
 
-    def prepare_headers_dict(self, symbol: Set | Parameter | Variable | Equation):
+    def prepare_headers_dict(
+        self, symbol: Set | Parameter | Variable | Equation
+    ) -> dict[str, dict[str, str]]:
         def rename_duplicates(items: list[str]) -> list[str]:
             # Renames duplicate domain names. For example:
             # p = gp.Parameter(c,'p',domain=[i,i], is_miro_input=True)
@@ -344,7 +359,7 @@ class MiroJSONEncoder:
 
         return miro_dict
 
-    def write_json(self):
+    def write_json(self) -> dict:
         miro_dict = self.prepare_dict()
         filename = os.path.splitext(os.path.basename(sys.argv[0]))[0]
         directory = os.path.dirname(sys.argv[0])

@@ -593,6 +593,11 @@ def test_parameter_todict():
     )
     assert p_2d.toDict() == {("A", "X"): 100.0, ("B", "Y"): 200.0}
 
+    # No records
+    p_empty = gp.Parameter(m, "p_empty", domain=[i])
+    assert p_empty.toDict() == {}
+    assert p_empty.toDict(orient="columns") == {}
+
     # Invalid: Scalar
     p_scalar = gp.Parameter(m, "p_scalar", records=5.0)
     with pytest.raises(TypeError):

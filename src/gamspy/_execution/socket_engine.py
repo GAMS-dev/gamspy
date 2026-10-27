@@ -5,6 +5,7 @@ import platform
 import signal
 import socket
 import subprocess
+import sys
 import threading
 import time
 import weakref
@@ -17,6 +18,8 @@ from gamspy._execution.base import ExecutionEngine
 from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
 if TYPE_CHECKING:
+    from types import FrameType
+
     from gamspy import Container, Model, Options
 
 
@@ -67,6 +70,12 @@ def _read_output(process: subprocess.Popen, output: TextIO | None) -> None:
     if output is not None:
         while True:
             data = process.stdout.readline()  # ty: ignore[unresolved-attribute]
+            if not data:
+                raise FatalError(
+                    "The GAMS process terminated unexpectedly with return code"
+                    f" {process.poll()}."
+                )
+
             output.write(data)
             output.flush()
             if data.startswith("--- Job ") and "elapsed" in data:
@@ -174,7 +183,7 @@ class SocketEngine(ExecutionEngine):
                 f"Error while reading the port! {port_info + process.stdout.read()}"  # ty: ignore[unresolved-attribute]
             ) from e
 
-        def handler(signum, frame):  # pragma: no cover
+        def handler(signum: int, frame: FrameType | None) -> None:  # pragma: no cover
             if platform.system() != "Windows":
                 os.kill(process.pid, signal.SIGINT)
 
@@ -288,8 +297,8 @@ class SocketEngine(ExecutionEngine):
         if self._process is None:
             return
 
-        if platform.system() == "Windows":
-            os.kill(self._process.pid, signal.CTRL_C_EVENT)  # ty: ignore[unresolved-attribute]
+        if sys.platform == "win32":
+            os.kill(self._process.pid, signal.CTRL_C_EVENT)
         else:
             os.kill(self._process.pid, signal.SIGINT)
 

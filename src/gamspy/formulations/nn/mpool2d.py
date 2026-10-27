@@ -18,7 +18,7 @@ class _MPool2d:
         stride: int | tuple[int, int] | None = None,
         padding: int | tuple[int, int] = 0,
         name_prefix: str | None = None,
-    ):
+    ) -> None:
         # Validate pooling type
         if sense not in ("min", "max"):
             raise ValidationError("_MPool2d expects min or max")
@@ -161,12 +161,6 @@ class _MPool2d:
         )
         N, C, H_out, W_out = utils._get_domain(out_var)
 
-        # Calculate input window positions (top - left)
-        # These indices determine where pooling windows start in the input tensor
-        # Formula accounts for padding and stride
-        top_index = (self.stride[0] * (gp.Ord(H_out) - 1)) - self.padding[0] + 1
-        left_index = (self.stride[1] * (gp.Ord(W_out) - 1)) - self.padding[1] + 1
-
         # Create filter dimensions and domain relationships
         Hf, Wf = gp.math._generate_dims(self.container, self.kernel_size)
         Hf, Wf, H_in, W_in = utils._next_domains(
@@ -174,23 +168,15 @@ class _MPool2d:
         )
 
         # Create mapping between input/output positions
-        subset = gp.Set(
+        subset = utils._window_subset(
             self.container,
-            name=utils._generate_name("s", self._name_prefix, "in_out_matching_1"),
-            domain=[H_out, W_out, Hf, Wf, H_in, W_in],
+            utils._generate_name("s", self._name_prefix, "in_out_matching_1"),
+            [H_out, W_out],
+            [Hf, Wf],
+            [H_in, W_in],
+            self.stride,
+            self.padding,
         )
-        # Create relationship between output positions and their corresponding input windows
-        subset[
-            H_out,
-            W_out,
-            Hf,
-            Wf,
-            H_in,
-            W_in,
-        ].where[
-            (gp.Ord(H_in) == (top_index + gp.Ord(Hf) - 1))  # Vertical position
-            & (gp.Ord(W_in) == (left_index + gp.Ord(Wf) - 1))  # Horizontal
-        ] = True
 
         # Create a binary variable
         bin_var = gp.Variable(

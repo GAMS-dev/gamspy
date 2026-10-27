@@ -6,6 +6,7 @@ import os
 import threading
 import warnings
 import weakref
+from abc import abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar, cast
 
@@ -27,9 +28,11 @@ from gamspy._categoricals import (
 )
 from gamspy._internals import (
     GAMS_MAX_INDEX_DIM,
+    VAR_EQU_ATTRIBUTES,
     DataSource,
     DomainStatus,
 )
+from gamspy._notation import LATEX, UNICODE
 from gamspy._records_ingestion import VarEquIngestor
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.equals import equals_variable
@@ -39,8 +42,9 @@ from gamspy._universe import UNIVERSE, Universe, is_universe
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Sequence
+    from collections.abc import Callable, Generator, Iterable, Sequence
 
+    import graphviz
     from scipy.sparse import coo_matrix
 
     from gamspy import (
@@ -59,20 +63,20 @@ if TYPE_CHECKING:
         Variable,
     )
     from gamspy._algebra.expression import Expression
-    from gamspy._model_instance import ModelInstance
+    from gamspy._frozen_model import FrozenModel
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitParameter
     from gamspy._types import (
         DomainType,
         NormalizedDomainType,
         RecordsSourceType,
-        SymbolType,
-        SymbolWithRecordsType,
+        VarEquRecordsType,
     )
 
 
 @dataclass(frozen=True, slots=True)
 class DomainViolation:
-    symbol: gp.Set | gp.Parameter | gp.Variable | gp.Equation
+    symbol: DataSymbol
     dimension: int
     domain: gp.Set | gp.Alias | gp.UniverseAlias
     violations: Any
@@ -91,7 +95,7 @@ def _deserialize_assignment(declaration: str) -> Expression:
 class SymbolConstructor(type):
     """Resolves Symbol(container, name) to an already-declared symbol."""
 
-    def __call__(cls: type[T], *args: Any, **kwargs: Any) -> T:
+    def __call__(cls: type[T], *args: Any, **kwargs: Any) -> T:  # noqa: ANN401
         container = args[0] if args else kwargs.get("container")
         name = args[1] if len(args) > 1 else kwargs.get("name")
 
@@ -125,6 +129,9 @@ class SymbolConstructor(type):
 
 class BaseSymbol(metaclass=SymbolConstructor):
     is_universe: bool = False
+    name: str
+    records: pd.DataFrame | None
+    _container: Container
 
     @staticmethod
     def _container_proxy(container: Container) -> Container:
@@ -160,16 +167,16 @@ class BaseSymbol(metaclass=SymbolConstructor):
         name = validation.validate_name(name)
         return container, name.lower() if is_miro else name
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         raise ValidationError("A symbol cannot be used as a truth value.")
 
-    def __len__(self: SymbolType):
+    def __len__(self) -> int:
         if self.records is not None:
             return len(self.records.index)
 
         return 0
 
-    def latexRepr(self: SymbolType):
+    def latexRepr(self) -> str:
         """
         Representation of symbol in Latex.
 
@@ -186,9 +193,34 @@ class BaseSymbol(metaclass=SymbolConstructor):
         i
 
         """
-        return self._latex_name
+        return self._math_repr(LATEX)
 
-    def toGraph(self: SymbolType):
+    def unicodeRepr(self) -> str:
+        """
+        Representation of symbol in mathematical notation with Unicode characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> print(i.unicodeRepr())
+        i
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_name(self, notation: Notation) -> str:
+        return notation.symbol_name(self.name)
+
+    def _math_repr(self, notation: Notation) -> str:
+        return self._math_name(notation)
+
+    def toGraph(self) -> graphviz.Digraph:
         """
         Return a ``graphviz.Digraph`` of this symbol's expression tree.
 
@@ -233,7 +265,7 @@ class BaseSymbol(metaclass=SymbolConstructor):
         )
 
     @property
-    def synchronize(self: SymbolType) -> bool:
+    def synchronize(self) -> bool:
         """
         Synchronization state of the symbol. If True, the symbol data
         will be communicated with GAMS. Otherwise, GAMS state will not be updated.
@@ -245,7 +277,7 @@ class BaseSymbol(metaclass=SymbolConstructor):
         return True
 
     @synchronize.setter
-    def synchronize(self: SymbolWithRecordsType, value: bool) -> None:
+    def synchronize(self, value: bool) -> None:
         warnings.warn(
             "`symbol.synchronize` has no effect and will be deprecated in a future release.",
             category=DeprecationWarning,
@@ -513,16 +545,30 @@ class BaseSymbol(metaclass=SymbolConstructor):
         return gp.Sor(op_indices, self[self.domain])  # ty: ignore[invalid-argument-type] Invalid indices are caught in the constructor of the operation
 
     @property
-    def container(self: SymbolType) -> Container:
+    def container(self) -> Container:
         """Container of the symbol"""
         return self._container
 
 
-class DomainSymbol(BaseSymbol):
+class DataSymbol(BaseSymbol):
     """Base class for Set, Parameter, Variable, and Equation."""
 
     _should_load_from: RecordsSourceType
     _default_domain: ClassVar[Literal["*"] | None] = None
+
+    @property
+    @abstractmethod
+    def _attributes(self) -> list[str]: ...
+
+    @abstractmethod
+    def _setRecords(
+        self, records: VarEquRecordsType, *, uels_on_axes: bool = False
+    ) -> None: ...
+
+    @abstractmethod
+    def setRecords(
+        self, records: VarEquRecordsType | None, uels_on_axes: bool = False
+    ) -> None: ...
 
     def _init_symbol(
         self: Set | Parameter | Variable | Equation,
@@ -557,7 +603,6 @@ class DomainSymbol(BaseSymbol):
         self._domain_violations = None
         self._should_load_from = DataSource.NONE
         self._should_unload_to_gams = False
-        self._latex_name = name.replace("_", r"\_")
         self.where = condition.Condition(self)
         self._set_miro_flags(
             is_miro_input=is_miro_input,
@@ -587,8 +632,8 @@ class DomainSymbol(BaseSymbol):
         self._is_miro_symbol = is_miro_input or is_miro_output or is_miro_table
 
     def _init_records(
-        self: Set | Parameter | Variable | Equation,
-        records: Any,
+        self,
+        records: VarEquRecordsType | None,
         *,
         uels_on_axes: bool,
     ) -> None:
@@ -602,7 +647,7 @@ class DomainSymbol(BaseSymbol):
                 self._container._synch_with_gams()
 
     def _redefine_symbol(
-        self: Set | Parameter | Variable | Equation,
+        self,
         domain: DomainType | None,
         *,
         domain_forwarding: bool | list[bool],
@@ -639,8 +684,8 @@ class DomainSymbol(BaseSymbol):
         self._records = None
 
     def _redefine_records(
-        self: Set | Parameter | Variable | Equation,
-        records: Any,
+        self,
+        records: VarEquRecordsType | None,
         *,
         uels_on_axes: bool,
     ) -> None:
@@ -681,10 +726,10 @@ class DomainSymbol(BaseSymbol):
 
         self._domain = new_domain
 
-    def _deserialize_value(self, key: str, value: Any) -> Any:
+    def _deserialize_value(self, key: str, value: object) -> object:
         """Rebuilds the value of a serialized attribute."""
         if key == "_assignment":
-            return _deserialize_assignment(value)
+            return _deserialize_assignment(cast("str", value))
 
         return value
 
@@ -700,16 +745,14 @@ class DomainSymbol(BaseSymbol):
             )
 
     def _get_records(
-        self: Set | Parameter | Variable | Equation,
+        self,
     ) -> pd.DataFrame | None:
         if self._should_load_from is not DataSource.NONE:
             self._load_records()
 
         return self._records
 
-    def _assign_records(
-        self: Set | Parameter | Variable | Equation, records: pd.DataFrame | None
-    ) -> None:
+    def _assign_records(self, records: pd.DataFrame | None) -> None:
         self._check_miro_protection()
 
         if records is not None and not isinstance(records, pd.DataFrame):
@@ -721,8 +764,8 @@ class DomainSymbol(BaseSymbol):
         self._handle_domain_forwarding()
 
     def _update_records(
-        self: Set | Parameter | Variable | Equation,
-        records: Any,
+        self,
+        records: VarEquRecordsType | None,
         *,
         uels_on_axes: bool,
     ) -> None:
@@ -740,7 +783,7 @@ class DomainSymbol(BaseSymbol):
         self._container._synch_with_gams()
 
     @contextlib.contextmanager
-    def _miro_unprotected(self: Set | Parameter | Variable | Equation):
+    def _miro_unprotected(self) -> Generator[None]:
         options = self._container._options
         previous_state = options.miro_protect
         options.miro_protect = False
@@ -749,12 +792,12 @@ class DomainSymbol(BaseSymbol):
         finally:
             options.miro_protect = previous_state
 
-    def _load_records(self: Set | Parameter | Variable | Equation) -> None:
+    def _load_records(self) -> None:
         source = self._should_load_from
         if source is not DataSource.GAMS:
             self._should_load_from = DataSource.NONE
             try:
-                cast("ModelInstance", source)._read_records(self)
+                cast("FrozenModel", source)._read_records(self)
             except BaseException:
                 # The records are still stale, so they are loaded on the next access.
                 self._should_load_from = source
@@ -785,16 +828,16 @@ class DomainSymbol(BaseSymbol):
         self._records = records[self.name]
 
     @property
-    def _is_frozen_modifiable(self: Set | Parameter | Variable | Equation) -> bool:
+    def _is_frozen_modifiable(self) -> bool:
         """Whether a frozen model may modify this symbol."""
         return self.name in self._container._frozen_modifiables
 
-    def _handle_domain_violations(self: Set | Parameter | Variable | Equation) -> None:
+    def _handle_domain_violations(self) -> None:
         if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
             self._domain_violations = self._getDomainViolations()
             self._dropDomainViolations()
 
-    def _handle_domain_forwarding(self: Set | Parameter | Variable | Equation) -> None:
+    def _handle_domain_forwarding(self) -> None:
         if self._domain_forwarding:
             if isinstance(self._domain_forwarding, bool):
                 forwardings = [self._domain_forwarding] * self.dimension
@@ -805,9 +848,7 @@ class DomainSymbol(BaseSymbol):
                 if forwarding and isinstance(elem, (gp.Set, gp.Alias)):
                     elem._should_load_from = DataSource.GAMS
 
-    def _get_domain_str(
-        self: SymbolWithRecordsType, forwardings: bool | list[bool]
-    ) -> str:
+    def _get_domain_str(self, forwardings: bool | list[bool]) -> str:
         import gamspy._symbols.implicits as implicits
 
         if isinstance(forwardings, bool):
@@ -826,12 +867,12 @@ class DomainSymbol(BaseSymbol):
         return "(" + ",".join(set_strs) + ")"
 
     @property
-    def domain_names(self: SymbolWithRecordsType) -> list[str]:
+    def domain_names(self) -> list[str]:
         """String version of domain names"""
         return [i if isinstance(i, str) else i.name for i in self.domain]
 
     @property
-    def domain_labels(self: Set | Parameter | Variable | Equation) -> list[str]:
+    def domain_labels(self) -> list[str]:
         """The column headings for the records DataFrame"""
         if self.records is None:
             return []
@@ -839,7 +880,7 @@ class DomainSymbol(BaseSymbol):
         return self.records.columns.tolist()[: self.dimension]
 
     @domain_labels.setter
-    def domain_labels(self: SymbolWithRecordsType, labels):
+    def domain_labels(self, labels: list[str] | str) -> None:
         if not isinstance(labels, list):
             labels = [labels]
 
@@ -860,7 +901,7 @@ class DomainSymbol(BaseSymbol):
             self.records.columns = labels + self._attributes
 
     def _normalize_domain(
-        self: Set | Parameter | Variable | Equation,
+        self,
         container: Container,
         domain: DomainType | None,
         default: Literal["*"] | None = None,
@@ -885,7 +926,7 @@ class DomainSymbol(BaseSymbol):
 
     @property
     def domain(
-        self: Set | Parameter | Variable | Equation,
+        self,
     ) -> NormalizedDomainType:
         """
         List of domains given either as the UNIVERSE sentinel, a relaxed domain string,
@@ -914,17 +955,17 @@ class DomainSymbol(BaseSymbol):
         return domain
 
     @property
-    def description(self: Set | Parameter | Variable | Equation) -> str:
+    def description(self) -> str:
         """Description of the symbol"""
         return self._description
 
     @property
-    def dimension(self: SymbolWithRecordsType) -> int:
+    def dimension(self) -> int:
         """The dimension of symbol"""
         return len(self.domain)
 
     @property
-    def number_records(self: Set | Parameter | Variable | Equation) -> int:
+    def number_records(self) -> int:
         """Number of records"""
         if self.records is None:
             return 0
@@ -932,7 +973,7 @@ class DomainSymbol(BaseSymbol):
         return len(self.records)
 
     def _getUELCodes(
-        self: Set | Parameter | Variable | Equation,
+        self,
         dimension: int,
         *,
         ignore_unused: bool = False,
@@ -942,7 +983,7 @@ class DomainSymbol(BaseSymbol):
         return {uel: code for code, uel in enumerate(uels)}
 
     def _getUELs(
-        self: Set | Parameter | Variable | Equation,
+        self,
         dimensions: int | list[int] | None = None,
         *,
         ignore_unused: bool = False,
@@ -992,7 +1033,7 @@ class DomainSymbol(BaseSymbol):
         return union_categories(cats_input, ignore_unused=ignore_unused).tolist()
 
     def _removeUELs(
-        self: Set | Parameter | Variable | Equation,
+        self,
         uels: dict | list | str | None = None,
         dimensions: int | Iterable | None = None,
     ) -> None:
@@ -1080,7 +1121,7 @@ class DomainSymbol(BaseSymbol):
                     ) from err
 
     def _getDomainViolations(
-        self: Set | Parameter | Variable | Equation,
+        self,
     ) -> list[DomainViolation] | None:
         if self.records is None:
             return None
@@ -1108,7 +1149,7 @@ class DomainSymbol(BaseSymbol):
         return dvobjs
 
     def _findDomainViolations(
-        self: Set | Parameter | Variable | Equation,
+        self,
     ) -> pd.DataFrame | None:
         if self.records is None:
             return None
@@ -1127,7 +1168,7 @@ class DomainSymbol(BaseSymbol):
 
         return self.records.loc[pd.Index([]), :]
 
-    def _dropDomainViolations(self: Set | Parameter | Variable | Equation) -> None:
+    def _dropDomainViolations(self) -> None:
         if self.records is None:
             return None
 
@@ -1135,12 +1176,12 @@ class DomainSymbol(BaseSymbol):
         self.records.drop(index=violations.index, inplace=True)  # ty: ignore[unresolved-attribute]
 
     @property
-    def domain_type(self: SymbolWithRecordsType):
+    def domain_type(self) -> str:
         """State of the domain links"""
         return self._domain_status.name
 
     @property
-    def _domain_status(self: SymbolWithRecordsType):
+    def _domain_status(self) -> DomainStatus:
         AnyContainerDomainSymbol = (gp.Set, gp.Alias, gp.UniverseAlias)
 
         if (
@@ -1153,7 +1194,7 @@ class DomainSymbol(BaseSymbol):
 
         return DomainStatus.relaxed
 
-    def _assert_valid_records(self: Set | Parameter | Variable | Equation):
+    def _assert_valid_records(self) -> None:
         if self.records is None:
             return None
 
@@ -1166,7 +1207,7 @@ class DomainSymbol(BaseSymbol):
                     "Cannot write symbol until domain labels have been been restored."
                 )
 
-    def getSparsity(self: SymbolWithRecordsType) -> float:
+    def getSparsity(self) -> float:
         """
         Calculates the sparsity of the symbol's records.
 
@@ -1233,11 +1274,11 @@ def _special_value_predicate(value: float) -> Callable[[Any], np.ndarray | np.bo
     raise ValidationError("Unknown special value detected")
 
 
-class RecordSymbol(DomainSymbol):
+class NumericSymbol(DataSymbol):
     """Base class for Parameter, Variable, and Equation."""
 
     @property
-    def shape(self: Parameter | Variable | Equation) -> tuple[int, ...]:
+    def shape(self) -> tuple[int, ...]:
         """
         Number of UELs that are actually used in every dimension of the symbol.
 
@@ -1266,7 +1307,7 @@ class RecordSymbol(DomainSymbol):
         )
 
     @property
-    def is_scalar(self: Parameter | Variable | Equation) -> bool:
+    def is_scalar(self) -> bool:
         """
         Returns True if the len(self.domain) = 0
 
@@ -1278,12 +1319,10 @@ class RecordSymbol(DomainSymbol):
         return self.dimension == 0
 
     @property
-    def _default_attribute(self: Parameter | Variable | Equation) -> str:
+    def _default_attribute(self) -> str:
         return self._attributes[0]
 
-    def _validate_column(
-        self: Parameter | Variable | Equation, column: str | None
-    ) -> str:
+    def _validate_column(self, column: str | None) -> str:
         if column is None:
             return self._default_attribute
 
@@ -1299,9 +1338,7 @@ class RecordSymbol(DomainSymbol):
 
         return column
 
-    def _validate_columns(
-        self: Parameter | Variable | Equation, columns: str | list[str] | None
-    ) -> list[str]:
+    def _validate_columns(self, columns: str | list[str] | None) -> list[str]:
         """Resolve ``columns`` to a non-empty list of existing attribute columns."""
         if columns is None:
             return [self._default_attribute]
@@ -1312,7 +1349,7 @@ class RecordSymbol(DomainSymbol):
             )
 
         if isinstance(columns, str):
-            return [self._validate_column(columns)]
+            columns = [columns]
 
         if not columns:
             raise ValidationError("Argument 'columns' must not be empty.")
@@ -1328,9 +1365,7 @@ class RecordSymbol(DomainSymbol):
 
         return columns
 
-    def _getDimensionCodes(
-        self: Parameter | Variable | Equation, records: pd.DataFrame, dimension: int
-    ) -> np.ndarray:
+    def _getDimensionCodes(self, records: pd.DataFrame, dimension: int) -> np.ndarray:
         if self._domain_status is DomainStatus.regular:
             domain = cast("list[Set | Alias]", self.domain)
             domain_records = domain[dimension].records
@@ -1357,8 +1392,56 @@ class RecordSymbol(DomainSymbol):
 
         return records.iloc[:, dimension].cat.codes.to_numpy(dtype=int)
 
+    def _toDense(self, column: str, default: float) -> np.ndarray:
+        if self.records is None:
+            return np.full(self.shape, default, dtype=float)
+
+        if self.domain_type == "regular":
+            for symobj in cast("list[Set | Alias]", self.domain):
+                if symobj.records is None:
+                    raise ValidationError(
+                        f"The domain element `{symobj.name}` of `{self.name}` has no records. The domain symbols need to have records to get the dense representation."
+                    )
+
+                data_cats = symobj.records.iloc[:, 0].unique().tolist()
+                cats = symobj.records.iloc[:, 0].cat.categories.tolist()
+
+                if data_cats != cats[: len(data_cats)]:
+                    raise ValidationError(
+                        f"`toDense` requires that UEL data order of domain set `{symobj.name}` must be "
+                        "equal be equal to UEL category order (i.e., the order that set elements "
+                        "appear in rows of the dataframe and the order set elements are specified by the categorical). "
+                    )
+        else:
+            for n in range(self.dimension):
+                if (self.records.iloc[:, n].cat.codes.to_numpy() == -1).any():
+                    raise ValidationError(
+                        f"Invalid category detected in dimension `{n}` (code == -1), "
+                        "cannot create array until all categories are properly resolved"
+                    )
+
+                data_cats = self.records.iloc[:, n].unique().tolist()
+                cats = self.records.iloc[:, n].cat.categories.tolist()
+
+                if data_cats != cats[: len(data_cats)]:
+                    raise ValidationError(
+                        "`toDense` requires (for 'relaxed' symbols) that UEL data order must be "
+                        "equal be equal to UEL category order (i.e., the order that set elements "
+                        "appear in rows of the dataframe and the order set elements are specified by the categorical). "
+                    )
+
+        idx = [
+            self._getDimensionCodes(self.records, dimension)
+            for dimension in range(self.dimension)
+        ]
+
+        a = np.full(self.shape, default, dtype=float)
+        a[tuple(idx)] = self.records.loc[:, column].to_numpy(dtype=float)
+
+        return a
+
     def _getCooIndices(
-        self: Parameter | Variable | Equation, records: pd.DataFrame
+        self, records: pd.DataFrame
     ) -> tuple[np.ndarray, np.ndarray, tuple[int, int]]:
         """Row and column position of every record, together with the matrix shape."""
         if self.is_scalar:
@@ -1376,9 +1459,7 @@ class RecordSymbol(DomainSymbol):
         m, n = self.shape
         return rows, columns, (m, n)
 
-    def _toSparseCoo(
-        self: Parameter | Variable | Equation, column: str
-    ) -> coo_matrix | None:
+    def _toSparseCoo(self, column: str) -> coo_matrix | None:
         from scipy.sparse import coo_matrix
 
         records = self.records
@@ -1399,9 +1480,7 @@ class RecordSymbol(DomainSymbol):
             dtype=float,
         )
 
-    def findEps(
-        self: Parameter | Variable | Equation, column: str | None = None
-    ) -> pd.DataFrame | None:
+    def findEps(self, column: str | None = None) -> pd.DataFrame | None:
         """
         Records whose ``column`` holds the GAMS special value EPS.
 
@@ -1428,9 +1507,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self.findSpecialValues(SpecialValues.EPS, column=column)
 
-    def findNA(
-        self: Parameter | Variable | Equation, column: str | None = None
-    ) -> pd.DataFrame | None:
+    def findNA(self, column: str | None = None) -> pd.DataFrame | None:
         """
         Records whose ``column`` holds the GAMS special value NA.
 
@@ -1457,9 +1534,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self.findSpecialValues(SpecialValues.NA, column=column)
 
-    def findUndef(
-        self: Parameter | Variable | Equation, column: str | None = None
-    ) -> pd.DataFrame | None:
+    def findUndef(self, column: str | None = None) -> pd.DataFrame | None:
         """
         Records whose ``column`` holds the GAMS special value UNDEF.
 
@@ -1486,9 +1561,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self.findSpecialValues(SpecialValues.UNDEF, column=column)
 
-    def findPosInf(
-        self: Parameter | Variable | Equation, column: str | None = None
-    ) -> pd.DataFrame | None:
+    def findPosInf(self, column: str | None = None) -> pd.DataFrame | None:
         """
         Records whose ``column`` holds positive infinity.
 
@@ -1515,9 +1588,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self.findSpecialValues(SpecialValues.POSINF, column=column)
 
-    def findNegInf(
-        self: Parameter | Variable | Equation, column: str | None = None
-    ) -> pd.DataFrame | None:
+    def findNegInf(self, column: str | None = None) -> pd.DataFrame | None:
         """
         Records whose ``column`` holds negative infinity.
 
@@ -1545,7 +1616,7 @@ class RecordSymbol(DomainSymbol):
         return self.findSpecialValues(SpecialValues.NEGINF, column=column)
 
     def findSpecialValues(
-        self: Parameter | Variable | Equation,
+        self,
         values: float | Sequence[float],
         column: str | None = None,
     ) -> pd.DataFrame | None:
@@ -1617,9 +1688,7 @@ class RecordSymbol(DomainSymbol):
 
         return records.loc[mask]
 
-    def countNA(
-        self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> int:
+    def countNA(self, columns: str | list[str] | None = None) -> int:
         """
         Number of GAMS NA values across ``columns``.
 
@@ -1646,9 +1715,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self._countSpecialValues(SpecialValues.NA, columns=columns)
 
-    def countEps(
-        self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> int:
+    def countEps(self, columns: str | list[str] | None = None) -> int:
         """
         Number of GAMS EPS values across ``columns``.
 
@@ -1675,9 +1742,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self._countSpecialValues(SpecialValues.EPS, columns=columns)
 
-    def countUndef(
-        self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> int:
+    def countUndef(self, columns: str | list[str] | None = None) -> int:
         """
         Number of GAMS UNDEF values across ``columns``.
 
@@ -1704,9 +1769,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self._countSpecialValues(SpecialValues.UNDEF, columns=columns)
 
-    def countPosInf(
-        self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> int:
+    def countPosInf(self, columns: str | list[str] | None = None) -> int:
         """
         Number of positive infinities across ``columns``.
 
@@ -1733,9 +1796,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self._countSpecialValues(SpecialValues.POSINF, columns=columns)
 
-    def countNegInf(
-        self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> int:
+    def countNegInf(self, columns: str | list[str] | None = None) -> int:
         """
         Number of negative infinities across ``columns``.
 
@@ -1763,7 +1824,7 @@ class RecordSymbol(DomainSymbol):
         return self._countSpecialValues(SpecialValues.NEGINF, columns=columns)
 
     def _countSpecialValues(
-        self: Parameter | Variable | Equation,
+        self,
         special_value: float,
         columns: str | list[str] | None,
     ) -> int:
@@ -1785,9 +1846,7 @@ class RecordSymbol(DomainSymbol):
             for column in validated
         )
 
-    def whereMax(
-        self: Parameter | Variable | Equation, column: str | None = None
-    ) -> list[str] | None:
+    def whereMax(self, column: str | None = None) -> list[str] | None:
         """
         Domain of the record holding the largest value of ``column``.
 
@@ -1815,9 +1874,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self._whereMetric("max", column=column)
 
-    def whereMaxAbs(
-        self: Parameter | Variable | Equation, column: str | None = None
-    ) -> list[str] | None:
+    def whereMaxAbs(self, column: str | None = None) -> list[str] | None:
         """
         Domain of the record holding the largest magnitude of ``column``.
 
@@ -1846,9 +1903,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self._whereMetric("absmax", column=column)
 
-    def whereMin(
-        self: Parameter | Variable | Equation, column: str | None = None
-    ) -> list[str] | None:
+    def whereMin(self, column: str | None = None) -> list[str] | None:
         """
         Domain of the record holding the smallest value of ``column``.
 
@@ -1877,7 +1932,7 @@ class RecordSymbol(DomainSymbol):
         return self._whereMetric("min", column=column)
 
     def _whereMetric(
-        self: Parameter | Variable | Equation,
+        self,
         metric: Literal["max", "min", "absmax"],
         column: str | None,
     ) -> list[str] | None:
@@ -1904,9 +1959,7 @@ class RecordSymbol(DomainSymbol):
         # that `records.iloc[position, :dimension]` would need first.
         return [records.iat[position, dim] for dim in range(dimension)]
 
-    def getMaxValue(
-        self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> float | None:
+    def getMaxValue(self, columns: str | list[str] | None = None) -> float | None:
         """
         Largest value found in ``columns``.
 
@@ -1934,9 +1987,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self._getMetric("max", columns=columns)
 
-    def getMinValue(
-        self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> float | None:
+    def getMinValue(self, columns: str | list[str] | None = None) -> float | None:
         """
         Smallest value found in ``columns``.
 
@@ -1964,9 +2015,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self._getMetric("min", columns=columns)
 
-    def getMeanValue(
-        self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> float | None:
+    def getMeanValue(self, columns: str | list[str] | None = None) -> float | None:
         """
         Mean of the values found in ``columns``.
 
@@ -1998,9 +2047,7 @@ class RecordSymbol(DomainSymbol):
         """
         return self._getMetric("mean", columns=columns)
 
-    def getMaxAbsValue(
-        self: Parameter | Variable | Equation, columns: str | list[str] | None = None
-    ) -> float | None:
+    def getMaxAbsValue(self, columns: str | list[str] | None = None) -> float | None:
         """
         Largest magnitude found in ``columns``.
 
@@ -2029,7 +2076,7 @@ class RecordSymbol(DomainSymbol):
         return self._getMetric("absmax", columns=columns)
 
     def _getMetric(
-        self: Parameter | Variable | Equation,
+        self,
         metric: Literal["max", "min", "mean", "absmax"],
         columns: str | list[str] | None,
     ) -> float | None:
@@ -2059,10 +2106,18 @@ class RecordSymbol(DomainSymbol):
         return float("nan") if pd.isna(result) else float(result)
 
 
-class VarEquSymbol(RecordSymbol):
+class VarEquSymbol(NumericSymbol):
     """Base class for Variable and Equation."""
 
     _attribute_slots: ClassVar[dict[str, str]]
+
+    @property
+    @abstractmethod
+    def _default_records(self) -> dict[str, float]: ...
+
+    @property
+    @abstractmethod
+    def type(self) -> str: ...
 
     def _create_attr(self: Variable | Equation, attr_name: str) -> ImplicitParameter:
         import gamspy._symbols.implicits as implicits
@@ -2077,24 +2132,24 @@ class VarEquSymbol(RecordSymbol):
         for suffix, slot in self._attribute_slots.items():
             setattr(self, slot, self._create_attr(suffix))
 
-    def _update_attr_domains(self: Variable | Equation) -> None:
+    def _update_attr_domains(self) -> None:
         for suffix, slot in self._attribute_slots.items():
             getattr(self, slot).__init__(
                 self, name=f"{self.name}.{suffix}", domain=self.domain
             )
 
-    def _deserialize(self: Variable | Equation, info: dict) -> None:
+    def _deserialize(self, info: dict) -> None:
         super()._deserialize(info)
 
         # Refresh the domains of the attributes
         self._update_attr_domains()
 
     @property
-    def _attributes(self):
-        return ["level", "marginal", "lower", "upper", "scale"]
+    def _attributes(self) -> list[str]:
+        return list(VAR_EQU_ATTRIBUTES)
 
     @property
-    def summary(self: Variable | Equation):
+    def summary(self) -> dict:
         return {
             "name": self.name,
             "description": self.description,
@@ -2105,7 +2160,7 @@ class VarEquSymbol(RecordSymbol):
             "number_records": self.number_records,
         }
 
-    def dropDefaults(self: Variable | Equation) -> None:
+    def dropDefaults(self) -> None:
         """
         Drops records from the symbol that are equal to their default values.
 
@@ -2126,7 +2181,7 @@ class VarEquSymbol(RecordSymbol):
         )
         self.records = self.records[~mask].reset_index(drop=True)
 
-    def dropNA(self: Variable | Equation) -> None:
+    def dropNA(self) -> None:
         """
         Drops records from the symbol that contain NA (Not Available) values.
 
@@ -2139,7 +2194,7 @@ class VarEquSymbol(RecordSymbol):
         mask = SpecialValues.isNA(self.records[self._attributes]).any(axis=1)
         self.records = self.records[~mask].reset_index(drop=True)
 
-    def dropUndef(self: Variable | Equation) -> None:
+    def dropUndef(self) -> None:
         """
         Drops records from the symbol that contain UNDEF (Undefined) values.
 
@@ -2152,7 +2207,7 @@ class VarEquSymbol(RecordSymbol):
         mask = SpecialValues.isUndef(self.records[self._attributes]).any(axis=1)
         self.records = self.records[~mask].reset_index(drop=True)
 
-    def dropEps(self: Variable | Equation) -> None:
+    def dropEps(self) -> None:
         """
         Drops records from the symbol that contain EPS (Epsilon) values.
 
@@ -2165,7 +2220,7 @@ class VarEquSymbol(RecordSymbol):
         mask = SpecialValues.isEps(self.records[self._attributes]).any(axis=1)
         self.records = self.records[~mask].reset_index(drop=True)
 
-    def dropMissing(self: Variable | Equation) -> None:
+    def dropMissing(self) -> None:
         """
         Drops records from the symbol that contain missing (NaN) values.
 
@@ -2178,7 +2233,7 @@ class VarEquSymbol(RecordSymbol):
         mask = pd.isna(self.records[self._attributes]).any(axis=1)
         self.records = self.records[~mask].reset_index(drop=True)
 
-    def toValue(self: Variable | Equation, column: str | None = None) -> float:
+    def toValue(self, column: str | None = None) -> float:
         """
         Returns the numerical value of a specified attribute for a scalar symbol.
 
@@ -2212,9 +2267,7 @@ class VarEquSymbol(RecordSymbol):
 
         return toValueVariableEquation(self, column=column)
 
-    def toList(
-        self: Variable | Equation, columns: str | list[str] | None = None
-    ) -> list:
+    def toList(self, columns: str | list[str] | None = None) -> list:
         """
         Converts the specified attributes of the symbol records to a Python list.
 
@@ -2249,7 +2302,7 @@ class VarEquSymbol(RecordSymbol):
         return toListVariableEquation(self, columns=columns)
 
     def toDict(
-        self: Variable | Equation,
+        self,
         columns: str | list[str] | None = None,
         orient: str | None = None,
     ) -> dict:
@@ -2293,7 +2346,9 @@ class VarEquSymbol(RecordSymbol):
         return toDictVariableEquation(self, columns=columns, orient=orient)
 
     def _setRecords(
-        self: Variable | Equation, records, uels_on_axes: bool = False
+        self: Variable | Equation,
+        records: VarEquRecordsType,
+        uels_on_axes: bool = False,
     ) -> None:
         VarEquIngestor(self).ingest(records, uels_on_axes=uels_on_axes)
         self._handle_domain_violations()
@@ -2426,9 +2481,7 @@ class VarEquSymbol(RecordSymbol):
         """
         return equals_variable(self, other, columns, check_meta_data, rtol, atol)
 
-    def toSparseCoo(
-        self: Variable | Equation, column: str = "level"
-    ) -> coo_matrix | None:
+    def toSparseCoo(self, column: str = "level") -> coo_matrix | None:
         """
         Converts a specified attribute column of the symbol's records to a SciPy sparse
         COOrdinate format (coo_matrix).
@@ -2471,7 +2524,7 @@ class VarEquSymbol(RecordSymbol):
         """
         return self._toSparseCoo(self._validate_column(column))
 
-    def toDense(self: Variable | Equation, column: str = "level") -> np.ndarray:
+    def toDense(self, column: str = "level") -> np.ndarray:
         """
         Convert column to a dense numpy.array format
 
@@ -2485,66 +2538,9 @@ class VarEquSymbol(RecordSymbol):
         np.ndarray
             A column to a dense numpy.array format
         """
-        if not isinstance(column, str):
-            raise TypeError("Argument 'column' must be type str")
+        column = self._validate_column(column)
 
-        if column not in self._attributes:
-            raise TypeError(
-                f"Argument 'column' must be one of the following: {self._attributes}"
-            )
-
-        if self.records is None:
-            return np.full(self.shape, self._default_records[column])
-
-        if self.is_scalar:
+        if self.is_scalar and self.records is not None:
             return self.records.loc[:, column].to_numpy(dtype=float)[0]
 
-        if self.domain_type == "regular":
-            # check order of domain UELs in categorical and order of domain UELs in data
-            for symobj in cast("list[Set | Alias]", self.domain):
-                if symobj.records is None:
-                    raise ValidationError(
-                        f"The domain element `{symobj.name}` of `{self.name}` has no records. The domain symbols need to have records to get the dense representation."
-                    )
-
-                data_cats = symobj.records.iloc[:, 0].unique().tolist()
-                cats = symobj.records.iloc[:, 0].cat.categories.tolist()
-
-                if data_cats != cats[: len(data_cats)]:
-                    raise ValidationError(
-                        f"`toDense` requires that UEL data order of domain set `{symobj.name}` must be "
-                        "equal be equal to UEL category order (i.e., the order that set elements "
-                        "appear in rows of the dataframe and the order set elements are specified by the categorical). "
-                    )
-        else:
-            # check order of domain UELs in categorical and order of domain UELs in data
-            for n in range(self.dimension):
-                # check if any invalid codes
-                if any(code == -1 for code in self.records.iloc[:, n].cat.codes):
-                    raise ValidationError(
-                        f"Invalid category detected in dimension `{n}` (code == -1), "
-                        "cannot create array until all categories are properly resolved"
-                    )
-
-                data_cats = self.records.iloc[:, n].unique().tolist()
-                cats = self.records.iloc[:, n].cat.categories.tolist()
-
-                if data_cats != cats[: len(data_cats)]:
-                    raise ValidationError(
-                        "`toDense` requires (for 'relaxed' symbols) that UEL data order must be "
-                        "equal be equal to UEL category order (i.e., the order that set elements "
-                        "appear in rows of the dataframe and the order set elements are specified by the categorical). "
-                    )
-
-        # create indexing scheme
-        idx = [
-            self._getDimensionCodes(self.records, dimension)
-            for dimension in range(self.dimension)
-        ]
-
-        # fill the dense array, missing records take the default value of the attribute
-        a = np.full(self.shape, self._default_records[column], dtype=float)
-        val = self.records.loc[:, column].to_numpy(dtype=float)
-        a[tuple(idx)] = val
-
-        return a
+        return self._toDense(column, self._default_records[column])

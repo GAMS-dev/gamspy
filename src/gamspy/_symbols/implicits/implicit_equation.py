@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy._internals import VAR_EQU_ATTRIBUTE_SUFFIXES
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
@@ -40,7 +41,7 @@ class ImplicitEquation(ImplicitSymbol):
         return f"ImplicitEquation(parent={self.parent}, name='{self.name}', domain={self.domain}, type={self.type})"
 
     @property
-    def l(self):
+    def l(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.l.name,
@@ -49,12 +50,12 @@ class ImplicitEquation(ImplicitSymbol):
         )
 
     @l.setter
-    def l(self, value: int | float | Expression):
+    def l(self, value: int | float | Expression) -> None:
         # b[t].l = 30 -> b.l[t] = 30
-        self.parent.l[self.domain] = value
+        self.l[...] = value
 
     @property
-    def m(self):
+    def m(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.m.name,
@@ -63,12 +64,12 @@ class ImplicitEquation(ImplicitSymbol):
         )
 
     @m.setter
-    def m(self, value: int | float | Expression):
+    def m(self, value: int | float | Expression) -> None:
         # b[t].m = 30 -> b.m[t] = 30
-        self.parent.m[self.domain] = value
+        self.m[...] = value
 
     @property
-    def lo(self):
+    def lo(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.lo.name,
@@ -77,12 +78,12 @@ class ImplicitEquation(ImplicitSymbol):
         )
 
     @lo.setter
-    def lo(self, value: int | float | Expression):
+    def lo(self, value: int | float | Expression) -> None:
         # b[t].lo = 30 -> b.lo[t] = 30
-        self.parent.lo[self.domain] = value
+        self.lo[...] = value
 
     @property
-    def up(self):
+    def up(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.up.name,
@@ -91,12 +92,12 @@ class ImplicitEquation(ImplicitSymbol):
         )
 
     @up.setter
-    def up(self, value: int | float | Expression):
+    def up(self, value: int | float | Expression) -> None:
         # b[t].up = 30 -> b.up[t] = 30
-        self.parent.up[self.domain] = value
+        self.up[...] = value
 
     @property
-    def scale(self):
+    def scale(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.scale.name,
@@ -105,12 +106,12 @@ class ImplicitEquation(ImplicitSymbol):
         )
 
     @scale.setter
-    def scale(self, value: int | float | Expression):
+    def scale(self, value: int | float | Expression) -> None:
         # b[t].scale = 30 -> b.scale[t] = 30
-        self.parent.scale[self.domain] = value
+        self.scale[...] = value
 
     @property
-    def stage(self):
+    def stage(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.stage.name,
@@ -119,24 +120,24 @@ class ImplicitEquation(ImplicitSymbol):
         )
 
     @stage.setter
-    def stage(self, value: int | float | Expression):
+    def stage(self, value: int | float | Expression) -> None:
         # b[t].stage = 30 -> b.stage[t] = 30
-        self.parent.stage[self.domain] = value
+        self.stage[...] = value
 
     @property
-    def range(self):
+    def range(self) -> implicits.ImplicitParameter:
         return self.parent.range
 
     @property
-    def slacklo(self):
+    def slacklo(self) -> implicits.ImplicitParameter:
         return self.parent.slacklo
 
     @property
-    def slackup(self):
+    def slackup(self) -> implicits.ImplicitParameter:
         return self.parent.slackup
 
     @property
-    def slack(self):
+    def slack(self) -> implicits.ImplicitParameter:
         return self.parent.slack
 
     @property
@@ -144,16 +145,14 @@ class ImplicitEquation(ImplicitSymbol):
         if self.parent.records is None:
             return None
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, self.parent.domain
-        )
         domain = list(self.domain)
         for i, d in self._scalar_domains:
             domain.insert(i, d)
 
-        temp_param[domain] = self.l
-        del self.container._data[temp_name]
+        with self.container._temp_symbol(
+            syms.Parameter, self.parent.domain
+        ) as temp_param:
+            temp_param[domain] = self.l
 
         recs = temp_param.records
         if recs is not None:
@@ -198,23 +197,8 @@ class ImplicitEquation(ImplicitSymbol):
         [2. 5.]
 
         """
-        if not isinstance(column, str):
-            raise TypeError("Argument 'column' must be type str")
-
-        columns = {
-            "level": "l",
-            "marginal": "m",
-            "lower": "lo",
-            "upper": "up",
-            "scale": "scale",
-        }
-
-        if column not in columns:
-            raise TypeError(
-                f"Argument 'column' must be one of the following: {list(columns)}"
-            )
-
-        return getattr(self, columns[column]).toDense()
+        column = self.parent._validate_column(column)
+        return getattr(self, VAR_EQU_ATTRIBUTE_SUFFIXES[column]).toDense()
 
     def toValue(self, column: str = "level") -> float:
         """
@@ -253,23 +237,8 @@ class ImplicitEquation(ImplicitSymbol):
         np.float64(2.0)
 
         """
-        if not isinstance(column, str):
-            raise TypeError("Argument 'column' must be type str")
-
-        columns = {
-            "level": "l",
-            "marginal": "m",
-            "lower": "lo",
-            "upper": "up",
-            "scale": "scale",
-        }
-
-        if column not in columns:
-            raise TypeError(
-                f"Argument 'column' must be one of the following: {list(columns)}"
-            )
-
-        return getattr(self, columns[column]).toValue()
+        column = self.parent._validate_column(column)
+        return getattr(self, VAR_EQU_ATTRIBUTE_SUFFIXES[column]).toValue()
 
     def toList(self, columns: str | list[str] | None = None) -> list:
         """
@@ -310,12 +279,7 @@ class ImplicitEquation(ImplicitSymbol):
             return []
 
         domain = list(self.domain)
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_eqn = syms.Equation._constructor_bypass(
-            self.container, temp_name, domain=domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Equation, domain) as temp_eqn:
             index = domain if domain else [...]
             temp_eqn.l[index] = self.l
             temp_eqn.m[index] = self.m
@@ -323,8 +287,6 @@ class ImplicitEquation(ImplicitSymbol):
             temp_eqn.up[index] = self.up
             temp_eqn.scale[index] = self.scale
             return temp_eqn.toList(columns)
-        finally:
-            del self.container._data[temp_name]
 
     def gamsRepr(self) -> str:
         representation = f"{self.name}"

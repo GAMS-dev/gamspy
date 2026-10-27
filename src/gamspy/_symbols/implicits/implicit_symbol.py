@@ -5,7 +5,10 @@ from typing import TYPE_CHECKING, Any, no_type_check
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
+import gamspy._algebra.expression as expression
+import gamspy._validation as validation
 import gamspy.utils as utils
+from gamspy._notation import LATEX, UNICODE
 from gamspy._universe import is_universe, is_universe_domain
 from gamspy.exceptions import ValidationError
 
@@ -22,12 +25,13 @@ if TYPE_CHECKING:
         Sor,
         Sum,
     )
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import (
         ImplicitParameter,
         ImplicitSet,
         ImplicitVariable,
     )
-    from gamspy._types import ImplicitSymbolType
+    from gamspy._types import ImplicitSymbolType, IndexType, ValidatedIndexType
 
 
 class ImplicitSymbol(ABC):
@@ -59,11 +63,10 @@ class ImplicitSymbol(ABC):
 
         self.fix_domain_scalars(parent_scalar_domains)
 
-    @property
-    def _latex_name(self: ImplicitSymbolType) -> str:
-        return self.parent._latex_name
+    def _math_name(self: ImplicitSymbolType, notation: Notation) -> str:
+        return self.parent._math_name(notation)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         raise ValidationError("A symbol cannot be used as a truth value.")
 
     def __len__(self: ImplicitSymbolType) -> int:
@@ -103,7 +106,7 @@ class ImplicitSymbol(ABC):
         self._scalar_domains = scalars
 
     @no_type_check
-    def fix_permutation(self):
+    def fix_permutation(self) -> None:
         numbers_pos = list(
             zip(self.permutation, range(len(self.permutation)), strict=False)
         )
@@ -113,6 +116,41 @@ class ImplicitSymbol(ABC):
             new_perm[pos] = i
 
         self.permutation = new_perm
+
+    def _reindex(
+        self: ImplicitSet | ImplicitParameter | ImplicitVariable, indices: IndexType
+    ) -> list[ValidatedIndexType]:
+        domain = validation.validate_domain(self, indices)
+        for elem in self.domain:
+            if isinstance(elem, expression.ShiftExpression):
+                break
+        else:
+            return domain
+
+        position = 0
+        for i, index in enumerate(domain):
+            width = getattr(index, "dimension", 1)
+            replaced = self.domain[position : position + width]
+            position += width
+
+            shifts = [
+                elem
+                for elem in replaced
+                if isinstance(elem, expression.ShiftExpression)
+            ]
+            if not shifts or (width == 1 and index is shifts[0]):
+                continue
+
+            if width != 1 or not isinstance(index, (gp.Set, gp.Alias)):
+                raise ValidationError(
+                    f"`{shifts[0].gamsRepr()}` in `{self.gamsRepr()}` can only be"
+                    " re-indexed with a set or an alias."
+                )
+
+            shift = shifts[0]
+            domain[i] = expression.ShiftExpression(index, shift.operator, shift.jump)
+
+        return domain
 
     @property
     def dimension(self: ImplicitSymbolType) -> int:
@@ -141,7 +179,7 @@ class ImplicitSymbol(ABC):
         return given_domain, declaration_domain
 
     @abstractmethod
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         """Representation of the implicit symbol in GAMS"""
 
     def _reference_domain(self: ImplicitSymbolType) -> list:
@@ -157,21 +195,60 @@ class ImplicitSymbol(ABC):
         return domain
 
     def latexRepr(self: ImplicitSymbolType) -> str:
-        representation = self._latex_name
+        r"""
+        Representation of this symbol in Latex.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> x = gp.Variable(m, "x", domain=i)
+        >>> print(x.l[i].latexRepr())
+        {x}^{\mathrm{l}}_{i}
+
+        """
+        return self._math_repr(LATEX)
+
+    def unicodeRepr(self: ImplicitSymbolType) -> str:
+        """
+        Representation of this symbol in mathematical notation with Unicode
+        characters.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> x = gp.Variable(m, "x", domain=i)
+        >>> print(x.l[i].unicodeRepr())
+        x.l[i]
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(self: ImplicitSymbolType, notation: Notation) -> str:
+        representation = self._math_name(notation)
         domain = self._reference_domain()
         if domain:
             set_strs = []
             for elem in domain:
                 if isinstance(elem, utils._get_domain_element_types()):
-                    set_strs.append(elem.latexRepr())
+                    set_strs.append(elem._math_repr(notation))
                 elif is_universe(elem):
-                    set_strs.append(r"\text{`*'}")
+                    set_strs.append(notation.quoted("*"))
                 elif isinstance(elem, str):
-                    elem = elem.replace("_", r"\_")
-                    set_strs.append(f"\\text{{`{elem}'}}")
+                    set_strs.append(notation.quoted(elem))
 
-            domain_str = "{" + ",".join(set_strs) + "}"
-            representation = f"{representation}_{domain_str}"
+            representation = notation.indexed(representation, set_strs)
 
         return representation
 

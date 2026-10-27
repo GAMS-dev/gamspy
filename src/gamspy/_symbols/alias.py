@@ -78,7 +78,6 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
 
         # gamspy attributes
         obj.where = condition.Condition(obj)
-        obj._latex_name = name.replace("_", r"\_")
         obj.container._add_statement(obj)
         obj._metadata = {}
         obj._assignment = None
@@ -104,7 +103,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         container: Container | None = None,
         name: str | None = None,
         alias_with: Set | Alias = None,  # ty: ignore[invalid-parameter-default]
-    ):
+    ) -> None:
         self._metadata: dict[str, Any] = {}
         self._assignment: Expression | None = None
 
@@ -119,7 +118,6 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         self._container._data.update({name: self})
 
         # gamspy attributes
-        self._latex_name = self.name.replace("_", r"\_")
         self.where = condition.Condition(self)
         self._container._add_statement(self)
 
@@ -156,7 +154,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
 
             setattr(self, key, value)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         raise ValidationError(
             "Alias cannot be used as a truth value. Use len(<symbol>.records) instead."
         )
@@ -164,7 +162,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
     def __repr__(self) -> str:
         return f"Alias(name='{self.name}', alias_with={self.alias_with})"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def __getitem__(self, indices: IndexType) -> ImplicitSet:
@@ -195,7 +193,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         | bool
         | str
         | SparseAssignment,
-    ):
+    ) -> None:
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
         assign(
@@ -218,7 +216,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         return self.alias_with.records
 
     @records.setter
-    def records(self, records):
+    def records(self, records: pd.DataFrame | None) -> None:
         self.alias_with.records = records
 
     def equals(
@@ -370,7 +368,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
     ) -> None:
         return self.alias_with._removeUELs(uels=uels, dimensions=dimensions)
 
-    def _assert_valid_records(self):
+    def _assert_valid_records(self) -> None:
         self.alias_with._assert_valid_records()
 
     @property
@@ -386,7 +384,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         return self._alias_with
 
     @staticmethod
-    def _resolve_target(alias_with: Any) -> Set:
+    def _resolve_target(alias_with: Set | Alias | None) -> Set | None:
         """Follow an Alias chain down to the root Set it ultimately aliases."""
         target = alias_with
         while isinstance(target, Alias):
@@ -507,7 +505,7 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         return self.alias_with.domain_labels
 
     @domain_labels.setter
-    def domain_labels(self, labels):
+    def domain_labels(self, labels: list[str] | str) -> None:
         self.alias_with.domain_labels = labels
 
     @property

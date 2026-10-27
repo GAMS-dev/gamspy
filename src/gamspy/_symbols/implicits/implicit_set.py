@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
-import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy._universe import UNIVERSE, is_universe_domain
@@ -19,7 +18,8 @@ if TYPE_CHECKING:
 
     from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
-    from gamspy._types import ValidatedIndexType
+    from gamspy._notation import Notation
+    from gamspy._types import OperableType, ValidatedIndexType
 
 
 class ImplicitSet(ImplicitSymbol, operable.Operable):
@@ -46,10 +46,10 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
 
         super().__init__(name, domain, parent_scalar_domains=scalar_domains)
 
-    def __ge__(self, other) -> Expression:
+    def __ge__(self, other: OperableType) -> Expression:
         return expression.Expression(self, ">=", other)
 
-    def __le__(self, other) -> Expression:
+    def __le__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "<=", other)
 
     def __repr__(self) -> str:
@@ -58,7 +58,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
     def __getitem__(
         self, indices: Sequence | str | EllipsisType | slice
     ) -> ImplicitSet:
-        domain = validation.validate_domain(self, indices)
+        domain = self._reindex(indices)
         return ImplicitSet(
             parent=self.parent,
             name=self.name,
@@ -71,17 +71,13 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         if self.parent.records is None:
             return None
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Set._constructor_bypass(
-            self.container, temp_name, self.parent.domain
-        )
         domain = list(self.domain)
         for i, d in self._scalar_domains:
             domain.insert(i, d)
 
-        temp_param[domain] = self
-        del self.container._data[temp_name]
-        return temp_param.records
+        with self.container._temp_symbol(syms.Set, self.parent.domain) as temp_set:
+            temp_set[domain] = self
+        return temp_set.records
 
     def toDense(self) -> np.ndarray:
         """
@@ -113,16 +109,9 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
 
         """
         domain = list(self.domain)
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Parameter, domain) as temp_param:
             temp_param[domain if domain else [...]] = self
             return temp_param.toDense()
-        finally:
-            del self.container._data[temp_name]
 
     def toValue(self) -> float:
         """
@@ -154,16 +143,9 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
 
         """
         domain = list(self.domain)
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Parameter, domain) as temp_param:
             temp_param[domain if domain else [...]] = self
             return temp_param.toValue()
-        finally:
-            del self.container._data[temp_name]
 
     def toList(self, *, include_element_text: bool = False) -> list:
         """
@@ -198,25 +180,19 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         if self.parent.records is None:
             return []
 
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_set = syms.Set._constructor_bypass(
-            self.container, temp_name, self.parent.domain
-        )
         domain = list(self.domain)
         for i, d in self._scalar_domains:
             domain.insert(i, d)
 
-        try:
+        with self.container._temp_symbol(syms.Set, self.parent.domain) as temp_set:
             temp_set[domain] = self
             return temp_set.toList(include_element_text=include_element_text)
-        finally:
-            del self.container._data[temp_name]
 
-    def latexRepr(self) -> str:
+    def _math_repr(self, notation: Notation) -> str:
         if is_universe_domain(self.domain):
-            return self._latex_name
+            return self._math_name(notation)
 
-        return super().latexRepr()
+        return super()._math_repr(notation)
 
     def gamsRepr(self) -> str:
         representation = self.name

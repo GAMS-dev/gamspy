@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 from gams.core.gdx import GMS_DT_PAR
@@ -8,16 +8,18 @@ from gams.core.gdx import GMS_DT_PAR
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
+import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
+import gamspy.math.misc as misc
 import gamspy.utils as utils
-from gamspy._internals import DataSource
+from gamspy._internals import PARAMETER_ATTRIBUTES, DataSource
 from gamspy._records_ingestion import ParameterIngestor
-from gamspy._symbols.base import RecordSymbol
+from gamspy._symbols.base import NumericSymbol
 from gamspy._symbols.equals import equals_parameter
 from gamspy._symbols.generate_records import generate_records_parameter
 from gamspy._symbols.pivot import pivot_parameter
-from gamspy._symbols.utils import assign
+from gamspy._symbols.utils import _quote_description, assign
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -26,7 +28,7 @@ if TYPE_CHECKING:
     import pandas as pd
     from scipy.sparse import coo_matrix
 
-    from gamspy import Alias, Card, Container, Ord, Set
+    from gamspy import Card, Container, Ord
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.number import Number
@@ -34,11 +36,16 @@ if TYPE_CHECKING:
     from gamspy._algebra.sparse import SparseAssignment
     from gamspy._extrinsic import ExtrinsicFunction
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
-    from gamspy._types import DomainType, IndexType, ParameterRecordsType
+    from gamspy._types import (
+        DomainType,
+        IndexType,
+        OperableType,
+        ParameterRecordsType,
+    )
     from gamspy.math.misc import MathOp
 
 
-class Parameter(operable.Operable, RecordSymbol):
+class Parameter(operable.Operable, NumericSymbol):
     """
     Represents a Parameter symbol in GAMS.
 
@@ -117,7 +124,7 @@ class Parameter(operable.Operable, RecordSymbol):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
         is_miro_table: bool = False,
-    ):
+    ) -> None:
         self._redefine_symbol(
             domain,
             domain_forwarding=domain_forwarding,
@@ -140,7 +147,7 @@ class Parameter(operable.Operable, RecordSymbol):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
         is_miro_table: bool = False,
-    ):
+    ) -> None:
         container, name = self._resolve_container_and_name(
             container,
             name,
@@ -161,7 +168,9 @@ class Parameter(operable.Operable, RecordSymbol):
         )
         self._init_records(records, uels_on_axes=uels_on_axes)
 
-    def _init_records(self, records: Any, *, uels_on_axes: bool) -> None:
+    def _init_records(
+        self, records: ParameterRecordsType | None, *, uels_on_axes: bool
+    ) -> None:
         if records is None:
             super()._init_records(records, uels_on_axes=uels_on_axes)
             return
@@ -195,7 +204,7 @@ class Parameter(operable.Operable, RecordSymbol):
         | Number
         | ExtrinsicFunction
         | SparseAssignment,
-    ):
+    ) -> None:
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
         assign(
@@ -205,20 +214,22 @@ class Parameter(operable.Operable, RecordSymbol):
             domain,
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         op = "eq"
         if isinstance(
             other,
             (
+                syms.Variable,
                 implicits.ImplicitVariable,
                 expression.Expression,
                 operation.Operation,
+                misc.MathOp,
             ),
         ):
             op = "=e="
         return expression.Expression(self, op, other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
     def __repr__(self) -> str:
@@ -263,8 +274,8 @@ class Parameter(operable.Operable, RecordSymbol):
         return _transpose(self, "Parameter")  # ty: ignore[invalid-return-type]
 
     @property
-    def _attributes(self):
-        return ["value"]
+    def _attributes(self) -> list[str]:
+        return list(PARAMETER_ATTRIBUTES)
 
     @property
     def summary(self) -> dict:
@@ -330,7 +341,7 @@ class Parameter(operable.Operable, RecordSymbol):
 
         return toListParameter(self)
 
-    def toDict(self, orient: str | None = None) -> dict | None:
+    def toDict(self, orient: str | None = None) -> dict:
         """
         Converts the records of a non-scalar Parameter to a Python dictionary.
 
@@ -344,8 +355,8 @@ class Parameter(operable.Operable, RecordSymbol):
 
         Returns
         -------
-        dict | None
-            A dictionary containing the parameter's data, or None if there are no records.
+        dict
+            A dictionary containing the parameter's data. Returns an empty dict if there are no records.
 
         Raises
         ------
@@ -420,56 +431,10 @@ class Parameter(operable.Operable, RecordSymbol):
         [3. 4. 5.]
 
         """
-        if self.records is None:
-            return np.zeros(self.shape, dtype=float)
-
-        if self.is_scalar:
+        if self.is_scalar and self.records is not None:
             return self.records.to_numpy(dtype=float).reshape(self.shape)
 
-        if self.domain_type == "regular":
-            for symobj in cast("list[Set | Alias]", self.domain):
-                if symobj.records is None:
-                    raise ValidationError(
-                        f"The domain element `{symobj.name}` of `{self.name}` has no records. The domain symbols need to have records to get the dense representation."
-                    )
-
-                data_cats = symobj.records.iloc[:, 0].unique().tolist()
-                cats = symobj.records.iloc[:, 0].cat.categories.tolist()
-
-                if data_cats != cats[: len(data_cats)]:
-                    raise ValidationError(
-                        f"`toDense` requires that UEL data order of domain set `{symobj.name}` must be "
-                        "equal be equal to UEL category order (i.e., the order that set elements "
-                        "appear in rows of the dataframe and the order set elements are specified by the categorical). "
-                    )
-        else:
-            for n in range(self.dimension):
-                if any(code == -1 for code in self.records.iloc[:, n].cat.codes):
-                    raise ValidationError(
-                        f"Invalid category detected in dimension `{n}` (code == -1), "
-                        "cannot create array until all categories are properly resolved"
-                    )
-
-                data_cats = self.records.iloc[:, n].unique().tolist()
-                cats = self.records.iloc[:, n].cat.categories.tolist()
-
-                if data_cats != cats[: len(data_cats)]:
-                    raise ValidationError(
-                        "`toDense` requires (for 'relaxed' symbols) that UEL data order must be "
-                        "equal be equal to UEL category order (i.e., the order that set elements "
-                        "appear in rows of the dataframe and the order set elements are specified by the categorical). "
-                    )
-
-        idx = [
-            self._getDimensionCodes(self.records, dimension)
-            for dimension in range(self.dimension)
-        ]
-
-        a = np.zeros(self.shape)
-        val = self.records.iloc[:, -1].to_numpy(dtype=float)
-        a[tuple(idx)] = val
-
-        return a
+        return self._toDense("value", 0.0)
 
     def pivot(
         self,
@@ -602,13 +567,15 @@ class Parameter(operable.Operable, RecordSymbol):
         return self._get_records()
 
     @records.setter
-    def records(self, records: pd.DataFrame | None):
+    def records(self, records: pd.DataFrame | None) -> None:
         self._assign_records(records)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
-    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+    def _setRecords(
+        self, records: ParameterRecordsType, *, uels_on_axes: bool = False
+    ) -> None:
         ParameterIngestor(self).ingest(records, uels_on_axes=uels_on_axes)
         self._handle_domain_violations()
 
@@ -707,7 +674,7 @@ class Parameter(operable.Operable, RecordSymbol):
         output = f"Parameter {self.gamsRepr()}"
 
         if self.description:
-            output += ' "' + self.description + '"'
+            output += " " + _quote_description(self.description)
 
         if self._records is None:
             output += " / /"

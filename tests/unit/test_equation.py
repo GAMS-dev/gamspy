@@ -1093,6 +1093,13 @@ def test_alternative_syntax():
     e[i].stage = 5
     assert e.getAssignment() == "e.stage(i) = 5;"
 
+    j = Set(m, "j", records=["j1", "j2"])
+    e2 = Equation(m, "e2", domain=[i, j])
+    e2["i1", j].m = 5
+    assert e2.getAssignment() == 'e2.m("i1",j) = 5;'
+    e2["i2", "j2"].l = 2
+    assert e2.getAssignment() == 'e2.l("i2","j2") = 2;'
+
 
 def test_equation_tolist():
     m = gp.Container()
@@ -1295,3 +1302,50 @@ def test_implicit_equation_toList():
 
     # The temporary parameters used internally must not leak into the container.
     assert set(m.data) == {"i", "j", "p", "v", "e", "f"}
+
+
+def test_nested_relation_in_definition():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    a = Parameter(m, "a", domain=i, records=[("i1", 2)])
+    x = Variable(m, "x", domain=i)
+    z = Variable(m, "z")
+
+    e = Equation(m, "e", domain=i)
+    e[i] = (a[i] >= 1) * x[i] == 2
+    assert e.getDefinition() == "e(i) .. (a(i) >= 1) * x(i) =e= 2;"
+
+    e[i] = x[i] - (a[i] <= 1) >= 0
+    assert e.getDefinition() == "e(i) .. x(i) - (a(i) <= 1) =g= 0;"
+
+    e[i] = x[i] == (a[i] >= 1)
+    assert e.getDefinition() == "e(i) .. x(i) =e= (a(i) >= 1);"
+
+    f = Equation(m, "f")
+    f[...] = Sum(i, (a[i] >= 1) * x[i]) == z
+    assert f.getDefinition() == "f .. sum(i,(a(i) >= 1) * x(i)) =e= z;"
+
+
+def test_parameter_eq_variable_in_definition():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    p = Parameter(m, "p", records=2)
+    q = Parameter(m, "q", domain=i, records=[("i1", 2)])
+    z = Variable(m, "z")
+    x = Variable(m, "x", domain=i)
+
+    e = Equation(m, "e")
+    e[...] = p == z
+    assert e.getDefinition() == "e .. p =e= z;"
+
+    e[...] = p == sqr(z)
+    assert e.getDefinition() == "e .. p =e= sqr(z);"
+
+    f = Equation(m, "f", domain=i)
+    f[i] = q[i] == sqr(x[i])
+    assert f.getDefinition() == "f(i) .. q(i) =e= sqr(x(i));"
+
+    r = Parameter(m, "r", domain=i)
+    r[i] = q[i] == p
+    assert r.getAssignment() == "r(i) = q(i) eq p;"
+    assert r.toList() == [("i1", 1.0)]

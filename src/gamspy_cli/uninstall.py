@@ -55,7 +55,7 @@ def _get_removable_solvers(addons_path: str) -> set[str]:
     )
 
 
-def complete_solver_names(ctx: typer.Context, incomplete: str):
+def complete_solver_names(ctx: typer.Context, incomplete: str) -> list[str]:
     import gamspy_base
 
     import gamspy.utils as utils
@@ -71,7 +71,7 @@ def complete_solver_names(ctx: typer.Context, incomplete: str):
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy uninstall license",
     short_help="To uninstall the current license",
 )
-def license():
+def license() -> None:
     import gamspy.utils as utils
 
     try:
@@ -116,7 +116,7 @@ def solver(
     use_uv: bool = typer.Option(
         False, "--use-uv", help="Use uv instead of pip to uninstall solvers."
     ),
-):
+) -> None:
     import gamspy_base
 
     import gamspy.utils as utils
@@ -140,7 +140,7 @@ def solver(
     if "CURL_CA_BUNDLE" not in environment_variables:
         environment_variables["CURL_CA_BUNDLE"] = certifi.where()
 
-    def remove_addons(addons: Iterable[str]):
+    def remove_addons(addons: Iterable[str]) -> None:
         for item in addons:
             solver_name = item.lower()
 

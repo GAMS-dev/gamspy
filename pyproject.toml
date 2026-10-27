@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.29.1"
+version = "1.29.2"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -34,8 +34,8 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi >= 54.6.0, < 55.0.0",
-  "gamspy_base >= 54.6.0, < 55.0.0",
+  "gamsapi >= 54.6.1, < 55.0.0",
+  "gamspy_base >= 54.6.1, < 55.0.0",
   "pandas >= 2.2.2, < 3.1",
   "pydantic >= 2.0",
   "pyyaml >= 6.0",
@@ -56,7 +56,7 @@ graph = ["graphviz>=0.20"]
 
 [tool.uv]
 exclude-newer = "3 days"
-exclude-newer-package = {gamspy_base = false, gamsapi = false, gamspy-highs = false, gamspy-ipopt = false, gamspy-ipopth = false, gamspy-knitro = false, gamspy-miles = false, gamspy-minos = false, gamspy-mosek = false, gamspy-mpsge = false, gamspy-pathnlp = false, gamspy-reshop = false, gamspy-scip = false, gamspy-shot = false, gamspy-snopt = false, gamspy-soplex = false, gamspy-xpress = false, gamspy-baron = false, gamspy-cbc = false, gamspy-conopt3 = false, gamspy-copt = false, gamspy-de = false, gamspy-dicopt = false, gamspy-examiner = false, gamspy-examiner2 = false, gamspy-gurobi = false, gamspy-arm-perf = false, gamspy-mkl = false}
+exclude-newer-package = {certifi = false, gamspy_base = false, gamsapi = false, gamspy-highs = false, gamspy-ipopt = false, gamspy-ipopth = false, gamspy-knitro = false, gamspy-miles = false, gamspy-minos = false, gamspy-mosek = false, gamspy-mpsge = false, gamspy-pathnlp = false, gamspy-reshop = false, gamspy-scip = false, gamspy-shot = false, gamspy-snopt = false, gamspy-soplex = false, gamspy-xpress = false, gamspy-baron = false, gamspy-cbc = false, gamspy-conopt3 = false, gamspy-copt = false, gamspy-de = false, gamspy-dicopt = false, gamspy-examiner = false, gamspy-examiner2 = false, gamspy-gurobi = false, gamspy-arm-perf = false, gamspy-mkl = false}
 
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu" }]
@@ -241,6 +241,7 @@ select = [
     "PLC0208",  # iteration-over-set
     "PLE",      # Pylint error rules
     "PGH003",   # blanket-type-ignore
+    "ANN",      # flake8-annotations
 ]
 ignore = [
     "E501",   # line-too-long
@@ -251,7 +252,6 @@ ignore = [
     "RUF005", # collection-literal-concatenation
     "RUF022", # unsorted-dunder-all
     "B905",   # zip-without-explicit-strict
-    "ANN401", # any-type
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
@@ -260,6 +260,9 @@ unfixable = []
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ANN"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

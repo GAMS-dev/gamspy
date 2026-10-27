@@ -75,8 +75,8 @@ if TYPE_CHECKING:
 
     from gamspy import Container, Equation, Model, Parameter, Variable
     from gamspy._options import FreezeOptions, Options
+    from gamspy._symbols.base import DataSymbol
     from gamspy._symbols.implicits import ImplicitParameter
-    from gamspy._types import SymbolWithRecordsType
 
 logger = logging.getLogger("FROZEN MODEL")
 logger.setLevel(logging.INFO)
@@ -131,7 +131,7 @@ class GamsModifier:
         update_action: int | None = None,
         data_symbol: GamsParameter | None = None,
         update_type: int = 3,
-    ):
+    ) -> None:
         self.update_action = None
         self.gams_symbol = gams_symbol
         self.update_type = update_type
@@ -151,7 +151,7 @@ class GamsModifier:
                 "Wrong combination of parameters. Specifying only update_action or data_symbol is not allowed."
             )
 
-    def _validate_update_action(self, update_action: int):
+    def _validate_update_action(self, update_action: int) -> None:
         if update_action in (1, 2, 3):
             if not isinstance(self.gams_symbol, GamsVariable):
                 raise GamspyException(
@@ -166,9 +166,9 @@ class GamsModifier:
             raise GamspyException(f"Unknown update action {update_action}")
 
 
-class ModelInstance:
+class FrozenModel:
     """
-    ModelInstance class provides a controlled way of modifying a model instance
+    FrozenModel class provides a controlled way of modifying a model instance
     and solving the resulting problem in the most efficient way, by communicating
     only the changes of the model to the solver and doing a hot start (in case of
     a continuous model like LP) without the use of disk IO.
@@ -189,7 +189,7 @@ class ModelInstance:
         freeze_options: Options,
         output: TextIO | None,
         hibernate: bool = False,
-    ):
+    ) -> None:
         self.container = container
         self.job_name = container._job
         self.gms_file = self.job_name + ".gms"
@@ -243,7 +243,7 @@ class ModelInstance:
         self.summary = pd.DataFrame(index=range(1), columns=HEADER)
 
     @staticmethod
-    def cleanup(gmo, gev) -> None:
+    def cleanup(gmo: object, gev: object) -> None:
         gmoFree(gmo)
         gevFree(gev)
 
@@ -270,7 +270,9 @@ class ModelInstance:
                 update_action = UPDATE_ACTION_MAP[attribute]
 
                 try:
-                    sync_db_symbol = self.sync_db[symbol.parent.name]
+                    sync_db_symbol = cast(
+                        "GamsVariable | GamsEquation", self.sync_db[symbol.parent.name]
+                    )
                 except KeyError:
                     if isinstance(symbol.parent, gp.Variable):
                         sync_db_symbol = self.sync_db.add_variable(
@@ -349,7 +351,6 @@ class ModelInstance:
         self.sync_db._check_for_gmd_error(rc, self.workspace)
 
         self._solution_symbols = get_variable_equation_names(self.sync_db.gmd)
-        self._validate_reserved_suffix()
         self._create_companion_variables()
 
     def _validate_companion_names(self) -> None:
@@ -371,33 +372,6 @@ class ModelInstance:
                 " of its modifiable parameters, and the container already has a symbol"
                 f" under that name: {', '.join(clashes)}. One symbol of each pair must be"
                 " renamed to freeze the model."
-            )
-
-    def _validate_reserved_suffix(self) -> None:
-        """
-        A model instance keeps a modifiable parameter's value in a fixed variable named
-        <parameter>_var. GAMS treats every variable of the model instance with that
-        suffix as such a companion, hence it fixes the ones that do not belong to a
-        modifiable parameter to zero instead of solving for them.
-        """
-        companions = {
-            symbol.name.casefold() + "_var"
-            for symbol in self.modifiables
-            if isinstance(symbol, gp.Parameter)
-        }
-
-        reserved = [
-            name
-            for name in self._solution_symbols
-            if name.casefold().endswith("_var")
-            and name.casefold() not in companions
-            and isinstance(self.container._data.get(name), gp.Variable)
-        ]
-
-        if reserved:
-            raise ValidationError(
-                f"Variable name(s) {reserved} of model `{self.model.name}` end with `_var`"
-                " which is a suffix reserved by the frozen solve. They must be renamed to freeze the model."
             )
 
     def _create_companion_variables(self) -> None:
@@ -749,7 +723,7 @@ class ModelInstance:
 
     def _discard_pending_records(self) -> None:
         for name in self._solution_symbols:
-            symbol = self.container._data.get(name)
+            symbol = cast("DataSymbol | None", self.container._data.get(name))
             if symbol is None or symbol._should_load_from is not self:
                 continue
 
@@ -758,14 +732,14 @@ class ModelInstance:
 
     def _read_pending_records(self) -> None:
         for name in self._solution_symbols:
-            symbol = self.container._data.get(name)
+            symbol = cast("DataSymbol | None", self.container._data.get(name))
             if symbol is None or symbol._should_load_from is not self:
                 continue
 
             symbol._should_load_from = DataSource.NONE
             self._read_records(symbol)
 
-    def _read_records(self, symbol: SymbolWithRecordsType) -> None:
+    def _read_records(self, symbol: DataSymbol) -> None:
         if self._uels is None and symbol.dimension:
             self._uels = get_uel_list(self.container._gams2np, self.sync_db.gmd)
 
@@ -778,3 +752,4 @@ class ModelInstance:
 
         symbol._records = records_dict[symbol.name]
         symbol.domain_labels = symbol.domain_names
+        symbol._should_unload_to_gams = True

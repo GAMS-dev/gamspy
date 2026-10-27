@@ -15,6 +15,8 @@ from gamspy.formulations.utils import _domain_name
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from gamspy._algebra.number import Number
+    from gamspy._types import ConditionType
     from gamspy._universe import Universe
 
     DomainElementType: typing.TypeAlias = (
@@ -24,12 +26,13 @@ if typing.TYPE_CHECKING:
     BigMType: typing.TypeAlias = int | float | Operable
     BinaryType: typing.TypeAlias = gp.Variable | ImplicitVariable
     OperandType: typing.TypeAlias = int | float | Operable
+    ConditionArgType: typing.TypeAlias = ConditionType | Number | bool | int | float
 
 
 _RELATIONAL_OPERATORS = {"=l=", "=e=", "=g="}
 
 
-def _is_binary(symbol: typing.Any) -> bool:
+def _is_binary(symbol: object) -> bool:
     if isinstance(symbol, ImplicitVariable):
         return symbol.parent.type == "binary"
 
@@ -87,7 +90,7 @@ def _dimension(set_: DomainElementType) -> int:
     return set_.dimension if isinstance(set_, (gp.Set, gp.Alias)) else 1
 
 
-def _is_multidimensional(set_: typing.Any) -> typing.TypeGuard[gp.Set | gp.Alias]:
+def _is_multidimensional(set_: object) -> typing.TypeGuard[gp.Set | gp.Alias]:
     return isinstance(set_, (gp.Set, gp.Alias)) and set_.dimension > 1
 
 
@@ -162,7 +165,7 @@ def _add_native_indicator(
     indicator_var: BinaryType,
     indicator_val: typing.Literal[0, 1],
     expr: Expression,
-    condition: typing.Any,
+    condition: ConditionArgType | None,
     domain: DomainType,
     index: DomainType,
     key: list[typing.Any],
@@ -221,7 +224,7 @@ def _add_equation(
     domain: DomainType,
     key: list[typing.Any],
     definition: Expression,
-    condition: typing.Any,
+    condition: ConditionArgType | None,
 ) -> gp.Equation:
     equation = m.addEquation(name=gp.utils._get_unique_name("equation"), domain=domain)
     indices = key if key else ...
@@ -405,7 +408,7 @@ def indicator(
     return result
 
 
-def _validate_operand(operand: typing.Any) -> None:
+def _validate_operand(operand: object) -> None:
     if isinstance(operand, (int, float)) and not isinstance(operand, bool):
         if not math.isfinite(operand):
             raise ValidationError("operands must be finite numbers")

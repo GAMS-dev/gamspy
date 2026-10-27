@@ -230,7 +230,7 @@ gradient:
 
 To choose gradients independently of the outer segments, define explicit rays.
 The following two examples describe the same graph: the left ray has gradient
-2, and the right ray has gradient -1.
+-1, and the right ray has gradient 2.
 
 .. tab-set::
 
@@ -625,9 +625,11 @@ it defaults to all ``input_x`` domains; a full two-dimensional dictionary then
 uses keys such as ``("low", "basic")``.
 
 .. note::
-    Curve dictionaries require explicit domain Sets and must contain exactly
-    one curve for every label combination in ``curve_domain``. Missing or extra
-    keys and wildcard domains are rejected.
+    Curve dictionaries require explicit Set or Alias domains. Without
+    ``restrict``, they must contain exactly one curve for every label
+    combination in ``curve_domain``; missing or extra keys are rejected.
+    With ``restrict``, only the curves used by selected entries are required;
+    see :ref:`pwl-restrict`.
 
 Passing one curve instead of a dictionary broadcasts it to every row:
 
@@ -636,6 +638,81 @@ Passing one curve instead of a dictionary broadcasts it to every row:
    shared_curve = gp.formulations.PWLCurve([(0, 0), (2, 4)])
    y, eqs = gp.formulations.pwlinear(x, shared_curve)
 
+
+.. _pwl-restrict:
+
+Restricting Indexed Inputs
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, a piecewise linear formulation applies to every combination of
+the input variable's domain labels. When only some combinations need a PWL
+relationship, pass a Set containing those entries as ``restrict``. All three
+formulation-specific functions and ``pwlinear`` support this argument.
+
+The restriction must use the same domain Sets or Aliases as ``input_x``, in
+the same order. Unlike ``curve_domain``, it must include every input domain.
+
+For example, suppose only ``premium`` at the ``north`` warehouse and
+``basic`` at the ``south`` warehouse need a PWL relationship:
+
+.. code-block:: python
+
+   import gamspy as gp
+
+   m = gp.Container()
+   warehouse = gp.Set(m, records=["north", "south"])
+   product = gp.Set(m, records=["basic", "premium"])
+   x = gp.Variable(m, domain=[warehouse, product])
+   selected = gp.Set(
+       m,
+       domain=[warehouse, product],
+       records=[("north", "premium"), ("south", "basic")],
+   )
+
+The following calls apply the same graph to the selected entries:
+
+.. tab-set::
+
+   .. tab-item:: Paired points
+
+      .. code-block:: python
+
+         y, eqs = gp.formulations.pwl_interval_formulation(
+             x,
+             x_points=[0, 2, 4, 6],
+             y_points=[0, 4, 6, 4],
+             restrict=selected,
+         )
+
+   .. tab-item:: Curve API
+
+      .. code-block:: python
+
+         curve = gp.formulations.PWLCurve(
+             [(0, 0), (2, 4), (4, 6), (6, 4)]
+         )
+         curves = {"basic": curve, "premium": curve}
+         y, eqs = gp.formulations.pwlinear(
+             x,
+             curves,
+             curve_domain=[product],
+             method="interval",
+             restrict=selected,
+         )
+
+Both calls generate PWL equations only for ``("north", "premium")`` and
+``("south", "basic")``. The other two combinations have no PWL relationship.
+In the Curve API example, ``curve_domain`` chooses the curve by product,
+while ``restrict`` selects the warehouse-product combinations to use.
+
+.. warning::
+    The returned ``y`` keeps the full input domain. Unselected entries
+    have no PWL equations or bounds and are not fixed to zero.
+    Including them in the objective can make the model unbounded.
+
+With indexed Parameters and curve dictionaries, only curves needed for the
+selected entries are used. Curves for unselected entries may be omitted or
+kept; they are ignored.
 
 Choosing a Formulation
 ^^^^^^^^^^^^^^^^^^^^^^

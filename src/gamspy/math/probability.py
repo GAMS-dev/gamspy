@@ -39,7 +39,7 @@ def binomial(n: OperableType, k: OperableType) -> MathOp:
 def centropy(
     x: OperableType,
     y: OperableType,
-    z: float = 1e-20,
+    z: OperableType = 1e-20,
 ) -> MathOp:
     """
     Cross-entropy: ``x.ln((x + z) / (y + z))`` for ``x, y > 0`` and ``z >= 0``
@@ -48,16 +48,11 @@ def centropy(
     ----------
     x : OperableType
     y : OperableType
-    z : float, optional
+    z : OperableType, optional
 
     Returns
     -------
     MathOp
-
-    Raises
-    ------
-    ValueError
-        if z is smaller than 0
 
     Examples
     --------
@@ -72,12 +67,6 @@ def centropy(
     [('i1', 6.254058220219863), ('i2', -2.939501948596297), ('i3', -7.775720603249651)]
 
     """
-    if not isinstance(z, (int, float)):
-        raise TypeError("z must be a number")
-
-    if z < 0:
-        raise ValueError("z must be greater than or equal to 0")
-
     return MathOp("centropy", (x, y, z))
 
 

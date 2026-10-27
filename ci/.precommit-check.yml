@@ -10,7 +10,7 @@ leg-precommit:
     paths:
       - .prek_cache/
   script:
-    - uv audit --ignore-until-fixed GHSA-rrmf-rvhw-rf47 --frozen
+    - uv audit --frozen
     - uv pip install --system prek ty
     - prek run --all-files
     # Removes the repositories and environments of hook versions that are no longer configured

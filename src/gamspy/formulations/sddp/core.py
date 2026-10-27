@@ -5,6 +5,7 @@ import signal
 import threading
 import time
 import warnings
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -18,6 +19,9 @@ from gamspy.formulations.sddp.result import SDDPResult, _sci
 from gamspy.formulations.sddp.risk import CVaR
 from gamspy.formulations.sddp.simulation import SimulationResult
 from gamspy.formulations.sddp.state import StateVar
+
+if TYPE_CHECKING:
+    from types import FrameType
 
 
 class SDDP:
@@ -1420,7 +1424,7 @@ class SDDP:
         on_main_thread = threading.current_thread() is threading.main_thread()
         prev_sigint = signal.getsignal(signal.SIGINT)  # GAMSPy's handler
 
-        def _sddp_sigint(signum, frame):
+        def _sddp_sigint(signum: int, frame: FrameType | None) -> None:
             if not self._stop_requested:
                 self._stop_requested = True
                 print(
@@ -1433,7 +1437,7 @@ class SDDP:
                 signal.signal(signal.SIGINT, prev_sigint)
             raise KeyboardInterrupt
 
-        def _restore_sigint():
+        def _restore_sigint() -> None:
             if on_main_thread and prev_sigint is not None:
                 signal.signal(signal.SIGINT, prev_sigint)
 
@@ -2531,7 +2535,9 @@ class SDDP:
         return float(rec["level"].iloc[0])
 
     @staticmethod
-    def _extract_decision(var: gp.Variable, t_label: str):
+    def _extract_decision(
+        var: gp.Variable, t_label: str
+    ) -> float | dict[str, float] | dict[tuple[str, ...], float]:
         """Pull a variable's level(s) at the given time label.
 
         Returns:

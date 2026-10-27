@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
+from typing import TYPE_CHECKING, Literal, cast, overload
 
 from gams.core.gdx import GMS_DT_SET
 
@@ -9,12 +9,13 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
+from gamspy._internals import SET_ATTRIBUTES
 from gamspy._records_ingestion import SetIngestor
-from gamspy._symbols.base import DomainSymbol
+from gamspy._symbols.base import DataSymbol
 from gamspy._symbols.equals import equals_set
 from gamspy._symbols.generate_records import generate_records_set
 from gamspy._symbols.pivot import pivot_set
-from gamspy._symbols.utils import assign
+from gamspy._symbols.utils import _quote_description, assign
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -421,7 +422,11 @@ class SetMixin:
         assert isinstance(other, (gp.Set, gp.Alias, str))
         return gp.math.same_as(self, other)
 
-    def __eq__(self: Set | Alias, other):
+    @overload
+    def __eq__(self: Set | Alias, other: str) -> MathOp: ...
+    @overload
+    def __eq__(self: Set | Alias, other: object) -> bool: ...
+    def __eq__(self: Set | Alias, other: object) -> MathOp | bool:
         # i == "i1" is sugar for i.sameAs("i1"). Any string is an element label.
         # For other types, fall back to identity semantics by returning NotImplemented.
         if isinstance(other, str):
@@ -429,7 +434,11 @@ class SetMixin:
 
         return NotImplemented
 
-    def __ne__(self: Set | Alias, other):
+    @overload
+    def __ne__(self: Set | Alias, other: str) -> Expression: ...
+    @overload
+    def __ne__(self: Set | Alias, other: object) -> bool: ...
+    def __ne__(self: Set | Alias, other: object) -> Expression | bool:
         # Follows the same logic with __eq__.
         if isinstance(other, str):
             return ~gp.math.same_as(self, other)
@@ -437,7 +446,7 @@ class SetMixin:
         return NotImplemented
 
 
-class Set(operable.Operable, DomainSymbol, SetMixin):
+class Set(operable.Operable, DataSymbol, SetMixin):
     """
     Represents a Set symbol in GAMS.
 
@@ -495,7 +504,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
 
     """
 
-    _default_domain: ClassVar[Literal["*"]] = "*"
+    _default_domain = "*"
 
     @classmethod
     def _constructor_bypass(
@@ -535,7 +544,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         uels_on_axes: bool = False,
         is_miro_input: bool = False,
         is_miro_output: bool = False,
-    ):
+    ) -> None:
         if self.is_singleton != is_singleton:
             raise ValueError(
                 "Cannot overwrite symbol in container unless"
@@ -563,7 +572,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         uels_on_axes: bool = False,
         is_miro_input: bool = False,
         is_miro_output: bool = False,
-    ):
+    ) -> None:
         container, name = self._resolve_container_and_name(
             container,
             name,
@@ -617,7 +626,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         | bool
         | str
         | SparseAssignment,
-    ):
+    ) -> None:
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
         assign(
@@ -630,7 +639,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
     def __repr__(self) -> str:
         return f"Set(name='{self.name}', domain={self.domain})"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def _singleton_check(
@@ -638,7 +647,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         is_singleton: bool,
         records: SetRecordsType | None,
         domain: NormalizedDomainType,
-    ):
+    ) -> None:
         if is_singleton:
             if records is not None and len(records) != 1:
                 raise ValidationError("Singleton set records size must be one.")
@@ -649,8 +658,8 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
                 )
 
     @property
-    def _attributes(self):
-        return ["element_text"]
+    def _attributes(self) -> list[str]:
+        return list(SET_ATTRIBUTES)
 
     @property
     def summary(self) -> dict:
@@ -820,10 +829,12 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         return self._get_records()
 
     @records.setter
-    def records(self, records: pd.DataFrame | None):
+    def records(self, records: pd.DataFrame | None) -> None:
         self._assign_records(records)
 
-    def _setRecords(self, records: Any, *, uels_on_axes: bool = False) -> None:
+    def _setRecords(
+        self, records: SetRecordsType, *, uels_on_axes: bool = False
+    ) -> None:
         SetIngestor(self).ingest(records, uels_on_axes=uels_on_axes)
         self._handle_domain_violations()
 
@@ -906,7 +917,7 @@ class Set(operable.Operable, DomainSymbol, SetMixin):
         output += self._get_domain_str(self._domain_forwarding)
 
         if self.description:
-            output += f' "{self.description}"'
+            output += " " + _quote_description(self.description)
 
         if self._records is None:
             output += " / /"

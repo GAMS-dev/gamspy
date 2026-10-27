@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import importlib
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -13,6 +13,8 @@ from gamspy.exceptions import ValidationError
 from gamspy.formulations.ml.decision_tree_struct import DecisionTreeStruct
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from sklearn.tree import DecisionTreeRegressor
 
 
@@ -69,7 +71,7 @@ class RegressionTree:
         container: gp.Container,
         regressor: DecisionTreeRegressor | DecisionTreeStruct,
         name_prefix: str | None = None,
-    ):
+    ) -> None:
         if not isinstance(container, gp.Container):
             raise ValidationError(f"{container} is not a gp.Container.")
 
@@ -96,7 +98,7 @@ class RegressionTree:
 
         self._name_prefix = name_prefix
 
-    def _initialize_from_sklearn(self, regressor: DecisionTreeRegressor):
+    def _initialize_from_sklearn(self, regressor: DecisionTreeRegressor) -> None:
         """
         Initializes the tree attributes from a fitted scikit-learn DecisionTreeRegressor.
         """
@@ -115,7 +117,9 @@ class RegressionTree:
         self.capacity = regressor.tree_.capacity
         self.n_features = regressor.tree_.n_features
 
-    def _initialize_from_decision_tree_struct(self, regressor: DecisionTreeStruct):
+    def _initialize_from_decision_tree_struct(
+        self, regressor: DecisionTreeStruct
+    ) -> None:
         """
         Initializes the tree attributes from DecisionTreeStruct.
         """
@@ -127,7 +131,7 @@ class RegressionTree:
         self.capacity = regressor.capacity
         self.n_features = regressor.n_features
 
-    def _check_tree(self):
+    def _check_tree(self) -> None:
         """
         Validates that the core tree attributes are populated and have valid basic properties.
 
@@ -149,7 +153,7 @@ class RegressionTree:
         if self.capacity <= 0:
             raise ValidationError("'capacity' must be a positive integer.")
 
-    def _node_bounds(self):
+    def _node_bounds(self) -> tuple[np.ndarray, np.ndarray]:
         """Traverse the tree using DFS and extract bound information for each node."""
         node_lb = np.empty((self.n_features, self.capacity))
         node_lb.fill(-np.inf)
@@ -181,7 +185,7 @@ class RegressionTree:
         self,
         input: gp.Parameter | gp.Variable,
         M: float | None = None,
-    ):
+    ) -> Generator[Any]:
         leafs = self.children_left < 0
         leafs = leafs.nonzero()[0]
         nleafs = len(leafs)
@@ -314,7 +318,7 @@ class RegressionTree:
             self.container,
             name=utils._generate_name("s", self._name_prefix, "subset_of_paths"),
             description="Dynamic subset of possible paths",
-            domain=uni_domain,
+            domain=uni_domain + [cons_type],
         )
 
         feat_thresh = gp.Parameter._constructor_bypass(
@@ -418,7 +422,8 @@ class RegressionTree:
             & mask
             & (feat_par[..., ub] < np.inf)
         )
-        s[...].where[mask_lo | mask_up] = True
+        s[..., ge].where[mask_lo] = True
+        s[..., le].where[mask_up] = True
 
         self.container._add_statement(
             expression.Expression(
@@ -447,7 +452,7 @@ class RegressionTree:
 
         self.container._add_statement(
             expression.Expression(
-                _bound_big_m[s[uni_domain], ge].where[mask_lo],
+                _bound_big_m[..., ge].where[s[..., ge]],
                 "=",
                 (
                     M
@@ -462,7 +467,7 @@ class RegressionTree:
 
         self.container._add_statement(
             expression.Expression(
-                _bound_big_m[s[uni_domain], le].where[mask_up],
+                _bound_big_m[..., le].where[s[..., le]],
                 "=",
                 (
                     M
@@ -484,7 +489,7 @@ class RegressionTree:
         )
 
         definition = expression.Expression(
-            ge_cons[uni_domain].where[(feat_thresh[..., ge] != 0) & s[uni_domain]],
+            ge_cons[uni_domain].where[s[..., ge]],
             "..",
             feat_vars
             >= feat_thresh[..., ge] - _bound_big_m[..., ge] * (1 - indicator_vars),
@@ -492,10 +497,9 @@ class RegressionTree:
         self.container._add_statement(definition)
         ge_cons._definition = definition
 
-        le_cons[uni_domain].where[(feat_thresh[..., le] != 0) & s[uni_domain]] = (
-            feat_vars
-            <= feat_thresh[..., le] + _bound_big_m[..., le] * (1 - indicator_vars)
-        )
+        le_cons[uni_domain].where[s[..., le]] = feat_vars <= feat_thresh[
+            ..., le
+        ] + _bound_big_m[..., le] * (1 - indicator_vars)
 
         eqns = [
             assign_one_output,

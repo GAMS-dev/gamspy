@@ -49,7 +49,7 @@ class AvgPool2d:
         stride: int | tuple[int, int] | None = None,
         padding: int | tuple[int, int] = 0,
         name_prefix: str | None = None,
-    ):
+    ) -> None:
         _kernel_size = utils._check_tuple_int(kernel_size, "kernel_size")
         if stride is None:
             stride = kernel_size
@@ -214,8 +214,6 @@ class AvgPool2d:
         )
 
         # expr must have domain N, C, H_out, W_out
-        top_index = (self.stride[0] * (gp.Ord(H_out) - 1)) - self.padding[0] + 1
-        left_index = (self.stride[1] * (gp.Ord(W_out) - 1)) - self.padding[1] + 1
         coeff = 1 / (self.kernel_size[0] * self.kernel_size[1])
 
         Hf, Wf = gp.math._generate_dims(self.container, self.kernel_size)
@@ -223,22 +221,15 @@ class AvgPool2d:
             [Hf, Wf, H_in, W_in], utils._get_domain(out_var)
         )
 
-        subset = gp.Set(
+        subset = utils._window_subset(
             self.container,
-            name=utils._generate_name("s", self._name_prefix, "in_out_matching_1"),
-            domain=[H_out, W_out, Hf, Wf, H_in, W_in],
+            utils._generate_name("s", self._name_prefix, "in_out_matching_1"),
+            [H_out, W_out],
+            [Hf, Wf],
+            [H_in, W_in],
+            self.stride,
+            self.padding,
         )
-        subset[
-            H_out,
-            W_out,
-            Hf,
-            Wf,
-            H_in,
-            W_in,
-        ].where[
-            (gp.Ord(H_in) == (top_index + gp.Ord(Hf) - 1))
-            & (gp.Ord(W_in) == (left_index + gp.Ord(Wf) - 1))
-        ] = True
 
         expr = gp.Sum(
             subset[H_out, W_out, Hf, Wf, H_in, W_in],

@@ -18,6 +18,7 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     from gamspy._algebra.sparse import SparseAssignment
     from gamspy._symbols import Alias, Equation, Parameter, Set, Variable
+    from gamspy._symbols.base import VarEquSymbol
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
     from gamspy._types import OperableType, ValidatedDomainType
 
@@ -28,7 +29,7 @@ class DictFormat(Enum):
     NATURAL = 1
 
     @classmethod
-    def _missing_(cls, value):
+    def _missing_(cls, value: object) -> DictFormat:
         return DictFormat.UNKNOWN
 
 
@@ -39,7 +40,14 @@ DICT_FORMAT = {
 AXES = ["index", "columns"]
 
 
-def _get_implied_dimension_from_axes(records):
+def _quote_description(description: str) -> str:
+    if '"' in description:
+        return f"'{description}'"
+
+    return f'"{description}"'
+
+
+def _get_implied_dimension_from_axes(records: pd.DataFrame | pd.Series) -> int:
     return sum([axis.nlevels for axis in records.axes])
 
 
@@ -269,25 +277,14 @@ def toValueParameter(symbol: Parameter) -> float:
     return symbol.records["value"][0]
 
 
-def toValueVariableEquation(symbol: Variable | Equation, column: str | None) -> float:
+def toValueVariableEquation(symbol: VarEquSymbol, column: str | None) -> float:
     if not symbol.is_scalar:
         raise TypeError(
             "Cannot extract value data for non-scalar symbols "
             f"(symbol dimension is {symbol.dimension})"
         )
 
-    if column is None:
-        column = "level"
-
-    if not isinstance(column, str):
-        raise TypeError(
-            f"Argument 'column' must be type str. User passed {type(column)}."
-        )
-
-    if column not in symbol._attributes:
-        raise TypeError(
-            f"Argument 'column' must be one of the following: {symbol._attributes}"
-        )
+    column = symbol._validate_column(column)
 
     if symbol.records is None:
         raise ValidationError(
@@ -327,26 +324,9 @@ def toListParameter(symbol: Parameter) -> list:
 
 
 def toListVariableEquation(
-    symbol: Variable | Equation, columns: str | list[str] | None
+    symbol: VarEquSymbol, columns: str | list[str] | None
 ) -> list:
-    if columns is None:
-        columns = "level"
-
-    if not isinstance(columns, (str, list)):
-        raise TypeError(
-            f"Argument 'columns' must be type str or list. User passed {type(columns)}."
-        )
-
-    if isinstance(columns, str):
-        columns = [columns]
-
-    if any(not isinstance(i, str) for i in columns):
-        raise TypeError("Argument 'columns' must contain only type str.")
-
-    if any(i not in symbol._attributes for i in columns):
-        raise TypeError(
-            f"Argument 'columns' must be a subset of the following: {symbol._attributes}"
-        )
+    columns = symbol._validate_columns(columns)
 
     if symbol.records is None:
         return []
@@ -356,7 +336,7 @@ def toListVariableEquation(
     ).index.to_list()
 
 
-def _toDict_orient_chk(orient):
+def _toDict_orient_chk(orient: str | None) -> DictFormat:
     if orient is None:
         orient = "natural"
 
@@ -368,88 +348,73 @@ def _toDict_orient_chk(orient):
     return DICT_FORMAT[orient.casefold()]
 
 
-def toDictParameter(symbol: Parameter, orient=None):
-    # check and/or set orient
-    orient = _toDict_orient_chk(orient)
+def toDictParameter(symbol: Parameter, orient: str | None = None) -> dict:
+    dict_format = _toDict_orient_chk(orient)
 
     if symbol.is_scalar:
         raise TypeError(
             f"Symbol `{symbol.name}` is a scalar and cannot be converted into a dict."
         )
 
-    if symbol.records is not None:
-        if orient is DictFormat.NATURAL:
-            if symbol.dimension == 1:
-                return dict(
-                    zip(
-                        symbol.records.iloc[:, 0],
-                        symbol.records.iloc[:, -1],
-                        strict=True,
-                    )
-                )
+    if symbol.records is None:
+        return {}
 
-            else:
-                doms = zip(
-                    *[symbol.records.iloc[:, i] for i in range(symbol.dimension)],
+    if dict_format is DictFormat.NATURAL:
+        if symbol.dimension == 1:
+            return dict(
+                zip(
+                    symbol.records.iloc[:, 0],
+                    symbol.records.iloc[:, -1],
                     strict=True,
                 )
-                vals = symbol.records[symbol.records.columns[-1]]
+            )
 
-                return dict(zip(doms, vals, strict=True))
+        else:
+            doms = zip(
+                *[symbol.records.iloc[:, i] for i in range(symbol.dimension)],
+                strict=True,
+            )
+            vals = symbol.records[symbol.records.columns[-1]]
 
-        if orient is DictFormat.COLUMNS:
-            return symbol.records.to_dict()
+            return dict(zip(doms, vals, strict=True))
+
+    return symbol.records.to_dict()
 
 
 def toDictVariableEquation(
-    symbol: Variable | Equation, columns: str | list[str] | None, orient=None
-):
-    # check and/or set orient
-    orient = _toDict_orient_chk(orient)
+    symbol: VarEquSymbol,
+    columns: str | list[str] | None,
+    orient: str | None = None,
+) -> dict:
+    dict_format = _toDict_orient_chk(orient)
 
-    if columns is None:
-        columns = "level"
-
-    if not isinstance(columns, (str, list)):
-        raise TypeError(
-            f"Argument 'columns' must be type str or list. User passed {type(columns)}."
-        )
-
-    if isinstance(columns, str):
-        columns = [columns]
-
-    if any(not isinstance(i, str) for i in columns):
-        raise TypeError("Argument 'columns' must contain only type str.")
-
-    if any(i not in symbol._attributes for i in columns):
-        raise TypeError(
-            f"Argument 'columns' must be a subset of the following: {symbol._attributes}"
-        )
+    columns = symbol._validate_columns(columns)
 
     if symbol.is_scalar:
         raise TypeError(
             f"Symbol `{symbol.name}` is a scalar and cannot be converted into a dict."
         )
 
-    if symbol.records is not None:
-        if orient is DictFormat.NATURAL:
-            if symbol.dimension == 1:
-                doms = symbol.records.iloc[:, 0]
-            else:
-                doms = zip(
-                    *[symbol.records.iloc[:, i] for i in range(symbol.dimension)],
-                    strict=True,
-                )
+    if symbol.records is None:
+        return {}
 
-            if len(columns) == 1:
-                return dict(zip(doms, symbol.records[columns[0]], strict=True))
-            else:
-                vals = symbol.records[columns].to_dict("records")
+    if dict_format is DictFormat.NATURAL:
+        if symbol.dimension == 1:
+            doms = symbol.records.iloc[:, 0]
+        else:
+            doms = zip(
+                *[symbol.records.iloc[:, i] for i in range(symbol.dimension)],
+                strict=True,
+            )
 
-                return dict(zip(doms, vals, strict=True))
+        if len(columns) == 1:
+            return dict(zip(doms, symbol.records[columns[0]], strict=True))
+        else:
+            vals = symbol.records[columns].to_dict("records")
 
-        if orient is DictFormat.COLUMNS:
-            return symbol.records[symbol.domain_labels + columns].to_dict()
+            return dict(zip(doms, vals, strict=True))
+
+    return symbol.records[symbol.domain_labels + columns].to_dict()
 
 
 def assign(

@@ -37,7 +37,7 @@ class GUSSScenarioDict:
         name: str,
         scenario_set: Set,
         description: str = "",
-    ):
+    ) -> None:
         if not isinstance(container, Container):
             raise ValidationError("GUSSScenarioDict requires a GAMSPy Container.")
 

@@ -7,7 +7,7 @@ import os
 import threading
 import warnings
 from collections.abc import Sequence
-from enum import Enum
+from enum import Enum, StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
@@ -25,10 +25,11 @@ from gamspy._backend.backend import backend_factory
 from gamspy._convert import (
     GamsConverter,
     LatexConverter,
+    UnicodeConverter,
     get_convert_solver_options,
 )
+from gamspy._frozen_model import FrozenModel
 from gamspy._internals import ATTR_PREFIX, MODEL_ATTRIBUTE_MAP, DataSource
-from gamspy._model_instance import ModelInstance
 from gamspy._options import (
     EXECUTION_OPTIONS,
     INDICATOR_SOLVERS,
@@ -40,6 +41,7 @@ from gamspy._options import (
     get_indicator_file_name,
     write_solver_options,
 )
+from gamspy._symbols.utils import _quote_description
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -75,7 +77,7 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 
-class Problem(Enum):
+class Problem(StrEnum):
     """An enumeration for problem all problem types"""
 
     LP = "LP"
@@ -124,12 +126,9 @@ class Problem(Enum):
     """Extended Mathematical Program"""
 
     @classmethod
-    def values(cls):
+    def values(cls) -> list[str]:
         """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
-
-    def __str__(self) -> str:
-        return self.value
 
 
 INT_TO_PROBLEM: dict[int, str] = {
@@ -151,7 +150,7 @@ INT_TO_PROBLEM: dict[int, str] = {
 }
 
 
-class Sense(Enum):
+class Sense(StrEnum):
     """An enumeration for sense types"""
 
     MIN = "MIN"
@@ -164,12 +163,9 @@ class Sense(Enum):
     """Assess feasibility."""
 
     @classmethod
-    def values(cls):
+    def values(cls) -> list[str]:
         """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
-
-    def __str__(self) -> str:
-        return self.value
 
 
 class ModelStatus(Enum):
@@ -279,7 +275,7 @@ class SolveStatus(Enum):
     """This indicates a completely unknown or unexpected error condition."""
 
 
-class FileFormat(Enum):
+class FileFormat(StrEnum):
     """An enumeration for file format types"""
 
     AMPL = "ampl.mod"
@@ -422,7 +418,7 @@ class Model:
         | None = None,
         limited_variables: Sequence[ImplicitVariable] | None = None,
         external_module: str | None = None,
-    ):
+    ) -> None:
         if container is not None and not isinstance(container, gp.Container):
             raise TypeError(
                 f"Container must of type `Container` but found {type(container)}"
@@ -493,7 +489,7 @@ class Model:
 
         # allow freezing
         self._is_frozen: bool = False
-        self.instance: ModelInstance | None = None
+        self._frozen_model: FrozenModel | None = None
         self._modifiable_names: set[str] = set()
 
         # Attributes
@@ -1032,7 +1028,7 @@ class Model:
         return self._external_module
 
     @external_module.setter
-    def external_module(self, value: str | None):
+    def external_module(self, value: str | None) -> None:
         if self._external_module_file is not None:
             self.container._add_statement(f"putclose {self._external_module_file};")
 
@@ -1339,7 +1335,7 @@ class Model:
                 ]
 
                 for name in var_names:
-                    variable: Variable = self.container._data[name]
+                    variable = cast("Variable", self.container._data[name])
                     infeas_rows = utils._calculate_infeasibilities(variable)
                     infeas_dict[variable.name] = infeas_rows
 
@@ -1514,7 +1510,7 @@ class Model:
         hibernate: bool = False,
     ) -> None:
         """
-        Instantiates a model instance. After calling freeze, only modifiables can be modified.
+        Instantiates a frozen model. After calling freeze, only modifiables can be modified.
 
         Parameters
         ----------
@@ -1523,11 +1519,11 @@ class Model:
         options : Options | None, optional
             GAMSPy options, by default None
         hibernate : bool, optional
-            Whether to stop the GAMS execution engine once the model instance has
-            been generated. The engine is not needed after building the model instance.
-            Its state is saved first and restored by the next statement that needs it,
-            which is only worth it for a model that is large enough to pay for saving and
-            restarting. Local backend only. Default is False.
+            Whether to stop the GAMS execution engine once the model is frozen.
+            The engine is not needed after freezing the model. Its state is saved first
+            and restored by the next statement that needs it, which is only worth it
+            for a model that is large enough to pay for saving and restarting. Local
+            backend only. Default is False.
 
         Examples
         --------
@@ -1546,7 +1542,7 @@ class Model:
         if options is None:
             options = self.container._options
 
-        self.instance = ModelInstance(
+        self._frozen_model = FrozenModel(
             self.container,
             self,
             modifiables,
@@ -1562,22 +1558,22 @@ class Model:
             symbol.parent.name
             if isinstance(symbol, implicits.ImplicitParameter)
             else symbol.name
-            for symbol in self.instance.modifiables
+            for symbol in self._frozen_model.modifiables
         }
         self.container._frozen_modifiables |= self._modifiable_names
 
     def unfreeze(self, *, load_records: bool = True) -> None:
         """
-        Unfreezes the model and releases the resources of its model instance.
+        Unfreezes the model.
 
         Parameters
         ----------
         load_records : bool, optional
-            Whether to read the solution of the last frozen solve before the
-            model instance is released. Only the records that were not accessed
-            yet are read, since they exist nowhere else. For a large model this
-            can be a lot of data that may not be needed, in which case False
-            discards them and only the memory of the instance is left. Default is True.
+            Whether to read the solution records of the last frozen solve before
+            unfreezing the model. Only the records that were not accessed yet are
+            read, since they exist nowhere else. For a large model this can be a
+            lot of data that may not be needed, in which case False discards them.
+            Default is True.
 
         Raises
         ------
@@ -1598,22 +1594,22 @@ class Model:
         >>> model.unfreeze()
 
         """
-        if self.instance is None:
+        if self._frozen_model is None:
             raise ValidationError(
                 f"Model `{self.name}` is not frozen. `unfreeze` requires a `freeze` first."
             )
 
         if load_records:
-            self.instance._read_pending_records()
+            self._frozen_model._read_pending_records()
         else:
-            self.instance._discard_pending_records()
+            self._frozen_model._discard_pending_records()
 
-        self.instance.close_license_session()
+        self._frozen_model.close_license_session()
 
         self.container._frozen_modifiables -= self._modifiable_names
         self._modifiable_names = set()
         self._is_frozen = False
-        self.instance = None
+        self._frozen_model = None
 
         # The database of the instance is gone now. That might be gigabytes of memory.
         gc.collect()
@@ -1863,13 +1859,19 @@ class Model:
         if options is None:
             options = self.container._options
 
+        options = options.model_copy()
+
         if isinstance(solver_options, (str, Path)):
             solver_options = Path(solver_options)
 
         # Only for local until GAMS Engine and NEOS Server backends adopt the new GP_SolveLine option.
         if backend == "local":
             frame = inspect.currentframe()
-            options._frame = frame.f_back if frame is not None else None
+            caller = frame.f_back if frame is not None else None
+            if caller is not None:
+                options._solve_line = (
+                    f"{caller.f_code.co_filename} line {caller.f_lineno}"
+                )
 
         indicators = self._get_indicators()
         self._indicator_file = None
@@ -1899,21 +1901,22 @@ class Model:
             if freeze_options is not None:
                 instance_options = freeze_options
 
-            summary = self.instance.solve(  # ty: ignore[unresolved-attribute]
+            summary = self._frozen_model.solve(  # ty: ignore[unresolved-attribute]
                 solver, instance_options, solver_options, output
             )
             return summary
 
         self._add_runtime_options(options, backend)
+        self.container._add_statement(f"option {self.problem} = {solver};")
+        self.container._add_statement(
+            f"{self.name}.optFile = {1 if solver_options else 0};"
+        )
         self.container._add_statement(
             self._generate_solve_string(scenario=scenario) + ";\n"
         )
         if self.container._in_loop:
             self._assign_model_attributes()
             self.container._models_solved_in_loop[self.name] = self
-        options._set_model_info(solver, self.problem, solver_options)
-
-        if self.container._in_loop:
             return None
 
         runner = backend_factory(
@@ -2027,7 +2030,7 @@ class Model:
 
         model_str = f"Model {self.name}"
         if self.description:
-            model_str += ' "' + self.description + '"'
+            model_str += " " + _quote_description(self.description)
 
         if equations_str != "":
             model_str += f" / {equations_str} /"
@@ -2120,3 +2123,67 @@ class Model:
 
         if generate_pdf:
             converter.to_pdf()
+
+    def toUnicode(
+        self,
+        path: str | Path | None = None,
+        rename: dict[str, str] | None = None,
+    ) -> str:
+        """
+        Generates the model definition in mathematical notation with Unicode
+        characters. If a path is given, it is also written to path/<model_name>.txt
+
+        Parameters
+        ----------
+        path : str | Path, optional
+            Path to the directory which will contain the .txt file.
+        rename: dict[str, str], optional
+            A dictionary to rename symbols in the output. Keys are GAMSPy symbol names
+            and values are the names that will be used in the output.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["seattle", "san-diego"], description="plants")
+        >>> a = gp.Parameter(m, "a", domain=i, description="supply of plant i")
+        >>> x = gp.Variable(m, "x", domain=i, type="positive", description="shipment")
+        >>> supply = gp.Equation(m, "supply", domain=i, description="supply limit")
+        >>> supply[i] = x[i] <= a[i]
+        >>> model = gp.Model(
+        ...     m,
+        ...     "shipment",
+        ...     problem="LP",
+        ...     equations=[supply],
+        ...     sense="max",
+        ...     objective=gp.Sum(i, x[i]),
+        ... )
+        >>> print(model.toUnicode())
+        Sets
+          i[*]  plants
+        <BLANKLINE>
+        Parameters
+          a[i]  supply of plant i
+        <BLANKLINE>
+        Variables
+          x[i]  shipment
+        <BLANKLINE>
+        Equations
+          supply[i]  supply limit
+        <BLANKLINE>
+        Model Definition
+          max ∑(i) x[i]
+          s.t.
+            supply[i]: x[i] ≤ a[i]  ∀ i
+            x[i] ≥ 0  ∀ i
+
+        """
+        converter = UnicodeConverter(self, rename)
+        if path is None:
+            return converter.generate()
+
+        return converter.convert(Path(path))

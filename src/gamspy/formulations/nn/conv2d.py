@@ -1,22 +1,19 @@
 from __future__ import annotations
 
-import math
 from typing import TYPE_CHECKING, Literal
-
-import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view
 
 import gamspy as gp
 import gamspy.formulations.utils as utils
 from gamspy.exceptions import ValidationError
-from gamspy.formulations.result import FormulationResult
-from gamspy.math import dim
+from gamspy.formulations.nn._conv import _ConvNd
 
 if TYPE_CHECKING:
-    from gamspy import Parameter, Variable
+    import numpy as np
+
+    from gamspy.formulations.result import FormulationResult
 
 
-class Conv2d:
+class Conv2d(_ConvNd[tuple[int, int], tuple[int, int, int, int]]):
     """
     Formulation generator for 2D Convolution symbol in GAMS. It can
     be used to embed convolutional layers of trained neural networks
@@ -71,6 +68,8 @@ class Conv2d:
 
     """
 
+    _n_spatial = 2
+
     def __init__(
         self,
         container: gp.Container,
@@ -82,13 +81,7 @@ class Conv2d:
         name_prefix: str | None = None,
         *,
         bias: bool = True,
-    ):
-        if not (isinstance(in_channels, int) and in_channels > 0):
-            raise ValidationError("in_channels must be a positive integer")
-
-        if not (isinstance(out_channels, int) and out_channels > 0):
-            raise ValidationError("out_channels must be a positive integer")
-
+    ) -> None:
         _kernel_size = utils._check_tuple_int(kernel_size, "kernel_size")
         _stride = utils._check_tuple_int(stride, "stride")
 
@@ -108,192 +101,24 @@ class Conv2d:
         else:
             _padding = utils._check_padding(padding)
 
-        if not isinstance(bias, bool):
-            raise ValidationError("bias must be a boolean")
-
-        self.container = container
-        self.in_channels = in_channels
-        self.out_channels = out_channels
+        super().__init__(container, in_channels, out_channels, name_prefix, bias)
         self.kernel_size = _kernel_size
         self.stride = _stride
         self.padding = _padding
-        self.use_bias = bias
 
-        self._state = 0
-        self.weight: Parameter | Variable | None = None
-        self.weight_array = None
-        self.bias: Parameter | Variable | None = None
-        self.bias_array = None
+    @property
+    def _kernel_dims(self) -> tuple[int, ...]:
+        return self.kernel_size
 
-        if name_prefix is None:
-            name_prefix = gp.utils._get_unique_name()
+    @property
+    def _stride_dims(self) -> tuple[int, ...]:
+        return self.stride
 
-        self._name_prefix = name_prefix
+    @property
+    def _padding_dims(self) -> tuple[int, ...] | str:
+        return self.padding
 
-    def _propagate_bounds(
-        self, input, output, weight, bias, stride, padding, result: FormulationResult
-    ):
-        # Extract input bounds
-        input_bounds = gp.Parameter(
-            self.container,
-            domain=dim([2, *input.shape]),
-            name=utils._generate_name("p", self._name_prefix, "input_bounds"),
-        )
-        # lower bounds
-        input_bounds[("0",) + tuple(input.domain)] = input.lo[...]
-        # upper bounds
-        input_bounds[("1",) + tuple(input.domain)] = input.up[...]
-
-        result.parameters_created["input_bounds"] = input_bounds
-
-        # If the bounds are all zeros (None in GAMSPy parameters);
-        # we skip matrix multiplication as it will result in zero values
-        if input_bounds.records is None:
-            out_bounds_array = np.zeros(output.shape)
-
-            if self.use_bias:
-                assert self.bias_array is not None, "bias cannot be None here"
-                b = self.bias_array[:, np.newaxis, np.newaxis]
-                out_bounds_array = out_bounds_array + b
-
-            out_bounds = gp.Parameter(
-                self.container,
-                domain=dim(output.shape),
-                records=out_bounds_array,
-                name=utils._generate_name("p", self._name_prefix, "output_bounds"),
-            )
-            output.lo[...] = out_bounds
-            output.up[...] = out_bounds
-
-            result.parameters_created["output_bounds"] = out_bounds
-
-            return
-
-        input_lower, input_upper = input_bounds.toDense()
-
-        # Check if the input bounds contain (-)infinity values
-        inf_exists = input_bounds.countNegInf() or input_bounds.countPosInf()
-        out_arr_dtype = np.complex128 if inf_exists else np.float64
-
-        if inf_exists:
-            # Encode infinity values as complex numbers
-            input_lower = utils._encode_infinity(input_lower)
-            input_upper = utils._encode_infinity(input_upper)
-
-        batch, out_channels, h_out, w_out = output.shape
-        _, in_channels, h_k, w_k = weight.shape
-        stride_y, stride_x = stride
-        pad_top, pad_left, pad_bottom, pad_right = padding
-
-        # if any side of the padding is non-zero, we need to pad the input
-        if any(padding):
-            # Pad the input bounds
-            input_lower = np.pad(
-                input_lower,
-                ((0, 0), (0, 0), (pad_top, pad_bottom), (pad_left, pad_right)),
-                mode="constant",
-                constant_values=0,
-            )
-            input_upper = np.pad(
-                input_upper,
-                ((0, 0), (0, 0), (pad_top, pad_bottom), (pad_left, pad_right)),
-                mode="constant",
-                constant_values=0,
-            )
-
-        # ----- Sliding window view -----
-        # Create sliding windows for the input, where each window has the same shape as the kernel.
-        # This is done separately for the lower and upper bounds of the input.
-        # Then, downsample the sliding windows by selecting every `stride_y` step along the height (vertical) axis
-        # and every `stride_x` step along the width (horizontal) axis. This reduces the number of windows
-        # by skipping positions based on the user-specified strides.
-        #
-        # After slicing, the axes are transposed to reorder the dimensions. Specifically:
-        # - The original window positions (height and width axes) are moved to the end.
-        # - The window content (channel and spatial dimensions) is brought forward.
-        #
-        # This ensures that the windows are processed in a left-to-right, top-to-bottom order,
-        # prioritizing horizontal traversal first, which is the desired behavior.
-        windows_lower = sliding_window_view(input_lower, (batch, in_channels, h_k, w_k))
-        windows_upper = sliding_window_view(input_upper, (batch, in_channels, h_k, w_k))
-
-        windows_lower = windows_lower[:, :, ::stride_y, ::stride_x, :, :, :].transpose(
-            0, 1, 4, 2, 3, 5, 6, 7
-        )
-        windows_upper = windows_upper[:, :, ::stride_y, ::stride_x, :, :, :].transpose(
-            0, 1, 4, 2, 3, 5, 6, 7
-        )
-
-        # # Reshape windows for vectorized computation
-        windows_lower = windows_lower.reshape(
-            batch, h_out, w_out, in_channels, h_k, w_k
-        )
-        windows_upper = windows_upper.reshape(
-            batch, h_out, w_out, in_channels, h_k, w_k
-        )
-
-        # Split weights into positive and negative parts
-        pos_weight = np.maximum(weight, 0)
-        neg_weight = np.minimum(weight, 0)
-
-        # Initialize output bounds
-        output_lower = np.zeros(
-            (batch, out_channels, h_out, w_out), dtype=out_arr_dtype
-        )
-        output_upper = np.zeros(
-            (batch, out_channels, h_out, w_out), dtype=out_arr_dtype
-        )
-
-        if bias is None:
-            bias = np.zeros(out_channels)
-
-        for c_out in range(out_channels):
-            # Lower bound: sum(input_lower * pos_weight + input_upper * neg_weight)
-            output_lower[:, c_out, :, :] = (
-                np.sum(
-                    windows_lower * pos_weight[c_out, np.newaxis, np.newaxis, :, :, :],
-                    axis=(3, 4, 5),
-                )
-                + np.sum(
-                    windows_upper * neg_weight[c_out, np.newaxis, np.newaxis, :, :, :],
-                    axis=(3, 4, 5),
-                )
-                + bias[c_out]
-            )
-
-            # Upper bound: sum(input_lower * neg_weight + input_upper * pos_weight)
-            output_upper[:, c_out, :, :] = (
-                np.sum(
-                    windows_lower * neg_weight[c_out, np.newaxis, np.newaxis, :, :, :],
-                    axis=(3, 4, 5),
-                )
-                + np.sum(
-                    windows_upper * pos_weight[c_out, np.newaxis, np.newaxis, :, :, :],
-                    axis=(3, 4, 5),
-                )
-                + bias[c_out]
-            )
-
-        if inf_exists:
-            # Decode complex numbers back to real numbers if infinity values were used
-            output_lower = utils._decode_complex_array(output_lower)
-            output_upper = utils._decode_complex_array(output_upper)
-
-        out_bounds_array = np.stack([output_lower, output_upper], axis=0)
-
-        out_bounds = gp.Parameter(
-            self.container,
-            domain=dim([2, *output.shape]),
-            records=out_bounds_array,
-            name=utils._generate_name("p", self._name_prefix, "output_bounds"),
-        )
-
-        output.lo[...] = out_bounds[("0",) + tuple(output.domain)]
-        output.up[...] = out_bounds[("1",) + tuple(output.domain)]
-
-        result.parameters_created["output_bounds"] = out_bounds
-
-    def make_variable(self, *, init_weights=False) -> None:
+    def make_variable(self, *, init_weights: bool = False) -> None:
         """
         Mark Conv2d as variable. After this is called `load_weights`
         cannot be called. Use this when you need to learn the weights
@@ -308,40 +133,7 @@ class Conv2d:
                When `init_weights` is set to True, values are initialized from
                :math:`\\mathcal{U}(-\\sqrt{k},\\sqrt{k})`, where :math:`k = 1/[C_{in} * \\prod_{i=0}^{1}{kernel\\_size_n}]`.
         """
-        if self._state == 1:
-            raise ValidationError(
-                "make_variable cannot be used after calling load_weights"
-            )
-
-        expected_shape = (
-            self.out_channels,
-            self.in_channels,
-            self.kernel_size[0],
-            self.kernel_size[1],
-        )
-
-        sk = math.sqrt(
-            1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1])
-        )
-        if self.weight is None:
-            self.weight = gp.Variable(
-                self.container,
-                domain=dim(expected_shape),
-                name=utils._generate_name("v", self._name_prefix, "weight"),
-            )
-            if init_weights:
-                self.weight.l[...] = gp.math.uniform(-sk, sk)
-
-        if self.use_bias and self.bias is None:
-            self.bias = gp.Variable(
-                self.container,
-                domain=dim([self.out_channels]),
-                name=utils._generate_name("v", self._name_prefix, "bias"),
-            )
-            if init_weights:
-                self.bias.l[...] = gp.math.uniform(-sk, sk)
-
-        self._state = 2
+        self._make_variable(init_weights)
 
     def load_weights(self, weight: np.ndarray, bias: np.ndarray | None = None) -> None:
         """
@@ -359,68 +151,7 @@ class Conv2d:
                bias=True during initialization
 
         """
-        if self._state == 2:
-            raise ValidationError(
-                "load_weights cannot be used after calling make_variable"
-            )
-
-        if self.use_bias is False and bias is not None:
-            raise ValidationError(
-                "bias must be None since bias was set to False during initialization"
-            )
-
-        if self.use_bias is True and bias is None:
-            raise ValidationError("bias must be provided")
-
-        if len(weight.shape) != 4:
-            raise ValidationError(
-                f"expected 4D input for weight (got {len(weight.shape)}D input)"
-            )
-
-        expected_shape = (
-            self.out_channels,
-            self.in_channels,
-            self.kernel_size[0],
-            self.kernel_size[1],
-        )
-        if weight.shape != expected_shape:
-            raise ValidationError(f"weight expected to be {expected_shape}")
-
-        if bias is not None:
-            if len(bias.shape) != 1:
-                raise ValidationError(
-                    f"expected 1D input for bias (got {len(bias.shape)}D input)"
-                )
-
-            if bias.shape != (self.out_channels,):
-                raise ValidationError(f"bias expected to be ({self.out_channels},)")
-
-        if self.weight is None:
-            self.weight = gp.Parameter(
-                self.container,
-                domain=dim(expected_shape),
-                records=weight,
-                name=utils._generate_name("p", self._name_prefix, "weight"),
-            )
-        else:
-            self.weight.setRecords(weight)
-
-        self.weight_array = weight
-
-        if self.use_bias:
-            if self.bias is None:
-                self.bias = gp.Parameter(
-                    self.container,
-                    domain=dim([self.out_channels]),
-                    records=bias,
-                    name=utils._generate_name("p", self._name_prefix, "bias"),
-                )
-            else:
-                self.bias.setRecords(bias)
-
-            self.bias_array = bias
-
-        self._state = 1
+        self._load_weights(weight, bias)
 
     def __call__(
         self, input: gp.Parameter | gp.Variable, *, propagate_bounds: bool = True
@@ -459,130 +190,4 @@ class Conv2d:
         -------
         FormulationResult
         """
-        if not isinstance(propagate_bounds, bool):
-            raise ValidationError("Expected a boolean for propagate_bounds")
-
-        if self.weight is None:
-            raise ValidationError(
-                "You must call load_weights or make_variable first before using the Conv2d"
-            )
-
-        if len(input.domain) != 4:
-            raise ValidationError(f"expected 4D input (got {len(input.domain)}D input)")
-
-        N, C_in, H_in, W_in = utils._get_domain(input)
-
-        if len(C_in) != self.in_channels:
-            raise ValidationError("in_channels does not match")
-
-        h_in = len(H_in)
-        w_in = len(W_in)
-
-        h_out, w_out = utils._calc_hw(
-            self.padding, self.kernel_size, self.stride, h_in, w_in
-        )
-
-        out = gp.Variable(
-            self.container,
-            domain=dim([len(N), self.out_channels, h_out, w_out]),
-            name=utils._generate_name("v", self._name_prefix, "output"),
-        )
-
-        N, C_out, H_out, W_out = utils._get_domain(out)
-
-        set_out = gp.Equation(
-            self.container,
-            domain=out.domain,
-            name=utils._generate_name("e", self._name_prefix, "set_output"),
-        )
-
-        if isinstance(self.padding, str):
-            padding = utils._calc_same_padding_2d(self.kernel_size)
-        else:
-            padding = self.padding
-
-        # expr must have domain N, C_out, H_out, W_out
-        top_index = (self.stride[0] * (gp.Ord(H_out) - 1)) - padding[0] + 1
-        left_index = (self.stride[1] * (gp.Ord(W_out) - 1)) - padding[1] + 1
-
-        _, _, Hf, Wf = utils._get_domain(self.weight)
-        C_in, Hf, Wf, H_in, W_in = utils._next_domains(
-            [C_in, Hf, Wf, H_in, W_in],
-            utils._get_domain(out),
-        )
-
-        subset = gp.Set(
-            self.container,
-            domain=[H_out, W_out, Hf, Wf, H_in, W_in],
-            name=utils._generate_name("s", self._name_prefix, "conv_subset"),
-        )
-        subset[
-            H_out,
-            W_out,
-            Hf,
-            Wf,
-            H_in,
-            W_in,
-        ].where[
-            (gp.Ord(H_in) == (top_index + gp.Ord(Hf) - 1))
-            & (gp.Ord(W_in) == (left_index + gp.Ord(Wf) - 1))
-        ] = True
-
-        expr = gp.Sum(
-            [C_in],
-            gp.Sum(
-                subset[H_out, W_out, Hf, Wf, H_in, W_in],
-                input[N, C_in, H_in, W_in] * self.weight[C_out, C_in, Hf, Wf],
-            ),
-        )
-
-        if self.use_bias:
-            assert self.bias is not None
-            expr = expr + self.bias[C_out]
-
-        set_out[N, C_out, H_out, W_out] = out[N, C_out, H_out, W_out] == expr
-
-        result = FormulationResult(
-            result=out,
-            equations_created={"set_output": set_out},
-        )
-        result.variables_created["output"] = out
-        result.sets_created["conv_subset"] = subset
-
-        if isinstance(self.weight, gp.Variable):
-            result.variables_created["weight"] = self.weight
-        else:
-            result.parameters_created["weight"] = self.weight
-
-        if self.use_bias:
-            if isinstance(self.bias, gp.Variable):
-                result.variables_created["bias"] = self.bias
-            elif isinstance(self.bias, gp.Parameter):
-                result.parameters_created["bias"] = self.bias
-
-        # If propagate_bounds is True, weight is a parameter and input is a variable,
-        # we will propagate the bounds of the input to the output
-        if propagate_bounds and self._state == 1 and isinstance(input, gp.Variable):
-            self._propagate_bounds(
-                input,
-                out,
-                self.weight_array,
-                self.bias_array,
-                self.stride,
-                padding,
-                result,
-            )
-
-        return result
-
-    def __str__(self) -> str:
-        return (
-            "Conv2D(\n"
-            f"  in_channels={self.in_channels}\n"
-            f"  out_channels={self.out_channels}\n"
-            f"  kernel_size={self.kernel_size}\n"
-            f"  stride={self.stride}\n"
-            f"  padding={self.padding}\n"
-            f"  bias={self.use_bias}\n"
-            f"  weights_loaded={'True' if self._state == 1 else 'False'}\n)"
-        )
+        return self._convolve(input, propagate_bounds)

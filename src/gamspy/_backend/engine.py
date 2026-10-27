@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, TextIO
 import gamspy._backend.backend as backend
 import gamspy._gdx as gdxio
 from gamspy._execution import SocketEngine
+from gamspy._execution.socket_engine import GAMS_STATUS
 from gamspy._internals import DataSource
 from gamspy._options import Options
 from gamspy.exceptions import (
@@ -23,10 +24,13 @@ from gamspy.exceptions import (
     EngineException,
     GamspyException,
     ValidationError,
+    _customize_exception,
 )
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    import pandas as pd
 
     from gamspy import Container, Model
 
@@ -41,6 +45,9 @@ logger.addHandler(stream_handler)
 
 
 MAX_REQUEST_ATTEMPS = 3
+# (connect, read) timeouts in seconds for each request to GAMS Engine
+REQUEST_TIMEOUT = (30, 300)
+JOB_POLL_INTERVAL = 0.5
 ZIP_NAME = "data.zip"
 INEX_FILE_NAME = "inex.json"
 STATUS_MAP = {
@@ -91,14 +98,14 @@ class EngineConfiguration:
 
     def __init__(
         self, host: str, username: str, password: str, jwt: str, namespace: str
-    ):
+    ) -> None:
         self.jwt = jwt
         self.username = username
         self.password = password
         self.namespace = namespace
         self.host = self._verify_host(host)
 
-    def _verify_host(self, host: str):
+    def _verify_host(self, host: str) -> str:
         validated_url = urllib.parse.urlparse(host)
         if validated_url.scheme not in ("http", "https"):
             raise ValidationError(
@@ -114,7 +121,7 @@ class EngineConfiguration:
 
         return host
 
-    def _get_auth_header(self):
+    def _get_auth_header(self) -> str:
         """Returns authentication header"""
         if not self.username:
             if not self.jwt:
@@ -184,6 +191,7 @@ class Auth(Endpoint):
                 f"{self.client._engine_config.host}/auth",
                 params=params,
                 headers=self.client.get_request_headers(),
+                timeout=REQUEST_TIMEOUT,
             )
 
             response_data = r.content.decode("utf-8", errors="replace")
@@ -240,6 +248,7 @@ class Auth(Endpoint):
             r = requests.post(
                 f"{self.client._engine_config.host}/auth/login",
                 data=payload,
+                timeout=REQUEST_TIMEOUT,
             )
 
             response_data = r.content.decode("utf-8", errors="replace")
@@ -274,6 +283,7 @@ class Auth(Endpoint):
             r = requests.post(
                 f"{self.client._engine_config.host}/auth/logout",
                 headers=self.client.get_request_headers(),
+                timeout=REQUEST_TIMEOUT,
             )
 
             if r.status_code == 200:
@@ -324,6 +334,7 @@ class Job(Endpoint):
             r = requests.get(
                 f"{self.client._engine_config.host}/jobs/{token}",
                 headers=self.client.get_request_headers(),
+                timeout=REQUEST_TIMEOUT,
             )
             response_data = r.content.decode("utf-8", errors="replace")
 
@@ -332,7 +343,7 @@ class Job(Endpoint):
                 job_status = int(info["status"])
                 return (
                     job_status,
-                    STATUS_MAP[job_status],
+                    STATUS_MAP.get(job_status, "unknown"),
                     info["process_status"],
                 )
             elif r.status_code == 403:
@@ -346,7 +357,7 @@ class Job(Endpoint):
                 raise EngineClientException("Internal error!")
 
         raise EngineClientException(
-            "Creating job on GAMS Engine failed after: "
+            "Getting job status from GAMS Engine failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
             + response_data
@@ -396,6 +407,7 @@ class Job(Endpoint):
                 params=query_params,
                 files=file_params,
                 headers=self.client.get_request_headers(),
+                timeout=REQUEST_TIMEOUT,
             )
             response_data = r.content.decode("utf-8", errors="replace")
             if r.status_code == 201:
@@ -423,7 +435,7 @@ class Job(Endpoint):
             + response_data
         )
 
-    def get_results(self, token: str, working_directory: str):
+    def get_results(self, token: str, working_directory: str) -> None:
         """
         Get request to /jobs/{token}/result which downloads the job results.
         Downloaded results are unpacked to working directory.
@@ -451,6 +463,7 @@ class Job(Endpoint):
                 f"{self.client._engine_config.host}/jobs/{token}/result",
                 headers=self.client.get_request_headers(),
                 stream=True,
+                timeout=REQUEST_TIMEOUT,
             )
 
             if r.status_code == 200:
@@ -473,6 +486,7 @@ class Job(Endpoint):
                 logger.info(
                     f"Results have been extracted to your working directory: {working_directory}."
                 )
+                return
             elif r.status_code == 400:
                 raise EngineClientException("Bad request!")
             elif r.status_code == 401:
@@ -492,7 +506,13 @@ class Job(Endpoint):
                     f" {response_data}"
                 )
 
-    def delete_results(self, token: str):
+        raise EngineClientException(
+            "Getting job results from GAMS Engine failed after: "
+            + str(MAX_REQUEST_ATTEMPS)
+            + " attempts."
+        )
+
+    def delete_results(self, token: str) -> None:
         """
         Delete request to /jobs/{token} which deletes the job results.
         Refer to https://engine.gams.com/api/ for more details.
@@ -515,6 +535,7 @@ class Job(Endpoint):
             r = requests.delete(
                 f"{self.client._engine_config.host}/jobs/{token}/result",
                 headers=self.client.get_request_headers(),
+                timeout=REQUEST_TIMEOUT,
             )
             response_data = r.content.decode("utf-8", errors="replace")
 
@@ -566,6 +587,7 @@ class Job(Endpoint):
             r = requests.delete(
                 f"{self.client._engine_config.host}/jobs/{token}/unread-logs",
                 headers=self.client.get_request_headers(),
+                timeout=REQUEST_TIMEOUT,
             )
             response_data = r.content.decode("utf-8", errors="replace")
 
@@ -618,7 +640,9 @@ class Job(Endpoint):
 
         return model_data_zip
 
-    def _get_params(self, model_data_zip, gms_file, pf_file: str | None):
+    def _get_params(
+        self, model_data_zip: io.BytesIO, gms_file: str, pf_file: str | None
+    ) -> tuple[dict, dict]:
         file_params = {}
         query_params = copy.deepcopy(self.engine_options) if self.engine_options else {}
 
@@ -721,7 +745,7 @@ class EngineClient:
         *,
         remove_results: bool = False,
         is_blocking: bool = True,
-    ):
+    ) -> None:
         self.host = host
         self.username = username
         self.password = password
@@ -747,7 +771,7 @@ class EngineClient:
         self.job = Job(self)
         self.auth = Auth(self)
 
-    def get_request_headers(self):
+    def get_request_headers(self) -> dict[str, str]:
         return {
             "Authorization": self._engine_config._get_auth_header(),
             "User-Agent": "GAMSPy EngineClient",
@@ -780,10 +804,10 @@ class GAMSEngine(backend.Backend):
         self.model = model
         self.client = client
 
-    def is_async(self):
+    def is_async(self) -> bool:
         return not self.client.is_blocking
 
-    def run(self):
+    def run(self) -> pd.DataFrame | None:
         # Run a dummy job to get the restart file to be sent to GAMS Engine
         self._create_restart_file()
 
@@ -804,7 +828,7 @@ class GAMSEngine(backend.Backend):
 
         return summary
 
-    def execute_gams(self, gams_string: str):
+    def execute_gams(self, gams_string: str) -> None:
         hidden_options = {
             "gdx": os.path.basename(self.container._gdx_out),
             "gdxSymbols": "newOrChanged",
@@ -818,48 +842,24 @@ class GAMSEngine(backend.Backend):
             file.write(gams_string)
 
         try:
-            original_extra_files = copy.deepcopy(self.client.extra_model_files)
+            original_extra_files = self.client.extra_model_files
             self.client.extra_model_files = self._append_gamspy_files()
-            token = self.client.job.post(
-                self.container.working_directory,
-                self.gms_file,
-                self.pf_file,
-            )
-            self.client.extra_model_files = original_extra_files
+            try:
+                token = self.client.job.post(
+                    self.container.working_directory,
+                    self.gms_file,
+                    self.pf_file,
+                )
+            finally:
+                self.client.extra_model_files = original_extra_files
+
             self.client.tokens.append(token)
 
             if not self.is_async():
-                job_status, message, _ = self.client.job.get(token)
-
-                if job_status not in STATUS_MAP:
-                    raise EngineException(
-                        "Unknown job status code! Currently supported job"
-                        f" status codes: {STATUS_MAP.keys()}",
-                        return_code=job_status,
-                        status_code=job_status,
-                    )
-
-                if job_status in (-1, -3):
-                    raise EngineException(
-                        f"Could not get job results because the job is {message}.",
-                        return_code=job_status,
-                        status_code=job_status,
-                    )
-
-                while job_status in (-10, -2, 0):
-                    logger.info(f"Job status is {message}...")
-                    job_status, _, _ = self.client.job.get(token)
-
-                while job_status in (1, 2):
-                    message, is_finished = self.client.job.get_logs(token)
-
-                    if self.output is not None:
-                        self.output.write(message)
-
-                    if is_finished:
-                        job_status = 10
-
+                return_code = self._wait_for_job(token)
                 self.client.job.get_results(token, self.container.working_directory)
+                if self.client.remove_results:
+                    self.client.job.delete_results(token)
 
                 engine_output_path = os.path.join(
                     self.container.working_directory, "log_stdout.txt"
@@ -874,15 +874,62 @@ class GAMSEngine(backend.Backend):
                     except FileNotFoundError:
                         ...
 
-                self.model._update_model_attributes()
+                if return_code:
+                    message = (
+                        f"Return code {return_code}. {GAMS_STATUS.get(return_code, '')}"
+                        f" Check {self.job_name + '.lst'} for more information."
+                        + _customize_exception(self.options, self.job_name, return_code)
+                    )
+                    self.container._workspace._errors.append(message)
+                    raise EngineException(message, return_code=return_code)
 
-                if self.client.remove_results:
-                    self.client.job.delete_results(token)
+                self.model._update_model_attributes()
         finally:
             self.container._unsaved_statements = []
             self.container._delete_autogenerated_symbols()
 
-    def postprocess(self):
+    def _wait_for_job(self, token: str) -> int | None:
+        """
+        Polls the job until it finishes and streams its log to the output.
+        Returns the GAMS return code of the job.
+        """
+        logs_finished = self.output is None
+        last_message = None
+
+        while True:
+            job_status, message, return_code = self.client.job.get(token)
+
+            if job_status in (-1, -3):
+                raise EngineException(
+                    f"Could not get job results because the job is {message}.",
+                    return_code=job_status,
+                    status_code=job_status,
+                )
+
+            if job_status not in STATUS_MAP:
+                raise EngineException(
+                    "Unknown job status code! Currently supported job"
+                    f" status codes: {STATUS_MAP.keys()}",
+                    return_code=job_status,
+                    status_code=job_status,
+                )
+
+            # Logs of a finished job can still be fetched once.
+            if job_status in (1, 2, 10) and not logs_finished:
+                assert self.output is not None
+                logs, logs_finished = self.client.job.get_logs(token)
+                self.output.write(logs)
+
+            if job_status == 10 and logs_finished:
+                return return_code
+
+            if job_status in (-10, -2, 0) and message != last_message:
+                logger.info(f"Job status is {message}...")
+                last_message = message
+
+            time.sleep(JOB_POLL_INTERVAL)
+
+    def postprocess(self) -> pd.DataFrame | None:
         if self.client.remove_results or self.model is None:
             return None
 
@@ -911,7 +958,7 @@ class GAMSEngine(backend.Backend):
 
         return hidden_options
 
-    def _create_restart_file(self):
+    def _create_restart_file(self) -> None:
         with open(self.gms_file, "w", encoding="utf-8") as gams_file:
             gams_file.write("")
 
@@ -928,7 +975,7 @@ class GAMSEngine(backend.Backend):
 
         engine.send_job(self.job_name, self.pf_file)
 
-    def _sync(self):
+    def _sync(self) -> None:
         symbols = gdxio._get_symbol_names_from_gdx(
             self.container.system_directory, self.container._gdx_out
         )
@@ -957,7 +1004,7 @@ class GAMSEngine(backend.Backend):
                 extra_model_files.append(self.model._indicator_file)
 
         if self.options.loadpoint is not None:
-            extra_model_files.append(self.options.loadpoint)
+            extra_model_files.append(str(self.options.loadpoint))
 
         if self.model.external_module is not None:
             extra_model_files.append(self.model.external_module)

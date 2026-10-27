@@ -305,7 +305,7 @@ def _declaration_plumbing_callers():
     callers = []
 
     for path in sorted(package_root.rglob("*.py")):
-        tree = ast.parse(path.read_text())
+        tree = ast.parse(path.read_text(encoding="utf-8"))
         module_name = "gamspy." + ".".join(
             path.relative_to(package_root).with_suffix("").parts
         )

@@ -6,8 +6,8 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
-import gamspy._validation as validation
 import gamspy.utils as utils
+from gamspy._internals import VAR_EQU_ATTRIBUTE_SUFFIXES
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy.exceptions import ValidationError
 
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
     from gamspy import Variable
     from gamspy._algebra.expression import Expression
-    from gamspy._types import ValidatedIndexType
+    from gamspy._types import OperableType, ValidatedIndexType
 
 
 class ImplicitVariable(ImplicitSymbol, operable.Operable):
@@ -31,7 +31,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         domain: list[ValidatedIndexType],
         permutation: list[int] | None = None,
         scalar_domains: list[tuple[int, str]] | None = None,
-    ):
+    ) -> None:
         """
         Implicit Variable
 
@@ -50,7 +50,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     def __getitem__(
         self, indices: Sequence | str | EllipsisType | slice
     ) -> ImplicitVariable:
-        domain = validation.validate_domain(self, indices)
+        domain = self._reindex(indices)
         return ImplicitVariable(
             parent=self.parent,
             name=self.name,
@@ -60,7 +60,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         )
 
     @property
-    def l(self):
+    def l(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.l.name,
@@ -70,12 +70,12 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         )
 
     @l.setter
-    def l(self, value: int | float | Expression):
+    def l(self, value: int | float | Expression) -> None:
         # b[t].l = 30 -> b.l[t] = 30
-        self.parent.l[self.domain] = value
+        self.l[...] = value
 
     @property
-    def m(self):
+    def m(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.m.name,
@@ -85,12 +85,12 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         )
 
     @m.setter
-    def m(self, value: int | float | Expression):
+    def m(self, value: int | float | Expression) -> None:
         # b[t].m = 30 -> b.m[t] = 30
-        self.parent.m[self.domain] = value
+        self.m[...] = value
 
     @property
-    def lo(self):
+    def lo(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.lo.name,
@@ -100,12 +100,12 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         )
 
     @lo.setter
-    def lo(self, value: int | float | Expression):
+    def lo(self, value: int | float | Expression) -> None:
         # b[t].lo = 30 -> b.lo[t] = 30
-        self.parent.lo[self.domain] = value
+        self.lo[...] = value
 
     @property
-    def up(self):
+    def up(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.up.name,
@@ -115,12 +115,12 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         )
 
     @up.setter
-    def up(self, value: int | float | Expression):
+    def up(self, value: int | float | Expression) -> None:
         # b[t].up = 30 -> b.up[t] = 30
-        self.parent.up[self.domain] = value
+        self.up[...] = value
 
     @property
-    def scale(self):
+    def scale(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.scale.name,
@@ -130,15 +130,15 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         )
 
     @scale.setter
-    def scale(self, value: int | float | Expression):
+    def scale(self, value: int | float | Expression) -> None:
         if self.parent.type in ("integer", "binary"):
             raise ValidationError("Scales cannot be applied to discrete variables.")
 
         # b[t].scale = 30 -> b.scale[t] = 30
-        self.parent.scale[self.domain] = value
+        self.scale[...] = value
 
     @property
-    def fx(self):
+    def fx(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.fx.name,
@@ -148,12 +148,12 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         )
 
     @fx.setter
-    def fx(self, value: int | float | Expression):
+    def fx(self, value: int | float | Expression) -> None:
         # b[t].fx = 30 -> b.fx[t] = 30
-        self.parent.fx[self.domain] = value
+        self.fx[...] = value
 
     @property
-    def prior(self):
+    def prior(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.prior.name,
@@ -163,15 +163,15 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         )
 
     @prior.setter
-    def prior(self, value: int | float | Expression):
+    def prior(self, value: int | float | Expression) -> None:
         if self.parent.type not in ("integer", "binary"):
             raise ValidationError("Priorities can only be used on discrete variables.")
 
         # b[t].prior = 30 -> b.prior[t] = 30
-        self.parent.prior[self.domain] = value
+        self.prior[...] = value
 
     @property
-    def stage(self):
+    def stage(self) -> implicits.ImplicitParameter:
         return implicits.ImplicitParameter(
             self.parent,
             name=self.parent.stage.name,
@@ -181,9 +181,9 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         )
 
     @stage.setter
-    def stage(self, value: int | float | Expression):
+    def stage(self, value: int | float | Expression) -> None:
         # b[t].stage = 30 -> b.stage[t] = 30
-        self.parent.stage[self.domain] = value
+        self.stage[...] = value
 
     @property
     def T(self) -> implicits.ImplicitVariable:
@@ -217,17 +217,14 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         if self.parent.records is None:
             return None
 
-        temp_name = "autotemp" + utils._get_unique_name()
         given_domain, declaration_domain = self._get_temp_domain()
-        temp_param = syms.Parameter._constructor_bypass(
-            self.container, temp_name, declaration_domain
-        )
-
         if given_domain == []:
             given_domain = [...]
 
-        temp_param[given_domain] = self.l
-        del self.container._data[temp_name]
+        with self.container._temp_symbol(
+            syms.Parameter, declaration_domain
+        ) as temp_param:
+            temp_param[given_domain] = self.l
 
         recs = temp_param.records
         if recs is not None:
@@ -274,23 +271,8 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         [2. 5.]
 
         """
-        if not isinstance(column, str):
-            raise TypeError("Argument 'column' must be type str")
-
-        columns = {
-            "level": "l",
-            "marginal": "m",
-            "lower": "lo",
-            "upper": "up",
-            "scale": "scale",
-        }
-
-        if column not in columns:
-            raise TypeError(
-                f"Argument 'column' must be one of the following: {list(columns)}"
-            )
-
-        return getattr(self, columns[column]).toDense()
+        column = self.parent._validate_column(column)
+        return getattr(self, VAR_EQU_ATTRIBUTE_SUFFIXES[column]).toDense()
 
     def toValue(self, column: str = "level") -> float:
         """
@@ -327,23 +309,8 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         np.float64(2.0)
 
         """
-        if not isinstance(column, str):
-            raise TypeError("Argument 'column' must be type str")
-
-        columns = {
-            "level": "l",
-            "marginal": "m",
-            "lower": "lo",
-            "upper": "up",
-            "scale": "scale",
-        }
-
-        if column not in columns:
-            raise TypeError(
-                f"Argument 'column' must be one of the following: {list(columns)}"
-            )
-
-        return getattr(self, columns[column]).toValue()
+        column = self.parent._validate_column(column)
+        return getattr(self, VAR_EQU_ATTRIBUTE_SUFFIXES[column]).toValue()
 
     def toList(self, columns: str | list[str] | None = None) -> list:
         """
@@ -382,12 +349,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             return []
 
         domain = list(self.domain)
-        temp_name = "autotemp" + utils._get_unique_name()
-        temp_var = syms.Variable._constructor_bypass(
-            self.container, temp_name, domain=domain
-        )
-
-        try:
+        with self.container._temp_symbol(syms.Variable, domain) as temp_var:
             index = domain if domain else [...]
             temp_var.l[index] = self.l
             temp_var.m[index] = self.m
@@ -395,16 +357,14 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             temp_var.up[index] = self.up
             temp_var.scale[index] = self.scale
             return temp_var.toList(columns)
-        finally:
-            del self.container._data[temp_name]
 
-    def __eq__(self, other):
+    def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):
+    def __ne__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "ne", other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def gamsRepr(self) -> str:

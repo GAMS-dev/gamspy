@@ -249,20 +249,21 @@ def test_lazy_records(transport, monkeypatch):
     )
 
     reads = []
-    original = gp._model_instance.get_records
+    original = gp._frozen_model.get_records
 
     def spy(*args, symbols=None, **kwargs):
         reads.append(symbols)
         return original(*args, symbols=symbols, **kwargs)
 
-    monkeypatch.setattr(gp._model_instance, "get_records", spy)
+    monkeypatch.setattr(gp._frozen_model, "get_records", spy)
 
     transport.freeze(modifiables=[bmult])
     # the companion variable of a modifiable parameter is created by freeze
     assert "bmult_var" in m.data
 
+    # unlike `bmult[...] = value`, setRecords does not run a GAMS job
     for value in (0.6, 0.7, 0.8):
-        bmult[...] = value
+        bmult.setRecords(value)
         transport.solve(solver="conopt")
 
     # no records are read from the model instance while solving
@@ -289,14 +290,14 @@ def test_lazy_records(transport, monkeypatch):
     assert reads == [["z"], ["x"], ["bmult_var"]]
 
     # a solve invalidates the records that were read before
-    bmult[...] = 0.9
+    bmult.setRecords(0.9)
     transport.solve(solver="conopt")
     assert math.isclose(z.toValue(), 138.307, rel_tol=1e-3)
     assert reads == [["z"], ["x"], ["bmult_var"], ["z"]]
 
     # unfreeze reads whatever is still pending and releases the instance
     transport.unfreeze()
-    assert transport.instance is None
+    assert transport._frozen_model is None
     # everything except `z`, which was read after the last solve
     assert sorted(name for (name,) in reads[4:]) == [
         "bmult_var",
@@ -315,6 +316,8 @@ def test_lazy_records(transport, monkeypatch):
     bmult[...] = 0.6
     transport.solve(solver="conopt")
 
+    # a GAMS job first sends the records a frozen solve left pending to GAMS
+    reads_so_far = len(reads)
     other = Model(
         m,
         name="other",
@@ -323,6 +326,8 @@ def test_lazy_records(transport, monkeypatch):
         sense=Sense.MIN,
         objective=z,
     )
+    assert len(reads) > reads_so_far
+
     bmult[...] = 1
     reads_so_far = len(reads)
     other.solve(solver="conopt")
@@ -331,6 +336,44 @@ def test_lazy_records(transport, monkeypatch):
     # the records came from the GAMS state, not from the model instance
     assert len(reads) == reads_so_far
     transport.unfreeze()
+
+
+@pytest.mark.integration
+def test_gams_sees_frozen_solution(transport, tmp_path):
+    m = transport.container
+    i = Set(m, "i", records=["a", "b"])
+    p = Parameter(m, "p", domain=i, records=[("a", 1), ("b", 1)])
+    x = Variable(m, "x", domain=i, type="positive")
+    x.up[i] = 1
+    e = Equation(m, "e", definition=Sum(i, x[i]) <= 1)
+    model = Model(
+        m,
+        name="small",
+        equations=[e],
+        problem="LP",
+        sense=Sense.MAX,
+        objective=Sum(i, p[i] * x[i]),
+    )
+    model.solve(solver="cplex")
+    assert x.toList() == [("a", 1.0), ("b", 0.0)]
+
+    model.freeze(modifiables=[p])
+    p.setRecords([("a", 1), ("b", 5)])
+    model.solve(solver="cplex")
+
+    # read before the GAMS job
+    assert x.toList() == [("a", 0.0), ("b", 1.0)]
+    q = Parameter(m, "q", domain=i)
+    q[i] = x.l[i]
+    assert q.toList() == [("b", 1.0)]
+
+    # still pending when the GAMS job runs
+    p.setRecords([("a", 3), ("b", 1)])
+    model.solve(solver="cplex")
+    m.write(str(tmp_path / "out.gdx"), ["x"])
+    out = Container(load_from=str(tmp_path / "out.gdx"))
+    assert out["x"].toList() == [("a", 1.0), ("b", 0.0)]
+    model.unfreeze()
 
 
 @pytest.mark.integration
@@ -368,7 +411,7 @@ def test_solve_after_container_close(transport):
         c[i] = 42
 
     model.unfreeze()
-    assert model.instance is None
+    assert model._frozen_model is None
 
 
 @pytest.mark.integration
@@ -431,7 +474,7 @@ def test_unfreeze_without_loading_records(transport):
     levels = x.toList()
     model.unfreeze(load_records=False)
 
-    assert model.instance is None
+    assert model._frozen_model is None
     assert x.toList() == levels  # what was read is kept
     assert e.records is None  # what was not read is dropped
     assert math.isclose(model.objective_value, 1.0, rel_tol=1e-6)
@@ -1082,7 +1125,7 @@ def test_database():
 
 
 @pytest.mark.integration
-def test_reserved_var_suffix():
+def test_var_suffix():
     m = gp.Container()
     x = gp.Variable(m, "x", type="Positive")
     cost_var = gp.Variable(m, "cost_var", type="Positive")
@@ -1091,18 +1134,19 @@ def test_reserved_var_suffix():
     demand = gp.Equation(m, "demand", definition=x + cost_var >= rhs)
     model = gp.Model(
         m,
-        "reserved",
+        "suffix",
         equations=[cap, demand],
         problem="LP",
         sense=Sense.MAX,
-        objective=x + cost_var,
+        objective=x + 2 * cost_var,
     )
 
-    with pytest.raises(ValidationError, match="reserved by the frozen solve"):
-        model.freeze(modifiables=[rhs])
-
-    assert not model._is_frozen
-    assert model.instance is None
+    # GAMS used to fix every `*_var` variable of a model instance to zero.
+    model.freeze(modifiables=[rhs])
+    model.solve()
+    assert math.isclose(model.objective_value, 20)
+    assert math.isclose(cost_var.toValue(), 10)
+    model.unfreeze()
 
     # The companion variable that the frozen solve creates itself is allowed.
     m2 = gp.Container()
@@ -1151,7 +1195,7 @@ def test_companion_name_clash(clashing):
         model.freeze(modifiables=[rhs])
 
     assert not model._is_frozen
-    assert model.instance is None
+    assert model._frozen_model is None
     assert m._frozen_modifiables == set()
 
     # The container must still be usable, the clash was caught before GAMS ran.

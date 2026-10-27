@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, cast
+from enum import StrEnum
+from typing import TYPE_CHECKING, ClassVar, cast
 
 from gams.core.gdx import GMS_DT_EQU
 
@@ -17,8 +17,10 @@ from gamspy._internals import (
     EQU_TYPE,
     TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
 )
+from gamspy._notation import LATEX, UNICODE
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import VarEquSymbol
+from gamspy._symbols.utils import _quote_description
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -29,8 +31,14 @@ if TYPE_CHECKING:
     from gamspy import Container, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._notation import Notation
     from gamspy._symbols.implicits import ImplicitEquation, ImplicitParameter
-    from gamspy._types import DomainType, IndexType, VarEquRecordsType
+    from gamspy._types import (
+        DomainType,
+        IndexType,
+        ValidatedIndexType,
+        VarEquRecordsType,
+    )
 
 
 EQ_TYPES = ["=e=", "=l=", "=g=", "=n=", "=x=", "=b="]
@@ -81,7 +89,7 @@ EQU_DEFAULT_VALUES = {
 }
 
 
-class EquationType(Enum):
+class EquationType(StrEnum):
     """
     Enumeration of available equation types.
     """
@@ -99,12 +107,9 @@ class EquationType(Enum):
     """Boolean equations."""
 
     @classmethod
-    def values(cls):
+    def values(cls) -> list[str]:
         """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
-
-    def __str__(self) -> str:
-        return self.value
 
 
 class Equation(VarEquSymbol):
@@ -222,7 +227,7 @@ class Equation(VarEquSymbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
         definition_domain: list | None = None,
-    ):
+    ) -> None:
         type = cast_type(type)
         if self.type != type.casefold():
             raise TypeError(
@@ -260,7 +265,7 @@ class Equation(VarEquSymbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
         definition_domain: list | None = None,
-    ):
+    ) -> None:
         container, name = self._resolve_container_and_name(
             container, name, prefix="e", is_miro=is_miro_output
         )
@@ -300,13 +305,15 @@ class Equation(VarEquSymbol):
 
         return info
 
-    def _deserialize_value(self, key: str, value: Any) -> Any:
+    def _deserialize_value(self, key: str, value: object) -> object:
         if key == "_definition":
-            left, right = value.split(" .. ")
+            left, right = cast("str", value).split(" .. ")
             return expression.Expression(left, "..", right[:-1])
 
         if key == "_indicator":
-            binary_name, positions, indicator_value, generation_name = value
+            binary_name, positions, indicator_value, generation_name = cast(
+                "list", value
+            )
             return (
                 self._container[binary_name],
                 tuple(positions),
@@ -326,7 +333,7 @@ class Equation(VarEquSymbol):
             domain=domain,
         )
 
-    def __setitem__(self, indices: IndexType, rhs: Expression):
+    def __setitem__(self, indices: IndexType, rhs: Expression) -> None:
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 
@@ -340,17 +347,21 @@ class Equation(VarEquSymbol):
     def _init_definition(
         self,
         assignment: Variable | Operation | Expression | None = None,
-    ):
+    ) -> None:
         if assignment is None:
             return None
 
-        domain = self.domain
+        domain = cast("list[ValidatedIndexType]", self.domain)
         if self._definition_domain is not None:
             domain = validation.validate_domain(self, self._definition_domain)
 
         self._set_definition(domain, assignment)
 
-    def _set_definition(self, domain, rhs):
+    def _set_definition(
+        self,
+        domain: list[ValidatedIndexType],
+        rhs: Variable | Operation | Expression,
+    ) -> None:
         # self[domain] = rhs
         if isinstance(rhs, sparse.SparseAssignment):
             raise ValidationError(
@@ -433,7 +444,7 @@ class Equation(VarEquSymbol):
                 break  # pragma: no cover
 
     @property
-    def l(self):
+    def l(self) -> ImplicitParameter:
         """
         The Level of the equation (its current value).
 
@@ -463,11 +474,11 @@ class Equation(VarEquSymbol):
         return self._l
 
     @l.setter
-    def l(self, value: int | float | Expression):
+    def l(self, value: int | float | Expression) -> None:
         self._l[...] = value
 
     @property
-    def m(self):
+    def m(self) -> ImplicitParameter:
         """
         The Marginal (dual) value of the equation.
 
@@ -497,11 +508,11 @@ class Equation(VarEquSymbol):
         return self._m
 
     @m.setter
-    def m(self, value: int | float | Expression):
+    def m(self, value: int | float | Expression) -> None:
         self._m[...] = value
 
     @property
-    def lo(self):
+    def lo(self) -> ImplicitParameter:
         """
         The Lower Bound of the equation.
 
@@ -528,11 +539,11 @@ class Equation(VarEquSymbol):
         return self._lo
 
     @lo.setter
-    def lo(self, value: int | float | Expression):
+    def lo(self, value: int | float | Expression) -> None:
         self._lo[...] = value
 
     @property
-    def up(self):
+    def up(self) -> ImplicitParameter:
         """
         The Upper Bound of the equation.
 
@@ -559,11 +570,11 @@ class Equation(VarEquSymbol):
         return self._up
 
     @up.setter
-    def up(self, value: int | float | Expression):
+    def up(self, value: int | float | Expression) -> None:
         self._up[...] = value
 
     @property
-    def scale(self):
+    def scale(self) -> ImplicitParameter:
         """
         The Scale factor of the equation.
 
@@ -593,11 +604,11 @@ class Equation(VarEquSymbol):
         return self._s
 
     @scale.setter
-    def scale(self, value: int | float | Expression):
+    def scale(self, value: int | float | Expression) -> None:
         self._s[...] = value
 
     @property
-    def stage(self):
+    def stage(self) -> ImplicitParameter:
         """
         The Stage of the equation.
 
@@ -627,11 +638,11 @@ class Equation(VarEquSymbol):
         return self._stage
 
     @stage.setter
-    def stage(self, value: int | float | Expression):
+    def stage(self, value: int | float | Expression) -> None:
         self._stage[...] = value
 
     @property
-    def range(self):
+    def range(self) -> ImplicitParameter:
         """
         The Range of the equation.
 
@@ -661,7 +672,7 @@ class Equation(VarEquSymbol):
         return self._range
 
     @property
-    def slacklo(self):
+    def slacklo(self) -> ImplicitParameter:
         """
         The lower bound slack of the equation.
 
@@ -688,7 +699,7 @@ class Equation(VarEquSymbol):
         return self._slacklo
 
     @property
-    def slackup(self):
+    def slackup(self) -> ImplicitParameter:
         """
         The upper bound slack of the equation.
 
@@ -715,7 +726,7 @@ class Equation(VarEquSymbol):
         return self._slackup
 
     @property
-    def slack(self):
+    def slack(self) -> ImplicitParameter:
         """
         The Slack of the equation.
 
@@ -745,7 +756,7 @@ class Equation(VarEquSymbol):
         return self._slack
 
     @property
-    def infeas(self):
+    def infeas(self) -> ImplicitParameter:
         """
         The Infeasibility of the equation.
 
@@ -873,7 +884,7 @@ class Equation(VarEquSymbol):
                 if matches == len(sets):
                     listings.append(listing)
 
-        def infeasibility_filter(listing):
+        def infeasibility_filter(listing: str) -> bool:
             infeasibility = listing.split("INFES = ")
 
             if infeasibility_threshold is None:
@@ -912,10 +923,10 @@ class Equation(VarEquSymbol):
         return self._get_records()
 
     @records.setter
-    def records(self, records: pd.DataFrame | None):
+    def records(self, records: pd.DataFrame | None) -> None:
         self._assign_records(records)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def setRecords(
@@ -957,7 +968,7 @@ class Equation(VarEquSymbol):
         return EQU_DEFAULT_VALUES[self._type]
 
     @property
-    def type(self):
+    def type(self) -> str:
         """
         The type of the equation.
 
@@ -986,7 +997,7 @@ class Equation(VarEquSymbol):
         return self._type
 
     @type.setter
-    def type(self, eq_type: str | EquationType):
+    def type(self, eq_type: str | EquationType) -> None:
         given_type = cast_type(eq_type)
         self._type = given_type
 
@@ -1043,12 +1054,44 @@ class Equation(VarEquSymbol):
         $
 
         """
-        return self._latex_repr()
+        return self._math_repr(LATEX)
 
-    def _latex_repr(self, matched_variables: Sequence[Variable] = ()) -> str:
+    def unicodeRepr(self) -> str:
+        """
+        Generates the representation of the equation definition in mathematical
+        notation with Unicode characters.
+
+        Returns
+        -------
+        str
+
+        Raises
+        ------
+        ValidationError
+            If the equation has not been defined (assigned).
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1'])
+        >>> j = gp.Set(m, "j", records=['j1'])
+        >>> c = gp.Parameter(m, "c", domain=[i, j])
+        >>> x = gp.Variable(m, "x", domain=[i, j])
+        >>> e = gp.Equation(m, "e", domain=[j])
+        >>> e[j] = gp.Sum(i, c[i, j] * x[i, j]) <= 10
+        >>> print(e.unicodeRepr())
+        ∑(i) c[i,j] · x[i,j] ≤ 10  ∀ j
+
+        """
+        return self._math_repr(UNICODE)
+
+    def _math_repr(
+        self, notation: Notation, matched_variables: Sequence[Variable] = ()
+    ) -> str:
         if self._definition is None:
             raise ValidationError(
-                "Equation must be defined to get its latex representation."
+                "Equation must be defined to get its mathematical representation."
             )
 
         # The LHS of an equation definition can either be an ImplicitEquation or a condition.
@@ -1066,41 +1109,44 @@ class Equation(VarEquSymbol):
         # e[i, "j1"] = ... holds for all i where j = 'j1'
         conditions = []
         for position, literal in left._scalar_domains:
-            declared = utils._get_domain_str([self.domain[position]], latex=True)[1:-1]
-            literal = literal.replace("_", r"\_")
-            conditions.append(f"{declared} = \\text{{`{literal}'}}")
+            declared = utils._get_domain_str(
+                [self.domain[position]], notation=notation
+            )[1:-1]
+            conditions.append(f"{declared} = {notation.quoted(literal)}")
 
         if where is not None:
-            where_str, where_prec, _ = expression.latex_operand(where)
+            where_str, where_prec, _ = expression.math_operand(where, notation)
             if conditions and where_prec < expression.PRECEDENCE["and"]:
                 where_str = f"({where_str})"
             conditions.append(where_str)
 
-        condition_str = " \\wedge ".join(conditions)
-        domain_str = utils._get_domain_str(left.domain, latex=True)[1:-1]
+        condition_str = f" {notation.operators['and']} ".join(conditions)
+        domain_str = utils._get_domain_str(left.domain, notation=notation)[1:-1]
         right_side = ""
         if domain_str:
-            right_side = f"\\hfill \\forall {domain_str}"
+            right_side = notation.forall + domain_str
             if condition_str:
-                right_side += f" ~ | ~ {condition_str}"
+                right_side += notation.such_that + condition_str
         elif condition_str:
-            right_side = f"\\hfill \\text{{if }} {condition_str}"
+            right_side = notation.condition_only + condition_str
 
         assert self._definition.right is not None
-        definition_str = expression.get_operand_latex_repr(self._definition.right)
+        definition_str = expression.get_operand_math_repr(
+            self._definition.right, notation
+        )
 
         if matched_variables:
             # Variables are matched to the equation position by position.
             positions = left._reference_domain()
             variable_strs = [
-                variable[positions].latexRepr()
+                variable[positions]._math_repr(notation)
                 if positions and variable.dimension == len(positions)
-                else variable.latexRepr()
+                else variable._math_repr(notation)
                 for variable in matched_variables
             ]
-            definition_str += " \\perp " + ",".join(variable_strs)
+            definition_str += notation.complementarity + ",".join(variable_strs)
 
-        return "$\n" + definition_str + right_side + "\n$"
+        return notation.math_block(definition_str + right_side)
 
     def getDeclaration(self) -> str:
         """
@@ -1130,7 +1176,7 @@ class Equation(VarEquSymbol):
             output += self._get_domain_str(self._domain_forwarding)
 
         if self.description:
-            output += ' "' + self.description + '"'
+            output += " " + _quote_description(self.description)
 
         if self._records is None:
             output += " / /"
@@ -1220,9 +1266,5 @@ def cast_type(type: str | EquationType) -> str:
         # assign eq by default
         if type == "regular":
             type = "eq"
-
-    elif isinstance(type, EquationType):
-        # assign eq by default
-        type = "eq" if type == EquationType.REGULAR else str(type)
 
     return type

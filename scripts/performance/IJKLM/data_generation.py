@@ -5,7 +5,9 @@ import pandas as pd
 
 
 ########## Data ##########
-def create_fixed_data(m):
+def create_fixed_data(
+    m: int,
+) -> tuple[list[str], list[str], list[str], list[str], pd.DataFrame, pd.DataFrame]:
     J = [f"j{x}" for x in range(1, m + 1)]
     K = [f"k{x}" for x in range(1, m + 1)]
     L = [f"l{x}" for x in range(1, m + 1)]
@@ -25,7 +27,9 @@ def create_fixed_data(m):
     return J, K, L, M, jkl, klm
 
 
-def create_variable_data(n, j, k):
+def create_variable_data(
+    n: int, j: list[str], k: list[str]
+) -> tuple[list[str], pd.DataFrame]:
     i = [f"i{x}" for x in range(1, n + 1)]
 
     ijk = pd.DataFrame(
@@ -37,7 +41,9 @@ def create_variable_data(n, j, k):
     return i, ijk
 
 
-def fixed_data_to_tuples(JKL, KLM):
+def fixed_data_to_tuples(
+    JKL: pd.DataFrame, KLM: pd.DataFrame
+) -> tuple[list[tuple[str, ...]], list[tuple[str, ...]]]:
     jkl = [
         tuple(x)
         for x in JKL.loc[JKL["value"] == 1][["j", "k", "l"]].to_dict("split")["data"]
@@ -49,7 +55,7 @@ def fixed_data_to_tuples(JKL, KLM):
     return jkl, klm
 
 
-def variable_data_to_tuples(IJK):
+def variable_data_to_tuples(IJK: pd.DataFrame) -> list[tuple[str, ...]]:
     ijk = [
         tuple(x)
         for x in IJK.loc[IJK["value"] == 1][["i", "j", "k"]].to_dict("split")["data"]
@@ -57,7 +63,11 @@ def variable_data_to_tuples(IJK):
     return ijk
 
 
-def fixed_data_to_dicts(JKL, KLM):
+def fixed_data_to_dicts(
+    JKL: list[tuple[str, ...]], KLM: list[tuple[str, ...]]
+) -> tuple[
+    defaultdict[tuple[str, str], list[str]], defaultdict[tuple[str, str], list[str]]
+]:
     JKL_dict = defaultdict(list)
     KLM_dict = defaultdict(list)
     for j, k, l in JKL:

@@ -9,6 +9,7 @@ import pytest
 from gamspy import (
     Alias,
     Equation,
+    Model,
     Parameter,
     Set,
     SpecialValues,
@@ -1042,6 +1043,23 @@ def test_redeclaration_without_description(container):
     for name, make in factories.items():
         make(description="keep me")
         assert make().description == "keep me", name
+
+
+def test_description_with_quotes(container):
+    i = Set(container, "i", records=["i1"])
+    classes = {"s": Set, "p": Parameter, "v": Variable, "e": Equation}
+
+    for description in ['"double"', "'single'"]:
+        for name, cls in classes.items():
+            symbol = cls(container, domain=i, description=description)
+            container._synch_with_gams()
+            assert symbol.description == description, name
+
+        e = Equation(container, domain=i)
+        e[i] = Variable(container, domain=i)[i] >= 0
+        model = Model(container, equations=[e], description=description)
+        container._synch_with_gams()
+        assert model.description == description
 
 
 def test_failed_declaration_restores_miro_protect(container):

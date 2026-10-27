@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import os
 import pathlib
 import platform
@@ -25,7 +26,7 @@ from gamspy import (
     Variable,
 )
 from gamspy._backend.engine import EngineConfiguration
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import EngineClientException, EngineException, ValidationError
 
 pytestmark = [pytest.mark.engine, pytest.mark.usefixtures("cleanup_generated_files")]
 try:
@@ -828,3 +829,117 @@ def test_external_equation_on_engine(transport):
         assert y1.toDense() == -1.0
 
         m.close()
+
+
+def test_job_results_downloaded_once(transport, tmp_path, caplog):
+    client = EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+        is_blocking=False,
+    )
+
+    gms_path = str(tmp_path / "dummy.gms")
+    with open(gms_path, "w") as file:
+        file.write("Set i / i1*i3 /;")
+
+    token = client.job.post(str(tmp_path), gms_path)
+    status, _, _ = client.job.get(token)
+    while status != 10:
+        time.sleep(0.5)
+        status, _, _ = client.job.get(token)
+
+    with caplog.at_level("INFO", logger="ENGINE"):
+        client.job.get_results(token, str(tmp_path / "out"))
+
+    assert caplog.text.count("Results have been extracted") == 1
+    client.job.delete_results(token)
+
+
+def test_engine_output(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
+    i = Set(m, name="i", records=canning_plants)
+    j = Set(m, name="j", records=markets)
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
+    d = Parameter(m, name="d", domain=[i, j], records=distances)
+    x = Variable(m, name="x", domain=[i, j], type="Positive")
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), d[i, j] * x[i, j]),
+    )
+    client = EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+    )
+
+    output = io.StringIO()
+    transport.solve(backend="engine", client=client, output=output)
+    assert "--- Job" in output.getvalue()
+    assert "*** Status: Normal completion" in output.getvalue()
+
+
+def test_extra_files_restored_on_failure(transport):
+    m, canning_plants, *_ = transport
+    i = Set(m, name="i", records=canning_plants)
+    x = Variable(m, name="x", domain=i)
+    e = Equation(m, name="e", domain=i)
+    e[i] = x[i] >= 1
+    model = Model(
+        m, equations=[e], problem="LP", sense=Sense.MIN, objective=Sum(i, x[i])
+    )
+
+    with tempfile.NamedTemporaryFile() as file:
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+            extra_model_files=[file.name],
+        )
+
+        with pytest.raises(ValidationError):
+            model.solve(backend="engine", client=client)
+
+        assert client.extra_model_files == [file.name]
+
+
+def test_gams_error_on_engine(transport):
+    m, canning_plants, *_ = transport
+    i = Set(m, name="i", records=canning_plants)
+    p = Parameter(m, name="p", domain=i, records=[("seattle", 1)])
+    x = Variable(m, name="x", domain=i)
+    e = Equation(m, name="e", domain=i)
+    e[i] = x[i] >= 1 / p[i]
+    model = Model(
+        m, equations=[e], problem="LP", sense=Sense.MIN, objective=Sum(i, x[i])
+    )
+    client = EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+        remove_results=True,
+    )
+
+    with pytest.raises(EngineException, match="division by zero") as exc_info:
+        model.solve(backend="engine", client=client)
+    assert exc_info.value.return_code == 3
+
+    with pytest.raises(EngineClientException, match="No job found"):
+        client.job.delete_results(client.tokens[-1])
+
+    p["san-diego"] = 2
+    model.solve(backend="engine", client=client)
+    assert x.toList() == [("seattle", 1.0), ("san-diego", 0.5)]

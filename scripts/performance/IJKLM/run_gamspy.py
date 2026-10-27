@@ -16,7 +16,7 @@ import warnings  # noqa: E402
 warnings.filterwarnings("ignore")
 
 
-def run_gamspy(I, repeats, number):
+def run_gamspy(I: list[str], repeats: int, number: int) -> pd.DataFrame:
     m = gt.Container(
         system_directory=gamspy_base.directory,
         load_from=os.path.join(os.path.dirname(__file__), "data", "data.gdx"),
@@ -58,7 +58,9 @@ def run_gamspy(I, repeats, number):
     return result
 
 
-def gamspy_model(c, IJK, JKL, KLM):
+def gamspy_model(
+    c: gp.Container, IJK: pd.DataFrame, JKL: pd.DataFrame, KLM: pd.DataFrame
+) -> None:
     i, j, k, l, m = c["i"], c["j"], c["k"], c["l"], c["m"]
     ijk = gp.Set(c, "IJK", domain=[i, j, k], records=IJK)
     jkl = gp.Set(c, "JKL", domain=[j, k, l], records=JKL)

@@ -675,6 +675,34 @@ def test_copy(transport, tmp_path):
 
 
 @pytest.mark.unit
+def test_data_copy():
+    m = Container()
+    i = Set(m, "i", records=["a", "b"])
+    _ = Set(m, "j")
+
+    data = m.data.copy()
+    assert data["I"] is i
+    assert list(data.keys()) == ["i", "j"]
+
+    del data["j"]
+    assert "j" in m.data
+    assert "j" not in data
+
+    shallow = copy.copy(m.data)
+    shallow.popitem()
+    assert "J" not in shallow
+    assert "J" in m.data
+
+    shallow.clear()
+    assert "I" not in shallow
+    assert "I" in m.data
+
+    assert m.data.pop("zz", None) is None
+    with pytest.raises(KeyError):
+        m.data.pop("zz")
+
+
+@pytest.mark.unit
 def test_generate_gams_string():
     m = Container(debugging_level="keep")
     i = Set(m, "i")
@@ -1090,6 +1118,24 @@ def test_read_rename_from_transfer_container():
     assert m2["q"].domain == [m2["j"]]
     assert m2["j"].toList() == ["i1", "i2"]
     assert m2["q"].toList() == [("i1", 1.0), ("i2", 2.0)]
+
+
+@pytest.mark.unit
+def test_read_domains_from_transfer_container():
+    gt_container = gt.Container(system_directory=gamspy_base.directory)
+    gt_i = gt.Set(gt_container, "I", records=["i1", "i2"])
+    _ = gt.Parameter(gt_container, "p", domain=gt_i, records=[("i1", 1)])
+    _ = gt.Variable(gt_container, "v", domain=gt_i)
+    _ = gt.Equation(gt_container, "e", "eq", domain=gt_i)
+
+    m = Container()
+    m.read(gt_container)
+    i = m["I"]
+    assert m["p"].domain == [i]
+    assert m["v"].domain == [i]
+    assert m["v"].l.domain == [i]
+    assert m["e"].m.domain == [i]
+    assert m["v"].l[i].gamsRepr() == "v.l(I)"
 
 
 @pytest.mark.unit
@@ -2974,4 +3020,24 @@ def test_failed_lazy_load_is_retried(monkeypatch):
             _ = p.records
 
     assert p.toValue() == 2
+    m.close()
+
+
+@pytest.mark.unit
+def test_failed_records_leave_no_temp_symbol():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    a = Parameter(m, "a", domain=i, records=[("i1", 1), ("i2", 0)])
+
+    for failing in (
+        1 / a[i],
+        Sum(i, 1 / a[i]),
+        (1 / a[i]).where[a[i] >= 0],
+    ):
+        with pytest.raises(GamspyException):
+            _ = failing.records
+
+    assert m.listParameters() == ["a"]
+    a[i] = 2
+    assert a.toList() == [("i1", 2.0), ("i2", 2.0)]
     m.close()

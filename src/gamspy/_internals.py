@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-import copy
 import itertools
 from collections import UserDict
 from enum import Enum
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, TypeVar, overload
 
 from gams.core.gdx import (
+    GMS_DT_EQU,
+    GMS_DT_PAR,
+    GMS_DT_SET,
+    GMS_DT_VAR,
     GMS_EQUTYPE_B,
     GMS_EQUTYPE_E,
     GMS_EQUTYPE_G,
@@ -27,6 +30,9 @@ from gams.core.gdx import (
     GMS_VARTYPE_SOS2,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import ItemsView, KeysView, Mapping, ValuesView
+
 GAMS_SYMBOL_MAX_LENGTH = GMS_UEL_IDENT_SIZE - 1
 GAMS_UEL_MAX_LENGTH = GMS_UEL_IDENT_SIZE - 1
 GAMS_DESCRIPTION_MAX_LENGTH = GMS_SSSIZE - 1
@@ -34,21 +40,24 @@ GAMS_MAX_INDEX_DIM = GMS_MAX_INDEX_DIM
 
 
 _VT = TypeVar("_VT")
+_T = TypeVar("_T")
+
+_MISSING = object()
 
 
 class CasePreservingDict(UserDict[str, _VT]):
-    def __init__(self, *args, **kwargs):
-        self._casefolded_key_map = {}
+    def __init__(self, *args: Mapping[str, _VT], **kwargs: _VT) -> None:
+        self._casefolded_key_map: dict[str, str] = {}
         super().__init__(*args, **kwargs)
 
-    def __contains__(self, key):
+    def __contains__(self, key: str) -> bool:
         return key.casefold() in self._casefolded_key_map
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         del self.data[self._casefolded_key_map[key.casefold()]]
         del self._casefolded_key_map[key.casefold()]
 
-    def __setitem__(self, key, item):
+    def __setitem__(self, key: str, item: _VT) -> None:
         key_cf = key.casefold()
 
         if key_cf not in self._casefolded_key_map:
@@ -57,24 +66,41 @@ class CasePreservingDict(UserDict[str, _VT]):
         else:
             self.data[self._casefolded_key_map[key_cf]] = item
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> _VT:
         return self.data[self._casefolded_key_map[key.casefold()]]
 
-    def pop(self, key: str) -> Any:
-        a = self.data.pop(self._casefolded_key_map[key.casefold()])
-        del self._casefolded_key_map[key.casefold()]
+    @overload
+    def pop(self, key: str) -> _VT: ...
+    @overload
+    def pop(self, key: str, default: _VT | _T) -> _VT | _T: ...
+    def pop(self, key: str, default: object = _MISSING) -> object:
+        key_cf = key.casefold()
+        if key_cf not in self._casefolded_key_map:
+            if default is _MISSING:
+                raise KeyError(key)
+            return default
+
+        a = self.data.pop(self._casefolded_key_map[key_cf])
+        del self._casefolded_key_map[key_cf]
         return a
 
-    def get(self, key: str, default: Any | None = None) -> Any:
+    def get(self, key: str, default: _VT | None = None) -> _VT | None:
         try:
             return self.data.get(self._casefolded_key_map[key.casefold()])
         except KeyError:
             return default
 
     def copy(self) -> CasePreservingDict[_VT]:
-        return copy.deepcopy(self)
+        return CasePreservingDict(self.data)
 
-    def setdefault(self, key: str, default: Any) -> Any:
+    def __copy__(self) -> CasePreservingDict[_VT]:
+        return self.copy()
+
+    def clear(self) -> None:
+        self.data.clear()
+        self._casefolded_key_map.clear()
+
+    def setdefault(self, key: str, default: _VT) -> _VT:
         key_cf = key.casefold()
         if key_cf not in self._casefolded_key_map:
             self.__setitem__(key, default)
@@ -82,16 +108,18 @@ class CasePreservingDict(UserDict[str, _VT]):
         else:
             return self.data[self._casefolded_key_map[key_cf]]
 
-    def popitem(self) -> tuple:
-        return self.data.popitem()
+    def popitem(self) -> tuple[str, _VT]:
+        key, item = self.data.popitem()
+        del self._casefolded_key_map[key.casefold()]
+        return key, item
 
-    def items(self):
+    def items(self) -> ItemsView[str, _VT]:
         return self.data.items()
 
-    def keys(self):
+    def keys(self) -> KeysView[str]:
         return self.data.keys()
 
-    def values(self):
+    def values(self) -> ValuesView[_VT]:
         return self.data.values()
 
 
@@ -105,7 +133,7 @@ class DomainStatus(Enum):
 class DataSource(Enum):
     """
     Where the records of a symbol must be read from. A frozen model is not a
-    member because the symbol stores the ModelInstance to read from itself:
+    member because the symbol stores the FrozenModel to read from itself:
     a container can hold more than one frozen model of the same symbol.
     """
 
@@ -174,6 +202,23 @@ UNDEF = set(
     + list(map("".join, itertools.product(*zip("UNDF", "undf", strict=True))))
 )
 NA = set(map("".join, itertools.product(*zip("NA", "na", strict=True))))
+
+SET_ATTRIBUTES = ("element_text",)
+PARAMETER_ATTRIBUTES = ("value",)
+VAR_EQU_ATTRIBUTES = ("level", "marginal", "lower", "upper", "scale")
+VAR_EQU_ATTRIBUTE_SUFFIXES = {
+    "level": "l",
+    "marginal": "m",
+    "lower": "lo",
+    "upper": "up",
+    "scale": "scale",
+}
+SYMBOL_ATTRIBUTES = {
+    GMS_DT_SET: SET_ATTRIBUTES,
+    GMS_DT_PAR: PARAMETER_ATTRIBUTES,
+    GMS_DT_VAR: VAR_EQU_ATTRIBUTES,
+    GMS_DT_EQU: VAR_EQU_ATTRIBUTES,
+}
 
 # Autogenerated symbol prefix for model attributes
 ATTR_PREFIX = "autogenerated_"
