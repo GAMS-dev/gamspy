@@ -599,6 +599,40 @@ def test_regression_tree_no_lower_bound(data):
     assert model.status == ModelStatus(1)
 
 
+def test_regression_tree_zero_threshold():
+    m = Container()
+    tree = DecisionTreeStruct(
+        children_left=np.array([1, -1, -1]),
+        children_right=np.array([2, -1, -1]),
+        feature=np.array([0, -2, -2]),
+        threshold=np.array([0.0, -2.0, -2.0]),
+        value=np.array([[5.0], [0.0], [10.0]]),
+        capacity=3,
+        n_features=1,
+    )
+    x = gp.Variable(m, "x", domain=dim((2, 1)))
+    x.lo[...] = -10
+    x.up[...] = 10
+    out, eqns = RegressionTree(m, tree)(x)
+
+    data = gp.Parameter(m, domain=x.domain, records=np.array([[-5], [5]]))
+    fix_x = gp.Equation(m, domain=x.domain)
+    fix_x[...] = x[...] == data[...]
+
+    for sense in ("max", "min"):
+        model = gp.Model(
+            m,
+            equations=[*eqns, fix_x],
+            problem="mip",
+            sense=sense,
+            objective=gp.Sum(out.domain, out[out.domain]),
+        )
+        model.solve()
+        assert np.allclose(out.toDense().flatten(), [0, 10])
+
+    m.close()
+
+
 @pytest.fixture
 def data_rf():
     m = Container()

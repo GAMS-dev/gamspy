@@ -70,6 +70,12 @@ def _read_output(process: subprocess.Popen, output: TextIO | None) -> None:
     if output is not None:
         while True:
             data = process.stdout.readline()  # ty: ignore[unresolved-attribute]
+            if not data:
+                raise FatalError(
+                    "The GAMS process terminated unexpectedly with return code"
+                    f" {process.poll()}."
+                )
+
             output.write(data)
             output.flush()
             if data.startswith("--- Job ") and "elapsed" in data:

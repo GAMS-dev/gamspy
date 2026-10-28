@@ -827,3 +827,41 @@ def test_find_symbols_in_all_function_arguments():
         "z",
     ]
     assert sorted(set(find_symbols_in_conditions(e._definition))) == ["p", "q"]
+
+
+def test_shifted_index_domain():
+    m = gp.Container()
+    t = gp.Set(m, "t", records=["t1", "t2", "t3"])
+    s = gp.Alias(m, "s", t)
+    j = gp.Set(m, "j", records=["j1"])
+    b = gp.Parameter(m, "b", domain=t, records=[("t1", 1), ("t2", 2), ("t3", 4)])
+    c = gp.Parameter(m, "c", domain=[t, j], records=[("t2", "j1", 3)])
+
+    expr = b[t] + b[t - 1]
+    assert expr.domain == [t]
+    assert expr.toList() == [["t1", 1.0], ["t2", 3.0], ["t3", 6.0]]
+    assert expr[s].gamsRepr() == "b(s) + b(s - 1)"
+
+    op = gp.Sum(t, b[t] - b[t.lag(1)])
+    assert op.domain == []
+    assert op.toValue() == 4
+
+    op = gp.Sum(j, c[t + 1, j])
+    assert op.domain == [t]
+    assert op[s].gamsRepr() == "sum(j,c(s + 1,j))"
+
+    i = gp.Set(m, "i", records=["i1", "i2"])
+    y = gp.Parameter(m, "y", domain=[t, i], records=[("t1", "i1", 1), ("t2", "i2", 2)])
+    w = gp.Parameter(
+        m, "w", domain=[i, j], records=[("i1", "j1", 10), ("i2", "j1", 100)]
+    )
+    op = (y[t - 1, i] + y[t, i]) @ w
+    assert op.gamsRepr() == "sum(i,(y(t - 1,i) + y(t,i)) * w(i,j))"
+    assert op.toList() == [["t1", "j1", 10.0], ["t2", "j1", 210.0], ["t3", "j1", 200.0]]
+
+    op = gp.Sum(i, y[t.lead(2, "circular"), i])
+    assert op[s].gamsRepr() == "sum(i,y(s ++ 2,i))"
+
+    assert expr[...].gamsRepr() == "b(t) + b(t - 1)"
+    with pytest.raises(ValidationError):
+        expr["t2"]

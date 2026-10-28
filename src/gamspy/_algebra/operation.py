@@ -72,7 +72,7 @@ class Operation(operable.Operable):
         self._op_name = op_name
         self.raw_domain = self._get_raw_domain()
 
-        self._bare_op_domain = utils._get_set(self.op_domain)
+        self._bare_op_domain = utils._get_set(self.raw_domain)
         self.container = self.raw_domain[0].container
         self.domain: list[Set | Alias] = []
 
@@ -82,6 +82,9 @@ class Operation(operable.Operable):
 
         if not isinstance(rhs, (bool, float, int)):
             for i, x in enumerate(rhs.domain):  # ty: ignore[invalid-argument-type]
+                if isinstance(x, expression.ShiftExpression):
+                    x = x.parent
+
                 sum_index = -1
                 for idx, elem in enumerate(self._bare_op_domain):
                     if elem is x:
@@ -109,6 +112,11 @@ class Operation(operable.Operable):
             return Operation(self.op_domain, self.rhs, self._op_name)
 
         return Operation(self.op_domain, self.rhs[domain], self._op_name)  # ty: ignore[invalid-argument-type, not-subscriptable]
+
+    def __bool__(self) -> bool:
+        raise ValidationError(
+            "An operation cannot be used as a truth value. Use toValue() instead."
+        )
 
     def __len__(self) -> int:
         if self.records is not None:
@@ -854,6 +862,9 @@ class Ord(operable.Operable):
 
     def __hash__(self) -> int:
         return id(self)
+
+    def __bool__(self) -> bool:
+        raise ValidationError("Ord operation cannot be used as a truth value.")
 
     def gamsRepr(self) -> str:
         """

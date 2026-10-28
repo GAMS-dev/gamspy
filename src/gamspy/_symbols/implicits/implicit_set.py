@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
-import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy._universe import UNIVERSE, is_universe_domain
@@ -59,7 +58,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
     def __getitem__(
         self, indices: Sequence | str | EllipsisType | slice
     ) -> ImplicitSet:
-        domain = validation.validate_domain(self, indices)
+        domain = self._reindex(indices)
         return ImplicitSet(
             parent=self.parent,
             name=self.name,

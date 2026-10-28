@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy.math as gamspy_math
 from gamspy import (
     Alias,
     Card,
@@ -230,6 +231,16 @@ def test_truth_value(transport):
     with pytest.raises(ValidationError):
         if Card(i):
             ...
+
+    with pytest.raises(ValidationError):
+        if Ord(i):
+            ...
+
+    b = Parameter(m, "b", domain=i)
+    for operand in (Sum(i, b[i]), b[i].where[b[i] > 0], gamspy_math.sqr(b["i1"])):
+        with pytest.raises(ValidationError):
+            if operand:
+                ...
 
     with pytest.raises(ValidationError):
         if i:
@@ -462,6 +473,28 @@ def test_mathop_as_operation_index():
         eq.getDefinition()
         == "eq(r,t,p) .. sum(sameAs(t - 1,v(tt)) $ (rtp(r,v,p)),cap(r,v,p)) =e= 0;"
     )
+
+
+def test_conditioned_operation_index():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2", "i3"])
+    j = Set(m, "j", records=["j1", "j2"])
+    a = Parameter(m, "a", domain=i, records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    b = Parameter(m, "b", domain=[i, j], records=[("i1", "j1", 1), ("i2", "j2", 2)])
+    c = Parameter(m, "c", domain=i, records=[("i1", 1), ("i3", 1)])
+
+    op = Sum(i.where[c[i] > 0], a[i])
+    assert op.domain == []
+    assert op.controlled_domain == [i]
+    assert op.toValue() == 5
+
+    op = Sum(i.where[c[i] > 0], b[i, j])
+    assert op.domain == [j]
+    assert op.toList() == [["j1", 1.0]]
+
+    op = Sum(Domain(i, j).where[c[i] > 0], b[i, j])
+    assert op.domain == []
+    assert op.toValue() == 1
 
 
 def test_number():

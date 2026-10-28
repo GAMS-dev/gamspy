@@ -26,7 +26,7 @@ from gamspy import (
     Variable,
 )
 from gamspy._backend.engine import EngineConfiguration
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import EngineClientException, EngineException, ValidationError
 
 pytestmark = [pytest.mark.engine, pytest.mark.usefixtures("cleanup_generated_files")]
 try:
@@ -913,3 +913,33 @@ def test_extra_files_restored_on_failure(transport):
             model.solve(backend="engine", client=client)
 
         assert client.extra_model_files == [file.name]
+
+
+def test_gams_error_on_engine(transport):
+    m, canning_plants, *_ = transport
+    i = Set(m, name="i", records=canning_plants)
+    p = Parameter(m, name="p", domain=i, records=[("seattle", 1)])
+    x = Variable(m, name="x", domain=i)
+    e = Equation(m, name="e", domain=i)
+    e[i] = x[i] >= 1 / p[i]
+    model = Model(
+        m, equations=[e], problem="LP", sense=Sense.MIN, objective=Sum(i, x[i])
+    )
+    client = EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+        remove_results=True,
+    )
+
+    with pytest.raises(EngineException, match="division by zero") as exc_info:
+        model.solve(backend="engine", client=client)
+    assert exc_info.value.return_code == 3
+
+    with pytest.raises(EngineClientException, match="No job found"):
+        client.job.delete_results(client.tokens[-1])
+
+    p["san-diego"] = 2
+    model.solve(backend="engine", client=client)
+    assert x.toList() == [("seattle", 1.0), ("san-diego", 0.5)]

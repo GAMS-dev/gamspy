@@ -8,6 +8,7 @@ import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
 import gamspy._validation as validation
+import gamspy.math.misc as misc
 import gamspy.utils as utils
 from gamspy._internals import DataSource
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
@@ -102,7 +103,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         return name
 
     def __getitem__(self, indices: IndexType) -> ImplicitParameter:
-        domain = validation.validate_domain(self, indices)
+        domain = self._reindex(indices)
 
         return ImplicitParameter(
             parent=self.parent,
@@ -160,7 +161,13 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         op = "eq"
         if isinstance(
             other,
-            (ImplicitVariable, expression.Expression, operation.Operation),
+            (
+                syms.Variable,
+                ImplicitVariable,
+                expression.Expression,
+                operation.Operation,
+                misc.MathOp,
+            ),
         ):
             op = "=e="
         return expression.Expression(self, op, other)

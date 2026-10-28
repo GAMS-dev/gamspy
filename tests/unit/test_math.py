@@ -1157,3 +1157,29 @@ def test_strict_power_operator():
         gp.set_options({"STRICT_POWER_OPERATOR": old})
 
     assert (a[i] ** 3).gamsRepr() == "power(a(i),3)"
+
+
+def test_mathop_domain_from_all_arguments():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1"])
+    t = Set(m, "t", records=["t1", "t2"])
+    a = Parameter(m, "a", domain=i, records=[("i1", 3), ("i2", -1)])
+    b = Parameter(m, "b", domain=j, records=[("j1", 2)])
+    c = Parameter(m, "c", domain=t)
+    x = Variable(m, "x", domain=i)
+
+    assert gams_math.Max(1, a[i]).domain == [i]
+    assert gams_math.Max(1, a[i]).toList() == [["i1", 3.0], ["i2", 1.0]]
+
+    op = gams_math.Max(a[i], b[j])
+    assert op.domain == [i, j]
+    assert op.toList() == [["i1", "j1", 3.0], ["i2", "j1", 2.0]]
+
+    assert gams_math.Max(a[i], a[i] + 1).domain == [i]
+    assert gams_math.ifthen(a[i] > 0, 1, b[j]).domain == [i, j]
+    assert gams_math.Max(1, c[t.lag(1)]).domain == [t]
+
+    e = Equation(m, "e", domain=i)
+    e[...] = gams_math.power(2, x[i]) >= 1
+    assert e.getDefinition() == "e(i) .. power(2,x(i)) =g= 1;"

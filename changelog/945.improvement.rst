@@ -1,1 +1,0 @@
-Conv1d, Conv2d, MaxPool2d, MinPool2d and AvgPool2d window set creation improvements.

@@ -12,6 +12,7 @@ import gamspy.utils as utils
 from gamspy._container import Container
 from gamspy._internals import DataSource
 from gamspy._notation import LATEX, UNICODE
+from gamspy._universe import is_universe
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -65,10 +66,18 @@ class MathOp(operable.Operable):
         self.safe_cancel = safe_cancel
         self.container: Container | None = self._find_container()
         self.domain: list[Set | Alias] = []
-        self.dimension = 0
-        if hasattr(elements[0], "domain"):
-            self.domain: list[Set | Alias] = elements[0].domain
-            self.dimension = validation.get_dimension(self.domain)
+        for elem in elements:
+            for d in getattr(elem, "domain", []):
+                if isinstance(d, expression.ShiftExpression):
+                    d = d.parent
+
+                if isinstance(d, str) or is_universe(d):
+                    continue
+
+                if not any(d is seen for seen in self.domain):
+                    self.domain.append(d)
+
+        self.dimension = validation.get_dimension(self.domain)
 
         self.where = condition.Condition(self)
 
@@ -80,6 +89,11 @@ class MathOp(operable.Operable):
 
     def __hash__(self) -> int:
         return id(self)
+
+    def __bool__(self) -> bool:
+        raise ValidationError(
+            "A math operation cannot be used as a truth value. Use toValue() instead."
+        )
 
     def __len__(self) -> int:
         if self.records is not None:

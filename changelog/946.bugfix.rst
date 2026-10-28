@@ -1,1 +1,0 @@
-Fix attribute assignments that are ignoring literal indices and transposition.
