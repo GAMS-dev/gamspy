@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -497,6 +498,104 @@ def test_api_job(transport, tmp_path):
         print(client.job.get_logs(token))
 
     client.job.delete_results(token)
+
+
+def test_api_job_entries(tmp_path):
+    client = EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+        engine_options={
+            "tag": "entries",
+            "text_entries": ["out.txt"],
+            "stream_entries": ["stream.txt"],
+        },
+    )
+
+    gms_path = str(tmp_path / "entries.gms")
+    with open(gms_path, "w") as file:
+        file.write(
+            "file s /stream.txt/; s.ap = 1;\n"
+            "put s 'line1' /; putclose s;\n"
+            "Scalar t; t = sleep(2);\n"
+            "put s 'line2' /; putclose s;\n"
+            "file f /out.txt/; put f 'hello world'; putclose f;\n"
+        )
+
+    token = client.job.post(str(tmp_path), gms_path)
+
+    streamed = ""
+    while True:
+        status, _, _ = client.job.get(token)
+        if status in (1, 2, 10):
+            value, finished = client.job.get_stream_entry(token, "stream.txt")
+            streamed += value
+            if status == 10 and finished:
+                break
+
+        time.sleep(0.5)
+
+    assert streamed == "line1\nline2\n"
+    assert client.job.get_text_entry(token, "out.txt") == "hello world\n"
+    assert client.job.get_text_entry(token, "out.txt", 7, 3) == "wor"
+    with pytest.raises(EngineClientException):
+        client.job.get_text_entry(token, "missing.txt")
+
+    client.job.update_tag(token, "entries2")
+    jobs = client.job.list_jobs(per_page=50)["results"]
+    job = next(job for job in jobs if job["token"] == token)
+    assert job["tag"] == "entries2"
+
+    from_datetime = datetime.now(UTC) - timedelta(hours=1)
+    usage = client.usage.get(from_datetime=from_datetime, tokens=[token])
+    assert [job["token"] for job in usage["job_usage"]] == [token]
+
+    with pytest.raises(EngineClientException):
+        client.job.cancel(token)
+
+
+def test_api_cancel(tmp_path):
+    client = EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+    )
+
+    gms_path = str(tmp_path / "sleep.gms")
+    with open(gms_path, "w") as file:
+        file.write("Scalar t; t = sleep(60);")
+
+    token = client.job.post(str(tmp_path), gms_path)
+    while client.job.get(token)[0] != 1:
+        time.sleep(0.5)
+
+    jobs = client.job.list_jobs(per_page=50, show_only_active=True)["results"]
+    assert token in [job["token"] for job in jobs]
+
+    client.job.cancel(token, hard_kill=True)
+    while (job := client.job.get(token))[0] != 10:
+        time.sleep(0.5)
+
+    assert job[2] == 137
+
+
+def test_api_account():
+    client = EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+    )
+
+    assert {"version", "gams_version"} <= client.get_version().keys()
+    assert isinstance(client.usage.get_quota(), list)
+    assert isinstance(client.namespaces.get_models(), list)
+
+    jwt = client.auth.login(expires_in=300, scope=["USERS", "USAGE"])
+    client = EngineClient(host=os.environ["ENGINE_URL"], jwt=jwt)
+    assert isinstance(client.usage.get_quota(), list)
 
 
 def test_api_auth(transport, tmp_path):
