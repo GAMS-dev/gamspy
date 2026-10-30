@@ -1,0 +1,1 @@
+Implement ``logical_and``, ``logical_or``, ``logical_not``, ``logical_xor``, ``logical_imp`` and ``logical_eqv`` for modeling logical relations between binary variables.

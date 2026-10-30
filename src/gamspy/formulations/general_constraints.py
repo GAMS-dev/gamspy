@@ -1,32 +1,30 @@
 from __future__ import annotations
 
 import math
-import typing
+from typing import TYPE_CHECKING, Literal, TypeAlias, TypeGuard
 
 import gamspy as gp
 from gamspy._algebra.condition import Condition
-from gamspy._algebra.expression import Expression
+from gamspy._algebra.expression import Expression, ShiftExpression
 from gamspy._algebra.operable import Operable
 from gamspy._symbols.implicits import ImplicitSet, ImplicitVariable
+from gamspy._universe import Universe
 from gamspy.exceptions import ValidationError
 from gamspy.formulations.result import FormulationResult
 from gamspy.formulations.utils import _domain_name
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from gamspy._algebra.number import Number
-    from gamspy._types import ConditionType
-    from gamspy._universe import Universe
+    from gamspy._types import ConditionType, DomainElementType, NormalizedDomainType
 
-    DomainElementType: typing.TypeAlias = (
-        gp.Set | gp.Alias | gp.UniverseAlias | Universe | str
-    )
-    DomainType: typing.TypeAlias = list[DomainElementType]
-    BigMType: typing.TypeAlias = int | float | Operable
-    BinaryType: typing.TypeAlias = gp.Variable | ImplicitVariable
-    OperandType: typing.TypeAlias = int | float | Operable
-    ConditionArgType: typing.TypeAlias = ConditionType | Number | bool | int | float
+    BigMType: TypeAlias = int | float | Operable
+    BinaryType: TypeAlias = gp.Variable | ImplicitVariable
+    OperandType: TypeAlias = int | float | Operable
+    OverType: TypeAlias = DomainElementType | Sequence[DomainElementType]
+    EquationIndexType: TypeAlias = list[DomainElementType | ImplicitSet]
+    WhereType: TypeAlias = ConditionType | Number | bool | int | float | None
 
 
 _RELATIONAL_OPERATORS = {"=l=", "=e=", "=g="}
@@ -73,11 +71,11 @@ def _validate_big_m(big_m: BigMType | None, controlled: set[str]) -> None:
         )
 
 
-def _declaration_domain(index: DomainType) -> DomainType:
+def _declaration_domain(var_index: NormalizedDomainType) -> NormalizedDomainType:
     # multidimensional subsets such as ij(i,j) cannot be declaration domains,
     # the symbols are declared over (i,j) and indexed with ij instead
-    domain: DomainType = []
-    for set_ in index:
+    domain: NormalizedDomainType = []
+    for set_ in var_index:
         if _is_multidimensional(set_):
             domain.extend(set_.domain)
         else:
@@ -86,20 +84,32 @@ def _declaration_domain(index: DomainType) -> DomainType:
     return domain
 
 
+def _index_sets(domain: Sequence[DomainElementType]) -> NormalizedDomainType:
+    # a lag or lead such as t - 1 is controlled by t, e.g. x(t) - x(t-1) by t
+    sets: NormalizedDomainType = []
+    for set_ in domain:
+        if isinstance(set_, ShiftExpression):
+            set_ = set_.parent
+        if _domain_name(set_) not in _domain_names(sets):
+            sets.append(set_)
+
+    return sets
+
+
 def _dimension(set_: DomainElementType) -> int:
     return set_.dimension if isinstance(set_, (gp.Set, gp.Alias)) else 1
 
 
-def _is_multidimensional(set_: object) -> typing.TypeGuard[gp.Set | gp.Alias]:
+def _is_multidimensional(set_: object) -> TypeGuard[gp.Set | gp.Alias]:
     return isinstance(set_, (gp.Set, gp.Alias)) and set_.dimension > 1
 
 
 def _control_index(
-    domain: DomainType,
-) -> tuple[DomainType, list[typing.Any], set[str]]:
+    domain: NormalizedDomainType,
+) -> tuple[NormalizedDomainType, EquationIndexType, set[str]]:
     # defining the equations over ij(i,j) instead of ij also controls i and j,
     # e.g. eq(ij(i,j)) .. x(ij) =l= b(i)
-    expanded: dict[str, typing.Any] = {}
+    expanded: dict[str, ImplicitSet] = {}
     components: set[str] = set()
     for set_ in domain:
         if not _is_multidimensional(set_) or not all(
@@ -113,18 +123,18 @@ def _control_index(
             components |= names
 
     # x[ij] <= p[i] has the domain [ij, i] but ij(i,j) already controls i
-    index = [
+    var_index = [
         set_
         for set_ in domain
         if _is_multidimensional(set_) or _domain_name(set_) not in components
     ]
-    key = [expanded.get(_domain_name(set_), set_) for set_ in index]
+    equation_index = [expanded.get(_domain_name(set_), set_) for set_ in var_index]
 
-    return index, key, _domain_names(index) | components
+    return var_index, equation_index, _domain_names(var_index) | components
 
 
 def _indicator_positions(
-    indicator_var: BinaryType, index: DomainType
+    indicator_var: BinaryType, var_index: NormalizedDomainType
 ) -> tuple[int, ...]:
     # positions of the indices of indicator_var: e.g. (0, 2) for indicator(b[i, k], 1, x[ij, k] <= 1)
     if isinstance(indicator_var, ImplicitVariable) and (
@@ -143,7 +153,7 @@ def _indicator_positions(
 
     offsets: dict[str, range] = {}
     position = 0
-    for set_ in index:
+    for set_ in var_index:
         dimension = _dimension(set_)
         offsets.setdefault(_domain_name(set_), range(position, position + dimension))
         if dimension > 1:
@@ -163,15 +173,15 @@ def _indicator_positions(
 
 def _add_native_indicator(
     indicator_var: BinaryType,
-    indicator_val: typing.Literal[0, 1],
+    indicator_val: Literal[0, 1],
     expr: Expression,
-    condition: ConditionArgType | None,
-    domain: DomainType,
-    index: DomainType,
-    key: list[typing.Any],
+    condition: WhereType,
+    domain: NormalizedDomainType,
+    var_index: NormalizedDomainType,
+    equation_index: EquationIndexType,
 ) -> FormulationResult:
     m = indicator_var.container
-    positions = _indicator_positions(indicator_var, index)
+    positions = _indicator_positions(indicator_var, var_index)
     binary = (
         indicator_var.parent
         if isinstance(indicator_var, ImplicitVariable)
@@ -179,12 +189,12 @@ def _add_native_indicator(
     )
 
     result = FormulationResult()
-    equation = _add_equation(m, domain, key, expr, condition)
+    equation = _add_equation(m, domain, equation_index, expr, condition)
 
     # GAMS generates only the variables that appear in the equations of the
     # model but indicator_var might only appear in the options file
-    if key:
-        sum_domain = gp.Domain(*key)
+    if equation_index:
+        sum_domain = gp.Domain(*equation_index)
         if condition is not None:
             sum_domain = sum_domain.where[condition]
         generation = gp.Sum(sum_domain, indicator_var) >= 0
@@ -209,7 +219,7 @@ def _add_native_indicator(
     return result
 
 
-def _add_sos1_pair(m: gp.Container, domain: DomainType) -> gp.Variable:
+def _add_sos1_pair(m: gp.Container, domain: NormalizedDomainType) -> gp.Variable:
     # at most one of [*domain, "0"] and [*domain, "1"] can be nonzero
     sos_dim = gp.math._generate_dims(m, [2])[0]
     return m.addVariable(
@@ -221,13 +231,13 @@ def _add_sos1_pair(m: gp.Container, domain: DomainType) -> gp.Variable:
 
 def _add_equation(
     m: gp.Container,
-    domain: DomainType,
-    key: list[typing.Any],
+    domain: NormalizedDomainType,
+    equation_index: EquationIndexType,
     definition: Expression,
-    condition: ConditionArgType | None,
+    condition: WhereType,
 ) -> gp.Equation:
     equation = m.addEquation(name=gp.utils._get_unique_name("equation"), domain=domain)
-    indices = key if key else ...
+    indices = equation_index if equation_index else ...
     if condition is None:
         equation[indices] = definition
     else:
@@ -238,7 +248,7 @@ def _add_equation(
 
 def indicator(
     indicator_var: BinaryType,
-    indicator_val: typing.Literal[0, 1],
+    indicator_val: Literal[0, 1],
     expr: Expression | Condition,
     *,
     big_m: BigMType | None = None,
@@ -341,8 +351,8 @@ def indicator(
     if not isinstance(expr, Expression) or expr.operator not in _RELATIONAL_OPERATORS:
         raise ValidationError("expr needs to be inequality or equality")
 
-    index, key, controlled = _control_index(list(expr.domain))
-    if not _domain_names(indicator_var.domain) <= controlled:
+    var_index, equation_index, controlled = _control_index(_index_sets(expr.domain))
+    if not _domain_names(_index_sets(indicator_var.domain)) <= controlled:
         raise ValidationError(
             "The domain of indicator_var must be a subset of the domain of expr"
         )
@@ -364,14 +374,20 @@ def indicator(
         )
 
     _validate_big_m(big_m, controlled)
-    domain = _declaration_domain(index)
+    domain = _declaration_domain(var_index)
 
     if native:
         if big_m is not None:
             raise ValidationError("big_m cannot be used with native=True")
 
         return _add_native_indicator(
-            indicator_var, indicator_val, expr, condition, domain, index, key
+            indicator_var,
+            indicator_val,
+            expr,
+            condition,
+            domain,
+            var_index,
+            equation_index,
         )
 
     lhs_minus_rhs = expr.left - expr.right  # ty: ignore[unsupported-operator]
@@ -390,7 +406,7 @@ def indicator(
         for prefix, row in rows:
             # enforces row <= 0 when active == 1
             result.equations_created[f"{prefix}big_m"] = _add_equation(
-                m, domain, key, row <= big_m * (1 - active), condition
+                m, domain, equation_index, row <= big_m * (1 - active), condition
             )
         return result
 
@@ -399,10 +415,10 @@ def indicator(
     result.variables_created["sos1"] = sos1_var
     for prefix, row in rows:
         result.equations_created[f"{prefix}slack"] = _add_equation(
-            m, domain, key, row <= sos1_var[[*index, "1"]], condition
+            m, domain, equation_index, row <= sos1_var[[*var_index, "1"]], condition
         )
     result.equations_created["link"] = _add_equation(
-        m, domain, key, sos1_var[[*index, "0"]] == active, condition
+        m, domain, equation_index, sos1_var[[*var_index, "0"]] == active, condition
     )
 
     return result
@@ -429,28 +445,27 @@ def _validate_operand(operand: object) -> None:
         )
 
 
-def _extremum(
-    sense: typing.Literal["min", "max"],
-    operands: tuple[OperandType, ...],
-    *,
-    over: DomainElementType | Sequence[DomainElementType] | None,
-    big_m: BigMType | None,
-    native: bool,
-) -> FormulationResult:
-    if len(operands) == 0:
-        raise ValidationError("At least one operand is required")
+def _reduction(
+    operands: Sequence[OperandType],
+    over: OverType | None,
+) -> tuple[
+    gp.Container,
+    NormalizedDomainType,
+    list[list[DomainElementType]],
+    list[tuple[NormalizedDomainType, EquationIndexType, set[str]]],
+]:
+    if over is None:
+        over = []
+    elif isinstance(over, (gp.Set, gp.Alias, gp.UniverseAlias, Universe, str)):
+        over = [over]
+    reduced = _domain_names(over)
 
-    for operand in operands:
-        _validate_operand(operand)
-
-    reduced = _domain_names([] if over is None else gp.utils._to_list(over))
-
-    domains = [list(getattr(operand, "domain", [])) for operand in operands]
+    domains = [_index_sets(getattr(operand, "domain", [])) for operand in operands]
     if not reduced <= _domain_names([d for domain in domains for d in domain]):
         raise ValidationError("over must be a subset of the domain of the operands")
 
     # the domain of the output is the union of the operand domains except over
-    output_domain: DomainType = []
+    output_domain: NormalizedDomainType = []
     for domain in domains:
         for set_ in domain:
             name = _domain_name(set_)
@@ -470,35 +485,77 @@ def _extremum(
         for reduced_domain in reduced_domains
     ]
 
+    return m, output_domain, reduced_domains, indices
+
+
+def _add_output(
+    m: gp.Container,
+    domain: NormalizedDomainType,
+    type: str,
+) -> tuple[
+    FormulationResult,
+    gp.Variable | ImplicitVariable,
+    NormalizedDomainType,
+    EquationIndexType,
+]:
+    var_index, equation_index, _ = _control_index(domain)
+    declaration = _declaration_domain(var_index)
+    output_var = m.addVariable(
+        name=gp.utils._get_unique_name("output_var"),
+        type=type,
+        domain=declaration,
+    )
+
+    result = FormulationResult(output_var)
+    result.variables_created["output"] = output_var
+
+    return (
+        result,
+        output_var[var_index] if var_index else output_var,
+        declaration,
+        equation_index,
+    )
+
+
+def _extremum(
+    sense: Literal["min", "max"],
+    operands: tuple[OperandType, ...],
+    *,
+    over: OverType | None,
+    big_m: BigMType | None,
+    native: bool,
+) -> FormulationResult:
+    if len(operands) == 0:
+        raise ValidationError("At least one operand is required")
+
+    for operand in operands:
+        _validate_operand(operand)
+
+    m, output_domain, reduced_domains, indices = _reduction(operands, over)
+
     for _, _, controlled in indices:
         _validate_big_m(big_m, controlled)
 
     if native and big_m is not None:
         raise ValidationError("big_m cannot be used with native=True")
 
-    output_index, output_key, _ = _control_index(output_domain)
-    output_var = m.addVariable(
-        name=gp.utils._get_unique_name("output_var"),
-        domain=_declaration_domain(output_index),
+    result, output, output_declaration, output_equation_index = _add_output(
+        m, output_domain, "free"
     )
-    output = output_var[output_index] if output_index else output_var
-
-    result = FormulationResult(output_var)
-    result.variables_created["output"] = output_var
 
     # output is bounded by every operand and equals the selected one
     selections = []
-    for k, (operand, reduced_domain, (index, key, _)) in enumerate(
+    for k, (operand, reduced_domain, (var_index, equation_index, _)) in enumerate(
         zip(operands, reduced_domains, indices, strict=True)
     ):
-        declaration = _declaration_domain(index)
+        declaration = _declaration_domain(var_index)
 
         select_var = m.addVariable(
             name=gp.utils._get_unique_name("select_var"),
             type="binary",
             domain=declaration,
         )
-        select = select_var[index] if index else select_var
+        select = select_var[var_index] if var_index else select_var
         result.variables_created[f"select_{k}"] = select_var
 
         if sense == "max":
@@ -507,7 +564,7 @@ def _extremum(
             bound, selected = output <= operand, output >= operand
 
         result.equations_created[f"bound_{k}"] = _add_equation(
-            m, declaration, key, bound, None
+            m, declaration, equation_index, bound, None
         )
         selection = indicator(select, 1, selected, big_m=big_m, native=native)
         for name, variable in selection.variables_created.items():
@@ -515,12 +572,16 @@ def _extremum(
         for name, equation in selection.equations_created.items():
             result.equations_created[f"{name}_{k}"] = equation
 
-        selections.append(gp.Sum(reduced_domain, select) if reduced_domain else select)
+        selections.append(
+            gp.Sum(reduced_domain, select)  # ty: ignore[invalid-argument-type]
+            if reduced_domain
+            else select
+        )
 
     result.equations_created["pick_one"] = _add_equation(
         m,
-        _declaration_domain(output_index),
-        output_key,
+        output_declaration,
+        output_equation_index,
         sum(selections[1:], start=selections[0]) == 1,
         None,
     )
@@ -530,7 +591,7 @@ def _extremum(
 
 def minimum(
     *operands: OperandType,
-    over: DomainElementType | Sequence[DomainElementType] | None = None,
+    over: OverType | None = None,
     big_m: BigMType | None = None,
     native: bool = False,
 ) -> FormulationResult:
@@ -581,7 +642,7 @@ def minimum(
 
 def maximum(
     *operands: OperandType,
-    over: DomainElementType | Sequence[DomainElementType] | None = None,
+    over: OverType | None = None,
     big_m: BigMType | None = None,
     native: bool = False,
 ) -> FormulationResult:
@@ -702,3 +763,396 @@ def absolute(
     """
     _validate_operand(operand)
     return _extremum("max", (operand, -operand), over=None, big_m=big_m, native=native)
+
+
+def _validate_binary_operands(operands: Sequence[BinaryType]) -> None:
+    if len(operands) == 0:
+        raise ValidationError("At least one operand is required")
+
+    for operand in operands:
+        if not _is_binary(operand):
+            raise ValidationError("operands must be binary variables")
+
+
+def _logical(
+    operator: Literal["and", "or"],
+    operands: tuple[BinaryType, ...],
+    over: OverType | None,
+) -> FormulationResult:
+    _validate_binary_operands(operands)
+    m, output_domain, reduced_domains, indices = _reduction(operands, over)
+    result, output, output_declaration, output_equation_index = _add_output(
+        m, output_domain, "binary"
+    )
+
+    terms = []
+    for k, (operand, reduced_domain, (var_index, equation_index, _)) in enumerate(
+        zip(operands, reduced_domains, indices, strict=True)
+    ):
+        if operator == "and":
+            name, bound, term = f"upper_{k}", output <= operand, 1 - operand
+        else:
+            name, bound, term = f"lower_{k}", output >= operand, operand
+
+        result.equations_created[name] = _add_equation(
+            m, _declaration_domain(var_index), equation_index, bound, None
+        )
+        terms.append(
+            gp.Sum(reduced_domain, term)  # ty: ignore[invalid-argument-type]
+            if reduced_domain
+            else term
+        )
+
+    total = sum(terms[1:], start=terms[0])
+    if operator == "and":
+        name, definition = "lower_0", output >= 1 - total
+    else:
+        name, definition = "upper_0", output <= total
+
+    result.equations_created[name] = _add_equation(
+        m, output_declaration, output_equation_index, definition, None
+    )
+
+    return result
+
+
+def logical_and(
+    *operands: BinaryType,
+    over: OverType | None = None,
+) -> FormulationResult:
+    """
+    Creates a binary variable ``y`` that equals the logical AND of the binary
+    ``operands``, i.e. ``y == 1`` if and only if every operand is 1. If
+    ``over`` is given, the AND is also taken over these sets, e.g.
+    ``logical_and(b[i, j], over=j)`` creates ``y[i] == 1`` if and only if
+    ``b[i, j] == 1`` for every ``j``.
+
+    The domain of ``y`` is the union of the domains of the operands except
+    ``over``. If an operand is indexed with a multidimensional subset, e.g.
+    ``b[ij]`` with ``ij(i, j)``, ``y`` is declared over ``i`` and ``j`` but is
+    only constrained for the elements of ``ij``.
+
+    The formulation is linear and exact for binary operands :math:`b_k`:
+
+    .. math::
+        y \\leq b_k \\quad \\forall{k}
+
+        y \\geq 1 - \\sum_{k}{(1 - b_k)}
+
+    With ``over``, the sum also ranges over the elements of these sets.
+
+    FormulationResult:
+        - variables_created: ["output"]
+        - equations_created: ["upper_k", "lower_0"]
+        - ``k`` is the position of the operand in ``operands``.
+
+    Parameters
+    ----------
+    *operands : Variable | ImplicitVariable
+        Binary variables to combine.
+    over : Set | Alias | Sequence[Set | Alias] | None, optional
+        Sets to take the AND over.
+
+    Returns
+    -------
+    FormulationResult
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=range(3))
+    >>> j = gp.Set(m, "j", records=range(2))
+    >>> a = gp.Variable(m, "a", type="binary", domain=i)
+    >>> b = gp.Variable(m, "b", type="binary", domain=[i, j])
+    >>> y, eqs = gp.formulations.logical_and(a, b)
+    >>> [d.name for d in y.domain]
+    ['i', 'j']
+    >>> res = gp.formulations.logical_and(b, over=j)
+    >>> list(res.equations_created)
+    ['upper_0', 'lower_0']
+
+    """
+    return _logical("and", operands, over)
+
+
+def logical_or(
+    *operands: BinaryType,
+    over: OverType | None = None,
+) -> FormulationResult:
+    """
+    Creates a binary variable ``y`` that equals the logical OR of the binary
+    ``operands``, i.e. ``y == 1`` if and only if at least one operand is 1.
+    If ``over`` is given, the OR is also taken over these sets, e.g.
+    ``logical_or(b[i, j], over=j)`` creates ``y[i] == 1`` if and only if
+    ``b[i, j] == 1`` for some ``j``.
+
+    The domain of ``y`` is determined as for :meth:`logical_and
+    <gamspy.formulations.logical_and>`. The formulation is linear and exact
+    for binary operands :math:`b_k`:
+
+    .. math::
+        y \\geq b_k \\quad \\forall{k}
+
+        y \\leq \\sum_{k}{b_k}
+
+    With ``over``, the sum also ranges over the elements of these sets.
+
+    FormulationResult:
+        - variables_created: ["output"]
+        - equations_created: ["lower_k", "upper_0"]
+        - ``k`` is the position of the operand in ``operands``.
+
+    Parameters
+    ----------
+    *operands : Variable | ImplicitVariable
+        Binary variables to combine.
+    over : Set | Alias | Sequence[Set | Alias] | None, optional
+        Sets to take the OR over.
+
+    Returns
+    -------
+    FormulationResult
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=range(3))
+    >>> j = gp.Set(m, "j", records=range(2))
+    >>> a = gp.Variable(m, "a", type="binary", domain=i)
+    >>> b = gp.Variable(m, "b", type="binary", domain=[i, j])
+    >>> y, eqs = gp.formulations.logical_or(a, b[i, "0"])
+    >>> [d.name for d in y.domain]
+    ['i']
+    >>> res = gp.formulations.logical_or(a, b, over=j)
+    >>> list(res.equations_created)
+    ['lower_0', 'lower_1', 'upper_0']
+
+    """
+    return _logical("or", operands, over)
+
+
+def logical_not(operand: BinaryType) -> FormulationResult:
+    """
+    Creates a binary variable ``y`` that equals the logical NOT of the binary
+    ``operand``, i.e. ``y == 1 - operand``. ``y`` has the domain of the
+    operand and can be passed to :meth:`logical_and
+    <gamspy.formulations.logical_and>`, :meth:`logical_or
+    <gamspy.formulations.logical_or>` or :meth:`indicator
+    <gamspy.formulations.indicator>`.
+
+    FormulationResult:
+        - variables_created: ["output"]
+        - equations_created: ["complement"]
+
+    Parameters
+    ----------
+    operand : Variable | ImplicitVariable
+        Binary variable to negate.
+
+    Returns
+    -------
+    FormulationResult
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=range(3))
+    >>> a = gp.Variable(m, "a", type="binary", domain=i)
+    >>> b = gp.Variable(m, "b", type="binary", domain=i)
+    >>> not_b, _ = gp.formulations.logical_not(b)
+    >>> y, eqs = gp.formulations.logical_and(a, not_b)
+    >>> [d.name for d in y.domain]
+    ['i']
+
+    """
+    _validate_binary_operands([operand])
+    m, output_domain, _, _ = _reduction([operand], None)
+    result, output, output_declaration, output_equation_index = _add_output(
+        m, output_domain, "binary"
+    )
+    result.equations_created["complement"] = _add_equation(
+        m, output_declaration, output_equation_index, output == 1 - operand, None
+    )
+
+    return result
+
+
+def _logical_pair(
+    operator: Literal["xor", "imp", "eqv"],
+    left: BinaryType,
+    right: BinaryType,
+) -> FormulationResult:
+    _validate_binary_operands([left, right])
+    m, output_domain, _, _ = _reduction([left, right], None)
+    result, output, output_declaration, output_equation_index = _add_output(
+        m, output_domain, "binary"
+    )
+
+    # each inequality forces the correct y for one or two combinations of left and right
+    # e.g. for xor, y <= 2 - left - right forces y = 0 only when left = right = 1,
+    # and for imp, y >= 1 - left forces y = 1 whenever left = 0
+    if operator == "xor":
+        lower = [left - right, right - left]
+        upper = [left + right, 2 - left - right]
+    elif operator == "imp":
+        lower = [1 - left, right]
+        upper = [1 - left + right]
+    else:
+        lower = [left + right - 1, 1 - left - right]
+        upper = [1 - left + right, 1 + left - right]
+
+    for k, bound in enumerate(lower):
+        result.equations_created[f"lower_{k}"] = _add_equation(
+            m, output_declaration, output_equation_index, output >= bound, None
+        )
+    for k, bound in enumerate(upper):
+        result.equations_created[f"upper_{k}"] = _add_equation(
+            m, output_declaration, output_equation_index, output <= bound, None
+        )
+
+    return result
+
+
+def logical_xor(left: BinaryType, right: BinaryType) -> FormulationResult:
+    """
+    Creates a binary variable ``y`` that equals the exclusive disjunction of
+    the binary operands, i.e. ``y == 1`` if and only if exactly one of
+    ``left`` and ``right`` is 1.
+
+    The domain of ``y`` is the union of the domains of the operands. The
+    formulation is linear and exact for binary operands :math:`a` and
+    :math:`b`:
+
+    .. math::
+        y \\geq a - b, \\quad y \\geq b - a
+
+        y \\leq a + b, \\quad y \\leq 2 - a - b
+
+    FormulationResult:
+        - variables_created: ["output"]
+        - equations_created: ["lower_0", "lower_1", "upper_0", "upper_1"]
+
+    Parameters
+    ----------
+    left : Variable | ImplicitVariable
+        First binary operand.
+    right : Variable | ImplicitVariable
+        Second binary operand.
+
+    Returns
+    -------
+    FormulationResult
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=range(3))
+    >>> j = gp.Set(m, "j", records=range(2))
+    >>> a = gp.Variable(m, "a", type="binary", domain=i)
+    >>> b = gp.Variable(m, "b", type="binary", domain=j)
+    >>> y, eqs = gp.formulations.logical_xor(a, b)
+    >>> [d.name for d in y.domain]
+    ['i', 'j']
+
+    """
+    return _logical_pair("xor", left, right)
+
+
+def logical_imp(left: BinaryType, right: BinaryType) -> FormulationResult:
+    """
+    Creates a binary variable ``y`` that equals the logical implication
+    ``left => right``, i.e. ``y == 0`` if and only if ``left`` is 1 and
+    ``right`` is 0.
+
+    The domain of ``y`` is the union of the domains of the operands. The
+    formulation is linear and exact for binary operands :math:`a` and
+    :math:`b`:
+
+    .. math::
+        y \\geq 1 - a, \\quad y \\geq b
+
+        y \\leq 1 - a + b
+
+    To enforce the implication instead of computing its value, use the
+    constraint ``left <= right``.
+
+    FormulationResult:
+        - variables_created: ["output"]
+        - equations_created: ["lower_0", "lower_1", "upper_0"]
+
+    Parameters
+    ----------
+    left : Variable | ImplicitVariable
+        Binary premise.
+    right : Variable | ImplicitVariable
+        Binary conclusion.
+
+    Returns
+    -------
+    FormulationResult
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=range(3))
+    >>> a = gp.Variable(m, "a", type="binary", domain=i)
+    >>> b = gp.Variable(m, "b", type="binary", domain=i)
+    >>> res = gp.formulations.logical_imp(a, b)
+    >>> list(res.equations_created)
+    ['lower_0', 'lower_1', 'upper_0']
+
+    """
+    return _logical_pair("imp", left, right)
+
+
+def logical_eqv(left: BinaryType, right: BinaryType) -> FormulationResult:
+    """
+    Creates a binary variable ``y`` that equals the logical equivalence of
+    the binary operands, i.e. ``y == 1`` if and only if ``left`` and
+    ``right`` are equal.
+
+    The domain of ``y`` is the union of the domains of the operands. The
+    formulation is linear and exact for binary operands :math:`a` and
+    :math:`b`:
+
+    .. math::
+        y \\geq a + b - 1, \\quad y \\geq 1 - a - b
+
+        y \\leq 1 - a + b, \\quad y \\leq 1 + a - b
+
+    To enforce the equivalence instead of computing its value, use the
+    constraint ``left == right``.
+
+    FormulationResult:
+        - variables_created: ["output"]
+        - equations_created: ["lower_0", "lower_1", "upper_0", "upper_1"]
+
+    Parameters
+    ----------
+    left : Variable | ImplicitVariable
+        First binary operand.
+    right : Variable | ImplicitVariable
+        Second binary operand.
+
+    Returns
+    -------
+    FormulationResult
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=range(3))
+    >>> a = gp.Variable(m, "a", type="binary", domain=i)
+    >>> b = gp.Variable(m, "b", type="binary", domain=i)
+    >>> y, eqs = gp.formulations.logical_eqv(a, b)
+    >>> len(eqs)
+    4
+
+    """
+    return _logical_pair("eqv", left, right)
