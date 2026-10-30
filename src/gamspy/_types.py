@@ -41,24 +41,16 @@ if TYPE_CHECKING:
     # Where the records of a symbol must be read from
     RecordsSourceType: TypeAlias = DataSource | FrozenModel
 
+    DomainElementType: TypeAlias = Set | Alias | UniverseAlias | Universe | str
+
     # Possible types that the user can provide as a domain. A `str` is either
     # the universe label "*" or a relaxed domain.
-    DomainType: TypeAlias = (
-        Sequence[Set | Alias | UniverseAlias | Universe | str]
-        | Set
-        | Alias
-        | UniverseAlias
-        | Universe
-        | Dim
-        | str
-    )
+    DomainType: TypeAlias = Sequence[DomainElementType] | DomainElementType | Dim
 
     # Possible types after normalization of the provided domain. The universe
     # label "*" has been replaced by the `UNIVERSE` sentinel, so a remaining
     # `str` is always a relaxed domain.
-    NormalizedDomainType: TypeAlias = Sequence[
-        Set | Alias | UniverseAlias | Universe | str
-    ]
+    NormalizedDomainType: TypeAlias = Sequence[DomainElementType]
     # The ellipsis/slice is expanded and integer labels are converted to str.
     ValidatedIndexType: TypeAlias = (
         Set | Alias | UniverseAlias | Universe | ImplicitSet | Expression | str

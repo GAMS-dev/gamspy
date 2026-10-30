@@ -14,6 +14,12 @@ from gamspy.formulations import (
     PWLCurve,
     absolute,
     indicator,
+    logical_and,
+    logical_eqv,
+    logical_imp,
+    logical_not,
+    logical_or,
+    logical_xor,
     maximum,
     minimum,
     pwl_convexity_formulation,
@@ -510,6 +516,20 @@ def test_indicator_solve(big_m):
     model.solve()
     assert math.isclose(model.objective_value, 22)
 
+    # the lag of the first element is 0
+    c = gp.Variable(m, name="c", type="binary", domain=j)
+    c.fx[j] = 1
+    _, eqs4 = indicator(c[j - 1], 1, x[i, j] <= 2, big_m=big_m)
+    model = gp.Model(
+        m,
+        equations=eqs4,
+        problem="mip",
+        sense="max",
+        objective=gp.Sum([i, j], x),
+    )
+    model.solve()
+    assert math.isclose(model.objective_value, 24)
+
 
 def test_min_max():
     m = gp.Container()
@@ -629,6 +649,7 @@ def test_min_max_solve(kwargs):
     # the output of x[ij] is only defined over ij
     cases = [
         (maximum(x, over=j, **kwargs), [i], {"a": 4, "b": 9}),
+        (maximum(x, over="j", **kwargs), [i], {"a": 4, "b": 9}),
         (minimum(x, over=j, **kwargs), [i], {"a": -2, "b": 0}),
         (maximum(x[i, "1"], x[i, "3"], 1, **kwargs), [i], {"a": 4, "b": 6}),
         (minimum(x[i, "2"], 2, **kwargs), [i], {"a": 1, "b": 2}),
@@ -637,6 +658,12 @@ def test_min_max_solve(kwargs):
         (minimum(2 * x[i, j] - p[i, j], over=[i, j], **kwargs), [], -2),
         (absolute(x[i, "3"], **kwargs), [i], {"a": 2, "b": 6}),
         (absolute(x[i, "1"] - 5, **kwargs), [i], {"a": 1, "b": 5}),
+        (minimum(x[i, j] - x[i, j - 1], over=j, **kwargs), [i], {"a": -3, "b": -3}),
+        (
+            maximum(x[i, j.lead(1, "circular")] - x[i, j], over=j, **kwargs),
+            [i],
+            {"a": 6, "b": 9},
+        ),
     ]
 
     equations = [eq for res, _, _ in cases for eq in res.equations_created.values()]
@@ -656,6 +683,112 @@ def test_min_max_solve(kwargs):
                 assert res.result.toValue() == pytest.approx(expected)
 
 
+def test_logical():
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b"])
+    j = gp.Set(m, name="j", records=["1", "2", "3"])
+    ij = gp.Set(m, name="ij", domain=[i, j], records=[("a", "1"), ("b", "3")])
+    x = gp.Variable(m, name="x", domain=i)
+    a = gp.Variable(m, name="a", type="binary", domain=i)
+    b = gp.Variable(m, name="b", type="binary", domain=[i, j])
+
+    for formulate in (logical_and, logical_or):
+        with pytest.raises(ValidationError, match="At least one operand"):
+            formulate()
+        for operand in (x, 1 - a, 1):
+            with pytest.raises(ValidationError, match="binary variables"):
+                formulate(a, operand)
+        with pytest.raises(ValidationError, match="over must be a subset"):
+            formulate(a, over=j)
+    with pytest.raises(ValidationError, match="binary variables"):
+        logical_not(x)
+    for formulate in (logical_xor, logical_imp, logical_eqv):
+        with pytest.raises(ValidationError, match="binary variables"):
+            formulate(a, x)
+
+    res1 = logical_and(a, b)
+    assert res1.result.type == "binary"
+    assert [d.name for d in res1.result.domain] == ["i", "j"]
+    assert list(res1.variables_created) == ["output"]
+    assert list(res1.equations_created) == ["upper_0", "upper_1", "lower_0"]
+
+    res2 = logical_or(a, b, over=j)
+    assert [d.name for d in res2.result.domain] == ["i"]
+    assert list(res2.equations_created) == ["lower_0", "lower_1", "upper_0"]
+
+    res3 = logical_or(b[ij], over=ij)
+    assert res3.result.domain == []
+
+    res4 = logical_not(b[ij])
+    assert [d.name for d in res4.result.domain] == ["i", "j"]
+    assert list(res4.equations_created) == ["complement"]
+
+    res5 = logical_xor(a, b)
+    assert [d.name for d in res5.result.domain] == ["i", "j"]
+    assert list(res5.equations_created) == ["lower_0", "lower_1", "upper_0", "upper_1"]
+
+    res6 = logical_imp(a, b[ij])
+    assert [d.name for d in res6.result.domain] == ["i", "j"]
+    assert list(res6.equations_created) == ["lower_0", "lower_1", "upper_0"]
+
+
+def test_logical_solve():
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b", "c"])
+    j = gp.Set(m, name="j", records=["1", "2"])
+    ij = gp.Set(m, name="ij", domain=[i, j], records=[("a", "2"), ("b", "1")])
+    b = gp.Variable(m, name="b", type="binary", domain=[i, j])
+    b.fx[i, j] = 0
+    b.fx["b", "2"] = 1
+    b.fx["c", j] = 1
+
+    negation = logical_not(b[i, "1"])
+    cases = [
+        (negation, [i], {"a": 1, "b": 1, "c": 0}),
+        (logical_and(b, over=j), [i], {"a": 0, "b": 0, "c": 1}),
+        (logical_or(b, over=j), [i], {"a": 0, "b": 1, "c": 1}),
+        (logical_or(b, over="j"), [i], {"a": 0, "b": 1, "c": 1}),
+        (logical_and(b[i, "2"], negation.result), [i], {"a": 0, "b": 1, "c": 0}),
+        (logical_or(b[ij], over=ij), [], 0),
+        (logical_and(b[i, j], over=[i, j]), [], 0),
+        (logical_not(b[ij]), [ij], {("a", "2"): 1, ("b", "1"): 1}),
+        (logical_xor(b[i, "1"], b[i, "2"]), [i], {"a": 0, "b": 1, "c": 0}),
+        (logical_imp(b[i, "1"], b[i, "2"]), [i], {"a": 1, "b": 1, "c": 1}),
+        (logical_imp(b[i, "2"], b[i, "1"]), [i], {"a": 1, "b": 0, "c": 1}),
+        (logical_eqv(b[i, "2"], b[i, "1"]), [i], {"a": 1, "b": 0, "c": 1}),
+        (logical_or(b[i, j + 1], over=j), [i], {"a": 0, "b": 1, "c": 1}),
+        (
+            logical_xor(b[i, j], b[i, j - 1]),
+            [i, j],
+            {
+                ("a", "1"): 0,
+                ("a", "2"): 0,
+                ("b", "1"): 0,
+                ("b", "2"): 1,
+                ("c", "1"): 1,
+                ("c", "2"): 0,
+            },
+        ),
+    ]
+
+    equations = [eq for res, _, _ in cases for eq in res.equations_created.values()]
+    objective = sum(
+        gp.Sum(domain, res.result[domain]) if domain else res.result
+        for res, domain, _ in cases
+    )
+    for sense in ("min", "max"):
+        model = gp.Model(
+            m, equations=equations, problem="mip", sense=sense, objective=objective
+        )
+        model.solve()
+        for res, domain, expected in cases:
+            if domain:
+                records = res.result.toDict()
+                assert {key: records.get(key, 0) for key in expected} == expected
+            else:
+                assert res.result.toValue() == expected
+
+
 @pytest.mark.parametrize("mode", ["no", "yes", "yes-or-autogenerate"])
 def test_general_constraints_name_their_symbols(set_options, mode):
     set_options({"USE_PY_VAR_NAME": mode})
@@ -672,6 +805,12 @@ def test_general_constraints_name_their_symbols(set_options, mode):
         lambda: maximum(x, 0),
         lambda: minimum(x, 0),
         lambda: absolute(x),
+        lambda: logical_and(b, b),
+        lambda: logical_or(b, b),
+        lambda: logical_not(b),
+        lambda: logical_xor(b, b),
+        lambda: logical_imp(b, b),
+        lambda: logical_eqv(b, b),
     ):
         (y1, eqs1), (y2, eqs2) = formulate(), formulate()
         assert y1 is None or y1 is not y2

@@ -1255,3 +1255,193 @@ choose a mode:
 
 Every operand adds a binary variable, so prefer the plain inequalities
 whenever they are enough.
+
+Logical Constraints
+-------------------
+
+Binary variables often stand for yes/no decisions, and models need to combine
+them: a machine runs if *any* product is assigned to it, a route is usable if
+*both* of its end points are open, or a facility needs a permit if it is
+*not* outsourced. :meth:`logical_and <gamspy.formulations.logical_and>`,
+:meth:`logical_or <gamspy.formulations.logical_or>`,
+:meth:`logical_not <gamspy.formulations.logical_not>`,
+:meth:`logical_xor <gamspy.formulations.logical_xor>`,
+:meth:`logical_imp <gamspy.formulations.logical_imp>` and
+:meth:`logical_eqv <gamspy.formulations.logical_eqv>` create a binary variable
+that equals the AND, OR, NOT, exclusive disjunction, implication or
+equivalence of binary variables, using only linear constraints.
+The functions :meth:`bool_and <gamspy.math.bool_and>`,
+:meth:`bool_xor <gamspy.math.bool_xor>` etc. are meant for data. Applied to
+variables, they make the model nonlinear, and it no longer compiles as a
+``MIP``.
+
+Do You Need a Logical Formulation?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As with `Minimum, Maximum and Absolute Value`_, often you do not. If the
+model only ever benefits from setting the result to 0, the constraints that
+force it to 1 are enough. The classic example is a fixed cost that is paid if
+any product is assigned to a machine. Minimizing the cost keeps ``runs`` at
+0 unless an assignment forces it to 1:
+
+.. code-block:: python
+
+   import gamspy as gp
+
+   m = gp.Container()
+   p = gp.Set(m, "p", records=["bolts", "nuts", "screws"])
+   k = gp.Set(m, "k", records=["lathe", "press"])
+   assign = gp.Variable(m, "assign", type="binary", domain=[p, k])
+   runs = gp.Variable(m, "runs", type="binary", domain=k)
+
+   # runs[k] >= assign[p, k] for every p, i.e. runs[k] >= OR(assign[p, k] for p)
+   setup = gp.Equation(m, "setup", domain=[p, k])
+   setup[p, k] = runs[k] >= assign[p, k]
+
+Similarly, if the model only benefits from setting the result to 1, e.g. a
+bonus that is paid if a route is usable, ``usable <= open[a]`` and
+``usable <= open[b]`` are enough for an AND.
+
+You also do not need a formulation if the logical expression must simply
+hold, rather than be available as a variable. Each of the following is a
+single linear constraint on binary variables ``a`` and ``b``:
+
+=====================================  ==================
+Must hold                              Constraint
+=====================================  ==================
+``a`` implies ``b``                    ``a <= b``
+``a`` is equivalent to ``b``           ``a == b``
+exactly one of ``a`` and ``b``         ``a + b == 1``
+at least one of ``a`` and ``b``        ``a + b >= 1``
+both ``a`` and ``b``                   fix both to 1
+=====================================  ==================
+
+The one-sided constraints are not enough when the model benefits from moving
+the result in the other direction, for example when ``runs`` is rewarded
+elsewhere, or when it controls an :meth:`indicator
+<gamspy.formulations.indicator>` constraint that holds for both of its
+values. Then the solver sets the result to whatever value suits it. In these
+cases, use the formulations, which make the result equal to the logical
+expression:
+
+.. code-block:: python
+
+   # runs[k] == OR(assign[p, k] for p)
+   runs, eqs = gp.formulations.logical_or(assign, over=p)
+
+   # idle[k] == NOT runs[k]
+   idle, eqs = gp.formulations.logical_not(runs)
+
+   is_open = gp.Variable(m, "is_open", type="binary", domain=k)
+
+   # ready[k] == is_open[k] AND idle[k]
+   ready, eqs = gp.formulations.logical_and(is_open, idle)
+
+   ran_before = gp.Variable(m, "ran_before", type="binary", domain=k)
+
+   # switched[k] == runs[k] XOR ran_before[k], e.g. to charge a switching cost
+   switched, eqs = gp.formulations.logical_xor(runs, ran_before)
+
+Like :meth:`maximum <gamspy.formulations.maximum>`, each formulation creates
+the result variable, with a generated name that starts with ``output_var_``,
+and returns it together with its equations. Add the equations to the model,
+including those of intermediate results such as ``idle`` above, otherwise the
+intermediate variable is free. The result is a binary variable, so it can be
+an operand of another logical formulation or the binary variable of an
+indicator constraint.
+
+The operands must be binary variables. To negate an operand, pass the result
+of :meth:`logical_not <gamspy.formulations.logical_not>`. The domain of the
+result is the union of the operand domains. For ``logical_and`` and
+``logical_or``, ``over`` combines the operands over the given sets, as for
+:meth:`maximum <gamspy.formulations.maximum>`. ``logical_xor``, ``logical_imp`` and ``logical_eqv`` 
+take exactly two operands. If an operand is indexed with a multidimensional subset,
+the result is only constrained for the elements of the subset.
+
+For complete applications, see the
+`product portfolio with synergies <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/prodsyn/prodsyn.py>`_
+for :meth:`logical_and <gamspy.formulations.logical_and>`, the
+`corn and soybean rotation planning <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/croprot/croprot.py>`_
+for :meth:`logical_xor <gamspy.formulations.logical_xor>` and the
+`nurse rostering with weekend and supervision rules <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/nurseroster/nurseroster.py>`_
+for the other logical formulations.
+
+How Logical Formulations Work
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let :math:`b_1, \dots, b_n` be the binary operands. With ``over``, every
+element of the given sets counts as a separate operand. :meth:`logical_and
+<gamspy.formulations.logical_and>` generates:
+
+.. math::
+
+   y \leq b_k \quad \forall{k}
+
+   y \geq 1 - \sum_{k}{(1 - b_k)}
+
+If some :math:`b_k = 0`, the first constraints force :math:`y = 0`. If all
+:math:`b_k = 1`, the sum is 0 and the last constraint forces :math:`y = 1`.
+:meth:`logical_or <gamspy.formulations.logical_or>` generates:
+
+.. math::
+
+   y \geq b_k \quad \forall{k}
+
+   y \leq \sum_{k}{b_k}
+
+If some :math:`b_k = 1`, the first constraints force :math:`y = 1`. If all
+:math:`b_k = 0`, the last constraint forces :math:`y = 0`. Over an empty set,
+the AND is 1 and the OR is 0, like :meth:`Sand <gamspy.Sand>` and
+:meth:`Sor <gamspy.Sor>`. The first constraints are the one-sided
+constraints of `Do You Need a Logical Formulation?`_, and the last
+constraint adds the other direction. :meth:`logical_not
+<gamspy.formulations.logical_not>` generates :math:`y = 1 - b`.
+
+For two operands :math:`a` and :math:`b`, the truth table has four rows. The
+formulations of :meth:`logical_xor <gamspy.formulations.logical_xor>`,
+:meth:`logical_imp <gamspy.formulations.logical_imp>` and
+:meth:`logical_eqv <gamspy.formulations.logical_eqv>` rule out the wrong value
+of :math:`y` in every row:
+
+.. math::
+
+   \text{xor:} \quad y \geq a - b, \quad y \geq b - a, \quad
+   y \leq a + b, \quad y \leq 2 - a - b
+
+   \text{imp:} \quad y \geq 1 - a, \quad y \geq b, \quad
+   y \leq 1 - a + b
+
+   \text{eqv:} \quad y \geq a + b - 1, \quad y \geq 1 - a - b, \quad
+   y \leq 1 - a + b, \quad y \leq 1 + a - b
+
+Each inequality rules out the wrong value in one or two rows and allows the
+right value in all of them. For example, at :math:`a = b = 1`, the other XOR
+constraints allow both values of :math:`y`, and :math:`y \leq 2 - a - b`
+forces :math:`y = 0`. At the other rows, it allows :math:`y = 1`. The
+implication needs only three inequalities, because :math:`y \geq 1 - a`
+covers both rows with :math:`a = 0`.
+
+No big-M value or bounds are needed for any of the formulations, and the LP
+relaxation is exact: for fractional operands, the constraints describe the
+convex hull of the truth table, so the solver never has to branch on
+:math:`y`. Each formulation adds one binary variable per element of the
+domain of :math:`y`, and :math:`n + 1` equations for AND and OR, one for NOT,
+three for the implication, and four for XOR and the equivalence.
+
+The generated symbols are available in the returned
+:class:`FormulationResult <gamspy.formulations.FormulationResult>` under the
+following keys, where ``k`` is the position of the operand for AND and OR,
+and the position of the inequality in the order above otherwise:
+
+=================================  ================  ==============
+Symbol                             Formulation       Key
+=================================  ================  ==============
+:math:`y \leq b_k`                 ``logical_and``   ``upper_k``
+:math:`y \geq 1 - \sum (1 - b_k)`  ``logical_and``   ``lower_0``
+:math:`y \geq b_k`                 ``logical_or``    ``lower_k``
+:math:`y \leq \sum b_k`            ``logical_or``    ``upper_0``
+:math:`y = 1 - b`                  ``logical_not``   ``complement``
+``k``-th :math:`y \geq \dots`      xor, imp and eqv  ``lower_k``
+``k``-th :math:`y \leq \dots`      xor, imp and eqv  ``upper_k``
+:math:`y`                          all               ``output``
+=================================  ================  ==============
