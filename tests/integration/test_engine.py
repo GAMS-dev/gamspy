@@ -39,7 +39,7 @@ except Exception:
 
 
 @pytest.fixture
-def network_license():
+def network_license(temp_license_path):
     subprocess.run(
         [
             sys.executable,
@@ -48,6 +48,8 @@ def network_license():
             "install",
             "license",
             os.environ["NETWORK_LICENSE_NON_ACADEMIC"],
+            "-o",
+            temp_license_path,
         ],
         check=True,
     )
@@ -68,17 +70,6 @@ def network_license():
 
     yield m, canning_plants, markets, capacities, demands, distances
     m.close()
-    subprocess.run(
-        [
-            sys.executable,
-            "-Bm",
-            "gamspy",
-            "install",
-            "license",
-            os.environ["LOCAL_LICENSE"],
-        ],
-        check=True,
-    )
 
 
 def test_network_license(network_license):

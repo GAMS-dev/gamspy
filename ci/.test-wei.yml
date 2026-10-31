@@ -2,7 +2,7 @@
 .wei_template:
   extends: .uv_package_cache
   stage: test
-  needs: [wei-cli-3.11, setup-wei-toolchain]
+  needs: [setup-wei-toolchain]
   tags: [windows]
   before_script:
     - !reference [.wei_unpack_toolchain, script]

@@ -1,0 +1,1 @@
+Install licenses and solvers in tests into a temporary license file and a fresh virtual environment instead of the active environment. Run the cli stage after the test stage.

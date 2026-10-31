@@ -1,7 +1,7 @@
 leg-cli-3.15:
   extends: .uv_package_cache
   stage: cli
-  needs: [setup-leg-toolchain]
+  needs: [leg-test-3.15, setup-leg-toolchain]
   tags: [linux]
   image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   script:
@@ -14,7 +14,7 @@ leg-cli-3.15:
 leg-cli-3.11:
   extends: .uv_package_cache
   stage: cli
-  needs: [setup-leg-toolchain]
+  needs: [leg-test-3.11, setup-leg-toolchain]
   tags: [linux]
   image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   script:
@@ -26,7 +26,7 @@ leg-cli-3.11:
 lag-cli-3.15:
   extends: .uv_package_cache
   stage: cli
-  needs: [setup-lag-toolchain]
+  needs: [lag-test-3.15, setup-lag-toolchain]
   tags: [linux-arm64]
   image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   script:
@@ -40,7 +40,7 @@ lag-cli-3.15:
 lag-cli-3.11:
   extends: .uv_package_cache
   stage: cli
-  needs: [setup-lag-toolchain]
+  needs: [lag-test-3.11, setup-lag-toolchain]
   tags: [linux-arm64]
   image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   script:
@@ -54,7 +54,7 @@ dac-cli-3.15:
   extends: .uv_package_cache
   stage: cli
   when: on_success
-  needs: [setup-dac-toolchain]
+  needs: [dac-test-3.15, setup-dac-toolchain]
   tags: [macos-arm64]
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
@@ -67,7 +67,7 @@ dac-cli-3.15:
 dac-cli-3.11:
   extends: .uv_package_cache
   stage: cli
-  needs: [dac-cli-3.15, setup-dac-toolchain]
+  needs: [dac-test-3.11, dac-cli-3.15, setup-dac-toolchain]
   tags: [macos-arm64]
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
@@ -79,7 +79,7 @@ dac-cli-3.11:
 deg-cli-3.15:
   extends: .uv_package_cache
   stage: cli
-  needs: [setup-deg-toolchain]
+  needs: [{job: deg-test-3.15, optional: true}, setup-deg-toolchain]
   tags: [macos]
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
@@ -93,7 +93,7 @@ deg-cli-3.11:
   extends: .uv_package_cache
   stage: cli
   # Preserving dependency on 3.15 while adding toolchain
-  needs: [deg-cli-3.15, setup-deg-toolchain]
+  needs: [{job: deg-test-3.11, optional: true}, deg-cli-3.15, setup-deg-toolchain]
   tags: [macos]
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
@@ -105,7 +105,7 @@ deg-cli-3.11:
 wei-cli-3.15:
   extends: .uv_package_cache
   stage: cli
-  needs: [setup-wei-toolchain]
+  needs: [wei-test-3.15, setup-wei-toolchain]
   tags: [windows]
   script:
     - !reference [.wei_unpack_toolchain, script]
@@ -118,7 +118,7 @@ wei-cli-3.15:
 wei-cli-3.11:
   extends: .uv_package_cache
   stage: cli
-  needs: [setup-wei-toolchain]
+  needs: [{job: wei-test-3.11, optional: true}, setup-wei-toolchain]
   tags: [windows]
   script:
     - !reference [.wei_unpack_toolchain, script]
