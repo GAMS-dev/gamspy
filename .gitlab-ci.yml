@@ -13,8 +13,8 @@ stages:
   - precommit
   - setup
   - update
-  - cli
   - test
+  - cli
   - engine
   - neos
   - docs

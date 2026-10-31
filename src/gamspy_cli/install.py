@@ -208,7 +208,7 @@ def license(
                 )
                 raise typer.Exit(code=1)
 
-        shutil.copy(license, license_path)
+        shutil.copy(license, output if output else license_path)
 
     # Free personal license has different default solvers. Install them.
     if "FREEPERSONAL" in lines[4]:

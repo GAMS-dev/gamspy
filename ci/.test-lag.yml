@@ -2,7 +2,7 @@
 .lag_template:
   extends: .uv_package_cache
   stage: test
-  needs: [lag-cli-3.11, setup-lag-toolchain]
+  needs: [setup-lag-toolchain]
   tags: [linux-arm64]
   image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   before_script:

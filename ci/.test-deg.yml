@@ -2,7 +2,7 @@
 .deg_template:
   extends: [.uv_package_cache, .develop_and_master_only]
   stage: test
-  needs: [deg-cli-3.11, setup-deg-toolchain]
+  needs: [setup-deg-toolchain]
   tags: [macos]
   before_script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
