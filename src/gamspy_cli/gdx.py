@@ -9,9 +9,15 @@ import os
 import platform
 import re
 import subprocess
-from typing import Annotated, Never
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Annotated
 
 import typer
+
+from .util import cli_error
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 app = typer.Typer(
     short_help="To dump and compare GDX files.",
@@ -38,10 +44,10 @@ def _get_gdx_symbol_names(filename: str) -> set[str]:
     with gdxio.open_gdx(gamspy_base.directory, filename) as handle:
         _, number_of_symbols, _ = gdx.gdxSystemInfo(handle)
 
-        for symbol_number in range(number_of_symbols):
+        # Symbol 0 is the universe, hence the symbols are numbered from 1.
+        for symbol_number in range(1, number_of_symbols + 1):
             _, symbol_name, _, _ = gdx.gdxSymbolInfo(handle, symbol_number)
-            if symbol_name != "*":
-                symbol_names.add(symbol_name)
+            symbol_names.add(symbol_name)
 
     return symbol_names
 
@@ -68,6 +74,165 @@ def complete_yes_no(ctx: typer.Context, incomplete: str) -> list[str]:
 
 def complete_field(ctx: typer.Context, incomplete: str) -> list[str]:
     return [f for f in VALID_FIELDS if f.startswith(incomplete)]
+
+
+def gdx_dump(
+    filename: str,
+    *,
+    version: bool = False,
+    output: str | None = None,
+    symb: str | None = None,
+    ueltable: str | None = None,
+    delim: str | None = None,
+    decimalsep: str | None = None,
+    noheader: bool = False,
+    nodata: bool = False,
+    csvallfields: bool = False,
+    csvsettext: bool = False,
+    symbols: bool = False,
+    domaininfo: bool = False,
+    symbolsasset: bool = False,
+    symbolsassetdi: bool = False,
+    settext: bool = False,
+    format: str | None = None,
+    dformat: str | None = None,
+    cdim: str | None = None,
+    filterdef: str | None = None,
+    epsout: str | None = None,
+    naout: str | None = None,
+    pinfout: str | None = None,
+    minfout: str | None = None,
+    undfout: str | None = None,
+    zeroout: str | None = None,
+    header: str | None = None,
+) -> str:
+    """
+    Dumps the content of a GDX file in ASCII format. Equivalent of ``gamspy gdx dump``.
+    Run ``gamspy gdx dump --help`` for the description of the options.
+
+    Parameters
+    ----------
+    filename : str
+        Input GDX filename.
+
+    Returns
+    -------
+    str
+        The dump of the GDX file. Empty if ``output`` is given.
+
+    Raises
+    ------
+    CLIError
+        In case the file does not exist, an option is invalid or gdxdump fails.
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> from gamspy import cli
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=["i1", "i2"])
+    >>> m.write("data.gdx")
+    >>> print(cli.gdx_dump("data.gdx", symb="i", format="csv"), end="")
+    "Dim1"
+    "i1"
+    "i2"
+
+    """
+    import gamspy_base
+
+    GDXDUMP_PATH = os.path.join(gamspy_base.directory, "gdxdump")
+    if platform.system() == "Windows":
+        GDXDUMP_PATH = f"{GDXDUMP_PATH}.exe"
+
+    if not filename.endswith(".gdx"):
+        filename += ".gdx"
+
+    if not os.path.exists(filename):
+        raise cli_error(f"File not found: {filename}")
+
+    # Validation
+    if delim and delim not in VALID_DELIMS:
+        raise cli_error(
+            f"Invalid Delim: {delim}. Must be one of: {', '.join(VALID_DELIMS)}"
+        )
+    if decimalsep and decimalsep not in VALID_DECIMAL_SEP:
+        raise cli_error(
+            f"Invalid DecimalSep: {decimalsep}. Must be one of: {', '.join(VALID_DECIMAL_SEP)}"
+        )
+    if format and format not in VALID_FORMATS:
+        raise cli_error(
+            f"Invalid Format: {format}. Must be one of: {', '.join(VALID_FORMATS)}"
+        )
+    if dformat and dformat not in VALID_DFORMATS:
+        raise cli_error(
+            f"Invalid dFormat: {dformat}. Must be one of: {', '.join(VALID_DFORMATS)}"
+        )
+    if cdim and cdim not in VALID_YN:
+        raise cli_error(f"Invalid CDim: {cdim}. Must be Y or N")
+    if filterdef and filterdef not in VALID_YN:
+        raise cli_error(f"Invalid FilterDef: {filterdef}. Must be Y or N")
+
+    cmd = [GDXDUMP_PATH, filename]
+    if version:
+        cmd.append("-V")
+    if output:
+        cmd.append(f"Output={output}")
+    if symb:
+        cmd.append(f"Symb={symb}")
+    if ueltable:
+        cmd.append(f"UelTable={ueltable}")
+    if delim:
+        cmd.append(f"Delim={delim}")
+    if decimalsep:
+        cmd.append(f"DecimalSep={decimalsep}")
+    if noheader:
+        cmd.append("NoHeader")
+    if nodata:
+        cmd.append("NoData")
+    if csvallfields:
+        cmd.append("CSVAllFields")
+    if csvsettext:
+        cmd.append("CSVSetText")
+    if symbols:
+        cmd.append("Symbols")
+    if domaininfo:
+        cmd.append("DomainInfo")
+    if symbolsasset:
+        cmd.append("SymbolsAsSet")
+    if symbolsassetdi:
+        cmd.append("SymbolsAsSetDI")
+    if settext:
+        cmd.append("SetText")
+    if format:
+        cmd.append(f"Format={format}")
+    if dformat:
+        cmd.append(f"dFormat={dformat}")
+    if cdim:
+        cmd.append(f"CDim={cdim}")
+    if filterdef:
+        cmd.append(f"FilterDef={filterdef}")
+    if epsout:
+        cmd.append(f"EpsOut={epsout}")
+    if naout:
+        cmd.append(f"NaOut={naout}")
+    if pinfout:
+        cmd.append(f"PinfOut={pinfout}")
+    if minfout:
+        cmd.append(f"MinfOut={minfout}")
+    if undfout:
+        cmd.append(f"UndfOut={undfout}")
+    if zeroout:
+        cmd.append(f"ZeroOut={zeroout}")
+    if header:
+        cmd.append(f"Header={header}")
+
+    process = subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace"
+    )
+    if process.returncode:
+        raise cli_error(process.stdout + process.stderr, process.returncode)
+
+    return process.stdout
 
 
 @app.command(
@@ -161,108 +326,204 @@ def dump(
     header: str | None = typer.Option(
         None, "--header", help="New header for CSV output"
     ),
-) -> Never:
+) -> None:
+    content = gdx_dump(
+        filename,
+        version=version,
+        output=output,
+        symb=symb,
+        ueltable=ueltable,
+        delim=delim,
+        decimalsep=decimalsep,
+        noheader=noheader,
+        nodata=nodata,
+        csvallfields=csvallfields,
+        csvsettext=csvsettext,
+        symbols=symbols,
+        domaininfo=domaininfo,
+        symbolsasset=symbolsasset,
+        symbolsassetdi=symbolsassetdi,
+        settext=settext,
+        format=format,
+        dformat=dformat,
+        cdim=cdim,
+        filterdef=filterdef,
+        epsout=epsout,
+        naout=naout,
+        pinfout=pinfout,
+        minfout=minfout,
+        undfout=undfout,
+        zeroout=zeroout,
+        header=header,
+    )
+    typer.echo(content, nl=False)
+
+
+@dataclass(frozen=True)
+class GdxDiffResult:
+    """
+    Result of :func:`gdx_diff`.
+
+    Attributes
+    ----------
+    has_differences : bool
+        Whether the GDX files differ.
+    output : str
+        Output of gdxdiff that summarizes the differences.
+    """
+
+    has_differences: bool
+    output: str
+
+
+def gdx_diff(
+    file1: str,
+    file2: str,
+    diffile: str | None = None,
+    *,
+    eps: float | None = None,
+    releps: float | None = None,
+    field: str | None = None,
+    fldonly: bool = False,
+    diffonly: bool = False,
+    cmpdefaults: bool = False,
+    cmpdomains: bool = False,
+    matrixfile: bool = False,
+    ignoreorder: bool = False,
+    setdesc: str | None = None,
+    id: Iterable[str] | None = None,
+    skipid: Iterable[str] | None = None,
+    skip_regex: str | None = None,
+) -> GdxDiffResult:
+    """
+    Compares two GDX files. Equivalent of ``gamspy gdx diff``. Run
+    ``gamspy gdx diff --help`` for the description of the options.
+
+    Parameters
+    ----------
+    file1 : str
+        First input GDX file.
+    file2 : str
+        Second input GDX file.
+    diffile : str, optional
+        Output GDX file for the differences. Defaults to diffile.gdx.
+
+    Returns
+    -------
+    GdxDiffResult
+
+    Raises
+    ------
+    CLIError
+        In case a file does not exist, an option is invalid or gdxdiff fails.
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> from gamspy import cli
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=["i1", "i2"])
+    >>> m.write("data1.gdx")
+    >>> i.setRecords(["i1", "i3"])
+    >>> m.write("data2.gdx")
+    >>> cli.gdx_diff("data1.gdx", "data2.gdx").has_differences
+    True
+
+    """
     import gamspy_base
 
-    GDXDUMP_PATH = os.path.join(gamspy_base.directory, "gdxdump")
+    GDXDIFF_PATH = os.path.join(gamspy_base.directory, "gdxdiff")
     if platform.system() == "Windows":
-        GDXDUMP_PATH = f"{GDXDUMP_PATH}.exe"
+        GDXDIFF_PATH = f"{GDXDIFF_PATH}.exe"
 
-    if not filename.endswith(".gdx"):
-        filename += ".gdx"
+    if not file1.endswith(".gdx"):
+        file1 += ".gdx"
 
-    if not os.path.exists(filename):
-        typer.echo(f"File not found: {filename}", err=True)
-        raise typer.Exit(code=1)
+    if not os.path.exists(file1):
+        raise cli_error(f"File not found: {file1}")
 
-    # Validation
-    if delim and delim not in VALID_DELIMS:
-        typer.echo(
-            f"Invalid Delim: {delim}. Must be one of: {', '.join(VALID_DELIMS)}",
-            err=True,
+    if not file2.endswith(".gdx"):
+        file2 += ".gdx"
+
+    if not os.path.exists(file2):
+        raise cli_error(f"File not found: {file2}")
+
+    if diffile and not diffile.endswith(".gdx"):
+        diffile += ".gdx"
+
+    # Validate restricted strings
+    if field and field not in VALID_FIELDS:
+        raise cli_error(
+            f"Invalid field: '{field}'. Must be one of: {', '.join(VALID_FIELDS)}"
         )
-        raise typer.Exit(code=1)
-    if decimalsep and decimalsep not in VALID_DECIMAL_SEP:
-        typer.echo(
-            f"Invalid DecimalSep: {decimalsep}. Must be one of: {', '.join(VALID_DECIMAL_SEP)}",
-            err=True,
-        )
-        raise typer.Exit(code=1)
-    if format and format not in VALID_FORMATS:
-        typer.echo(
-            f"Invalid Format: {format}. Must be one of: {', '.join(VALID_FORMATS)}",
-            err=True,
-        )
-        raise typer.Exit(code=1)
-    if dformat and dformat not in VALID_DFORMATS:
-        typer.echo(
-            f"Invalid dFormat: {dformat}. Must be one of: {', '.join(VALID_DFORMATS)}",
-            err=True,
-        )
-        raise typer.Exit(code=1)
-    if cdim and cdim not in VALID_YN:
-        typer.echo(f"Invalid CDim: {cdim}. Must be Y or N", err=True)
-        raise typer.Exit(code=1)
-    if filterdef and filterdef not in VALID_YN:
-        typer.echo(f"Invalid FilterDef: {filterdef}. Must be Y or N", err=True)
-        raise typer.Exit(code=1)
 
-    cmd = [GDXDUMP_PATH, filename]
-    if version:
-        cmd.append("-V")
-    if output:
-        cmd.append(f"Output={output}")
-    if symb:
-        cmd.append(f"Symb={symb}")
-    if ueltable:
-        cmd.append(f"UelTable={ueltable}")
-    if delim:
-        cmd.append(f"Delim={delim}")
-    if decimalsep:
-        cmd.append(f"DecimalSep={decimalsep}")
-    if noheader:
-        cmd.append("NoHeader")
-    if nodata:
-        cmd.append("NoData")
-    if csvallfields:
-        cmd.append("CSVAllFields")
-    if csvsettext:
-        cmd.append("CSVSetText")
-    if symbols:
-        cmd.append("Symbols")
-    if domaininfo:
-        cmd.append("DomainInfo")
-    if symbolsasset:
-        cmd.append("SymbolsAsSet")
-    if symbolsassetdi:
-        cmd.append("SymbolsAsSetDI")
-    if settext:
-        cmd.append("SetText")
-    if format:
-        cmd.append(f"Format={format}")
-    if dformat:
-        cmd.append(f"dFormat={dformat}")
-    if cdim:
-        cmd.append(f"CDim={cdim}")
-    if filterdef:
-        cmd.append(f"FilterDef={filterdef}")
-    if epsout:
-        cmd.append(f"EpsOut={epsout}")
-    if naout:
-        cmd.append(f"NaOut={naout}")
-    if pinfout:
-        cmd.append(f"PinfOut={pinfout}")
-    if minfout:
-        cmd.append(f"MinfOut={minfout}")
-    if undfout:
-        cmd.append(f"UndfOut={undfout}")
-    if zeroout:
-        cmd.append(f"ZeroOut={zeroout}")
-    if header:
-        cmd.append(f"Header={header}")
+    if setdesc and setdesc not in VALID_SETDESC:
+        raise cli_error(f"Invalid SetDesc value: '{setdesc}'. Must be Y or N")
 
-    result = subprocess.run(cmd, text=True)
-    raise typer.Exit(code=result.returncode)
+    skipid_list = list(skipid) if skipid else []
+
+    if skip_regex:
+        pattern = re.compile(skip_regex)
+
+        file1_symbol_names = _get_gdx_symbol_names(file1)
+        file2_symbol_names = _get_gdx_symbol_names(file2)
+        union = file1_symbol_names.union(file2_symbol_names)
+        matched_symbol_names = [sym for sym in union if pattern.search(sym)]
+        skipid_list.extend(matched_symbol_names)
+
+    # gdxdiff writes the differences to a temporary file in the working directory
+    # and renames it to diffile, which fails if they are on different file systems.
+    cwd = None
+    if diffile:
+        file1, file2, diffile = (
+            os.path.abspath(path) for path in (file1, file2, diffile)
+        )
+        cwd = os.path.dirname(diffile)
+
+    # Build the command
+    cmd = [GDXDIFF_PATH, file1, file2]
+    if diffile:
+        cmd.append(diffile)
+    if eps is not None:
+        cmd.append(f"Eps={eps}")
+    if releps is not None:
+        cmd.append(f"RelEps={releps}")
+    if field:
+        cmd.append(f"Field={field}")
+    if fldonly:
+        cmd.append("FldOnly")
+    if diffonly:
+        cmd.append("DiffOnly")
+    if cmpdefaults:
+        cmd.append("CmpDefaults")
+    if cmpdomains:
+        cmd.append("CmpDomains")
+    if matrixfile:
+        cmd.append("MatrixFile")
+    if ignoreorder:
+        cmd.append("IgnoreOrder")
+    if setdesc:
+        cmd.append(f"SetDesc={setdesc}")
+    if id:
+        for i in id:
+            cmd.append(f"ID={i}")
+    if skipid_list:
+        for s in set(skipid_list):
+            cmd.append(f"SkipID={s}")
+
+    process = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        cwd=cwd,
+    )
+    # gdxdiff returns 1 if the files differ.
+    if process.returncode > 1:
+        raise cli_error(process.stdout + process.stderr, process.returncode)
+
+    return GdxDiffResult(has_differences=process.returncode == 1, output=process.stdout)
 
 
 @app.command(
@@ -329,86 +590,28 @@ def diff(
             "--skip-regex", help="Regular expression pattern to skip identifiers"
         ),
     ] = None,
-) -> Never:
-    import gamspy_base
-
-    GDXDIFF_PATH = os.path.join(gamspy_base.directory, "gdxdiff")
-    if platform.system() == "Windows":
-        GDXDIFF_PATH = f"{GDXDIFF_PATH}.exe"
-
-    if not file1.endswith(".gdx"):
-        file1 += ".gdx"
-
-    if not os.path.exists(file1):
-        typer.echo(f"File not found: {file1}", err=True)
+) -> None:
+    result = gdx_diff(
+        file1,
+        file2,
+        diffile,
+        eps=eps,
+        releps=releps,
+        field=field,
+        fldonly=fldonly,
+        diffonly=diffonly,
+        cmpdefaults=cmpdefaults,
+        cmpdomains=cmpdomains,
+        matrixfile=matrixfile,
+        ignoreorder=ignoreorder,
+        setdesc=setdesc,
+        id=id,
+        skipid=skipid,
+        skip_regex=skip_regex,
+    )
+    typer.echo(result.output, nl=False)
+    if result.has_differences:
         raise typer.Exit(code=1)
-
-    if not file2.endswith(".gdx"):
-        file2 += ".gdx"
-
-    if not os.path.exists(file2):
-        typer.echo(f"File not found: {file2}", err=True)
-        raise typer.Exit(code=1)
-
-    if diffile and not diffile.endswith(".gdx"):
-        diffile += ".gdx"
-
-    # Validate restricted strings
-    if field and field not in VALID_FIELDS:
-        typer.echo(
-            f"Invalid field: '{field}'. Must be one of: {', '.join(VALID_FIELDS)}",
-            err=True,
-        )
-        raise typer.Exit(code=1)
-
-    if setdesc and setdesc not in VALID_SETDESC:
-        typer.echo(f"Invalid SetDesc value: '{setdesc}'. Must be Y or N", err=True)
-        raise typer.Exit(code=1)
-
-    skipid_list = list(skipid) if skipid else []
-
-    if skip_regex:
-        pattern = re.compile(skip_regex)
-
-        file1_symbol_names = _get_gdx_symbol_names(file1)
-        file2_symbol_names = _get_gdx_symbol_names(file2)
-        union = file1_symbol_names.union(file2_symbol_names)
-        matched_symbol_names = [sym for sym in union if pattern.search(sym)]
-        skipid_list.extend(matched_symbol_names)
-
-    # Build the command
-    cmd = [GDXDIFF_PATH, file1, file2]
-    if diffile:
-        cmd.append(diffile)
-    if eps is not None:
-        cmd.append(f"Eps={eps}")
-    if releps is not None:
-        cmd.append(f"RelEps={releps}")
-    if field:
-        cmd.append(f"Field={field}")
-    if fldonly:
-        cmd.append("FldOnly")
-    if diffonly:
-        cmd.append("DiffOnly")
-    if cmpdefaults:
-        cmd.append("CmpDefaults")
-    if cmpdomains:
-        cmd.append("CmpDomains")
-    if matrixfile:
-        cmd.append("MatrixFile")
-    if ignoreorder:
-        cmd.append("IgnoreOrder")
-    if setdesc:
-        cmd.append(f"SetDesc={setdesc}")
-    if id:
-        for i in id:
-            cmd.append(f"ID={i}")
-    if skipid_list:
-        for s in set(skipid_list):
-            cmd.append(f"SkipID={s}")
-
-    result = subprocess.run(cmd, text=True)
-    raise typer.Exit(code=result.returncode)
 
 
 if __name__ == "__main__":

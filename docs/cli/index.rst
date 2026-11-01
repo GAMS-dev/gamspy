@@ -67,7 +67,26 @@ Show version information::
     $ gamspy --version
     GAMSPy version: 1.13.0
     GAMS version: 50.2.0
-    gamspy_base version: 50.2.0                              
+    gamspy_base version: 50.2.0
+
+Using the CLI from Python
+-------------------------
+
+The commands are also available as Python functions in :mod:`gamspy.cli`. Instead of printing
+their results and exiting, the functions return the results and raise
+:class:`CLIError <gamspy.exceptions.CLIError>` on failure::
+
+    from gamspy import cli
+    from gamspy.exceptions import CLIError
+
+    cli.install_solver(["highs", "scip"])         # gamspy install solver highs scip
+    licensed = cli.show_license().licensed_solvers  # gamspy show license
+    installed = [s.name for s in cli.list_solvers()]  # gamspy list solvers
+
+    try:
+        cli.install_license("<access_code>")       # gamspy install license <access_code>
+    except CLIError as e:
+        print(e.message)
 
 List of Commands
 ----------------

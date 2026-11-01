@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sys
+
 import typer
 
 from . import gdx, install, list, mps2gms, probe, retrieve, run, show, uninstall
@@ -15,7 +17,7 @@ app.add_typer(retrieve.app, name="retrieve")
 app.add_typer(run.app, name="run")
 app.add_typer(show.app, name="show")
 app.add_typer(uninstall.app, name="uninstall")
-app.command(name="mps2gms")(mps2gms.mps2gms)
+app.command(name="mps2gms")(mps2gms.mps2gms_command)
 
 
 def version_callback(value: bool) -> None:
@@ -60,4 +62,13 @@ def main() -> None:
     """
     Entry point for gamspy command line application.
     """
-    app(prog_name="gamspy")
+    try:
+        app(prog_name="gamspy")
+    except Exception as e:
+        from gamspy.exceptions import CLIError
+
+        if not isinstance(e, CLIError):
+            raise
+
+        typer.echo(e.message, err=True)
+        sys.exit(e.return_code)

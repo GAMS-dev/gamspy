@@ -16,6 +16,8 @@ import zipfile
 
 import typer
 
+from .util import cli_error
+
 SOLVER_NAME = "cuopt"
 REPOSITORY = "GAMS-dev/cuoptlink-builder"
 RELEASES_URL = f"https://api.github.com/repos/{REPOSITORY}/releases"
@@ -51,11 +53,10 @@ def _get_cuda_version() -> str | None:
         return None
 
     if cuda_version not in CUDA_VERSIONS:
-        typer.echo(
+        raise cli_error(
             f"Invalid `{CUDA_VERSION_ENV}` ({cuda_version}). `{SOLVER_NAME}` supports "
             f"{' and '.join(CUDA_VERSIONS)}."
         )
-        raise typer.Exit(code=1)
 
     return cuda_version
 
@@ -66,8 +67,7 @@ def _install_cuda_runtime() -> bool:
         return True
 
     if value not in ("0", "1"):
-        typer.echo(f"Invalid `{CUDA_RUNTIME_ENV}` ({value}). It must be 0 or 1.")
-        raise typer.Exit(code=1)
+        raise cli_error(f"Invalid `{CUDA_RUNTIME_ENV}` ({value}). It must be 0 or 1.")
 
     return value == "1"
 
@@ -96,11 +96,10 @@ def _set_installed_files(files: list[str]) -> None:
 
 def _get_architecture() -> str:
     if platform.system() != "Linux":
-        typer.echo(
+        raise cli_error(
             f"`{SOLVER_NAME}` is only available on Linux. On Windows, install it in a "
             "WSL2 distribution."
         )
-        raise typer.Exit(code=1)
 
     machine = platform.machine().lower()
     if machine in ("x86_64", "amd64"):
@@ -109,10 +108,9 @@ def _get_architecture() -> str:
     if machine in ("aarch64", "arm64"):
         return "arm64"
 
-    typer.echo(
+    raise cli_error(
         f"`{SOLVER_NAME}` is only available for x86_64 and arm64 but found {machine}."
     )
-    raise typer.Exit(code=1)
 
 
 def _detect_cuda_version() -> str | None:
@@ -135,26 +133,23 @@ def _get_asset_urls(names: list[str], version: str) -> list[str]:
     try:
         response = requests.get(url, timeout=30)
     except requests.RequestException as e:
-        typer.echo(
+        raise cli_error(
             f"Could not reach {url}. Please check your internet connection. "
             f"Here is the error message: {e}"
-        )
-        raise typer.Exit(code=1) from e
+        ) from e
 
     if response.status_code == 404:
-        typer.echo(
+        raise cli_error(
             f"{REPOSITORY} has no release `{version}`. Set `{CUOPT_VERSION_ENV}` to one of "
             f"the versions listed on {RELEASES_PAGE} or unset it to install "
             f"{DEFAULT_VERSION}."
         )
-        raise typer.Exit(code=1)
 
     if response.status_code != 200:
-        typer.echo(
+        raise cli_error(
             f"Could not get the `{version}` `{SOLVER_NAME}` release. Request status: "
             f"{response.status_code}. Reason: {response.text}."
         )
-        raise typer.Exit(code=1)
 
     release = response.json()
     assets = {
@@ -164,11 +159,10 @@ def _get_asset_urls(names: list[str], version: str) -> list[str]:
     urls = []
     for name in names:
         if name not in assets:
-            typer.echo(
+            raise cli_error(
                 f"Release `{release['tag_name']}` of {REPOSITORY} does not contain "
                 f"`{name}`. Available archives: {sorted(assets)}"
             )
-            raise typer.Exit(code=1)
 
         urls.append(assets[name])
 
@@ -206,11 +200,10 @@ def _download(url: str, path: str) -> None:
                     _ = file.write(chunk)
                     progress.update(task, advance=len(chunk))
     except requests.RequestException as e:
-        typer.echo(
+        raise cli_error(
             f"Could not download {url}. Please check your internet connection. "
             f"Here is the error message: {e}"
-        )
-        raise typer.Exit(code=1) from e
+        ) from e
 
 
 def _extract(path: str, directory: str) -> list[str]:
@@ -260,18 +253,18 @@ def _load_config(path: str) -> dict:
         try:
             config = yaml.safe_load(file)
         except yaml.YAMLError as e:
-            typer.echo(f"`{path}` is not a valid YAML file. Here is the error: {e}")
-            raise typer.Exit(code=1) from e
+            raise cli_error(
+                f"`{path}` is not a valid YAML file. Here is the error: {e}"
+            ) from e
 
     if config is None:
         return {}
 
     if not isinstance(config, dict):
-        typer.echo(
+        raise cli_error(
             f"`{path}` must map configuration sections such as "
             f"`{SOLVER_CONFIG_SECTION}` to their entries."
         )
-        raise typer.Exit(code=1)
 
     return config
 
@@ -283,12 +276,11 @@ def _find_section(lines: list[str], section: str, path: str) -> int | None:
             continue
 
         if not re.match(rf"{re.escape(section)}[ \t]*:[ \t]*(#.*)?$", line):
-            typer.echo(
+            raise cli_error(
                 f"`{section}` of `{path}` is not written as a block of entries, "
                 f"hence GAMSPy cannot add `{SOLVER_NAME}` to it. Please add the "
                 f"entry of `{SOLVER_CONFIG_FILE}` to it by hand."
             )
-            raise typer.Exit(code=1)
 
         return index
 
@@ -342,20 +334,18 @@ def _get_solver_config(gamspy_base_directory: str) -> list[str]:
     """The entries that the release archive registers in gamsconfig_cuopt.yaml"""
     path = os.path.join(gamspy_base_directory, SOLVER_CONFIG_FILE)
     if list(_load_config(path)) != [SOLVER_CONFIG_SECTION]:
-        typer.echo(
+        raise cli_error(
             f"`{path}` of the release archive holds more than a "
             f"`{SOLVER_CONFIG_SECTION}` section, which GAMSPy cannot merge into "
             f"`{CONFIG_FILE}`. Please add its content to `{CONFIG_FILE}` by hand."
         )
-        raise typer.Exit(code=1)
 
     with open(path, encoding="utf-8") as file:
         lines = file.read().splitlines()
 
     index = _find_section(lines, SOLVER_CONFIG_SECTION, path)
     if index is None:
-        typer.echo(f"`{path}` of the release archive does not register a solver.")
-        raise typer.Exit(code=1)
+        raise cli_error(f"`{path}` of the release archive does not register a solver.")
 
     return lines[index + 1 : _get_section_end(lines, index + 1)]
 
@@ -440,14 +430,13 @@ def install() -> list[str]:
         cuda_version = _detect_cuda_version()
         if cuda_version is None:
             if not install_cuda_runtime:
-                typer.echo(
+                raise cli_error(
                     "Could not find a CUDA runtime on your machine. Install the CUDA "
                     "runtime (https://developer.nvidia.com/cuda-downloads) and specify "
                     f"its major version with `{CUDA_VERSION_ENV}="
                     f"<{'|'.join(CUDA_VERSIONS)}>`, or let GAMSPy install the required "
                     f"CUDA runtime libraries by unsetting `{CUDA_RUNTIME_ENV}`."
                 )
-                raise typer.Exit(code=1)
 
             cuda_version = DEFAULT_CUDA_VERSION
         else:
@@ -483,11 +472,10 @@ def uninstall() -> None:
     gamspy_base_directory = utils._get_gamspy_base_directory()
     installed_files = get_installed_files()
     if not installed_files:
-        typer.echo(
+        raise cli_error(
             f"`{SOLVER_NAME}` was not installed with GAMSPy, hence it cannot be "
             "uninstalled with GAMSPy."
         )
-        raise typer.Exit(code=1)
 
     # gamsconfig.yaml is an installed file only if GAMSPy created it. One that was
     # already there may configure more than cuopt, so only its entries are removed.
