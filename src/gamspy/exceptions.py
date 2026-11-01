@@ -71,6 +71,24 @@ class EngineClientException(GamspyBaseException):
     """EngineClient exception"""
 
 
+class CLIError(GamspyBaseException):
+    """
+    An error raised by the functions of :mod:`gamspy.cli`, e.g. when a solver
+    cannot be installed. The ``gamspy`` command line application reports the
+    message and exits with ``return_code``.
+
+    Parameters
+    ----------
+    message : str
+    return_code : int, optional
+    """
+
+    def __init__(self, message: str, return_code: int = 1) -> None:
+        super().__init__(message)
+        self.message = message
+        self.return_code = return_code
+
+
 class NeosException(GamspyException):
     """NEOS Server execution exception"""
 

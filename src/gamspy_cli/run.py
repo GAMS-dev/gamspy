@@ -10,6 +10,8 @@ from typing import Annotated, Optional
 
 import typer
 
+from .util import cli_error
+
 app = typer.Typer(
     short_help="To run your model with GAMS MIRO.",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy run miro [--path <path_to_miro>] [--model <path_to_model>]",
@@ -21,6 +23,89 @@ class ModeEnum(StrEnum):
     config = "config"
     base = "base"
     deploy = "deploy"
+
+
+def run_miro(
+    model: str | os.PathLike[str],
+    *,
+    mode: ModeEnum | str = ModeEnum.base,
+    path: str | os.PathLike[str] | None = None,
+    skip_execution: bool = False,
+    args: list[str] | None = None,
+) -> None:
+    """
+    Runs a GAMSPy model with GAMS MIRO. Equivalent of ``gamspy run miro``.
+
+    Parameters
+    ----------
+    model : str | os.PathLike
+        Path to the GAMSPy model.
+    mode : str, optional
+        Execution mode of MIRO: "base", "config" or "deploy".
+    path : str | os.PathLike, optional
+        Path to the MIRO executable (.exe, .app, or .AppImage). By default, the
+        MIRO_PATH environment variable or the standard installation locations
+        are used.
+    skip_execution : bool, optional
+        Whether to skip model execution.
+    args : list[str], optional
+        Arguments to the GAMSPy model.
+
+    Raises
+    ------
+    CLIError
+        In case MIRO cannot be found or the model fails.
+
+    Examples
+    --------
+    >>> from gamspy import cli
+    >>> cli.run_miro("model.py", mode="config")  # doctest: +SKIP
+
+    """
+    model_path = os.path.abspath(model)
+    execution_mode = ModeEnum(mode).value
+    miro_path = os.getenv("MIRO_PATH", path)
+
+    if miro_path is None:
+        miro_path = miro_path if miro_path is not None else discover_miro()
+
+    if miro_path is None:
+        raise cli_error("--path must be provided to run MIRO")
+
+    if platform.system() == "Darwin" and os.path.splitext(miro_path)[1] == ".app":
+        miro_path = os.path.join(miro_path, "Contents", "MacOS", "GAMS MIRO")
+
+    # Initialize MIRO
+    if not skip_execution:
+        subprocess_env = os.environ.copy()
+        subprocess_env["MIRO"] = "1"
+        command = [sys.executable, model_path]
+        if args is not None:
+            command += args
+
+        process = subprocess.run(
+            command,
+            env=subprocess_env,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        if process.returncode != 0:
+            raise cli_error(process.stderr, process.returncode)
+
+    # Run MIRO
+    subprocess_env = os.environ.copy()
+    if execution_mode == "deploy":
+        subprocess_env["MIRO_BUILD"] = "true"
+        execution_mode = "base"
+
+    subprocess_env["MIRO_MODEL_PATH"] = model_path
+    subprocess_env["MIRO_MODE"] = execution_mode
+    subprocess_env["MIRO_DEV_MODE"] = "true"
+    subprocess_env["MIRO_USE_TMP"] = "false"
+    subprocess_env["PYTHON_EXEC_PATH"] = sys.executable
+
+    subprocess.run([miro_path], env=subprocess_env, check=True)
 
 
 @app.command(
@@ -58,52 +143,7 @@ def miro(
         typer.echo("--model must be provided to run MIRO", file=sys.stderr)
         sys.exit(1)
 
-    model_path = os.path.abspath(model)
-    execution_mode = mode.value
-    miro_path = os.getenv("MIRO_PATH", path)
-
-    if miro_path is None:
-        miro_path = miro_path if miro_path is not None else discover_miro()
-
-    if miro_path is None:
-        typer.echo("--path must be provided to run MIRO")
-        raise typer.Exit(code=1)
-
-    if platform.system() == "Darwin" and os.path.splitext(miro_path)[1] == ".app":
-        miro_path = os.path.join(miro_path, "Contents", "MacOS", "GAMS MIRO")
-
-    # Initialize MIRO
-    if not skip_execution:
-        subprocess_env = os.environ.copy()
-        subprocess_env["MIRO"] = "1"
-        command = [sys.executable, model_path]
-        if args is not None:
-            command += args
-
-        process = subprocess.run(
-            command,
-            env=subprocess_env,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-        )
-        if process.returncode != 0:
-            typer.echo(process.stderr, file=sys.stderr)
-            sys.exit(process.returncode)
-
-    # Run MIRO
-    subprocess_env = os.environ.copy()
-    if execution_mode == "deploy":
-        subprocess_env["MIRO_BUILD"] = "true"
-        execution_mode = "base"
-
-    subprocess_env["MIRO_MODEL_PATH"] = model_path
-    subprocess_env["MIRO_MODE"] = execution_mode
-    subprocess_env["MIRO_DEV_MODE"] = "true"
-    subprocess_env["MIRO_USE_TMP"] = "false"
-    subprocess_env["PYTHON_EXEC_PATH"] = sys.executable
-
-    subprocess.run([miro_path], env=subprocess_env, check=True)
+    run_miro(model, mode=mode, path=path, skip_execution=skip_execution, args=args)
 
 
 def discover_miro() -> str | None:

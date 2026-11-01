@@ -3,9 +3,25 @@ from __future__ import annotations
 import importlib.util
 import os
 import shutil
-from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-__all__ = ["SolverInfo", "add_solver_entry", "remove_solver_entry", "has_pip", "has_uv"]
+if TYPE_CHECKING:
+    from gamspy.exceptions import CLIError
+
+__all__ = [
+    "add_solver_entry",
+    "cli_error",
+    "remove_solver_entry",
+    "has_pip",
+    "has_uv",
+]
+
+
+def cli_error(message: str, return_code: int = 1) -> CLIError:
+    # gamspy is imported lazily since importing it slows down the startup of the CLI.
+    from gamspy.exceptions import CLIError
+
+    return CLIError(message, return_code)
 
 
 def has_pip() -> bool:
@@ -14,25 +30,6 @@ def has_pip() -> bool:
 
 def has_uv() -> bool:
     return shutil.which("uv") is not None
-
-
-@dataclass
-class SolverInfo:
-    solver_id: str
-    file_type: str
-    dict_type: str
-    lic_codes: str
-    default_ok_flag: str
-    hidden_flag: str
-    lines_to_follow: str
-    model_types: list = field(default_factory=list)
-
-    def __str__(self) -> str:
-        return (
-            f"{self.solver_id} {self.file_type} {self.dict_type} "
-            f"{self.lic_codes} {self.default_ok_flag} {self.hidden_flag} "
-            f"{self.lines_to_follow} {' '.join(self.model_types)}"
-        )
 
 
 def add_solver_entry(

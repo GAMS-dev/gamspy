@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 
 import typer
 
-from .license import EVALUATIONS, LICENSE_COMPONENTS
+from .license import EVALUATIONS, LICENSE_COMPONENTS, get_licensed_solvers
 
 app = typer.Typer(
     short_help="To show your license and gamspy_base directory.",
@@ -59,9 +60,37 @@ SOLVER_PAGE_MAP = {
 }
 
 
-def print_expiration_date(lines: list[str]) -> None:
-    import rich
+@dataclass(frozen=True)
+class LicenseInfo:
+    """
+    Information about the active license as returned by :func:`show_license`.
 
+    Attributes
+    ----------
+    path : str
+        Path of the license file.
+    content : str
+        Content of the license file.
+    license_type : str
+        Description of the license type.
+    expiration_date : date
+        Expiration date of the license if it is time limited, otherwise the
+        expiration date of its maintenance and support.
+    is_time_limited : bool
+        Whether the license stops working after ``expiration_date``.
+    licensed_solvers : list[str]
+        Solvers permitted by the license.
+    """
+
+    path: str
+    content: str
+    license_type: str
+    expiration_date: date
+    is_time_limited: bool
+    licensed_solvers: list[str]
+
+
+def _get_expiration_date(lines: list[str]) -> tuple[date, bool]:
     month = lines[3][0:2]
     m = month[1] if month[0] == "0" else month[0]
     mval = 0
@@ -79,6 +108,13 @@ def print_expiration_date(lines: list[str]) -> None:
     expiration = datetime.strptime(lines[0][48:54], "%y%m%d") + timedelta(
         days=(mval + 1) * 30
     )
+    return expiration.date(), is_time_limited
+
+
+def print_expiration_date(lines: list[str]) -> None:
+    import rich
+
+    expiration, is_time_limited = _get_expiration_date(lines)
     if is_time_limited:
         rich.print(
             f"\n[bold]License expiration date[/bold]: {expiration.strftime('%Y-%m-%d')}"
@@ -129,6 +165,63 @@ def print_licensed_solvers(lines: list[str], verbose: bool) -> None:
             rich.print(table)
 
 
+def show_license() -> LicenseInfo:
+    """
+    Returns information about the active license. Equivalent of ``gamspy show license``.
+
+    Returns
+    -------
+    LicenseInfo
+
+    Examples
+    --------
+    >>> import os
+    >>> from gamspy import cli
+    >>> info = cli.show_license()
+    >>> os.path.isfile(info.path)
+    True
+
+    """
+    import gamspy_base
+
+    import gamspy.utils as utils
+
+    license_path = utils._get_license_path(gamspy_base.directory)
+    with open(license_path, encoding="utf-8") as license_file:
+        lines = [line.strip() for line in license_file.readlines()]
+
+    expiration_date, is_time_limited = _get_expiration_date(lines)
+    return LicenseInfo(
+        path=license_path,
+        content="\n".join(lines),
+        license_type=LICENSE_TYPE_MAP[lines[2][0:2]],
+        expiration_date=expiration_date,
+        is_time_limited=is_time_limited,
+        licensed_solvers=get_licensed_solvers(license_path),
+    )
+
+
+def show_base() -> str:
+    """
+    Returns the path of gamspy_base. Equivalent of ``gamspy show base``.
+
+    Returns
+    -------
+    str
+
+    Examples
+    --------
+    >>> import gamspy_base
+    >>> from gamspy import cli
+    >>> cli.show_base() == gamspy_base.directory
+    True
+
+    """
+    import gamspy_base
+
+    return gamspy_base.directory
+
+
 @app.command(short_help="Shows the license content.")
 def license(
     verbose: bool = typer.Option(
@@ -158,9 +251,7 @@ def license(
 
 @app.command(short_help="Shows the path of gamspy_base.")
 def base() -> None:
-    import gamspy_base
-
-    print(gamspy_base.directory)
+    print(show_base())
 
 
 if __name__ == "__main__":

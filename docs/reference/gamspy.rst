@@ -44,6 +44,7 @@ gamspy
    gamspy.math
    gamspy.formulations
    gamspy.utils
+   gamspy.cli
    gamspy.SpecialValues
    gamspy.exceptions
 
