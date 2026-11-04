@@ -140,7 +140,7 @@ You can automate most of these steps with:
 python scripts/update_version.py <new_version>
 ```
 
-Merging the release branch into `master` triggers the publishing workflow, including building and uploading wheels to PyPI and updating documentation.
+Pushing the `v<new_version>` tag to GitHub triggers the release workflow, which builds the wheels and uploads them to PyPI via trusted publishing.
 
 ---
 

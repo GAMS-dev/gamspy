@@ -121,7 +121,7 @@ How to make a release
     towncrier build --yes --version <new_version>
 
 
-After you merge the release branch to master, you can simply run the job named ``upload`` to upload the wheel to PyPI and ``update_website`` to update gams.com. 
+After you merge the release branch to master, push the ``v<new_version>`` tag to GitHub to upload the wheel to PyPI via trusted publishing.
 
 Note: One can automate all steps as follows: ::
     

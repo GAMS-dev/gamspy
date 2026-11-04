@@ -1,0 +1,1 @@
+Publish to PyPI from GitHub Actions via trusted publishing so releases carry provenance.
