@@ -60,3 +60,10 @@ class StateVar:
     @property
     def name(self) -> str:
         return self.variable.name
+
+    def restore_bounds(self, time_set: gp.Set) -> None:
+        """Reset the variable's bounds over ``time_set`` to the user's originals."""
+        assert self.orig_lo_param is not None
+        assert self.orig_up_param is not None
+        self.variable.lo[time_set] = self.orig_lo_param[time_set]
+        self.variable.up[time_set] = self.orig_up_param[time_set]
