@@ -62,14 +62,34 @@ realised cost distribution.
    max        2500.000000
    Name: total_cost, dtype: float64
 
-The ``SimulationResult`` holds the per-path ``total_cost`` together with the
-per-(path, stage) ``stage_costs``, ``noise`` and reported ``variables``; its
-``summary`` reduces ``total_cost`` to the mean, standard deviation and
-percentiles above. ``report`` defaults to the state variables, and ``seed``
-defaults to the training seed plus one.
+Each simulated path is one sequence of sampled noise values across all stages.
+``simulate()`` returns a ``SimulationResult`` containing:
 
-Both ``policy()`` and ``simulate()`` work on an instance reloaded from a
-``.sddp`` file, so a saved policy can be queried without retraining.
+- ``total_cost``: the total cost of each path, summed across all stages.
+- ``stage_costs``: the cost at each stage of each path.
+- ``noise``: the sampled noise value at each stage of each path.
+- ``variables``: one table for each reported variable, containing its value
+  at the end of each stage for each path.
+
+``sim.summary`` summarises the total costs across paths. It reports the number
+of paths, mean, standard deviation, percentiles, and maximum cost.
+
+Use ``report`` to choose which variables to record. By default, these are the
+registered state variables. If ``seed`` is omitted, simulation uses the seed
+configured when creating the SDDP instance plus one; ``42 -> 43``.
+
+After loading a saved policy with ``SDDP.load(...)``, you can call ``policy()``
+and ``simulate()`` on the loaded instance without retraining. See
+:doc:`save_load` for details.
+
+``policy()`` and ``simulate()`` apply the
+:ref:`solve status checks <sddp_solve_failures>` to every required solve.
+If a check fails, the method raises ``ValidationError`` instead of
+returning a result.
+
+A solver-reported user interruption (``SolveStatus.UserInterrupt``)
+also raises ``ValidationError`` for these methods.
+
 
 .. seealso::
    The :doc:`ClearLake tutorial <clearlake>` runs both methods on a complete

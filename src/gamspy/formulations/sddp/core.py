@@ -5,12 +5,13 @@ import signal
 import threading
 import time
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pandas as pd
 
 import gamspy as gp
+from gamspy._model import ModelStatus, SolveStatus
 from gamspy.exceptions import GamspyException, ValidationError
 from gamspy.formulations.sddp.cut_selection import LastCuts
 from gamspy.formulations.sddp.noise import NoiseConfig
@@ -21,7 +22,16 @@ from gamspy.formulations.sddp.simulation import SimulationResult
 from gamspy.formulations.sddp.state import StateVar
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from types import FrameType
+
+    from gamspy._algebra.expression import Expression
+    from gamspy._symbols.implicits import ImplicitParameter
+
+
+_OPTIMAL_MODEL_STATUS = ModelStatus.OptimalGlobal.value
+_NORMAL_SOLVE_STATUS = SolveStatus.NormalCompletion.value
+_USER_INTERRUPT_STATUS = SolveStatus.UserInterrupt.value
 
 
 class SDDP:
@@ -645,6 +655,10 @@ class SDDP:
             records=[("SkipBaseCase", 1), ("LogOption", 1), ("UpdateType", 2)],
         )
         self._guss_options = guss_options
+        stat_attribs = gp.Set(container, records=["ModelStat", "SolveStat"])
+        backward_stat_rep = gp.Parameter(
+            container, domain=[trial_set, scenario_set, stat_attribs]
+        )
         backward_noise = gp.Parameter(
             container,
             "sddp_backward_noise",
@@ -681,7 +695,7 @@ class SDDP:
         backward_scenario_dict = gp.GUSSScenarioDict(
             container, "sddp_backward_scenario_dict", backward_scenario_set
         )
-        backward_scenario_dict.add_options(guss_options)
+        backward_scenario_dict.add_options(guss_options, backward_stat_rep)
         backward_scenario_dict.add_param(noise_config.parameter, backward_noise)
         for state_var in self._states:
             assert state_var.backward_fixed_state is not None
@@ -757,6 +771,9 @@ class SDDP:
             domain=[trial_set, scenario_set],
             description="active forward scenarios for current stage",
         )
+        forward_stat_rep = gp.Parameter(
+            container, domain=[trial_set, scenario_set, stat_attribs]
+        )
         forward_noise = gp.Parameter(
             container,
             "sddp_forward_noise",
@@ -792,7 +809,7 @@ class SDDP:
         forward_scenario_dict = gp.GUSSScenarioDict(
             container, "sddp_forward_scenario_dict", forward_scenario_set
         )
-        forward_scenario_dict.add_options(guss_options)
+        forward_scenario_dict.add_options(guss_options, forward_stat_rep)
         forward_scenario_dict.add_param(noise_config.parameter, forward_noise)
         for state_var in self._states:
             assert state_var.forward_fixed_state is not None
@@ -812,6 +829,9 @@ class SDDP:
         # Step 9b: Stage-1 wait-and-see GUSS dict
         # n_scenarios LPs in a single GUSS batch, one per stage-1 realization
         # of the noise.
+        initial_stage_stat_rep = gp.Parameter(
+            container, domain=[scenario_set, stat_attribs]
+        )
         initial_stage_noise = gp.Parameter(
             container,
             "sddp_initial_stage_noise",
@@ -847,7 +867,7 @@ class SDDP:
         initial_stage_scenario_dict = gp.GUSSScenarioDict(
             container, "sddp_initial_stage_scenario_dict", scenario_set
         )
-        initial_stage_scenario_dict.add_options(guss_options)
+        initial_stage_scenario_dict.add_options(guss_options, initial_stage_stat_rep)
         initial_stage_scenario_dict.add_param(
             noise_config.parameter, initial_stage_noise
         )
@@ -965,6 +985,7 @@ class SDDP:
         self._backward_noise = backward_noise
         self._backward_approx_cost = backward_approx_cost
         self._backward_scenario_dict = backward_scenario_dict
+        self._backward_stat_rep = backward_stat_rep
         self._stage_scenario_noise = stage_scenario_noise
         self._cut_intercept_accumulator = cut_intercept_accumulator
         self._scenario_alias = scenario_alias
@@ -976,7 +997,9 @@ class SDDP:
         self._forward_approx_cost = forward_approx_cost
         self._forward_stage_cost = forward_stage_cost
         self._forward_scenario_dict = forward_scenario_dict
+        self._forward_stat_rep = forward_stat_rep
         self._initial_stage_scenario_dict = initial_stage_scenario_dict
+        self._initial_stage_stat_rep = initial_stage_stat_rep
         self._initial_stage_noise = initial_stage_noise
         self._initial_stage_approx_cost = initial_stage_approx_cost
         self._initial_stage_cost = initial_stage_cost
@@ -1177,13 +1200,87 @@ class SDDP:
             (gp.Ord(iteration_set) >= first) & (gp.Ord(iteration_set) <= completed)
         ] = True
 
-    def _stage1_bound(self, slot: str) -> float:
+    def _cleanup_solve_failure(
+        self,
+        solve_error: GamspyException | ValidationError,
+        iteration_label: str | None = None,
+    ) -> None:
+        try:
+            if iteration_label is not None:
+                cast("gp.Set", self._active_cut_iteration_set)[iteration_label] = False
+            self._restore_user_bounds()
+            for state_var in self._states:
+                lb = cast("gp.Parameter", state_var.orig_lo_param)
+                ub = cast("gp.Parameter", state_var.orig_up_param)
+                state_var.variable.lo[self._time_set] = lb[self._time_set]
+                state_var.variable.up[self._time_set] = ub[self._time_set]
+        except (GamspyException, ValidationError) as cleanup_error:
+            solve_error.add_note(
+                f"Restoring the SDDP state after the failed solve also failed: {cleanup_error}"
+            )
+        else:
+            # if no exceptions return
+            return
+
+        # raise the exception with the added note
+        raise solve_error
+
+    def _raise_on_solve_failures(
+        self,
+        stat_rep: gp.Parameter,
+        failed: Sequence[tuple[str, ...]],
+        context: str,
+        iteration_label: str | None = None,
+        allow_interrupt: bool = True,
+    ) -> None:
+        """Clean up after failed solves, then raise for the first one.
+
+        ``failed`` holds the ``stat_rep`` keys (without the attribute) of the
+        failed solves and ``context`` locates the first of them. Returns only if
+        ``allow_interrupt`` is set and every failed solve reports UserInterrupt.
+        """
+        stats = stat_rep.toDict()
+        solve_stats = [stats.get((*key, "SolveStat"), 0.0) for key in failed]
+        solve_error = _solve_status_error(
+            stats.get((*failed[0], "ModelStat"), 0.0), solve_stats[0], context
+        )
+        self._cleanup_solve_failure(solve_error, iteration_label)
+        if not allow_interrupt or any(
+            sstat != _USER_INTERRUPT_STATUS for sstat in solve_stats
+        ):
+            raise solve_error
+
+    def _handle_batch_failure(
+        self,
+        stat_rep: gp.Parameter,
+        failures: list[tuple[str, str, str]],
+        iteration_label: str,
+        pass_name: str,
+    ) -> None:
+        fail_stage, fail_trial, fail_scen = failures[0]
+        self._raise_on_solve_failures(
+            stat_rep,
+            [(trial, scen) for _, trial, scen in failures],
+            f"{pass_name} stage '{fail_stage}', trial '{fail_trial}', scenario '{fail_scen}', iteration '{iteration_label}'",
+        )
+
+    def _get_initial_stage_failures(self) -> list[tuple[str]]:
+        stat_rep = self._initial_stage_stat_rep.toDense()
+        return [
+            (scen,)
+            for scen, stats in zip(self._scenario_labels, stat_rep, strict=True)
+            if _solve_failed(*stats)
+        ]
+
+    def _stage1_bound(self, slot: str) -> float | None:
         """Expected stage-1 cost under whichever cuts are currently active.
 
         This is what the lower bound *is*, so pricing a different cut pool needs
         only this one wait-and-see batch: the pool is being evaluated, not
         extended, so no backward pass is involved. Costs ``n_scenarios`` LPs
         against the several thousand a full iteration solves.
+
+        Returns None if a confirmed user interruption prevents the measurement.
         """
         assert self._noise is not None
         assert self._gp_model is not None
@@ -1222,9 +1319,19 @@ class SDDP:
         self._initial_stage_approx_cost[scenario_set] = 0
         self._initial_stage_cost[scenario_set] = 0
 
+        self._initial_stage_stat_rep[...] = 0
         self._gp_model.solve(
             options=self._solve_opts, scenario=self._initial_stage_scenario_dict
         )
+        failures = self._get_initial_stage_failures()
+        if failures:
+            self._raise_on_solve_failures(
+                self._initial_stage_stat_rep,
+                failures,
+                f"bound remeasurement at stage '{initial_stage_label}', iteration '{slot}', scenario '{failures[0][0]}'",
+            )
+            # Stop gracefully when every failed solve reports UserInterrupt.
+            return None
 
         convergence_metrics[slot, "lo_full"] = gp.Sum(
             scenario_set,
@@ -1364,6 +1471,10 @@ class SDDP:
 
         backward_noise = self._backward_noise
         backward_approx_cost = self._backward_approx_cost
+        backward_stat_rep = self._backward_stat_rep
+        backward_failures = gp.Set(
+            self._container, domain=[stage_set, trial_set, scenario_set]
+        )
         cut_intercept_accumulator = self._cut_intercept_accumulator
         cut_intercept = self._cut_intercept
         scenario_alias = self._scenario_alias
@@ -1374,6 +1485,10 @@ class SDDP:
         forward_noise = self._forward_noise
         forward_approx_cost = self._forward_approx_cost
         forward_stage_cost = self._forward_stage_cost
+        forward_stat_rep = self._forward_stat_rep
+        forward_failures = gp.Set(
+            self._container, domain=[stage_set, trial_set, scenario_set]
+        )
 
         initial_stage_scenario_dict = self._initial_stage_scenario_dict
         initial_stage_noise = self._initial_stage_noise
@@ -1519,7 +1634,7 @@ class SDDP:
                     gp.Domain(backward_step_alias, backward_stage_alias).where[
                         backward_stage_map[backward_step_alias, backward_stage_alias]
                     ]
-                ):
+                ) as backward_loop:
                     # Activate the current backward stage
                     active_stage_set[stage_set] = False
                     active_stage_set[backward_stage_alias] = True
@@ -1555,7 +1670,19 @@ class SDDP:
                     ]
 
                     # GUSS solve: (n_trials x n_scenarios) LPs in one batch
+                    backward_stat_rep[...] = 0
                     gp_model.solve(options=solve_opts, scenario=backward_scenario_dict)
+
+                    backward_failures[backward_stage_alias, trial_set, scenario_set] = (
+                        _solve_failed(
+                            backward_stat_rep[trial_set, scenario_set, "ModelStat"],
+                            backward_stat_rep[trial_set, scenario_set, "SolveStat"],
+                        )
+                    )
+                    with gp.If(gp.Card(backward_failures) > 0):
+                        # Discard the failed iteration before any results are used
+                        active_cut_iteration_set[iteration_label] = False
+                        backward_loop.Break  # noqa: B018
 
                     # Change-of-measure weight per scenario: nominal probability,
                     # or the CVaR Rockafellar-Uryasev weight when risk-averse.
@@ -1625,6 +1752,20 @@ class SDDP:
                     ] = cut_intercept_accumulator[trial_set]
                     active_cut_iteration_set[iteration_label] = True
 
+                failures = backward_failures.toList()
+                if failures:
+                    try:
+                        self._handle_batch_failure(
+                            backward_stat_rep,
+                            failures,
+                            iteration_label,
+                            pass_name="backward",
+                        )
+                        result.stop_reason = "interrupted"
+                        break
+                    finally:
+                        _restore_sigint()
+
                 # Forward stage 1: wait-and-see GUSS batch
                 active_stage_set[stage_set] = False
                 active_stage_set[stage_labels[0]] = True
@@ -1657,7 +1798,21 @@ class SDDP:
                 initial_stage_approx_cost[scenario_set] = 0
                 initial_stage_cost[scenario_set] = 0
 
+                self._initial_stage_stat_rep[...] = 0
                 gp_model.solve(options=solve_opts, scenario=initial_stage_scenario_dict)
+                failures = self._get_initial_stage_failures()
+                if failures:
+                    try:
+                        self._raise_on_solve_failures(
+                            self._initial_stage_stat_rep,
+                            failures,
+                            f"initial stage '{stage_labels[0]}', iteration '{iteration_label}', scenario '{failures[0][0]}'",
+                            iteration_label,
+                        )
+                        result.stop_reason = "interrupted"
+                        break
+                    finally:
+                        _restore_sigint()
 
                 convergence_metrics[iteration_label, "lo"] = gp.Sum(
                     scenario_set,
@@ -1700,7 +1855,7 @@ class SDDP:
                 # Forward pass:
                 with gp.Loop(
                     forward_stage_alias.where[forward_stage_set[forward_stage_alias]]
-                ):
+                ) as forward_loop:
                     active_stage_set[stage_set] = False
                     active_stage_set[forward_stage_alias] = True
 
@@ -1753,7 +1908,22 @@ class SDDP:
                     forward_stage_cost[trial_set, scenario_set] = 0
 
                     # GUSS solve
+                    forward_stat_rep[...] = 0
                     gp_model.solve(options=solve_opts, scenario=forward_scenario_dict)
+
+                    # only for the sampled scenarios in this pass
+                    for_solve_failed = _solve_failed(
+                        forward_stat_rep[trial_set, scenario_set, "ModelStat"],
+                        forward_stat_rep[trial_set, scenario_set, "SolveStat"],
+                    )
+
+                    forward_failures[forward_stage_alias, trial_set, scenario_set] = (
+                        forward_scenario_set[trial_set, scenario_set] & for_solve_failed
+                    )
+
+                    with gp.If(gp.Card(forward_failures) > 0):
+                        active_cut_iteration_set[iteration_label] = False
+                        forward_loop.Break  # noqa: B018
 
                     # Accumulate stage cost into forward_path_cost
                     forward_path_cost[iteration_label, trial_set] = forward_path_cost[
@@ -1782,6 +1952,20 @@ class SDDP:
                         state_var.forward_state_history[
                             iteration_label, forward_stage_alias.lead(1), trial_set
                         ] = state_var.current_forward_state[trial_set]
+
+                failures = forward_failures.toList()
+                if failures:
+                    try:
+                        self._handle_batch_failure(
+                            forward_stat_rep,
+                            failures,
+                            iteration_label,
+                            pass_name="forward",
+                        )
+                        result.stop_reason = "interrupted"
+                        break
+                    finally:
+                        _restore_sigint()
 
                 # Upper bound
                 # Average total-path cost across all n_trials forward trajectories
@@ -1911,9 +2095,31 @@ class SDDP:
                     # the ones holding the bound up. Price the whole pool - one
                     # stage-1 batch - and only believe the plateau if the full
                     # pool agrees there is no progress left.
-                    self._set_active_cuts(completed, None)
-                    full_lo = self._stage1_bound(iteration_label)
-                    self._set_active_cuts(completed, cut_selection.keep_iter)
+
+                    # Temporarily measure the bound using all completed cuts
+                    try:
+                        self._set_active_cuts(completed, None)
+                        full_lo = self._stage1_bound(iteration_label)
+                    except (GamspyException, ValidationError) as solve_error:
+                        try:
+                            self._set_active_cuts(completed, cut_selection.keep_iter)
+                        except (GamspyException, ValidationError) as cleanup_error:
+                            solve_error.add_note(
+                                f"Restoring the cut selection window also failed: {cleanup_error}"
+                            )
+                        finally:
+                            _restore_sigint()
+                        raise
+
+                    # Measurement returned normally -> restore selected cuts
+                    try:
+                        self._set_active_cuts(completed, cut_selection.keep_iter)
+                    except (GamspyException, ValidationError):
+                        _restore_sigint()
+                        raise
+                    if full_lo is None:
+                        result.stop_reason = "interrupted"
+                        break
 
                     # Measure against the previous full-pool reading once there
                     # is one
@@ -1948,7 +2154,7 @@ class SDDP:
         if cut_selection is not None and completed > 0:
             self._set_active_cuts(completed, None)
             try:
-                lo = self._stage1_bound(iteration_labels[completed - 1])
+                measured_lo = self._stage1_bound(iteration_labels[completed - 1])
             except GamspyException:
                 # An interrupted run can leave GAMS unable to solve again. The
                 # restoration above is still queued and will be applied by the
@@ -1957,12 +2163,20 @@ class SDDP:
                 if result.stop_reason != "interrupted":
                     raise
             else:
+                if measured_lo is None:
+                    result.stop_reason = "interrupted"
+                else:
+                    lo = measured_lo
                 # A superset of valid cuts cannot give a looser bound. This is
                 # the invariant that replaces the monotonicity guard, and it is
                 # sharper: it tests the thing that can actually go wrong.
                 proved = [b for b in (best_windowed, best_full) if b is not None]
                 witness = max(proved) if proved else None
-                if witness is not None and lo < witness - 1e-6 * max(abs(witness), 1.0):
+                if (
+                    measured_lo is not None
+                    and witness is not None
+                    and lo < witness - 1e-6 * max(abs(witness), 1.0)
+                ):
                     raise GamspyException(
                         f"the full cut pool gave a looser bound ({lo:,.6f}) than a "
                         f"bound already proved during training ({witness:,.6f}); a "
@@ -2203,6 +2417,19 @@ class SDDP:
             domain=[sim_paths, scenario_set],
             description="active simulation scenarios for current stage",
         )
+        stat_attribs = gp.Set(
+            container,
+            f"sddp_sim_stat_attribs{suffix}",
+            records=["ModelStat", "SolveStat"],
+        )
+        stat_rep = gp.Parameter(
+            container,
+            f"sddp_sim_stat_rep{suffix}",
+            domain=[sim_paths, scenario_set, stat_attribs],
+        )
+        failure_set = gp.Set(
+            container, f"sddp_sim_failures{suffix}", domain=[sim_paths, scenario_set]
+        )
 
         # Scatter parameters
         sim_noise = gp.Parameter(
@@ -2280,7 +2507,7 @@ class SDDP:
             f"sddp_sim_dict{suffix}",
             sim_active,
         )
-        sim_dict.add_options(self._guss_options)
+        sim_dict.add_options(self._guss_options, stat_rep)
         sim_dict.add_param(noise_config.parameter, sim_noise)
         for state_var in self._states:
             sim_dict.add_fixed(state_var.variable, sim_state[state_var.variable.name])
@@ -2337,7 +2564,25 @@ class SDDP:
                 sim_var_level[variable.name][sim_paths, scenario_set, time_set] = 0
 
             # GUSS solve: n_paths LPs in one batch
+            stat_rep[...] = 0
             self._gp_model.solve(options=self._solve_opts, scenario=sim_dict)
+
+            solve_failed = _solve_failed(
+                stat_rep[sim_paths, scenario_set, "ModelStat"],
+                stat_rep[sim_paths, scenario_set, "SolveStat"],
+            )
+            failure_set[sim_paths, scenario_set] = (
+                sim_active[sim_paths, scenario_set] & solve_failed
+            )
+            failures = failure_set.toList()
+            if failures:
+                fail_path, fail_scen = failures[0]
+                self._raise_on_solve_failures(
+                    stat_rep,
+                    failures,
+                    f"simulation stage '{stage_label}', path '{fail_path}', scenario '{fail_scen}'",
+                    allow_interrupt=False,
+                )
 
             # Record per-stage history
             sim_cost_hist[sim_paths, stage_label] = gp.Sum(
@@ -2443,6 +2688,8 @@ class SDDP:
         assert self._gp_model is not None
         assert self._approx_cost is not None
 
+        model = self._gp_model
+
         if stage not in self._stage_labels:
             raise ValidationError(
                 f"stage {stage!r} is not a valid stage; "
@@ -2498,7 +2745,14 @@ class SDDP:
         noise_config.parameter[...] = float(noise)
 
         # Single plain solve
-        self._gp_model.solve(options=self._solve_opts)
+        try:
+            model.solve(options=self._solve_opts)
+            stats = (model.status.value, model.solve_status.value)
+            if _solve_failed(*stats):
+                raise _solve_status_error(*stats, f"policy stage '{stage}'")
+        except (GamspyException, ValidationError) as e:
+            self._cleanup_solve_failure(e)
+            raise
 
         cost_to_go = self._scalar_level(self._approx_cost)
         decisions = {
@@ -2605,6 +2859,30 @@ class SDDP:
             f"SDDP(stages={self.n_stages}, "
             f"states={states}, noise={noise}, built={self._built})"
         )
+
+
+def _solve_failed(
+    mstat: float | ImplicitParameter, sstat: float | ImplicitParameter
+) -> bool | Expression:
+    invalid_mstat = mstat != _OPTIMAL_MODEL_STATUS
+    invalid_sstat = sstat != _NORMAL_SOLVE_STATUS
+    return invalid_mstat | invalid_sstat
+
+
+def _describe_stat(
+    stat_val: float, stat_type: type[gp.ModelStatus] | type[gp.SolveStatus]
+) -> str:
+    try:
+        return f"{stat_type(stat_val).name} ({stat_val})"
+    except ValueError:
+        return f"unknown ({stat_val})"
+
+
+def _solve_status_error(mstat: float, sstat: float, context: str) -> ValidationError:
+    message = f"SDDP {context}: unsuccessful solve; ModelStat={_describe_stat(mstat, gp.ModelStatus)}, SolveStat={_describe_stat(sstat, gp.SolveStatus)}"
+    if mstat == 0 and sstat == 0:
+        message += ". Check the solver output for more information."
+    return ValidationError(message)
 
 
 def _parameter_values_for_iteration(
