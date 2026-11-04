@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/_static/gamspy_logo_dark.png">
-    <img alt="GAMSPy" src="docs/_static/gamspy_logo.png" width="420">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/GAMS-dev/gamspy/blob/develop/docs/_static/gamspy_logo_dark.png?raw=true">
+    <img alt="GAMSPy" src="https://github.com/GAMS-dev/gamspy/blob/develop/docs/_static/gamspy_logo.png?raw=true" width="420">
   </picture>
 </p>
 
@@ -14,13 +14,13 @@
   <a href="https://pypi.org/project/gamspy/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/gamspy.svg?maxAge=3600"></a>
   <a href="https://pepy.tech/project/gamspy"><img alt="Downloads" src="https://static.pepy.tech/badge/gamspy"></a>
   <a href="https://pypi.org/project/gamspy/"><img alt="Supported versions" src="https://img.shields.io/pypi/pyversions/gamspy.svg"></a>
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <a href="https://github.com/GAMS-dev/gamspy/blob/develop/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <a href="https://gamspy.readthedocs.io/en/latest/"><img alt="Documentation Status" src="https://readthedocs.org/projects/gamspy/badge/?version=latest"></a>
   <a href="https://colab.research.google.com/github/GAMS-dev/gamspy/blob/develop/docs/user/notebooks/trnsport_colab.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 </p>
 
 <p align="center">
-  <img alt="Building and solving a battery arbitrage model with GAMSPy" src="docs/_static/gamspy_demo.gif" width="700">
+  <img alt="Building and solving a battery arbitrage model with GAMSPy" src="https://github.com/GAMS-dev/gamspy/blob/develop/docs/_static/gamspy_demo.gif?raw=true" width="700">
 </p>
 
 ## Why GAMSPy
@@ -110,7 +110,7 @@ Continue with the [quick start guide](https://gamspy.readthedocs.io/en/latest/us
 
 ## License
 
-The GAMSPy Python source is [MIT-licensed](LICENSE). Solving uses the bundled GAMS runtime and solvers, which need a license:
+The GAMSPy Python source is [MIT-licensed](https://github.com/GAMS-dev/gamspy/blob/develop/LICENSE). Solving uses the bundled GAMS runtime and solvers, which need a license:
 
 - A **demo license** for small models is included.
 - **Free licenses** are available for personal non-commercial use and for academic use (the academic one includes commercial solvers without size limits). Get one at the [GAMS Portal](https://portal.gams.com/); see [free licenses](https://www.gams.com/free-licenses/) for the terms.
@@ -120,4 +120,4 @@ See the [licensing guide](https://gamspy.readthedocs.io/en/latest/user/installat
 
 ## Community and contributing
 
-Ask questions on the [GAMS Forum](https://forum.gams.com/), report bugs and request features in the [issue tracker](https://github.com/GAMS-dev/gamspy/issues), and see the [contributing guide](CONTRIBUTING.md) to send changes.
+Ask questions on the [GAMS Forum](https://forum.gams.com/), report bugs and request features in the [issue tracker](https://github.com/GAMS-dev/gamspy/issues), and see the [contributing guide](https://github.com/GAMS-dev/gamspy/blob/develop/CONTRIBUTING.md) to send changes.
