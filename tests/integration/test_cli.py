@@ -676,11 +676,12 @@ DUMMY_GDX = os.path.join(os.path.dirname(__file__), "file1.gdx")
 DUMMY_GDX2 = os.path.join(os.path.dirname(__file__), "file2.gdx")
 
 
-def run_cli(args):
+def run_cli(args, cwd):
     return subprocess.run(
         [sys.executable, "-Bm", "gamspy", "gdx"] + args,
         capture_output=True,
         text=True,
+        cwd=cwd,
     )
 
 
@@ -704,8 +705,8 @@ def run_cli(args):
         ("--header", "My Header"),
     ],
 )
-def test_gdx_dump_with_value_flags(flag, value):
-    result = run_cli(["dump", DUMMY_GDX, flag, value])
+def test_gdx_dump_with_value_flags(flag, value, tmp_path):
+    result = run_cli(["dump", DUMMY_GDX, flag, value], tmp_path)
     assert result.returncode == 0, f"Failed: {flag} = {value}"
 
 
@@ -724,8 +725,8 @@ def test_gdx_dump_with_value_flags(flag, value):
         "--settext",
     ],
 )
-def test_gdx_dump_with_boolean_flags(flag):
-    result = run_cli(["dump", DUMMY_GDX, flag])
+def test_gdx_dump_with_boolean_flags(flag, tmp_path):
+    result = run_cli(["dump", DUMMY_GDX, flag], tmp_path)
     assert result.returncode == 0, f"Failed: {flag}"
 
 
@@ -738,8 +739,8 @@ def test_gdx_dump_with_boolean_flags(flag):
         ("--setdesc", "N"),
     ],
 )
-def test_gdx_diff_with_value_flags(flag, value):
-    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, flag, value])
+def test_gdx_diff_with_value_flags(flag, value, tmp_path):
+    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, flag, value], tmp_path)
     assert result.returncode == 0, f"Failed: {flag} = {value}"
 
 
@@ -752,33 +753,38 @@ def test_gdx_diff_with_value_flags(flag, value):
         "--ignoreorder",
     ],
 )
-def test_gdx_diff_with_boolean_flags(flag):
-    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, flag])
+def test_gdx_diff_with_boolean_flags(flag, tmp_path):
+    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, flag], tmp_path)
     assert result.returncode == 0, f"Failed: {flag}"
 
 
-def test_gdx_diff_with_ids():
-    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--id", "i", "--id", "j"])
+def test_gdx_diff_with_ids(tmp_path):
+    result = run_cli(
+        ["diff", DUMMY_GDX, DUMMY_GDX2, "--id", "i", "--id", "j"], tmp_path
+    )
     assert result.returncode == 0
 
 
-def test_gdx_diff_with_skipids():
-    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--skipid", "i", "--skipid", "j"])
+def test_gdx_diff_with_skipids(tmp_path):
+    result = run_cli(
+        ["diff", DUMMY_GDX, DUMMY_GDX2, "--skipid", "i", "--skipid", "j"], tmp_path
+    )
     assert result.returncode == 0
 
 
-def test_gdx_diff_with_skip_regex():
+def test_gdx_diff_with_skip_regex(tmp_path):
     # Test skipping everything using a catch-all regex
-    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--skip-regex", "^.*"])
+    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--skip-regex", "^.*"], tmp_path)
     assert result.returncode == 0
 
     # Test skipping symbols with a specific prefix (e.g., starting with 'i')
-    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--skip-regex", "^i.*"])
+    result = run_cli(["diff", DUMMY_GDX, DUMMY_GDX2, "--skip-regex", "^i.*"], tmp_path)
     assert result.returncode == 0
 
     # Test combining manual skipid and skip-regex
     result = run_cli(
-        ["diff", DUMMY_GDX, DUMMY_GDX2, "--skipid", "j", "--skip-regex", "^i.*"]
+        ["diff", DUMMY_GDX, DUMMY_GDX2, "--skipid", "j", "--skip-regex", "^i.*"],
+        tmp_path,
     )
     assert result.returncode == 0
 

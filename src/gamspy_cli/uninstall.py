@@ -35,7 +35,7 @@ def _remove_installed_addon(addons_path: str, solver_name: str) -> None:
     try:
         installed.remove(solver_name.upper())
     except ValueError:
-        ...
+        return
 
     with open(addons_path, "w") as file:
         file.write("\n".join(installed) + "\n")
