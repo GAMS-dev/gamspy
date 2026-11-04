@@ -2,7 +2,7 @@
 .leg_template:
   extends: .uv_package_cache
   stage: test
-  needs: [leg-cli-3.11, setup-leg-toolchain]
+  needs: [setup-leg-toolchain]
   tags: [linux]
   image: ghcr.io/astral-sh/uv:$UV_VERSION-trixie
   variables:

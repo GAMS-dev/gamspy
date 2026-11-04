@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+
 import typer
 
 app = typer.Typer(
@@ -98,6 +100,80 @@ def _collect_solver_data(all: bool) -> tuple[list[dict], list[dict], list[str]]:
     ]
 
     return solver_rows, tool_rows, all_types
+
+
+@dataclass(frozen=True)
+class SolverInfo:
+    """
+    Status of a solver or a tool as listed by :func:`list_solvers`.
+
+    Attributes
+    ----------
+    name : str
+        Name of the solver or tool.
+    licensed : bool
+        Whether the active license permits it.
+    installed : bool
+        Whether it is installed.
+    size_limited : bool
+        Whether the active license limits the size of the models it can solve.
+    capabilities : list[str]
+        Problem types the solver supports. Empty for tools.
+    is_tool : bool
+        Whether it is a tool (e.g. a translator) rather than a solver.
+    """
+
+    name: str
+    licensed: bool
+    installed: bool
+    size_limited: bool
+    capabilities: list[str] = field(default_factory=list)
+    is_tool: bool = False
+
+
+def list_solvers(all: bool = False) -> list[SolverInfo]:
+    """
+    Lists the solvers and tools along with their license and installation status.
+    Equivalent of ``gamspy list solvers``.
+
+    Parameters
+    ----------
+    all : bool, optional
+        Lists all available solvers and tools instead of only the installed ones.
+
+    Returns
+    -------
+    list[SolverInfo]
+
+    Examples
+    --------
+    >>> from gamspy import cli
+    >>> installed = [solver.name for solver in cli.list_solvers()]
+    >>> "CONOPT4" in installed
+    True
+
+    """
+    solver_rows, tool_rows, _ = _collect_solver_data(all)
+
+    return [
+        SolverInfo(
+            name=row["name"],
+            licensed=row["licensed"],
+            installed=row["installed"],
+            size_limited=row["size_limited"],
+            capabilities=list(row["capabilities"]),
+        )
+        for row in solver_rows
+    ] + [
+        SolverInfo(
+            name=row["name"],
+            licensed=row["licensed"],
+            installed=row["installed"],
+            size_limited=row["size_limited"],
+            is_tool=True,
+        )
+        for row in tool_rows
+    ]
 
 
 def _print_solver_tables(all: bool) -> None:

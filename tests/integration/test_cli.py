@@ -7,9 +7,11 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import ClassVar
+from importlib.metadata import version
+from typing import ClassVar, NamedTuple
 
 import gams.core.gdx as gdx
 import gamspy_base
@@ -27,14 +29,6 @@ try:
 except Exception:
     pass
 
-user_dir = os.path.expanduser("~")
-if platform.system() == "Linux":
-    DEFAULT_DIR = os.path.join(user_dir, ".local", "share", "GAMSPy")
-elif platform.system() == "Darwin":
-    DEFAULT_DIR = os.path.join(user_dir, "Library", "Application Support", "GAMSPy")
-elif platform.system() == "Windows":
-    DEFAULT_DIR = os.path.join(user_dir, "Documents", "GAMSPy")
-
 
 @pytest.fixture
 def teardown():
@@ -48,7 +42,72 @@ def teardown():
     shutil.rmtree("tmp")
 
 
-def test_install_license(teardown):
+class FreshVenv(NamedTuple):
+    python: str
+    env: dict[str, str]
+    gamspy_base_dir: str
+
+
+@pytest.fixture
+def fresh_venv():
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    license_path = gp.utils._get_license_path(gamspy_base.directory)
+    uv_cache_dir = subprocess.run(
+        ["uv", "cache", "dir"], capture_output=True, text=True, check=True
+    ).stdout.strip()
+
+    with tempfile.TemporaryDirectory() as directory:
+        venv_dir = os.path.join(directory, "venv")
+        home_dir = os.path.join(directory, "home")
+        os.makedirs(home_dir)
+        bin_dir = os.path.join(
+            venv_dir, "Scripts" if platform.system() == "Windows" else "bin"
+        )
+        env = {
+            **os.environ,
+            "VIRTUAL_ENV": venv_dir,
+            "PATH": bin_dir + os.pathsep + os.environ["PATH"],
+            "HOME": home_dir,
+            "USERPROFILE": home_dir,
+            "UV_CACHE_DIR": uv_cache_dir,
+            "GAMSPY_LICENSE_PATH": license_path,
+        }
+
+        subprocess.run(
+            ["uv", "venv", venv_dir, "--python", sys.executable],
+            env=env,
+            check=True,
+            capture_output=True,
+        )
+        python = os.path.join(
+            bin_dir, "python.exe" if platform.system() == "Windows" else "python"
+        )
+        subprocess.run(
+            [
+                "uv",
+                "pip",
+                "install",
+                "-e",
+                repo_root,
+                f"gamspy-base=={gamspy_base.__version__}",
+                f"gamsapi=={version('gamsapi')}",
+            ],
+            env=env,
+            check=True,
+            capture_output=True,
+        )
+        gamspy_base_dir = subprocess.run(
+            [python, "-c", "import gamspy_base; print(gamspy_base.directory)"],
+            env=env,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+        yield FreshVenv(python, env, gamspy_base_dir)
+
+
+def test_install_license(teardown, fresh_venv, temp_license_path):
     tmp_license_path = os.path.join("tmp", "gamspy_license.txt")
 
     # Try to install a license with GAMS access code
@@ -61,6 +120,8 @@ def test_install_license(teardown):
                 "install",
                 "license",
                 os.environ["GAMS_ACCESS_CODE"],
+                "-o",
+                temp_license_path,
             ],
             check=True,
             capture_output=True,
@@ -79,6 +140,8 @@ def test_install_license(teardown):
                 "install",
                 "license",
                 tmp_license_path,
+                "-o",
+                temp_license_path,
             ],
             check=True,
             capture_output=True,
@@ -97,6 +160,8 @@ def test_install_license(teardown):
                 "install",
                 "license",
                 tmp_license_path,
+                "-o",
+                temp_license_path,
             ],
             check=True,
             capture_output=True,
@@ -111,6 +176,8 @@ def test_install_license(teardown):
             "install",
             "license",
             os.environ["NOSOLVE_LICENSE"],
+            "-o",
+            temp_license_path,
         ],
         check=True,
     )
@@ -124,13 +191,13 @@ def test_install_license(teardown):
             "install",
             "license",
             os.environ["NETWORK_LICENSE"],
+            "-o",
+            temp_license_path,
         ],
         check=True,
     )
 
-    gamspy_license_path = os.path.join(DEFAULT_DIR, "gamspy_license.txt")
-
-    assert os.path.exists(gamspy_license_path)
+    assert os.path.exists(temp_license_path)
 
     m = Container()
     assert m._network_license
@@ -141,14 +208,23 @@ def test_install_license(teardown):
     # Test invalid access code / license
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
-            [sys.executable, "-Bm", "gamspy", "install", "license", "blabla"],
+            [
+                sys.executable,
+                "-Bm",
+                "gamspy",
+                "install",
+                "license",
+                "blabla",
+                "-o",
+                temp_license_path,
+            ],
             check=True,
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
         )
 
     # Test installing a license from a file path.
-    shutil.copy(gamspy_license_path, tmp_license_path)
+    shutil.copy(temp_license_path, tmp_license_path)
 
     process = subprocess.run(
         [
@@ -158,6 +234,8 @@ def test_install_license(teardown):
             "install",
             "license",
             tmp_license_path,
+            "-o",
+            temp_license_path,
         ],
         capture_output=True,
         text=True,
@@ -194,6 +272,8 @@ def test_install_license(teardown):
             "install",
             "license",
             os.environ["LOCAL_LICENSE"],
+            "-o",
+            temp_license_path,
             "-p",
             "100",
         ],
@@ -212,6 +292,8 @@ def test_install_license(teardown):
                 "install",
                 "license",
                 os.environ["ON_PREM_LICENSE"],
+                "-o",
+                temp_license_path,
                 "-s",
                 "alptest.gams.com",
             ],
@@ -228,20 +310,25 @@ def test_install_license(teardown):
     # Install free personal license
     process = subprocess.run(
         [
-            sys.executable,
+            fresh_venv.python,
             "-Bm",
             "gamspy",
             "install",
             "license",
             os.environ["FREE_PERSONAL_LICENSE"],
+            "-o",
+            temp_license_path,
             "--use-uv",
         ],
+        env=fresh_venv.env,
         text=True,
         capture_output=True,
     )
 
     assert process.returncode == 0, process.stderr
-    with open(os.path.join(gamspy_base.directory, gp.utils.CAPABILITIES_FILE)) as file:
+    with open(
+        os.path.join(fresh_venv.gamspy_base_dir, gp.utils.CAPABILITIES_FILE)
+    ) as file:
         content = file.read()
 
     assert "HIGHS" in content
@@ -251,27 +338,12 @@ def test_install_license(teardown):
     assert "RESHOP" in content
     assert "SCIP" in content
 
-    # Recover local license
-    process = subprocess.run(
-        [
-            sys.executable,
-            "-Bm",
-            "gamspy",
-            "install",
-            "license",
-            os.environ["LOCAL_LICENSE"],
-        ],
-        text=True,
-        capture_output=True,
-    )
 
-    assert process.returncode == 0, process.stderr
-
-
-def test_install_solver():
+def test_install_solver(fresh_venv):
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
-            [sys.executable, "-Bm", "gamspy", "install", "solver", "bla"],
+            [fresh_venv.python, "-Bm", "gamspy", "install", "solver", "bla"],
+            env=fresh_venv.env,
             check=True,
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
@@ -279,7 +351,7 @@ def test_install_solver():
 
     process = subprocess.run(
         [
-            sys.executable,
+            fresh_venv.python,
             "-Bm",
             "gamspy",
             "install",
@@ -288,6 +360,7 @@ def test_install_solver():
             "mosek",
             "--use-uv",
         ],
+        env=fresh_venv.env,
         capture_output=True,
         encoding="utf-8",
         text=True,
@@ -296,7 +369,7 @@ def test_install_solver():
 
     process = subprocess.run(
         [
-            sys.executable,
+            fresh_venv.python,
             "-Bm",
             "gamspy",
             "install",
@@ -305,6 +378,7 @@ def test_install_solver():
             "--skip-pip-install",
             "--use-uv",
         ],
+        env=fresh_venv.env,
         capture_output=True,
         encoding="utf-8",
         text=True,
@@ -313,7 +387,8 @@ def test_install_solver():
 
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
-            [sys.executable, "-Bm", "gamspy", "uninstall", "solver", "bla"],
+            [fresh_venv.python, "-Bm", "gamspy", "uninstall", "solver", "bla"],
+            env=fresh_venv.env,
             check=True,
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
@@ -321,7 +396,7 @@ def test_install_solver():
 
     process = subprocess.run(
         [
-            sys.executable,
+            fresh_venv.python,
             "-Bm",
             "gamspy",
             "install",
@@ -329,6 +404,7 @@ def test_install_solver():
             "--install-all-solvers",
             "--use-uv",
         ],
+        env=fresh_venv.env,
         capture_output=True,
         encoding="utf-8",
         text=True,
@@ -337,7 +413,7 @@ def test_install_solver():
 
     process = subprocess.run(
         [
-            sys.executable,
+            fresh_venv.python,
             "-Bm",
             "gamspy",
             "uninstall",
@@ -346,6 +422,7 @@ def test_install_solver():
             "mosek",
             "--use-uv",
         ],
+        env=fresh_venv.env,
         capture_output=True,
         encoding="utf-8",
         text=True,
@@ -354,7 +431,7 @@ def test_install_solver():
 
     process = subprocess.run(
         [
-            sys.executable,
+            fresh_venv.python,
             "-Bm",
             "gamspy",
             "uninstall",
@@ -362,6 +439,7 @@ def test_install_solver():
             "--uninstall-all-solvers",
             "--use-uv",
         ],
+        env=fresh_venv.env,
         capture_output=True,
         encoding="utf-8",
         text=True,
@@ -370,7 +448,7 @@ def test_install_solver():
 
     process = subprocess.run(
         [
-            sys.executable,
+            fresh_venv.python,
             "-Bm",
             "gamspy",
             "install",
@@ -381,6 +459,7 @@ def test_install_solver():
             "reshop",
             "--use-uv",
         ],
+        env=fresh_venv.env,
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -390,7 +469,7 @@ def test_install_solver():
     if platform.system() == "Linux":
         process = subprocess.run(
             [
-                sys.executable,
+                fresh_venv.python,
                 "-Bm",
                 "gamspy",
                 "install",
@@ -398,6 +477,7 @@ def test_install_solver():
                 "soplex",
                 "--use-uv",
             ],
+            env=fresh_venv.env,
             capture_output=True,
             encoding="utf-8",
             text=True,
@@ -406,7 +486,7 @@ def test_install_solver():
 
         process = subprocess.run(
             [
-                sys.executable,
+                fresh_venv.python,
                 "-Bm",
                 "gamspy",
                 "uninstall",
@@ -414,6 +494,7 @@ def test_install_solver():
                 "soplex",
                 "--use-uv",
             ],
+            env=fresh_venv.env,
             capture_output=True,
             encoding="utf-8",
             text=True,
@@ -421,10 +502,10 @@ def test_install_solver():
         assert process.returncode == 0, process.stdout + process.stderr
 
 
-def test_install_licensed_solvers_and_uninstall_unlicensed_solvers():
+def test_install_licensed_solvers_and_uninstall_unlicensed_solvers(fresh_venv):
     process = subprocess.run(
         [
-            sys.executable,
+            fresh_venv.python,
             "-Bm",
             "gamspy",
             "uninstall",
@@ -432,6 +513,7 @@ def test_install_licensed_solvers_and_uninstall_unlicensed_solvers():
             "--uninstall-all-solvers",
             "--use-uv",
         ],
+        env=fresh_venv.env,
         capture_output=True,
         encoding="utf-8",
         text=True,
@@ -440,7 +522,7 @@ def test_install_licensed_solvers_and_uninstall_unlicensed_solvers():
 
     process = subprocess.run(
         [
-            sys.executable,
+            fresh_venv.python,
             "-Bm",
             "gamspy",
             "install",
@@ -448,6 +530,7 @@ def test_install_licensed_solvers_and_uninstall_unlicensed_solvers():
             "--licensed",
             "--use-uv",
         ],
+        env=fresh_venv.env,
         capture_output=True,
         encoding="utf-8",
         text=True,
@@ -457,7 +540,7 @@ def test_install_licensed_solvers_and_uninstall_unlicensed_solvers():
     # Running it again should find nothing left to install.
     process = subprocess.run(
         [
-            sys.executable,
+            fresh_venv.python,
             "-Bm",
             "gamspy",
             "install",
@@ -465,6 +548,7 @@ def test_install_licensed_solvers_and_uninstall_unlicensed_solvers():
             "--licensed",
             "--use-uv",
         ],
+        env=fresh_venv.env,
         capture_output=True,
         encoding="utf-8",
         text=True,
@@ -475,7 +559,7 @@ def test_install_licensed_solvers_and_uninstall_unlicensed_solvers():
     # Should be a no-op here since everything just installed is permitted by the license.
     process = subprocess.run(
         [
-            sys.executable,
+            fresh_venv.python,
             "-Bm",
             "gamspy",
             "uninstall",
@@ -483,29 +567,13 @@ def test_install_licensed_solvers_and_uninstall_unlicensed_solvers():
             "--unlicensed",
             "--use-uv",
         ],
+        env=fresh_venv.env,
         capture_output=True,
         encoding="utf-8",
         text=True,
     )
     assert process.returncode == 0, process.stdout + process.stderr
     assert "No unlicensed solvers" in process.stdout
-
-    # Restore a clean state for the rest of the suite.
-    process = subprocess.run(
-        [
-            sys.executable,
-            "-Bm",
-            "gamspy",
-            "uninstall",
-            "solver",
-            "--uninstall-all-solvers",
-            "--use-uv",
-        ],
-        capture_output=True,
-        encoding="utf-8",
-        text=True,
-    )
-    assert process.returncode == 0, process.stdout + process.stderr
 
 
 def test_list_solvers():

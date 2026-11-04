@@ -5,6 +5,8 @@ import subprocess
 
 import typer
 
+from .util import cli_error
+
 app = typer.Typer(
     short_help="To probe a node's information.",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy probe -j <output_path.json>",
@@ -12,7 +14,33 @@ app = typer.Typer(
 )
 
 
-def _probe(json_out: str | None) -> None:
+def probe(json_out: str | None = None) -> str:
+    """
+    Probes the information of this node to retrieve a license for it on another
+    node. Equivalent of ``gamspy probe``.
+
+    Parameters
+    ----------
+    json_out : str, optional
+        Output path for the JSON file.
+
+    Returns
+    -------
+    str
+        Node information in JSON format.
+
+    Raises
+    ------
+    CLIError
+        In case the node cannot be probed.
+
+    Examples
+    --------
+    >>> import json
+    >>> from gamspy import cli
+    >>> node_info = json.loads(cli.probe())
+
+    """
     import gamspy_base
 
     process = subprocess.run(
@@ -22,15 +50,17 @@ def _probe(json_out: str | None) -> None:
     )
 
     if process.returncode:
-        typer.echo(process.stderr)
-        raise typer.Exit(code=1)
-
-    print(process.stdout)
+        raise cli_error(process.stderr)
 
     if json_out:
         with open(json_out, "w") as file:
             file.write(process.stdout)
 
+    return process.stdout
+
+
+def _probe(json_out: str | None) -> None:
+    print(probe(json_out))
     raise typer.Exit()
 
 

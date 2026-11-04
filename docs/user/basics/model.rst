@@ -505,6 +505,9 @@ Tokens of the submitted jobs are stored in `client.tokens` ::
 
     print(client.tokens) # This prints all tokens for the submitted jobs
 
+``client.tokens`` only lives as long as the Python process. The jobs submitted earlier can be listed with
+``client.job.list_jobs()``, and a pending or running job can be cancelled with ``client.job.cancel(token)``.
+
 The results of the non-blocking jobs can be retrieved later. For example if want to retrieve the results of the 
 last submitted job, we can do that following: ::
 

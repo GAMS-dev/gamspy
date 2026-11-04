@@ -19,17 +19,35 @@ lower bound and the convergence history.
 Iterations and early stopping
 =============================
 
-``n_iter`` is the hard cap on the number of iterations. On its own the run does
-exactly that many and reports ``stop_reason == "max_iter"``.
+``n_iter`` sets the maximum number of training iterations. If training reaches
+this limit, it stops and sets ``result.stop_reason`` to ``"max_iter"``.
 
-The lower bound usually plateaus well before the cap, so ``rel_tol`` and
-``patience`` add a stopping rule: training stops once the bound improves by less
-than ``rel_tol`` (relative) for ``patience`` consecutive iterations, reporting
-``stop_reason == "converged"``. On ClearLake, ``rel_tol=1e-3, patience=3`` stops
-after 6 of the 20 allowed iterations. Leaving ``rel_tol=None`` (the default)
-disables early stopping and runs all ``n_iter``.
+Set ``rel_tol`` to enable early stopping based on progress in the lower bound.
+In the case where relative improvement stays below ``rel_tol`` for ``patience``
+consecutive iterations, training stops and sets ``result.stop_reason`` to ``"converged"``.
+An improvement at or above this threshold resets the count. With
+``rel_tol=None`` (the default), the early stopping check is disabled.
 
 To train a risk-averse policy, pass ``risk=``; see :doc:`risk`.
+
+.. _sddp_solve_failures:
+
+Unsuccessful solves
+===================
+
+SDDP checks every required scenario before using its results. Each LP must
+report ``ModelStatus.OptimalGlobal`` and ``SolveStatus.NormalCompletion``.
+These checks also apply when measuring or remeasuring the lower bound.
+
+Unless the failure is a user interruption (see below), an unacceptable or
+missing status raises ``ValidationError`` and stops the training call. The
+error identifies the stage and scenario, and the trial and iteration where
+applicable. Failed scenarios are not skipped, and cuts from an unfinished
+iteration are deactivated. Errors raised by GAMSPy itself still propagate.
+
+An infeasible subproblem can result from the particular incoming state and
+scenario; it does not establish that the entire multistage problem is
+infeasible. Check the model data, bounds, and solver output before retrying.
 
 Bounding the cut pool
 =====================
@@ -129,10 +147,15 @@ this entirely and is perf-neutral.
 Interrupting training
 =====================
 
-Long runs can be stopped gracefully. Pressing :kbd:`Ctrl+C` once finishes the
-current iteration, then returns the policy trained so far with
-``stop_reason == "interrupted"``, and the cuts learned up to that point are intact
-and usable. Pressing :kbd:`Ctrl+C` a second time aborts hard.
+Press :kbd:`Ctrl+C` once to request a stop after the current iteration.
+``train()`` returns a result where ``stop_reason`` is ``"interrupted"``,
+and cuts from completed iterations remain usable. Press :kbd:`Ctrl+C`
+again to abort with ``KeyboardInterrupt``.
+
+
+If the reported solve failures are all user interruptions
+(``SolveStatus.UserInterrupt``), training returns the results from completed iterations and discards any unfinished ones.
+If, on the other hand, at least one subproblem fails for another reason, training raises an error even if the user requested a stop.
 
 .. seealso::
    The :doc:`ClearLake tutorial <clearlake>` shows a full training run and its

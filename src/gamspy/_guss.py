@@ -201,7 +201,12 @@ class GUSSScenarioDict:
     ) -> None:
         self._add_entry(target, scenario_data, "marginal", (Variable, Equation))
 
-    def add_options(self, options: Parameter) -> None:
+    def add_options(self, options: Parameter, report: Parameter | None = None) -> None:
+        """Add GUSS options and an optional per-scenario attribute report.
+
+        The report's domain consists of the scenario dimensions followed by
+        GUSS model attributes, such as ``ModelStat``.
+        """
         if not isinstance(options, Parameter):
             raise ValidationError("GUSS options must be a Parameter.")
 
@@ -213,6 +218,19 @@ class GUSSScenarioDict:
                 f"but found {options.dimension}."
             )
 
+        if report is not None:
+            if not isinstance(report, Parameter):
+                raise ValidationError("GUSS report must be a Parameter.")
+
+            self._validate_same_container(report, "report")
+            # We add one here for the attribute we need to pull
+            expect_dim = self.scenario_set.dimension + 1
+
+            if report.dimension != expect_dim:
+                raise ValidationError(
+                    f"Expected GUSS report parameter to have {expect_dim} not {report.dimension} dimensions."
+                )
+
         key = (options.name, "opt")
         if key in self._entries:
             raise ValidationError(
@@ -220,7 +238,9 @@ class GUSSScenarioDict:
             )
 
         self._entries.add(key)
-        self._records.append((options.name, "opt", ""))
+        self._records.append(
+            (options.name, "opt", report.name if report is not None else "")
+        )
         self._set.setRecords(self._records)
 
     def _add_entry(

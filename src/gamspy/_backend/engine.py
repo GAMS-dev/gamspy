@@ -28,9 +28,11 @@ from gamspy.exceptions import (
 )
 
 if TYPE_CHECKING:
+    from datetime import datetime
     from pathlib import Path
 
     import pandas as pd
+    import requests
 
     from gamspy import Container, Model
 
@@ -615,6 +617,169 @@ class Job(Endpoint):
             + "."
         )
 
+    def list_jobs(
+        self,
+        page: int = 1,
+        per_page: int = 10,
+        order_by: str = "submitted_at",
+        order_asc: bool = False,
+        show_only_active: bool = False,
+    ) -> dict:
+        """
+        Get request to /jobs/ which lists the jobs of the user.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Parameters
+        ----------
+        page : int, optional
+            Page number, by default 1
+        per_page : int, optional
+            Number of jobs per page, by default 10
+        order_by : str, optional
+            One of "model", "namespace", "status", "process_status",
+            "submitted_at", "finished_at" or "user", by default "submitted_at"
+        order_asc : bool, optional
+            Whether to sort in ascending order, by default False
+        show_only_active : bool, optional
+            Whether to list only the jobs that have not finished yet, by default False
+
+        Returns
+        -------
+        dict
+            Page with the keys "count", "next", "previous" and "results".
+            "results" is the list of jobs on this page.
+
+        Raises
+        ------
+        EngineClientException
+            If get request has failed.
+        """
+        params = {
+            "page": page,
+            "per_page": per_page,
+            "order_by": order_by,
+            "order_asc": order_asc,
+            "show_only_active": show_only_active,
+        }
+        r = self.client._send("GET", "/jobs/", params=params, headers={"X-Fields": "*"})
+        return r.json()
+
+    def cancel(self, token: str, hard_kill: bool = False) -> None:
+        """
+        Delete request to /jobs/{token} which cancels a pending or running job.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Parameters
+        ----------
+        token : str
+            Job token
+        hard_kill : bool, optional
+            Sends SIGKILL instead of SIGINT if True, by default False
+
+        Raises
+        ------
+        EngineClientException
+            If the job is already finished or the delete request has failed.
+        """
+        self.client._send("DELETE", f"/jobs/{token}", params={"hard_kill": hard_kill})
+
+    def get_text_entry(
+        self,
+        token: str,
+        entry_name: str,
+        start_position: int = 1,
+        length: int | None = None,
+    ) -> str:
+        """
+        Get request to /jobs/{token}/text-entry/{entry_name} which returns the
+        value of a text entry. Text entries are requested with
+        ``engine_options={"text_entries": [...]}``.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Parameters
+        ----------
+        token : str
+            Job token
+        entry_name : str
+            Name of the text entry
+        start_position : int, optional
+            Start position of the substring, by default 1
+        length : int | None, optional
+            Number of characters to read, by default the whole entry
+
+        Returns
+        -------
+        str
+            Value of the text entry
+
+        Raises
+        ------
+        EngineClientException
+            If get request has failed.
+        """
+        params: dict[str, int] = {"start_position": start_position}
+        if length is not None:
+            params["length"] = length
+
+        r = self.client._send(
+            "GET", f"/jobs/{token}/text-entry/{entry_name}", params=params
+        )
+        return r.json()["entry_value"]
+
+    def get_stream_entry(self, token: str, entry_name: str) -> tuple[str, bool]:
+        """
+        Delete request to /jobs/{token}/stream-entry/{entry_name} which returns
+        the unread part of a stream entry. Stream entries are requested with
+        ``engine_options={"stream_entries": [...]}``.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Parameters
+        ----------
+        token : str
+            Job token
+        entry_name : str
+            Name of the stream entry
+
+        Returns
+        -------
+        tuple[str, bool]
+            Unread part of the stream entry and whether the stream is finished
+
+        Raises
+        ------
+        EngineClientException
+            If delete request has failed.
+        """
+        r = self.client._send(
+            "DELETE",
+            f"/jobs/{token}/stream-entry/{entry_name}",
+            ok_codes=(200, 308),
+        )
+        if r.status_code == 308:
+            return "", True
+
+        info = r.json()
+        return info["entry_value"], info["queue_finished"]
+
+    def update_tag(self, token: str, tag: str) -> None:
+        """
+        Put request to /jobs/{token}/tag which updates the tag of a job.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Parameters
+        ----------
+        token : str
+            Job token
+        tag : str
+            New tag, at most 255 characters
+
+        Raises
+        ------
+        EngineClientException
+            If put request has failed.
+        """
+        self.client._send("PUT", f"/jobs/{token}/tag", params={"tag": tag})
+
     def _create_zip_file(
         self,
         working_directory: str,
@@ -701,6 +866,112 @@ class Job(Endpoint):
         return query_params, file_params
 
 
+class Usage(Endpoint):
+    def __init__(self, client: EngineClient) -> None:
+        self.client = client
+
+    def get(
+        self,
+        from_datetime: datetime | str | None = None,
+        to_datetime: datetime | str | None = None,
+        tokens: list[str] | None = None,
+    ) -> dict:
+        """
+        Get request to /usage/ which returns the usage data of the user.
+        A client authenticated with a JWT needs the USERS scope to look up its username.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Parameters
+        ----------
+        from_datetime : datetime | str | None, optional
+            Exclude jobs submitted before this time, by default None
+        to_datetime : datetime | str | None, optional
+            Exclude jobs submitted after this time, by default None
+        tokens : list[str] | None, optional
+            Only include these jobs, by default None
+
+        Returns
+        -------
+        dict
+            Usage data with the keys "job_usage", "hypercube_job_usage" and "pool_usage"
+
+        Raises
+        ------
+        EngineClientException
+            If get request has failed.
+        """
+        params: dict[str, str | list[str]] = {"username": self.client._get_username()}
+        for key, value in (
+            ("from_datetime", from_datetime),
+            ("to_datetime", to_datetime),
+        ):
+            if value is not None:
+                params[key] = value if isinstance(value, str) else value.isoformat()
+
+        if tokens is not None:
+            params["token"] = tokens
+
+        return self.client._send("GET", "/usage/", params=params).json()
+
+    def get_quota(self) -> list[dict]:
+        """
+        Get request to /usage/quota which returns the quotas of the user.
+        A client authenticated with a JWT needs the USERS scope to look up its username.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Returns
+        -------
+        list[dict]
+            Quotas that apply to the user, one per user they are inherited from
+
+        Raises
+        ------
+        EngineClientException
+            If get request has failed.
+        """
+        params = {"username": self.client._get_username()}
+        return self.client._send("GET", "/usage/quota", params=params).json()
+
+
+class Namespaces(Endpoint):
+    def __init__(self, client: EngineClient) -> None:
+        self.client = client
+
+    def get_models(
+        self, namespace: str | None = None, model: str | None = None
+    ) -> list[dict]:
+        """
+        Get request to /namespaces/{namespace} which lists the models registered
+        in a namespace. A registered model can be run with
+        ``engine_options={"model": <name>}``.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Parameters
+        ----------
+        namespace : str | None, optional
+            Namespace, by default the namespace of the client
+        model : str | None, optional
+            Only list the model with this name, by default None
+
+        Returns
+        -------
+        list[dict]
+            Registered models
+
+        Raises
+        ------
+        EngineClientException
+            If get request has failed.
+        """
+        if namespace is None:
+            namespace = self.client._engine_config.namespace
+
+        params = {"model": model} if model is not None else None
+        return self.client._send(
+            "GET", f"/namespaces/{namespace}", params=params
+        ).json()
+
+
 class EngineClient:
     """
     GAMS Engine Client.
@@ -770,6 +1041,8 @@ class EngineClient:
         # Endpoints
         self.job = Job(self)
         self.auth = Auth(self)
+        self.usage = Usage(self)
+        self.namespaces = Namespaces(self)
 
     def get_request_headers(self) -> dict[str, str]:
         return {
@@ -777,6 +1050,66 @@ class EngineClient:
             "User-Agent": "GAMSPy EngineClient",
             "Accept": "application/json",
         }
+
+    def get_version(self) -> dict:
+        """
+        Get request to /version which returns the GAMS Engine and GAMS versions.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Returns
+        -------
+        dict
+            Versions with the keys "version", "gams_version" and "in_kubernetes"
+
+        Raises
+        ------
+        EngineClientException
+            If get request has failed.
+        """
+        return self._send("GET", "/version").json()
+
+    def _get_username(self) -> str:
+        if self._engine_config.username:
+            return self._engine_config.username
+
+        r = self._send("GET", "/users/", params={"everyone": False})
+        return r.json()[0]["username"]
+
+    def _send(
+        self,
+        method: str,
+        path: str,
+        params: dict | None = None,
+        headers: dict[str, str] | None = None,
+        ok_codes: tuple[int, ...] = (200,),
+    ) -> requests.Response:
+        import requests
+
+        headers = self.get_request_headers() | (headers or {})
+        for attempt_number in range(MAX_REQUEST_ATTEMPS):
+            r = requests.request(
+                method,
+                f"{self._engine_config.host}{path}",
+                params=params,
+                headers=headers,
+                timeout=REQUEST_TIMEOUT,
+            )
+            if r.status_code in ok_codes:
+                return r
+
+            if r.status_code != 429:
+                break
+
+            time.sleep(2**attempt_number)  # retry with exponential backoff
+
+        try:
+            message = r.json()["message"]
+        except (ValueError, KeyError, TypeError):
+            message = r.text
+
+        raise EngineClientException(
+            f"{method} {path} failed with status code {r.status_code}: {message}"
+        )
 
 
 class GAMSEngine(backend.Backend):

@@ -13,14 +13,13 @@ stages:
   - precommit
   - setup
   - update
-  - cli
   - test
+  - cli
   - engine
   - neos
   - docs
   - performance
   - website
-  - upload
 
 variables:
   MACHINES_CONTAINER_REG:
@@ -47,12 +46,6 @@ variables:
   PF_GAMS_LICENSE:
     value: $GAMS_LICENSE
     description: "GAMS license string used for testing"
-  PF_PYPI_USERNAME:
-    value: $PYPI_USERNAME
-    description: "Username for PyPI"
-  PF_PYPI_PASSWORD:
-    value: $PYPI_PASSWORD
-    description: "Password for PyPI"
 
 # This job updates pre-commit hooks and uv lock on a schedule
 autoupgrade:
@@ -98,6 +91,5 @@ include: ['ci/.toolchain.yml',
           'ci/.test-deg.yml',
           'ci/.test-wei.yml',
           'ci/.update-website.yml',
-          'ci/.upload.yml',
           'ci/.docs.yml',
           'ci/.performance.yml']

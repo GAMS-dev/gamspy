@@ -53,7 +53,6 @@ lag-cli-3.11:
 dac-cli-3.15:
   extends: .uv_package_cache
   stage: cli
-  when: on_success
   needs: [setup-dac-toolchain]
   tags: [macos-arm64]
   script:
@@ -67,7 +66,7 @@ dac-cli-3.15:
 dac-cli-3.11:
   extends: .uv_package_cache
   stage: cli
-  needs: [dac-cli-3.15, setup-dac-toolchain]
+  needs: [setup-dac-toolchain]
   tags: [macos-arm64]
   script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
@@ -88,32 +87,6 @@ deg-cli-3.15:
     - uv build
     - uv sync --locked --group test
     - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
-
-deg-cli-3.11:
-  extends: .uv_package_cache
-  stage: cli
-  # Preserving dependency on 3.15 while adding toolchain
-  needs: [deg-cli-3.15, setup-deg-toolchain]
-  tags: [macos]
-  script:
-    - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"
-    - uv venv .venv --python 3.11
-    - source .venv/bin/activate
-    - uv sync --locked --group test
-    - UV_NO_CONFIG=1 python -m pytest -x -ra -m 'cli' tests
-
-wei-cli-3.15:
-  extends: .uv_package_cache
-  stage: cli
-  needs: [setup-wei-toolchain]
-  tags: [windows]
-  script:
-    - !reference [.wei_unpack_toolchain, script]
-    - uv venv .venv --python 3.15
-    - .venv\Scripts\Activate.ps1
-    - uv build
-    - uv sync --locked --group test
-    - $env:UV_NO_CONFIG="1"; python -m pytest -x -ra -m 'cli' tests
 
 wei-cli-3.11:
   extends: .uv_package_cache

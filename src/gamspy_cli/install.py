@@ -17,7 +17,7 @@ import typer
 
 from . import cuopt
 from .license import get_licensed_solvers
-from .util import add_solver_entry, has_pip, has_uv
+from .util import add_solver_entry, cli_error, has_pip, has_uv
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -29,43 +29,53 @@ app = typer.Typer(
 )
 
 
-@app.command(
-    help="[bold][yellow]Examples[/yellow][/bold]: gamspy install license <access_code> or <path/to/license/file>",
-    short_help="To install a new license",
-)
-def license(
-    license: Annotated[
-        str, typer.Argument(help="access code or path to the license file.")
-    ],
-    checkout_duration: int | None = typer.Option(
-        None,
-        "--checkout-duration",
-        "-c",
-        help="Specify a duration in hours to checkout a session.",
-    ),
-    server: str = typer.Option(
-        "https://license.gams.com",
-        "--server",
-        "-s",
-        help="License server address.",
-    ),
-    port: int | None = typer.Option(
-        None, "--port", "-p", help="Port for the license server connection."
-    ),
-    output: str | None = typer.Option(
-        None,
-        "--output",
-        "-o",
-        help="Specify a file path to write the license file.",
-    ),
-    uses_port: Annotated[
-        int | None,
-        typer.Option("--uses-port", help="Interprocess communication starting port."),
-    ] = None,
-    use_uv: bool = typer.Option(
-        False, "--use-uv", help="Use uv instead of pip to install solvers."
-    ),
-) -> None:
+def install_license(
+    license: str,
+    *,
+    checkout_duration: int | None = None,
+    server: str = "https://license.gams.com",
+    port: int | None = None,
+    output: str | None = None,
+    uses_port: int | None = None,
+    use_uv: bool = False,
+) -> str:
+    """
+    Installs a GAMSPy license. Equivalent of ``gamspy install license``.
+
+    Parameters
+    ----------
+    license : str
+        Access code or path to the license file.
+    checkout_duration : int, optional
+        Duration in hours to checkout a session.
+    server : str, optional
+        License server address.
+    port : int, optional
+        Port for the license server connection.
+    output : str, optional
+        File path to write the license file. By default, the license is written
+        to the GAMSPy license path.
+    uses_port : int, optional
+        Interprocess communication starting port.
+    use_uv : bool, optional
+        Use uv instead of pip to install the default solvers of the license.
+
+    Returns
+    -------
+    str
+        Path of the installed license file.
+
+    Raises
+    ------
+    CLIError
+        In case the license is invalid or cannot be retrieved.
+
+    Examples
+    --------
+    >>> from gamspy import cli
+    >>> license_path = cli.install_license("<access_code>")  # doctest: +SKIP
+
+    """
     import json
 
     import requests
@@ -77,11 +87,10 @@ def license(
     is_alp = not os.path.isfile(license)
 
     if is_alp and len(license) != 36:
-        typer.echo(
+        raise cli_error(
             f"Invalid access code or license file ({license}). Please enter a 36-character "
             f"access code, or ensure the absolute path to your license file is correct and the file exists."
         )
-        raise typer.Exit(code=1)
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
     license_path = os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt")
@@ -95,10 +104,9 @@ def license(
             params = {"access_token": alp_id}
             request = requests.get(f"{server}/license-type", params=params)
             if request.status_code != 200:
-                typer.echo(
+                raise cli_error(
                     f"License server did not respond in an expected way. Request status: {request.status_code}. Reason: {request.content.decode('utf-8', errors='replace')}"
                 )
-                raise typer.Exit(code=1)
 
             data = request.content.decode("utf-8", errors="replace")
             cmex_type = json.loads(data)["cmex_type"]
@@ -110,11 +118,10 @@ def license(
                 "gamspy++",
                 "gamsall",
             ):
-                typer.echo(
+                raise cli_error(
                     f"Given access code `{alp_id} ({cmex_type})` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
-                raise typer.Exit(code=1)
 
         command = [
             os.path.join(gamspy_base_dir, "gamsgetkey"),
@@ -158,8 +165,7 @@ def license(
             env=environment_variables,
         )
         if process.returncode:
-            typer.echo(process.stderr)
-            raise typer.Exit(code=1)
+            raise cli_error(process.stderr)
 
         license_file_path = output if output else license_path
         with open(license_file_path) as file:
@@ -169,25 +175,22 @@ def license(
         try:
             license_type = lines[0][54]
         except (Exception, IndexError) as e:
-            typer.echo(
+            raise cli_error(
                 f"Invalid license text. \nLicense text: {license_text}\nstdout: {process.stdout}\nstderr: {process.stderr}"
-            )
-            raise typer.Exit(code=1) from e
+            ) from e
 
         if license_type == "+":
             if lines[2][:2] not in ("00", "06", "07", "08", "09"):
-                typer.echo(
+                raise cli_error(
                     f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
-                raise typer.Exit(code=1)
         else:
             if lines[2][8:10] not in ("00", "06", "07", "08", "09"):
-                typer.echo(
+                raise cli_error(
                     f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
-                raise typer.Exit(code=1)
     else:
         with open(license) as file:
             lines = file.read().splitlines()
@@ -195,20 +198,18 @@ def license(
         license_type = lines[0][54]
         if license_type == "+":
             if lines[2][:2] not in ("00", "06", "07", "08", "09"):
-                typer.echo(
+                raise cli_error(
                     f"Given license file `{license}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
-                raise typer.Exit(code=1)
         else:
             if lines[2][8:10] not in ("00", "06", "07", "08", "09"):
-                typer.echo(
+                raise cli_error(
                     f"Given license file `{license}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
-                raise typer.Exit(code=1)
 
-        shutil.copy(license, license_path)
+        shutil.copy(license, output if output else license_path)
 
     # Free personal license has different default solvers. Install them.
     if "FREEPERSONAL" in lines[4]:
@@ -229,6 +230,56 @@ def license(
             command.append("--use-uv")
 
         subprocess.run(command)
+
+    return output if output else license_path
+
+
+@app.command(
+    help="[bold][yellow]Examples[/yellow][/bold]: gamspy install license <access_code> or <path/to/license/file>",
+    short_help="To install a new license",
+)
+def license(
+    license: Annotated[
+        str, typer.Argument(help="access code or path to the license file.")
+    ],
+    checkout_duration: int | None = typer.Option(
+        None,
+        "--checkout-duration",
+        "-c",
+        help="Specify a duration in hours to checkout a session.",
+    ),
+    server: str = typer.Option(
+        "https://license.gams.com",
+        "--server",
+        "-s",
+        help="License server address.",
+    ),
+    port: int | None = typer.Option(
+        None, "--port", "-p", help="Port for the license server connection."
+    ),
+    output: str | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Specify a file path to write the license file.",
+    ),
+    uses_port: Annotated[
+        int | None,
+        typer.Option("--uses-port", help="Interprocess communication starting port."),
+    ] = None,
+    use_uv: bool = typer.Option(
+        False, "--use-uv", help="Use uv instead of pip to install solvers."
+    ),
+) -> None:
+    install_license(
+        license,
+        checkout_duration=checkout_duration,
+        server=server,
+        port=port,
+        output=output,
+        uses_port=uses_port,
+        use_uv=use_uv,
+    )
 
 
 def append_dist_info(files: Iterable[str], gamspy_base_dir: str) -> None:
@@ -294,63 +345,62 @@ def complete_solver_names(ctx: typer.Context, incomplete: str) -> list[str]:
     ]
 
 
-@app.command(
-    short_help="To install solvers",
-    help=(
-        "[bold][yellow]Examples[/yellow][/bold]: gamspy install solver <solver_name> | "
-        "gamspy install solver --licensed"
-    ),
-)
-def solver(
-    solver: list[str] = typer.Argument(  # noqa: B008
-        None,
-        help="solver names to be installed",
-        autocompletion=complete_solver_names,
-    ),
-    install_all_solvers: bool = typer.Option(
-        False,
-        "--install-all-solvers",
-        "--all",
-        "-a",
-        help="Installs all available add-on solvers.",
-    ),
-    existing_solvers: bool = typer.Option(
-        False,
-        "--existing-solvers",
-        help="Reinstalls previously installed add-on solvers.",
-    ),
-    licensed: bool = typer.Option(
-        False,
-        "--licensed",
-        help="Installs all add-on solvers permitted by the active license that are not yet installed.",
-    ),
-    skip_pip_install: bool = typer.Option(
-        False,
-        "--skip-pip-install",
-        "-s",
-        help="If you already have the solver installed, skip pip install and update gamspy installed solver list.",
-    ),
-    use_uv: bool = typer.Option(
-        False, "--use-uv", help="Use uv instead of pip to install solvers."
-    ),
+def install_solver(
+    solvers: str | Iterable[str] | None = None,
+    *,
+    install_all_solvers: bool = False,
+    existing_solvers: bool = False,
+    licensed: bool = False,
+    skip_pip_install: bool = False,
+    use_uv: bool = False,
 ) -> None:
+    """
+    Installs add-on solvers. Equivalent of ``gamspy install solver``.
+
+    Parameters
+    ----------
+    solvers : str | Iterable[str], optional
+        Name(s) of the solvers to be installed.
+    install_all_solvers : bool, optional
+        Installs all available add-on solvers.
+    existing_solvers : bool, optional
+        Reinstalls previously installed add-on solvers.
+    licensed : bool, optional
+        Installs all add-on solvers permitted by the active license that are not yet installed.
+    skip_pip_install : bool, optional
+        If you already have the solver installed, skip pip install and update gamspy installed solver list.
+    use_uv : bool, optional
+        Use uv instead of pip to install solvers.
+
+    Raises
+    ------
+    CLIError
+        In case a solver name is invalid or a solver cannot be installed.
+
+    Examples
+    --------
+    >>> from gamspy import cli
+    >>> cli.install_solver("highs")  # doctest: +SKIP
+    >>> cli.install_solver(["highs", "scip"])  # doctest: +SKIP
+    >>> cli.install_solver(licensed=True)  # doctest: +SKIP
+
+    """
     import gamspy_base
 
     import gamspy.utils as utils
 
-    requested = [name.lower() for name in solver or []]
+    solver = [solvers] if isinstance(solvers, str) else list(solvers or [])
+    requested = [name.lower() for name in solver]
     if not requested or any(name != cuopt.SOLVER_NAME for name in requested):
         if not use_uv and not has_pip():
-            typer.echo(
+            raise cli_error(
                 "pip is not installed in your environment. Please install pip first or add --use-uv flag to install solvers with uv."
             )
-            raise typer.Exit(code=1)
 
         if use_uv and not has_uv():
-            typer.echo(
+            raise cli_error(
                 "uv is not installed in your machine. Please install uv first to install solvers with --use-uv flag."
             )
-            raise typer.Exit(code=1)
 
     addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
     os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
@@ -374,11 +424,10 @@ def solver(
 
             installable_solvers = utils.getInstallableSolvers()
             if solver_name.upper() not in installable_solvers:
-                typer.echo(
+                raise cli_error(
                     f'Given solver name ("{solver_name}") is not valid. Available'
                     f" solvers that can be installed: {installable_solvers}"
                 )
-                raise typer.Exit(code=1)
 
             if solver_name == "examiner2":
                 typer.echo(
@@ -405,10 +454,9 @@ def solver(
                         env=environment_variables,
                     )
                 except subprocess.CalledProcessError as e:
-                    typer.echo(
+                    raise cli_error(
                         f"Could not install gamspy-{solver_name}. Please check your internet connection. If it's not related to your internet connection, PyPI servers might be down. Please retry it later. Here is the error message of pip:\n\n{e.stderr}"
-                    )
-                    raise typer.Exit(code=1) from e
+                    ) from e
             else:
                 try:
                     solver_lib = importlib.import_module(f"gamspy_{solver_name}")
@@ -454,8 +502,7 @@ def solver(
                 install_addons(solvers)
                 return
         except FileNotFoundError as e:
-            typer.echo("No existing add-on solvers found!")
-            raise typer.Exit(code=1) from e
+            raise cli_error("No existing add-on solvers found!") from e
 
     if licensed:
         license_path = utils._get_license_path(gamspy_base.directory)
@@ -471,9 +518,8 @@ def solver(
         install_addons(diff)
         return
 
-    if solver is None:
-        typer.echo("Solver name is missing: `gamspy install solver <solver_name>`")
-        raise typer.Exit(code=1)
+    if not solver:
+        raise cli_error("Solver name is missing: `gamspy install solver <solver_name>`")
 
     solvers = [elem.upper() for elem in solver]
     if (
@@ -484,6 +530,56 @@ def solver(
         solvers.insert(0, "GUROBI")
 
     install_addons(solvers)
+
+
+@app.command(
+    short_help="To install solvers",
+    help=(
+        "[bold][yellow]Examples[/yellow][/bold]: gamspy install solver <solver_name> | "
+        "gamspy install solver --licensed"
+    ),
+)
+def solver(
+    solver: list[str] = typer.Argument(  # noqa: B008
+        None,
+        help="solver names to be installed",
+        autocompletion=complete_solver_names,
+    ),
+    install_all_solvers: bool = typer.Option(
+        False,
+        "--install-all-solvers",
+        "--all",
+        "-a",
+        help="Installs all available add-on solvers.",
+    ),
+    existing_solvers: bool = typer.Option(
+        False,
+        "--existing-solvers",
+        help="Reinstalls previously installed add-on solvers.",
+    ),
+    licensed: bool = typer.Option(
+        False,
+        "--licensed",
+        help="Installs all add-on solvers permitted by the active license that are not yet installed.",
+    ),
+    skip_pip_install: bool = typer.Option(
+        False,
+        "--skip-pip-install",
+        "-s",
+        help="If you already have the solver installed, skip pip install and update gamspy installed solver list.",
+    ),
+    use_uv: bool = typer.Option(
+        False, "--use-uv", help="Use uv instead of pip to install solvers."
+    ),
+) -> None:
+    install_solver(
+        solver,
+        install_all_solvers=install_all_solvers,
+        existing_solvers=existing_solvers,
+        licensed=licensed,
+        skip_pip_install=skip_pip_install,
+        use_uv=use_uv,
+    )
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 .dac_template:
   extends: .uv_package_cache
   stage: test
-  needs: [dac-cli-3.11, setup-dac-toolchain]
+  needs: [setup-dac-toolchain]
   tags: [macos-arm64]
   before_script:
     - export PATH="$CI_PROJECT_DIR/.uv_bin:$PATH"

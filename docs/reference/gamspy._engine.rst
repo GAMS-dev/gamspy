@@ -15,3 +15,12 @@ EngineClient
    :members: 
    :undoc-members:
    :show-inheritance:
+.. autoclass:: gamspy._backend.engine.Usage
+   :members: 
+   :undoc-members:
+   :show-inheritance:
+
+.. autoclass:: gamspy._backend.engine.Namespaces
+   :members: 
+   :undoc-members:
+   :show-inheritance:

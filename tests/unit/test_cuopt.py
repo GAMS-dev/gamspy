@@ -8,9 +8,9 @@ import stat
 import zipfile
 
 import pytest
-import typer
 
 import gamspy.utils as utils
+from gamspy.exceptions import CLIError
 from gamspy_cli import cuopt
 
 pytestmark = pytest.mark.unit
@@ -37,14 +37,14 @@ def test_architecture(monkeypatch):
         assert cuopt._get_architecture() == "arm64"
 
     monkeypatch.setattr(platform, "machine", lambda: "ppc64le")
-    with pytest.raises(typer.Exit):
+    with pytest.raises(CLIError):
         cuopt._get_architecture()
 
     # cuOpt is only available on Linux (and on Windows through WSL2).
     monkeypatch.setattr(platform, "machine", lambda: "x86_64")
     for system in ("Windows", "Darwin"):
         monkeypatch.setattr(platform, "system", lambda system=system: system)
-        with pytest.raises(typer.Exit):
+        with pytest.raises(CLIError):
             cuopt._get_architecture()
 
 
@@ -103,7 +103,7 @@ def test_cuda_version(monkeypatch):
         assert cuopt._get_cuda_version() == version
 
     monkeypatch.setenv(cuopt.CUDA_VERSION_ENV, "11")
-    with pytest.raises(typer.Exit):
+    with pytest.raises(CLIError):
         cuopt._get_cuda_version()
 
 
@@ -122,7 +122,7 @@ def test_cuda_runtime(monkeypatch):
 
     for value in ("true", "no", "2"):
         monkeypatch.setenv(cuopt.CUDA_RUNTIME_ENV, value)
-        with pytest.raises(typer.Exit):
+        with pytest.raises(CLIError):
             cuopt._install_cuda_runtime()
 
 
@@ -236,7 +236,7 @@ def test_load_config(tmp_path):
         with open(path, "w", encoding="utf-8") as file:
             file.write(content)
 
-        with pytest.raises(typer.Exit):
+        with pytest.raises(CLIError):
             cuopt._load_config(path)
 
 
@@ -256,7 +256,7 @@ def test_get_solver_config(system_directory):
     source_path.write_text(
         CUOPT_CONFIG + "commandLineParameters:\n  - LP:\n      value: cuopt\n"
     )
-    with pytest.raises(typer.Exit):
+    with pytest.raises(CLIError):
         _ = cuopt._get_solver_config(str(system_directory))
 
 
@@ -345,7 +345,7 @@ def test_merge_solver_config():
 
     # A solverConfig section that is not a block of entries cannot be merged
     # into, because a second solverConfig key would hide it.
-    with pytest.raises(typer.Exit):
+    with pytest.raises(CLIError):
         _ = cuopt._merge_solver_config("solverConfig: []\n", entries, "")
 
 
