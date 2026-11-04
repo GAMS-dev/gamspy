@@ -1830,13 +1830,19 @@ class Model:
             output = self.container.output
 
         if solver is None:
-            solver = self._default_solver
-        else:
-            if not isinstance(solver, str):
-                raise TypeError(
-                    f"`solver` argument must be of type `str` but given `{type(solver)}`"
+            solver = (
+                getattr(
+                    self.container._options if options is None else options,
+                    str(self.problem).lower(),
+                    None,
                 )
-            solver = solver.lower()
+                or self._default_solver
+            )
+        elif not isinstance(solver, str):
+            raise TypeError(
+                f"`solver` argument must be of type `str` but given `{type(solver)}`"
+            )
+        solver = solver.lower()
 
         if solver == "conopt":
             solver = "conopt4"

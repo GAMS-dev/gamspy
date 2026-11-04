@@ -1240,6 +1240,20 @@ def test_solver_options(transport, set_options):
             assert ">>  rtmaxv 1.e12" in content
 
 
+def test_solver_from_options():
+    m = Container(options=Options(lp="conopt"))
+    x = Variable(m, "x")
+    e = Equation(m, "e")
+    e[...] = x >= 1
+    model = Model(m, "example", equations=[e], problem="LP", sense="MIN", objective=x)
+
+    assert model.solve()["Solver"][0] == "CONOPT4"
+    assert model.solve(options=Options(lp="minos"))["Solver"][0] == "MINOS"
+    assert model.solve(solver="minos")["Solver"][0] == "MINOS"
+    default = model._default_solver.upper()
+    assert model.solve(options=Options())["Solver"][0] == default
+
+
 def test_ellipsis(transport):
     m, canning_plants, markets, distances, capacities, demands = transport
     i = Set(m, name="i", records=canning_plants)

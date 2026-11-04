@@ -1,0 +1,1 @@
+Respect the solver set for the problem type (e.g. ``lp``) in container options or solve options when ``solver`` is not given.
