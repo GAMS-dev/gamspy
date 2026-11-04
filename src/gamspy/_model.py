@@ -491,6 +491,7 @@ class Model:
         self._is_frozen: bool = False
         self._frozen_model: FrozenModel | None = None
         self._modifiable_names: set[str] = set()
+        self._guss_rep_names: set[str] = set()
 
         # Attributes
         self._num_domain_violations: float | None = None
@@ -1260,6 +1261,9 @@ class Model:
         self.container._add_statement("$onListing")
 
     def _update_model_attributes(self) -> None:
+        self.container._should_load_from(self._guss_rep_names, DataSource.GAMS)
+        self._guss_rep_names.clear()
+
         records = gdxio._get_model_attr_records(
             self.container, self._attr_gdx_file, self._attr_symbol_names
         )
@@ -1914,6 +1918,10 @@ class Model:
         self.container._add_statement(
             self._generate_solve_string(scenario=scenario) + ";\n"
         )
+        if scenario is not None:
+            self._guss_rep_names.update(
+                rep for _, act, rep in scenario._records if act == "opt" and rep
+            )
         if self.container._in_loop:
             self._assign_model_attributes()
             self.container._models_solved_in_loop[self.name] = self
