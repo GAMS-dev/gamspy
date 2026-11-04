@@ -1210,10 +1210,7 @@ class SDDP:
                 cast("gp.Set", self._active_cut_iteration_set)[iteration_label] = False
             self._restore_user_bounds()
             for state_var in self._states:
-                lb = cast("gp.Parameter", state_var.orig_lo_param)
-                ub = cast("gp.Parameter", state_var.orig_up_param)
-                state_var.variable.lo[self._time_set] = lb[self._time_set]
-                state_var.variable.up[self._time_set] = ub[self._time_set]
+                state_var.restore_bounds(self._time_set)
         except (GamspyException, ValidationError) as cleanup_error:
             solve_error.add_note(
                 f"Restoring the SDDP state after the failed solve also failed: {cleanup_error}"
@@ -1298,10 +1295,7 @@ class SDDP:
         for state_var in self._states:
             assert state_var.initial_stage_fixed_state is not None
             assert state_var.initial_stage_state_level is not None
-            assert state_var.orig_lo_param is not None
-            assert state_var.orig_up_param is not None
-            state_var.variable.lo[time_set] = state_var.orig_lo_param[time_set]
-            state_var.variable.up[time_set] = state_var.orig_up_param[time_set]
+            state_var.restore_bounds(time_set)
             state_var.initial_stage_fixed_state[scenario_set, time_set] = 0
             state_var.initial_stage_fixed_state[
                 scenario_set, self._initial_state_time
@@ -1646,14 +1640,7 @@ class SDDP:
                     for state_var in self._states:
                         assert state_var.backward_fixed_state is not None
                         assert state_var.trial_values is not None
-                        assert state_var.orig_lo_param is not None
-                        assert state_var.orig_up_param is not None
-                        state_var.variable.lo[time_set] = state_var.orig_lo_param[
-                            time_set
-                        ]
-                        state_var.variable.up[time_set] = state_var.orig_up_param[
-                            time_set
-                        ]
+                        state_var.restore_bounds(time_set)
                         # Scatter: fix x_s[prev_last_of_wloop] at trial level[i]
                         state_var.backward_fixed_state[
                             trial_set, scenario_set, time_set
@@ -1776,10 +1763,7 @@ class SDDP:
                 for state_var in self._states:
                     assert state_var.initial_stage_fixed_state is not None
                     assert state_var.initial_stage_state_level is not None
-                    assert state_var.orig_lo_param is not None
-                    assert state_var.orig_up_param is not None
-                    state_var.variable.lo[time_set] = state_var.orig_lo_param[time_set]
-                    state_var.variable.up[time_set] = state_var.orig_up_param[time_set]
+                    state_var.restore_bounds(time_set)
                     state_var.initial_stage_fixed_state[scenario_set, time_set] = 0
                     state_var.initial_stage_fixed_state[
                         scenario_set, initial_state_time
@@ -1882,14 +1866,7 @@ class SDDP:
                         assert state_var.forward_fixed_state is not None
                         assert state_var.forward_state_level is not None
                         assert state_var.current_forward_state is not None
-                        assert state_var.orig_lo_param is not None
-                        assert state_var.orig_up_param is not None
-                        state_var.variable.lo[time_set] = state_var.orig_lo_param[
-                            time_set
-                        ]
-                        state_var.variable.up[time_set] = state_var.orig_up_param[
-                            time_set
-                        ]
+                        state_var.restore_bounds(time_set)
                         state_var.forward_fixed_state[
                             trial_set, scenario_set, time_set
                         ] = 0
@@ -2535,10 +2512,7 @@ class SDDP:
 
             # Per state: restore bounds and fix the incoming state.
             for state_var in self._states:
-                assert state_var.orig_lo_param is not None
-                assert state_var.orig_up_param is not None
-                state_var.variable.lo[time_set] = state_var.orig_lo_param[time_set]
-                state_var.variable.up[time_set] = state_var.orig_up_param[time_set]
+                state_var.restore_bounds(time_set)
 
                 state_param = sim_state[state_var.variable.name]
                 state_param[sim_paths, scenario_set, time_set] = 0
@@ -2733,10 +2707,7 @@ class SDDP:
         # Restore user bounds, then fix each state at its incoming value.
         self._restore_user_bounds()
         for state_var in self._states:
-            assert state_var.orig_lo_param is not None
-            assert state_var.orig_up_param is not None
-            state_var.variable.lo[time_set] = state_var.orig_lo_param[time_set]
-            state_var.variable.up[time_set] = state_var.orig_up_param[time_set]
+            state_var.restore_bounds(time_set)
             state_var.variable.fx[previous_stage_end_time] = max(
                 state_values[state_var.variable.name], self._EPS
             )
@@ -2762,10 +2733,7 @@ class SDDP:
 
         # Logical cleanup: unfix every state
         for state_var in self._states:
-            assert state_var.orig_lo_param is not None
-            assert state_var.orig_up_param is not None
-            state_var.variable.lo[time_set] = state_var.orig_lo_param[time_set]
-            state_var.variable.up[time_set] = state_var.orig_up_param[time_set]
+            state_var.restore_bounds(time_set)
 
         incoming: float | dict[str, float] = (
             state_values[self._states[0].variable.name]
