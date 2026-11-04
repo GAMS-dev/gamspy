@@ -1,1 +1,0 @@
-Prevent SDDP from using unsuccessful solve results when building cuts, measuring bounds, simulating, or querying a policy.

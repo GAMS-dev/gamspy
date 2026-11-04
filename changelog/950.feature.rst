@@ -1,1 +1,0 @@
-Add an optional ``report`` argument to ``GUSSScenarioDict.add_options`` that collects per-scenario model attributes, such as ``ModelStat`` and ``SolveStat``, into a parameter after each GUSS solve.

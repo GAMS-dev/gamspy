@@ -20,7 +20,7 @@ So for example: ``123.feature.rst``, ``456.bugfix.rst``.
 
 .. tip::
 
-   See :file:`pyproject.toml` for all available categories
+   See `pyproject.toml <../pyproject.toml>`_ for all available categories
    (``tool.towncrier.type``).
 
 If your PR fixes an issue, use that number here. If there is no issue,

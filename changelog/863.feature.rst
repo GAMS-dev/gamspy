@@ -1,1 +1,0 @@
-Expose the commands of the GAMSPy CLI as Python functions in ``gamspy.cli``, e.g. ``gamspy.cli.install_solver("highs")``.

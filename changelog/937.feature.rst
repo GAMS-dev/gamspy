@@ -1,1 +1,0 @@
-Support listing, cancelling and tagging GAMS Engine jobs, reading text and stream entries, and querying the version, usage, quotas and namespace models.
