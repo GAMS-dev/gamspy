@@ -9,20 +9,14 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, TextIO, cast
 
 import pandas as pd
-from gams.core.cfg import GMS_SSSIZE
 from gams.core.gev import (
-    gevCreateD,
-    gevFree,
     gevGetLShandle,
     gevGetStrOpt,
-    gevHandleToPtr,
-    gevInitEnvironmentLegacy,
     gevNameLogFile,
     gevNameStaFile,
     gevRestoreLogStat,
     gevRestoreLogStatRewrite,
     gevSwitchLogStat,
-    new_gevHandle_tp,
 )
 from gams.core.gmd import (
     GMD_NRUELS,
@@ -34,8 +28,6 @@ from gams.core.gmd import (
     gmdUpdateModelSymbol,
 )
 from gams.core.gmo import (
-    gmoCreateD,
-    gmoFree,
     gmoGetHeadnTail,
     gmoHandleToPtr,
     gmoHdomused,
@@ -44,15 +36,12 @@ from gams.core.gmo import (
     gmoHmarginals,
     gmoHobjval,
     gmoHresused,
-    gmoLoadDataLegacy,
     gmoModelStat,
     gmoNameOptFileSet,
     gmoOptFileSet,
-    gmoRegisterEnvironment,
     gmoSolveStat,
     gmoTmipbest,
     gmoTmipnod,
-    new_gmoHandle_tp,
 )
 
 import gamspy as gp
@@ -68,6 +57,12 @@ from gamspy._gmd import (
     update_parameter_records,
 )
 from gamspy._internals import ATTR_PREFIX, DataSource
+from gamspy._model_instance import (
+    create_handles,
+    free_handles,
+    get_control_file,
+    load_instance,
+)
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -196,9 +191,7 @@ class FrozenModel:
         self.lst_file = self.job_name + ".lst"
         self.pf_file = self.job_name + ".pf"
         self.trace_file = self.job_name + ".txt"
-        self.solver_control_file = os.path.join(
-            self.container._process_directory, "gamscntr.dat"
-        )
+        self.solver_control_file = get_control_file(self.container)
 
         self.model = model
         self.output = output
@@ -212,19 +205,10 @@ class FrozenModel:
         self.workspace = container._workspace
         self.sync_db = Database(self.workspace)
 
-        self._gev = new_gevHandle_tp()
-        ret = gevCreateD(self._gev, container.system_directory, GMS_SSSIZE)
-        if not ret[0]:
-            raise GamspyException(ret[1])
-
-        self._gmo = new_gmoHandle_tp()
-        ret = gmoCreateD(self._gmo, container.system_directory, GMS_SSSIZE)
-        if not ret[0]:
-            gevFree(self._gev)
-            raise GamspyException(ret[1])
+        self._gev, self._gmo = create_handles(container.system_directory)
 
         # Failed instantiation should not leak handles.
-        weakref.finalize(self, self.cleanup, self._gmo, self._gev)
+        weakref.finalize(self, free_handles, self._gmo, self._gev)
 
         self.modifiers = self._create_modifiers()
         self.instantiate(model, freeze_options, hibernate=hibernate)
@@ -241,11 +225,6 @@ class FrozenModel:
             "Solver Time",
         ]
         self.summary = pd.DataFrame(index=range(1), columns=HEADER)
-
-    @staticmethod
-    def cleanup(gmo: object, gev: object) -> None:
-        gmoFree(gmo)
-        gevFree(gev)
 
     def close_license_session(self) -> None:
         gmdCloseLicenseSession(self.sync_db.gmd)
@@ -338,14 +317,7 @@ class FrozenModel:
         if hibernate:
             self.container.hibernate()
 
-        # Init environments
-        if gevInitEnvironmentLegacy(self._gev, self.solver_control_file) != 0:
-            raise GamspyException("Could not initialize model instance")
-
-        gmoRegisterEnvironment(self._gmo, gevHandleToPtr(self._gev))
-        ret = gmoLoadDataLegacy(self._gmo)
-        if ret[0] != 0:
-            raise GamspyException(f"Could not load model instance: {ret[1]}")
+        load_instance(self._gev, self._gmo, self.solver_control_file)
 
         rc = gmdInitFromDict(self.sync_db.gmd, gmoHandleToPtr(self._gmo))
         self.sync_db._check_for_gmd_error(rc, self.workspace)

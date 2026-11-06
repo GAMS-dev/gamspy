@@ -24,6 +24,7 @@ from gamspy._container import Container
 from gamspy._control_flow import Else, ElseIf, For, If, Loop, While
 from gamspy._guss import GUSSScenarioDict
 from gamspy._model import FileFormat, Model, ModelStatus, Problem, Sense, SolveStatus
+from gamspy._model_instance import ModelInstance
 from gamspy._options import ConvertOptions, FreezeOptions, Options
 from gamspy._serialization import deserialize, serialize
 from gamspy._special_values import SpecialValues
@@ -55,6 +56,7 @@ __all__ = [
     "Equation",
     "GUSSScenarioDict",
     "Model",
+    "ModelInstance",
     "Problem",
     "Sense",
     "VariableType",

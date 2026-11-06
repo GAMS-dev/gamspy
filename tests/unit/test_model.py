@@ -1451,3 +1451,138 @@ def test_model_attributes():
 
     with pytest.raises(ValidationError, match=r"The model is not solved yet"):
         _ = model.solver_version
+
+
+def test_model_instance():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i1", "i2"])
+    p = gp.Parameter(m, "p", domain=i, records=[("i1", 2), ("i2", 3)])
+    x = gp.Variable(m, "x", domain=i, type="positive")
+    y = gp.Variable(m, "y", type="integer")
+    z = gp.Variable(m, "z")
+    e = gp.Equation(m, "e", domain=i)
+    e[i] = p[i] * x[i] + gp.math.sqr(z) >= 5
+    e2 = gp.Equation(m, "e2", definition=y <= 4)
+    model = gp.Model(
+        m,
+        "mod",
+        equations=[e, e2],
+        problem="MINLP",
+        sense="min",
+        objective=Sum(i, x[i]) + z + y,
+    )
+    z.l = 1.5
+
+    instance = model.getModelInstance()
+    assert instance.objective_variable == "mod_objective_variable"
+    assert instance.equations.to_dict("list") == {
+        "name": ["e(i1)", "e(i2)", "e2", "mod_objective"],
+        "type": ["=G=", "=G=", "=L=", "=E="],
+        "rhs": [5.0, 5.0, 4.0, 0.0],
+        "nonlinear": [True, True, False, False],
+    }
+    assert instance.variables.to_dict("list") == {
+        "name": ["x(i1)", "x(i2)", "y", "z", "mod_objective_variable"],
+        "type": ["continuous", "continuous", "integer", "continuous", "continuous"],
+        "lower": [0.0, 0.0, 0.0, -math.inf, -math.inf],
+        "upper": [math.inf] * 5,
+        "level": [0.0, 0.0, 0.0, 1.5, 0.0],
+    }
+    jacobian = instance.jacobian
+    assert len(jacobian) == 10
+    assert jacobian[jacobian.equation == "e(i1)"].to_dict("list") == {
+        "equation": ["e(i1)", "e(i1)"],
+        "variable": ["x(i1)", "z"],
+        "coefficient": [2.0, 3.0],
+        "nonlinear": [False, True],
+    }
+
+    with pytest.raises(ValidationError, match=r"The model is not solved yet"):
+        _ = model.objective_value
+
+    p["i1"] = 10
+    jacobian = model.getModelInstance().jacobian
+    assert jacobian.loc[0, "coefficient"] == 10.0
+
+    with pytest.raises(TypeError, match="`options` must be of type Option"):
+        model.getModelInstance(options={"time_limit": 5})
+
+    with pytest.raises(TypeError, match="`options` must be of type Option"):
+        model.getModelInstance(options=gp.FreezeOptions())
+
+
+def test_model_instance_mcp():
+    m = gp.Container()
+    v = gp.Variable(m, "v", type="positive")
+    f = gp.Equation(m, "f", definition=v >= gp.Number(1))
+    model = gp.Model(m, "mcp", problem="MCP", matches={f: v})
+
+    instance = model.getModelInstance()
+    assert instance.objective_variable is None
+    assert instance.indicators.empty
+    assert instance.jacobian.to_dict("list") == {
+        "equation": ["f"],
+        "variable": ["v"],
+        "coefficient": [1.0],
+        "nonlinear": [False],
+    }
+
+
+def test_model_instance_indicators():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i1", "i2"])
+    j = gp.Set(m, "j", records=["j1", "j2"])
+    x = gp.Variable(m, "x", domain=[i, j], type="positive")
+    b = gp.Variable(m, "b", domain=i, type="binary")
+    off = gp.formulations.indicator(b[i], 0, x[i, j] <= 0, native=True)
+    on = gp.formulations.indicator(b[i], 1, x[i, j] >= 2, native=True)
+    model = gp.Model(
+        m,
+        "mod",
+        equations=m.getEquations(),
+        problem="MIP",
+        sense="min",
+        objective=Sum([i, j], x[i, j]),
+    )
+
+    indicators = model.getModelInstance().indicators
+    off_name = off.equations_created["indicator"].name
+    on_name = on.equations_created["indicator"].name
+    assert indicators.to_dict("list") == {
+        "equation": [
+            f"{off_name}(i1,j1)",
+            f"{off_name}(i1,j2)",
+            f"{off_name}(i2,j1)",
+            f"{off_name}(i2,j2)",
+            f"{on_name}(i1,j1)",
+            f"{on_name}(i1,j2)",
+            f"{on_name}(i2,j1)",
+            f"{on_name}(i2,j2)",
+        ],
+        "variable": ["b(i1)", "b(i1)", "b(i2)", "b(i2)"] * 2,
+        "value": [0] * 4 + [1] * 4,
+    }
+
+    b.fx["i1"] = 1
+    with pytest.raises(ValidationError, match="hold_fixed_variables"):
+        model.getModelInstance(gp.Options(hold_fixed_variables=True))
+
+
+def test_model_instance_frozen():
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i1", "i2"])
+    q = gp.Parameter(m, "q", domain=i, records=[("i1", 1), ("i2", 2)])
+    w = gp.Variable(m, "w", domain=i)
+    g = gp.Equation(m, "g", domain=i)
+    g[i] = w[i] >= q[i]
+    model = gp.Model(
+        m, "lp", equations=[g], problem="LP", sense="min", objective=Sum(i, w[i])
+    )
+    model.freeze(modifiables=[q])
+
+    assert model.getModelInstance().equations["rhs"].tolist() == [1.0, 2.0, 0.0]
+
+    q.setRecords([("i1", 7), ("i2", 7)])
+    model.solve()
+    assert model.objective_value == 14.0
+    model.unfreeze()
