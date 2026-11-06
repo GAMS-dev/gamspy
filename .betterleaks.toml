@@ -1,0 +1,15 @@
+title = "gamspy betterleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "gams-access-code"
+description = "GAMS access code"
+regex = '''(?:^|[^0-9A-Za-z])([0-9A-Za-z]{8}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{12})(?:[^0-9A-Za-z]|$)'''
+filter = '''
+finding["secret"] in [
+    "876e5812-1222-4aba-819d-e1e91b7e2f52",
+    "a4907087-2ff2-4c91-ade4-a7909647d768",
+]
+'''

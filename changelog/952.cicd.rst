@@ -1,0 +1,1 @@
+Replace the unmaintained detect-secrets pre-commit hook with betterleaks and add a hook that flags code run at interpreter startup from site-packages.
