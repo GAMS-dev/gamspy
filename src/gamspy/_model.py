@@ -30,6 +30,7 @@ from gamspy._convert import (
 )
 from gamspy._frozen_model import FrozenModel
 from gamspy._internals import ATTR_PREFIX, MODEL_ATTRIBUTE_MAP, DataSource
+from gamspy._model_instance import ModelInstance, generate_model_instance
 from gamspy._options import (
     EXECUTION_OPTIONS,
     INDICATOR_SOLVERS,
@@ -1489,6 +1490,49 @@ class Model:
 
         return "\n".join(listings)
 
+    def getModelInstance(self, options: Options | None = None) -> ModelInstance:
+        """
+        Generates the model instance with the current data without solving it.
+
+        Parameters
+        ----------
+        options : Options | None, optional
+            GAMSPy options, by default None
+
+        Returns
+        -------
+        ModelInstance
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> p = gp.Parameter(m, "p", domain=i, records=[("i1", 2), ("i2", 3)])
+        >>> x = gp.Variable(m, "x", domain=i, type="positive")
+        >>> e = gp.Equation(m, "e", domain=i)
+        >>> e[i] = p[i] * x[i] >= 5
+        >>> model = gp.Model(m, "test", equations=[e], problem="LP", sense="MIN", objective=gp.Sum(i, x[i]))
+        >>> instance = model.getModelInstance()
+        >>> instance.equations
+                     name type  rhs  nonlinear
+        0           e(i1)  =G=  5.0      False
+        1           e(i2)  =G=  5.0      False
+        2  test_objective  =E=  0.0      False
+        >>> instance.jacobian[instance.jacobian.equation == "e(i2)"]
+          equation variable  coefficient  nonlinear
+        1    e(i2)    x(i2)          3.0      False
+
+        """
+        validation.validate_options(options)
+        if options is None:
+            options = self.container._options
+
+        validation.validate_equations(self)
+        self._validate_fixed_indicators(options)
+
+        return generate_model_instance(self, options)
+
     def interrupt(self) -> None:
         """
         Sends interrupt signal to the running job.
@@ -1675,6 +1719,9 @@ class Model:
                 "Native indicator constraints are not supported on NEOS Server."
             )
 
+        self._validate_fixed_indicators(options)
+
+    def _validate_fixed_indicators(self, options: Options) -> None:
         if options.hold_fixed_variables:
             for equation in self._indicator_equations:
                 assert equation._indicator is not None

@@ -633,6 +633,19 @@ def validate_model_name(name: str) -> str:
     return name
 
 
+def validate_options(options: Options | None) -> None:
+    if not get_option("VALIDATION") or options is None:
+        return
+
+    if not isinstance(options, Options):
+        raise TypeError(f"`options` must be of type Option but found {type(options)}")
+
+    if options.monitor_process_tree_memory:
+        raise ValidationError(
+            "`monitor_process_tree_memory` can only be set on container creation!"
+        )
+
+
 def validate_solver_args(
     system_directory: str,
     backend: Literal["local", "engine", "neos"],
@@ -644,17 +657,7 @@ def validate_solver_args(
     if not get_option("VALIDATION"):
         return
 
-    # Check validity of options
-    if options is not None:
-        if not isinstance(options, Options):
-            raise TypeError(
-                f"`options` must be of type Option but found {type(options)}"
-            )
-        else:
-            if options.monitor_process_tree_memory:
-                raise ValidationError(
-                    "`monitor_process_tree_memory` can only be set on container creation!"
-                )
+    validate_options(options)
 
     # Check validity of output
     if output is not None and (

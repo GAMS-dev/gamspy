@@ -652,6 +652,138 @@ solve_status           Indicates the solver termination condition
 solver_version         Solver version
 ====================== ===========================
 
+.. _inspecting_model_instance:
+
+Inspecting The Model Instance
+=============================
+
+A GAMSPy model is written algebraically, e.g. ``supply[i] = Sum(j, x[i, j]) <= a[i]``. Before a solver can work on it,
+GAMS generates the *model instance* (see :ref:`whatisgamspy`): every indexed equation and variable is expanded into
+scalar rows and columns, sums are unrolled, conditions are evaluated, and the parameters are replaced by their current values.
+:meth:`getModelInstance <gamspy.Model.getModelInstance>` generates this instance without solving it and returns it as a
+:meth:`ModelInstance <gamspy.ModelInstance>` that holds four pandas DataFrames.
+
+It answers questions such as "did my condition remove the rows I expected?", "does this new bound actually reach the model?",
+or "what changed in the model after I updated the data?", without reading a listing file or calling a solver. The tabular
+format also makes it easy to inspect programmatically, for example by scripts or by AI coding assistants.
+
+Take the transport model with two plants ``i`` and three markets ``j``: ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["seattle", "san-diego"])
+    j = gp.Set(m, "j", records=["new-york", "chicago", "topeka"])
+    a = gp.Parameter(m, "a", domain=i, records=[["seattle", 350], ["san-diego", 600]])
+    b = gp.Parameter(m, "b", domain=j, records=[["new-york", 325], ["chicago", 300], ["topeka", 275]])
+    c = gp.Parameter(m, "c", domain=[i, j], records=[
+        ["seattle", "new-york", 0.225], ["seattle", "chicago", 0.153], ["seattle", "topeka", 0.162],
+        ["san-diego", "new-york", 0.225], ["san-diego", "chicago", 0.162], ["san-diego", "topeka", 0.126],
+    ])
+    x = gp.Variable(m, "x", domain=[i, j], type="positive")
+    supply = gp.Equation(m, "supply", domain=i)
+    demand = gp.Equation(m, "demand", domain=j)
+    supply[i] = gp.Sum(j, x[i, j]) <= a[i]
+    demand[j] = gp.Sum(i, x[i, j]) >= b[j]
+    transport = gp.Model(
+        m,
+        "transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense="min",
+        objective=gp.Sum((i, j), c[i, j] * x[i, j]),
+    )
+
+    instance = transport.getModelInstance()
+
+::
+
+    In [1]: instance
+    Out[1]: ModelInstance(equations=6, variables=7, nonzeros=19)
+
+    In [2]: instance.equations
+    Out[2]:
+                      name type    rhs  nonlinear
+    0      supply(seattle)  =L=  350.0      False
+    1    supply(san-diego)  =L=  600.0      False
+    2     demand(new-york)  =G=  325.0      False
+    3      demand(chicago)  =G=  300.0      False
+    4       demand(topeka)  =G=  275.0      False
+    5  transport_objective  =E=    0.0      False
+
+    In [3]: instance.variables
+    Out[3]:
+                               name        type  lower  upper  level
+    0           x(seattle,new-york)  continuous    0.0    inf    0.0
+    1            x(seattle,chicago)  continuous    0.0    inf    0.0
+    2             x(seattle,topeka)  continuous    0.0    inf    0.0
+    3         x(san-diego,new-york)  continuous    0.0    inf    0.0
+    4          x(san-diego,chicago)  continuous    0.0    inf    0.0
+    5           x(san-diego,topeka)  continuous    0.0    inf    0.0
+    6  transport_objective_variable  continuous   -inf    inf    0.0
+
+    In [4]: instance.jacobian[instance.jacobian.equation == "demand(chicago)"]
+    Out[4]:
+              equation              variable  coefficient  nonlinear
+    8  demand(chicago)    x(seattle,chicago)          1.0      False
+    9  demand(chicago)  x(san-diego,chicago)          1.0      False
+
+The DataFrames contain the following columns:
+
+=============== ==================================================================================================
+DataFrame       Columns
+=============== ==================================================================================================
+``equations``   ``name``, ``type`` (``=E=``, ``=G=``, ``=L=``, ``=N=``, ``=X=``, ``=C=``, ``=B=``), ``rhs``, and
+                ``nonlinear``, which is ``True`` if the row has at least one nonlinear term.
+``variables``   ``name``, ``type`` (``continuous``, ``binary``, ``integer``, ``sos1``, ``sos2``, ``semicont``,
+                ``semiint``), ``lower``, ``upper``, and ``level``.
+``jacobian``    One row per nonzero coefficient: ``equation``, ``variable``, ``coefficient``, and ``nonlinear``.
+``indicators``  One row per native indicator constraint: ``equation``, ``variable``, and ``value``. The equation
+                is enforced only when the binary ``variable`` equals ``value``.
+=============== ==================================================================================================
+
+The model instance reflects the data at the time of the call. For example, to check that a new bound reaches the model: ::
+
+    In [5]: x.up["seattle", "chicago"] = 0
+
+    In [6]: variables = transport.getModelInstance().variables
+
+    In [7]: variables[variables.name == "x(seattle,chicago)"]
+    Out[7]:
+                     name        type  lower  upper  level
+    1  x(seattle,chicago)  continuous    0.0    0.0    0.0
+
+Since the instance is plain pandas, two instances can be compared with the usual pandas tools. The following
+example shows which right-hand sides change if the demand in Chicago drops to zero: ::
+
+    In [8]: before = transport.getModelInstance()
+
+    In [9]: b["chicago"] = 0
+
+    In [10]: after = transport.getModelInstance()
+
+    In [11]: diff = before.equations.merge(after.equations, on="name", suffixes=("_before", "_after"))
+
+    In [12]: diff.loc[diff.rhs_before != diff.rhs_after, ["name", "rhs_before", "rhs_after"]]
+    Out[12]:
+                  name  rhs_before  rhs_after
+    3  demand(chicago)       300.0        0.0
+
+Things to keep in mind when reading a model instance:
+
+- If the objective is an expression, GAMSPy adds an objective equation and an objective variable to the model, so they appear
+  in the instance as well. :meth:`ModelInstance.objective_variable <gamspy.ModelInstance>` holds the name of the objective
+  variable. For models without an objective, such as MCP or CNS, it is ``None``.
+- Positive, negative, and free variables are all ``continuous`` in the instance. They differ only in their ``lower`` and ``upper`` bounds.
+- A variable appears in the instance only if it appears in at least one generated equation, and an equation row is generated
+  only for the domain elements that pass its conditions.
+- For a nonlinear term, ``coefficient`` is the derivative evaluated at the current levels of the variables, and ``nonlinear``
+  is ``True``. For example, with ``y.l = 3`` the equation ``sqr(y) + y >= 4`` gives a coefficient of ``7`` (``2 * 3 + 1``) for ``y``.
+  The nonlinear expression itself is not part of the instance. Use :meth:`convert <gamspy.Model.convert>` with
+  :meth:`FileFormat.GAMS <gamspy.FileFormat>` to see it in scalar form.
+- Generating the instance takes about as long as the generation step of a :meth:`solve <gamspy.Model.solve>`, so for large
+  models it is not free. It is only available for the local backend.
+
 Converting A Model To A Scalar Format
 =====================================
 :meth:`gamspy.Model.convert` transforms a GAMSPy model instance into a scalar model where all confidential information 
