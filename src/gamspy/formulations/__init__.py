@@ -13,6 +13,7 @@ from gamspy.formulations.general_constraints import (
     logical_xor,
     maximum,
     minimum,
+    reify,
 )
 from gamspy.formulations.ml import (
     DecisionTreeStruct,
@@ -61,6 +62,7 @@ __all__ = [
     "maximum",
     "minimum",
     "PWLCurve",
+    "reify",
     "RandomForest",
     "RegressionTree",
     "TorchSequential",
