@@ -1,0 +1,1 @@
+Add reify formulation to gamspy.formulations for creating a binary variable that indicates whether a constraint holds.

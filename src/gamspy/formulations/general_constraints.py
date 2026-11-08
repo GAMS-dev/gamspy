@@ -41,22 +41,24 @@ def _domain_names(domain: Sequence[DomainElementType]) -> set[str]:
     return {_domain_name(set_) for set_ in domain}
 
 
-def _validate_big_m(big_m: BigMType | None, controlled: set[str]) -> None:
+def _validate_big_m(
+    big_m: BigMType | None, controlled: set[str], name: str = "big_m"
+) -> None:
     if big_m is None:
         return
 
     if isinstance(
         big_m, (gp.Variable, ImplicitVariable, gp.Set, gp.Alias, ImplicitSet)
     ):
-        raise ValidationError("big_m cannot be a variable or a set")
+        raise ValidationError(f"{name} cannot be a variable or a set")
 
     if isinstance(big_m, Expression) and big_m.operator in _RELATIONAL_OPERATORS:
-        raise ValidationError("big_m cannot be an inequality or equality")
+        raise ValidationError(f"{name} cannot be an inequality or equality")
 
     if isinstance(big_m, Operable):
         if not _domain_names(big_m.domain) <= controlled:  # ty: ignore[unresolved-attribute]
             raise ValidationError(
-                "The domain of big_m must be a subset of the domain of the constraint"
+                f"The domain of {name} must be a subset of the domain of the constraint"
             )
         return
 
@@ -67,7 +69,7 @@ def _validate_big_m(big_m: BigMType | None, controlled: set[str]) -> None:
         or big_m <= 0
     ):
         raise ValidationError(
-            "big_m must be a positive finite number, a parameter expression or None"
+            f"{name} must be a positive finite number, a parameter expression or None"
         )
 
 
@@ -227,6 +229,14 @@ def _add_sos1_pair(m: gp.Container, domain: NormalizedDomainType) -> gp.Variable
         domain=[*domain, sos_dim],
         type="sos1",
     )
+
+
+def _add_symbols(result: FormulationResult, other: FormulationResult, key: str) -> None:
+    # key is a format string for the names in result, e.g. "{}_0"
+    for name, variable in other.variables_created.items():
+        result.variables_created[key.format(name)] = variable
+    for name, equation in other.equations_created.items():
+        result.equations_created[key.format(name)] = equation
 
 
 def _add_equation(
@@ -567,10 +577,7 @@ def _extremum(
             m, declaration, equation_index, bound, None
         )
         selection = indicator(select, 1, selected, big_m=big_m, native=native)
-        for name, variable in selection.variables_created.items():
-            result.variables_created[f"{name}_{k}"] = variable
-        for name, equation in selection.equations_created.items():
-            result.equations_created[f"{name}_{k}"] = equation
+        _add_symbols(result, selection, f"{{}}_{k}")
 
         selections.append(
             gp.Sum(reduced_domain, select)  # ty: ignore[invalid-argument-type]
@@ -1156,3 +1163,155 @@ def logical_eqv(left: BinaryType, right: BinaryType) -> FormulationResult:
 
     """
     return _logical_pair("eqv", left, right)
+
+
+def reify(
+    expr: Expression | Condition,
+    *,
+    epsilon: int | float | Operable,
+    big_m: BigMType | None = None,
+    native: bool = False,
+) -> FormulationResult:
+    """
+    Creates a binary variable ``y`` that is 1 if and only if the constraint
+    ``expr`` holds, i.e. ``y == 1  <=>  expr``. ``y`` can be used like any
+    binary variable, e.g. as an operand of :meth:`logical_or
+    <gamspy.formulations.logical_or>` or summed up to count the constraints
+    that hold.
+
+    A MIP cannot express that a constraint is violated, e.g. ``lhs > rhs``
+    for ``lhs <= rhs``, so the violation must be at least ``epsilon``. Values
+    of ``lhs - rhs`` strictly between 0 and ``epsilon`` become infeasible. If
+    ``lhs - rhs`` only takes integer values, ``epsilon=1`` is exact.
+    Otherwise, ``epsilon`` must be more than twice the feasibility tolerance
+    of the solver, or ``y`` can take either value near the boundary.
+
+    For a ``<=`` constraint, the formulation consists of two indicator
+    constraints that are modeled with :meth:`indicator
+    <gamspy.formulations.indicator>`:
+
+    .. math::
+        y = 1 \\implies lhs \\leq rhs
+
+        y = 0 \\implies lhs \\geq rhs + \\epsilon
+
+    ``>=`` constraints are handled symmetrically. For an equality, the
+    violation can have either sign, so two additional binary variables
+    :math:`a` and :math:`b` select it:
+
+    .. math::
+        y = 1 \\implies lhs = rhs
+
+        a = 1 \\implies lhs \\geq rhs + \\epsilon
+
+        b = 1 \\implies lhs \\leq rhs - \\epsilon
+
+        y + a + b = 1
+
+    ``big_m`` and ``native`` are passed to :meth:`indicator
+    <gamspy.formulations.indicator>`. ``big_m`` must be valid for both
+    directions, which holds if it is at least ``max(abs(lhs - rhs)) +
+    epsilon``.
+
+    ``y`` has the domain of ``expr``. If ``expr`` has a condition or is
+    indexed with a multidimensional subset, ``y`` is only constrained for
+    the corresponding elements.
+
+    FormulationResult:
+        - variables_created: ["output"] and, for equalities, ["above", "below"] for :math:`a` and :math:`b`
+        - equations_created: ["pick_one"] for equalities
+        - The symbols of the indicator constraints are prefixed with ``holds_`` for :math:`y = 1` and ``violated_`` otherwise, e.g. ``holds_big_m`` and ``violated_big_m``. For equalities, the ``violated_`` keys are suffixed with ``_0`` for :math:`a` and ``_1`` for :math:`b`.
+
+    Parameters
+    ----------
+    expr : Expression | Condition
+        Constraint in the form of ``lhs <= rhs``, ``lhs >= rhs`` or ``lhs == rhs``,
+        optionally with a condition.
+    epsilon : int | float | Operable
+        Smallest violation of ``expr`` when ``y`` is 0.
+    big_m : int | float | Operable | None, optional
+        Big-M value of the indicator constraints.
+    native : bool, optional
+        Pass the indicator constraints to the solver instead of reformulating
+        them.
+
+    Returns
+    -------
+    FormulationResult
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=range(3))
+    >>> x = gp.Variable(m, "x", type="integer", domain=i)
+    >>> met, eqs = gp.formulations.reify(x >= 5, epsilon=1)
+    >>> [d.name for d in met.domain]
+    ['i']
+    >>> res = gp.formulations.reify(x <= 5, epsilon=1, big_m=100)
+    >>> list(res.equations_created)
+    ['holds_big_m', 'violated_big_m']
+    >>> res = gp.formulations.reify(x == 5, epsilon=1, big_m=100)
+    >>> list(res.variables_created)
+    ['output', 'above', 'below']
+
+    """
+    constraint = expr
+    condition = None
+    if isinstance(expr, Condition):
+        condition = expr.condition
+        expr = expr.conditioning_on  # ty: ignore[invalid-assignment]
+
+    if not isinstance(expr, Expression) or expr.operator not in _RELATIONAL_OPERATORS:
+        raise ValidationError("expr needs to be inequality or equality")
+
+    m = expr.container
+    if m is None:
+        raise ValidationError("expr must contain a parameter or a variable")
+
+    domain = _index_sets(expr.domain)
+    var_index, _, controlled = _control_index(domain)
+    _validate_big_m(epsilon, controlled, "epsilon")
+    _validate_big_m(big_m, controlled)
+    if native and big_m is not None:
+        raise ValidationError("big_m cannot be used with native=True")
+
+    lhs_minus_rhs: Expression = expr.left - expr.right  # ty: ignore[unsupported-operator]
+    if expr.operator == "=l=":
+        negations = [lhs_minus_rhs >= epsilon]
+    elif expr.operator == "=g=":
+        negations = [lhs_minus_rhs <= -epsilon]
+    else:
+        negations = [lhs_minus_rhs >= epsilon, lhs_minus_rhs <= -epsilon]
+    if condition is not None:
+        negations = [negation.where[condition] for negation in negations]
+
+    result, output, declaration, equation_index = _add_output(m, domain, "binary")
+    holds = indicator(output, 1, constraint, big_m=big_m, native=native)
+    _add_symbols(result, holds, "holds_{}")
+
+    if len(negations) == 1:
+        violated = indicator(output, 0, negations[0], big_m=big_m, native=native)
+        _add_symbols(result, violated, "violated_{}")
+        return result
+
+    selections: list[gp.Variable | ImplicitVariable] = []
+    for k, (name, negation) in enumerate(zip(("above", "below"), negations)):
+        select_var = m.addVariable(
+            name=gp.utils._get_unique_name(name), type="binary", domain=declaration
+        )
+        select = select_var[var_index] if var_index else select_var
+        result.variables_created[name] = select_var
+        violated = indicator(select, 1, negation, big_m=big_m, native=native)
+        _add_symbols(result, violated, f"violated_{{}}_{k}")
+        selections.append(select)
+
+    result.equations_created["pick_one"] = _add_equation(
+        m,
+        declaration,
+        equation_index,
+        output + selections[0] + selections[1] == 1,
+        condition,
+    )
+
+    return result
