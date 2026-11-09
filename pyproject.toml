@@ -68,7 +68,7 @@ explicit = true
 
 [tool.ty.rules]
 invalid-method-override = "ignore"  # Some overrides do not match the signature of equivalent gtp functions.
-unresolved-import = "ignore"  # Needed for optional torch dependency
+import-not-found = "ignore"  # Needed for optional torch dependency
 
 [dependency-groups]
 dev = [
