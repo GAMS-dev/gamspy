@@ -939,6 +939,46 @@ def test_domain_violation(directory):
     assert process.returncode == 0, process.stderr
 
 
+def test_drop_domain_violations(tmp_path):
+    gdx_in = tmp_path / "miro_in.gdx"
+    c = Container()
+    i = Set(c, "i", records=["a", "b", "zz"])
+    Parameter(c, "p", domain=i, records=[("a", 1), ("zz", 2)])
+    Parameter(c, "q", domain=i, records=[("b", 3)])
+    c.write(str(gdx_in))
+
+    script = tmp_path / "model.py"
+    script.write_text(
+        "import gamspy as gp\n"
+        "from gamspy.exceptions import DomainViolationError\n"
+        "m = gp.Container()\n"
+        "i = gp.Set(m, 'i', records=['a', 'b'])\n"
+        "p = gp.Parameter(m, 'p', domain=i, is_miro_input=True, drop_domain_violations=True)\n"
+        "assert p.toList() == [('a', 1.0)], p.toList()\n"
+        "m2 = gp.Container()\n"
+        "i = gp.Set(m2, 'i', records=['a', 'b'])\n"
+        "try:\n"
+        "    gp.Parameter(m2, 'p', domain=i, is_miro_input=True)\n"
+        "except DomainViolationError as e:\n"
+        "    assert e.violations['p'].values.tolist() == [['zz', 2.0]]\n"
+        "p = m2['p']\n"
+        "q = gp.Parameter(m2, 'q', domain=i, is_miro_input=True)\n"
+        "r = gp.Parameter(m2, 'r', domain=i)\n"
+        "r[i] = p[i] + q[i]\n"
+        "assert p.toList() == [], p.toList()\n"
+        "assert r.toList() == [('b', 3.0)], r.toList()\n"
+    )
+    process = subprocess.run(
+        [sys.executable, script],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "GAMS_IDC_GDX_INPUT": str(gdx_in)},
+        cwd=tmp_path,
+    )
+
+    assert process.returncode == 0, process.stderr
+
+
 def test_duplicate_domain():
     c = Container()
     i = Set(c, "i")

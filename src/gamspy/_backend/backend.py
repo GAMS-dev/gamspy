@@ -115,6 +115,7 @@ class Backend(ABC):
         self.pf_file = self.job_name + ".pf"
         self.restart_file = self.job_name + ".g00"
         self.trace_file = self.job_name + ".txt"
+        self.symbol_names: list[str] = []
 
     @abstractmethod
     def is_async(self) -> bool: ...
@@ -138,6 +139,7 @@ class Backend(ABC):
 
     def preprocess(self) -> str:
         symbol_names = self.container._symbols_to_unload()
+        self.symbol_names = symbol_names
 
         if len(symbol_names) != 0:
             self.container._write(

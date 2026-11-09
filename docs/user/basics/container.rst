@@ -201,6 +201,112 @@ update multiple symbols in a single transaction.
             k = gp.Set(m)
             m.setRecords({i: range(10), k: range(5)})
 
+.. _domain_violations:
+
+Handling Domain Violations
+--------------------------
+
+A record has a *domain violation* when one of its labels is not an element of the
+corresponding domain set. Typical causes are typos in the input data, input files that
+cover more elements than the model uses, and domain sets that change after the data was
+set. GAMS checks the domain when it loads the records, so the check adds no work in
+Python when the data is clean.
+
+By default, records with domain violations are rejected with a
+:class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`. Its
+``violations`` attribute maps the name of each offending symbol to the records that
+violate the domain:
+
+.. code-block:: python
+
+    import gamspy as gp
+    from gamspy.exceptions import DomainViolationError
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["seattle", "san-diego"])
+    j = gp.Set(m, "j", records=["new-york", "chicago", "topeka"])
+
+    try:
+        d = gp.Parameter(
+            m,
+            "d",
+            domain=[i, j],
+            records=[
+                ("seattle", "new-york", 2.5),
+                ("seattle", "chicag0", 1.7),
+                ("san-diego", "topeka", 1.4),
+            ],
+        )
+    except DomainViolationError as e:
+        print(e.violations["d"])
+
+.. code-block:: text
+
+             i        j  value
+    1  seattle  chicag0    1.7
+
+If the input data is expected to contain records outside the domain, pass
+``drop_domain_violations=True`` to drop them while loading. The argument is available
+in the symbol constructors, ``setRecords`` and
+:meth:`Container.setRecords <gamspy.Container.setRecords>`:
+
+.. code-block:: python
+
+    d = gp.Parameter(
+        m,
+        "d",
+        domain=[i, j],
+        records=[
+            ("seattle", "new-york", 2.5),
+            ("seattle", "chicag0", 1.7),
+            ("san-diego", "topeka", 1.4),
+        ],
+        drop_domain_violations=True,
+    )
+    print(d.toList())
+
+.. code-block:: text
+
+    [('seattle', 'new-york', 2.5), ('san-diego', 'topeka', 1.4)]
+
+Dropping is silent, so a misspelled label like ``chicag0`` above disappears without
+notice. To keep track of what is dropped, set the records without the argument first,
+report the violations, and then retry with ``drop_domain_violations=True``:
+
+.. code-block:: python
+
+    records = [("seattle", "new-york", 2.5), ("boston", "chicago", 1.7)]
+    try:
+        d.setRecords(records)
+    except DomainViolationError as e:
+        for name, rows in e.violations.items():
+            print(f"Dropping {len(rows)} record(s) of {name}")
+        d.setRecords(records, drop_domain_violations=True)
+
+.. note::
+    After a ``DomainViolationError``, the symbols with violations keep their previous
+    records and the other symbols of the call are set. If the previous records were
+    computed by GAMS and not read yet, the symbol may hold the valid part of the rejected
+    records instead, so set its records again before using it.
+
+Domain violations can also appear after the records were set, for example when a domain
+set loses elements. :meth:`findDomainViolations <gamspy.Parameter.findDomainViolations>`
+returns the offending records of a symbol at any time:
+
+.. code-block:: python
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["seattle", "san-diego"])
+    a = gp.Parameter(m, "a", domain=i, records=[("seattle", 350), ("san-diego", 600)])
+
+    i.setRecords(["seattle"])
+    print(a.findDomainViolations())
+
+.. code-block:: text
+
+               i  value
+    1  san-diego  600.0
+
 Input / Output (GDX)
 ====================
 

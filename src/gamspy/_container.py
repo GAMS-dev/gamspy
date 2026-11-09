@@ -45,7 +45,7 @@ from gamspy._model import Problem, Sense
 from gamspy._options import write_solver_options
 from gamspy._symbols.base import BaseSymbol
 from gamspy._workspace import Workspace
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import DomainViolationError, GamspyException, ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Iterator, Sequence
@@ -84,6 +84,15 @@ MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
 is_windows = platform.system() == "Windows"
 
 _SymbolT = TypeVar("_SymbolT", bound="SymbolType")
+
+
+def _loads_from_miro(symbol: DataSymbol) -> bool:
+    return (
+        type(symbol) in (gp.Set, gp.Parameter)
+        and symbol._is_miro_input
+        and not IS_MIRO_INIT
+        and bool(MIRO_GDX_IN)
+    )
 
 
 class _Bypassable(Protocol):
@@ -1515,7 +1524,20 @@ class Container:
             return None
 
         runner = backend_factory(self, self._options, output=self.output)
-        summary = runner.run()
+        statements = self._unsaved_statements
+        try:
+            summary = runner.run()
+        except GamspyException as exception:
+            self._raise_domain_violations(exception, runner.symbol_names, statements)
+            raise
+
+        for name in runner.symbol_names:
+            symbol = self._data.get(name)
+            if isinstance(symbol, (gp.Set, gp.Parameter, gp.Variable, gp.Equation)):
+                symbol._previous_records = None
+                if symbol._drop_domain_violations:
+                    # GAMS filtered the records while loading them.
+                    symbol._should_load_from = DataSource.GAMS
 
         if self._options and self._options.seed is not None:
             # Required for correct seeding. Seed can only be set in the first run.
@@ -1525,6 +1547,68 @@ class Container:
             miro._write_default_gdx_miro(self)
 
         return summary
+
+    def _raise_domain_violations(
+        self,
+        exception: GamspyException,
+        symbol_names: list[str],
+        statements: list,
+    ) -> None:
+        loadable = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
+        loaded = [
+            cast("DataSymbol", symbol)
+            for name in symbol_names
+            if isinstance(symbol := self._data.get(name), loadable)
+        ]
+        miro_inputs = {s.name: s for s in loaded if _loads_from_miro(s)}
+        python_records = {name: s._records for name, s in miro_inputs.items()}
+        if miro_inputs:
+            try:
+                miro_records = gdxio.get_records(
+                    self, cast("str", MIRO_GDX_IN), list(miro_inputs)
+                )
+            except ValueError:
+                miro_records = {}
+
+            for name, symbol in miro_inputs.items():
+                symbol._records = miro_records.get(name)
+
+        violations: dict[str, DataFrame] = {}
+        for symbol in loaded:
+            if symbol._drop_domain_violations:
+                continue
+
+            records = symbol.findDomainViolations()
+            if records is not None and not records.empty:
+                violations[symbol.name] = records
+
+        for name, symbol in miro_inputs.items():
+            symbol._records = None if name in violations else python_records[name]
+
+        if not violations:
+            return
+
+        # A rejected $loadDC drops the job's declarations and statements but keeps
+        # the valid rows it loaded. Rerun the job with the previous records of the
+        # violating symbols.
+        self._unsaved_statements = statements + self._unsaved_statements
+        for symbol in loaded:
+            if symbol.name in violations and symbol.name in miro_inputs:
+                # Otherwise the next job loads the MIRO records with $gdxLoad,
+                # which drops the violations silently.
+                cast("Set | Parameter", symbol)._already_loaded = True
+                symbol._should_unload_to_gams = False
+                symbol._should_load_from = DataSource.GAMS
+            elif symbol.name in violations and not symbol._restore_records():
+                symbol._should_unload_to_gams = False
+                symbol._should_load_from = DataSource.GAMS
+
+            symbol._previous_records = None
+
+        self._synch_with_gams()
+        raise DomainViolationError(
+            str(exception), exception.return_code, violations
+        ) from exception
 
     def _generate_gams_string(self, gdx_in: str, symbol_names: list[str]) -> str:
         LOADABLE = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
@@ -1536,7 +1620,6 @@ class Container:
             gp.Alias,
             gp.UniverseAlias,
         )
-        MIRO_INPUT_TYPES = (gp.Set, gp.Parameter)
         assume_suffix = int(get_option("ASSUME_VARIABLE_SUFFIX"))
 
         strings = ["$onMultiR", "$onUNDF"]
@@ -1583,14 +1666,15 @@ class Container:
             if loadables:
                 strings.append(f"$gdxIn {gdx_in}")
                 for loadable in loadables:
-                    if (
-                        type(loadable) in MIRO_INPUT_TYPES
-                        and loadable._is_miro_input
-                        and not IS_MIRO_INIT
-                        and MIRO_GDX_IN
-                    ):
-                        miro_load = miro.get_load_input_str(loadable.name, gdx_in)
+                    if _loads_from_miro(loadable):
+                        miro_load = miro.get_load_input_str(
+                            loadable.name,
+                            gdx_in,
+                            drop_violations=loadable._drop_domain_violations,
+                        )
                         strings.append(miro_load)
+                    elif loadable._drop_domain_violations:
+                        strings.append(f"$load {loadable.name}")
                     else:
                         strings.append(f"$loadDC {loadable.name}")
 
@@ -1899,7 +1983,11 @@ class Container:
         self._read(load_from, symbol_names, encoding)
 
     def setRecords(
-        self, records: dict[SymbolType, Any], *, uels_on_axes: bool | list[bool] = False
+        self,
+        records: dict[SymbolType, Any],
+        *,
+        uels_on_axes: bool | list[bool] = False,
+        drop_domain_violations: bool = False,
     ) -> None:
         """
         Set records for multiple symbols in a single batch operation.
@@ -1918,6 +2006,10 @@ class Container:
         uels_on_axes : bool | list[bool], optional
             Whether domain labels (UELs) are stored on pandas axes. Either a single
             boolean applied to all symbols, or a list matching ``records`` order.
+        drop_domain_violations : bool, optional
+            If True, records with labels outside the domain are dropped instead of
+            raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+            Default is False.
 
 
         Raises
@@ -1948,7 +2040,15 @@ class Container:
             if isinstance(symbol, gp.UniverseAlias):
                 continue
 
-            symbol._setRecords(record, uels_on_axes=uels_on_axe)
+            if isinstance(symbol, gp.Alias):
+                symbol = symbol.alias_with
+
+            symbol._remember_records()
+            symbol._setRecords(
+                record,
+                uels_on_axes=uels_on_axe,
+                drop_domain_violations=drop_domain_violations,
+            )
 
         self._synch_with_gams()
 
@@ -2406,6 +2506,8 @@ $endIf
         uels_on_axes: bool = False,
         is_miro_input: bool = False,
         is_miro_output: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> Set:
         """
         Creates a Set and adds it to the container.
@@ -2431,6 +2533,10 @@ $endIf
             Whether the symbol is a GAMS MIRO input symbol. See: https://gams.com/miro/tutorial.html
         is_miro_output : bool
             Whether the symbol is a GAMS MIRO output symbol. See: https://gams.com/miro/tutorial.html
+        drop_domain_violations : bool, optional
+            If True, records with labels outside the domain are dropped instead of
+            raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+            Default is False.
 
         Returns
         -------
@@ -2480,6 +2586,7 @@ $endIf
             uels_on_axes,
             is_miro_input=is_miro_input,
             is_miro_output=is_miro_output,
+            drop_domain_violations=drop_domain_violations,
         )
 
     def addParameter(
@@ -2493,6 +2600,8 @@ $endIf
         is_miro_input: bool = False,
         is_miro_output: bool = False,
         is_miro_table: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> Parameter:
         """
         Creates a Parameter and adds it to the Container
@@ -2518,6 +2627,10 @@ $endIf
             Whether the symbol is a GAMS MIRO output symbol. See: https://gams.com/miro/tutorial.html
         is_miro_table : bool
             Whether the symbol is a GAMS MIRO table symbol. See: https://gams.com/miro/tutorial.html
+        drop_domain_violations : bool, optional
+            If True, records with labels outside the domain are dropped instead of
+            raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+            Default is False.
 
         Returns
         -------
@@ -2552,6 +2665,7 @@ $endIf
             is_miro_input=is_miro_input,
             is_miro_output=is_miro_output,
             is_miro_table=is_miro_table,
+            drop_domain_violations=drop_domain_violations,
         )
 
     def addVariable(
@@ -2564,6 +2678,8 @@ $endIf
         description: str = "",
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> Variable:
         """
         Creates a Variable and adds it to the Container
@@ -2585,6 +2701,10 @@ $endIf
             Description of the variable.
         is_miro_output : bool
             Whether the symbol is a GAMS MIRO output symbol. See: https://gams.com/miro/tutorial.html
+        drop_domain_violations : bool, optional
+            If True, records with labels outside the domain are dropped instead of
+            raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+            Default is False.
 
         Returns
         -------
@@ -2618,6 +2738,7 @@ $endIf
             description,
             uels_on_axes,
             is_miro_output=is_miro_output,
+            drop_domain_violations=drop_domain_violations,
         )
 
     def addEquation(
@@ -2632,6 +2753,8 @@ $endIf
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
         definition_domain: list | None = None,
+        *,
+        drop_domain_violations: bool = False,
     ) -> Equation:
         """
         Creates an Equation and adds it to the Container
@@ -2659,6 +2782,10 @@ $endIf
             Definiton domain of the equation.
         is_miro_output : bool
             Whether the symbol is a GAMS MIRO output symbol. See: https://gams.com/miro/tutorial.html
+        drop_domain_violations : bool, optional
+            If True, records with labels outside the domain are dropped instead of
+            raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+            Default is False.
 
         Returns
         -------
@@ -2694,6 +2821,7 @@ $endIf
             uels_on_axes,
             is_miro_output,
             definition_domain,
+            drop_domain_violations=drop_domain_violations,
         )
 
     def addModel(

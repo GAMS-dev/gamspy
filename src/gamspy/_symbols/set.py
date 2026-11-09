@@ -480,6 +480,10 @@ class Set(operable.Operable, DataSymbol, SetMixin):
         If True, flags this set as an input symbol for GAMS MIRO. Default is False.
     is_miro_output : bool, optional
         If True, flags this set as an output symbol for GAMS MIRO. Default is False.
+    drop_domain_violations : bool, optional
+        If True, records with labels outside the domain are dropped instead of
+        raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+        Default is False.
 
     Examples
     --------
@@ -544,6 +548,8 @@ class Set(operable.Operable, DataSymbol, SetMixin):
         uels_on_axes: bool = False,
         is_miro_input: bool = False,
         is_miro_output: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         if self.is_singleton != is_singleton:
             raise ValueError(
@@ -558,7 +564,11 @@ class Set(operable.Operable, DataSymbol, SetMixin):
             is_miro_input=is_miro_input,
             is_miro_output=is_miro_output,
         )
-        self._redefine_records(records, uels_on_axes=uels_on_axes)
+        self._redefine_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def __init__(
         self,
@@ -572,6 +582,8 @@ class Set(operable.Operable, DataSymbol, SetMixin):
         uels_on_axes: bool = False,
         is_miro_input: bool = False,
         is_miro_output: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         container, name = self._resolve_container_and_name(
             container,
@@ -596,7 +608,11 @@ class Set(operable.Operable, DataSymbol, SetMixin):
             is_miro_input=is_miro_input,
             is_miro_output=is_miro_output,
         )
-        self._init_records(records, uels_on_axes=uels_on_axes)
+        self._init_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def __getitem__(self, indices: IndexType) -> ImplicitSet:
         domain = validation.validate_domain(self, indices)
@@ -833,13 +849,21 @@ class Set(operable.Operable, DataSymbol, SetMixin):
         self._assign_records(records)
 
     def _setRecords(
-        self, records: SetRecordsType, *, uels_on_axes: bool = False
+        self,
+        records: SetRecordsType,
+        *,
+        uels_on_axes: bool = False,
+        drop_domain_violations: bool = False,
     ) -> None:
         SetIngestor(self).ingest(records, uels_on_axes=uels_on_axes)
-        self._handle_domain_violations()
+        self._handle_domain_violations(drop=drop_domain_violations)
 
     def setRecords(
-        self, records: SetRecordsType | None, uels_on_axes: bool = False
+        self,
+        records: SetRecordsType | None,
+        uels_on_axes: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         """
         Sets the records (elements) of the Set.
@@ -860,6 +884,10 @@ class Set(operable.Operable, DataSymbol, SetMixin):
             If True, assumes that the domain information is located in the axes
             (index/columns) of the `records` object rather than the data values.
             Use this when passing a DataFrame where the indices represent the set elements.
+        drop_domain_violations : bool, optional
+            If True, records with labels outside the domain are dropped instead of
+            raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+            Default is False.
 
         Examples
         --------
@@ -871,7 +899,11 @@ class Set(operable.Operable, DataSymbol, SetMixin):
         [['seattle', ''], ['san-diego', '']]
 
         """
-        self._update_records(records, uels_on_axes=uels_on_axes)
+        self._update_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def gamsRepr(self) -> str:
         """

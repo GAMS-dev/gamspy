@@ -147,6 +147,10 @@ class Equation(VarEquSymbol):
         contained in the axes (index/columns) of the provided `records` object.
     is_miro_output : bool, optional
         If True, flags this equation as an output symbol for GAMS MIRO. Default is False.
+    drop_domain_violations : bool, optional
+        If True, records with labels outside the domain are dropped instead of
+        raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+        Default is False.
 
     Examples
     --------
@@ -227,6 +231,8 @@ class Equation(VarEquSymbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
         definition_domain: list | None = None,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         type = cast_type(type)
         if self.type != type.casefold():
@@ -250,7 +256,11 @@ class Equation(VarEquSymbol):
         with self._miro_unprotected():
             self._init_definition(definition)
 
-        self._redefine_records(records, uels_on_axes=uels_on_axes)
+        self._redefine_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def __init__(
         self,
@@ -265,6 +275,8 @@ class Equation(VarEquSymbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
         definition_domain: list | None = None,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         container, name = self._resolve_container_and_name(
             container, name, prefix="e", is_miro=is_miro_output
@@ -284,7 +296,11 @@ class Equation(VarEquSymbol):
         )
         self._init_definition(definition)
         self._init_attributes()
-        self._init_records(records, uels_on_axes=uels_on_axes)
+        self._init_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def _init_definition_state(self, definition_domain: list | None) -> None:
         self._definition: Expression | None = None
@@ -930,7 +946,11 @@ class Equation(VarEquSymbol):
         return id(self)
 
     def setRecords(
-        self, records: VarEquRecordsType | None, uels_on_axes: bool = False
+        self,
+        records: VarEquRecordsType | None,
+        uels_on_axes: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         """
         Sets the records (data) of the Equation.
@@ -946,6 +966,10 @@ class Equation(VarEquSymbol):
             whatever order they appear in. Omitted attributes take their default.
         uels_on_axes : bool, optional
             If True, assumes domain elements are in the axes of the DataFrame. Default is False.
+        drop_domain_violations : bool, optional
+            If True, records with labels outside the domain are dropped instead of
+            raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+            Default is False.
 
         Examples
         --------
@@ -960,7 +984,11 @@ class Equation(VarEquSymbol):
         np.float64(5.0)
 
         """
-        self._update_records(records, uels_on_axes=uels_on_axes)
+        self._update_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     @property
     def _default_records(self) -> dict[str, float]:
