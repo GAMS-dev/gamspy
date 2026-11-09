@@ -1,0 +1,1 @@
+Deprecate the ``DROP_DOMAIN_VIOLATIONS`` option in favor of the ``drop_domain_violations`` argument.

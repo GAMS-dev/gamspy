@@ -530,11 +530,25 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         }
 
     def _setRecords(
-        self, records: SetRecordsType, *, uels_on_axes: bool = False
+        self,
+        records: SetRecordsType,
+        *,
+        uels_on_axes: bool = False,
+        drop_domain_violations: bool = False,
     ) -> None:
-        self.alias_with.setRecords(records, uels_on_axes=uels_on_axes)
+        self.alias_with._setRecords(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
-    def setRecords(self, records: SetRecordsType, uels_on_axes: bool = False) -> None:
+    def setRecords(
+        self,
+        records: SetRecordsType,
+        uels_on_axes: bool = False,
+        *,
+        drop_domain_violations: bool = False,
+    ) -> None:
         """
         Sets the records of the Set that is aliased.
 
@@ -554,6 +568,10 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
             If True, assumes that the domain information is located in the axes
             (index/columns) of the `records` object rather than the data values.
             Use this when passing a DataFrame where the indices represent the set elements.
+        drop_domain_violations : bool, optional
+            If True, records with labels outside the domain are dropped instead of
+            raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+            Default is False.
 
         Examples
         --------
@@ -566,7 +584,11 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         [['seattle', ''], ['san-diego', '']]
 
         """
-        self.alias_with.setRecords(records, uels_on_axes)
+        self.alias_with.setRecords(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def gamsRepr(self) -> str:
         """

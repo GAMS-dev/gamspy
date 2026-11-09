@@ -355,7 +355,7 @@ Here is a list of package wide options:
 +==============================+=======+==========================================================================================================================================+
 | VALIDATION                   | int   | Whether to enable all validations of GAMSPy. Set to 1 by default.                                                                        |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-| DROP_DOMAIN_VIOLATIONS       | int   | Whether to drop domain violations in the records of a symbol. Set to 0 by default.                                                       |
+| DROP_DOMAIN_VIOLATIONS       | int   | Deprecated. Use the ``drop_domain_violations`` argument of ``setRecords`` or the symbol constructors instead. Set to 0 by default.       |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | DOMAIN_VALIDATION            | int   | Whether to check for domain validation. Set to 1 by default.                                                                             |
 +------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+

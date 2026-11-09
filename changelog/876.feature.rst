@@ -1,0 +1,1 @@
+Add ``DomainViolationError``, the ``drop_domain_violations`` argument and ``findDomainViolations()`` to handle records outside a symbol's domain.

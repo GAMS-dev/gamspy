@@ -164,6 +164,10 @@ class Variable(operable.Operable, VarEquSymbol):
         A human-readable description of the variable.
     is_miro_output : bool, optional
         If True, flags this variable as an output symbol for GAMS MIRO. Default is False.
+    drop_domain_violations : bool, optional
+        If True, records with labels outside the domain are dropped instead of
+        raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+        Default is False.
 
     Examples
     --------
@@ -231,6 +235,8 @@ class Variable(operable.Operable, VarEquSymbol):
         description: str = "",
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         if self.type != cast_type(type):
             raise TypeError(
@@ -247,7 +253,11 @@ class Variable(operable.Operable, VarEquSymbol):
         )
         self._assignment = None
         self._column_listing = None
-        self._redefine_records(records, uels_on_axes=uels_on_axes)
+        self._redefine_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def __init__(
         self,
@@ -260,6 +270,8 @@ class Variable(operable.Operable, VarEquSymbol):
         description: str = "",
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         container, name = self._resolve_container_and_name(
             container, name, prefix="v", is_miro=is_miro_output
@@ -277,7 +289,11 @@ class Variable(operable.Operable, VarEquSymbol):
             is_miro_output=is_miro_output,
         )
         self._init_attributes()
-        self._init_records(records, uels_on_axes=uels_on_axes)
+        self._init_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def __getitem__(self, indices: IndexType) -> ImplicitVariable:
         domain = validation.validate_domain(self, indices)
@@ -723,7 +739,11 @@ class Variable(operable.Operable, VarEquSymbol):
         return id(self)
 
     def setRecords(
-        self, records: VarEquRecordsType | None, uels_on_axes: bool = False
+        self,
+        records: VarEquRecordsType | None,
+        uels_on_axes: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         """
         Sets the records (data) of the Variable.
@@ -740,6 +760,10 @@ class Variable(operable.Operable, VarEquSymbol):
             whatever order they appear in. Omitted attributes take their default.
         uels_on_axes : bool, optional
             If True, assumes domain elements are in the axes of the DataFrame. Default is False.
+        drop_domain_violations : bool, optional
+            If True, records with labels outside the domain are dropped instead of
+            raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+            Default is False.
 
         Examples
         --------
@@ -753,7 +777,11 @@ class Variable(operable.Operable, VarEquSymbol):
         [['seattle', 7.0, 0.0, -inf, inf, 1.0], ['san-diego', 18.0, 0.0, -inf, inf, 1.0]]
 
         """
-        self._update_records(records, uels_on_axes=uels_on_axes)
+        self._update_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     @property
     def _default_records(self) -> dict[str, float]:

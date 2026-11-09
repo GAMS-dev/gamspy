@@ -101,6 +101,17 @@ def test_option_names_cover_the_defaults():
 
 
 @pytest.mark.unit
+def test_drop_domain_violations_env_deprecated(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(gp._config, "configuration", {})
+    monkeypatch.setenv("GAMSPY_DROP_DOMAIN_VIOLATIONS", "1")
+
+    with pytest.warns(DeprecationWarning, match="DROP_DOMAIN_VIOLATIONS"):
+        gp._config._set_default_options()
+
+    assert gp._config.configuration["DROP_DOMAIN_VIOLATIONS"] == 1
+
+
+@pytest.mark.unit
 def test_get_option_reports_unknown_name():
     with pytest.raises(KeyError, match="Did you mean `STRICT_POWER_OPERATOR`"):
         gp.get_option("STRICT_POWER_OPERATR")
