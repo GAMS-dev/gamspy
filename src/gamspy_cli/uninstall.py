@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import os
-import subprocess
-import sys
 from typing import TYPE_CHECKING, Annotated
 
-import certifi
 import typer
 
-from . import cuopt
-from .license import get_licensed_solvers
-from .util import cli_error, has_pip, has_uv, remove_solver_entry
+from .util import (
+    CUOPT,
+    cli_error,
+    installation_error,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -41,28 +40,12 @@ def _remove_installed_addon(addons_path: str, solver_name: str) -> None:
         file.write("\n".join(installed) + "\n")
 
 
-def _get_removable_solvers(addons_path: str) -> set[str]:
-    import gamspy_base
-
-    import gamspy.utils as utils
-
-    installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
-    config_solvers = set(utils._get_config_solvers(gamspy_base.directory))
-    return (
-        set(installed_solvers)
-        - set(gamspy_base.default_solvers)
-        - (config_solvers - set(_get_installed_addons(addons_path)))
-    )
-
-
 def complete_solver_names(ctx: typer.Context, incomplete: str) -> list[str]:
     import gamspy_base
 
-    import gamspy.utils as utils
-
     return [
         s.lower()
-        for s in utils.getInstalledSolvers(gamspy_base.directory)
+        for s in gamspy_base.get_installed_addon_solvers()
         if s.startswith(incomplete.upper())
     ]
 
@@ -134,84 +117,49 @@ def uninstall_solver(
     import gamspy.utils as utils
 
     solver = [solvers] if isinstance(solvers, str) else list(solvers or [])
-    requested = [name.lower() for name in solver]
-    if not requested or any(name != cuopt.SOLVER_NAME for name in requested):
-        if not use_uv and not has_pip():
-            raise cli_error(
-                "pip is not installed in your environment. Please install pip first or add --use-uv flag to uninstall solvers with uv."
-            )
 
-        if use_uv and not has_uv():
-            raise cli_error(
-                "uv is not installed in your machine. Please install uv first to uninstall solvers with --use-uv flag."
-            )
-
+    # gamspy_base.uninstall_solver checks for pip (or uv) before it uninstalls anything.
     addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
-    environment_variables = os.environ.copy()
-    if "CURL_CA_BUNDLE" not in environment_variables:
-        environment_variables["CURL_CA_BUNDLE"] = certifi.where()
+    removable_solvers = set(gamspy_base.get_installed_addon_solvers())
 
     def remove_addons(addons: Iterable[str]) -> None:
         for item in addons:
             solver_name = item.lower()
 
-            removable_solvers = _get_removable_solvers(addons_path)
             if solver_name.upper() not in removable_solvers:
                 raise cli_error(
                     f'Given solver name ("{solver_name}") is not valid. Installed'
                     f" solvers that can be uninstalled: {sorted(removable_solvers)}"
                 )
 
-            if solver_name == cuopt.SOLVER_NAME:
-                cuopt.uninstall()
-                _remove_installed_addon(addons_path, solver_name)
-                continue
+            # The files of the solver stay in gamspy_base as other solvers might
+            # depend on them, apart from the ones of cuOpt.
+            try:
+                gamspy_base.uninstall_solver(
+                    solver_name,
+                    use_uv=use_uv,
+                    uninstall_package=not skip_pip_uninstall,
+                )
+            except (gamspy_base.InstallationError, ValueError) as e:
+                raise installation_error(e) from e
 
-            if not skip_pip_uninstall:
-                # uninstall specified solver
-                if use_uv:
-                    command = [
-                        "uv",
-                        "pip",
-                        "uninstall",
-                        f"gamspy-{solver_name}",
-                    ]
-                else:
-                    command = [
-                        sys.executable,
-                        "-m",
-                        "pip",
-                        "uninstall",
-                        f"gamspy-{solver_name}",
-                        "-y",
-                    ]
-                try:
-                    _ = subprocess.run(
-                        command,
-                        check=True,
-                        encoding="utf-8",
-                        stderr=subprocess.PIPE,
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise cli_error(
-                        f"Could not uninstall gamspy-{solver_name}: {e.output}"
-                    ) from e
-
-            # do not delete files from gamspy_base as other solvers might depend on it
-            remove_solver_entry(gamspy_base.directory, solver_name)
+            removable_solvers.discard(solver_name.upper())
             _remove_installed_addon(addons_path, solver_name)
 
     if uninstall_all_solvers:
-        remove_addons(sorted(_get_removable_solvers(addons_path)))
+        remove_addons(sorted(removable_solvers))
 
         # All add-on solvers are gone.
         return
 
     if unlicensed:
         license_path = utils._get_license_path(gamspy_base.directory)
-        licensed_solvers = {s.upper() for s in get_licensed_solvers(license_path)}
+        licensed_solvers = set(gamspy_base.get_licensed_solvers(license_path))
 
-        diff = sorted(_get_removable_solvers(addons_path) - licensed_solvers)
+        # cuOpt is not licensed through the GAMS license.
+        licensed_solvers.add(CUOPT.upper())
+
+        diff = sorted(removable_solvers - licensed_solvers)
         if not diff:
             typer.echo("No unlicensed solvers to uninstall.")
             return
