@@ -10,7 +10,6 @@ import gamspy as gp
 import gamspy.utils as utils
 from gamspy import cli
 from gamspy.exceptions import CLIError, GamspyBaseException
-from gamspy_cli import install, uninstall
 from gamspy_cli.cli import main
 
 pytestmark = pytest.mark.unit
@@ -127,9 +126,7 @@ def test_list_solvers():
     assert set(utils.getAvailableSolvers()) <= names
 
 
-def test_install_solver_errors(monkeypatch):
-    monkeypatch.setattr(install, "has_pip", lambda: True)
-
+def test_install_solver_errors():
     with pytest.raises(CLIError, match="Solver name is missing"):
         cli.install_solver()
 
@@ -137,9 +134,7 @@ def test_install_solver_errors(monkeypatch):
         cli.install_solver("bla")
 
 
-def test_uninstall_solver_errors(monkeypatch):
-    monkeypatch.setattr(uninstall, "has_pip", lambda: True)
-
+def test_uninstall_solver_errors():
     with pytest.raises(CLIError, match="Solver name is missing"):
         cli.uninstall_solver([])
 
@@ -166,3 +161,103 @@ def test_main_reports_cli_error(monkeypatch, capsys):
 
     assert exc_info.value.code == 1
     assert "File not found: does_not_exist.gdx" in capsys.readouterr().err
+
+
+@pytest.fixture
+def fake_gamspy_base(tmp_path, monkeypatch):
+    """Records the solver (un)installations instead of running pip."""
+    calls = []
+    addons = set()
+
+    def install_solver(name, *, use_uv=False, install_package=True):
+        calls.append(("install", name, use_uv, install_package))
+        if name == "bad":
+            raise gamspy_base.InstallationError("pip failed")
+        addons.add(name.upper())
+
+    def uninstall_solver(name, *, use_uv=False, uninstall_package=True):
+        calls.append(("uninstall", name, use_uv, uninstall_package))
+        addons.discard(name.upper())
+
+    monkeypatch.setattr(gamspy_base, "install_solver", install_solver)
+    monkeypatch.setattr(gamspy_base, "uninstall_solver", uninstall_solver)
+    monkeypatch.setattr(
+        gamspy_base, "get_installed_addon_solvers", lambda: sorted(addons)
+    )
+    monkeypatch.setattr(
+        utils, "getInstallableSolvers", lambda: ["BAD", "CUOPT", "HIGHS", "SCIP"]
+    )
+    monkeypatch.setattr(utils, "DEFAULT_DIR", str(tmp_path / "GAMSPy"))
+    return calls, addons, tmp_path / "GAMSPy" / "solvers.txt"
+
+
+def test_install_and_uninstall_solver(fake_gamspy_base):
+    calls, addons, addons_path = fake_gamspy_base
+
+    cli.install_solver(["highs", "SCIP"], use_uv=True)
+    assert calls == [
+        ("install", "highs", True, True),
+        ("install", "scip", True, True),
+    ]
+    assert addons_path.read_text().split() == ["HIGHS", "SCIP"]
+
+    cli.install_solver("highs", skip_pip_install=True)
+    assert calls[-1] == ("install", "highs", False, False)
+
+    # The errors of gamspy_base are reported as CLIError.
+    with pytest.raises(CLIError, match="pip failed"):
+        cli.install_solver("bad")
+    assert addons_path.read_text().split() == ["HIGHS", "SCIP"]
+
+    # solvers.txt is the record for --existing-solvers.
+    calls.clear()
+    cli.install_solver(existing_solvers=True)
+    assert [call[1] for call in calls] == ["highs", "scip"]
+
+    calls.clear()
+    cli.uninstall_solver("highs", skip_pip_uninstall=True)
+    assert calls == [("uninstall", "highs", False, False)]
+    assert addons_path.read_text().split() == ["SCIP"]
+
+    # Only installed add-on solvers can be uninstalled.
+    with pytest.raises(CLIError, match="is not valid"):
+        cli.uninstall_solver("highs")
+
+    cli.uninstall_solver(uninstall_all_solvers=True)
+    assert calls[-1] == ("uninstall", "scip", False, True)
+    assert not addons
+
+
+def test_install_licensed_solvers_skips_deprecated(fake_gamspy_base, monkeypatch):
+    calls, _, _ = fake_gamspy_base
+    monkeypatch.setattr(
+        utils, "getInstallableSolvers", lambda: ["EXAMINER2", "HIGHS", "SCIP"]
+    )
+    monkeypatch.setattr(
+        gamspy_base,
+        "get_licensed_solvers",
+        lambda path: ["EXAMINER2", "HIGHS", "SCIP"],
+    )
+    monkeypatch.setattr(gamspy_base, "get_solver_capabilities", lambda: {"SCIP": []})
+
+    cli.install_solver(licensed=True)
+    assert [call[1] for call in calls] == ["highs"]
+
+
+def test_uninstall_same_solver_twice(fake_gamspy_base):
+    calls, addons, _ = fake_gamspy_base
+    addons.add("HIGHS")
+
+    with pytest.raises(CLIError, match="is not valid"):
+        cli.uninstall_solver(["highs", "highs"])
+    assert calls == [("uninstall", "highs", False, True)]
+
+
+def test_uninstall_unlicensed_solvers_keeps_cuopt(fake_gamspy_base, monkeypatch):
+    calls, addons, _ = fake_gamspy_base
+    addons.update({"CUOPT", "HIGHS", "SCIP"})
+    monkeypatch.setattr(gamspy_base, "get_licensed_solvers", lambda path: ["SCIP"])
+
+    cli.uninstall_solver(unlicensed=True)
+    assert [call[1] for call in calls] == ["highs"]
+    assert addons == {"CUOPT", "SCIP"}

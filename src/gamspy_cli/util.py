@@ -1,20 +1,17 @@
 from __future__ import annotations
 
-import importlib.util
-import os
-import shutil
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy.exceptions import CLIError
 
 __all__ = [
-    "add_solver_entry",
+    "CUOPT",
     "cli_error",
-    "remove_solver_entry",
-    "has_pip",
-    "has_uv",
+    "installation_error",
 ]
+
+CUOPT = "cuopt"
 
 
 def cli_error(message: str, return_code: int = 1) -> CLIError:
@@ -24,81 +21,9 @@ def cli_error(message: str, return_code: int = 1) -> CLIError:
     return CLIError(message, return_code)
 
 
-def has_pip() -> bool:
-    return importlib.util.find_spec("pip") is not None
+def installation_error(error: Exception) -> CLIError:
+    """The CLIError for an error of gamspy_base.install_solver or uninstall_solver"""
+    if isinstance(error, ModuleNotFoundError) and error.msg:
+        return cli_error(error.msg)
 
-
-def has_uv() -> bool:
-    return shutil.which("uv") is not None
-
-
-def add_solver_entry(
-    system_directory: str, solver_name: str, verbatims: list[str]
-) -> None:
-    import gamspy.utils as utils
-
-    capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
-    if solver_name.upper() in utils._get_capabilities_file_solvers(system_directory):
-        return
-
-    with open(capabilities_path, encoding="utf-8") as f:
-        string = f.read()
-
-    for verbatim in verbatims:
-        string = f"{verbatim}\n\n{string}"
-
-        with open(capabilities_path, "w", encoding="utf-8") as f:
-            f.write(string)
-
-
-def find_bounds(system_directory: str, solver_name: str) -> tuple[int, int]:
-    import gamspy.utils as utils
-
-    capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
-    with open(capabilities_path, encoding="utf-8") as file:
-        lines = file.readlines()
-
-    start_idx = 0
-    line_count = 0
-    while True:
-        line = lines.pop(0)
-        if line.startswith("*") or line in {"", "\n"}:
-            start_idx += 1
-            continue
-        if line == "DEFAULTS":
-            break
-
-        start_idx += 1
-        solver, _, _, _, _, _, num_lines, *_ = line.split()
-        for _ in range(int(num_lines) + 2):
-            _ = lines.pop(0)
-
-        start_idx += int(num_lines) + 2
-
-        if solver == solver_name.upper():
-            line_count = int(num_lines)
-            start_idx -= int(num_lines) + 3
-            break
-
-    return start_idx, line_count
-
-
-def remove_solver_entry(system_directory: str, solver_name: str) -> None:
-    import gamspy.utils as utils
-
-    capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
-    if solver_name.upper() not in utils._get_capabilities_file_solvers(
-        system_directory
-    ):
-        return
-
-    line_num, line_count = find_bounds(system_directory, solver_name)
-
-    with open(capabilities_path, encoding="utf-8") as f:
-        lines = f.readlines()
-
-    for _ in range(line_count + 3):
-        lines.pop(line_num)
-
-    with open(capabilities_path, "w", encoding="utf-8") as f:
-        f.writelines(lines)
+    return cli_error(str(error))

@@ -1,0 +1,1 @@
+Install and uninstall add-on solvers, and determine the installed solvers and the solvers a license covers through gamspy_base instead of the GAMSPy CLI.

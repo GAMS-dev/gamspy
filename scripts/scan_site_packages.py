@@ -65,7 +65,8 @@ def scan_dir(directory: str) -> tuple[list[str], list[str]]:
 
         with open(path, "rb") as f:
             content = f.read()
-        if ALLOWED.get(name) == content:
+        # Installers on Windows may write the file with CRLF line endings.
+        if ALLOWED.get(name) == content.replace(b"\r\n", b"\n"):
             continue
 
         for lineno, line in enumerate(read_lines(content), 1):
