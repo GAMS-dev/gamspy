@@ -1,0 +1,2 @@
+Add ``solver`` and ``solver_options`` arguments to ``SDDP`` and ``SDDP.load``
+to configure all SDDP model solves.

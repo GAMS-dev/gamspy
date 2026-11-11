@@ -43,7 +43,12 @@ Creating the instance
 
 .. code-block:: python
 
-   sddp = SDDP(container, stage_set=t, n_trials=5, seed=42)
+   sddp = SDDP(
+       container,
+       stage_set=t,
+       solver="cplex",
+       solver_options={"threads": 1},
+   )
 
 The constructor takes:
 
@@ -54,6 +59,13 @@ The constructor takes:
 - ``n_trials``: the number of trial trajectories explored per iteration.
 - ``seed``: the forward-pass sampler seed, for reproducible runs.
 - ``verbose``: print one convergence row per iteration during training.
+- ``solver``: the solver for all SDDP solves. Defaults to the system's LP solver.
+- ``solver_options``: a dictionary of solver options or a path to an existing
+  option file, as accepted by :meth:`Model.solve <gamspy.Model.solve>`.
+
+The solver configuration applies to training, policy queries and simulations.
+Solver selections in container options, such as ``Options(lp="conopt")``, are
+ignored by SDDP. Set ``solver`` on the SDDP instance instead.
 
 The active-stage gating pattern
 ===============================

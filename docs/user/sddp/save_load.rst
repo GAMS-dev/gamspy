@@ -20,12 +20,22 @@ it back.
    # later, in a fresh session
    from gamspy.formulations.sddp import SDDP
 
-   sddp = SDDP.load("clearlake.sddp")
-   sddp.policy(stage="mar", state=150, noise=350, report=[R, L, Z, F])
+   sddp = SDDP.load(
+       "clearlake.sddp",
+       solver="cplex",
+       solver_options={"threads": 1},
+   )
+   report = [sddp.container[name] for name in ("R", "L", "Z", "F")]
+   sddp.policy(stage="mar", state=150, noise=350, report=report)
 
 The path must end in ``.sddp``. The file bundles the host container (with all the
 trained cuts) and a small sidecar recording which symbols play which role, so a
 reloaded instance is ready to use immediately.
+
+Solver configuration is not saved with the model when using ``save()``.
+To reuse the same settings, pass ``solver`` and ``solver_options`` again
+when loading. If omitted, the loaded policy uses the system's default LP
+solver without custom solver options.
 
 Read-only instances
 ===================

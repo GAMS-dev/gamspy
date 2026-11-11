@@ -58,10 +58,10 @@ def test_forward_rejects_infeasible_scenario(
     original_solve = c.sddp._gp_model.solve
 
     # Only forward solves get the drought; earlier passes keep normal inflows.
-    def solve_with_forward_drought(options, scenario):
+    def solve_with_forward_drought(options, scenario, **kwargs):
         if scenario is c.sddp._forward_scenario_dict:
             c.sddp._forward_noise[...] = -1000.0
-        return original_solve(options=options, scenario=scenario)
+        return original_solve(options=options, scenario=scenario, **kwargs)
 
     monkeypatch.setattr(c.sddp._gp_model, "solve", solve_with_forward_drought)
     with pytest.raises(ValidationError) as error:

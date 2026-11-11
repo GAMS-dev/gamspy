@@ -23,6 +23,7 @@ from gamspy.formulations.sddp.state import StateVar
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from pathlib import Path
     from types import FrameType
 
     from gamspy._algebra.expression import Expression
@@ -61,6 +62,12 @@ class SDDP:
     verbose : bool
         Print one convergence row per iteration during training. By default
         True.
+    solver : str | None
+        Preferred solver to use for all SDDP solves. The default ``None`` uses
+        the system's default LP solver.
+    solver_options : dict | str | Path | None
+        Options used by the solver, supplied as a Python dictionary or a path
+        to an existing option file.
 
     Examples
     --------
@@ -104,6 +111,8 @@ class SDDP:
         n_trials: int = 5,
         seed: int = 42,
         verbose: bool = True,
+        solver: str | None = None,
+        solver_options: dict | str | Path | None = None,
     ) -> None:
         if not isinstance(container, gp.Container):
             raise ValidationError("container must be a gp.Container instance")
@@ -120,6 +129,8 @@ class SDDP:
         self._n_trials: int = n_trials
         self._seed: int = seed
         self._verbose: bool = verbose
+        self._solver = solver
+        self._solver_opts = solver_options
 
         # sddp-owned active-stage singleton; the user reads this back via
         # `sddp.active_stage` and references it in their .where[...] gates.
@@ -652,7 +663,12 @@ class SDDP:
             container,
             "sddp_guss_options",
             domain="*",
-            records=[("SkipBaseCase", 1), ("LogOption", 1), ("UpdateType", 2)],
+            records=[
+                ("SkipBaseCase", 1),
+                ("LogOption", 1),
+                ("UpdateType", 2),
+                ("Optfile", int(bool(self._solver_opts))),
+            ],
         )
         self._guss_options = guss_options
         stat_attribs = gp.Set(container, records=["ModelStat", "SolveStat"])
@@ -1315,7 +1331,10 @@ class SDDP:
 
         self._initial_stage_stat_rep[...] = 0
         self._gp_model.solve(
-            options=self._solve_opts, scenario=self._initial_stage_scenario_dict
+            solver=self._solver,
+            solver_options=self._solver_opts,
+            options=self._solve_opts,
+            scenario=self._initial_stage_scenario_dict,
         )
         failures = self._get_initial_stage_failures()
         if failures:
@@ -1658,7 +1677,12 @@ class SDDP:
 
                     # GUSS solve: (n_trials x n_scenarios) LPs in one batch
                     backward_stat_rep[...] = 0
-                    gp_model.solve(options=solve_opts, scenario=backward_scenario_dict)
+                    gp_model.solve(
+                        solver=self._solver,
+                        solver_options=self._solver_opts,
+                        options=solve_opts,
+                        scenario=backward_scenario_dict,
+                    )
 
                     backward_failures[backward_stage_alias, trial_set, scenario_set] = (
                         _solve_failed(
@@ -1783,7 +1807,12 @@ class SDDP:
                 initial_stage_cost[scenario_set] = 0
 
                 self._initial_stage_stat_rep[...] = 0
-                gp_model.solve(options=solve_opts, scenario=initial_stage_scenario_dict)
+                gp_model.solve(
+                    solver=self._solver,
+                    solver_options=self._solver_opts,
+                    options=solve_opts,
+                    scenario=initial_stage_scenario_dict,
+                )
                 failures = self._get_initial_stage_failures()
                 if failures:
                     try:
@@ -1890,7 +1919,12 @@ class SDDP:
 
                     # GUSS solve
                     forward_stat_rep[...] = 0
-                    gp_model.solve(options=solve_opts, scenario=forward_scenario_dict)
+                    gp_model.solve(
+                        solver=self._solver,
+                        solver_options=self._solver_opts,
+                        options=solve_opts,
+                        scenario=forward_scenario_dict,
+                    )
 
                     # only for the sampled scenarios in this pass
                     for_solve_failed = _solve_failed(
@@ -2237,7 +2271,12 @@ class SDDP:
         _pack(self._container, metadata, path)
 
     @classmethod
-    def load(cls, path: str) -> SDDP:
+    def load(
+        cls,
+        path: str,
+        solver: str | None = None,
+        solver_options: dict | str | Path | None = None,
+    ) -> SDDP:
         """Load an sddp instance.
 
         The returned instance is **read-only**: ``policy()`` and
@@ -2249,6 +2288,13 @@ class SDDP:
         ----------
         path : str
             Path to a ``.sddp`` file produced by ``SDDP.save()``.
+        solver : str | None
+            Preferred solver for policy queries and simulations. The default
+            ``None`` uses the system's default LP solver.
+        solver_options : dict | str | Path | None
+            Options used by the solver, supplied as a Python dictionary or a
+            path to an existing option file. Solver configuration is not
+            saved with the model; supply it again when loading.
 
         Returns
         -------
@@ -2273,7 +2319,9 @@ class SDDP:
 
         container, metadata = _unpack(path)
         _validate_metadata(metadata)
-        return _reattach_sddp(container, metadata)
+        return _reattach_sddp(
+            container, metadata, solver=solver, solver_options=solver_options
+        )
 
     # simulate
 
@@ -2547,7 +2595,12 @@ class SDDP:
 
             # GUSS solve: n_paths LPs in one batch
             stat_rep[...] = 0
-            self._gp_model.solve(options=self._solve_opts, scenario=sim_dict)
+            self._gp_model.solve(
+                solver=self._solver,
+                solver_options=self._solver_opts,
+                options=self._solve_opts,
+                scenario=sim_dict,
+            )
 
             solve_failed = _solve_failed(
                 stat_rep[sim_paths, scenario_set, "ModelStat"],
@@ -2725,7 +2778,11 @@ class SDDP:
 
         # Single plain solve
         try:
-            model.solve(options=self._solve_opts)
+            model.solve(
+                solver=self._solver,
+                solver_options=self._solver_opts,
+                options=self._solve_opts,
+            )
             stats = (model.status.value, model.solve_status.value)
             if _solve_failed(*stats):
                 raise _solve_status_error(*stats, f"policy stage '{stage}'")
