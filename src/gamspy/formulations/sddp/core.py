@@ -1870,12 +1870,16 @@ class SDDP:
                         state_var.forward_fixed_state[
                             trial_set, scenario_set, time_set
                         ] = 0
+                        # Preserve explicit zero updates for GUSS UpdateType 2.
                         state_var.forward_fixed_state[
                             trial_set, scenario_set, time_alias
                         ].where[
                             forward_scenario_set[trial_set, scenario_set]
                             & previous_stage_end_map[forward_stage_alias, time_alias]
-                        ] = state_var.current_forward_state[trial_set]
+                        ] = (
+                            state_var.current_forward_state[trial_set]
+                            + gp.SpecialValues.EPS
+                        )
                         state_var.forward_state_level[
                             trial_set, scenario_set, time_set
                         ] = 0
@@ -2526,10 +2530,14 @@ class SDDP:
                         sim_active[sim_paths, scenario_set]
                     ] = max(initial, self._EPS)
                 else:
+                    # Preserve explicit zero updates for GUSS UpdateType 2.
                     state_param[sim_paths, scenario_set, time_alias].where[
                         sim_active[sim_paths, scenario_set]
                         & previous_stage_end_map[stage_label, time_alias]
-                    ] = sim_fwd_state[state_var.variable.name][sim_paths]
+                    ] = (
+                        sim_fwd_state[state_var.variable.name][sim_paths]
+                        + gp.SpecialValues.EPS
+                    )
 
             # Reset extracts
             sim_approx_cost[sim_paths, scenario_set] = 0

@@ -3,7 +3,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from gamspy import Equation, Parameter, Set, Sum, Variable
 from gamspy.exceptions import ValidationError
+from gamspy.formulations.sddp import SDDP
 
 
 @pytest.mark.requires_license
@@ -22,6 +24,47 @@ def test_simulate_is_reproducible(clearlake_trained):
     a = c.sddp.simulate(n_paths=20, report=[c.lev], seed=7)
     b = c.sddp.simulate(n_paths=20, report=[c.lev], seed=7)
     assert a.total_cost.equals(b.total_cost)
+
+
+@pytest.mark.unit
+@pytest.mark.requires_license
+def test_state_propagation(container):
+    scen_data = np.array([[1, 2, 3], [1, 2, 3], [2, 2, 2]])
+
+    t = Set(container, name="t", records=["a", "b", "c"])
+    model = SDDP(container, stage_set=t, n_trials=6, seed=42, verbose=False)
+    active_stage = model.active_stage
+    noise = Parameter(container, name="noise")
+    state = Variable(container, name="state", domain=t)
+    state.lo[t] = -2
+    state.up[t] = 4
+    cost = Variable(container, name="cost")
+
+    # Nonzero noise produces outgoing states of -1, 0, or 1.
+    balance = Equation(container, name="balance", domain=t)
+    balance[t].where[active_stage[t]] = state[t] == noise - 2
+    objective = Equation(container, name="objective")
+    objective[...] = cost == 10 + Sum(
+        active_stage[t], state[t.lag(1, "circular")] - state[t]
+    )
+
+    model.add_state(variable=state, initial_state=1)
+
+    model.set_noise(parameter=noise, scenario_data=scen_data)
+    model.build(stage_cost=cost)
+    model.train(n_iter=1)
+
+    # Incoming/outgoing terms cancel: total = 3 * 10 + initial 1 - final 0.
+    assert np.allclose(model._forward_path_cost.toDense(), 31)
+
+    sim = model.simulate(n_paths=12, seed=0)
+    levels = sim.variables["state"]
+    costs = sim.stage_costs
+
+    assert np.allclose(levels, sim.noise - 2)
+    assert np.allclose(costs["a"] + levels["a"], 11)
+    assert np.allclose(costs["b"] + levels["b"], 10 + levels["a"])
+    assert np.allclose(costs["c"] + levels["c"], 10 + levels["b"])
 
 
 @pytest.mark.requires_license
