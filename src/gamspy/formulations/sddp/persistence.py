@@ -20,6 +20,8 @@ from gamspy._guss import GUSSScenarioDict
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from gamspy.formulations.sddp.core import SDDP
 
 # Layout inside the .sddp archive (a zip under the hood).
@@ -190,7 +192,12 @@ def _validate_metadata(metadata: dict[str, Any]) -> None:
 # Reattach - turn (container, metadata) into a usable SDDP instance
 
 
-def _reattach_sddp(container: gp.Container, metadata: dict[str, Any]) -> SDDP:
+def _reattach_sddp(
+    container: gp.Container,
+    metadata: dict[str, Any],
+    solver: str | None = None,
+    solver_options: dict | str | Path | None = None,
+) -> SDDP:
     """Construct an SDDP instance from a deserialized container + sidecar."""
     from gamspy.formulations.sddp.core import SDDP
     from gamspy.formulations.sddp.noise import NoiseConfig
@@ -225,6 +232,8 @@ def _reattach_sddp(container: gp.Container, metadata: dict[str, Any]) -> SDDP:
     sddp._n_trials = int(constructor["n_trials"])
     sddp._seed = int(constructor["seed"])
     sddp._verbose = bool(constructor["verbose"])
+    sddp._solver = solver
+    sddp._solver_opts = solver_options
     sddp._sim_call_count = int(metadata["sim_call_count"])
     sddp._built = True
     sddp._loaded_from_save = True
@@ -242,6 +251,7 @@ def _reattach_sddp(container: gp.Container, metadata: dict[str, Any]) -> SDDP:
     sddp._stage_end_map = _lookup("sddp_stage_end")
     sddp._previous_stage_end_map = _lookup("sddp_previous_stage_end")
     sddp._guss_options = _lookup("sddp_guss_options")
+    sddp._guss_options["Optfile"] = int(bool(sddp._solver_opts))
     sddp._scenario_prob = _lookup("sddp_prob")
     sddp._stage_scenario_noise = _lookup("sddp_stage_scenario_noise")
 
