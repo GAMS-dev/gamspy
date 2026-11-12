@@ -16,7 +16,7 @@ repos:
         language: python
         pass_filenames: false
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.4
+    rev: v0.17.5
     hooks:
     # Run the linter.
     -   id: ruff-check
@@ -24,7 +24,7 @@ repos:
     # Run the formatter.
     -   id: ruff-format
 -   repo: https://github.com/betterleaks/betterleaks
-    rev: v1.10.0
+    rev: v1.10.1
     hooks:
     -   id: betterleaks
         entry: betterleaks dir --config .betterleaks.toml --no-banner --redact --verbose
