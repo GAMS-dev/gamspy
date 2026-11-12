@@ -29,6 +29,7 @@ from gamspy._backend.local import (
 from gamspy._convert import (
     GamsConverter,
     LatexConverter,
+    MarkdownConverter,
     UnicodeConverter,
     get_convert_solver_options,
 )
@@ -36,6 +37,7 @@ from gamspy._frozen_model import FrozenModel
 from gamspy._internals import ATTR_PREFIX, MODEL_ATTRIBUTE_MAP, DataSource
 from gamspy._miro import IS_MIRO_INIT
 from gamspy._model_instance import ModelInstance, generate_model_instance
+from gamspy._notation import LATEX_SEPARATOR
 from gamspy._options import (
     EXECUTION_OPTIONS,
     INDICATOR_SOLVERS,
@@ -2331,6 +2333,7 @@ class Model:
         rename: dict[str, str] | None = None,
         *,
         generate_pdf: bool = False,
+        separator: str = LATEX_SEPARATOR,
     ) -> None:
         """
         Generates a latex file that contains the model definition under path/<model_name>.tex
@@ -2344,6 +2347,8 @@ class Model:
             and values are the names that will be used in the LaTeX file.
         generate_pdf: bool, False by default
             Generates a pdf file if it is set. Requires xelatex to be installed.
+        separator : str, optional
+            Separates an equation definition from its domain (e.g. ``\\quad`` or ``\\hfill``).
 
         Examples
         --------
@@ -2359,7 +2364,7 @@ class Model:
 
         """
         path = Path(path)
-        converter = LatexConverter(self, path, rename)
+        converter = LatexConverter(self, path, rename, separator)
         converter.convert()
 
         if generate_pdf:
@@ -2424,6 +2429,97 @@ class Model:
 
         """
         converter = UnicodeConverter(self, rename)
+        if path is None:
+            return converter.generate()
+
+        return converter.convert(Path(path))
+
+    def toMarkdown(
+        self,
+        path: str | Path | None = None,
+        rename: dict[str, str] | None = None,
+        *,
+        separator: str = LATEX_SEPARATOR,
+    ) -> str:
+        r"""
+        Generates the model definition in Markdown with LaTeX math, e.g. for Quarto
+        or Jupyter. If a path is given, it is also written to path/<model_name>.md
+
+        Parameters
+        ----------
+        path : str | Path, optional
+            Path to the directory which will contain the .md file.
+        rename: dict[str, str], optional
+            A dictionary to rename symbols in the output. Keys are GAMSPy symbol names
+            and values are the names that will be used in the output.
+        separator : str, optional
+            Separates an equation definition from its domain (e.g. ``\quad`` or ``\hspace{1cm}``).
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["seattle", "san-diego"], description="plants")
+        >>> a = gp.Parameter(m, "a", domain=i, description="supply of plant i")
+        >>> x = gp.Variable(m, "x", domain=i, type="positive", description="shipment")
+        >>> supply = gp.Equation(m, "supply", domain=i, description="supply limit")
+        >>> supply[i] = x[i] <= a[i]
+        >>> model = gp.Model(
+        ...     m,
+        ...     "shipment",
+        ...     problem="LP",
+        ...     equations=[supply],
+        ...     sense="max",
+        ...     objective=gp.Sum(i, x[i]),
+        ... )
+        >>> print(model.toMarkdown())
+        ## Sets
+        <BLANKLINE>
+        | Symbol | Description |
+        | --- | --- |
+        | $i_{*}$ | plants |
+        <BLANKLINE>
+        ## Parameters
+        <BLANKLINE>
+        | Symbol | Description |
+        | --- | --- |
+        | $a_{i}$ | supply of plant i |
+        <BLANKLINE>
+        ## Variables
+        <BLANKLINE>
+        | Symbol | Description |
+        | --- | --- |
+        | $x_{i}$ | shipment |
+        <BLANKLINE>
+        ## Equations
+        <BLANKLINE>
+        | Symbol | Description |
+        | --- | --- |
+        | $supply_{i}$ | supply limit |
+        <BLANKLINE>
+        ## Model Definition
+        <BLANKLINE>
+        $$
+        \max \sum_{i} x_{i}
+        $$
+        <BLANKLINE>
+        subject to
+        <BLANKLINE>
+        $supply_{i}$
+        $$
+        x_{i} \leq a_{i}\quad \forall i
+        $$
+        <BLANKLINE>
+        $$
+        x_{i} \geq 0\quad \forall i
+        $$
+
+        """
+        converter = MarkdownConverter(self, rename, separator)
         if path is None:
             return converter.generate()
 

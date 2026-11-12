@@ -17,7 +17,12 @@ from gamspy._internals import (
     EQU_TYPE,
     TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
 )
-from gamspy._notation import LATEX, UNICODE
+from gamspy._notation import (
+    LATEX_MATH_DELIMITERS,
+    LATEX_SEPARATOR,
+    UNICODE,
+    LatexNotation,
+)
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import VarEquSymbol
 from gamspy._symbols.utils import _quote_description
@@ -1054,9 +1059,21 @@ class Equation(VarEquSymbol):
             representation += self._get_domain_str(self._domain_forwarding)
         return representation
 
-    def latexRepr(self) -> str:
+    def latexRepr(
+        self,
+        *,
+        separator: str = LATEX_SEPARATOR,
+        delimiters: tuple[str, str] = LATEX_MATH_DELIMITERS,
+    ) -> str:
         r"""
         Generates a LaTeX representation of the equation definition.
+
+        Parameters
+        ----------
+        separator : str, optional
+            Separates the definition from its domain (e.g. ``\quad`` or ``\hspace{1cm}``).
+        delimiters : tuple[str, str], optional
+            Start and end delimiters of the definition (e.g. ``("$$", "$$")``).
 
         Returns
         -------
@@ -1078,11 +1095,14 @@ class Equation(VarEquSymbol):
         >>> e[i] = v[i] <= 10
         >>> print(e.latexRepr())
         $
-        v_{i} \leq 10\hfill \forall i
+        v_{i} \leq 10\quad \forall i
         $
+        >>> print(e.latexRepr(separator=r"\hspace{1cm}", delimiters=("$$", "$$")))
+        $$v_{i} \leq 10\hspace{1cm} \forall i$$
 
         """
-        return self._math_repr(LATEX)
+        notation = LatexNotation(separator=separator, math_delimiters=delimiters)
+        return self._math_repr(notation)
 
     def unicodeRepr(self) -> str:
         """

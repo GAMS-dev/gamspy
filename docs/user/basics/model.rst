@@ -949,7 +949,20 @@ For example: ::
     
 This would result in: ::
 
-    $v_{i} \geq 5\hfill \forall i$
+    $
+    v_{i} \geq 5\quad \forall i
+    $
+
+The separator before the domain (also a ``separator`` argument of :meth:`toLatex <gamspy.Model.toLatex>`)
+and the delimiters can be changed, e.g. for Quarto or Markdown: ::
+
+    print(e.latexRepr(separator=r"\hspace{1cm}", delimiters=("$$", "$$")))
+
+The whole model can be exported to Markdown with LaTeX math (e.g. for Quarto or Jupyter) with
+:meth:`toMarkdown <gamspy.Model.toMarkdown>`. It takes the same arguments as :meth:`toUnicode <gamspy.Model.toUnicode>`
+plus ``separator``, and writes a `.md` file if a path is given. ::
+
+    print(transport.toMarkdown(rename={"x": r"\xi"}))
 
 Exporting Model To Unicode
 ==========================
