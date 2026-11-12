@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import platform
 import select
@@ -19,7 +20,7 @@ import pytest
 import requests
 
 import gamspy as gp
-from gamspy import Container, Set
+from gamspy import Container, Set, cli
 
 pytestmark = pytest.mark.cli
 try:
@@ -670,6 +671,40 @@ def test_probe(teardown):
     )
 
     assert process.returncode == 0, process.stdout + process.stderr
+
+
+def test_probe_options(tmp_path):
+    def probe(*args):
+        return subprocess.run(
+            [sys.executable, "-Bm", "gamspy", "probe", *args],
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+        )
+
+    process = probe("-p", "40000", "5")
+    assert process.returncode == 0, process.stdout + process.stderr
+    assert 40000 <= json.loads(process.stdout)["gams_port"] < 40005
+
+    process = probe("-u", "41000", "-j", "info.json")
+    assert process.returncode == 0, process.stdout + process.stderr
+    with open(tmp_path / "info.json") as file:
+        assert json.load(file)["gams_port"] >= 41000
+
+    process = probe("-n")
+    assert process.returncode == 0, process.stdout + process.stderr
+    assert "MAC address" in process.stdout
+
+    process = probe("-p", "40000", "5", "-u", "41000")
+    assert process.returncode == 1
+    assert "-p and -u" in process.stderr
+
+    process = probe("-n", "-j", "interfaces.json")
+    assert process.returncode == 1
+    assert not (tmp_path / "interfaces.json").exists()
+
+    node_info = json.loads(cli.probe(ports=(40000, 5)))
+    assert 40000 <= node_info["gams_port"] < 40005
 
 
 DUMMY_GDX = os.path.join(os.path.dirname(__file__), "file1.gdx")

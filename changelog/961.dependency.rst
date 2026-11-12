@@ -1,1 +1,0 @@
-Upgrade the minimum version of gamspy_base and gamsapi to 54.7.0.

@@ -171,22 +171,7 @@ def _normalize_curve_data(
     if input_keys is not None:
         # Unselected curves may remain in the dictionary, but their keys must
         # still belong to the declared curve domains.
-        domain_labels = [
-            {label.casefold() for label in domain.toList()}
-            for domain in normalized_curve_domain
-        ]
-        extra_keys = set()
-        for mapping_key in provided_keys.keys() - expected_keys:
-            key = (mapping_key,) if len(domain_labels) == 1 else mapping_key
-            if (
-                not isinstance(key, tuple)
-                or len(key) != len(domain_labels)
-                or any(
-                    label not in labels
-                    for label, labels in zip(key, domain_labels, strict=True)
-                )
-            ):
-                extra_keys.add(mapping_key)
+        extra_keys = _get_keys_outside_domain(extra_keys, normalized_curve_domain)
 
     if missing_keys:
         raise ValidationError(f"curve is missing keys: {_format_keys(missing_keys)}")
@@ -213,6 +198,26 @@ def _normalize_curve_data(
     return _PwlData(
         rows=rows, curve_domain=normalized_curve_domain, input_keys=input_keys
     )
+
+
+def _get_keys_outside_domain(
+    keys: Iterable[object], domain: tuple[gp.Set | gp.Alias, ...]
+) -> set[object]:
+    domain_labels = [{label.casefold() for label in d.toList()} for d in domain]
+    outside = set()
+    for mapping_key in keys:
+        key = (mapping_key,) if len(domain_labels) == 1 else mapping_key
+        if (
+            not isinstance(key, tuple)
+            or len(key) != len(domain_labels)
+            or any(
+                label not in labels
+                for label, labels in zip(key, domain_labels, strict=True)
+            )
+        ):
+            outside.add(mapping_key)
+
+    return outside
 
 
 def _format_keys(keys: Iterable[object]) -> str:

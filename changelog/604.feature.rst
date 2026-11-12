@@ -1,1 +1,0 @@
-Add ``separator`` and ``delimiters`` arguments to ``Equation.latexRepr`` and a ``separator`` argument to ``Model.toLatex``, use ``\quad`` instead of ``\hfill`` before the domain, and add ``Model.toMarkdown``.

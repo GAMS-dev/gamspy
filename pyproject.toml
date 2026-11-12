@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.29.3"
+version = "1.30.0"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -242,6 +242,7 @@ select = [
     "PLE",      # Pylint error rules
     "PGH003",   # blanket-type-ignore
     "ANN",      # flake8-annotations
+    "C901",     # complex-structure
 ]
 ignore = [
     "E501",   # line-too-long
@@ -263,6 +264,9 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ANN"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 20
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

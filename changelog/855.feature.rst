@@ -1,3 +1,0 @@
-Added non-blocking solves via the new ``Model.solveAsync`` method, which submits the 
-solve and immediately returns a ``SolveHandle``. Multiple instances of the same model 
-can be in flight in parallel.

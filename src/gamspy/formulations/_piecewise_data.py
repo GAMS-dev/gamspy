@@ -599,6 +599,52 @@ def _normalize_parameter_row(
         raise
 
 
+def _parse_finite_points(
+    x_values: tuple[object, ...],
+    y_values: tuple[object, ...],
+    start: int,
+) -> tuple[list[_PwlPoint], list[int]]:
+    points: list[_PwlPoint] = []
+    separator_indices: list[int] = []
+    follows_hole = False
+
+    for source_position, (x_value, y_value) in enumerate(
+        zip(x_values, y_values, strict=True), start=start
+    ):
+        if x_value is None:
+            if follows_hole:
+                raise ValidationError(
+                    "point data cannot contain two consecutive None values"
+                )
+
+            follows_hole = True
+            continue
+
+        point = _PwlPoint(
+            x=_to_finite_number(x_value, "x_points", source_position),
+            y=_to_finite_number(y_value, "y_points", source_position),
+        )
+
+        if points:
+            previous = points[-1]
+            # Holes, repeated x values, and x decreases split consecutive point
+            # chains.
+            if follows_hole:
+                if point.x <= previous.x:
+                    raise ValidationError(
+                        "a point following None must have a greater x value than "
+                        "the point preceding None"
+                    )
+                separator_indices.append(len(points) - 1)
+            elif point.x <= previous.x:
+                separator_indices.append(len(points) - 1)
+
+        points.append(point)
+        follows_hole = False
+
+    return points, separator_indices
+
+
 def _normalize_sequence_row(
     x_values: tuple[object, ...],
     y_values: tuple[object, ...],
@@ -661,43 +707,7 @@ def _normalize_sequence_row(
     if finite_x[0] is None or finite_x[-1] is None:
         raise ValidationError("point data cannot start or end with a None value")
 
-    points: list[_PwlPoint] = []
-    separator_indices: list[int] = []
-    follows_hole = False
-
-    for source_position, (x_value, y_value) in enumerate(
-        zip(finite_x, finite_y, strict=True), start=first
-    ):
-        if x_value is None:
-            if follows_hole:
-                raise ValidationError(
-                    "point data cannot contain two consecutive None values"
-                )
-
-            follows_hole = True
-            continue
-
-        point = _PwlPoint(
-            x=_to_finite_number(x_value, "x_points", source_position),
-            y=_to_finite_number(y_value, "y_points", source_position),
-        )
-
-        if points:
-            previous = points[-1]
-            # Holes, repeated x values, and x decreases split consecutive point
-            # chains.
-            if follows_hole:
-                if point.x <= previous.x:
-                    raise ValidationError(
-                        "a point following None must have a greater x value than "
-                        "the point preceding None"
-                    )
-                separator_indices.append(len(points) - 1)
-            elif point.x <= previous.x:
-                separator_indices.append(len(points) - 1)
-
-        points.append(point)
-        follows_hole = False
+    points, separator_indices = _parse_finite_points(finite_x, finite_y, first)
 
     if len(points) == 1 and left_gradient is None and right_gradient is None:
         raise ValidationError(

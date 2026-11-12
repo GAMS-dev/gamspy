@@ -393,7 +393,7 @@ def _transpose(
     return permute(x, dims)
 
 
-def _validate_matrix_mult_dims(
+def _validate_matrix_mult_dims(  # noqa: C901
     left: Parameter
     | Variable
     | implicits.ImplicitParameter

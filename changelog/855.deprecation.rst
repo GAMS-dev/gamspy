@@ -1,3 +1,0 @@
-Deprecated ``is_blocking=False`` on ``EngineClient`` and ``NeosClient``. Constructing a 
-client with it now emits a ``DeprecationWarning``; use ``Model.solveAsync(backend=..., client=...)`` 
-instead, which returns a ``SolveHandle`` that loads the solution back into the model.

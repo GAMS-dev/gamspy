@@ -27,6 +27,15 @@ app = typer.Typer(
 _DEPRECATED_SOLVERS = frozenset({"EXAMINER2"})
 
 
+def _check_gamspy_license(lines: list[str], license_type: str, source: str) -> None:
+    platform_code = lines[2][:2] if license_type == "+" else lines[2][8:10]
+    if platform_code not in ("00", "06", "07", "08", "09"):
+        raise cli_error(
+            f"{source} is not valid for GAMSPy. "
+            "Make sure that you use a GAMSPy license, not a GAMS license."
+        )
+
+
 def install_license(
     license: str,
     *,
@@ -178,35 +187,12 @@ def install_license(
                 f"Invalid license text. \nLicense text: {license_text}\nstdout: {process.stdout}\nstderr: {process.stderr}"
             ) from e
 
-        if license_type == "+":
-            if lines[2][:2] not in ("00", "06", "07", "08", "09"):
-                raise cli_error(
-                    f"Given access code `{alp_id}` is not valid for GAMSPy. "
-                    "Make sure that you use a GAMSPy license, not a GAMS license."
-                )
-        else:
-            if lines[2][8:10] not in ("00", "06", "07", "08", "09"):
-                raise cli_error(
-                    f"Given access code `{alp_id}` is not valid for GAMSPy. "
-                    "Make sure that you use a GAMSPy license, not a GAMS license."
-                )
+        _check_gamspy_license(lines, license_type, f"Given access code `{alp_id}`")
     else:
         with open(license) as file:
             lines = file.read().splitlines()
 
-        license_type = lines[0][54]
-        if license_type == "+":
-            if lines[2][:2] not in ("00", "06", "07", "08", "09"):
-                raise cli_error(
-                    f"Given license file `{license}` is not valid for GAMSPy. "
-                    "Make sure that you use a GAMSPy license, not a GAMS license."
-                )
-        else:
-            if lines[2][8:10] not in ("00", "06", "07", "08", "09"):
-                raise cli_error(
-                    f"Given license file `{license}` is not valid for GAMSPy. "
-                    "Make sure that you use a GAMSPy license, not a GAMS license."
-                )
+        _check_gamspy_license(lines, lines[0][54], f"Given license file `{license}`")
 
         shutil.copy(license, output if output else license_path)
 

@@ -1,1 +1,0 @@
-Add ``Model.getModelInstance`` to inspect the generated model instance.

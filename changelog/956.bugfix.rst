@@ -1,1 +1,0 @@
-Fix ``gamspy uninstall solver`` failing when the GAMSPy user directory does not exist.

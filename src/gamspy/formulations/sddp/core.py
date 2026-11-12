@@ -361,7 +361,7 @@ class SDDP:
 
     # build
 
-    def build(
+    def build(  # noqa: C901
         self,
         stage_cost: gp.Variable,
         equations: list | None = None,
@@ -1359,7 +1359,7 @@ class SDDP:
         )
 
     # training (running) the model
-    def train(
+    def train(  # noqa: C901
         self,
         n_iter: int = 20,
         rel_tol: float | None = None,
