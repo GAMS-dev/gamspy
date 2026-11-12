@@ -298,6 +298,8 @@ Here is the list of options and their descriptions:
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 | allow_suffix_in_limited_variables | Allow domain limited variables with suffixes in model                             | bool                                                                                      |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| append_to_log_file                | Append to the log file instead of overwriting it                                  | bool                                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 | basis_detection_threshold         | Basis detection threshold                                                         | float                                                                                     |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 | compile_error_limit               | Compile time error limit                                                          | int                                                                                       |
@@ -447,10 +449,78 @@ Execution Backends
 ==================
 GAMSPy allows you to solve models locally or on cloud platforms.
 
+Asynchronous Solve
+------------------
+
+By default, :meth:`solve <gamspy.Model.solve>` blocks until the solver is done.
+:meth:`solveAsync <gamspy.Model.solveAsync>` submits the solve instead: the model instance is
+generated with the current data and handed to the backend, and ``solveAsync`` returns a
+:class:`SolveHandle <gamspy.SolveHandle>` immediately while the solve runs in the background.
+You can continue working in Python and submit more solves — of other models or of the same model
+with modified data — so that many solves are in flight at once. The solution of each submitted
+instance is collected with :meth:`SolveHandle.wait <gamspy.SolveHandle.wait>`, which blocks until
+that solve is done, loads its solution into the model and returns the solve summary. ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+    ...
+
+    # Solve one scenario per capacity, all in parallel.
+    handles = {}
+    for capacity in [300, 350, 400]:
+        a["seattle"] = capacity
+        handles[capacity] = transport.solveAsync()
+
+    results = {}
+    for capacity, handle in handles.items():
+        handle.wait()
+        # Collecting the next handle overwrites the records, so copy what you need now.
+        results[capacity] = (transport.objective_value, x.records.copy())
+
+``wait`` accepts an optional ``timeout`` (in seconds) and raises a ``TimeoutError`` if the solve
+is not done in time; the solve keeps running in the background and ``wait`` can be called again
+later. A timeout of ``0`` checks the status without waiting. To collect solutions in completion
+order instead of submission order, poll :meth:`SolveHandle.isReady <gamspy.SolveHandle.isReady>`,
+which returns ``True`` once the solve is done (i.e. ``wait`` would not block). ``wait`` also takes
+``options``: the solver log is written to their ``log_file``, appended if ``append_to_log_file``
+is set.
+
+``solveAsync`` takes the same ``backend`` and ``client`` arguments as ``solve``, so the same code
+runs against any backend — only where the solve happens differs:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 15 40 45
+
+   * - Backend
+     - Runs on
+     - Handle
+   * - ``local``
+     - `GAMS grid facility <https://gams.com/latest/docs/UG_GridComputing.html>`_, i.e. solver
+       processes on your machine
+     - Tied to the Container's GAMS process, so it cannot outlive it. ``isReady`` runs a small
+       GAMS job, so avoid polling it in a tight loop. With ``report_solution=1``, ``wait`` appends
+       the solution listing to the ``listing_file`` of the submission.
+   * - ``engine``
+     - GAMS Engine, see :ref:`below <engine_backend>`
+     - Carries the job ``token``, also available in ``client.tokens``.
+   * - ``neos``
+     - NEOS Server, see :ref:`below <neos_backend>`
+     - Carries ``job_number`` and ``job_password``, also available in ``client.jobs``.
+
+.. note::
+
+    Collecting a solution overwrites the model attributes and the symbol records of the previous
+    collection (or of an intermediate blocking solve) — read the records you need between
+    collections.
+
 Solving Locally
 ---------------
 
 By default, models are solved locally (on your machine).
+
+.. _engine_backend:
 
 Solving with GAMS Engine
 ------------------------
@@ -487,40 +557,52 @@ Asynchronous Solve
 ~~~~~~~~~~~~~~~~~~
 
 If you just want to send your jobs to GAMS Engine without blocking until the results are received,
-the `is_blocking` parameter can be set to `False` in `EngineClient`.
-
-Tokens of the submitted jobs are stored in `client.tokens` ::
+use :meth:`solveAsync <gamspy.Model.solveAsync>` with the ``engine`` backend. Each submission
+returns a handle that collects the solution into your model. Tokens of the submitted jobs are
+also stored in `client.tokens` ::
 
     client = gp.EngineClient(
         host=os.environ["ENGINE_URL"],
         username=os.environ["ENGINE_USER"],
         password=os.environ["ENGINE_PASSWORD"],
         namespace=os.environ["ENGINE_NAMESPACE"],
-        is_blocking=False,
     )
 
+    handles = []
     for _ in range(3):
         ... # changes in your model
-        model.solve(backend="engine", client=client)
+        handles.append(model.solveAsync(backend="engine", client=client))
 
     print(client.tokens) # This prints all tokens for the submitted jobs
 
-``client.tokens`` only lives as long as the Python process. The jobs submitted earlier can be listed with
-``client.job.list_jobs()``, and a pending or running job can be cancelled with ``client.job.cancel(token)``.
+    for handle in handles:
+        summary = handle.wait()
+        # Collecting the next handle overwrites the records, so copy what you need now.
+        ...
 
-The results of the non-blocking jobs can be retrieved later. For example if want to retrieve the results of the 
-last submitted job, we can do that following: ::
+The job keeps running on the server independently of your Python process, so ``handle.token`` can
+also be used with the ``client.job`` endpoints directly. ``client.tokens`` only lives as long as the
+Python process; the jobs submitted earlier can be listed with ``client.job.list_jobs()``, and a
+pending or running job can be cancelled with ``client.job.cancel(token)``. For example, to download
+the results of a job that was submitted in an earlier session: ::
 
     token = client.tokens[-1]
     client.job.get_results(token, working_directory="out_dir")
 
-The results would be downloaded to the given working directory. The downloaded GDX file will have the same name with :meth:`gdxOutputPath <gamspy.Container.gdxOutputPath>`. 
-Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded GDX 
+The results would be downloaded to the given working directory. The downloaded GDX file will have the same name with :meth:`gdxOutputPath <gamspy.Container.gdxOutputPath>`.
+Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded GDX
 file: ::
 
     gdx_out_path = os.path.join("out_dir", os.path.basename(m.gdxOutputPath()))
     solution_container = gp.Container(load_from=gdx_out_path)
 
+.. deprecated:: 1.27.0
+
+    Setting ``is_blocking=False`` on ``EngineClient`` and calling ``solve`` is deprecated in
+    favour of ``solveAsync``.
+
+
+.. _neos_backend:
 
 Solving with NEOS Server
 ------------------------
@@ -573,36 +655,47 @@ Asynchronous Solve
 ~~~~~~~~~~~~~~~~~~
 
 If you just want to send your jobs to NEOS server without blocking until the results are received,
-`is_blocking` parameter can be set to `False` in `NeosClient`.
-
-All submitted jobs are stored in `client.jobs` in case you want to reach to the job numbers and job passwords
-you already sent to the server. ::
+use :meth:`solveAsync <gamspy.Model.solveAsync>` with the ``neos`` backend. Each submission returns
+a handle that collects the solution into your model. All submitted jobs are also stored in
+`client.jobs` in case you want to reach to the job numbers and job passwords you already sent to
+the server. ::
 
     client = gp.NeosClient(
         email=os.environ["NEOS_EMAIL"],
         username=os.environ["NEOS_USER"],
         password=os.environ["NEOS_PASSWORD"],
-        is_blocking=False,
     )
 
+    handles = []
     for _ in range(3):
         ... # changes in your model
-        model.solve(backend="neos", client=client)
+        handles.append(model.solveAsync(backend="neos", client=client))
 
-    print(client.jobs) # This prints all job numbers and jon passwords as a list of tuples
+    print(client.jobs) # This prints all job numbers and job passwords as a list of tuples
 
-The results of the non-blocking jobs can be retrieved later. For example if want to retrieve the results of the 
-last submitted job, we can do that following: ::
+    for handle in handles:
+        summary = handle.wait()
+        # Collecting the next handle overwrites the records, so copy what you need now.
+        ...
+
+The job keeps running on the server independently of your Python process, so
+``handle.job_number`` and ``handle.job_password`` can also be used with the client directly — for
+example to download the results of a job that was submitted in an earlier session: ::
 
     job_number, job_password = client.jobs[-1]
     client.get_final_results(job_number, job_password)
     client.download_output(job_number, job_password, working_directory="my_out_directory")
 
-The results would be downloaded to the given working directory. The downloaded gdx file will always have the name "output.gdx". 
-Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded gdx 
+The results would be downloaded to the given working directory. The downloaded gdx file will always have the name "output.gdx".
+Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded gdx
 file: ::
 
     solution_container = gp.Container(load_from="my_out_directory/output.gdx")
+
+.. deprecated:: 1.27.0
+
+    Setting ``is_blocking=False`` on ``NeosClient`` and calling ``solve`` is deprecated in favour
+    of ``solveAsync``.
 
 
 The terms of use for NEOS can be found here: `Terms of use <https://neos-server.org/neos/termofuse.html>`_.

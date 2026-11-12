@@ -4,6 +4,7 @@ import math
 import os
 import tempfile
 import uuid
+import warnings
 from pathlib import Path
 
 import pandas as pd
@@ -24,6 +25,7 @@ from gamspy import (
     Variable,
     VariableType,
 )
+from gamspy._backend.local import LocalSolveHandle
 from gamspy._model import FileFormat
 from gamspy._options import ConvertOptions
 from gamspy.exceptions import ValidationError
@@ -1397,6 +1399,47 @@ def test_reassigned_equation_exception():
         match=r"Each given equation in `equations` argument must be a type of Equation but found an expression:",
     ):
         gp.Model(m, equations=[e])
+
+
+def test_grid_solve_validations():
+    m = gp.Container()
+    x = gp.Variable(m, "x")
+    e = gp.Equation(m, "e", definition=x >= 5)
+    model = gp.Model(
+        m, "grid_model", equations=[e], problem="LP", sense="MIN", objective=x
+    )
+
+    handle = LocalSolveHandle(model, 123, "cplex", gp.Options())
+    assert isinstance(handle, gp.SolveHandle)
+    assert handle.backend == "local"
+    assert "job=123" in repr(handle)
+
+    with pytest.raises(ValidationError, match=r"`timeout` must be nonnegative"):
+        handle.wait(timeout=-1)
+
+    # A collected handle cannot be waited for or polled again.
+    handle._is_collected = True
+    with pytest.raises(ValidationError, match=r"already been collected"):
+        handle.wait()
+
+    with pytest.raises(ValidationError, match=r"already been collected"):
+        handle.isReady()
+
+    m.close()
+
+
+def test_async_client_deprecation():
+    with pytest.warns(DeprecationWarning, match=r"`is_blocking=False` is deprecated"):
+        gp.EngineClient(host="https://engine.gams.com/api/", is_blocking=False)
+
+    with pytest.warns(DeprecationWarning, match=r"`is_blocking=False` is deprecated"):
+        gp.NeosClient(email="test@test.com", is_blocking=False)
+
+    # The blocking default stays silent.
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        gp.EngineClient(host="https://engine.gams.com/api/")
+        gp.NeosClient(email="test@test.com")
 
 
 def test_model_attributes():

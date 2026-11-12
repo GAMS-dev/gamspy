@@ -5,6 +5,8 @@ import logging
 import os
 import shutil
 import ssl
+import time
+import warnings
 import xmlrpc.client
 import zipfile
 from pathlib import Path
@@ -65,6 +67,12 @@ class NeosClient:
             Priority of the job, by default "long"
         is_blocking : bool, optional
             Decides on sync or async execution, by default True
+
+            .. deprecated::
+                Use :meth:`Model.solveAsync <gamspy.Model.solveAsync>` to submit
+                a solve without blocking. It returns a
+                :class:`SolveHandle <gamspy.SolveHandle>` that collects the
+                solution into the model instead of leaving it on the server.
         """
         self.email = email
         self.server = server
@@ -72,6 +80,16 @@ class NeosClient:
         self.password = password
         self.priority = priority
         self.is_blocking = is_blocking
+
+        if not is_blocking:
+            warnings.warn(
+                "`is_blocking=False` is deprecated and will be removed in a future"
+                " release. Use `Model.solveAsync(backend='neos', client=...)`"
+                " instead, which returns a `SolveHandle` that loads the solution"
+                " back into the model.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
         context = ssl.create_default_context(cafile=certifi.where())
         self.neos = xmlrpc.client.ServerProxy(server, context=context)
         self.jobs: list[tuple] = []
@@ -381,6 +399,74 @@ class NeosClient:
         return job_number, job_password
 
 
+class NeosSolveHandle(backend.SolveHandle):
+    """
+    Handle of an asynchronous solve submitted to NEOS Server by
+    :meth:`Model.solveAsync <gamspy.Model.solveAsync>`.
+
+    The job keeps running on the server independently of the Python process;
+    its credentials are available as :attr:`job_number` and
+    :attr:`job_password`, and in ``client.jobs``.
+    """
+
+    backend = "neos"
+
+    def __init__(
+        self,
+        model: Model,
+        runner: NEOSServer,
+        job_number: int,
+        job_password: str,
+    ) -> None:
+        super().__init__(model)
+        self._runner = runner
+        self.job_number = job_number
+        self.job_password = job_password
+
+    @property
+    def _job_id(self) -> int:
+        return self.job_number
+
+    def isReady(self) -> bool:
+        self._validate()
+
+        status = self._runner.client.get_job_status(self.job_number, self.job_password)
+
+        if status in ("Unknown Job", "Bad Password"):
+            raise NeosClientException(
+                f"Could not get the status of job {self.job_number}: {status}."
+            )
+
+        return status == "Done"
+
+    def wait(
+        self,
+        timeout: float | None = None,
+        output: TextIO | None = None,
+        options: Options | None = None,
+    ) -> pd.DataFrame:
+        self._validate_timeout(timeout)
+        self._validate()
+
+        runner = self._runner
+        model = self.model
+
+        if output is None:
+            output = model.container.output
+
+        runner._wait_for_job(self.job_number, self.job_password, timeout)
+        runner._fetch_results(self.job_number, self.job_password, output, options)
+        self._is_collected = True
+
+        runner.parse_listings(model)
+        summary = runner.prepare_summary(model)
+
+        # Load the solution into GAMS and GAMSPy
+        runner._sync()
+
+        return summary
+
+
 class NEOSServer(backend.Backend):
     def __init__(
         self,
@@ -404,7 +490,7 @@ class NEOSServer(backend.Backend):
         self.client = client
 
     def is_async(self) -> bool:
-        return not self.client.is_blocking
+        return self.options._async_mode == "submit" or not self.client.is_blocking
 
     def run(self) -> pd.DataFrame | None:
         # Run a dummy job to get the restart file to be sent to NEOS Server
@@ -418,6 +504,7 @@ class NEOSServer(backend.Backend):
         self.execute_gams(gams_string)
 
         if self.is_async():
+            self._mark_unloaded_symbols_dirty()
             return None
 
         # Synchronize GAMSPy with checkpoint and return a summary
@@ -427,6 +514,10 @@ class NEOSServer(backend.Backend):
         self._sync()
 
         return summary
+
+    def create_handle(self) -> NeosSolveHandle:
+        job_number, job_password = self._job
+        return NeosSolveHandle(self.model, self, job_number, job_password)
 
     def execute_gams(self, gams_string: str) -> None:
         working_directory = self.container.working_directory
@@ -449,46 +540,80 @@ class NEOSServer(backend.Backend):
             working_directory=working_directory,
         )
 
-        job_number, job_password = self.client.submit_job(
-            working_directory=working_directory
-        )
+        self._job = self.client.submit_job(working_directory=working_directory)
 
-        if self.client.is_blocking:
-            _ = self.client.get_final_results(job_number, job_password)
-
-            self.client.download_output(
-                job_number,
-                job_password,
-                working_directory=working_directory,
-            )
-
-            out_gdx = os.path.join(working_directory, "output.gdx")
-            attr_gdx = os.path.join(working_directory, "gams1.gdx")
-            log_path = os.path.join(working_directory, "solve.log")
-            if not os.path.exists(out_gdx):
-                raise GamspyException(
-                    "The job was not completed successfully. Check"
-                    f" {log_path} for details."
-                )
-            shutil.move(out_gdx, self.container._gdx_out)
-            shutil.move(attr_gdx, self.model._attr_gdx_file)
-
-            if self.output is not None:
-                with open(log_path) as file:
-                    self.output.write(file.read())
-
-            if self.options.log_file is not None and not os.path.exists(
-                self.options.log_file
-            ):
-                shutil.copy(log_path, self.options.log_file)
-
-        self.container._unsaved_statements = []
-        if not self.is_async() and self.model:
-            self.model._update_model_attributes()
+        try:
+            if not self.is_async():
+                self._fetch_results(*self._job, output=self.output)
+        finally:
+            self.container._unsaved_statements = []
             self.container._delete_autogenerated_symbols()
 
+    def _wait_for_job(
+        self,
+        job_number: int,
+        job_password: str,
+        timeout: float | None = None,
+    ) -> None:
+        POLL_INTERVAL = 1.0  # Poll every second to be nice to NEOS Server
+        deadline = None if timeout is None else time.monotonic() + timeout
+
+        while True:
+            status = self.client.get_job_status(job_number, job_password)
+
+            if status == "Done":
+                return
+
+            if status in ("Unknown Job", "Bad Password"):
+                raise NeosClientException(
+                    f"Could not get the status of job {job_number}: {status}."
+                )
+
+            if deadline is not None and time.monotonic() >= deadline:
+                raise TimeoutError(
+                    f"The asynchronous solve of model `{self.model.name}` did not"
+                    f" finish within {timeout} seconds. The job ({job_number}) keeps"
+                    " running on NEOS Server."
+                )
+
+            time.sleep(POLL_INTERVAL)
+
+    def _fetch_results(
+        self,
+        job_number: int,
+        job_password: str,
+        output: TextIO | None = None,
+        options: Options | None = None,
+    ) -> None:
+        working_directory = self.container.working_directory
+        _ = self.client.get_final_results(job_number, job_password)
+
+        self.client.download_output(
+            job_number,
+            job_password,
+            working_directory=working_directory,
+        )
+
+        out_gdx = os.path.join(working_directory, "output.gdx")
+        attr_gdx = os.path.join(working_directory, "gams1.gdx")
+        log_path = os.path.join(working_directory, "solve.log")
+        if not os.path.exists(out_gdx):
+            raise GamspyException(
+                f"The job was not completed successfully. Check {log_path} for details."
+            )
+        shutil.move(out_gdx, self.container._gdx_out)
+        shutil.move(attr_gdx, self.model._attr_gdx_file)
+
+        if output is not None:
+            with open(log_path) as file:
+                output.write(file.read())
+
+        self._copy_log(log_path, self.options if options is None else options)
+
+        self.model._update_model_attributes()
+
     def postprocess(self) -> pd.DataFrame | None:
-        if self.client.is_blocking:
+        if not self.is_async():
             self.parse_listings(self.model)
             return self.prepare_summary(self.model)
 
