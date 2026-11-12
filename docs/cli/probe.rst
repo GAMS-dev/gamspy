@@ -22,6 +22,18 @@ Usage
      - -j
      - None
      - Output path to dump probed information.
+   * - -\-ports
+     - -p
+     - None
+     - Starting port and number of ports to search for available ports for instantiating a use-limited license.
+   * - -\-use-port
+     - -u
+     - None
+     - Starting port for instantiating a use-limited license.
+   * - -\-network-interfaces
+     - -n
+     - False
+     - List all available network interfaces and their hashes instead of the node information.
 
 Example
 ~~~~~~~

@@ -440,6 +440,9 @@ class Options(BaseModel):
         self._hidden_options: dict[str, Any] = {}
         self._extra_options: dict[str, Any] = {}
         self._solve_line: str | None = None
+        self._async_mode: Literal["submit", "collect"] | None = None
+        self._use_grid: bool = False
+        self._option_file_number: int = 0
 
     @staticmethod
     def _cast_value(value: _T) -> _T | bool | int | float:
@@ -505,6 +508,7 @@ class Options(BaseModel):
                     except (KeyError, ValueError) as e:
                         raise ValidationError(
                             f"`{value}` is not a valid value for `{key}`. Possible values are 2 and 5."
+                            " For solvelink 3, use `Model.solveAsync` instead of an option."
                         ) from e
                 else:
                     value = Options._cast_value(value)
@@ -605,6 +609,15 @@ class Options(BaseModel):
 
             value = int(value) if isinstance(value, bool) else value
             gams_options[OPTION_MAP[key]] = value
+
+        if self._use_grid:
+            gams_options["solvelink"] = 3
+
+        # Grid solves print their solution listing at collection, regardless of solprint.
+        if self._async_mode == "collect" and self.report_solution == 1:
+            gams_options["asyncsollst"] = 1
+            if self.listing_file:
+                gams_options["appendout"] = 1
 
         gams_options["previouswork"] = 1  # # In case GAMS version differs on backend
 

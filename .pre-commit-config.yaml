@@ -9,24 +9,31 @@ repos:
     -   id: check-ast
     -   id: check-case-conflict
 -   repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.96
+    rev: v0.0.101
     hooks:
     -   id: ty
         entry: uv run --active ty check src
         language: python
         pass_filenames: false
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.3
+    rev: v0.17.4
     hooks:
     # Run the linter.
     -   id: ruff-check
         args: [ --fix ]
     # Run the formatter.
     -   id: ruff-format
--   repo: https://github.com/Yelp/detect-secrets
-    rev: v1.5.0
+-   repo: https://github.com/betterleaks/betterleaks
+    rev: v1.10.0
     hooks:
-    -   id: detect-secrets
-        # The separator class keeps the exclusion working on Windows, where
-        # detect-secrets normalises paths to docs\user\notebooks\...
-        args: [ --baseline, .secrets.baseline, --exclude-files, '^docs[/\\]user[/\\]notebooks[/\\]' ]
+    -   id: betterleaks
+        entry: betterleaks dir --config .betterleaks.toml --no-banner --redact --verbose
+        pass_filenames: true
+-   repo: local
+    hooks:
+    -   id: scan-site-packages
+        name: Scan site-packages for startup code
+        entry: python -I -S scripts/scan_site_packages.py
+        language: system
+        pass_filenames: false
+        always_run: true

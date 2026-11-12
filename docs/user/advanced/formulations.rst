@@ -1522,3 +1522,142 @@ Symbol                             Formulation       Key
 ``k``-th :math:`y \leq \dots`      xor, imp and eqv  ``upper_k``
 :math:`y`                          all               ``output``
 =================================  ================  ==============
+
+Reified Constraints
+-------------------
+
+The logical formulations combine binary variables. Often, the yes/no
+decision is not a variable but a constraint: a discount applies *if the order
+is at least 100 units*, or *at least three regions must meet their delivery
+target*. :meth:`reify <gamspy.formulations.reify>` creates a binary variable
+that is 1 if and only if a constraint holds. The binary variable can then be
+summed up, combined with the logical formulations or used in an indicator
+constraint.
+
+.. code-block:: python
+
+   import gamspy as gp
+
+   m = gp.Container()
+   r = gp.Set(m, "r", records=["north", "south", "east", "west", "central"])
+   target = gp.Parameter(
+       m,
+       "target",
+       domain=r,
+       records=[("north", 80), ("south", 60), ("east", 70), ("west", 50), ("central", 90)],
+   )
+   served = gp.Variable(m, "served", type="positive", domain=r)
+   served.up[r] = 120
+
+   # met[r] == 1  <=>  served[r] >= target[r]
+   met, eqs = gp.formulations.reify(served[r] >= target[r], epsilon=0.01)
+
+   at_least_three = gp.Equation(m, "at_least_three")
+   at_least_three[...] = gp.Sum(r, met[r]) >= 3
+
+The constraint can be an inequality or an equality, with a condition or
+indexed with a multidimensional subset as for :meth:`indicator
+<gamspy.formulations.indicator>`. The result has the domain of the
+constraint.
+
+Do You Need a Reified Constraint?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A reified constraint is two indicator constraints, one for each direction of
+the "if and only if". If the model only needs one direction, use
+:meth:`indicator <gamspy.formulations.indicator>` directly. In the example
+above, minimizing the delivery cost never benefits from setting ``met`` to 1
+without meeting the target, so ``met == 1  =>  served >= target`` is enough:
+
+.. code-block:: python
+
+   met_only = gp.Variable(m, "met_only", type="binary", domain=r)
+   _, eqs = gp.formulations.indicator(met_only, 1, served[r] >= target[r])
+
+``met_only`` is then only guaranteed to be correct in the direction that the
+objective pushes it: ``met_only`` can be 0 for a region whose target is met.
+Use :meth:`reify <gamspy.formulations.reify>` when the binary variable must be
+correct in both directions, e.g. when it is penalized and rewarded in
+different places, used in reports, or combined with other logic:
+
+.. code-block:: python
+
+   order = gp.Variable(m, "order", type="integer", domain=r)
+   order.up[r] = 500
+   has_contract = gp.Variable(m, "has_contract", type="binary", domain=r)
+
+   # large[r] == 1  <=>  order[r] >= 100
+   large, eqs = gp.formulations.reify(order[r] >= 100, epsilon=1, big_m=500)
+
+   # discount[r] == large[r] OR has_contract[r]
+   discount, eqs = gp.formulations.logical_or(large, has_contract)
+
+Choosing Epsilon
+^^^^^^^^^^^^^^^^
+
+In traditional mathematical optimization one cannot express a strict inequality, so it cannot state that a
+constraint is violated, e.g. :math:`order < 100`. Instead, the violation must
+be at least ``epsilon``, i.e. :math:`order \leq 100 - \epsilon`. Values
+strictly between :math:`100 - \epsilon` and 100 become infeasible.
+
+- If the constraint only takes integer values, as for the integer variable
+  ``order`` above, ``epsilon=1`` is exact.
+- Otherwise, choose ``epsilon`` as the smallest violation that matters for
+  your model, e.g. 0.01 units of ``served``. It must be more than twice the
+  feasibility tolerance of the solver, which is typically :math:`10^{-6}`.
+  With a smaller ``epsilon``, a point slightly above the boundary satisfies
+  both directions within the tolerance, and the binary variable can take
+  either value.
+
+How Reified Constraints Work
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For a constraint :math:`lhs \leq rhs`, :meth:`reify
+<gamspy.formulations.reify>` creates a binary variable :math:`y` and two
+indicator constraints:
+
+.. math::
+
+   y = 1 \implies lhs \leq rhs
+
+   y = 0 \implies lhs \geq rhs + \epsilon
+
+A ``>=`` constraint is handled symmetrically. The negation of an equality has
+two cases, :math:`lhs \geq rhs + \epsilon` or :math:`lhs \leq rhs -
+\epsilon`, so two additional binary variables :math:`a` and :math:`b` select
+one of them:
+
+.. math::
+
+   y = 1 \implies lhs = rhs
+
+   a = 1 \implies lhs \geq rhs + \epsilon
+
+   b = 1 \implies lhs \leq rhs - \epsilon
+
+   y + a + b = 1
+
+The indicator constraints are modeled with :meth:`indicator
+<gamspy.formulations.indicator>`, so ``big_m`` and ``native`` work as
+described in `Indicator Constraints`_. ``big_m`` must be valid for both
+directions, which holds if it is at least the largest value of
+:math:`|lhs - rhs|` plus ``epsilon``. In the order example, :math:`|order -
+100|` is at most 400, so ``big_m=500`` is valid.
+
+The generated symbols are available in the returned
+:class:`FormulationResult <gamspy.formulations.FormulationResult>` under the
+following keys. The keys of the indicator constraints are those of
+:meth:`indicator <gamspy.formulations.indicator>`, e.g. ``big_m`` or
+``slack`` and ``link``, with a prefix:
+
+============================================  ==============================
+Symbol                                        Key
+============================================  ==============================
+:math:`y`                                     ``output``
+:math:`y = 1 \implies` constraint             ``holds_`` + indicator key
+:math:`y = 0 \implies` negation               ``violated_`` + indicator key
+:math:`a`, :math:`b`                          ``above``, ``below``
+:math:`a = 1 \implies \dots`                  ``violated_`` + indicator key + ``_0``
+:math:`b = 1 \implies \dots`                  ``violated_`` + indicator key + ``_1``
+:math:`y + a + b = 1`                         ``pick_one``
+============================================  ==============================

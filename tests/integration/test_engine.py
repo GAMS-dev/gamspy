@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import math
 import os
 import pathlib
 import platform
@@ -14,6 +15,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+import gamspy as gp
 from gamspy import (
     Container,
     EngineClient,
@@ -242,6 +244,22 @@ def test_logoption(transport, tmp_path):
     )
     assert os.path.exists(log_file_path)
 
+    transport.solve(
+        backend="engine",
+        client=client,
+        options=Options(log_file=log_file_path, append_to_log_file=True),
+    )
+    with open(log_file_path) as file:
+        assert file.read().count("Normal completion") == 2
+
+    transport.solve(
+        backend="engine",
+        client=client,
+        options=Options(log_file=log_file_path),
+    )
+    with open(log_file_path) as file:
+        assert file.read().count("Normal completion") == 1
+
     # logoption=3
     transport.solve(backend="engine", client=client, output=sys.stdout)
     assert not os.path.exists(os.path.join(m.working_directory, "log_stdout.txt"))
@@ -438,13 +456,14 @@ def test_non_blocking(transport, tmp_path):
         sense=Sense.MIN,
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
-    client = EngineClient(
-        host=os.environ["ENGINE_URL"],
-        username=os.environ["ENGINE_USER"],
-        password=os.environ["ENGINE_PASSWORD"],
-        namespace=os.environ["ENGINE_NAMESPACE"],
-        is_blocking=False,
-    )
+    with pytest.deprecated_call():
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+            is_blocking=False,
+        )
     # send jobs asynchronously
     for _ in range(3):
         transport.solve(backend="engine", client=client)
@@ -466,6 +485,130 @@ def test_non_blocking(transport, tmp_path):
     assert "x" in container.data
     x.setRecords(container["x"].records)
     assert x.records.equals(container["x"].records)
+
+
+def test_solve_async(transport, tmp_path):
+    m, canning_plants, markets, distances, capacities, demands = transport
+    i = Set(m, name="i", records=canning_plants)
+    j = Set(m, name="j", records=markets)
+
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
+    d = Parameter(m, name="d", domain=[i, j], records=distances)
+    c = Parameter(m, name="c", domain=[i, j])
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(m, name="x", domain=[i, j], type="Positive")
+
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+    client = EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+    )
+
+    handle = transport.solveAsync(backend="engine", client=client)
+    assert isinstance(handle, gp.SolveHandle)
+    assert handle.backend == "engine"
+    assert handle.token == client.tokens[-1]
+
+    summary = handle.wait()
+    assert isinstance(summary, pd.DataFrame)
+    assert math.isclose(transport.objective_value, 153.675, rel_tol=0.001)
+    assert math.isclose(x.records["level"].sum(), 900)
+
+    # The solution can only be collected once.
+    with pytest.raises(ValidationError):
+        handle.wait()
+
+    log_file = tmp_path / "engine.log"
+    handle = transport.solveAsync(backend="engine", client=client)
+    handle.wait(options=Options(log_file=str(log_file)))
+    assert "Normal completion" in log_file.read_text()
+
+    # Several scenarios in flight at once.
+    handles = {}
+    for factor in (1.0, 2.0):
+        c[i, j] = factor * 90 * d[i, j] / 1000
+        handles[factor] = transport.solveAsync(backend="engine", client=client)
+
+    for factor, handle in handles.items():
+        assert handle.wait() is not None
+        assert math.isclose(transport.objective_value, factor * 153.675, rel_tol=0.001)
+
+
+def test_solve_async_timeout(transport):
+    m, *_ = transport
+    v = Variable(m, name="v")
+    e = Equation(m, name="e", definition=v >= 5)
+    model = Model(
+        m, name="tiny", equations=[e], problem="LP", sense=Sense.MIN, objective=v
+    )
+    client = EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+    )
+
+    handle = model.solveAsync(backend="engine", client=client)
+
+    with pytest.raises(ValidationError, match=r"`timeout` must be nonnegative"):
+        handle.wait(timeout=-1)
+
+    # The job keeps running after a timeout and can still be collected.
+    try:
+        handle.wait(timeout=0)
+    except TimeoutError:
+        pass
+
+    assert handle.wait() is not None
+    assert math.isclose(model.objective_value, 5)
+
+
+def test_solve_async_sends_records_to_gams(transport):
+    m, *_ = transport
+    p = Parameter(m, name="p", records=1)
+    q = Parameter(m, name="q", records=1)
+    v = Variable(m, name="v")
+    e = Equation(m, name="e", definition=v >= p + q)
+    model = Model(
+        m, name="sum_model", equations=[e], problem="LP", sense=Sense.MIN, objective=v
+    )
+    client = EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+    )
+
+    p.records = pd.DataFrame({"value": [42.0]})
+    first = model.solveAsync(backend="engine", client=client)
+    q.records = pd.DataFrame({"value": [7.0]})
+    second = model.solveAsync(backend="engine", client=client)
+
+    r = Parameter(m, name="r")
+    r[...] = p + q
+    assert math.isclose(r.toValue(), 49)
+
+    assert first.wait() is not None
+    assert math.isclose(model.objective_value, 43)
+    assert second.wait() is not None
+    assert math.isclose(model.objective_value, 49)
 
 
 def test_api_job(transport, tmp_path):

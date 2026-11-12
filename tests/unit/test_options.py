@@ -100,6 +100,33 @@ def test_options(transport, tmp_path):
     options = Options(solve_link_type="disk")
     assert options._get_gams_compatible_options()["solvelink"] == 2
 
+    # A submission to the GAMS grid overrides the solve link.
+    options._use_grid = True
+    assert options._get_gams_compatible_options()["solvelink"] == 3
+    options._use_grid = False
+
+    # Engine and NEOS submissions run the solve remotely, not on the grid.
+    options._async_mode = "submit"
+    assert options._get_gams_compatible_options()["solvelink"] == 2
+    options._async_mode = None
+
+    # The solution listing of a grid solve is printed at collection.
+    collect = Options(report_solution=1, listing_file=str(tmp_path / "a.lst"))
+    collect._async_mode = "collect"
+    gams_options = collect._get_gams_compatible_options()
+    assert gams_options["asyncsollst"] == 1
+    assert gams_options["appendout"] == 1
+
+    collect = Options(report_solution=1)
+    collect._async_mode = "collect"
+    gams_options = collect._get_gams_compatible_options()
+    assert gams_options["asyncsollst"] == 1
+    assert "appendout" not in gams_options
+
+    collect = Options()
+    collect._async_mode = "collect"
+    assert "asyncsollst" not in collect._get_gams_compatible_options()
+
     options_path = str(tmp_path / "options.pf")
     options.export(options_path)
     with open(options_path) as file:
@@ -1302,6 +1329,10 @@ def test_options_from_gams():
     assert options.time_limit == 5
     assert options.lp == "cplex"
     assert options.solve_link_type == "memory"
+
+    # solvelink 3 (grid) is not an option; it belongs to Model.solveAsync.
+    with pytest.raises(exceptions.ValidationError):
+        _ = Options.fromGams({"solvelink": 3})
 
     with pytest.raises(exceptions.ValidationError):
         _ = Options.fromGams({"solvelink": 4})

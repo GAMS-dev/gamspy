@@ -277,7 +277,7 @@ def test_renaming(container, tmp_path):
     assert reference_tex == generated_tex
 
     # Renaming only applies to the generated file.
-    assert supply.latexRepr() == "$\n\\sum_{j} x_{i,j} \\leq a_{i}\\hfill \\forall i\n$"
+    assert supply.latexRepr() == "$\n\\sum_{j} x_{i,j} \\leq a_{i}\\quad \\forall i\n$"
     assert supply.unicodeRepr() == "∑(j) x[i,j] ≤ a[i]  ∀ i"
 
 
@@ -355,7 +355,7 @@ def test_symbol_name_with_underscore():
     assert (
         fuel_balance_air.latexRepr()
         == r"""$
-fuel\_at\_landing_{cities} = fuel\_at\_takeoff_{cities - 1} - (1 + \frac{0.5 \cdot (fuel\_at\_takeoff_{cities - 1} + fuel\_at\_landing_{cities})}{2000}) \cdot distance\_for\_next\_city_{cities - 1}\hfill \forall cities ~ | ~ \operatorname{ord}(cities) > 1
+fuel\_at\_landing_{cities} = fuel\_at\_takeoff_{cities - 1} - (1 + \frac{0.5 \cdot (fuel\_at\_takeoff_{cities - 1} + fuel\_at\_landing_{cities})}{2000}) \cdot distance\_for\_next\_city_{cities - 1}\quad \forall cities ~ | ~ \operatorname{ord}(cities) > 1
 $"""
     )
 
@@ -401,31 +401,38 @@ def test_equation_latex_repr(container):
     e1 = Equation(m, "e1", domain=i)
     e1[i] = (x[i] + 1) * (x[i] - 1) == a[i]
     assert e1.latexRepr() == (
-        "$\n(x_{i} + 1) \\cdot (x_{i} - 1) = a_{i}\\hfill \\forall i\n$"
+        "$\n(x_{i} + 1) \\cdot (x_{i} - 1) = a_{i}\\quad \\forall i\n$"
     )
 
     e2 = Equation(m, "e2", domain=i)
     e2[i] = -x[i] + a[i] == 0
-    assert e2.latexRepr() == "$\n-x_{i} + a_{i} = 0\\hfill \\forall i\n$"
+    assert e2.latexRepr() == "$\n-x_{i} + a_{i} = 0\\quad \\forall i\n$"
 
     # A literal in the definition domain restricts the declared set
     e3 = Equation(m, "e3", domain=[i, j])
     e3[i, "j_1"] = x[i] <= 10
     assert e3.latexRepr() == (
-        "$\nx_{i} \\leq 10\\hfill \\forall i ~ | ~ j = \\text{`j\\_1'}\n$"
+        "$\nx_{i} \\leq 10\\quad \\forall i ~ | ~ j = \\text{`j\\_1'}\n$"
     )
 
     e4 = Equation(m, "e4", domain=[i, j])
     e4[i, "j_1"].where[(a[i] > 0) | (a[i] < -1)] = x[i] <= 10
     assert e4.latexRepr() == (
-        "$\nx_{i} \\leq 10\\hfill \\forall i ~ | ~ j = \\text{`j\\_1'} "
+        "$\nx_{i} \\leq 10\\quad \\forall i ~ | ~ j = \\text{`j\\_1'} "
         "\\wedge (a_{i} > 0 \\vee a_{i} < -1)\n$"
     )
 
     e5 = Equation(m, "e5", domain=i)
     e5["i1"] = x["i1"] == 1
     assert e5.latexRepr() == (
-        "$\nx_{\\text{`i1'}} = 1\\hfill \\text{if } i = \\text{`i1'}\n$"
+        "$\nx_{\\text{`i1'}} = 1\\quad \\text{if } i = \\text{`i1'}\n$"
+    )
+
+    assert e2.latexRepr(separator="\\hspace{1cm}", delimiters=("$$", "$$")) == (
+        "$$-x_{i} + a_{i} = 0\\hspace{1cm} \\forall i$$"
+    )
+    assert e5.latexRepr(separator="", delimiters=("", "")) == (
+        "x_{\\text{`i1'}} = 1 \\text{if } i = \\text{`i1'}"
     )
 
 
@@ -482,6 +489,10 @@ def test_to_latex_document(container, tmp_path):
         in content
     )
     assert r"&z_{i} \geq 0 ~ (\text{SOS1}) ~ \forall i&\\" in content
+
+    model.toLatex(str(tmp_path), separator=r"\hfill")
+    with open(tmp_path / "document.tex", encoding="utf-8") as file:
+        assert r"\hfill \forall i" in file.read()
 
 
 TRANSPORT_UNICODE = """Sets
@@ -565,3 +576,96 @@ def test_to_unicode_matches():
         " ⊥ x[s]  ∀ s"
     ) in lines
     assert "  budget: ∑(s) x[s] = 1.0 ⊥ m_budget" in lines
+
+
+TRANSPORT_MARKDOWN = r"""## Sets
+
+| Symbol | Description |
+| --- | --- |
+| $i_{*}$ | canning plants |
+| $j_{*}$ | markets |
+
+## Parameters
+
+| Symbol | Description |
+| --- | --- |
+| $a_{i}$ | capacity of plant i in cases |
+| $b_{j}$ | demand at market j in cases |
+| $c_{i,j}$ | transport cost in thousands of dollars per case |
+
+## Variables
+
+| Symbol | Description |
+| --- | --- |
+| $x_{i,j}$ | shipment quantities in cases |
+
+## Equations
+
+| Symbol | Description |
+| --- | --- |
+| $supply_{i}$ | observe supply limit at plant i |
+| $demand_{j}$ | satisfy demand at market j |
+
+## Model Definition
+
+$$
+\min \sum_{i,j} c_{i,j} \cdot x_{i,j}
+$$
+
+subject to
+
+$supply_{i}$
+$$
+\sum_{j} x_{i,j} \leq a_{i}\quad \forall i
+$$
+
+$demand_{j}$
+$$
+\sum_{i} x_{i,j} \geq b_{j}\quad \forall j
+$$
+
+$$
+x_{i,j} \geq 0\quad \forall i,j
+$$"""
+
+
+def test_to_markdown(container, tmp_path, capsys):
+    transport = model_builders.lp_transport(container)
+
+    assert transport.toMarkdown() == TRANSPORT_MARKDOWN
+    assert capsys.readouterr().out == ""
+
+    output_path = tmp_path / "to_markdown"
+    assert transport.toMarkdown(output_path) == TRANSPORT_MARKDOWN
+    assert "Markdown (.md) file has been generated" in capsys.readouterr().out
+    with open(output_path / "transport.md", encoding="utf-8") as file:
+        assert file.read() == TRANSPORT_MARKDOWN + "\n"
+
+    x = container["x"]
+    renamed = transport.toMarkdown(rename={"x": r"\rho"})
+    assert "| $\\rho_{i,j}$ | shipment quantities in cases |" in renamed
+    assert "\\sum_{j} \\rho_{i,j} \\leq a_{i}\\quad \\forall i" in renamed
+    assert x[...].latexRepr() == "x_{i,j}"
+
+    renamed = transport.toMarkdown(rename={"x": r"\|x|"})
+    assert "| $\\Vert x\\vert _{i,j}$ | shipment quantities in cases |" in renamed
+
+    separated = transport.toMarkdown(separator=r"\hspace{1cm}")
+    assert "a_{i}\\hspace{1cm} \\forall i" in separated
+    assert "x_{i,j} \\geq 0\\hspace{1cm} \\forall i,j" in separated
+
+
+def test_to_markdown_without_objective(container):
+    m = container
+    i = Set(m, "i", records=["i1", "i2"], description="a | b, $5 * a_b <c>")
+    v = Variable(m, "v", domain=i, type="binary")
+    e = Equation(m, "e", domain=i)
+    e[i] = v[i] >= 1
+    model = Model(m, "binaries", problem="MIP", equations=[e])
+
+    markdown = model.toMarkdown()
+    assert "| $i_{*}$ | a \\| b, \\$5 \\* a\\_b \\<c> |" in markdown
+    assert markdown.split("## Model Definition\n\n")[1] == (
+        "$e_{i}$\n$$\nv_{i} \\geq 1\\quad \\forall i\n$$\n\n"
+        "$$\nv_{i} \\in \\{0,1\\}\\quad \\forall i\n$$"
+    )

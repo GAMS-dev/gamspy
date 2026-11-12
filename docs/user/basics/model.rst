@@ -298,6 +298,8 @@ Here is the list of options and their descriptions:
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 | allow_suffix_in_limited_variables | Allow domain limited variables with suffixes in model                             | bool                                                                                      |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| append_to_log_file                | Append to the log file instead of overwriting it                                  | bool                                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 | basis_detection_threshold         | Basis detection threshold                                                         | float                                                                                     |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 | compile_error_limit               | Compile time error limit                                                          | int                                                                                       |
@@ -447,10 +449,78 @@ Execution Backends
 ==================
 GAMSPy allows you to solve models locally or on cloud platforms.
 
+Asynchronous Solve
+------------------
+
+By default, :meth:`solve <gamspy.Model.solve>` blocks until the solver is done.
+:meth:`solveAsync <gamspy.Model.solveAsync>` submits the solve instead: the model instance is
+generated with the current data and handed to the backend, and ``solveAsync`` returns a
+:class:`SolveHandle <gamspy.SolveHandle>` immediately while the solve runs in the background.
+You can continue working in Python and submit more solves — of other models or of the same model
+with modified data — so that many solves are in flight at once. The solution of each submitted
+instance is collected with :meth:`SolveHandle.wait <gamspy.SolveHandle.wait>`, which blocks until
+that solve is done, loads its solution into the model and returns the solve summary. ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+    ...
+
+    # Solve one scenario per capacity, all in parallel.
+    handles = {}
+    for capacity in [300, 350, 400]:
+        a["seattle"] = capacity
+        handles[capacity] = transport.solveAsync()
+
+    results = {}
+    for capacity, handle in handles.items():
+        handle.wait()
+        # Collecting the next handle overwrites the records, so copy what you need now.
+        results[capacity] = (transport.objective_value, x.records.copy())
+
+``wait`` accepts an optional ``timeout`` (in seconds) and raises a ``TimeoutError`` if the solve
+is not done in time; the solve keeps running in the background and ``wait`` can be called again
+later. A timeout of ``0`` checks the status without waiting. To collect solutions in completion
+order instead of submission order, poll :meth:`SolveHandle.isReady <gamspy.SolveHandle.isReady>`,
+which returns ``True`` once the solve is done (i.e. ``wait`` would not block). ``wait`` also takes
+``options``: the solver log is written to their ``log_file``, appended if ``append_to_log_file``
+is set.
+
+``solveAsync`` takes the same ``backend`` and ``client`` arguments as ``solve``, so the same code
+runs against any backend — only where the solve happens differs:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 15 40 45
+
+   * - Backend
+     - Runs on
+     - Handle
+   * - ``local``
+     - `GAMS grid facility <https://gams.com/latest/docs/UG_GridComputing.html>`_, i.e. solver
+       processes on your machine
+     - Tied to the Container's GAMS process, so it cannot outlive it. ``isReady`` runs a small
+       GAMS job, so avoid polling it in a tight loop. With ``report_solution=1``, ``wait`` appends
+       the solution listing to the ``listing_file`` of the submission.
+   * - ``engine``
+     - GAMS Engine, see :ref:`below <engine_backend>`
+     - Carries the job ``token``, also available in ``client.tokens``.
+   * - ``neos``
+     - NEOS Server, see :ref:`below <neos_backend>`
+     - Carries ``job_number`` and ``job_password``, also available in ``client.jobs``.
+
+.. note::
+
+    Collecting a solution overwrites the model attributes and the symbol records of the previous
+    collection (or of an intermediate blocking solve) — read the records you need between
+    collections.
+
 Solving Locally
 ---------------
 
 By default, models are solved locally (on your machine).
+
+.. _engine_backend:
 
 Solving with GAMS Engine
 ------------------------
@@ -487,40 +557,52 @@ Asynchronous Solve
 ~~~~~~~~~~~~~~~~~~
 
 If you just want to send your jobs to GAMS Engine without blocking until the results are received,
-the `is_blocking` parameter can be set to `False` in `EngineClient`.
-
-Tokens of the submitted jobs are stored in `client.tokens` ::
+use :meth:`solveAsync <gamspy.Model.solveAsync>` with the ``engine`` backend. Each submission
+returns a handle that collects the solution into your model. Tokens of the submitted jobs are
+also stored in `client.tokens` ::
 
     client = gp.EngineClient(
         host=os.environ["ENGINE_URL"],
         username=os.environ["ENGINE_USER"],
         password=os.environ["ENGINE_PASSWORD"],
         namespace=os.environ["ENGINE_NAMESPACE"],
-        is_blocking=False,
     )
 
+    handles = []
     for _ in range(3):
         ... # changes in your model
-        model.solve(backend="engine", client=client)
+        handles.append(model.solveAsync(backend="engine", client=client))
 
     print(client.tokens) # This prints all tokens for the submitted jobs
 
-``client.tokens`` only lives as long as the Python process. The jobs submitted earlier can be listed with
-``client.job.list_jobs()``, and a pending or running job can be cancelled with ``client.job.cancel(token)``.
+    for handle in handles:
+        summary = handle.wait()
+        # Collecting the next handle overwrites the records, so copy what you need now.
+        ...
 
-The results of the non-blocking jobs can be retrieved later. For example if want to retrieve the results of the 
-last submitted job, we can do that following: ::
+The job keeps running on the server independently of your Python process, so ``handle.token`` can
+also be used with the ``client.job`` endpoints directly. ``client.tokens`` only lives as long as the
+Python process; the jobs submitted earlier can be listed with ``client.job.list_jobs()``, and a
+pending or running job can be cancelled with ``client.job.cancel(token)``. For example, to download
+the results of a job that was submitted in an earlier session: ::
 
     token = client.tokens[-1]
     client.job.get_results(token, working_directory="out_dir")
 
-The results would be downloaded to the given working directory. The downloaded GDX file will have the same name with :meth:`gdxOutputPath <gamspy.Container.gdxOutputPath>`. 
-Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded GDX 
+The results would be downloaded to the given working directory. The downloaded GDX file will have the same name with :meth:`gdxOutputPath <gamspy.Container.gdxOutputPath>`.
+Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded GDX
 file: ::
 
     gdx_out_path = os.path.join("out_dir", os.path.basename(m.gdxOutputPath()))
     solution_container = gp.Container(load_from=gdx_out_path)
 
+.. deprecated:: 1.27.0
+
+    Setting ``is_blocking=False`` on ``EngineClient`` and calling ``solve`` is deprecated in
+    favour of ``solveAsync``.
+
+
+.. _neos_backend:
 
 Solving with NEOS Server
 ------------------------
@@ -573,36 +655,47 @@ Asynchronous Solve
 ~~~~~~~~~~~~~~~~~~
 
 If you just want to send your jobs to NEOS server without blocking until the results are received,
-`is_blocking` parameter can be set to `False` in `NeosClient`.
-
-All submitted jobs are stored in `client.jobs` in case you want to reach to the job numbers and job passwords
-you already sent to the server. ::
+use :meth:`solveAsync <gamspy.Model.solveAsync>` with the ``neos`` backend. Each submission returns
+a handle that collects the solution into your model. All submitted jobs are also stored in
+`client.jobs` in case you want to reach to the job numbers and job passwords you already sent to
+the server. ::
 
     client = gp.NeosClient(
         email=os.environ["NEOS_EMAIL"],
         username=os.environ["NEOS_USER"],
         password=os.environ["NEOS_PASSWORD"],
-        is_blocking=False,
     )
 
+    handles = []
     for _ in range(3):
         ... # changes in your model
-        model.solve(backend="neos", client=client)
+        handles.append(model.solveAsync(backend="neos", client=client))
 
-    print(client.jobs) # This prints all job numbers and jon passwords as a list of tuples
+    print(client.jobs) # This prints all job numbers and job passwords as a list of tuples
 
-The results of the non-blocking jobs can be retrieved later. For example if want to retrieve the results of the 
-last submitted job, we can do that following: ::
+    for handle in handles:
+        summary = handle.wait()
+        # Collecting the next handle overwrites the records, so copy what you need now.
+        ...
+
+The job keeps running on the server independently of your Python process, so
+``handle.job_number`` and ``handle.job_password`` can also be used with the client directly — for
+example to download the results of a job that was submitted in an earlier session: ::
 
     job_number, job_password = client.jobs[-1]
     client.get_final_results(job_number, job_password)
     client.download_output(job_number, job_password, working_directory="my_out_directory")
 
-The results would be downloaded to the given working directory. The downloaded gdx file will always have the name "output.gdx". 
-Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded gdx 
+The results would be downloaded to the given working directory. The downloaded gdx file will always have the name "output.gdx".
+Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded gdx
 file: ::
 
     solution_container = gp.Container(load_from="my_out_directory/output.gdx")
+
+.. deprecated:: 1.27.0
+
+    Setting ``is_blocking=False`` on ``NeosClient`` and calling ``solve`` is deprecated in favour
+    of ``solveAsync``.
 
 
 The terms of use for NEOS can be found here: `Terms of use <https://neos-server.org/neos/termofuse.html>`_.
@@ -651,6 +744,138 @@ sum_infeasibilities    Sum of infeasibilities
 solve_status           Indicates the solver termination condition
 solver_version         Solver version
 ====================== ===========================
+
+.. _inspecting_model_instance:
+
+Inspecting The Model Instance
+=============================
+
+A GAMSPy model is written algebraically, e.g. ``supply[i] = Sum(j, x[i, j]) <= a[i]``. Before a solver can work on it,
+GAMS generates the *model instance* (see :ref:`whatisgamspy`): every indexed equation and variable is expanded into
+scalar rows and columns, sums are unrolled, conditions are evaluated, and the parameters are replaced by their current values.
+:meth:`getModelInstance <gamspy.Model.getModelInstance>` generates this instance without solving it and returns it as a
+:meth:`ModelInstance <gamspy.ModelInstance>` that holds four pandas DataFrames.
+
+It answers questions such as "did my condition remove the rows I expected?", "does this new bound actually reach the model?",
+or "what changed in the model after I updated the data?", without reading a listing file or calling a solver. The tabular
+format also makes it easy to inspect programmatically, for example by scripts or by AI coding assistants.
+
+Take the transport model with two plants ``i`` and three markets ``j``: ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["seattle", "san-diego"])
+    j = gp.Set(m, "j", records=["new-york", "chicago", "topeka"])
+    a = gp.Parameter(m, "a", domain=i, records=[["seattle", 350], ["san-diego", 600]])
+    b = gp.Parameter(m, "b", domain=j, records=[["new-york", 325], ["chicago", 300], ["topeka", 275]])
+    c = gp.Parameter(m, "c", domain=[i, j], records=[
+        ["seattle", "new-york", 0.225], ["seattle", "chicago", 0.153], ["seattle", "topeka", 0.162],
+        ["san-diego", "new-york", 0.225], ["san-diego", "chicago", 0.162], ["san-diego", "topeka", 0.126],
+    ])
+    x = gp.Variable(m, "x", domain=[i, j], type="positive")
+    supply = gp.Equation(m, "supply", domain=i)
+    demand = gp.Equation(m, "demand", domain=j)
+    supply[i] = gp.Sum(j, x[i, j]) <= a[i]
+    demand[j] = gp.Sum(i, x[i, j]) >= b[j]
+    transport = gp.Model(
+        m,
+        "transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense="min",
+        objective=gp.Sum((i, j), c[i, j] * x[i, j]),
+    )
+
+    instance = transport.getModelInstance()
+
+::
+
+    In [1]: instance
+    Out[1]: ModelInstance(equations=6, variables=7, nonzeros=19)
+
+    In [2]: instance.equations
+    Out[2]:
+                      name type    rhs  nonlinear
+    0      supply(seattle)  =L=  350.0      False
+    1    supply(san-diego)  =L=  600.0      False
+    2     demand(new-york)  =G=  325.0      False
+    3      demand(chicago)  =G=  300.0      False
+    4       demand(topeka)  =G=  275.0      False
+    5  transport_objective  =E=    0.0      False
+
+    In [3]: instance.variables
+    Out[3]:
+                               name        type  lower  upper  level
+    0           x(seattle,new-york)  continuous    0.0    inf    0.0
+    1            x(seattle,chicago)  continuous    0.0    inf    0.0
+    2             x(seattle,topeka)  continuous    0.0    inf    0.0
+    3         x(san-diego,new-york)  continuous    0.0    inf    0.0
+    4          x(san-diego,chicago)  continuous    0.0    inf    0.0
+    5           x(san-diego,topeka)  continuous    0.0    inf    0.0
+    6  transport_objective_variable  continuous   -inf    inf    0.0
+
+    In [4]: instance.jacobian[instance.jacobian.equation == "demand(chicago)"]
+    Out[4]:
+              equation              variable  coefficient  nonlinear
+    8  demand(chicago)    x(seattle,chicago)          1.0      False
+    9  demand(chicago)  x(san-diego,chicago)          1.0      False
+
+The DataFrames contain the following columns:
+
+=============== ==================================================================================================
+DataFrame       Columns
+=============== ==================================================================================================
+``equations``   ``name``, ``type`` (``=E=``, ``=G=``, ``=L=``, ``=N=``, ``=X=``, ``=C=``, ``=B=``), ``rhs``, and
+                ``nonlinear``, which is ``True`` if the row has at least one nonlinear term.
+``variables``   ``name``, ``type`` (``continuous``, ``binary``, ``integer``, ``sos1``, ``sos2``, ``semicont``,
+                ``semiint``), ``lower``, ``upper``, and ``level``.
+``jacobian``    One row per nonzero coefficient: ``equation``, ``variable``, ``coefficient``, and ``nonlinear``.
+``indicators``  One row per native indicator constraint: ``equation``, ``variable``, and ``value``. The equation
+                is enforced only when the binary ``variable`` equals ``value``.
+=============== ==================================================================================================
+
+The model instance reflects the data at the time of the call. For example, to check that a new bound reaches the model: ::
+
+    In [5]: x.up["seattle", "chicago"] = 0
+
+    In [6]: variables = transport.getModelInstance().variables
+
+    In [7]: variables[variables.name == "x(seattle,chicago)"]
+    Out[7]:
+                     name        type  lower  upper  level
+    1  x(seattle,chicago)  continuous    0.0    0.0    0.0
+
+Since the instance is plain pandas, two instances can be compared with the usual pandas tools. The following
+example shows which right-hand sides change if the demand in Chicago drops to zero: ::
+
+    In [8]: before = transport.getModelInstance()
+
+    In [9]: b["chicago"] = 0
+
+    In [10]: after = transport.getModelInstance()
+
+    In [11]: diff = before.equations.merge(after.equations, on="name", suffixes=("_before", "_after"))
+
+    In [12]: diff.loc[diff.rhs_before != diff.rhs_after, ["name", "rhs_before", "rhs_after"]]
+    Out[12]:
+                  name  rhs_before  rhs_after
+    3  demand(chicago)       300.0        0.0
+
+Things to keep in mind when reading a model instance:
+
+- If the objective is an expression, GAMSPy adds an objective equation and an objective variable to the model, so they appear
+  in the instance as well. :meth:`ModelInstance.objective_variable <gamspy.ModelInstance>` holds the name of the objective
+  variable. For models without an objective, such as MCP or CNS, it is ``None``.
+- Positive, negative, and free variables are all ``continuous`` in the instance. They differ only in their ``lower`` and ``upper`` bounds.
+- A variable appears in the instance only if it appears in at least one generated equation, and an equation row is generated
+  only for the domain elements that pass its conditions.
+- For a nonlinear term, ``coefficient`` is the derivative evaluated at the current levels of the variables, and ``nonlinear``
+  is ``True``. For example, with ``y.l = 3`` the equation ``sqr(y) + y >= 4`` gives a coefficient of ``7`` (``2 * 3 + 1``) for ``y``.
+  The nonlinear expression itself is not part of the instance. Use :meth:`convert <gamspy.Model.convert>` with
+  :meth:`FileFormat.GAMS <gamspy.FileFormat>` to see it in scalar form.
+- Generating the instance takes about as long as the generation step of a :meth:`solve <gamspy.Model.solve>`, so for large
+  models it is not free. It is only available for the local backend.
 
 Converting A Model To A Scalar Format
 =====================================
@@ -724,7 +949,20 @@ For example: ::
     
 This would result in: ::
 
-    $v_{i} \geq 5\hfill \forall i$
+    $
+    v_{i} \geq 5\quad \forall i
+    $
+
+The separator before the domain (also a ``separator`` argument of :meth:`toLatex <gamspy.Model.toLatex>`)
+and the delimiters can be changed, e.g. for Quarto or Markdown: ::
+
+    print(e.latexRepr(separator=r"\hspace{1cm}", delimiters=("$$", "$$")))
+
+The whole model can be exported to Markdown with LaTeX math (e.g. for Quarto or Jupyter) with
+:meth:`toMarkdown <gamspy.Model.toMarkdown>`. It takes the same arguments as :meth:`toUnicode <gamspy.Model.toUnicode>`
+plus ``separator``, and writes a `.md` file if a path is given. ::
+
+    print(transport.toMarkdown(rename={"x": r"\xi"}))
 
 Exporting Model To Unicode
 ==========================

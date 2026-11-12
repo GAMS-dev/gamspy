@@ -11,7 +11,7 @@ from enum import Enum, StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
-from gams.core.gdx import GMS_UEL_IDENT_SIZE
+from gams.core.gdx import GMS_SV_NA, GMS_UEL_IDENT_SIZE
 
 import gamspy as gp
 import gamspy._algebra.expression as expression
@@ -22,14 +22,22 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
+from gamspy._backend.local import (
+    acquire_option_file_number,
+    release_option_file_number,
+)
 from gamspy._convert import (
     GamsConverter,
     LatexConverter,
+    MarkdownConverter,
     UnicodeConverter,
     get_convert_solver_options,
 )
 from gamspy._frozen_model import FrozenModel
 from gamspy._internals import ATTR_PREFIX, MODEL_ATTRIBUTE_MAP, DataSource
+from gamspy._miro import IS_MIRO_INIT
+from gamspy._model_instance import ModelInstance, generate_model_instance
+from gamspy._notation import LATEX_SEPARATOR
 from gamspy._options import (
     EXECUTION_OPTIONS,
     INDICATOR_SOLVERS,
@@ -52,6 +60,7 @@ if TYPE_CHECKING:
     from gamspy import Container, Equation, Parameter, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._backend.backend import SolveHandle
     from gamspy._backend.engine import EngineClient
     from gamspy._backend.neos import NeosClient
     from gamspy._guss import GUSSScenarioDict
@@ -66,7 +75,6 @@ MAX_MATCHING_LENGTH = (
     MAX_SYMBOL_NAME_LENGTH + MAX_SYMBOL_NAME_LENGTH + MAX_MODEL_DECLARATION_LENGTH + 1
 )
 MAX_NUM_MODEL_ELEMS = int(GMS_MAX_LINE_LENGTH / MAX_MATCHING_LENGTH)
-IS_MIRO_INIT = os.getenv("MIRO", False)
 
 logger = logging.getLogger("MODEL")
 logger.setLevel(logging.INFO)
@@ -498,6 +506,7 @@ class Model:
         self._algorithm_time: float | None = None
         self._total_solve_time: float | None = None
         self._total_solver_time: float | None = None
+        self._handle: float = 0.0
         self._num_iterations: float | None = None
         self._marginals: float | None = None
         self._max_infeasibility: float | None = None
@@ -1260,7 +1269,15 @@ class Model:
         )
         self.container._add_statement("$onListing")
 
-    def _update_model_attributes(self) -> None:
+    def _reset_solution_attributes(self) -> None:
+        # The handle of the submission is the only attribute that stays valid.
+        for python_attr in MODEL_ATTRIBUTE_MAP.values():
+            if python_attr != "_handle":
+                setattr(self, python_attr, None)
+
+        self._status = ModelStatus.NotSolved
+
+    def _update_model_attributes(self, is_submission: bool = False) -> None:
         self.container._should_load_from(self._guss_rep_names, DataSource.GAMS)
         self._guss_rep_names.clear()
 
@@ -1271,6 +1288,16 @@ class Model:
             MODEL_ATTRIBUTE_MAP.values(), self._attr_symbol_names, strict=True
         ):
             data = records[symbol_name]
+
+            # An asynchronous submission has no solution yet.
+            if is_submission and python_attr != "_handle":
+                continue
+
+            if data == GMS_SV_NA and (
+                is_submission
+                or python_attr in ("_status", "_solve_status", "_used_model_type")
+            ):
+                continue
 
             if python_attr == "_status":
                 setattr(self, python_attr, ModelStatus(data))
@@ -1489,6 +1516,49 @@ class Model:
 
         return "\n".join(listings)
 
+    def getModelInstance(self, options: Options | None = None) -> ModelInstance:
+        """
+        Generates the model instance with the current data without solving it.
+
+        Parameters
+        ----------
+        options : Options | None, optional
+            GAMSPy options, by default None
+
+        Returns
+        -------
+        ModelInstance
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1", "i2"])
+        >>> p = gp.Parameter(m, "p", domain=i, records=[("i1", 2), ("i2", 3)])
+        >>> x = gp.Variable(m, "x", domain=i, type="positive")
+        >>> e = gp.Equation(m, "e", domain=i)
+        >>> e[i] = p[i] * x[i] >= 5
+        >>> model = gp.Model(m, "test", equations=[e], problem="LP", sense="MIN", objective=gp.Sum(i, x[i]))
+        >>> instance = model.getModelInstance()
+        >>> instance.equations
+                     name type  rhs  nonlinear
+        0           e(i1)  =G=  5.0      False
+        1           e(i2)  =G=  5.0      False
+        2  test_objective  =E=  0.0      False
+        >>> instance.jacobian[instance.jacobian.equation == "e(i2)"]
+          equation variable  coefficient  nonlinear
+        1    e(i2)    x(i2)          3.0      False
+
+        """
+        validation.validate_options(options)
+        if options is None:
+            options = self.container._options
+
+        validation.validate_equations(self)
+        self._validate_fixed_indicators(options)
+
+        return generate_model_instance(self, options)
+
     def interrupt(self) -> None:
         """
         Sends interrupt signal to the running job.
@@ -1675,6 +1745,9 @@ class Model:
                 "Native indicator constraints are not supported on NEOS Server."
             )
 
+        self._validate_fixed_indicators(options)
+
+    def _validate_fixed_indicators(self, options: Options) -> None:
         if options.hold_fixed_variables:
             for equation in self._indicator_equations:
                 assert equation._indicator is not None
@@ -1686,6 +1759,238 @@ class Model:
                         " from the model but native indicator constraints refer to them."
                         " Unfix them or set `hold_fixed_variables=False`."
                     )
+
+    def _prepare_solve(
+        self,
+        solver: str | None,
+        options: Options | None,
+        solver_options: dict | str | Path | None,
+        output: TextIO | None,
+        backend: Literal["local", "engine", "neos"],
+        file_number: int = 1,
+    ) -> tuple[str, Options, dict | Path | None, TextIO | None]:
+        """Validates the solve arguments and writes the solver options file."""
+        if output is None:
+            output = self.container.output
+
+        if solver is None:
+            solver = (
+                getattr(
+                    self.container._options if options is None else options,
+                    str(self.problem).lower(),
+                    None,
+                )
+                or self._default_solver
+            )
+        elif not isinstance(solver, str):
+            raise TypeError(
+                f"`solver` argument must be of type `str` but given `{type(solver)}`"
+            )
+        solver = solver.lower()
+
+        if solver == "conopt":
+            solver = "conopt4"
+
+        if solver == "examiner2":
+            warnings.warn(
+                "`examiner2` solver is deprecated and will be removed in a future release. Use `examiner` instead.",
+                category=DeprecationWarning,
+                stacklevel=3,
+            )
+
+        validation.validate_solver_args(
+            self.container.system_directory,
+            backend,
+            solver,
+            self.problem,
+            options,
+            output,
+        )
+        validation.validate_equations(self)
+
+        if options is None:
+            options = self.container._options
+
+        options = options.model_copy()
+
+        if isinstance(solver_options, (str, Path)):
+            solver_options = Path(solver_options)
+
+        # Only for local until GAMS Engine and NEOS Server backends adopt the new GP_SolveLine option.
+        if backend == "local":
+            frame = inspect.currentframe()
+            # The caller of solve or solveAsync.
+            caller = frame.f_back.f_back if frame and frame.f_back else None
+            if caller is not None:
+                options._solve_line = (
+                    f"{caller.f_code.co_filename} line {caller.f_lineno}"
+                )
+
+        indicators = self._get_indicators()
+        self._indicator_file = None
+        if indicators:
+            self._validate_indicators(solver, backend, options)
+            indicator_file = get_indicator_file_name(solver, self.name)
+            if indicator_file is not None:
+                self._indicator_file = os.path.join(
+                    self.container.working_directory, indicator_file
+                )
+
+        if solver_options is not None or indicators:
+            options_file_name = write_solver_options(
+                self.container,
+                solver,
+                solver_options,
+                file_number,
+                indicators=indicators,
+                indicator_file=self._indicator_file,
+                absolute_paths=backend == "local",
+            )
+            if indicators:
+                solver_options = Path(options_file_name)
+
+        return solver, options, solver_options, output
+
+    def _add_solve_statements(
+        self,
+        options: Options,
+        backend: Literal["local", "engine", "neos"],
+        solver: str,
+        option_file_number: int,
+        scenario: GUSSScenarioDict | None = None,
+    ) -> None:
+        self._add_runtime_options(options, backend)
+        self.container._add_statement(f"option {self.problem} = {solver};")
+        self.container._add_statement(f"{self.name}.optFile = {option_file_number};")
+        self.container._add_statement(
+            self._generate_solve_string(scenario=scenario) + ";\n"
+        )
+
+    def solveAsync(
+        self,
+        solver: str | None = None,
+        options: Options | None = None,
+        solver_options: dict | str | Path | None = None,
+        output: TextIO | None = None,
+        backend: Literal["local", "engine", "neos"] = "local",
+        client: EngineClient | NeosClient | None = None,
+    ) -> SolveHandle:
+        """
+        Submits the solve without waiting for the solver to finish.
+
+        The model instance is generated with the current data and submitted to
+        the given backend, and this method returns a
+        :class:`SolveHandle <gamspy.SolveHandle>` immediately while the solve
+        runs in the background. Several solves — of the same model with
+        modified data (e.g. a loop over scenarios) or of different models —
+        can be in flight at once. Collect the solution of each submitted
+        instance with :meth:`SolveHandle.wait <gamspy.SolveHandle.wait>`.
+        Until then, the model reports no results, as if it was never solved.
+
+        On the ``local`` backend the solve is submitted to the
+        `GAMS grid facility <https://gams.com/latest/docs/UG_GridComputing.html>`_,
+        on ``engine`` and ``neos`` it is submitted to the respective server.
+        Asynchronous solves are not available for frozen models.
+
+        Parameters
+        ----------
+        solver : str, optional
+            Solver name
+        options : Options, optional
+            GAMSPy options.
+        solver_options : dict | str | Path, optional
+            Dictionary of solver options or path to an existing option file.
+        output : TextIO, optional
+            Output redirection target. Set this to sys.stdout to see the output in your terminal.
+        backend : str, optional
+            Backend to run on
+        client : EngineClient, NeosClient, optional
+            EngineClient to communicate with GAMS Engine or NEOS Client to communicate with NEOS Server
+
+        Returns
+        -------
+        SolveHandle
+            Handle to collect the solution of the submitted solve.
+
+        Raises
+        ------
+        ValidationError
+            In case the model is frozen or the solve happens inside a control
+            flow block.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> v = gp.Variable(m, "v")
+        >>> e = gp.Equation(m, "e", definition=v >= 5)
+        >>> model = gp.Model(m, "my_model", equations=[e], problem="LP", sense="MIN", objective=v)
+        >>> handle = model.solveAsync()
+        >>> summary = handle.wait()
+        >>> model.objective_value
+        5.0
+
+        """
+        if self._is_frozen:
+            raise ValidationError("`solveAsync` cannot be used on frozen models.")
+
+        if self.container._in_loop:
+            raise ValidationError(
+                "`solveAsync` cannot be used inside control flow blocks (Loop, If, While etc.)."
+            )
+
+        # Async submission needs its own option file
+        file_number = 1
+        if backend == "local":
+            file_number = acquire_option_file_number(self.container)
+
+        try:
+            solver, options, solver_options, output = self._prepare_solve(
+                solver, options, solver_options, output, backend, file_number
+            )
+
+            options._async_mode = "submit"
+
+            # Only local solves are submitted to the GAMS grid.
+            options._use_grid = backend == "local"
+            if options._use_grid and options.log_file is None:
+                # Otherwise the solver of a grid solve does not write a log.
+                options.log_file = os.path.join(
+                    self.container._process_directory, "grid_submission.log"
+                )
+            options._option_file_number = file_number if solver_options else 0
+
+            self._add_solve_statements(
+                options, backend, solver, options._option_file_number
+            )
+
+            runner = backend_factory(
+                self.container,
+                options,
+                solver,
+                solver_options,
+                output,
+                backend,
+                client,
+                self,
+            )
+
+            runner.run()
+            handle = runner.create_handle()
+        except BaseException:
+            release_option_file_number(self.container, file_number)
+            raise
+
+        if not solver_options:
+            release_option_file_number(self.container, file_number)
+
+        # Results of the previous solve must not pass for those of the submission.
+        self._reset_solution_attributes()
+
+        if IS_MIRO_INIT:
+            miro._write_default_gdx_miro(self.container)
+
+        return handle
 
     def solve(
         self,
@@ -1700,7 +2005,9 @@ class Model:
         scenario: GUSSScenarioDict | None = None,
     ) -> pd.DataFrame | None:
         """
-        Solves the model with given options.
+        Solves the model with given options and waits for the solver to
+        finish. See :meth:`solveAsync <gamspy.Model.solveAsync>` for
+        non-blocking solves.
         https://gamspy.readthedocs.io/en/latest/user/basics/model.html
 
         Parameters
@@ -1826,84 +2133,11 @@ class Model:
                 stacklevel=2,
             )
 
-        if output is None:
-            output = self.container.output
-
-        if solver is None:
-            solver = (
-                getattr(
-                    self.container._options if options is None else options,
-                    str(self.problem).lower(),
-                    None,
-                )
-                or self._default_solver
-            )
-        elif not isinstance(solver, str):
-            raise TypeError(
-                f"`solver` argument must be of type `str` but given `{type(solver)}`"
-            )
-        solver = solver.lower()
-
-        if solver == "conopt":
-            solver = "conopt4"
-
-        if solver == "examiner2":
-            warnings.warn(
-                "`examiner2` solver is deprecated and will be removed in a future release. Use `examiner` instead.",
-                category=DeprecationWarning,
-                stacklevel=2,
-            )
-
         self._validate_scenario(scenario, freeze_options)
 
-        validation.validate_solver_args(
-            self.container.system_directory,
-            backend,
-            solver,
-            self.problem,
-            options,
-            output,
+        solver, options, solver_options, output = self._prepare_solve(
+            solver, options, solver_options, output, backend
         )
-        validation.validate_equations(self)
-
-        if options is None:
-            options = self.container._options
-
-        options = options.model_copy()
-
-        if isinstance(solver_options, (str, Path)):
-            solver_options = Path(solver_options)
-
-        # Only for local until GAMS Engine and NEOS Server backends adopt the new GP_SolveLine option.
-        if backend == "local":
-            frame = inspect.currentframe()
-            caller = frame.f_back if frame is not None else None
-            if caller is not None:
-                options._solve_line = (
-                    f"{caller.f_code.co_filename} line {caller.f_lineno}"
-                )
-
-        indicators = self._get_indicators()
-        self._indicator_file = None
-        if indicators:
-            self._validate_indicators(solver, backend, options)
-            indicator_file = get_indicator_file_name(solver, self.name)
-            if indicator_file is not None:
-                self._indicator_file = os.path.join(
-                    self.container.working_directory, indicator_file
-                )
-
-        if solver_options is not None or indicators:
-            options_file_name = write_solver_options(
-                self.container,
-                solver,
-                solver_options,
-                indicators=indicators,
-                indicator_file=self._indicator_file,
-                absolute_paths=backend == "local",
-            )
-            if indicators:
-                solver_options = Path(options_file_name)
 
         if self._is_frozen:
             instance_options = FreezeOptions()
@@ -1916,13 +2150,8 @@ class Model:
             )
             return summary
 
-        self._add_runtime_options(options, backend)
-        self.container._add_statement(f"option {self.problem} = {solver};")
-        self.container._add_statement(
-            f"{self.name}.optFile = {1 if solver_options else 0};"
-        )
-        self.container._add_statement(
-            self._generate_solve_string(scenario=scenario) + ";\n"
+        self._add_solve_statements(
+            options, backend, solver, 1 if solver_options else 0, scenario
         )
         if scenario is not None:
             self._guss_rep_names.update(
@@ -2104,6 +2333,7 @@ class Model:
         rename: dict[str, str] | None = None,
         *,
         generate_pdf: bool = False,
+        separator: str = LATEX_SEPARATOR,
     ) -> None:
         """
         Generates a latex file that contains the model definition under path/<model_name>.tex
@@ -2117,6 +2347,8 @@ class Model:
             and values are the names that will be used in the LaTeX file.
         generate_pdf: bool, False by default
             Generates a pdf file if it is set. Requires xelatex to be installed.
+        separator : str, optional
+            Separates an equation definition from its domain (e.g. ``\\quad`` or ``\\hfill``).
 
         Examples
         --------
@@ -2132,7 +2364,7 @@ class Model:
 
         """
         path = Path(path)
-        converter = LatexConverter(self, path, rename)
+        converter = LatexConverter(self, path, rename, separator)
         converter.convert()
 
         if generate_pdf:
@@ -2197,6 +2429,97 @@ class Model:
 
         """
         converter = UnicodeConverter(self, rename)
+        if path is None:
+            return converter.generate()
+
+        return converter.convert(Path(path))
+
+    def toMarkdown(
+        self,
+        path: str | Path | None = None,
+        rename: dict[str, str] | None = None,
+        *,
+        separator: str = LATEX_SEPARATOR,
+    ) -> str:
+        r"""
+        Generates the model definition in Markdown with LaTeX math, e.g. for Quarto
+        or Jupyter. If a path is given, it is also written to path/<model_name>.md
+
+        Parameters
+        ----------
+        path : str | Path, optional
+            Path to the directory which will contain the .md file.
+        rename: dict[str, str], optional
+            A dictionary to rename symbols in the output. Keys are GAMSPy symbol names
+            and values are the names that will be used in the output.
+        separator : str, optional
+            Separates an equation definition from its domain (e.g. ``\quad`` or ``\hspace{1cm}``).
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["seattle", "san-diego"], description="plants")
+        >>> a = gp.Parameter(m, "a", domain=i, description="supply of plant i")
+        >>> x = gp.Variable(m, "x", domain=i, type="positive", description="shipment")
+        >>> supply = gp.Equation(m, "supply", domain=i, description="supply limit")
+        >>> supply[i] = x[i] <= a[i]
+        >>> model = gp.Model(
+        ...     m,
+        ...     "shipment",
+        ...     problem="LP",
+        ...     equations=[supply],
+        ...     sense="max",
+        ...     objective=gp.Sum(i, x[i]),
+        ... )
+        >>> print(model.toMarkdown())
+        ## Sets
+        <BLANKLINE>
+        | Symbol | Description |
+        | --- | --- |
+        | $i_{*}$ | plants |
+        <BLANKLINE>
+        ## Parameters
+        <BLANKLINE>
+        | Symbol | Description |
+        | --- | --- |
+        | $a_{i}$ | supply of plant i |
+        <BLANKLINE>
+        ## Variables
+        <BLANKLINE>
+        | Symbol | Description |
+        | --- | --- |
+        | $x_{i}$ | shipment |
+        <BLANKLINE>
+        ## Equations
+        <BLANKLINE>
+        | Symbol | Description |
+        | --- | --- |
+        | $supply_{i}$ | supply limit |
+        <BLANKLINE>
+        ## Model Definition
+        <BLANKLINE>
+        $$
+        \max \sum_{i} x_{i}
+        $$
+        <BLANKLINE>
+        subject to
+        <BLANKLINE>
+        $supply_{i}$
+        $$
+        x_{i} \leq a_{i}\quad \forall i
+        $$
+        <BLANKLINE>
+        $$
+        x_{i} \geq 0\quad \forall i
+        $$
+
+        """
+        converter = MarkdownConverter(self, rename, separator)
         if path is None:
             return converter.generate()
 

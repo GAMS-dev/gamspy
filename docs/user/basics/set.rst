@@ -129,7 +129,7 @@ must also be a member of the set ``i``. GAMSPy will enforce this relationship,
 which is called *domain checking*. Obviously, the order of declaration and definition 
 is important: the membership of ``i`` must be known before ``t`` is defined,
 otherwise checking cannot be done. If domain checking detects a violation, GAMSPy
-throws an exception: ::
+raises a ``DomainViolationError`` (see :ref:`domain_violations`): ::
 
     from gamspy import Container, Set
 
@@ -150,7 +150,7 @@ throws an exception: ::
 
 ::
 
-     gamspy.exceptions.GamspyException: There was a compilation error. Check /tmp/tmpbzdhtq7w/_a4907087-2ff2-4c91-ade4-a7909647d768.lst for more information.
+     gamspy.exceptions.DomainViolationError: Return code 2. There was a compilation error. Check /tmp/tmpbzdhtq7w/_a4907087-2ff2-4c91-ade4-a7909647d768.lst for more information.
      =============
      Error Summary
      =============

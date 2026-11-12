@@ -562,12 +562,20 @@ class DataSymbol(BaseSymbol):
 
     @abstractmethod
     def _setRecords(
-        self, records: VarEquRecordsType, *, uels_on_axes: bool = False
+        self,
+        records: VarEquRecordsType,
+        *,
+        uels_on_axes: bool = False,
+        drop_domain_violations: bool = False,
     ) -> None: ...
 
     @abstractmethod
     def setRecords(
-        self, records: VarEquRecordsType | None, uels_on_axes: bool = False
+        self,
+        records: VarEquRecordsType | None,
+        uels_on_axes: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None: ...
 
     def _init_symbol(
@@ -600,7 +608,11 @@ class DataSymbol(BaseSymbol):
         self._records = records
         self._metadata: dict[str, Any] = {}
         self._assignment: Expression | None = None
-        self._domain_violations = None
+        self._drop_domain_violations = False
+        # Records before setRecords. Restore them if GAMS rejects the new ones.
+        self._previous_records: (
+            tuple[pd.DataFrame | None, DataSource | FrozenModel] | None
+        ) = None
         self._should_load_from = DataSource.NONE
         self._should_unload_to_gams = False
         self.where = condition.Condition(self)
@@ -636,13 +648,19 @@ class DataSymbol(BaseSymbol):
         records: VarEquRecordsType | None,
         *,
         uels_on_axes: bool,
+        drop_domain_violations: bool,
     ) -> None:
         with self._miro_unprotected():
             if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
+                self.setRecords(
+                    records,
+                    uels_on_axes=uels_on_axes,
+                    drop_domain_violations=drop_domain_violations,
+                )
             elif self._is_miro_symbol:
                 # miro symbols must sync at declaration so their records are
                 # loaded from the miro gdx.
+                self._handle_domain_violations(drop=drop_domain_violations)
                 self._should_unload_to_gams = True
                 self._container._synch_with_gams()
 
@@ -676,7 +694,7 @@ class DataSymbol(BaseSymbol):
             is_miro_output=is_miro_output,
             is_miro_table=is_miro_table,
         )
-        self._domain_violations = None
+        self._drop_domain_violations = False
 
         if description != "":
             self._description = description
@@ -688,10 +706,15 @@ class DataSymbol(BaseSymbol):
         records: VarEquRecordsType | None,
         *,
         uels_on_axes: bool,
+        drop_domain_violations: bool,
     ) -> None:
         with self._miro_unprotected():
             if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
+                self.setRecords(
+                    records,
+                    uels_on_axes=uels_on_axes,
+                    drop_domain_violations=drop_domain_violations,
+                )
 
     def _serialize(self) -> dict:
         info: dict[str, Any] = {
@@ -759,6 +782,7 @@ class DataSymbol(BaseSymbol):
             raise TypeError("Symbol 'records' must be type DataFrame")
 
         self._records = records
+        self._drop_domain_violations = False
         self._should_unload_to_gams = True
         self._should_load_from = DataSource.NONE
         self._handle_domain_forwarding()
@@ -768,6 +792,7 @@ class DataSymbol(BaseSymbol):
         records: VarEquRecordsType | None,
         *,
         uels_on_axes: bool,
+        drop_domain_violations: bool,
     ) -> None:
         self._check_miro_protection()
 
@@ -776,11 +801,41 @@ class DataSymbol(BaseSymbol):
             self._records = None
             return
 
-        self._setRecords(records, uels_on_axes=uels_on_axes)
+        self._remember_records()
+        self._setRecords(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
         if self._is_frozen_modifiable:
+            # Frozen modifiables bypass GAMS, so $load cannot filter the records.
+            if self._drop_domain_violations:
+                violations = self.findDomainViolations()
+                if violations is not None and not violations.empty:
+                    self._records = self._records.drop(  # ty: ignore[unresolved-attribute]
+                        index=violations.index
+                    ).reset_index(drop=True)
             return
 
         self._container._synch_with_gams()
+
+    def _remember_records(self) -> None:
+        if self._previous_records is None and not self._is_frozen_modifiable:
+            self._previous_records = (self._records, self._should_load_from)
+
+    def _restore_records(self) -> bool:
+        if self._previous_records is None:
+            return False
+
+        records, source = self._previous_records
+        self._previous_records = None
+        if source is DataSource.GAMS:
+            return False
+
+        self._records = records
+        self._should_load_from = source
+        self._should_unload_to_gams = source is DataSource.NONE
+        return True
 
     @contextlib.contextmanager
     def _miro_unprotected(self) -> Generator[None]:
@@ -832,10 +887,10 @@ class DataSymbol(BaseSymbol):
         """Whether a frozen model may modify this symbol."""
         return self.name in self._container._frozen_modifiables
 
-    def _handle_domain_violations(self) -> None:
-        if gp.get_option("DROP_DOMAIN_VIOLATIONS"):
-            self._domain_violations = self._getDomainViolations()
-            self._dropDomainViolations()
+    def _handle_domain_violations(self, *, drop: bool) -> None:
+        self._drop_domain_violations = drop or bool(
+            gp.get_option("DROP_DOMAIN_VIOLATIONS")
+        )
 
     def _handle_domain_forwarding(self) -> None:
         if self._domain_forwarding:
@@ -1148,9 +1203,26 @@ class DataSymbol(BaseSymbol):
 
         return dvobjs
 
-    def _findDomainViolations(
-        self,
-    ) -> pd.DataFrame | None:
+    def findDomainViolations(self) -> pd.DataFrame | None:
+        """
+        Records with labels that are not in the domain of the symbol.
+
+        Returns
+        -------
+        pd.DataFrame | None
+            Offending records, or None if the symbol has no records.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["a", "b"])
+        >>> p = gp.Parameter(m, "p", domain=i, records=[("a", 1), ("b", 2)])
+        >>> i.setRecords(["a"])
+        >>> p.findDomainViolations()["i"].tolist()
+        ['b']
+
+        """
         if self.records is None:
             return None
 
@@ -1167,13 +1239,6 @@ class DataSymbol(BaseSymbol):
             return self.records.loc[idx, :]
 
         return self.records.loc[pd.Index([]), :]
-
-    def _dropDomainViolations(self) -> None:
-        if self.records is None:
-            return None
-
-        violations = self._findDomainViolations()
-        self.records.drop(index=violations.index, inplace=True)  # ty: ignore[unresolved-attribute]
 
     @property
     def domain_type(self) -> str:
@@ -2348,10 +2413,12 @@ class VarEquSymbol(NumericSymbol):
     def _setRecords(
         self: Variable | Equation,
         records: VarEquRecordsType,
+        *,
         uels_on_axes: bool = False,
+        drop_domain_violations: bool = False,
     ) -> None:
         VarEquIngestor(self).ingest(records, uels_on_axes=uels_on_axes)
-        self._handle_domain_violations()
+        self._handle_domain_violations(drop=drop_domain_violations)
 
     def pivot(
         self: Variable | Equation,

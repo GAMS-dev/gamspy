@@ -6,6 +6,7 @@ import functools
 import inspect
 import os
 import platform
+import re
 import uuid
 from typing import TYPE_CHECKING, TypeVar, cast
 
@@ -164,34 +165,46 @@ def _get_capabilities_file_solvers(system_directory: str) -> dict[str, list[str]
     with open(capabilities_path, encoding="utf-8") as file:
         lines = file.read().splitlines()
 
-    while True:
-        line = lines.pop(0)
-        if line.startswith("*") or line == "":
+    index = 0
+    while index < len(lines):
+        line = lines[index].strip()
+        if not line or line.startswith("*"):
+            index += 1
             continue
         if line == "DEFAULTS":
             break
 
+        # e.g. `HIGHS 11 5 HI 1 0 2 LP MIP RMIP`, followed by `num_lines` + 1 lines
         solver, _, _, _, _, _, num_lines, *problem_types = line.split()
-
-        for _ in range(int(num_lines) + 1):
-            _ = lines.pop(0)
-
         capabilities[solver] = problem_types
+        index += int(num_lines) + 2
 
     return capabilities
 
 
 def _parse_solver_config(text: str) -> dict[str, list[str]]:
+    # What follows the end of the YAML document (`...`) is not YAML.
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if re.match(r"\.\.\.([ \t]|$)", line):
+            text = "\n".join(lines[:index])
+            break
+
     config = yaml.safe_load(text)
     if not isinstance(config, dict):
         return {}
 
     solvers: dict[str, list[str]] = {}
     for entry in config.get("solverConfig") or []:
+        if not isinstance(entry, dict):
+            continue
+
         for name, attributes in entry.items():
-            solvers[name.upper()] = [
-                str(model_type).upper() for model_type in attributes["modelTypes"]
-            ]
+            model_types = []
+            if isinstance(attributes, dict):
+                model_types = attributes.get("modelTypes") or []
+
+            solvers[str(name).upper()] = [str(t).upper() for t in model_types]
 
     return solvers
 
@@ -278,28 +291,11 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
     except KeyError:
         ...
 
-    capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
-    solvers: list[str] = []
-
-    with open(capabilities_path, encoding="utf-8") as file:
-        lines = file.read().splitlines()
-
-    while True:
-        line = lines.pop(0)
-        if line.startswith("*") or line == "":
-            continue
-        if line == "DEFAULTS":
-            break
-
-        solver, _, _, _, _, _, num_lines, *_ = line.split()
-
-        for _ in range(int(num_lines) + 1):
-            _ = lines.pop(0)
-
-        if solver != "GUSS":
-            solvers.append(solver)
-
-    solvers.remove("CONOPT")
+    solvers = [
+        solver
+        for solver in _get_capabilities_file_solvers(system_directory)
+        if solver not in ("GUSS", "CONOPT")
+    ]
     solvers.extend(
         solver
         for solver in _get_config_solvers(system_directory)

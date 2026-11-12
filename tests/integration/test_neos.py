@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import gamspy as gp
 import gamspy.math as gams_math
 from gamspy import (
     Alias,
@@ -282,10 +283,11 @@ def test_neos_non_blocking(transport):
         sense=Sense.MIN,
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
-    client = NeosClient(
-        email=os.environ["NEOS_EMAIL"],
-        is_blocking=False,
-    )
+    with pytest.deprecated_call():
+        client = NeosClient(
+            email=os.environ["NEOS_EMAIL"],
+            is_blocking=False,
+        )
     transport.solve(solver="cplex", backend="neos", client=client)
 
     job_number, job_password = client.jobs[-1]
@@ -302,6 +304,87 @@ def test_neos_non_blocking(transport):
     assert "x" in container.data
     x.setRecords(container["x"].records)
     assert x.records.equals(container["x"].records)
+
+
+def test_neos_solve_async(transport, tmp_path):
+    m, canning_plants, markets, distances, capacities, demands = transport
+    i = Set(m, name="i", records=canning_plants)
+    j = Set(m, name="j", records=markets)
+
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
+    d = Parameter(m, name="d", domain=[i, j], records=distances)
+    c = Parameter(m, name="c", domain=[i, j])
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(m, name="x", domain=[i, j], type="Positive")
+
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+    client = NeosClient(email=os.environ["NEOS_EMAIL"])
+
+    handle = transport.solveAsync(solver="cplex", backend="neos", client=client)
+    assert isinstance(handle, gp.SolveHandle)
+    assert handle.backend == "neos"
+    assert (handle.job_number, handle.job_password) == client.jobs[-1]
+
+    with pytest.raises(ValidationError, match=r"`timeout` must be nonnegative"):
+        handle.wait(timeout=-1)
+
+    summary = handle.wait()
+    assert isinstance(summary, pd.DataFrame)
+    assert math.isclose(transport.objective_value, 153.675, rel_tol=0.001)
+    assert math.isclose(x.records["level"].sum(), 900)
+
+    # The solution can only be collected once.
+    with pytest.raises(ValidationError):
+        handle.wait()
+
+    with pytest.raises(ValidationError):
+        handle.isReady()
+
+    log_file = tmp_path / "neos.log"
+    handle = transport.solveAsync(solver="cplex", backend="neos", client=client)
+    handle.wait(options=Options(log_file=str(log_file)))
+    assert "Normal completion" in log_file.read_text()
+
+
+def test_neos_solve_async_sends_records_to_gams(transport):
+    m, *_ = transport
+    p = Parameter(m, name="p", records=1)
+    q = Parameter(m, name="q", records=1)
+    v = Variable(m, name="v")
+    e = Equation(m, name="e", definition=v >= p + q)
+    model = Model(
+        m, name="sum_model", equations=[e], problem="LP", sense=Sense.MIN, objective=v
+    )
+    client = NeosClient(email=os.environ["NEOS_EMAIL"])
+
+    p.records = pd.DataFrame({"value": [42.0]})
+    first = model.solveAsync(solver="cplex", backend="neos", client=client)
+    q.records = pd.DataFrame({"value": [7.0]})
+    second = model.solveAsync(solver="cplex", backend="neos", client=client)
+
+    r = Parameter(m, name="r")
+    r[...] = p + q
+    assert math.isclose(r.toValue(), 49)
+
+    assert first.wait() is not None
+    assert math.isclose(model.objective_value, 43)
+    assert second.wait() is not None
+    assert math.isclose(model.objective_value, 49)
 
 
 def test_solver_options(transport, tmp_path, set_options):
@@ -400,8 +483,22 @@ def test_solver_options(transport, tmp_path, set_options):
     with open(log_path) as file:
         assert ">>  aggfill 11" in file.read()
 
+    transport.solve(
+        solver="cplex",
+        solver_options={"aggfill": "11"},
+        backend="neos",
+        client=client,
+        options=Options(log_file=log_path, append_to_log_file=True),
+    )
+
+    with open(log_path) as file:
+        assert file.read().count(">>  aggfill 11") == 2
+
     # Read solver options from an existing file
     log_path2 = str(tmp_path / "neos2.log")
+    with open(log_path2, "w") as file:
+        file.write("stale log")
+
     set_options({"SOLVER_OPTION_VALIDATION": 0})
     with tempfile.TemporaryDirectory() as tmpdir:
         options_path = os.path.join(tmpdir, "my_solver_options.opt")
@@ -419,6 +516,7 @@ def test_solver_options(transport, tmp_path, set_options):
     with open(log_path2) as file:
         content = file.read()
         assert ">>  aggfill 55" in content
+        assert "stale log" not in content
 
 
 def test_lp(transport):
