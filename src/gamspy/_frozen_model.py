@@ -190,7 +190,6 @@ class FrozenModel:
         self.gms_file = self.job_name + ".gms"
         self.lst_file = self.job_name + ".lst"
         self.pf_file = self.job_name + ".pf"
-        self.trace_file = self.job_name + ".txt"
         self.solver_control_file = get_control_file(self.container)
 
         self.model = model
@@ -651,7 +650,6 @@ class FrozenModel:
     def _prepare_hidden_options(self) -> dict:
         scrdir = self.container._process_directory
         hidden_options = {
-            "trace": self.trace_file,
             "input": self.gms_file,
             "output": self.lst_file,
             "optdir": self.container.working_directory,

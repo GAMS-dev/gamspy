@@ -17,6 +17,7 @@ from gamspy._algebra import (
 )
 from gamspy._algebra.expression import Expression
 from gamspy._algebra.sparse import sparse
+from gamspy._backend.backend import SolveHandle
 from gamspy._backend.engine import EngineClient
 from gamspy._backend.neos import NeosClient
 from gamspy._config import _set_default_options, get_option, set_options
@@ -62,6 +63,7 @@ __all__ = [
     "VariableType",
     "EquationType",
     "ModelStatus",
+    "SolveHandle",
     "SolveStatus",
     "Sum",
     "Product",

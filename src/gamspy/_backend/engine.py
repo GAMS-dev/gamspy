@@ -10,6 +10,7 @@ import shutil
 import tempfile
 import time
 import urllib.parse
+import warnings
 import zipfile
 from typing import TYPE_CHECKING, TextIO
 
@@ -997,6 +998,12 @@ class EngineClient:
     is_blocking : bool, optional
         Synchronous (blocking) or asynchronous, by default True
 
+        .. deprecated::
+            Use :meth:`Model.solveAsync <gamspy.Model.solveAsync>` to submit a
+            solve without blocking. It returns a
+            :class:`SolveHandle <gamspy.SolveHandle>` that collects the
+            solution into the model instead of leaving it on the server.
+
     Examples
     --------
     >>> import gamspy as gp
@@ -1029,6 +1036,16 @@ class EngineClient:
         self.remove_results = remove_results
         self.is_blocking = is_blocking
         self.tokens: list[str] = []
+
+        if not is_blocking:
+            warnings.warn(
+                "`is_blocking=False` is deprecated and will be removed in a future"
+                " release. Use `Model.solveAsync(backend='engine', client=...)`"
+                " instead, which returns a `SolveHandle` that loads the solution"
+                " back into the model.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
 
         self._engine_config = EngineConfiguration(
             self.host,
@@ -1112,6 +1129,61 @@ class EngineClient:
         )
 
 
+class EngineSolveHandle(backend.SolveHandle):
+    """
+    Handle of an asynchronous solve submitted to GAMS Engine by
+    :meth:`Model.solveAsync <gamspy.Model.solveAsync>`.
+
+    The job keeps running on the server independently of the Python process;
+    its token is available as :attr:`token` and in ``client.tokens``.
+    """
+
+    backend = "engine"
+
+    def __init__(self, model: Model, runner: GAMSEngine, token: str) -> None:
+        super().__init__(model)
+        self._runner = runner
+        self.token = token
+
+    @property
+    def _job_id(self) -> str:
+        return self.token
+
+    def isReady(self) -> bool:
+        self._validate()
+
+        job_status, _, _ = self._runner._get_job_status(self.token)
+
+        return job_status == 10
+
+    def wait(
+        self,
+        timeout: float | None = None,
+        output: TextIO | None = None,
+        options: Options | None = None,
+    ) -> pd.DataFrame:
+        self._validate_timeout(timeout)
+        self._validate()
+
+        runner = self._runner
+        model = self.model
+
+        if output is None:
+            output = model.container.output
+
+        return_code = runner._wait_for_job(self.token, output, timeout)
+        runner._fetch_results(self.token, return_code, options)
+        self._is_collected = True
+
+        runner.parse_listings(model)
+        summary = runner.prepare_summary(model)
+
+        # Load the solution into GAMS and GAMSPy
+        runner._sync()
+
+        return summary
+
+
 class GAMSEngine(backend.Backend):
     def __init__(
         self,
@@ -1138,7 +1210,7 @@ class GAMSEngine(backend.Backend):
         self.client = client
 
     def is_async(self) -> bool:
-        return not self.client.is_blocking
+        return self.options._async_mode == "submit" or not self.client.is_blocking
 
     def run(self) -> pd.DataFrame | None:
         # Run a dummy job to get the restart file to be sent to GAMS Engine
@@ -1151,6 +1223,7 @@ class GAMSEngine(backend.Backend):
         self.execute_gams(gams_string)
 
         if self.is_async():
+            self._mark_unloaded_symbols_dirty()
             return None
 
         # Synchronize GAMSPy with checkpoint and return a summary
@@ -1160,6 +1233,9 @@ class GAMSEngine(backend.Backend):
         self._sync()
 
         return summary
+
+    def create_handle(self) -> EngineSolveHandle:
+        return EngineSolveHandle(self.model, self, self._token)
 
     def execute_gams(self, gams_string: str) -> None:
         hidden_options = {
@@ -1174,84 +1250,76 @@ class GAMSEngine(backend.Backend):
         with open(self.gms_file, "w", encoding="utf-8") as file:
             file.write(gams_string)
 
-        try:
-            original_extra_files = self.client.extra_model_files
-            self.client.extra_model_files = self._append_gamspy_files()
-            try:
-                token = self.client.job.post(
-                    self.container.working_directory,
-                    self.gms_file,
-                    self.pf_file,
-                )
-            finally:
-                self.client.extra_model_files = original_extra_files
+        self._submitted_gdx_out = self.container._gdx_out
 
-            self.client.tokens.append(token)
+        try:
+            self._token = self._post_job()
 
             if not self.is_async():
-                return_code = self._wait_for_job(token)
-                self.client.job.get_results(token, self.container.working_directory)
-                if self.client.remove_results:
-                    self.client.job.delete_results(token)
-
-                engine_output_path = os.path.join(
-                    self.container.working_directory, "log_stdout.txt"
-                )
-
-                if self.options.log_file:
-                    # logoption = 2 | 4
-                    shutil.move(engine_output_path, self.options.log_file)
-                else:
-                    try:
-                        os.remove(engine_output_path)  # logoption = 0 | 3
-                    except FileNotFoundError:
-                        ...
-
-                if return_code:
-                    message = (
-                        f"Return code {return_code}. {GAMS_STATUS.get(return_code, '')}"
-                        f" Check {self.job_name + '.lst'} for more information."
-                        + _customize_exception(self.options, self.job_name, return_code)
-                    )
-                    self.container._workspace._errors.append(message)
-                    raise EngineException(message, return_code=return_code)
-
-                self.model._update_model_attributes()
+                return_code = self._wait_for_job(self._token, self.output)
+                self._fetch_results(self._token, return_code)
         finally:
             self.container._unsaved_statements = []
             self.container._delete_autogenerated_symbols()
 
-    def _wait_for_job(self, token: str) -> int | None:
+    def _post_job(self) -> str:
+        original_extra_files = self.client.extra_model_files
+        self.client.extra_model_files = self._append_gamspy_files()
+        try:
+            token = self.client.job.post(
+                self.container.working_directory,
+                self.gms_file,
+                self.pf_file,
+            )
+        finally:
+            self.client.extra_model_files = original_extra_files
+
+        self.client.tokens.append(token)
+
+        return token
+
+    def _get_job_status(self, token: str) -> tuple[int, str, int | None]:
+        job_status, message, return_code = self.client.job.get(token)
+
+        if job_status in (-1, -3):
+            raise EngineException(
+                f"Could not get job results because the job is {message}.",
+                return_code=job_status,
+                status_code=job_status,
+            )
+
+        if job_status not in STATUS_MAP:
+            raise EngineException(
+                "Unknown job status code! Currently supported job"
+                f" status codes: {STATUS_MAP.keys()}",
+                return_code=job_status,
+                status_code=job_status,
+            )
+
+        return job_status, message, return_code
+
+    def _wait_for_job(
+        self,
+        token: str,
+        output: TextIO | None,
+        timeout: float | None = None,
+    ) -> int | None:
         """
         Polls the job until it finishes and streams its log to the output.
         Returns the GAMS return code of the job.
         """
-        logs_finished = self.output is None
+        deadline = None if timeout is None else time.monotonic() + timeout
+        logs_finished = output is None
         last_message = None
 
         while True:
-            job_status, message, return_code = self.client.job.get(token)
-
-            if job_status in (-1, -3):
-                raise EngineException(
-                    f"Could not get job results because the job is {message}.",
-                    return_code=job_status,
-                    status_code=job_status,
-                )
-
-            if job_status not in STATUS_MAP:
-                raise EngineException(
-                    "Unknown job status code! Currently supported job"
-                    f" status codes: {STATUS_MAP.keys()}",
-                    return_code=job_status,
-                    status_code=job_status,
-                )
+            job_status, message, return_code = self._get_job_status(token)
 
             # Logs of a finished job can still be fetched once.
             if job_status in (1, 2, 10) and not logs_finished:
-                assert self.output is not None
+                assert output is not None
                 logs, logs_finished = self.client.job.get_logs(token)
-                self.output.write(logs)
+                output.write(logs)
 
             if job_status == 10 and logs_finished:
                 return return_code
@@ -1260,7 +1328,52 @@ class GAMSEngine(backend.Backend):
                 logger.info(f"Job status is {message}...")
                 last_message = message
 
+            if deadline is not None and time.monotonic() >= deadline:
+                raise TimeoutError(
+                    f"The asynchronous solve of model `{self.model.name}` did not"
+                    f" finish within {timeout} seconds. The job (token: {token}) keeps"
+                    " running on GAMS Engine."
+                )
+
             time.sleep(JOB_POLL_INTERVAL)
+
+    def _fetch_results(
+        self, token: str, return_code: int | None, options: Options | None = None
+    ) -> None:
+        working_directory = self.container.working_directory
+        self.client.job.get_results(token, working_directory)
+        if self.client.remove_results:
+            self.client.job.delete_results(token)
+
+        engine_output_path = os.path.join(working_directory, "log_stdout.txt")
+
+        if options is None:
+            options = self.options
+
+        if options.log_file:
+            self._copy_log(engine_output_path, options)
+
+        try:
+            os.remove(engine_output_path)
+        except FileNotFoundError:
+            ...
+
+        if return_code:
+            message = (
+                f"Return code {return_code}. {GAMS_STATUS.get(return_code, '')}"
+                f" Check {self.job_name + '.lst'} for more information."
+                + _customize_exception(self.options, self.job_name, return_code)
+            )
+            self.container._workspace._errors.append(message)
+            raise EngineException(message, return_code=return_code)
+
+        downloaded_gdx = os.path.join(
+            working_directory, os.path.basename(self._submitted_gdx_out)
+        )
+        if os.path.abspath(downloaded_gdx) != os.path.abspath(self.container._gdx_out):
+            shutil.move(downloaded_gdx, self.container._gdx_out)
+
+        self.model._update_model_attributes()
 
     def postprocess(self) -> pd.DataFrame | None:
         if self.client.remove_results or self.model is None:

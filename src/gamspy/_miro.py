@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
+IS_MIRO_INIT = os.getenv("MIRO", False)
 
 
 def get_load_input_str(name: str, gdx_in: str, *, drop_violations: bool = False) -> str:

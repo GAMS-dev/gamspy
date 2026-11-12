@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import concurrent.futures
+import io
 import logging
 import math
 import multiprocessing
@@ -992,9 +993,8 @@ def test_solve(transport, tmp_path):
     platform.system() != "Linux",
     reason="It doesn't work in Docker Windows Server container.",
 )
-def test_interrupt():
-    m = Container()
-
+def _make_dice_model(m: Container) -> Model:
+    """Builds a MIP that takes a long time to solve."""
     f = Set(
         m,
         name="f",
@@ -1064,6 +1064,17 @@ def test_interrupt():
         objective=wnx,
     )
 
+    return xdice
+
+
+@pytest.mark.skipif(
+    platform.system() == "Windows",
+    reason="Interrupting GAMS with CTRL+C is not reliable in Windows pipelines.",
+)
+def test_interrupt():
+    m = Container()
+    xdice = _make_dice_model(m)
+
     def interrupt_gams(model):
         time.sleep(4)
         model.interrupt()
@@ -1084,6 +1095,340 @@ def test_interrupt():
     summary = xdice.solve(output=sys.stdout, options=Options(time_limit=2))
     assert summary is not None
     assert xdice.solve_status == SolveStatus.ResourceInterrupt
+
+
+def test_grid_solve(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
+    i = Set(m, name="i", records=canning_plants)
+    j = Set(m, name="j", records=markets)
+
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
+    d = Parameter(m, name="d", domain=[i, j], records=distances)
+    c = Parameter(m, name="c", domain=[i, j])
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(m, name="x", domain=[i, j], type="Positive")
+    z = Variable(m, name="z")
+
+    cost = Equation(m, name="cost")
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
+
+    cost[...] = Sum((i, j), c[i, j] * x[i, j]) == z
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=[cost, supply, demand],
+        problem="LP",
+        sense="min",
+        objective=z,
+    )
+
+    # An asynchronous solve returns a handle immediately.
+    handle = transport.solveAsync(output=sys.stdout)
+    assert isinstance(handle, gp.SolveHandle)
+
+    summary = handle.wait(timeout=60)
+    assert summary is not None
+    assert transport.status == ModelStatus.OptimalGlobal
+    assert transport.solve_status == SolveStatus.NormalCompletion
+    assert math.isclose(transport.objective_value, 153.675)
+    assert x.records is not None
+    assert math.isclose(x.records["level"].sum(), 900)
+
+    # The solution can only be collected once.
+    with pytest.raises(ValidationError):
+        handle.wait()
+
+    with pytest.raises(ValidationError):
+        handle.isReady()
+
+    # A blocking solve does not disturb an in-flight asynchronous solve.
+    handle = transport.solveAsync()
+    b[j] = 0.5 * b[j]
+    summary = transport.solve()
+    assert summary is not None
+    assert transport.objective_value < 153.675
+
+    # The asynchronous solve was generated with the original demand.
+    summary = handle.wait(timeout=60)
+    assert summary is not None
+    assert math.isclose(transport.objective_value, 153.675)
+
+
+def test_grid_solve_parallel(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
+    i = Set(m, name="i", records=canning_plants)
+    j = Set(m, name="j", records=markets)
+
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
+    d = Parameter(m, name="d", domain=[i, j], records=distances)
+    c = Parameter(m, name="c", domain=[i, j])
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(m, name="x", domain=[i, j], type="Positive")
+
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=[supply, demand],
+        problem="LP",
+        sense="min",
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+
+    v = Variable(m, name="v")
+    e = Equation(m, name="e", definition=v >= 42)
+    second = Model(
+        m, name="second", equations=[e], problem="LP", sense="min", objective=v
+    )
+
+    transport_handle = transport.solveAsync()
+    second_handle = second.solveAsync()
+
+    # Solutions can be collected in any order.
+    assert second_handle.wait(timeout=60) is not None
+    assert math.isclose(second.objective_value, 42)
+    assert transport_handle.wait(timeout=60) is not None
+    assert math.isclose(transport.objective_value, 153.675)
+
+
+def test_grid_solve_scenarios(transport):
+    m, canning_plants, markets, distances, capacities, demands = transport
+    i = Set(m, name="i", records=canning_plants)
+    j = Set(m, name="j", records=markets)
+
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
+    d = Parameter(m, name="d", domain=[i, j], records=distances)
+    c = Parameter(m, name="c", domain=[i, j])
+
+    x = Variable(m, name="x", domain=[i, j], type="Positive")
+
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=[supply, demand],
+        problem="LP",
+        sense="min",
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+
+    # Several instances of the same model in flight at once, one per scenario.
+    factors = [1.0, 2.0, 4.0]
+    handles = {}
+    for factor in factors:
+        c[i, j] = factor * 90 * d[i, j] / 1000
+        handles[factor] = transport.solveAsync()
+
+    # Collect in completion order.
+    results = {}
+    pending = dict(handles)
+    while pending:
+        for factor, handle in list(pending.items()):
+            if handle.isReady():
+                handle.wait(timeout=60)
+                # Read the records before the next collection overwrites them.
+                results[factor] = (transport.objective_value, x.records.copy())
+                del pending[factor]
+
+        time.sleep(0.1)
+
+    for factor in factors:
+        objective_value, records = results[factor]
+        assert math.isclose(objective_value, factor * 153.675)
+        assert math.isclose(records["level"].sum(), 900)
+
+
+def test_grid_solve_timeout():
+    m = Container()
+    xdice = _make_dice_model(m)
+
+    handle = xdice.solveAsync(options=Options(time_limit=8))
+    assert isinstance(handle, gp.SolveHandle)
+
+    # The solver cannot be done immediately after the submission.
+    assert not handle.isReady()
+
+    with pytest.raises(TimeoutError):
+        handle.wait(timeout=0)
+
+    # The solve keeps running in the background after a timeout and can still
+    # be collected; the solver stops at its time limit.
+    summary = handle.wait()
+    assert summary is not None
+    assert xdice.solve_status == SolveStatus.ResourceInterrupt
+    assert xdice.objective_value is not None
+
+    m.close()
+
+
+def test_grid_solve_native_indicator():
+    m = Container()
+    b = Variable(m, name="b", type="binary")
+    x = Variable(m, name="x")
+    x.lo = 0
+    x.up = 100
+    res = gp.formulations.indicator(b, 1, x <= 2, native=True)
+    off = Equation(m, name="off", definition=b == 0)
+    model = Model(
+        m,
+        name="indicator_model",
+        equations=[res.equations_created["indicator"], off],
+        problem="MIP",
+        sense="max",
+        objective=x,
+    )
+
+    # b = 0 deactivates the indicator; as a hard constraint it would cap x at 2.
+    handle = model.solveAsync()
+    handle.wait(timeout=60)
+    assert math.isclose(x.toValue(), 100)
+
+    m.close()
+
+
+def test_grid_solve_solver_options(tmp_path):
+    m = Container()
+    v = Variable(m, name="v")
+    w = Variable(m, name="w")
+    e = Equation(m, name="e", definition=v + w >= 5)
+    model = Model(
+        m, name="lp_model", equations=[e], problem="LP", sense="min", objective=v + w
+    )
+
+    handles = [
+        model.solveAsync(
+            solver="cplex", solver_options={"writelp": str(tmp_path / f"{k}.lp")}
+        )
+        for k in range(5)
+    ]
+    assert len(m._async_option_file_numbers) == 5
+
+    for handle in handles:
+        handle.wait(timeout=60)
+
+    assert sorted(path.name for path in tmp_path.glob("*.lp")) == [
+        f"{k}.lp" for k in range(5)
+    ]
+
+    # Collected solves give their option file numbers back.
+    assert m._async_option_file_numbers == set()
+
+    # A solve without an option file does not hold a number.
+    handle = model.solveAsync(solver="cplex")
+    assert m._async_option_file_numbers == set()
+    handle.wait(timeout=60)
+
+    m.close()
+
+
+def test_grid_solve_solution_listing(tmp_path):
+    m = Container()
+    v = Variable(m, name="v")
+    e = Equation(m, name="e", definition=v >= 5)
+    model = Model(
+        m, name="lp_model", equations=[e], problem="LP", sense="min", objective=v
+    )
+
+    listing_file = tmp_path / "async.lst"
+    options = Options(report_solution=1, listing_file=str(listing_file))
+    first = model.solveAsync(options=options)
+    second = model.solveAsync(options=options)
+    first.wait(timeout=60)
+    second.wait(timeout=60)
+
+    # The collections append to the listing of the last submission.
+    listing = listing_file.read_text(errors="replace")
+    assert "Model Statistics" in listing
+    assert f"Solution Report for model lp_model with handle {first.value}" in listing
+    assert f"Solution Report for model lp_model with handle {second.value}" in listing
+
+    listing_file.unlink()
+    handle = model.solveAsync(options=Options(listing_file=str(listing_file)))
+    handle.wait(timeout=60)
+    assert "Solution Report" not in listing_file.read_text(errors="replace")
+
+    m.close()
+
+
+def test_grid_solve_solver_log(tmp_path):
+    m = Container()
+    v = Variable(m, name="v")
+    e = Equation(m, name="e", definition=v >= 5)
+    model = Model(
+        m, name="lp_model", equations=[e], problem="LP", sense="min", objective=v
+    )
+
+    output = io.StringIO()
+    model.solveAsync(solver="cplex").wait(timeout=60, output=output)
+    assert "Optimal solution found" in output.getvalue()
+
+    log_file = tmp_path / "async.log"
+    model.solveAsync(solver="cplex").wait(
+        timeout=60, options=Options(log_file=str(log_file))
+    )
+    model.solveAsync(solver="cplex").wait(
+        timeout=60, options=Options(log_file=str(log_file), append_to_log_file=True)
+    )
+    assert log_file.read_text().count("Optimal solution found") == 2
+
+    model.solveAsync(solver="cplex").wait(
+        timeout=60, options=Options(log_file=str(log_file))
+    )
+    assert log_file.read_text().count("Optimal solution found") == 1
+
+    m.close()
+
+
+def test_grid_solve_does_not_report_the_previous_solve(caplog):
+    m = Container()
+    xdice = _make_dice_model(m)
+
+    # GAMS leaves the model attributes of this solve in place until another one
+    # finishes, so a submission must not pick them up and report them again.
+    xdice.solve(options=Options(time_limit=5))
+    assert xdice.solve_status == SolveStatus.ResourceInterrupt
+    assert xdice.objective_value is not None
+
+    with caplog.at_level(logging.WARNING, logger="MODEL"):
+        caplog.clear()
+        handle = xdice.solveAsync(options=Options(time_limit=5))
+        assert caplog.text == ""
+
+    # A submission resets the results of the previous solve until `wait`.
+    assert xdice.status == ModelStatus.NotSolved
+    with pytest.raises(ValidationError, match="not solved yet"):
+        _ = xdice.solve_status
+    with pytest.raises(ValidationError, match="not solved yet"):
+        _ = xdice.objective_value
+
+    # The interrupt of the collected solve is reported, though.
+    with caplog.at_level(logging.WARNING, logger="MODEL"):
+        caplog.clear()
+        handle.wait()
+        assert "The solve was interrupted!" in caplog.text
+
+    assert xdice.solve_status == SolveStatus.ResourceInterrupt
+
+    m.close()
 
 
 @pytest.mark.requires_solvers(
