@@ -229,6 +229,7 @@ MODEL_ATTRIBUTE_MAP = {
     "etAlg": "_algorithm_time",
     "etSolve": "_total_solve_time",
     "etSolver": "_total_solver_time",
+    "handle": "_handle",
     "iterUsd": "_num_iterations",
     "marginals": "_marginals",
     "maxInfes": "_max_infeasibility",

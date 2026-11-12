@@ -93,8 +93,7 @@ def test_domain_violations_without_records(container):
     p = Parameter(container, "p", domain=[i])
 
     assert p._getDomainViolations() is None
-    assert p._findDomainViolations() is None
-    assert p._dropDomainViolations() is None
+    assert p.findDomainViolations() is None
 
 
 def test_domain_violations_when_domain_has_no_records(container):
@@ -124,19 +123,15 @@ def test_domain_violations_in_multiple_dimensions(container):
         (1, ["bad_j"]),
     ]
 
-    found = p._findDomainViolations()
+    found = p.findDomainViolations()
     assert found.index.tolist() == [1, 2]
-
-    p._dropDomainViolations()
-    assert p.records["value"].tolist() == [1.0]
-    assert p._getDomainViolations() == []
 
 
 def test_find_domain_violations_returns_empty_frame(container):
     i = Set(container, "i", records=["a", "b"])
     p = Parameter(container, "p", domain=[i], records=[("a", 1.0)])
 
-    found = p._findDomainViolations()
+    found = p.findDomainViolations()
     assert found.empty
     assert found.columns.tolist() == p.records.columns.tolist()
 

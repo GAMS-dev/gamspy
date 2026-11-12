@@ -9,7 +9,8 @@
     - uv venv .venv --python $env:PYTHON_VERSION
     - .venv\Scripts\Activate.ps1
     - uv sync --locked --group test
-    - gamspy install license $env:LOCAL_LICENSE
+    - '& "$(gamspy show base)\gamsgetkey.exe" $env:LOCAL_LICENSE -o "$env:CI_PROJECT_DIR\ci_license.txt"'
+    - $env:GAMSPY_LICENSE_PATH="$env:CI_PROJECT_DIR\ci_license.txt"
     - $env:UV_NO_CONFIG="1"; gamspy install solver -a --use-uv
     - gamspy uninstall solver miles --use-uv
   script:

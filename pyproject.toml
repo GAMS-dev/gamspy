@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.29.3"
+version = "1.30.0"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -34,8 +34,8 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi >= 54.6.1, < 55.0.0",
-  "gamspy_base >= 54.6.1, < 55.0.0",
+  "gamsapi >= 54.7.0, < 55.0.0",
+  "gamspy_base >= 54.7.0, < 55.0.0",
   "pandas >= 2.2.2, < 3.1",
   "pydantic >= 2.0",
   "pyyaml >= 6.0",
@@ -68,7 +68,7 @@ explicit = true
 
 [tool.ty.rules]
 invalid-method-override = "ignore"  # Some overrides do not match the signature of equivalent gtp functions.
-unresolved-import = "ignore"  # Needed for optional torch dependency
+import-not-found = "ignore"  # Needed for optional torch dependency
 
 [dependency-groups]
 dev = [
@@ -242,6 +242,7 @@ select = [
     "PLE",      # Pylint error rules
     "PGH003",   # blanket-type-ignore
     "ANN",      # flake8-annotations
+    "C901",     # complex-structure
 ]
 ignore = [
     "E501",   # line-too-long
@@ -263,6 +264,9 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ANN"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 20
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

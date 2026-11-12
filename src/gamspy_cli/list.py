@@ -20,6 +20,8 @@ _SOLVER_TOOLS: dict[str, str] = {
     "RESHOP": "Reformulation and decomposition for MCP/MPEC",
 }
 
+_CUOPT_MODEL_TYPES = ["LP", "RMIP", "MIP", "QCP", "MIQCP", "RMIQCP"]
+
 _S_GREEN = "[bold bright_green]✓[/bold bright_green]"
 _S_YELLOW = "[bold yellow]○[/bold yellow]"
 _S_RED = "[bold red]✗[/bold red]"
@@ -38,29 +40,22 @@ def _status_cell(
     return f"{icon}{_S_SIZE_LIMITED}" if is_size_limited else icon
 
 
-def _collect_solver_data(all: bool) -> tuple[list[dict], list[dict], list[str]]:
+def _collect_solver_data(*, all: bool) -> tuple[list[dict], list[dict], list[str]]:
     import gamspy_base
 
     import gamspy.utils as utils
-    from gamspy_cli import cuopt
-    from gamspy_cli.license import get_licensed_solvers, is_size_limited_license
 
-    system_directory = gamspy_base.directory
-    installed = set(utils.getInstalledSolvers(system_directory))
-    # The capabilities of the system directory only cover installed solvers, hence
-    # those of gamspy_base and cuOpt fill in the rest.
+    installed_capabilities = gamspy_base.get_solver_capabilities()
+    installed = set(installed_capabilities)
     capabilities = {
         **gamspy_base.capabilities,
-        "CUOPT": cuopt.MODEL_TYPES,
-        **utils.getSolverCapabilities(system_directory),
+        "CUOPT": _CUOPT_MODEL_TYPES,
+        **installed_capabilities,
     }
 
-    license_path = utils._get_license_path(system_directory)
-    licensed = {s.upper() for s in get_licensed_solvers(license_path)}
-
-    if "CONOPT" in licensed:
-        licensed.add("CONOPT4")
-    size_limited_license = is_size_limited_license(license_path)
+    license_path = utils._get_license_path(gamspy_base.directory)
+    licensed = set(gamspy_base.get_licensed_solvers(license_path))
+    size_limited_license = gamspy_base.is_size_limited_license(license_path)
 
     tool_names = set(_SOLVER_TOOLS)
     solver_names = [n for n in utils.getAvailableSolvers() if n not in tool_names]
@@ -131,7 +126,7 @@ class SolverInfo:
     is_tool: bool = False
 
 
-def list_solvers(all: bool = False) -> list[SolverInfo]:
+def list_solvers(*, all: bool = False) -> list[SolverInfo]:
     """
     Lists the solvers and tools along with their license and installation status.
     Equivalent of ``gamspy list solvers``.
@@ -153,7 +148,7 @@ def list_solvers(all: bool = False) -> list[SolverInfo]:
     True
 
     """
-    solver_rows, tool_rows, _ = _collect_solver_data(all)
+    solver_rows, tool_rows, _ = _collect_solver_data(all=all)
 
     return [
         SolverInfo(
@@ -176,13 +171,13 @@ def list_solvers(all: bool = False) -> list[SolverInfo]:
     ]
 
 
-def _print_solver_tables(all: bool) -> None:
+def _print_solver_tables(*, all: bool) -> None:
     import sys
 
     from rich.console import Console
     from rich.table import Table
 
-    solver_rows, tool_rows, all_types = _collect_solver_data(all)
+    solver_rows, tool_rows, all_types = _collect_solver_data(all=all)
 
     # Force UTF-8. Windows systems might default to cp1252 encoding.
     # TODO: UTF-8 will be the default on all platforms in Python 3.15. Remove this when we drop support for Python 3.14.
@@ -285,7 +280,7 @@ def solvers(
 
         console.print(table)
     else:
-        _print_solver_tables(all)
+        _print_solver_tables(all=all)
 
 
 if __name__ == "__main__":

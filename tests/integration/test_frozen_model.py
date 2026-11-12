@@ -882,6 +882,22 @@ def test_modifiable_with_domain(transport):
     assert math.isclose(mymodel.objective_value, 32.36124699832342, rel_tol=1e-6)
 
 
+def test_drop_domain_violations():
+    m = Container()
+    i = Set(m, "i", records=["a", "b"])
+    p = Parameter(m, "p", domain=i, records=[("a", 1), ("b", 2)])
+    x = Variable(m, "x", domain=i)
+    e = Equation(m, "e", domain=i)
+    e[i] = x[i] >= p[i]
+    model = Model(m, equations=[e], problem="LP", sense="min", objective=Sum(i, x[i]))
+
+    model.freeze(modifiables=[p])
+    p.setRecords([("a", 3), ("b", 4), ("zz", 9)], drop_domain_violations=True)
+    assert p.toList() == [("a", 3.0), ("b", 4.0)]
+    model.solve()
+    assert x.toList() == [("a", 3.0), ("b", 4.0)]
+
+
 @pytest.mark.requires_license
 @pytest.mark.skipif(
     platform.system() == "Darwin",

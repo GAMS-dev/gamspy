@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+import warnings
 from difflib import get_close_matches
 from typing import TYPE_CHECKING, Any, Literal, cast, get_args, overload
 
@@ -28,6 +29,12 @@ OptionName = Literal[
 OPTION_NAMES: tuple[str, ...] = get_args(OptionName)
 
 configuration: dict[str, Any] = {}
+
+_DROP_DOMAIN_VIOLATIONS_DEPRECATION = (
+    "`DROP_DOMAIN_VIOLATIONS` option is deprecated and will be removed in a"
+    " future release. Use the `drop_domain_violations` argument of"
+    " `setRecords` or the symbol constructors instead."
+)
 
 
 def _unknown_option_message(name: str) -> str:
@@ -85,6 +92,12 @@ def _set_default_options() -> None:
     configuration["USE_PY_VAR_NAME"] = use_py_var_name
 
     # Do not drop the domain violations by default
+    if "GAMSPY_DROP_DOMAIN_VIOLATIONS" in os.environ:
+        warnings.warn(
+            _DROP_DOMAIN_VIOLATIONS_DEPRECATION,
+            category=DeprecationWarning,
+            stacklevel=3,
+        )
     strategy = int(os.getenv("GAMSPY_DROP_DOMAIN_VIOLATIONS", 0))
     configuration["DROP_DOMAIN_VIOLATIONS"] = strategy
 
@@ -129,6 +142,13 @@ def set_options(options: dict[OptionName, Any]) -> None:
     for name in given:
         if name not in OPTION_NAMES:
             raise ValidationError(_unknown_option_message(name))
+
+    if "DROP_DOMAIN_VIOLATIONS" in given:
+        warnings.warn(
+            _DROP_DOMAIN_VIOLATIONS_DEPRECATION,
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
 
     for name, value in given.items():
         configuration[name] = value

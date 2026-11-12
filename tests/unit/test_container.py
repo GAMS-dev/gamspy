@@ -39,7 +39,12 @@ from gamspy import (
     deserialize,
     serialize,
 )
-from gamspy.exceptions import GamspyException, GdxException, ValidationError
+from gamspy.exceptions import (
+    DomainViolationError,
+    GamspyException,
+    GdxException,
+    ValidationError,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -1861,42 +1866,107 @@ def test_writeSolverOptions_scip():
 def test_domain_violations(set_options):
     import gamspy as gp
 
-    set_options({"DROP_DOMAIN_VIOLATIONS": 1})
+    with pytest.warns(DeprecationWarning):
+        set_options({"DROP_DOMAIN_VIOLATIONS": 1})
 
     c = gp.Container()
     i = gp.Set(c, "i", records=["i1"])
 
     j = gp.Set(c, "j", domain=i, records=["i1", "i2"])
     assert j.toList() == ["i1"]
-    assert j._domain_violations[0].violations == ["i2"]
 
     p = gp.Parameter(c, "p", domain=[i], records=[("i1", 10), ("i2", 20)])
     assert p.toList() == [("i1", 10.0)]
-    assert p._domain_violations[0].violations == ["i2"]
 
-    v = gp.Variable(
-        c,
-        "v",
-        domain=[i],
-        records=pd.DataFrame(
-            data=[("i1", 5), ("i2", 10)],
-            columns=["domain", "level"],
-        ),
-    )
-    assert v.toList() == [("i1", 5.0)]
-    assert v._domain_violations[0].violations == ["i2"]
 
-    e = gp.Equation(
-        c,
-        "e",
-        domain=[i],
-        records=pd.DataFrame(
-            data=[("i1", 10), ("i2", 10)],
-            columns=["domain", "level"],
-        ),
+@pytest.mark.unit
+def test_domain_violation_error():
+    c = gp.Container()
+    i = gp.Set(c, "i", records=["a", "b"])
+
+    with pytest.raises(DomainViolationError) as err:
+        gp.Parameter(c, "p", domain=i, records=[("a", 1), ("c", 2)])
+
+    assert isinstance(err.value, GamspyException)
+    assert list(err.value.violations) == ["p"]
+    assert err.value.violations["p"].values.tolist() == [["c", 2.0]]
+
+    p = c["p"]
+    assert p.records is None
+    p.setRecords([("a", 1)])
+    q = gp.Parameter(c, "q", domain=i)
+    q[i] = p[i] + 1
+    assert q.toList() == [("a", 2.0), ("b", 1.0)]
+
+    with pytest.raises(DomainViolationError):
+        p.setRecords([("b", 5), ("c", 2)])
+    assert p.toList() == [("a", 1.0)]
+    q[i] = p[i]
+    assert q.toList() == p.toList()
+
+    k = gp.Set(c, "k")
+    v = gp.Variable(c, "v", domain=[i, i])
+    with pytest.raises(DomainViolationError) as err:
+        c.setRecords(
+            {
+                k: ["k1"],
+                v: pd.DataFrame([("a", "z", 1.0)], columns=["i", "i2", "level"]),
+            }
+        )
+    assert list(err.value.violations) == ["v"]
+    assert k.toList() == ["k1"]
+    assert v.toList() == []
+
+    r = gp.Parameter(c, "r", domain=i)
+    with pytest.raises(DomainViolationError):
+        c.setRecords({r: [("a", 3)], p: [("a", 7), ("c", 2)]})
+    assert r.toList() == [("a", 3.0)]
+    assert p.toList() == [("a", 1.0)]
+
+    j = gp.Set(c, "j", domain=i)
+    a = gp.Alias(c, "a", j)
+    with pytest.raises(DomainViolationError):
+        c.setRecords({p: [("a", 2)], a: ["zz"], r: [("b", 5)]})
+    assert p.toList() == [("a", 2.0)]
+    assert a.toList() == []
+    assert r.toList() == [("b", 5.0)]
+
+
+@pytest.mark.unit
+def test_drop_domain_violations():
+    c = gp.Container()
+    i = gp.Set(c, "i", records=["a", "b"])
+
+    j = gp.Set(c, "j", domain=i, records=["a", "x"], drop_domain_violations=True)
+    assert j.toList() == ["a"]
+
+    p = gp.Parameter(c, "p", domain=i)
+    p.setRecords([("a", 1), ("c", 2)], drop_domain_violations=True)
+    assert p.toList() == [("a", 1.0)]
+
+    a = gp.Alias(c, "a", alias_with=j)
+    a.setRecords(["b", "y"], drop_domain_violations=True)
+    assert j.toList() == ["b"]
+
+    e = gp.Equation(c, "e", domain=i)
+    c.setRecords(
+        {
+            p: [("b", 3), ("z", 4)],
+            e: pd.DataFrame([("c", 1.0)], columns=["i", "level"]),
+        },
+        drop_domain_violations=True,
     )
-    assert e.toList() == [("i1", 10.0)]
-    assert e._domain_violations[0].violations == ["i2"]
+    assert p.toList() == [("b", 3.0)]
+    assert e.toList() == []
+
+
+@pytest.mark.unit
+def test_find_domain_violations():
+    c = gp.Container()
+    i = gp.Set(c, "i", records=["a", "b"])
+    p = gp.Parameter(c, "p", domain=i, records=[("a", 1), ("b", 2)])
+    i.setRecords(["a"])
+    assert p.findDomainViolations().values.tolist() == [["b", 2.0]]
 
 
 @pytest.mark.unit

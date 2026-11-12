@@ -47,7 +47,7 @@ from gamspy import (
 from gamspy.math import Max, atan, cos, sin, sqr, sqrt
 
 
-def main():
+def main():  # noqa: C901
     # Parse the arguments
     parser = argparse.ArgumentParser()
 

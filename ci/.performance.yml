@@ -16,12 +16,14 @@ leg-performance:
     - conda install -y -c conda-forge cyipopt
     - uv pip install . --group test --group doc --group dev
     - uv pip install highsbox highspy llvmlite tccbox psutil pyoptinterface linopy
-    - gamspy install license $PERFORMANCE_LICENSE
+    - $(gamspy show base)/gamsgetkey $PERFORMANCE_LICENSE -o "$CI_PROJECT_DIR/performance_license.txt"
+    - export GAMSPY_LICENSE_PATH="$CI_PROJECT_DIR/performance_license.txt"
     - echo $GAMS_LICENSE > $(python -m gamspy show base)/gamslice.txt
     - gamspy install solver -a --use-uv
     - which python
     - python scripts/performance/lp/main.py
-    - gamspy install license $LOCAL_LICENSE
+    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE -o "$CI_PROJECT_DIR/ci_license.txt" $EXTRA_ARG
+    - export GAMSPY_LICENSE_PATH="$CI_PROJECT_DIR/ci_license.txt"
     - python scripts/performance/performance.py
     - python scripts/performance/read.py
     - python scripts/performance/main_IJKLM.py

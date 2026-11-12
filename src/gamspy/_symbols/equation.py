@@ -17,7 +17,12 @@ from gamspy._internals import (
     EQU_TYPE,
     TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
 )
-from gamspy._notation import LATEX, UNICODE
+from gamspy._notation import (
+    LATEX_MATH_DELIMITERS,
+    LATEX_SEPARATOR,
+    UNICODE,
+    LatexNotation,
+)
 from gamspy._special_values import SpecialValues
 from gamspy._symbols.base import VarEquSymbol
 from gamspy._symbols.utils import _quote_description
@@ -147,6 +152,10 @@ class Equation(VarEquSymbol):
         contained in the axes (index/columns) of the provided `records` object.
     is_miro_output : bool, optional
         If True, flags this equation as an output symbol for GAMS MIRO. Default is False.
+    drop_domain_violations : bool, optional
+        If True, records with labels outside the domain are dropped instead of
+        raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+        Default is False.
 
     Examples
     --------
@@ -227,6 +236,8 @@ class Equation(VarEquSymbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
         definition_domain: list | None = None,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         type = cast_type(type)
         if self.type != type.casefold():
@@ -250,7 +261,11 @@ class Equation(VarEquSymbol):
         with self._miro_unprotected():
             self._init_definition(definition)
 
-        self._redefine_records(records, uels_on_axes=uels_on_axes)
+        self._redefine_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def __init__(
         self,
@@ -265,6 +280,8 @@ class Equation(VarEquSymbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
         definition_domain: list | None = None,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         container, name = self._resolve_container_and_name(
             container, name, prefix="e", is_miro=is_miro_output
@@ -284,7 +301,11 @@ class Equation(VarEquSymbol):
         )
         self._init_definition(definition)
         self._init_attributes()
-        self._init_records(records, uels_on_axes=uels_on_axes)
+        self._init_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def _init_definition_state(self, definition_domain: list | None) -> None:
         self._definition: Expression | None = None
@@ -930,7 +951,11 @@ class Equation(VarEquSymbol):
         return id(self)
 
     def setRecords(
-        self, records: VarEquRecordsType | None, uels_on_axes: bool = False
+        self,
+        records: VarEquRecordsType | None,
+        uels_on_axes: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         """
         Sets the records (data) of the Equation.
@@ -946,6 +971,10 @@ class Equation(VarEquSymbol):
             whatever order they appear in. Omitted attributes take their default.
         uels_on_axes : bool, optional
             If True, assumes domain elements are in the axes of the DataFrame. Default is False.
+        drop_domain_violations : bool, optional
+            If True, records with labels outside the domain are dropped instead of
+            raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+            Default is False.
 
         Examples
         --------
@@ -960,7 +989,11 @@ class Equation(VarEquSymbol):
         np.float64(5.0)
 
         """
-        self._update_records(records, uels_on_axes=uels_on_axes)
+        self._update_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     @property
     def _default_records(self) -> dict[str, float]:
@@ -1026,9 +1059,21 @@ class Equation(VarEquSymbol):
             representation += self._get_domain_str(self._domain_forwarding)
         return representation
 
-    def latexRepr(self) -> str:
+    def latexRepr(
+        self,
+        *,
+        separator: str = LATEX_SEPARATOR,
+        delimiters: tuple[str, str] = LATEX_MATH_DELIMITERS,
+    ) -> str:
         r"""
         Generates a LaTeX representation of the equation definition.
+
+        Parameters
+        ----------
+        separator : str, optional
+            Separates the definition from its domain (e.g. ``\quad`` or ``\hspace{1cm}``).
+        delimiters : tuple[str, str], optional
+            Start and end delimiters of the definition (e.g. ``("$$", "$$")``).
 
         Returns
         -------
@@ -1050,11 +1095,14 @@ class Equation(VarEquSymbol):
         >>> e[i] = v[i] <= 10
         >>> print(e.latexRepr())
         $
-        v_{i} \leq 10\hfill \forall i
+        v_{i} \leq 10\quad \forall i
         $
+        >>> print(e.latexRepr(separator=r"\hspace{1cm}", delimiters=("$$", "$$")))
+        $$v_{i} \leq 10\hspace{1cm} \forall i$$
 
         """
-        return self._math_repr(LATEX)
+        notation = LatexNotation(separator=separator, math_delimiters=delimiters)
+        return self._math_repr(notation)
 
     def unicodeRepr(self) -> str:
         """

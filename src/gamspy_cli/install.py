@@ -1,23 +1,18 @@
 from __future__ import annotations
 
-import csv
-import importlib
-import importlib.util
 import os
-import pathlib
-import platform
 import shutil
 import subprocess
-import sys
-from importlib.metadata import distribution
 from typing import TYPE_CHECKING, Annotated
 
 import certifi
 import typer
 
-from . import cuopt
-from .license import get_licensed_solvers
-from .util import add_solver_entry, cli_error, has_pip, has_uv
+from .util import (
+    CUOPT,
+    cli_error,
+    installation_error,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -27,6 +22,18 @@ app = typer.Typer(
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy install license <access_code> or <path/to/license/file> | gamspy install solver <solver_name>",
     context_settings={"help_option_names": ["-h", "--help"]},
 )
+
+# Deprecated solvers are only installed when they are asked for by name.
+_DEPRECATED_SOLVERS = frozenset({"EXAMINER2"})
+
+
+def _check_gamspy_license(lines: list[str], license_type: str, source: str) -> None:
+    platform_code = lines[2][:2] if license_type == "+" else lines[2][8:10]
+    if platform_code not in ("00", "06", "07", "08", "09"):
+        raise cli_error(
+            f"{source} is not valid for GAMSPy. "
+            "Make sure that you use a GAMSPy license, not a GAMS license."
+        )
 
 
 def install_license(
@@ -81,6 +88,7 @@ def install_license(
     import requests
 
     import gamspy.utils as utils
+    from gamspy.exceptions import CLIError
 
     os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
 
@@ -179,57 +187,28 @@ def install_license(
                 f"Invalid license text. \nLicense text: {license_text}\nstdout: {process.stdout}\nstderr: {process.stderr}"
             ) from e
 
-        if license_type == "+":
-            if lines[2][:2] not in ("00", "06", "07", "08", "09"):
-                raise cli_error(
-                    f"Given access code `{alp_id}` is not valid for GAMSPy. "
-                    "Make sure that you use a GAMSPy license, not a GAMS license."
-                )
-        else:
-            if lines[2][8:10] not in ("00", "06", "07", "08", "09"):
-                raise cli_error(
-                    f"Given access code `{alp_id}` is not valid for GAMSPy. "
-                    "Make sure that you use a GAMSPy license, not a GAMS license."
-                )
+        _check_gamspy_license(lines, license_type, f"Given access code `{alp_id}`")
     else:
         with open(license) as file:
             lines = file.read().splitlines()
 
-        license_type = lines[0][54]
-        if license_type == "+":
-            if lines[2][:2] not in ("00", "06", "07", "08", "09"):
-                raise cli_error(
-                    f"Given license file `{license}` is not valid for GAMSPy. "
-                    "Make sure that you use a GAMSPy license, not a GAMS license."
-                )
-        else:
-            if lines[2][8:10] not in ("00", "06", "07", "08", "09"):
-                raise cli_error(
-                    f"Given license file `{license}` is not valid for GAMSPy. "
-                    "Make sure that you use a GAMSPy license, not a GAMS license."
-                )
+        _check_gamspy_license(lines, lines[0][54], f"Given license file `{license}`")
 
         shutil.copy(license, output if output else license_path)
 
     # Free personal license has different default solvers. Install them.
     if "FREEPERSONAL" in lines[4]:
-        command = [
-            sys.executable,
-            "-m",
-            "gamspy",
-            "install",
-            "solver",
-            "HIGHS",
-            "IPOPT",
-            "MILES",
-            "SHOT",
-            "RESHOP",
-            "SCIP",
-        ]
-        if use_uv:
-            command.append("--use-uv")
-
-        subprocess.run(command)
+        default_solvers = ["HIGHS", "IPOPT", "MILES", "SHOT", "RESHOP", "SCIP"]
+        try:
+            install_solver(default_solvers, use_uv=use_uv)
+        except CLIError as e:
+            # The license is installed, only its default solvers are missing.
+            names = " ".join(solver.lower() for solver in default_solvers)
+            typer.echo(
+                "Warning: The default solvers of the license could not be installed: "
+                f"{e.message}\nInstall them with `gamspy install solver {names}`.",
+                err=True,
+            )
 
     return output if output else license_path
 
@@ -280,44 +259,6 @@ def license(
         uses_port=uses_port,
         use_uv=use_uv,
     )
-
-
-def append_dist_info(files: Iterable[str], gamspy_base_dir: str) -> None:
-    dist = distribution("gamspy_base")
-    record = next(
-        (
-            path
-            for path in dist.files or []
-            if path.name == "RECORD" and path.parent.name.endswith(".dist-info")
-        ),
-        None,
-    )
-    if record is None:
-        return
-
-    record_path = str(dist.locate_file(record))
-    location = str(dist.locate_file(""))
-
-    with open(record_path, encoding="utf-8", newline="") as file:
-        content = file.read()
-
-    recorded = {row[0] for row in csv.reader(content.splitlines()) if row}
-    rows = []
-    for file in files:
-        path = pathlib.Path(
-            os.path.relpath(os.path.join(gamspy_base_dir, file), location)
-        ).as_posix()
-        if path not in recorded:
-            recorded.add(path)
-            rows.append([path, "", ""])
-
-    if not rows:
-        return
-
-    with open(record_path, "a", encoding="utf-8", newline="") as file:
-        if content and not content.endswith("\n"):
-            file.write("\n")
-        csv.writer(file, lineterminator="\n").writerows(rows)
 
 
 def _add_installed_addon(addons_path: str, solver_name: str) -> None:
@@ -390,25 +331,13 @@ def install_solver(
     import gamspy.utils as utils
 
     solver = [solvers] if isinstance(solvers, str) else list(solvers or [])
-    requested = [name.lower() for name in solver]
-    if not requested or any(name != cuopt.SOLVER_NAME for name in requested):
-        if not use_uv and not has_pip():
-            raise cli_error(
-                "pip is not installed in your environment. Please install pip first or add --use-uv flag to install solvers with uv."
-            )
 
-        if use_uv and not has_uv():
-            raise cli_error(
-                "uv is not installed in your machine. Please install uv first to install solvers with --use-uv flag."
-            )
-
+    # gamspy_base.install_solver checks for pip (or uv) before it installs anything.
     addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
     os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
-    environment_variables = os.environ.copy()
-    if "CURL_CA_BUNDLE" not in environment_variables:
-        environment_variables["CURL_CA_BUNDLE"] = certifi.where()
 
     def install_addons(addons: Iterable[str]) -> None:
+        installable_solvers = utils.getInstallableSolvers()
         for item in addons:
             solver_name = item.lower()
 
@@ -416,14 +345,8 @@ def install_solver(
                 print(f"`{solver_name}` is a default solver, skipping...")
                 continue
 
-            if solver_name == cuopt.SOLVER_NAME:
-                files = cuopt.install()
-                append_dist_info(files, utils._get_gamspy_base_directory())
-                _add_installed_addon(addons_path, solver_name)
-                continue
-
-            installable_solvers = utils.getInstallableSolvers()
-            if solver_name.upper() not in installable_solvers:
+            # gamspy_base explains why cuOpt cannot be installed on this platform.
+            if solver_name != CUOPT and solver_name.upper() not in installable_solvers:
                 raise cli_error(
                     f'Given solver name ("{solver_name}") is not valid. Available'
                     f" solvers that can be installed: {installable_solvers}"
@@ -435,57 +358,30 @@ def install_solver(
                     err=True,
                 )
 
-            if not skip_pip_install:
-                solver_version = gamspy_base.__version__
-                # install specified solver
-                command = ["uv"] if use_uv else [sys.executable, "-m"]
-                command.extend(
-                    [
-                        "pip",
-                        "install",
-                        f"gamspy-{solver_name}=={solver_version}",
-                        "--force-reinstall",
-                    ]
+            try:
+                gamspy_base.install_solver(
+                    solver_name,
+                    use_uv=use_uv,
+                    install_package=not skip_pip_install,
                 )
-                try:
-                    _ = subprocess.run(
-                        command,
-                        check=True,
-                        env=environment_variables,
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise cli_error(
-                        f"Could not install gamspy-{solver_name}. Please check your internet connection. If it's not related to your internet connection, PyPI servers might be down. Please retry it later. Here is the error message of pip:\n\n{e.stderr}"
-                    ) from e
-            else:
-                try:
-                    solver_lib = importlib.import_module(f"gamspy_{solver_name}")
-                except ModuleNotFoundError as e:
-                    e.msg = f"You must install gamspy-{solver_name} first!"
-                    raise e
+            except (
+                gamspy_base.InstallationError,
+                ValueError,
+                ModuleNotFoundError,
+            ) as e:
+                raise installation_error(e) from e
 
-            # copy solver files to gamspy_base
-            gamspy_base_dir = utils._get_gamspy_base_directory()
-            solver_lib = importlib.import_module(f"gamspy_{solver_name}")
-
-            file_paths = solver_lib.file_paths
-            for file in file_paths:
-                shutil.copy(file, gamspy_base_dir)
-
-            files = solver_lib.files
-            verbatims = [solver_lib.verbatim]
-            append_dist_info(files, gamspy_base_dir)
-            add_solver_entry(gamspy_base_dir, solver_name, verbatims)
+            # Remembered for --existing-solvers after an upgrade of gamspy_base
             _add_installed_addon(addons_path, solver_name)
 
     if install_all_solvers:
         available_solvers = utils.getAvailableSolvers()
-        installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
+        installed_solvers = gamspy_base.get_solver_capabilities()
         diff = []
         for available_solver in available_solvers:
             # cuOpt requires an NVIDIA GPU and downloads more than a gigabyte,
             # hence it is only installed when it is asked for by name.
-            if available_solver == "CUOPT":
+            if available_solver == "CUOPT" or available_solver in _DEPRECATED_SOLVERS:
                 continue
 
             if available_solver not in installed_solvers:
@@ -506,11 +402,15 @@ def install_solver(
 
     if licensed:
         license_path = utils._get_license_path(gamspy_base.directory)
-        licensed_solvers = {s.upper() for s in get_licensed_solvers(license_path)}
+        licensed_solvers = set(gamspy_base.get_licensed_solvers(license_path))
         installable_solvers = set(utils.getInstallableSolvers())
-        installed_solvers = set(utils.getInstalledSolvers(gamspy_base.directory))
+        installed_solvers = set(gamspy_base.get_solver_capabilities())
 
-        diff = sorted(licensed_solvers & installable_solvers - installed_solvers)
+        diff = sorted(
+            (licensed_solvers & installable_solvers)
+            - installed_solvers
+            - _DEPRECATED_SOLVERS
+        )
         if not diff:
             typer.echo("All licensed solvers are already installed.")
             return
@@ -521,15 +421,7 @@ def install_solver(
     if not solver:
         raise cli_error("Solver name is missing: `gamspy install solver <solver_name>`")
 
-    solvers = [elem.upper() for elem in solver]
-    if (
-        platform.system() + "_" + platform.machine() == "Linux_aarch64"
-        and "SCIP" in solvers
-        and "GUROBI" not in solvers
-    ):
-        solvers.insert(0, "GUROBI")
-
-    install_addons(solvers)
+    install_addons(solver)
 
 
 @app.command(

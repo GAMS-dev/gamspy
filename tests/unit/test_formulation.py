@@ -26,6 +26,7 @@ from gamspy.formulations import (
     pwl_dlog_formulation,
     pwl_interval_formulation,
     pwlinear,
+    reify,
 )
 from gamspy.formulations._piecewise_data import (
     _normalize_paired_data,
@@ -793,6 +794,121 @@ def test_logical_solve():
                 assert res.result.toValue() == expected
 
 
+def test_reify():
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b"])
+    j = gp.Set(m, name="j", records=["1", "2"])
+    ij = gp.Set(m, name="ij", domain=[i, j], records=[("a", "1")])
+    x = gp.Variable(m, name="x", domain=i)
+    z = gp.Variable(m, name="z", domain=[i, j])
+    p = gp.Parameter(m, name="p", domain=j)
+
+    with pytest.raises(ValidationError, match="inequality or equality"):
+        reify(x, epsilon=1)
+    symbols_before = list(m.data)
+    for kwargs, match in (
+        ({"epsilon": 0}, "epsilon must be a positive finite number"),
+        ({"epsilon": p}, "domain of epsilon must be"),
+        ({"epsilon": 1, "big_m": -1}, "big_m must be a positive finite number"),
+        ({"epsilon": 1, "big_m": 10, "native": True}, "cannot be used with native"),
+    ):
+        with pytest.raises(ValidationError, match=match):
+            reify(x <= 1, **kwargs)
+    assert list(m.data) == symbols_before
+
+    res1 = reify(x <= 1, epsilon=1)
+    assert res1.result.type == "binary"
+    assert [d.name for d in res1.result.domain] == ["i"]
+    assert list(res1.variables_created) == ["output", "holds_sos1", "violated_sos1"]
+    assert list(res1.equations_created) == [
+        "holds_slack",
+        "holds_link",
+        "violated_slack",
+        "violated_link",
+    ]
+
+    res2 = reify(x == 1, epsilon=1, big_m=100)
+    assert list(res2.variables_created) == ["output", "above", "below"]
+    assert list(res2.equations_created) == [
+        "holds_le_big_m",
+        "holds_ge_big_m",
+        "violated_big_m_0",
+        "violated_big_m_1",
+        "pick_one",
+    ]
+
+    res3 = reify((z[ij] >= 1).where[p[j] > 0], epsilon=1, native=True)
+    assert [d.name for d in res3.result.domain] == ["i", "j"]
+    assert list(res3.equations_created) == [
+        "holds_indicator",
+        "holds_binary",
+        "violated_indicator",
+        "violated_binary",
+    ]
+
+
+@pytest.mark.parametrize("kwargs", [{}, {"big_m": 100}, {"native": True}])
+def test_reify_solve(kwargs):
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b", "c", "d"])
+    j = gp.Set(m, name="j", records=["1", "2"])
+    ij = gp.Set(m, name="ij", domain=[i, j], records=[("a", "1"), ("d", "2")])
+    p = gp.Parameter(m, name="p", domain=i, records=[("b", 1), ("c", 1)])
+    x = gp.Variable(m, name="x", type="integer", domain=i)
+    x.fx[i] = gp.Number(2) + gp.Ord(i)
+    z = gp.Variable(m, name="z", domain=[i, j])
+    z.fx[i, j] = gp.Ord(i) * gp.Ord(j)
+
+    cases = [
+        (reify(x[i] >= 5, epsilon=1, **kwargs), [i], {"a": 0, "b": 0, "c": 1, "d": 1}),
+        (reify(x[i] <= 4, epsilon=1, **kwargs), [i], {"a": 1, "b": 1, "c": 0, "d": 0}),
+        (reify(x[i] == 5, epsilon=1, **kwargs), [i], {"a": 0, "b": 0, "c": 1, "d": 0}),
+        (
+            reify(x[i] - 1 >= z[i, "2"], epsilon=1, **kwargs),
+            [i],
+            {"a": 1, "b": 0, "c": 0, "d": 0},
+        ),
+        (
+            reify((x[i] >= 4).where[p[i] > 0], epsilon=1, **kwargs),
+            [i],
+            {"b": 1, "c": 1},
+        ),
+        (
+            reify(z[ij] <= 2.5, epsilon=0.5, **kwargs),
+            [ij],
+            {("a", "1"): 1, ("d", "2"): 0},
+        ),
+    ]
+
+    equations = [eq for res, _, _ in cases for eq in res.equations_created.values()]
+    objective = sum(gp.Sum(domain, res.result[domain]) for res, domain, _ in cases)
+    for sense in ("min", "max"):
+        model = gp.Model(
+            m, equations=equations, problem="mip", sense=sense, objective=objective
+        )
+        model.solve()
+        for res, _, expected in cases:
+            records = res.result.toDict()
+            assert {key: records.get(key, 0) for key in expected} == expected
+
+    gap = gp.Variable(m, name="gap")
+    gap.fx[...] = 0.7
+    model = gp.Model(
+        m,
+        equations=reify(gap <= 0.5, epsilon=0.5, **kwargs).equations_created.values(),
+        problem="mip",
+        sense="min",
+        objective=gap,
+    )
+    model.solve()
+    assert model.status in (
+        gp.ModelStatus.InfeasibleGlobal,
+        gp.ModelStatus.InfeasibleLocal,
+        gp.ModelStatus.InfeasibleNoSolution,
+        gp.ModelStatus.IntegerInfeasible,
+    )
+
+
 @pytest.mark.parametrize("mode", ["no", "yes", "yes-or-autogenerate"])
 def test_general_constraints_name_their_symbols(set_options, mode):
     set_options({"USE_PY_VAR_NAME": mode})
@@ -815,6 +931,8 @@ def test_general_constraints_name_their_symbols(set_options, mode):
         lambda: logical_xor(b, b),
         lambda: logical_imp(b, b),
         lambda: logical_eqv(b, b),
+        lambda: reify(x <= 1, epsilon=1),
+        lambda: reify(x == 1, epsilon=1, native=True),
     ):
         (y1, eqs1), (y2, eqs2) = formulate(), formulate()
         assert y1 is None or y1 is not y2

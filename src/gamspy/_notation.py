@@ -50,7 +50,6 @@ LATEX_BIG_OPERATORS = {
     "sor": "\\bigvee",
 }
 
-# Functions that have a dedicated LaTeX command. Note that log is the natural logarithm.
 LATEX_FUNCTIONS = {
     "exp": "\\exp",
     "log": "\\ln",
@@ -73,6 +72,17 @@ LATEX_DELIMITERS = {
     "abs": ("\\lvert ", " \\rvert"),
     "ceil": ("\\lceil ", " \\rceil"),
     "floor": ("\\lfloor ", " \\rfloor"),
+}
+
+LATEX_VARIABLE_TYPES = {
+    "binary": r"{reference} \in \{{0,1\}}",
+    "integer": r"{reference} \in \mathbb{{Z}}_{{\geq 0}}",
+    "positive": r"{reference} \geq 0",
+    "negative": r"{reference} \leq 0",
+    "sos1": r"{reference} \geq 0 ~ (\text{{SOS1}})",
+    "sos2": r"{reference} \geq 0 ~ (\text{{SOS2}})",
+    "semicont": r"{reference} \in \{{0\}} \cup {bounds}",
+    "semiint": r"{reference} \in \{{0\}} \cup ({bounds} \cap \mathbb{{Z}})",
 }
 
 UNICODE_OPERATORS = {
@@ -107,15 +117,31 @@ UNICODE_BIG_OPERATORS = {
     "sor": "\N{N-ARY LOGICAL OR}",
 }
 
-# Functions that are not written with their GAMS name. Note that log is the natural logarithm.
 UNICODE_FUNCTIONS = {"log": "ln", "log10": "log₁₀", "log2": "log₂"}
 
 UNICODE_DELIMITERS = {"abs": ("|", "|"), "ceil": ("⌈", "⌉"), "floor": ("⌊", "⌋")}
+
+UNICODE_VARIABLE_TYPES = {
+    "binary": "{reference} ∈ {{0,1}}",
+    "integer": "{reference} ∈ {{0,1,2,…}}",
+    "positive": "{reference} ≥ 0",
+    "negative": "{reference} ≤ 0",
+    "sos1": "{reference} ≥ 0 (SOS1)",
+    "sos2": "{reference} ≥ 0 (SOS2)",
+    "semicont": "{reference} ∈ {{0}} \N{UNION} {bounds}",
+    "semiint": "{reference} ∈ {{0}} \N{UNION} ({bounds} ∩ \N{DOUBLE-STRUCK CAPITAL Z})",
+}
 
 # Unicode has superscript forms of digits but not of a decimal point or most letters.
 SUPERSCRIPTABLE = "0123456789-"
 SUPERSCRIPTS = "⁰¹²³⁴⁵⁶⁷⁸⁹⁻"
 UNICODE_SUPERSCRIPTS = str.maketrans(SUPERSCRIPTABLE, SUPERSCRIPTS)
+
+
+# Separates an equation definition from its domain in LaTeX.
+LATEX_SEPARATOR = "\\quad"
+# Start and end delimiters of an equation definition in LaTeX.
+LATEX_MATH_DELIMITERS = ("$\n", "\n$")
 
 
 class Notation(ABC):
@@ -139,6 +165,8 @@ class Notation(ABC):
     functions: Mapping[str, str]
     # Functions that are written by delimiting their operands (e.g. |x|).
     delimiters: Mapping[str, tuple[str, str]]
+    # Constraints that the types of variables imply.
+    variable_types: Mapping[str, str]
     # Separates an expression from the condition that restricts it.
     such_that: str
     # Separates an equation definition from its domain.
@@ -216,6 +244,15 @@ class Notation(ABC):
     def math_block(self, body: str) -> str:
         """Wraps an equation definition."""
 
+    def variable_type_constraint(
+        self, variable_type: str, reference: str, bounds: str
+    ) -> str | None:
+        template = self.variable_types.get(variable_type)
+        if template is None:
+            return None
+
+        return template.format(reference=reference, bounds=bounds)
+
 
 class LatexNotation(Notation):
     operators = LATEX_OPERATORS
@@ -223,10 +260,20 @@ class LatexNotation(Notation):
     big_operators = LATEX_BIG_OPERATORS
     functions = LATEX_FUNCTIONS
     delimiters = LATEX_DELIMITERS
+    variable_types = LATEX_VARIABLE_TYPES
     such_that = " ~ | ~ "
-    forall = "\\hfill \\forall "
-    condition_only = "\\hfill \\text{if } "
     complementarity = " \\perp "
+
+    def __init__(
+        self,
+        rename: Mapping[str, str] | None = None,
+        separator: str = LATEX_SEPARATOR,
+        math_delimiters: tuple[str, str] = LATEX_MATH_DELIMITERS,
+    ) -> None:
+        super().__init__(rename)
+        self.forall = f"{separator} \\forall "
+        self.condition_only = f"{separator} \\text{{if }} "
+        self.math_delimiters = math_delimiters
 
     def escape(self, text: str) -> str:
         return text.replace("_", r"\_")
@@ -263,7 +310,8 @@ class LatexNotation(Notation):
         return f"\\frac{{{numerator}}}{{{denominator}}}"
 
     def math_block(self, body: str) -> str:
-        return f"$\n{body}\n$"
+        start, end = self.math_delimiters
+        return f"{start}{body}{end}"
 
 
 class UnicodeNotation(Notation):
@@ -272,6 +320,7 @@ class UnicodeNotation(Notation):
     big_operators = UNICODE_BIG_OPERATORS
     functions = UNICODE_FUNCTIONS
     delimiters = UNICODE_DELIMITERS
+    variable_types = UNICODE_VARIABLE_TYPES
     such_that = " | "
     forall = "  ∀ "
     condition_only = "  if "

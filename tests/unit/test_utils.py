@@ -299,6 +299,32 @@ def test_parse_solver_config():
     }
 
 
+def test_parse_solver_config_like_gamspy_base():
+    # Same rules as gamspy_base.get_solver_capabilities: what follows the end of
+    # the document is ignored and malformed entries do not raise.
+    text = """solverConfig:
+  - SHOT2:
+      modelTypes:
+        - MINLP
+  - not_a_mapping
+  - SHOT3:
+      minVersion: 34
+...
+this: [is not yaml
+"""
+    assert utils._parse_solver_config(text) == {"SHOT2": ["MINLP"], "SHOT3": []}
+
+
+def test_capabilities_file_without_defaults(tmp_path):
+    (tmp_path / utils.CAPABILITIES_FILE).write_text(
+        "* comment\n\n  HIGHS 11 5 HI 1 0 1 LP MIP\nline1\nline2\n",
+        encoding="utf-8",
+    )
+    assert utils._get_capabilities_file_solvers(str(tmp_path)) == {
+        "HIGHS": ["LP", "MIP"]
+    }
+
+
 def _declaration_plumbing_callers():
     """Every function in the package that asks for an auto-generated symbol name."""
     package_root = pathlib.Path(utils.__file__).parent

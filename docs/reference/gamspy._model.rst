@@ -10,6 +10,23 @@ Model
    :undoc-members:
    :show-inheritance:
 
+.. autoclass:: gamspy.SolveHandle
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. autoclass:: gamspy._backend.local.LocalSolveHandle
+   :members:
+   :show-inheritance:
+
+.. autoclass:: gamspy._backend.engine.EngineSolveHandle
+   :members:
+   :show-inheritance:
+
+.. autoclass:: gamspy._backend.neos.NeosSolveHandle
+   :members:
+   :show-inheritance:
+
 .. autoclass:: gamspy.ModelStatus
    :members:
    :undoc-members:
@@ -25,4 +42,7 @@ Model
 .. autoclass:: gamspy.FileFormat
    :members:
    :undoc-members:
+   :show-inheritance:
+.. autoclass:: gamspy.ModelInstance
+   :members:
    :show-inheritance:

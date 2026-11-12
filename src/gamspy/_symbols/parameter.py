@@ -79,6 +79,10 @@ class Parameter(operable.Operable, NumericSymbol):
         If True, flags this parameter as an output symbol for GAMS MIRO. Default is False.
     is_miro_table : bool, optional
         If True, flags this parameter as a table symbol for GAMS MIRO. Default is False.
+    drop_domain_violations : bool, optional
+        If True, records with labels outside the domain are dropped instead of
+        raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+        Default is False.
 
     Examples
     --------
@@ -124,6 +128,8 @@ class Parameter(operable.Operable, NumericSymbol):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
         is_miro_table: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         self._redefine_symbol(
             domain,
@@ -133,7 +139,11 @@ class Parameter(operable.Operable, NumericSymbol):
             is_miro_output=is_miro_output,
             is_miro_table=is_miro_table,
         )
-        self._redefine_records(records, uels_on_axes=uels_on_axes)
+        self._redefine_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def __init__(
         self,
@@ -147,6 +157,8 @@ class Parameter(operable.Operable, NumericSymbol):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
         is_miro_table: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         container, name = self._resolve_container_and_name(
             container,
@@ -166,17 +178,33 @@ class Parameter(operable.Operable, NumericSymbol):
             is_miro_output=is_miro_output,
             is_miro_table=is_miro_table,
         )
-        self._init_records(records, uels_on_axes=uels_on_axes)
+        self._init_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def _init_records(
-        self, records: ParameterRecordsType | None, *, uels_on_axes: bool
+        self,
+        records: ParameterRecordsType | None,
+        *,
+        uels_on_axes: bool,
+        drop_domain_violations: bool,
     ) -> None:
         if records is None:
-            super()._init_records(records, uels_on_axes=uels_on_axes)
+            super()._init_records(
+                records,
+                uels_on_axes=uels_on_axes,
+                drop_domain_violations=drop_domain_violations,
+            )
             return
 
         with self._miro_unprotected():
-            self._setRecords(records, uels_on_axes=uels_on_axes)
+            self._setRecords(
+                records,
+                uels_on_axes=uels_on_axes,
+                drop_domain_violations=drop_domain_violations,
+            )
             # The records of a scalar are sent to GAMS with its declaration.
             if self.dimension == 0 and not self._is_miro_symbol:
                 self._should_unload_to_gams = False
@@ -574,13 +602,21 @@ class Parameter(operable.Operable, NumericSymbol):
         return id(self)
 
     def _setRecords(
-        self, records: ParameterRecordsType, *, uels_on_axes: bool = False
+        self,
+        records: ParameterRecordsType,
+        *,
+        uels_on_axes: bool = False,
+        drop_domain_violations: bool = False,
     ) -> None:
         ParameterIngestor(self).ingest(records, uels_on_axes=uels_on_axes)
-        self._handle_domain_violations()
+        self._handle_domain_violations(drop=drop_domain_violations)
 
     def setRecords(
-        self, records: ParameterRecordsType | None, uels_on_axes: bool = False
+        self,
+        records: ParameterRecordsType | None,
+        uels_on_axes: bool = False,
+        *,
+        drop_domain_violations: bool = False,
     ) -> None:
         """
         Sets the records (data) of the Parameter.
@@ -602,6 +638,10 @@ class Parameter(operable.Operable, NumericSymbol):
             - pandas DataFrame
         uels_on_axes : bool, optional
             If True, assumes domain elements are in the axes of the DataFrame. Default is False.
+        drop_domain_violations : bool, optional
+            If True, records with labels outside the domain are dropped instead of
+            raising :class:`DomainViolationError <gamspy.exceptions.DomainViolationError>`.
+            Default is False.
 
         Examples
         --------
@@ -621,7 +661,11 @@ class Parameter(operable.Operable, NumericSymbol):
             self._should_load_from = DataSource.GAMS
             return
 
-        self._update_records(records, uels_on_axes=uels_on_axes)
+        self._update_records(
+            records,
+            uels_on_axes=uels_on_axes,
+            drop_domain_violations=drop_domain_violations,
+        )
 
     def gamsRepr(self) -> str:
         """

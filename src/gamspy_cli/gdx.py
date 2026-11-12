@@ -34,6 +34,17 @@ VALID_FIELDS = {"L", "M", "Up", "Lo", "Prior", "Scale", "All"}
 VALID_SETDESC = {"Y", "N"}
 
 
+def _option_args(options: list[tuple[str, str | float | bool | None]]) -> list[str]:
+    args: list[str] = []
+    for name, value in options:
+        if value is True:
+            args.append(name)
+        elif value is not False and value is not None and value != "":
+            args.append(f"{name}={value}")
+
+    return args
+
+
 def _get_gdx_symbol_names(filename: str) -> set[str]:
     import gams.core.gdx as gdx
     import gamspy_base
@@ -151,80 +162,51 @@ def gdx_dump(
         raise cli_error(f"File not found: {filename}")
 
     # Validation
-    if delim and delim not in VALID_DELIMS:
-        raise cli_error(
-            f"Invalid Delim: {delim}. Must be one of: {', '.join(VALID_DELIMS)}"
-        )
-    if decimalsep and decimalsep not in VALID_DECIMAL_SEP:
-        raise cli_error(
-            f"Invalid DecimalSep: {decimalsep}. Must be one of: {', '.join(VALID_DECIMAL_SEP)}"
-        )
-    if format and format not in VALID_FORMATS:
-        raise cli_error(
-            f"Invalid Format: {format}. Must be one of: {', '.join(VALID_FORMATS)}"
-        )
-    if dformat and dformat not in VALID_DFORMATS:
-        raise cli_error(
-            f"Invalid dFormat: {dformat}. Must be one of: {', '.join(VALID_DFORMATS)}"
-        )
-    if cdim and cdim not in VALID_YN:
-        raise cli_error(f"Invalid CDim: {cdim}. Must be Y or N")
-    if filterdef and filterdef not in VALID_YN:
-        raise cli_error(f"Invalid FilterDef: {filterdef}. Must be Y or N")
+    for name, value, valid in (
+        ("Delim", delim, VALID_DELIMS),
+        ("DecimalSep", decimalsep, VALID_DECIMAL_SEP),
+        ("Format", format, VALID_FORMATS),
+        ("dFormat", dformat, VALID_DFORMATS),
+    ):
+        if value and value not in valid:
+            raise cli_error(
+                f"Invalid {name}: {value}. Must be one of: {', '.join(valid)}"
+            )
+    for name, value in (("CDim", cdim), ("FilterDef", filterdef)):
+        if value and value not in VALID_YN:
+            raise cli_error(f"Invalid {name}: {value}. Must be Y or N")
 
     cmd = [GDXDUMP_PATH, filename]
-    if version:
-        cmd.append("-V")
-    if output:
-        cmd.append(f"Output={output}")
-    if symb:
-        cmd.append(f"Symb={symb}")
-    if ueltable:
-        cmd.append(f"UelTable={ueltable}")
-    if delim:
-        cmd.append(f"Delim={delim}")
-    if decimalsep:
-        cmd.append(f"DecimalSep={decimalsep}")
-    if noheader:
-        cmd.append("NoHeader")
-    if nodata:
-        cmd.append("NoData")
-    if csvallfields:
-        cmd.append("CSVAllFields")
-    if csvsettext:
-        cmd.append("CSVSetText")
-    if symbols:
-        cmd.append("Symbols")
-    if domaininfo:
-        cmd.append("DomainInfo")
-    if symbolsasset:
-        cmd.append("SymbolsAsSet")
-    if symbolsassetdi:
-        cmd.append("SymbolsAsSetDI")
-    if settext:
-        cmd.append("SetText")
-    if format:
-        cmd.append(f"Format={format}")
-    if dformat:
-        cmd.append(f"dFormat={dformat}")
-    if cdim:
-        cmd.append(f"CDim={cdim}")
-    if filterdef:
-        cmd.append(f"FilterDef={filterdef}")
-    if epsout:
-        cmd.append(f"EpsOut={epsout}")
-    if naout:
-        cmd.append(f"NaOut={naout}")
-    if pinfout:
-        cmd.append(f"PinfOut={pinfout}")
-    if minfout:
-        cmd.append(f"MinfOut={minfout}")
-    if undfout:
-        cmd.append(f"UndfOut={undfout}")
-    if zeroout:
-        cmd.append(f"ZeroOut={zeroout}")
-    if header:
-        cmd.append(f"Header={header}")
+    cmd += _option_args(
+        [
+            ("-V", version),
+            ("Output", output),
+            ("Symb", symb),
+            ("UelTable", ueltable),
+            ("Delim", delim),
+            ("DecimalSep", decimalsep),
+            ("NoHeader", noheader),
+            ("NoData", nodata),
+            ("CSVAllFields", csvallfields),
+            ("CSVSetText", csvsettext),
+            ("Symbols", symbols),
+            ("DomainInfo", domaininfo),
+            ("SymbolsAsSet", symbolsasset),
+            ("SymbolsAsSetDI", symbolsassetdi),
+            ("SetText", settext),
+            ("Format", format),
+            ("dFormat", dformat),
+            ("CDim", cdim),
+            ("FilterDef", filterdef),
+            ("EpsOut", epsout),
+            ("NaOut", naout),
+            ("PinfOut", pinfout),
+            ("MinfOut", minfout),
+            ("UndfOut", undfout),
+            ("ZeroOut", zeroout),
+            ("Header", header),
+        ]
+    )
 
     process = subprocess.run(
         cmd, capture_output=True, text=True, encoding="utf-8", errors="replace"
@@ -484,26 +466,20 @@ def gdx_diff(
     cmd = [GDXDIFF_PATH, file1, file2]
     if diffile:
         cmd.append(diffile)
-    if eps is not None:
-        cmd.append(f"Eps={eps}")
-    if releps is not None:
-        cmd.append(f"RelEps={releps}")
-    if field:
-        cmd.append(f"Field={field}")
-    if fldonly:
-        cmd.append("FldOnly")
-    if diffonly:
-        cmd.append("DiffOnly")
-    if cmpdefaults:
-        cmd.append("CmpDefaults")
-    if cmpdomains:
-        cmd.append("CmpDomains")
-    if matrixfile:
-        cmd.append("MatrixFile")
-    if ignoreorder:
-        cmd.append("IgnoreOrder")
-    if setdesc:
-        cmd.append(f"SetDesc={setdesc}")
+    cmd += _option_args(
+        [
+            ("Eps", eps),
+            ("RelEps", releps),
+            ("Field", field),
+            ("FldOnly", fldonly),
+            ("DiffOnly", diffonly),
+            ("CmpDefaults", cmpdefaults),
+            ("CmpDomains", cmpdomains),
+            ("MatrixFile", matrixfile),
+            ("IgnoreOrder", ignoreorder),
+            ("SetDesc", setdesc),
+        ]
+    )
     if id:
         for i in id:
             cmd.append(f"ID={i}")

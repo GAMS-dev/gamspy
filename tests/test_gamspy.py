@@ -18,7 +18,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 @pytest.mark.unit
 def test_version():
-    assert gp.__version__ == "1.29.3"
+    assert gp.__version__ == "1.30.0"
 
 
 @pytest.mark.unit
@@ -98,6 +98,17 @@ def test_option_names_cover_the_defaults():
 
     for name in OPTION_NAMES:
         assert gp.get_option(name) is not None
+
+
+@pytest.mark.unit
+def test_drop_domain_violations_env_deprecated(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(gp._config, "configuration", {})
+    monkeypatch.setenv("GAMSPY_DROP_DOMAIN_VIOLATIONS", "1")
+
+    with pytest.warns(DeprecationWarning, match="DROP_DOMAIN_VIOLATIONS"):
+        gp._config._set_default_options()
+
+    assert gp._config.configuration["DROP_DOMAIN_VIOLATIONS"] == 1
 
 
 @pytest.mark.unit

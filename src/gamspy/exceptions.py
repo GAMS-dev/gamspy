@@ -6,6 +6,8 @@ import os
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy import Options
 
 
@@ -116,6 +118,30 @@ class EngineException(GamspyException):
     ) -> None:
         super().__init__(message, return_code)
         self.status_code = status_code
+
+
+class DomainViolationError(GamspyException):
+    """
+    Raised when GAMS rejects records whose labels are not in the domain of
+    their symbol. The records of the symbols in the failed job are read back
+    from GAMS afterwards.
+
+    Parameters
+    ----------
+    message : str
+    return_code : int | None
+    violations : dict[str, pd.DataFrame]
+        Offending records of each symbol, keyed by symbol name.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        return_code: int | None,
+        violations: dict[str, pd.DataFrame],
+    ) -> None:
+        super().__init__(message, return_code)
+        self.violations = violations
 
 
 CHUNK_SIZE = 8

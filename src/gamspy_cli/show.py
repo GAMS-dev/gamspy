@@ -5,8 +5,6 @@ from datetime import date, datetime, timedelta
 
 import typer
 
-from .license import EVALUATIONS, LICENSE_COMPONENTS, get_licensed_solvers
-
 app = typer.Typer(
     short_help="To show your license and gamspy_base directory.",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy show license | gamspy show base",
@@ -25,14 +23,18 @@ SOLVER_PAGE_MAP = {
     "ANTIGONE": "https://www.gams.com/latest/docs/S_ANTIGONE.html",
     "BARON": "https://www.gams.com/latest/docs/S_BARON.html",
     "CBC": "https://www.gams.com/latest/docs/S_CBC.html",
-    "CONOPT": "https://www.gams.com/latest/docs/S_CONOPT4.html",
+    "CONOPT": "https://www.gams.com/latest/docs/S_CONOPT.html",
+    "CONOPT3": "https://www.gams.com/latest/docs/S_CONOPT3.html",
+    "CONOPT4": "https://www.gams.com/latest/docs/S_CONOPT.html",
     "CONVERT": "https://www.gams.com/latest/docs/S_CONVERT.html",
     "COPT": "https://www.gams.com/latest/docs/S_COPT.html",
     "CPLEX": "https://www.gams.com/latest/docs/S_CPLEX.html",
+    "DE": "https://www.gams.com/latest/docs/S_DE.html",
     "DECISC": "https://www.gams.com/latest/docs/S_DECIS.html",
     "DECISM": "https://www.gams.com/latest/docs/S_DECIS.html",
     "DICOPT": "https://www.gams.com/latest/docs/S_DICOPT.html",
     "EXAMINER": "https://www.gams.com/latest/docs/S_EXAMINER.html",
+    "EXAMINER2": "https://www.gams.com/latest/docs/S_EXAMINER.html",
     "GUROBI": "https://www.gams.com/latest/docs/S_GUROBI.html",
     "HIGHS": "https://www.gams.com/latest/docs/S_HIGHS.html",
     "IPOPT": "https://www.gams.com/latest/docs/S_IPOPT.html",
@@ -125,42 +127,37 @@ def print_expiration_date(lines: list[str]) -> None:
         )
 
 
-def print_licensed_solvers(lines: list[str], verbose: bool) -> None:
+def print_licensed_solvers(
+    lines: list[str], license_path: str, *, verbose: bool
+) -> None:
+    import gamspy_base
     import rich
     import rich.table
 
-    component_map: dict[str, bool] = dict.fromkeys(LICENSE_COMPONENTS.keys(), False)
+    rich.print(f"[bold]License type[/bold]: {LICENSE_TYPE_MAP[lines[2][0:2]]}")
 
-    is_academic = lines[0][59] == "A"
-    license_number = lines[2][0:2]
-    rich.print(f"[bold]License type[/bold]: {LICENSE_TYPE_MAP[license_number]}")
+    if not gamspy_base.is_size_limited_license(license_path):
+        if verbose:
+            licensed_components = []
+            for i in range(2, len(lines[2]), 2):
+                c = lines[2][i : i + 2]
+                if c == "__":
+                    break
+                licensed_components.append(c)
 
-    if license_number not in ["00", "05"]:
-        licensed_components = []
-        for i in range(2, len(lines[2]), 2):
-            c = lines[2][i : i + 2]
-            if c == "__":
-                break
-            component_map[c] = True
-            licensed_components.append(c)
+            if licensed_components:
+                rich.print("\n[bold]Licensed components:[/bold]")
+                for c in licensed_components:
+                    print(f"  {gamspy_base.LICENSE_COMPONENTS[c]}")
 
-        if verbose and licensed_components:
-            rich.print("\n[bold]Licensed components:[/bold]")
-            for c in licensed_components:
-                print(f"  {LICENSE_COMPONENTS[c]}")
-
-        licensed_solvers = []
-        for solver, is_licensed_func in EVALUATIONS.items():
-            if is_licensed_func(component_map, is_academic):
-                licensed_solvers.append(solver)
-
+        licensed_solvers = gamspy_base.get_licensed_solvers(license_path)
         if licensed_solvers:
             print()
             table = rich.table.Table(title="Licensed Solvers")
             table.add_column("Solver Name", style="green")
             table.add_column("Solver Manual", style="magenta")
             for solver in licensed_solvers:
-                table.add_row(solver, SOLVER_PAGE_MAP[solver])
+                table.add_row(solver, SOLVER_PAGE_MAP.get(solver, ""))
 
             rich.print(table)
 
@@ -197,7 +194,7 @@ def show_license() -> LicenseInfo:
         license_type=LICENSE_TYPE_MAP[lines[2][0:2]],
         expiration_date=expiration_date,
         is_time_limited=is_time_limited,
-        licensed_solvers=get_licensed_solvers(license_path),
+        licensed_solvers=gamspy_base.get_licensed_solvers(license_path),
     )
 
 
@@ -246,7 +243,7 @@ def license(
     print("\n".join(lines))
 
     print_expiration_date(lines)
-    print_licensed_solvers(lines, verbose)
+    print_licensed_solvers(lines, license_path, verbose=verbose)
 
 
 @app.command(short_help="Shows the path of gamspy_base.")

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 import gamspy._algebra.expression as expression
 import gamspy._symbols as syms
 import gamspy.utils as utils
-from gamspy._notation import LatexNotation, UnicodeNotation
+from gamspy._notation import LATEX_SEPARATOR, LatexNotation, UnicodeNotation
 from gamspy._options import (
     EXECUTION_OPTIONS,
     INDICATOR_SOLVERS,
@@ -565,11 +565,10 @@ class MathConverter(ABC):
     Subclasses decide how the document is written.
     """
 
-    notation_type: type[Notation]
     # Separates the constraint that a variable type implies from its domain.
     forall: str
 
-    def __init__(self, model: Model, rename: dict[str, str] | None) -> None:
+    def __init__(self, model: Model, notation: Notation) -> None:
         self.model = model
         self.container = model.container
         symbols = get_symbols(model)
@@ -589,28 +588,18 @@ class MathConverter(ABC):
 
         self.symbols = sorted(symbols, key=list(self.container._data.keys()).index)
 
-        self.rename = {} if rename is None else rename
-        for name in self.rename:
+        for name in notation.rename:
             if name not in self.container._data:
                 raise KeyError(
                     f"`{name}` does not exist in the Container. You can only rename symbols that already exist in the container."
                 )
 
         # Renaming only applies to the generated document.
-        self.notation = self.notation_type(rename=self.rename)
+        self.notation = notation
 
     @abstractmethod
     def generate(self) -> str:
         """Generates the document."""
-
-    @abstractmethod
-    def _variable_type_constraint(
-        self, variable_type: str, reference: str, bounds: str
-    ) -> str | None:
-        """
-        The constraint that the type of a variable implies, or None if its type
-        does not imply any.
-        """
 
     def _domain_str(self, domain: Sequence) -> str:
         return utils._get_domain_str(domain, notation=self.notation)[1:-1]
@@ -700,7 +689,7 @@ class MathConverter(ABC):
             reference = symbol[...]._math_repr(self.notation)
             lower = symbol.lo._math_repr(self.notation)
             upper = symbol.up._math_repr(self.notation)
-            constraint = self._variable_type_constraint(
+            constraint = self.notation.variable_type_constraint(
                 symbol.type, reference, f"[{lower}, {upper}]"
             )
             if constraint is None:
@@ -715,12 +704,17 @@ class MathConverter(ABC):
 
 
 class LatexConverter(MathConverter):
-    notation_type = LatexNotation
     forall = " ~ \\forall "
 
-    def __init__(self, model: Model, path: Path, rename: dict[str, str] | None) -> None:
+    def __init__(
+        self,
+        model: Model,
+        path: Path,
+        rename: dict[str, str] | None,
+        separator: str = LATEX_SEPARATOR,
+    ) -> None:
         os.makedirs(path, exist_ok=True)
-        super().__init__(model, rename)
+        super().__init__(model, LatexNotation(rename=rename, separator=separator))
         self.path = path
         self.header = self.get_header()
         self.set_header = "\\subsection*{Sets}"
@@ -828,26 +822,6 @@ class LatexConverter(MathConverter):
         constraints.append(r"\end{flalign*}")
         return "\n".join(constraints)
 
-    def _variable_type_constraint(
-        self, variable_type: str, reference: str, bounds: str
-    ) -> str | None:
-        if variable_type == "binary":
-            return reference + r" \in \{0,1\}"
-        if variable_type == "integer":
-            return reference + r" \in \mathbb{Z}_{\geq 0}"
-        if variable_type == "positive":
-            return reference + r" \geq 0"
-        if variable_type == "negative":
-            return reference + r" \leq 0"
-        if variable_type in ("sos1", "sos2"):
-            return reference + rf" \geq 0 ~ (\text{{{variable_type.upper()}}})"
-        if variable_type == "semicont":
-            return reference + rf" \in \{{0\}} \cup {bounds}"
-        if variable_type == "semiint":
-            return reference + rf" \in \{{0\}} \cup ({bounds} \cap \mathbb{{Z}})"
-
-        return None
-
     def get_header(self) -> str:
         header = r"""\documentclass[11pt]{article}
 \usepackage{geometry}
@@ -869,20 +843,24 @@ class LatexConverter(MathConverter):
         return header
 
 
-UNICODE_INDENT = "  "
+class TextConverter(MathConverter):
+    """
+    Writes a table for each kind of symbol followed by the model definition and
+    returns the document as a string.
+    """
 
-
-class UnicodeConverter(MathConverter):
-    notation_type = UnicodeNotation
-    forall = "  ∀ "
+    # Extension of the file that the document is written to.
+    extension: str
+    # Name of the document format in the message that reports the written file.
+    kind: str
 
     def convert(self, path: Path) -> str:
-        unicode_str = self.generate()
+        document = self.generate()
         os.makedirs(path, exist_ok=True)
-        file_path = os.path.join(path, self.model.name + ".txt")
-        _write_document(file_path, unicode_str + "\n", "Unicode (.txt)")
+        file_path = os.path.join(path, self.model.name + self.extension)
+        _write_document(file_path, document + "\n", self.kind)
 
-        return unicode_str
+        return document
 
     def generate(self) -> str:
         sections = []
@@ -902,6 +880,26 @@ class UnicodeConverter(MathConverter):
         sections.append(self.get_model_definition())
 
         return "\n\n".join(sections)
+
+    @abstractmethod
+    def get_table(self, title: str, rows: list[tuple[str, str]]) -> str:
+        """A table of symbol names and descriptions."""
+
+    @abstractmethod
+    def get_model_definition(self) -> str:
+        """The objective, the equation definitions, and the variable constraints."""
+
+
+UNICODE_INDENT = "  "
+
+
+class UnicodeConverter(TextConverter):
+    forall = "  ∀ "
+    extension = ".txt"
+    kind = "Unicode (.txt)"
+
+    def __init__(self, model: Model, rename: dict[str, str] | None) -> None:
+        super().__init__(model, UnicodeNotation(rename=rename))
 
     def get_table(self, title: str, rows: list[tuple[str, str]]) -> str:
         width = max(len(name) for name, _ in rows)
@@ -927,22 +925,56 @@ class UnicodeConverter(MathConverter):
 
         return "\n".join(lines)
 
-    def _variable_type_constraint(
-        self, variable_type: str, reference: str, bounds: str
-    ) -> str | None:
-        if variable_type == "binary":
-            return f"{reference} ∈ {{0,1}}"
-        if variable_type == "integer":
-            return f"{reference} ∈ {{0,1,2,…}}"
-        if variable_type == "positive":
-            return f"{reference} ≥ 0"
-        if variable_type == "negative":
-            return f"{reference} ≤ 0"
-        if variable_type in ("sos1", "sos2"):
-            return f"{reference} ≥ 0 ({variable_type.upper()})"
-        if variable_type == "semicont":
-            return f"{reference} ∈ {{0}} \N{UNION} {bounds}"
-        if variable_type == "semiint":
-            return f"{reference} ∈ {{0}} \N{UNION} ({bounds} ∩ \N{DOUBLE-STRUCK CAPITAL Z})"
 
-        return None
+MARKDOWN_MATH_DELIMITERS = ("$$\n", "\n$$")
+
+MARKDOWN_TEXT_ESCAPES = str.maketrans({char: "\\" + char for char in "\\`*_$<[]|~&"})
+
+# A bare pipe would end a table cell even inside math.
+MARKDOWN_MATH_PIPES = str.maketrans({"|": r"\vert "})
+
+
+class MarkdownConverter(TextConverter):
+    extension = ".md"
+    kind = "Markdown (.md)"
+
+    def __init__(
+        self,
+        model: Model,
+        rename: dict[str, str] | None,
+        separator: str = LATEX_SEPARATOR,
+    ) -> None:
+        notation = LatexNotation(
+            rename=rename,
+            separator=separator,
+            math_delimiters=MARKDOWN_MATH_DELIMITERS,
+        )
+        super().__init__(model, notation)
+        self.forall = notation.forall
+
+    def get_table(self, title: str, rows: list[tuple[str, str]]) -> str:
+        table = [f"## {title}", "", "| Symbol | Description |", "| --- | --- |"]
+        for name, description in rows:
+            name = name.replace(r"\|", r"\Vert ").translate(MARKDOWN_MATH_PIPES)
+            description = description.translate(MARKDOWN_TEXT_ESCAPES)
+            table.append(f"| ${name}$ | {description} |")
+
+        return "\n".join(table)
+
+    def get_model_definition(self) -> str:
+        blocks = ["## Model Definition"]
+        objective = self._objective()
+        if objective is not None:
+            sense = str(self.model.sense).lower()
+            blocks.append(self.notation.math_block(f"\\{sense} {objective}"))
+            blocks.append("subject to")
+
+        blocks += [
+            f"${name}$\n{definition}" for name, definition in self._definitions()
+        ]
+        blocks += [
+            self.notation.math_block(constraint)
+            for constraint in self._variable_constraints()
+        ]
+
+        return "\n\n".join(blocks)
