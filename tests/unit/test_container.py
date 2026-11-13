@@ -267,6 +267,16 @@ def test_str(transport):
 
 
 @pytest.mark.unit
+def test_ipython_key_completions():
+    m = Container()
+    assert m._ipython_key_completions_() == []
+
+    _ = Set(m, "i")
+    _ = Parameter(m, "Demand")
+    assert m._ipython_key_completions_() == ["i", "Demand"]
+
+
+@pytest.mark.unit
 def test_read_write(transport, tmp_path):
     m = transport.container
     gdx_path = str(tmp_path / "test.gdx")
