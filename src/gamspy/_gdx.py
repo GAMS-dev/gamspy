@@ -680,7 +680,7 @@ def power_write_symbol_scalar_record(
         subtype,
     )
 
-    vals = symobj.records.to_numpy().reshape((-1,))  # ty: ignore[unresolved-attribute]
+    vals = symobj.records.to_numpy().reshape((-1,))  # ty: ignore[missing-union-attribute]
 
     idx = np.arange(vals.size)
     arr = np.zeros(gdx.GMS_VAL_MAX, dtype=np.float64)

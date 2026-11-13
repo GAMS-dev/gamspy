@@ -269,7 +269,7 @@ class NeosClient:
             )
 
         with open(os.path.join(working_directory, filename), "wb") as file:
-            file.write(response.data)  # ty: ignore[unresolved-attribute]
+            file.write(response.data)  # ty: ignore[missing-union-attribute]
 
         with zipfile.ZipFile(os.path.join(working_directory, filename), "r") as zip_ref:
             zip_ref.extractall(working_directory)

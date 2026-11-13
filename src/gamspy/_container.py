@@ -1796,9 +1796,9 @@ class Container:
 
                 if any(
                     isinstance(domobj, AnyContainerDomainSymbol)
-                    for domobj in symobj.domain  # ty: ignore[unresolved-attribute]
+                    for domobj in symobj.domain  # ty: ignore[missing-attribute]
                 ):
-                    link_domains.append((gamspy_name, symobj.domain_names))  # ty: ignore[unresolved-attribute]
+                    link_domains.append((gamspy_name, symobj.domain_names))  # ty: ignore[missing-attribute]
 
                 if isinstance(symobj, gt.Set):
                     symbol = gp.Set._constructor_bypass(

@@ -143,10 +143,10 @@ class Condition(operable.Operable):
             if isinstance(self.conditioning_on, implicits.ImplicitEquation):
                 self.conditioning_on.parent._definition = statement
             else:
-                self.conditioning_on.parent._assignment = statement  # ty: ignore[unresolved-attribute]
+                self.conditioning_on.parent._assignment = statement  # ty: ignore[missing-union-attribute]
 
             self.conditioning_on.container._synch_with_gams()
-            self.conditioning_on.parent._should_load_from = DataSource.GAMS  # ty: ignore[unresolved-attribute]
+            self.conditioning_on.parent._should_load_from = DataSource.GAMS  # ty: ignore[missing-union-attribute]
 
         elif isinstance(self.conditioning_on, syms.Alias):
             self.conditioning_on._assignment = statement
