@@ -2145,7 +2145,7 @@ class Model:
             if freeze_options is not None:
                 instance_options = freeze_options
 
-            summary = self._frozen_model.solve(  # ty: ignore[unresolved-attribute]
+            summary = self._frozen_model.solve(  # ty: ignore[missing-union-attribute]
                 solver, instance_options, solver_options, output
             )
             return summary

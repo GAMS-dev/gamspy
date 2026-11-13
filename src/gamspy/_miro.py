@@ -251,7 +251,7 @@ class MiroJSONEncoder:
                 last_item = symbol.domain[-1]
                 self.validate_table(symbol, last_item)
 
-                set_values = last_item.records["uni"].values.tolist()  # ty: ignore[not-subscriptable, unresolved-attribute]
+                set_values = last_item.records["uni"].values.tolist()  # ty: ignore[not-subscriptable, missing-union-attribute]
 
                 domain_keys = domain_keys[:-2]
                 types = ["string"] * len(domain_keys) + ["numeric"] * len(set_values)

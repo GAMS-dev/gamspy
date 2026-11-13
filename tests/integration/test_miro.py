@@ -1038,7 +1038,7 @@ def test_miro_args():
 
         # miro does not exist in the path
         assert process.returncode != 0
-        assert "Path 'test.exe' does not exist" in process.stderr.replace(
+        assert "'test.exe' does not exist" in process.stderr.replace(
             os.linesep, ""
         ).replace("\n", "")
 

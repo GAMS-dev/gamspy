@@ -199,7 +199,7 @@ class Backend(ABC):
                     model.num_equations,
                     model.num_variables,
                     model.used_model_type,
-                    self.solver.upper(),  # ty: ignore[unresolved-attribute]
+                    self.solver.upper(),  # ty: ignore[missing-union-attribute]
                     model.total_solver_time,
                 ]
             ],

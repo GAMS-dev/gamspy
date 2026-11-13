@@ -474,11 +474,11 @@ def find_symbols(root_node: object) -> Iterator[str]:
 
             stack.extend(
                 elem
-                for elem in node.domain  # ty: ignore[unresolved-attribute]
+                for elem in node.domain  # ty: ignore[missing-attribute]
                 if not isinstance(elem, str) and elem.name != node.name
             )
         elif isinstance(node, ImplicitSymbol):
-            stack.append(node.parent)  # ty: ignore[unresolved-attribute]
+            stack.append(node.parent)  # ty: ignore[missing-attribute]
             stack.extend(node.domain)
         else:
             stack.extend(child for child, _ in _describe_graph_node(node)[2])
@@ -623,7 +623,7 @@ class Expression(operable.Operable):
         elif isinstance(left, domain.Domain):
             left_domain = left.sets
         else:
-            left_domain = left.domain  # ty: ignore[unresolved-attribute]
+            left_domain = left.domain  # ty: ignore[missing-union-attribute]
 
         right = self.right
         if isinstance(right, condition.Condition):
@@ -634,7 +634,7 @@ class Expression(operable.Operable):
         elif isinstance(right, domain.Domain):
             right_domain = right.sets
         else:
-            right_domain = right.domain  # ty: ignore[unresolved-attribute]
+            right_domain = right.domain  # ty: ignore[missing-union-attribute]
 
         self._left_domain = left_domain
         self._right_domain = right_domain
