@@ -377,6 +377,9 @@ class Container:
                 error_message += f" Did you mean `{matches[0]}`?"
             raise KeyError(error_message) from e
 
+    def _ipython_key_completions_(self) -> list[str]:
+        return self.listSymbols()
+
     def __iter__(self) -> Iterator[tuple[str, SymbolType]]:
         return iter(self._data.items())
 

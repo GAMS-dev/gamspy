@@ -1,0 +1,1 @@
+Symbol names now autocomplete in container["..."] in IPython and Jupyter.
