@@ -27,7 +27,7 @@ repos:
     rev: v2.0.0-rc.8
     hooks:
     -   id: betterleaks
-        entry: betterleaks dir --config .betterleaks.toml --no-banner --redact --verbose
+        entry: betterleaks fs --config .betterleaks.toml --no-banner --redact
         pass_filenames: true
 -   repo: local
     hooks:
