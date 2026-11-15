@@ -235,6 +235,32 @@ def test_indicator_subset(big_m):
         assert len(eq.records) == 4
 
 
+@pytest.mark.parametrize("big_m", [None, 100])
+def test_indicator_sum_over_subset(big_m):
+    # Sum(ij[i, j], ...) controls i and j, so the constraint is scalar
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b"])
+    j = gp.Set(m, name="j", records=["1", "2"])
+    ij = gp.Set(m, name="ij", domain=[i, j], records=[("a", "1"), ("b", "2")])
+    y = gp.Variable(m, name="y", domain=[i, j], type="positive")
+    b = gp.Variable(m, name="b", type="binary")
+    b.fx[...] = 1
+
+    res = indicator(b, 1, gp.Sum(ij[i, j], y[i, j]) <= 1, big_m=big_m)
+    for eq in res.equations_created.values():
+        assert eq.domain == []
+
+    model = gp.Model(
+        m,
+        equations=list(res.equations_created.values()),
+        problem="mip",
+        sense="max",
+        objective=gp.Sum(ij[i, j], y[i, j]),
+    )
+    model.solve()
+    assert math.isclose(model.objective_value, 1)
+
+
 @pytest.mark.parametrize("kwargs", [{}, {"big_m": 100}, {"native": True}])
 def test_indicator_subset_components(kwargs):
     m = gp.Container()

@@ -1,0 +1,1 @@
+Fix the domain of operations over an indexed subset.
