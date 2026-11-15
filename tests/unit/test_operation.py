@@ -497,6 +497,47 @@ def test_conditioned_operation_index():
     assert op.toValue() == 1
 
 
+def test_subset_operation_index():
+    # a subset indexed with sets controls these sets like the sets themselves
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", records=["j1", "j2"])
+    k = Set(m, "k", records=["k1", "k2"])
+    ii = Alias(m, "ii", i)
+    ij = Set(m, "ij", domain=[i, j], records=[("i1", "j1"), ("i2", "j2")])
+    s = Set(m, "s", domain=i, records=["i1"])
+    a = Parameter(
+        m,
+        "a",
+        domain=[k, i, j],
+        records=[("k1", "i1", "j1", 1), ("k1", "i2", "j2", 2), ("k2", "i1", "j2", 5)],
+    )
+
+    op = Sum(ij[i, j], a["k1", i, j])
+    assert op.domain == []
+    assert {elem.name for elem in op.controlled_domain} == {"ij", "i", "j"}
+    assert op.toValue() == 3
+
+    # (i1, j2) is not in ij
+    op = Sum(ij[i, j], a[k, i, j])
+    assert op.domain == [k]
+    assert op.toList() == [["k1", 3.0]]
+    assert op["k2"].gamsRepr() == 'sum(ij(i,j),a("k2",i,j))'
+
+    op = Sum(ij[ii, j], a[k, ii, j])
+    assert op.domain == [k]
+
+    op = Sum(ij[i, "j1"], a[k, i, "j1"])
+    assert op.domain == [k]
+
+    op = Sum(s[i], a[k, i, j])
+    assert op.domain == [k, j]
+    assert op.toList() == [["k1", "j1", 1.0], ["k2", "j2", 5.0]]
+
+    for operation in (Product, Smin, Smax):
+        assert operation(ij[i, j], a[k, i, j]).domain == [k]
+
+
 def test_number():
     m = Container()
 
