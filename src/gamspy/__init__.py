@@ -23,6 +23,7 @@ from gamspy._backend.neos import NeosClient
 from gamspy._config import _set_default_options, get_option, set_options
 from gamspy._container import Container
 from gamspy._control_flow import Else, ElseIf, For, If, Loop, While
+from gamspy._feasibility_relaxation import FeasibilityRelaxation
 from gamspy._guss import GUSSScenarioDict
 from gamspy._model import FileFormat, Model, ModelStatus, Problem, Sense, SolveStatus
 from gamspy._model_instance import ModelInstance
@@ -58,6 +59,7 @@ __all__ = [
     "GUSSScenarioDict",
     "Model",
     "ModelInstance",
+    "FeasibilityRelaxation",
     "Problem",
     "Sense",
     "VariableType",

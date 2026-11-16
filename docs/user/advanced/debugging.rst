@@ -359,3 +359,157 @@ be turned on by providing the ``feasopt`` argument in ``solver_options``, which 
 The relaxation is available through :meth:`gamspy.Model.computeInfeasibilities`. There are similar facilities available with other solvers
 such as BARON, COPT, Gurobi, Lindo etc. which can be enabled in a similar way.
 To see all facilities, refer to the `solver manuals <https://gams.com/latest/docs/S_MAIN.html>`_.
+
+Finding the Cause with a Feasibility Relaxation
+-----------------------------------------------
+
+:meth:`gamspy.Model.feasibilityRelaxation` builds a feasibility relaxation independently of the solver. Each relaxed
+equation gets a positive slack variable, or two for an equality, that allows it to be violated at a cost, and the
+relaxed model minimizes the total violation. The original model is not modified. The following example walks through
+a typical diagnosis.
+
+**Step 1: The infeasible model.** A small power system covers the demand of four representative hours with nuclear,
+coal, gas and wind generators at minimal cost. The output of each generator is limited by its capacity, the output of
+wind also by the wind of the hour, and the daily CO2 emissions are capped. The cap was entered as 70 t instead
+of 700 t:
+
+.. code-block:: python
+
+    import gamspy as gp
+
+    m = gp.Container()
+    g = gp.Set(m, "g", records=["nuclear", "coal", "gas", "wind"], description="generators")
+    t = gp.Set(m, "t", records=["night", "morning", "afternoon", "evening"], description="hours")
+    capacity = gp.Parameter(
+        m, "capacity", domain=g, records=[("nuclear", 400), ("coal", 300), ("gas", 400), ("wind", 300)],
+        description="capacity in MW",
+    )
+    cost = gp.Parameter(
+        m, "cost", domain=g, records=[("nuclear", 10), ("coal", 30), ("gas", 50), ("wind", 0)],
+        description="generation cost in $/MWh",
+    )
+    co2 = gp.Parameter(m, "co2", domain=g, records=[("coal", 0.9), ("gas", 0.4)], description="emissions in t/MWh")
+    wind = gp.Parameter(
+        m, "wind", domain=t, records=[("night", 0.8), ("morning", 0.5), ("afternoon", 0.3), ("evening", 0.6)],
+        description="available share of the wind capacity",
+    )
+    demand = gp.Parameter(
+        m, "demand", domain=t, records=[("night", 600), ("morning", 900), ("afternoon", 1000), ("evening", 1100)],
+        description="demand in MW",
+    )
+    co2_cap = gp.Parameter(m, "co2_cap", records=70, description="daily emission cap in t")
+
+    gen = gp.Variable(m, "gen", domain=[g, t], type="positive", description="generation in MW")
+    gen.up[g, t] = capacity[g]
+    gen.up["wind", t] = capacity["wind"] * wind[t]
+
+    balance = gp.Equation(m, "balance", domain=t)
+    balance[t] = gp.Sum(g, gen[g, t]) >= demand[t]
+    emissions = gp.Equation(m, "emissions")
+    emissions[...] = gp.Sum((g, t), co2[g] * gen[g, t]) <= co2_cap
+
+    dispatch = gp.Model(
+        m,
+        "dispatch",
+        equations=[balance, emissions],
+        problem="LP",
+        sense="min",
+        objective=gp.Sum((g, t), cost[g] * gen[g, t]),
+    )
+    dispatch.solve()
+    print(dispatch.status)
+
+.. code-block:: text
+
+    ModelStatus.InfeasibleNoSolution
+
+The solver only reports that no feasible solution exists. The exact status depends on the solver.
+
+**Step 2: Relax the model.** Only equations are relaxed. The capacities are bounds of ``gen`` and stay as they are,
+which suits physical limits. The demand forecast and the emission cap are both in doubt, so both equations are
+relaxed, which is the default. Equations that only define a variable, e.g. ``total == Sum((g, t), cost[g] * gen[g, t])``,
+do not need to be relaxed and can be left out with the ``equations`` argument.
+:meth:`solve() <gamspy.FeasibilityRelaxation.solve>` first minimizes the total violation and then, among the solutions
+with minimal violation, minimizes the cost. :meth:`violations() <gamspy.FeasibilityRelaxation.violations>` returns the
+violated rows of each relaxed equation:
+
+.. code-block:: python
+
+    relax = dispatch.feasibilityRelaxation()
+    relax.solve()
+    print(relax.violation.toValue())
+    print(relax.violations())
+
+.. code-block:: text
+
+    597.0
+    {'emissions':    violation
+    0      597.0}
+
+The ``violation`` column is the left-hand side minus the right-hand side. Even the cleanest dispatch that covers the
+demand emits 667 t, 597 t more than the cap allows.
+
+**Step 3: Weigh the alternatives.** By default, the violation is the sum of the slacks, which adds up tonnes of CO2
+and MW of unserved demand. Weights put the rows on a common scale and express which data you trust more. If
+one tonne above the cap counts as much as 100 MW of unserved demand, the relaxation leaves demand unserved instead:
+
+.. code-block:: python
+
+    relax = dispatch.feasibilityRelaxation(weights={emissions: 100})
+    relax.solve()
+    print(relax.violations()["balance"].violation.sum())
+
+.. code-block:: text
+
+    -1205.0
+
+If the cap were right, 1205 MW of demand would stay unserved across the morning, afternoon and evening, which is not
+plausible. A weight can also be a parameter over the domain of its equation, e.g. to trust the forecasts of some hours
+more than others.
+
+**Step 4: Count the changes.** With ``measure="count"``, the relaxation minimizes the number of violated rows instead
+of the amounts. This shows how many numbers must change at least, which helps when several values might be wrong.
+Each relaxed row gets a binary variable, so a purely continuous model turns into a mixed-integer model, in our example 
+the LP becomes a MIP:
+
+.. code-block:: python
+
+    relax = dispatch.feasibilityRelaxation(measure="count")
+    relax.solve()
+    print(relax.violation.toValue(), list(relax.violations()))
+
+.. code-block:: text
+
+    1.0 ['emissions']
+
+A single number, the emission cap, makes the model infeasible. The count measure does not minimize the amounts, so use
+it to locate the faulty rows and the default measure to size the change. ``measure="squares"`` minimizes the sum of the
+squared slacks, which spreads the violation evenly over the rows. Like ``count``, it changes the model type, here from
+LP to QCP.
+
+The count measure turns LP into MIP, QCP into MIQCP, and NLP, DNLP and CNS into MINLP. The binary variable of a row has
+to be 1 whenever the row is violated, i.e. whenever its slack is positive. The slacks have no upper bound, so by
+default this link is modeled with SOS1 variables, which need no bounds (see :meth:`gamspy.formulations.indicator`).
+Not every solver supports SOS1 variables. Among the MINLP solvers, BARON and KNITRO reject them with a capability
+error. If you know how large a violation can get, pass it as ``big_m``. The link then becomes the linear constraint
+``slack <= big_m * violated``, which every MIP and MINLP solver accepts and which usually gives a tighter relaxation:
+
+.. code-block:: python
+
+    relax = dispatch.feasibilityRelaxation(measure="count", big_m={balance: 1100, emissions: 1000})
+
+A number applies to every relaxed equation, a dictionary sets the big-M per equation, e.g. in its own unit. A big-M must
+be at least as large as the violation the row needs. Otherwise the relaxation cannot violate the row far enough, has to
+violate other rows instead and overstates the count, or becomes infeasible.
+
+**Step 5: Fix the data.** A zero is missing in the emission cap:
+
+.. code-block:: python
+
+    co2_cap[...] = 700
+    dispatch.solve()
+    print(dispatch.status, dispatch.objective_value, emissions.toValue())
+
+.. code-block:: text
+
+    ModelStatus.OptimalGlobal 78680.0 700.0

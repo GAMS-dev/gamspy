@@ -1349,3 +1349,30 @@ def test_parameter_eq_variable_in_definition():
     r[i] = q[i] == p
     assert r.getAssignment() == "r(i) = q(i) eq p;"
     assert r.toList() == [("i1", 1.0)]
+
+
+def test_scalar_equation_where_definition():
+    m = Container()
+    c = Parameter(m, "c", records=1)
+    x = Variable(m, "x")
+
+    e = Equation(m, "e")
+    e.where[c > 0] = x >= 2
+    assert e.getDefinition() == "e $ (c > 0) .. x =g= 2;"
+    with pytest.raises(ValidationError, match="not assigned"):
+        e.getAssignment()
+
+    assert e.latexRepr() == "$\nx \\geq 2\\quad \\text{if } c > 0\n$"
+
+    i = Set(m, "i", records=["i1", "i2"])
+    y = Variable(m, "y", domain=i)
+    f = Equation(m, "f", domain=i)
+    f.where[c > 0] = y[i] >= 1
+    assert f.getDefinition() == "f(i) $ (c > 0) .. y(i) =g= 1;"
+
+    model = Model(
+        m, equations=[e, f], problem="LP", sense="min", objective=x + Sum(i, y[i])
+    )
+    model.solve()
+    assert x.toValue() == 2
+    assert y.toList() == [("i1", 1.0), ("i2", 1.0)]

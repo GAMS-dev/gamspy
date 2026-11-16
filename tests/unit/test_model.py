@@ -28,7 +28,7 @@ from gamspy import (
 from gamspy._backend.local import LocalSolveHandle
 from gamspy._model import FileFormat
 from gamspy._options import ConvertOptions
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import GamspyException, ValidationError
 
 pytestmark = pytest.mark.unit
 
@@ -1629,3 +1629,308 @@ def test_model_instance_frozen():
     model.solve()
     assert model.objective_value == 14.0
     model.unfreeze()
+
+
+def test_feasibility_relaxation(transport):
+    m = transport.container
+    i = Set(m, "i", records=transport.canning_plants)
+    j = Set(m, "j", records=transport.markets)
+    a = Parameter(m, "a", domain=i, records=transport.capacities)
+    b = Parameter(m, "b", domain=j, records=transport.demands)
+    d = Parameter(m, "d", domain=[i, j], records=transport.distances)
+    b["new-york"] = 400
+    x = Variable(m, "x", domain=[i, j], type="positive")
+    supply = Equation(m, "supply", domain=i)
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand = Equation(m, "demand", domain=j)
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+    model = Model(
+        m,
+        "transport",
+        equations=[supply, demand],
+        problem="LP",
+        sense="min",
+        objective=Sum((i, j), d[i, j] * x[i, j]),
+    )
+    definition = demand.getDefinition()
+    equations = [equation.name for equation in model.equations]
+
+    relax = model.feasibilityRelaxation(equations=[demand])
+    assert relax.slacks[demand].positive.name == "demand_slack"
+    assert relax.model.name == "transport_feasrelax"
+    assert (
+        model.feasibilityRelaxation().slacks[demand].positive.name.startswith("slack_")
+    )
+    assert [equation.name for equation in model.equations] == equations
+    assert demand.getDefinition() == definition
+    assert list(relax.slacks) == [demand]
+    assert relax.model.equations[0] is supply
+    assert len(relax.model.equations) == 3
+    with pytest.raises(ValidationError, match="must be solved"):
+        relax.violations()
+
+    relax.model.solve()
+    assert relax.violation.toValue() == 25
+
+    relax.solve()
+    assert relax.violation.records.upper.item() == math.inf
+    assert relax.slacks[demand].negative is None
+    assert relax.slacks[demand].positive.toList() == [
+        ("new-york", 25.0),
+        ("chicago", 0.0),
+        ("topeka", 0.0),
+    ]
+    assert relax.violations()["demand"].values.tolist() == [["new-york", -25.0]]
+    assert model.status == gp.ModelStatus.NotSolved
+
+
+def test_feasibility_relaxation_objective_variable(transport):
+    m = transport.container
+    i = Set(m, "i", records=transport.canning_plants)
+    j = Set(m, "j", records=transport.markets)
+    a = Parameter(m, "a", domain=i, records=transport.capacities)
+    b = Parameter(m, "b", domain=j, records=transport.demands)
+    d = Parameter(m, "d", domain=[i, j], records=transport.distances)
+    b["new-york"] = 400
+    x = Variable(m, "x", domain=[i, j], type="positive")
+    z = Variable(m, "z")
+    supply = Equation(m, "supply", domain=i)
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand = Equation(m, "demand", domain=j)
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+    cost = Equation(m, "cost", definition=z == Sum((i, j), d[i, j] * x[i, j]))
+    model = Model(
+        m,
+        "transport",
+        equations=[supply, demand, cost],
+        problem="LP",
+        sense="min",
+        objective=z,
+    )
+
+    relax = model.feasibilityRelaxation()
+    assert list(relax.slacks) == [supply, demand, cost]
+
+    relax.solve()
+    assert relax.slacks[cost].positive.toValue() == 0
+    assert relax.slacks[cost].negative.toValue() == 0
+    assert z.toValue() == pytest.approx(relax.optimality_model.objective_value)
+    violations = relax.violations()
+    assert list(violations) == ["demand"]
+    assert violations["demand"].values.tolist() == [["new-york", -25.0]]
+
+
+def test_feasibility_relaxation_problems():
+    m = Container()
+    x = Variable(m, "x")
+    x.lo = 0
+    x.up = 1
+    e = Equation(m, "e", definition=gp.math.sqr(x) == 4)
+    cns = Model(m, equations=[e], problem="CNS")
+    relax = cns.feasibilityRelaxation(weights={e: Parameter(m, "w", records=2)})
+    assert relax.model.problem == Problem.NLP
+    assert relax.optimality_model is None
+
+    relax.solve()
+    assert relax.violation.toValue() == pytest.approx(6)
+    assert relax.violations()["e"].violation.item() == pytest.approx(-3)
+
+    i = Set(m, "i", records=["a", "b"])
+    j = Alias(m, "j", i)
+    y = Variable(m, "y", domain=i)
+    g = Equation(m, "g", domain=i)
+    g[j] = y[j] >= 1
+    k = Set(m, "k", domain=i, records=["a"])
+    limited = Model(m, equations=[g], problem="LP", limited_variables=[y[k]])
+    relax = limited.feasibilityRelaxation()
+    relax.solve()
+    assert relax.violations()["g"].values.tolist() == [["b", -1.0]]
+
+    hard = Equation(m, "hard", definition=x >= 2)
+    soft = Equation(m, "soft", definition=x <= 0)
+    model = Model(m, equations=[hard, soft], problem="LP", sense="min", objective=x)
+    relax = model.feasibilityRelaxation(equations=[soft])
+    relax.solve()
+    assert relax.optimality_model.status == gp.ModelStatus.NotSolved
+    assert relax.violation.records.upper.item() == math.inf
+
+
+def test_feasibility_relaxation_conditions():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2", "i3"])
+    k = Set(m, "k", records=["k1", "k2"])
+    p = Parameter(m, "p", domain=i, records=[("i1", 5), ("i2", 1)])
+    w = Parameter(m, "w", domain=[i, k], records=[("i1", "k1", 1), ("i2", "k1", 10)])
+    x = Variable(m, "x", domain=i)
+    x.lo[i] = 2
+    x.up[i] = 4
+    e = Equation(m, "e", domain=[i, k])
+    e[i, "k1"].where[p[i] > 0] = x[i] == p[i]
+    model = Model(m, equations=[e], problem="LP")
+
+    relax = model.feasibilityRelaxation(weights={e: w})
+    assert relax.optimality_model is None
+
+    relax.model.solve()
+    assert relax.violation.toValue() == 11
+    assert relax.slacks[e].positive.toList() == [("i1", "k1", 0.0), ("i2", "k1", 1.0)]
+    assert relax.slacks[e].negative.toList() == [("i1", "k1", 1.0), ("i2", "k1", 0.0)]
+    assert relax.violations()["e"].values.tolist() == [
+        ["i1", "k1", -1.0],
+        ["i2", "k1", 1.0],
+    ]
+    assert relax.model.num_variables == 7
+    assert relax.model.num_equations == 3
+
+
+def test_feasibility_relaxation_scalar():
+    m = Container()
+    c = Parameter(m, "c", records=1)
+    x = Variable(m, "x")
+    lo = Equation(m, "lo")
+    lo.where[c > 0] = x >= 3
+    up = Equation(m, "up", definition=x <= 1)
+    nb = Equation(m, "nb", type="nonbinding", definition=x == 100)
+    model = Model(m, equations=[lo, up, nb], problem="LP", sense="min", objective=x)
+
+    relax = model.feasibilityRelaxation(weights={up: 2})
+    assert list(relax.slacks) == [lo, up]
+    assert nb in relax.model.equations
+
+    relax.model.solve()
+    assert relax.violation.toValue() == 2
+
+    relax.violation.up = relax.violation.l
+    relax.optimality_model.solve()
+    assert x.toValue() == 1
+    assert relax.slacks[lo].positive.toValue() == 2
+
+
+def test_feasibility_relaxation_measures():
+    m = Container()
+    x = Variable(m, "x")
+    lo = Equation(m, "lo", definition=x >= 3)
+    up = Equation(m, "up", definition=x <= 1)
+    up2 = Equation(m, "up2", definition=x <= 2.5)
+    model = Model(m, equations=[lo, up, up2], problem="LP")
+
+    squares = model.feasibilityRelaxation(equations=[lo, up], measure="squares")
+    assert squares.model.problem == Problem.QCP
+    squares.model.solve()
+    assert squares.slacks[lo].positive.toValue() == pytest.approx(1)
+    assert squares.slacks[up].positive.toValue() == pytest.approx(1)
+
+    count = model.feasibilityRelaxation(measure="count")
+    assert count.model.problem == Problem.MIP
+    count.model.solve()
+    assert count.violation.toValue() == 1
+    assert count.slacks[up].positive.toValue() == 0
+    assert count.slacks[up2].positive.toValue() == 0
+    assert list(count.violations()) == ["lo"]
+
+    # big-M links each binary with one equation instead of two
+    big = model.feasibilityRelaxation(measure="count", big_m=10)
+    assert len(big.model.equations) == len(count.model.equations) - 3
+    big.model.solve()
+    assert big.violation.toValue() == 1
+    assert list(big.violations()) == ["lo"]
+
+    # lo needs a violation of 2, so a big-M of 1 forces a second violated row
+    small = model.feasibilityRelaxation(measure="count", big_m={lo: 1, up: 10})
+    small.model.solve()
+    assert small.violation.toValue() == 2
+
+    i = Set(m, "i", records=["i1", "i2", "i3"])
+    k = Set(m, "k", records=["k1", "k2"])
+    p = Parameter(m, "p", domain=i, records=[("i1", 5), ("i2", 1)])
+    w = Parameter(m, "w", domain=[i, k], records=[("i1", "k1", 1), ("i2", "k1", 10)])
+    y = Variable(m, "y", domain=i)
+    y.lo[i] = 2
+    y.up[i] = 4
+    e = Equation(m, "e", domain=[i, k])
+    e[i, "k1"].where[p[i] > 0] = y[i] == p[i]
+    indexed = Model(m, equations=[e], problem="LP")
+    count = indexed.feasibilityRelaxation(weights={e: w}, measure="count")
+    count.model.solve()
+    assert count.violation.toValue() == 11
+    assert len(count.violations()["e"]) == 2
+
+    bound = Parameter(
+        m, "bound", domain=[i, k], records=[("i1", "k1", 2), ("i2", "k1", 2)]
+    )
+    big = indexed.feasibilityRelaxation(
+        weights={e: w}, measure="count", big_m={e: bound}
+    )
+    big.model.solve()
+    assert big.violation.toValue() == 11
+    assert len(big.violations()["e"]) == 2
+
+    with pytest.raises(ValidationError, match="measure"):
+        model.feasibilityRelaxation(measure="max")
+
+    with pytest.raises(ValidationError, match="big_m"):
+        model.feasibilityRelaxation(big_m=10)
+
+    with pytest.raises(ValidationError, match="Big-M given for `up2`"):
+        model.feasibilityRelaxation(equations=[lo], measure="count", big_m={up2: 1})
+
+    relaxed = Model(m, equations=[lo, up], problem="RMIP")
+    with pytest.raises(ValidationError, match="relaxed problem type"):
+        relaxed.feasibilityRelaxation(measure="count")
+
+
+@pytest.mark.requires_solvers("baron", "knitro")
+@pytest.mark.parametrize("solver", ["baron", "knitro"])
+def test_feasibility_relaxation_count_big_m(solver):
+    m = Container()
+    x = Variable(m, "x")
+    y = Variable(m, "y")
+    x.lo, x.up, y.lo, y.up = 0, 3, 0, 3
+    disk = Equation(m, "disk", definition=gp.math.sqr(x) + gp.math.sqr(y) <= 1)
+    product = Equation(m, "product", definition=x * y >= 2)
+    growth = Equation(m, "growth", definition=gp.math.exp(x) >= 3)
+    model = Model(
+        m,
+        equations=[disk, product, growth],
+        problem="NLP",
+        sense="min",
+        objective=x + y,
+    )
+
+    # the default SOS1 link is not supported by BARON and KNITRO
+    sos1 = model.feasibilityRelaxation(measure="count")
+    assert sos1.model.problem == Problem.MINLP
+    with pytest.raises(GamspyException, match="CapabilityError"):
+        sos1.solve(solver=solver)
+
+    big = model.feasibilityRelaxation(measure="count", big_m=20)
+    big.solve(solver=solver)
+    assert big.violation.toValue() == pytest.approx(1)
+    assert list(big.violations()) == ["disk"]
+    assert big.optimality_model.status in (
+        gp.ModelStatus.OptimalGlobal,
+        gp.ModelStatus.OptimalLocal,
+        gp.ModelStatus.Integer,
+    )
+
+
+def test_feasibility_relaxation_validation():
+    m = Container()
+    x = Variable(m, "x")
+    e = Equation(m, "e", definition=x >= 3)
+    other = Equation(m, "other", definition=x <= 1)
+    undefined = Equation(m, "undefined")
+    model = Model(m, equations=[e, undefined], problem="LP")
+
+    with pytest.raises(ValidationError, match="not an equation of model"):
+        model.feasibilityRelaxation(equations=[other])
+
+    with pytest.raises(ValidationError, match="not relaxed"):
+        model.feasibilityRelaxation(equations=[e], weights={other: 2})
+
+    with pytest.raises(ValidationError, match="cannot be relaxed"):
+        model.feasibilityRelaxation()
+
+    mcp = Model(m, problem="MCP", matches={e: x})
+    with pytest.raises(ValidationError, match="matches"):
+        mcp.feasibilityRelaxation()
