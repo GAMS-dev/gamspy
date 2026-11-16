@@ -427,8 +427,9 @@ The solver only reports that no feasible solution exists. The exact status depen
 
 **Step 2: Relax the model.** Only equations are relaxed. The capacities are bounds of ``gen`` and stay as they are,
 which suits physical limits. The demand forecast and the emission cap are both in doubt, so both equations are
-relaxed, which is the default. Equations that only define a variable, e.g. ``total == Sum((g, t), cost[g] * gen[g, t])``,
-do not need to be relaxed and can be left out with the ``equations`` argument.
+relaxed, which is the default. Equations that only define a free variable, e.g. ``total == Sum((g, t), cost[g] * gen[g, t])``,
+cannot cause infeasibility. Leave them out with the ``equations`` argument; otherwise the relaxation can violate them
+instead of the equations that actually conflict.
 :meth:`solve() <gamspy.FeasibilityRelaxation.solve>` first minimizes the total violation and then, among the solutions
 with minimal violation, minimizes the cost. :meth:`violations() <gamspy.FeasibilityRelaxation.violations>` returns the
 violated rows of each relaxed equation:
