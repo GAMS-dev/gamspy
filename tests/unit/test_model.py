@@ -1879,6 +1879,77 @@ def test_feasibility_relaxation_measures():
         relaxed.feasibilityRelaxation(measure="count")
 
 
+def _exp_sqr(y):
+    return gp.math.exp(gp.math.sqr(y)) - 1
+
+
+@pytest.mark.parametrize(
+    ("problem", "relaxed", "term"),
+    [
+        ("LP", ("LP", "QCP", "MIP"), lambda y: 0),
+        ("MIP", ("MIP", "MIQCP", "MIP"), lambda y: 0),
+        ("RMIP", ("RMIP", "RMIQCP", None), lambda y: 0),
+        ("QCP", ("QCP", "QCP", "MIQCP"), gp.math.sqr),
+        ("MIQCP", ("MIQCP", "MIQCP", "MIQCP"), gp.math.sqr),
+        ("RMIQCP", ("RMIQCP", "RMIQCP", None), gp.math.sqr),
+        ("NLP", ("NLP", "NLP", "MINLP"), _exp_sqr),
+        ("MINLP", ("MINLP", "MINLP", "MINLP"), _exp_sqr),
+        ("RMINLP", ("RMINLP", "RMINLP", None), _exp_sqr),
+        ("DNLP", ("DNLP", "DNLP", "MINLP"), lambda y: gp.math.Max(y, 0)),
+        ("CNS", ("NLP", "NLP", "MINLP"), gp.math.sqr),
+    ],
+)
+@pytest.mark.parametrize("measure", ["sum", "squares", "count"])
+def test_feasibility_relaxation_problem_types(problem, relaxed, term, measure):
+    m = Container()
+    x = Variable(m, "x", type="integer" if problem.startswith("MI") else "free")
+    y = Variable(m, "y")
+    x.lo, x.up, y.lo, y.up, y.l = 0, 10, -1, 1, -0.5
+    if problem == "CNS":
+        lo = Equation(m, "lo", definition=x == 3)
+        up = Equation(m, "up", definition=x + term(y) == 1)
+        model = Model(m, equations=[lo, up], problem=problem)
+    else:
+        lo = Equation(m, "lo", definition=x >= 3)
+        up = Equation(m, "up", definition=x + term(y) <= 1)
+        model = Model(
+            m, equations=[lo, up], problem=problem, sense="min", objective=2 * x
+        )
+
+    expected = relaxed[("sum", "squares", "count").index(measure)]
+    if expected is None:
+        with pytest.raises(ValidationError, match="relaxed problem type"):
+            model.feasibilityRelaxation(measure=measure)
+        return
+
+    relax = model.feasibilityRelaxation(measure=measure)
+    assert relax.model.problem == Problem(expected)
+    assert (relax.optimality_model is None) == (problem == "CNS")
+
+    relax.solve()
+    solved = (
+        gp.ModelStatus.OptimalGlobal,
+        gp.ModelStatus.OptimalLocal,
+        gp.ModelStatus.Integer,
+    )
+    assert relax.model.status in solved
+    assert relax.violation.toValue() == pytest.approx(
+        1 if measure == "count" else 2, rel=1e-6
+    )
+    violated = list(relax.violations())
+    if measure == "squares":
+        assert violated == ["lo", "up"]
+    else:
+        assert len(violated) == 1
+
+    if relax.optimality_model is not None:
+        assert relax.optimality_model.status in solved
+        best = {"sum": 1, "squares": 2, "count": 0}[measure]
+        assert x.toValue() == pytest.approx(best, rel=1e-4, abs=1e-6)
+        if measure != "squares":
+            assert violated == ["lo"]
+
+
 @pytest.mark.requires_solvers("baron", "knitro")
 @pytest.mark.parametrize("solver", ["baron", "knitro"])
 def test_feasibility_relaxation_count_big_m(solver):

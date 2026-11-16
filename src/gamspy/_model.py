@@ -1397,8 +1397,10 @@ class Model:
         ----------
         equations : Sequence[Equation], optional
             Equations to relax. All equations of the model by default. Equations
-            that only define a variable, e.g. ``cost == Sum(i, c[i] * x[i])``,
-            do not need to be relaxed.
+            that only define a free variable, e.g. ``cost == Sum(i, c[i] * x[i])``,
+            cannot cause infeasibility and should be left out; otherwise the
+            relaxation can violate them instead of the equations that actually
+            conflict.
         weights : dict[Equation, int | float | Parameter], optional
             Weight of the violation of each equation. A Parameter must have the
             same domain as its equation. The default weight is 1.
