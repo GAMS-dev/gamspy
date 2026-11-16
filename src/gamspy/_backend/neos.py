@@ -119,7 +119,7 @@ class NeosClient:
         str
             Either "Done", "Running", "Waiting", "Unknown Job", or "Bad Password"
         """
-        return self.neos.getJobStatus(job_number, job_password)  # ty: ignore[invalid-return-type]
+        return self.neos.getJobStatus(job_number, job_password)  # ty: ignore[invalid-explicit-return]
 
     def get_completion_code(self, job_number: int, job_password: str) -> str:
         """
@@ -136,7 +136,7 @@ class NeosClient:
         -------
         str
         """
-        return self.neos.getCompletionCode(job_number, job_password)  # ty: ignore[invalid-return-type]
+        return self.neos.getCompletionCode(job_number, job_password)  # ty: ignore[invalid-explicit-return]
 
     def get_job_info(self, job_number: int, job_password: str) -> tuple:
         """
@@ -152,7 +152,7 @@ class NeosClient:
         tuple
             (category, solver_name, input, status, completion_code)
         """
-        return self.neos.getJobInfo(job_number, job_password)  # ty: ignore[invalid-return-type]
+        return self.neos.getJobInfo(job_number, job_password)  # ty: ignore[invalid-explicit-return]
 
     def kill_job(self, job_number: int, job_password: str, killmsg: str = "") -> str:
         """
@@ -168,7 +168,7 @@ class NeosClient:
         -------
         str
         """
-        return self.neos.killJob(job_number, job_password, killmsg)  # ty: ignore[invalid-return-type]
+        return self.neos.killJob(job_number, job_password, killmsg)  # ty: ignore[invalid-explicit-return]
 
     def get_final_results(
         self, job_number: int, job_password: str, *, is_blocking: bool = True
@@ -189,9 +189,9 @@ class NeosClient:
         xmlrpc.client.Binary
         """
         if is_blocking:
-            return self.neos.getFinalResults(job_number, job_password)  # ty: ignore[invalid-return-type]
+            return self.neos.getFinalResults(job_number, job_password)  # ty: ignore[invalid-explicit-return]
 
-        return self.neos.getFinalResultsNonBlocking(job_number, job_password)  # ty: ignore[invalid-return-type]
+        return self.neos.getFinalResultsNonBlocking(job_number, job_password)  # ty: ignore[invalid-explicit-return]
 
     def email_job_results(self, job_number: int, job_password: str) -> str:
         """
@@ -209,7 +209,7 @@ class NeosClient:
         -------
         str
         """
-        return self.neos.emailJobResults(job_number, job_password)  # ty: ignore[invalid-return-type]
+        return self.neos.emailJobResults(job_number, job_password)  # ty: ignore[invalid-explicit-return]
 
     def get_intermediate_results(
         self,
@@ -237,9 +237,9 @@ class NeosClient:
         xmlrpc.client.Binary
         """
         if is_blocking:
-            return self.neos.getIntermediateResults(job_number, job_password, offset)  # ty: ignore[invalid-return-type]
+            return self.neos.getIntermediateResults(job_number, job_password, offset)  # ty: ignore[invalid-explicit-return]
 
-        return self.neos.getIntermediateResultsNonBlocking(job_number, job_password)  # ty: ignore[invalid-return-type]
+        return self.neos.getIntermediateResultsNonBlocking(job_number, job_password)  # ty: ignore[invalid-explicit-return]
 
     def download_output(
         self,

@@ -66,7 +66,7 @@ class Domain:
     def _find_container(self) -> Container | None:
         for set in self.sets:
             if hasattr(set, "container"):
-                return set.container  # ty: ignore[invalid-return-type]
+                return set.container  # ty: ignore[invalid-explicit-return]
 
     def gamsRepr(self) -> str:
         """

@@ -168,7 +168,7 @@ class Loop(_LoopBlock):
             self.indices,
             (gp.Set, gp.Alias, Condition, Domain, ImplicitSet, gp.math.MathOp),
         ):
-            return self.indices.container  # ty: ignore[invalid-return-type]
+            return self.indices.container  # ty: ignore[invalid-explicit-return]
         elif isinstance(self.indices, Sequence):
             for elem in self.indices:
                 container = getattr(elem, "container", None)

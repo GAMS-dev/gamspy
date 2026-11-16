@@ -365,7 +365,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         [Set(name='i', domain=['*']), Set(name='j', domain=['*'])]
 
         """
-        return _transpose(self, "Parameter")  # ty: ignore[invalid-return-type]
+        return _transpose(self, "Parameter")  # ty: ignore[invalid-explicit-return]
 
     def gamsRepr(self) -> str:
         """Representation of the parameter in GAMS syntax.

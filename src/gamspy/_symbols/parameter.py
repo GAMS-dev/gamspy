@@ -299,7 +299,7 @@ class Parameter(operable.Operable, NumericSymbol):
         """
         from gamspy.math.matrix import _transpose
 
-        return _transpose(self, "Parameter")  # ty: ignore[invalid-return-type]
+        return _transpose(self, "Parameter")  # ty: ignore[invalid-explicit-return]
 
     @property
     def _attributes(self) -> list[str]:

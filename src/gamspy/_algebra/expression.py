@@ -122,7 +122,7 @@ def split_assignment(declaration: str) -> tuple[str, str, str]:
 
 def get_operand_gams_repr(operand: object) -> str:
     if hasattr(operand, "gamsRepr"):
-        return operand.gamsRepr()  # ty: ignore[call-non-callable]
+        return operand.gamsRepr()  # ty: ignore[not-callable]
 
     representation = str(operand)
 
@@ -200,7 +200,7 @@ def math_operand(operand: object, notation: Notation) -> tuple[str, float, bool]
         return operand._math_repr(notation), CONDITION_PRECEDENCE, False
 
     if hasattr(operand, "_math_repr"):
-        return operand._math_repr(notation), LEAF_PRECEDENCE, False  # ty: ignore[call-non-callable]
+        return operand._math_repr(notation), LEAF_PRECEDENCE, False  # ty: ignore[not-callable]
 
     return str(operand), LEAF_PRECEDENCE, False
 
@@ -1077,7 +1077,7 @@ class ShiftExpression(Expression):
     @property
     def jump(self) -> OperableType:
         """Number of positions the parent set is shifted by."""
-        return self.right  # ty: ignore[invalid-return-type]
+        return self.right  # ty: ignore[invalid-explicit-return]
 
     @property
     def is_circular(self) -> bool:
