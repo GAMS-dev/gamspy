@@ -46,3 +46,7 @@ Model
 .. autoclass:: gamspy.ModelInstance
    :members:
    :show-inheritance:
+
+.. autoclass:: gamspy.FeasibilityRelaxation
+   :members:
+   :show-inheritance:
