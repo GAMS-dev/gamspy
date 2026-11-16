@@ -23,11 +23,28 @@ ALLOWED: dict[str, bytes] = {
 CUSTOMIZE_MODULES = ("sitecustomize", "usercustomize")
 
 
+def find_venv() -> tuple[str, str] | None:
+    # Mirrors site.venv(), which -S skips on Python < 3.14 and which cannot be
+    # called here because it processes the .pth files of the venv.
+    exe_dir = os.path.dirname(os.path.abspath(sys.executable))
+    prefix = os.path.dirname(exe_dir)
+    for cfg in (
+        os.path.join(exe_dir, "pyvenv.cfg"),
+        os.path.join(prefix, "pyvenv.cfg"),
+    ):
+        if os.path.isfile(cfg):
+            return prefix, cfg
+    return None
+
+
 def site_dirs() -> list[str]:
-    dirs = site.getsitepackages()
+    venv = find_venv()
     include_system = True
-    cfg = os.path.join(sys.prefix, "pyvenv.cfg")
-    if sys.prefix != sys.base_prefix and os.path.isfile(cfg):
+    if venv is None:
+        dirs = site.getsitepackages()
+    else:
+        prefix, cfg = venv
+        dirs = site.getsitepackages([prefix])
         with open(cfg, encoding="utf-8") as f:
             for line in f:
                 key, _, value = line.partition("=")
