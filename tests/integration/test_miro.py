@@ -13,7 +13,7 @@ import pandas as pd
 import pytest
 
 import gamspy as gp
-from gamspy import Container, Equation, Options, Parameter, Set, Variable
+from gamspy import Alias, Container, Equation, Options, Parameter, Set, Variable
 from gamspy._miro import MiroJSONEncoder
 from gamspy.exceptions import ValidationError
 
@@ -200,6 +200,8 @@ def test_miro(directory):
                         "i": {
                             "type": "string",
                             "alias": "canning plants",
+                            "domain": "i",
+                            "domainDefining": False,
                         },
                         "new-york": {
                             "type": "numeric",
@@ -247,8 +249,15 @@ def test_miro(directory):
                         "i": {
                             "type": "string",
                             "alias": "canning plants",
+                            "domain": "i",
+                            "domainDefining": False,
                         },
-                        "j": {"type": "string", "alias": "markets"},
+                        "j": {
+                            "type": "string",
+                            "alias": "markets",
+                            "domain": "j",
+                            "domainDefining": False,
+                        },
                         "level": {"type": "numeric", "alias": "level"},
                         "marginal": {
                             "type": "numeric",
@@ -312,7 +321,12 @@ def test_contract(directory):
                     "alias": "k",
                     "symtype": "set",
                     "headers": {
-                        "uni": {"type": "string", "alias": "uni"},
+                        "uni": {
+                            "type": "string",
+                            "alias": "uni",
+                            "domain": "*",
+                            "domainDefining": False,
+                        },
                         "element_text": {
                             "type": "string",
                             "alias": "element_text",
@@ -326,6 +340,8 @@ def test_contract(directory):
                         "I": {
                             "type": "string",
                             "alias": "canning plants",
+                            "domain": "I",
+                            "domainDefining": True,
                         },
                         "value": {"type": "numeric", "alias": "a"},
                     },
@@ -334,7 +350,12 @@ def test_contract(directory):
                     "alias": "demand at market j in cases",
                     "symtype": "parameter",
                     "headers": {
-                        "j": {"type": "string", "alias": "markets"},
+                        "j": {
+                            "type": "string",
+                            "alias": "markets",
+                            "domain": "j",
+                            "domainDefining": True,
+                        },
                         "value": {"type": "numeric", "alias": "b"},
                     },
                 },
@@ -345,8 +366,15 @@ def test_contract(directory):
                         "I": {
                             "type": "string",
                             "alias": "canning plants",
+                            "domain": "I",
+                            "domainDefining": False,
                         },
-                        "j": {"type": "string", "alias": "markets"},
+                        "j": {
+                            "type": "string",
+                            "alias": "markets",
+                            "domain": "j",
+                            "domainDefining": False,
+                        },
                         "value": {"type": "numeric", "alias": "d"},
                     },
                 },
@@ -357,6 +385,8 @@ def test_contract(directory):
                         "I": {
                             "type": "string",
                             "alias": "canning plants",
+                            "domain": "I",
+                            "domainDefining": False,
                         },
                         "lat": {"type": "numeric", "alias": "lat"},
                         "lnG": {"type": "numeric", "alias": "lnG"},
@@ -366,7 +396,12 @@ def test_contract(directory):
                     "alias": "Market location information",
                     "symtype": "parameter",
                     "headers": {
-                        "j": {"type": "string", "alias": "markets"},
+                        "j": {
+                            "type": "string",
+                            "alias": "markets",
+                            "domain": "j",
+                            "domainDefining": False,
+                        },
                         "lat": {"type": "numeric", "alias": "lat"},
                         "lnG": {"type": "numeric", "alias": "lnG"},
                     },
@@ -410,8 +445,15 @@ def test_contract(directory):
                         "I": {
                             "type": "string",
                             "alias": "canning plants",
+                            "domain": "I",
+                            "domainDefining": False,
                         },
-                        "j": {"type": "string", "alias": "markets"},
+                        "j": {
+                            "type": "string",
+                            "alias": "markets",
+                            "domain": "j",
+                            "domainDefining": False,
+                        },
                         "lngP": {"type": "numeric", "alias": "lngP"},
                         "latP": {"type": "numeric", "alias": "latP"},
                         "lngM": {"type": "numeric", "alias": "lngM"},
@@ -604,7 +646,12 @@ def test_miro_encoder(container):
                 "alias": "k",
                 "symtype": "set",
                 "headers": {
-                    "uni": {"type": "string", "alias": "uni"},
+                    "uni": {
+                        "type": "string",
+                        "alias": "uni",
+                        "domain": "*",
+                        "domainDefining": False,
+                    },
                     "element_text": {
                         "type": "string",
                         "alias": "element_text",
@@ -615,7 +662,12 @@ def test_miro_encoder(container):
                 "alias": "distance in thousands of miles",
                 "symtype": "parameter",
                 "headers": {
-                    "i": {"type": "string", "alias": "canning plants"},
+                    "i": {
+                        "type": "string",
+                        "alias": "canning plants",
+                        "domain": "i",
+                        "domainDefining": False,
+                    },
                     "new-york": {
                         "type": "numeric",
                         "alias": "new-york",
@@ -628,7 +680,12 @@ def test_miro_encoder(container):
                 "alias": "table_without_records",
                 "symtype": "parameter",
                 "headers": {
-                    "i": {"type": "string", "alias": "canning plants"},
+                    "i": {
+                        "type": "string",
+                        "alias": "canning plants",
+                        "domain": "i",
+                        "domainDefining": False,
+                    },
                     "new-york": {
                         "type": "numeric",
                         "alias": "new-york",
@@ -666,8 +723,18 @@ def test_miro_encoder(container):
                 "alias": "shipment quantities in cases",
                 "symtype": "variable",
                 "headers": {
-                    "i": {"type": "string", "alias": "canning plants"},
-                    "j": {"type": "string", "alias": "markets"},
+                    "i": {
+                        "type": "string",
+                        "alias": "canning plants",
+                        "domain": "i",
+                        "domainDefining": False,
+                    },
+                    "j": {
+                        "type": "string",
+                        "alias": "markets",
+                        "domain": "j",
+                        "domainDefining": False,
+                    },
                     "level": {"type": "numeric", "alias": "level"},
                     "marginal": {
                         "type": "numeric",
@@ -784,8 +851,18 @@ def test_miro_encoder(container):
                 "alias": "a",
                 "symtype": "parameter",
                 "headers": {
-                    "uni": {"type": "string", "alias": "uni"},
-                    "uni#1": {"type": "string", "alias": "uni#1"},
+                    "uni": {
+                        "type": "string",
+                        "alias": "uni",
+                        "domain": "*",
+                        "domainDefining": False,
+                    },
+                    "uni#1": {
+                        "type": "string",
+                        "alias": "uni#1",
+                        "domain": "*",
+                        "domainDefining": False,
+                    },
                     "value": {"type": "numeric", "alias": "a"},
                 },
             },
@@ -793,7 +870,12 @@ def test_miro_encoder(container):
                 "alias": "i6",
                 "symtype": "set",
                 "headers": {
-                    "i5": {"type": "string", "alias": "i5"},
+                    "i5": {
+                        "type": "string",
+                        "alias": "i5",
+                        "domain": "i5",
+                        "domainDefining": False,
+                    },
                     "element_text": {
                         "type": "string",
                         "alias": "element_text",
@@ -993,13 +1075,79 @@ def test_duplicate_domain():
                 "alias": "p",
                 "symtype": "parameter",
                 "headers": {
-                    "i": {"type": "string", "alias": "i"},
-                    "i#1": {"type": "string", "alias": "i#1"},
+                    "i": {
+                        "type": "string",
+                        "alias": "i",
+                        "domain": "i",
+                        "domainDefining": False,
+                    },
+                    "i#1": {
+                        "type": "string",
+                        "alias": "i#1",
+                        "domain": "i",
+                        "domainDefining": False,
+                    },
                     "value": {"type": "numeric", "alias": "p"},
                 },
             }
         },
         "outputSymbols": {},
+    }
+
+
+def test_domain_in_headers():
+    c = Container()
+    i = Set(c, "i", description="canning plants")
+    j = Set(c, "j", records=["new-york", "chicago"])
+    ip = Alias(c, "ip", i)
+    _ = Parameter(
+        c,
+        "p",
+        domain=[ip, "*", i],
+        domain_forwarding=[False, False, True],
+        is_miro_input=True,
+    )
+    _ = Parameter(
+        c,
+        "t",
+        domain=[i, j],
+        records=[["seattle", "chicago", 1]],
+        domain_forwarding=[True, False],
+        is_miro_input=True,
+        is_miro_table=True,
+    )
+
+    headers = MiroJSONEncoder(c).prepare_dict()["inputSymbols"]
+    assert headers["p"]["headers"] == {
+        "ip": {
+            "type": "string",
+            "alias": "canning plants",
+            "domain": "i",
+            "domainDefining": False,
+        },
+        "uni": {
+            "type": "string",
+            "alias": "uni",
+            "domain": "*",
+            "domainDefining": False,
+        },
+        "i": {
+            "type": "string",
+            "alias": "canning plants",
+            "domain": "i",
+            "domainDefining": True,
+        },
+        "value": {"type": "numeric", "alias": "p"},
+    }
+    assert headers["t"]["headers"] == {
+        "i": {
+            "type": "string",
+            "alias": "canning plants",
+            "domain": "i",
+            "domainDefining": True,
+        },
+        "new-york": {"type": "numeric", "alias": "new-york"},
+        "chicago": {"type": "numeric", "alias": "chicago"},
     }
 
 
