@@ -222,9 +222,22 @@ class MiroJSONEncoder:
                 "The last column of miro table cannot be a miro input!"
             )
 
+    def _domain_forwardings(
+        self, symbol: Set | Parameter | Variable | Equation
+    ) -> list[bool]:
+        # A domain column is domain defining if the symbol forwards its records to that domain set.
+        forwardings = symbol._domain_forwarding
+        if isinstance(forwardings, bool):
+            forwardings = [forwardings] * symbol.dimension
+
+        return [
+            bool(forwarding) and isinstance(elem, (gp.Set, gp.Alias))
+            for elem, forwarding in zip(symbol.domain, forwardings, strict=True)
+        ]
+
     def prepare_headers_dict(
         self, symbol: Set | Parameter | Variable | Equation
-    ) -> dict[str, dict[str, str]]:
+    ) -> dict[str, dict[str, str | bool]]:
         def rename_duplicates(items: list[str]) -> list[str]:
             # Renames duplicate domain names. For example:
             # p = gp.Parameter(c,'p',domain=[i,i], is_miro_input=True)
@@ -266,7 +279,18 @@ class MiroJSONEncoder:
             ]
             types = ["string"] * len(symbol.domain_names) + ["numeric"] * 5
 
-        domain_values = []
+        # The last domain of a miro table is spread into value columns.
+        num_domain_columns = symbol.dimension - (
+            1 if isinstance(symbol, gp.Parameter) and symbol._is_miro_table else 0
+        )
+        # MIRO does not know about aliases, so it needs the aliased set.
+        domains = [
+            elem.alias_with.name if isinstance(elem, gp.Alias) else name
+            for elem, name in zip(symbol.domain, symbol.domain_names, strict=True)
+        ][:num_domain_columns]
+        forwardings = self._domain_forwardings(symbol)[:num_domain_columns]
+
+        domain_values: list[dict[str, str | bool]] = []
         uni_counter = 0
         for idx, key in enumerate(domain_keys):
             if key == "*":
@@ -274,14 +298,21 @@ class MiroJSONEncoder:
                 uni_counter += 1
 
         domain_keys = rename_duplicates(domain_keys)
-        for column, column_type in zip(domain_keys, types, strict=False):
+        for idx, (column, column_type) in enumerate(
+            zip(domain_keys, types, strict=False)
+        ):
             try:
                 elem = self.container._data[column]
                 alias = elem.description if elem.description else column
             except KeyError:
                 alias = symbol.name if column == "value" else column
 
-            domain_values.append({"type": column_type, "alias": alias})
+            header: dict[str, str | bool] = {"type": column_type, "alias": alias}
+            if idx < num_domain_columns:
+                header["domain"] = domains[idx]
+                header["domainDefining"] = forwardings[idx]
+
+            domain_values.append(header)
 
         return dict(zip(domain_keys, domain_values, strict=False))
 

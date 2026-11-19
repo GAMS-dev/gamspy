@@ -1,0 +1,1 @@
+Added domain info to GAMS MIRO contract.
