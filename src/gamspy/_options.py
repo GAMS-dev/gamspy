@@ -106,11 +106,14 @@ MODEL_ATTR_OPTION_MAP = {
     "absolute_optimality_gap": "optca",
     "relative_optimality_gap": "optcr",
     "time_limit": "reslim",
+    "projection_tolerance": "tolProj",
     "savepoint": "savepoint",
     "merge_strategy": "solveopt",
     "report_solver_status": "sysout",
     "threads": "threads",
 }
+# Model attributes that do not revert to their default with NA.
+MODEL_ATTR_RESET_VALUES = {"projection_tolerance": "0"}
 EXECUTION_OPTIONS = {"loadpoint": "execute_loadpoint"}
 
 # Model attribute options that may not be set as Container defaults; they must
@@ -128,6 +131,7 @@ CONTAINER_FORBIDDEN_OPTIONS = (
     "try_partial_integer_solution",
     "examine_linearity",
     "bypass_solver",
+    "projection_tolerance",
 )
 
 
@@ -296,6 +300,8 @@ class Options(BaseModel):
         Write profile information to this file
     profile_tolerance: float | None
         Minimum time a statement must use to appear in profile generated output
+    projection_tolerance: float | None
+        Tolerance for setting solution values to a nearby bound when reading a solution.
     reference_file: str | None
         Symbol reference file
     time_limit: float | None
@@ -419,6 +425,7 @@ class Options(BaseModel):
     profile: int | None = None
     profile_file: str | None = None
     profile_tolerance: float | None = None
+    projection_tolerance: float | None = None
     reference_file: str | None = None
     time_limit: float | None = None
     savepoint: Literal[0, 1, 2, 3, 4] | None = None
