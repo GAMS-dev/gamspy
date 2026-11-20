@@ -37,6 +37,7 @@ class Workspace:
     def __init__(
         self,
         debugging_level: str,
+        system_directory: str,
         working_directory: str | Path | None = None,
     ) -> None:
         if isinstance(working_directory, Path):
@@ -45,6 +46,7 @@ class Workspace:
         validate_arguments(working_directory, debugging_level)
 
         self.debugging_level = debugging_level
+        self.system_directory = system_directory
         self.using_tmp_working_dir = False
         self._errors: list[str] = []
 

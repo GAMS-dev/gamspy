@@ -431,7 +431,7 @@ class FrozenModel:
                     self.sync_db.gmd,
                     modifier.gams_symbol.sym_ptr,
                     modifier.update_action,
-                    modifier.data_symbol.sym_ptr,  # ty: ignore[unresolved-attribute]
+                    modifier.data_symbol.sym_ptr,  # ty: ignore[missing-union-attribute]
                     update_type,
                     no_match_cnt,
                 )

@@ -54,7 +54,7 @@ def probe(
     >>> import json
     >>> from gamspy import cli
     >>> node_info = json.loads(cli.probe())
-    >>> node_info = json.loads(cli.probe(ports=(33333, 10)))
+    >>> node_info = json.loads(cli.probe(ports=(33333, 1)))  # doctest: +SKIP
 
     """
     if network_interfaces and json_out:

@@ -726,7 +726,7 @@ Choosing a Formulation
      - Discrete variables
      - Suitable graphs
    * - Interval
-     - One position and one selector for each finite segment
+     - One nonnegative distance from the left endpoint and one selector for each finite segment
      - Approximately one binary variable per selectable unit
      - All supported graph features, including overlapping chains
    * - Convexity

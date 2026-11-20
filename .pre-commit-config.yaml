@@ -9,14 +9,14 @@ repos:
     -   id: check-ast
     -   id: check-case-conflict
 -   repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.101
+    rev: v0.0.107
     hooks:
     -   id: ty
         entry: uv run --active ty check src
         language: python
         pass_filenames: false
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.4
+    rev: v0.17.6
     hooks:
     # Run the linter.
     -   id: ruff-check
@@ -24,10 +24,10 @@ repos:
     # Run the formatter.
     -   id: ruff-format
 -   repo: https://github.com/betterleaks/betterleaks
-    rev: v1.10.0
+    rev: v2.0.0-rc.9
     hooks:
     -   id: betterleaks
-        entry: betterleaks dir --config .betterleaks.toml --no-banner --redact --verbose
+        entry: betterleaks fs --config .betterleaks.toml --no-banner --redact
         pass_filenames: true
 -   repo: local
     hooks:

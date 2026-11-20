@@ -812,7 +812,7 @@ class DataSymbol(BaseSymbol):
             if self._drop_domain_violations:
                 violations = self.findDomainViolations()
                 if violations is not None and not violations.empty:
-                    self._records = self._records.drop(  # ty: ignore[unresolved-attribute]
+                    self._records = self._records.drop(  # ty: ignore[missing-union-attribute]
                         index=violations.index
                     ).reset_index(drop=True)
             return

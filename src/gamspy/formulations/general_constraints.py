@@ -56,7 +56,7 @@ def _validate_big_m(
         raise ValidationError(f"{name} cannot be an inequality or equality")
 
     if isinstance(big_m, Operable):
-        if not _domain_names(big_m.domain) <= controlled:  # ty: ignore[unresolved-attribute]
+        if not _domain_names(big_m.domain) <= controlled:  # ty: ignore[missing-attribute]
             raise ValidationError(
                 f"The domain of {name} must be a subset of the domain of the constraint"
             )
@@ -159,7 +159,7 @@ def _indicator_positions(
         dimension = _dimension(set_)
         offsets.setdefault(_domain_name(set_), range(position, position + dimension))
         if dimension > 1:
-            for offset, component in enumerate(set_.domain):  # ty: ignore[unresolved-attribute]
+            for offset, component in enumerate(set_.domain):  # ty: ignore[missing-union-attribute]
                 offsets.setdefault(
                     _domain_name(component),
                     range(position + offset, position + offset + 1),

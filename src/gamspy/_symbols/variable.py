@@ -345,7 +345,7 @@ class Variable(operable.Operable, VarEquSymbol):
         """
         from gamspy.math.matrix import _transpose
 
-        return _transpose(self, "Variable")  # ty: ignore[invalid-return-type]
+        return _transpose(self, "Variable")  # ty: ignore[invalid-explicit-return]
 
     @property
     def l(self) -> ImplicitParameter:

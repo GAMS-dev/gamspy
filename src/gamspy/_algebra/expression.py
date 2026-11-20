@@ -122,7 +122,7 @@ def split_assignment(declaration: str) -> tuple[str, str, str]:
 
 def get_operand_gams_repr(operand: object) -> str:
     if hasattr(operand, "gamsRepr"):
-        return operand.gamsRepr()  # ty: ignore[call-non-callable]
+        return operand.gamsRepr()  # ty: ignore[not-callable]
 
     representation = str(operand)
 
@@ -200,7 +200,7 @@ def math_operand(operand: object, notation: Notation) -> tuple[str, float, bool]
         return operand._math_repr(notation), CONDITION_PRECEDENCE, False
 
     if hasattr(operand, "_math_repr"):
-        return operand._math_repr(notation), LEAF_PRECEDENCE, False  # ty: ignore[call-non-callable]
+        return operand._math_repr(notation), LEAF_PRECEDENCE, False  # ty: ignore[not-callable]
 
     return str(operand), LEAF_PRECEDENCE, False
 
@@ -474,11 +474,11 @@ def find_symbols(root_node: object) -> Iterator[str]:
 
             stack.extend(
                 elem
-                for elem in node.domain  # ty: ignore[unresolved-attribute]
+                for elem in node.domain  # ty: ignore[missing-attribute]
                 if not isinstance(elem, str) and elem.name != node.name
             )
         elif isinstance(node, ImplicitSymbol):
-            stack.append(node.parent)  # ty: ignore[unresolved-attribute]
+            stack.append(node.parent)  # ty: ignore[missing-attribute]
             stack.extend(node.domain)
         else:
             stack.extend(child for child, _ in _describe_graph_node(node)[2])
@@ -623,7 +623,7 @@ class Expression(operable.Operable):
         elif isinstance(left, domain.Domain):
             left_domain = left.sets
         else:
-            left_domain = left.domain  # ty: ignore[unresolved-attribute]
+            left_domain = left.domain  # ty: ignore[missing-union-attribute]
 
         right = self.right
         if isinstance(right, condition.Condition):
@@ -634,7 +634,7 @@ class Expression(operable.Operable):
         elif isinstance(right, domain.Domain):
             right_domain = right.sets
         else:
-            right_domain = right.domain  # ty: ignore[unresolved-attribute]
+            right_domain = right.domain  # ty: ignore[missing-union-attribute]
 
         self._left_domain = left_domain
         self._right_domain = right_domain
@@ -1077,7 +1077,7 @@ class ShiftExpression(Expression):
     @property
     def jump(self) -> OperableType:
         """Number of positions the parent set is shifted by."""
-        return self.right  # ty: ignore[invalid-return-type]
+        return self.right  # ty: ignore[invalid-explicit-return]
 
     @property
     def is_circular(self) -> bool:

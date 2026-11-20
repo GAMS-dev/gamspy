@@ -210,7 +210,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         """
         from gamspy.math.matrix import _transpose
 
-        return _transpose(self, "Variable")  # ty: ignore[invalid-return-type]
+        return _transpose(self, "Variable")  # ty: ignore[invalid-explicit-return]
 
     @property
     def records(self) -> pd.DataFrame | None:

@@ -1112,7 +1112,7 @@ def test_timing():
     reason="Darwin runners are not dockerized yet.",
 )
 def test_database():
-    ws = Workspace(debugging_level="delete")
+    ws = Workspace(debugging_level="delete", system_directory=gamspy_base.directory)
     database = Database(ws)
     set = database.add_set("i", 1)
     assert isinstance(set, GamsSet)

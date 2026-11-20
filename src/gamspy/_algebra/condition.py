@@ -115,12 +115,14 @@ class Condition(operable.Operable):
             raise FatalError("Cannot determine the container of the expression!")
 
         # conditioning_on.where[condition] = rhs
-        eq_types = (syms.Equation, implicits.ImplicitEquation)
+        if isinstance(self.conditioning_on, syms.Equation):
+            self.conditioning_on = self.conditioning_on[...]
+
         right_operand, op_type = sparse._unwrap(rhs)
         if isinstance(right_operand, bool):
             right_operand = "yes" if right_operand is True else "no"
 
-        if isinstance(self.conditioning_on, eq_types):
+        if isinstance(self.conditioning_on, implicits.ImplicitEquation):
             if op_type == sparse.SPARSE:
                 raise ValidationError(
                     "`sparse` cannot be used in an equation definition because GAMS "
@@ -143,10 +145,10 @@ class Condition(operable.Operable):
             if isinstance(self.conditioning_on, implicits.ImplicitEquation):
                 self.conditioning_on.parent._definition = statement
             else:
-                self.conditioning_on.parent._assignment = statement  # ty: ignore[unresolved-attribute]
+                self.conditioning_on.parent._assignment = statement  # ty: ignore[missing-union-attribute]
 
             self.conditioning_on.container._synch_with_gams()
-            self.conditioning_on.parent._should_load_from = DataSource.GAMS  # ty: ignore[unresolved-attribute]
+            self.conditioning_on.parent._should_load_from = DataSource.GAMS  # ty: ignore[missing-union-attribute]
 
         elif isinstance(self.conditioning_on, syms.Alias):
             self.conditioning_on._assignment = statement
@@ -154,7 +156,7 @@ class Condition(operable.Operable):
             self.conditioning_on.alias_with._should_load_from = DataSource.GAMS
         elif isinstance(
             self.conditioning_on,
-            (syms.Set, syms.Parameter, syms.Variable, syms.Equation),
+            (syms.Set, syms.Parameter, syms.Variable),
         ):
             self.conditioning_on._assignment = statement
             self.conditioning_on.container._synch_with_gams()

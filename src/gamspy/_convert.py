@@ -367,7 +367,7 @@ def get_symbols(model: Model) -> list[str]:
 
     if model._matches:
         for equation in model._matches:
-            symbols = expression.find_symbols(equation._definition)  # ty: ignore[unresolved-attribute]
+            symbols = expression.find_symbols(equation._definition)  # ty: ignore[missing-union-attribute]
             for symbol in symbols:
                 if symbol not in all_symbols:
                     all_symbols.append(symbol)

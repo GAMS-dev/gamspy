@@ -20,7 +20,6 @@ import pandas as pd
 import pytest
 
 import gamspy as gp
-import gamspy.utils as utils
 from gamspy import (
     Alias,
     Container,
@@ -264,6 +263,16 @@ def test_str(transport):
     assert (
         str(m) == f"<Container ({hex(id(m))}) with {len(m)} symbols: {m.data.keys()}>"
     )
+
+
+@pytest.mark.unit
+def test_ipython_key_completions():
+    m = Container()
+    assert m._ipython_key_completions_() == []
+
+    _ = Set(m, "i")
+    _ = Parameter(m, "Demand")
+    assert m._ipython_key_completions_() == ["i", "Demand"]
 
 
 @pytest.mark.unit
@@ -595,7 +604,7 @@ def test_system_directory():
         )
 
         assert (
-            Path(utils._get_gamspy_base_directory().lower()).resolve()
+            Path(gamspy_base.directory.lower()).resolve()
             == Path(expected_path.lower()).resolve()
         )
     else:

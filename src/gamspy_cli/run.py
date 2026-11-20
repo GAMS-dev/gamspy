@@ -105,7 +105,7 @@ def run_miro(
     subprocess_env["MIRO_USE_TMP"] = "false"
     subprocess_env["PYTHON_EXEC_PATH"] = sys.executable
 
-    subprocess.run([miro_path], env=subprocess_env, check=True)
+    subprocess.run([miro_path, "--log-level=3"], env=subprocess_env, check=True)
 
 
 @app.command(

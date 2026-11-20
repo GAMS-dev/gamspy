@@ -76,7 +76,16 @@ class Operation(operable.Operable):
         self.container = self.raw_domain[0].container
         self.domain: list[Set | Alias] = []
 
-        self._operation_indices = []
+        controlled = list(self._bare_op_domain)
+        for elem in self._bare_op_domain:
+            if isinstance(elem, implicits.ImplicitSet):
+                controlled += [
+                    member
+                    for member in elem.domain
+                    if isinstance(member, (syms.Set, syms.Alias))
+                ]
+
+        self._operation_indices: list[tuple[int, Set | Alias | ImplicitSet]] = []
         if isinstance(rhs, condition.Condition):
             rhs = rhs.conditioning_on  # ty: ignore[invalid-assignment]
 
@@ -85,18 +94,14 @@ class Operation(operable.Operable):
                 if isinstance(x, expression.ShiftExpression):
                     x = x.parent
 
-                sum_index = -1
-                for idx, elem in enumerate(self._bare_op_domain):
-                    if elem is x:
-                        sum_index = idx
-
-                if sum_index == -1:
+                controlling = next((elem for elem in controlled if elem is x), None)
+                if controlling is None:
                     self.domain.append(x)  # ty: ignore[invalid-argument-type]
                 else:
-                    self._operation_indices.append((i, sum_index))
+                    self._operation_indices.append((i, controlling))
 
         self.dimension: int = validation.get_dimension(self.domain)
-        controlled_domain = list(self._bare_op_domain)
+        controlled_domain = controlled
         controlled_domain.extend(getattr(rhs, "controlled_domain", []))
         self.controlled_domain = list(set(controlled_domain))
 
@@ -105,8 +110,8 @@ class Operation(operable.Operable):
 
     def __getitem__(self, indices: Sequence | str) -> Operation:
         domain = validation.validate_domain(self, indices)
-        for index, sum_index in self._operation_indices:
-            domain.insert(index, self._bare_op_domain[sum_index])
+        for index, controlling in self._operation_indices:
+            domain.insert(index, controlling)
 
         if isinstance(self.rhs, (bool, float, int)):
             return Operation(self.op_domain, self.rhs, self._op_name)

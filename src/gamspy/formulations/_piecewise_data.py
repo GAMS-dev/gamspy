@@ -31,6 +31,18 @@ class _PwlSegment:
     left: _PwlPoint
     right: _PwlPoint
 
+    @property
+    def width(self) -> float:
+        return self.right.x - self.left.x
+
+    @property
+    def slope(self) -> float:
+        width = self.width
+        # Isolated points and vertical jumps are segments of zero width.
+        if width == 0:
+            return 0.0
+        return (self.right.y - self.left.y) / width
+
 
 @dataclass(frozen=True)
 class _PwlRay:

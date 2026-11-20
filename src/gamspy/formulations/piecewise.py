@@ -357,36 +357,6 @@ def _generate_ray(
     return x_var, b_var, list(eqs.values())
 
 
-def _get_interval_segment_data(
-    row: _PwlRow,
-) -> list[tuple[str, float, float, float, float]]:
-    """
-    Prepare (slot, lower x, upper x, slope, offset) records for Interval builders.
-    """
-    segment_data = []
-    for index, segment in enumerate(row.segments):
-        if segment.left.x == segment.right.x:
-            slope = 0.0
-            offset = segment.left.y
-        else:
-            slope = (segment.right.y - segment.left.y) / (
-                segment.right.x - segment.left.x
-            )
-            offset = segment.left.y - slope * segment.left.x
-
-        segment_data.append(
-            (
-                str(index),
-                segment.left.x,
-                segment.right.x,
-                slope,
-                offset,
-            )
-        )
-
-    return segment_data
-
-
 def _get_dlog_segment_data(
     row: _PwlRow,
 ) -> list[tuple[str, float, float, float, float]]:
@@ -494,37 +464,37 @@ def _build_scalar_interval_formulation(
     x_term = gp.Number(0)
     y_term = gp.Number(0)
 
+    # 1. Prepare the finite segments
     if row.segments:
-        segment_data = _get_interval_segment_data(row)
+        segment_data = [
+            (str(index), segment) for index, segment in enumerate(row.segments)
+        ]
 
         J = gp.math._generate_dims(m, [len(row.segments)])[0]
         lowerbounds = m.addParameter(
-            domain=J, records=[(key, lower) for key, lower, _, _, _ in segment_data]
+            domain=J, records=[(key, segment.left.x) for key, segment in segment_data]
         )
-        upperbounds = m.addParameter(
-            domain=J, records=[(key, upper) for key, _, upper, _, _ in segment_data]
+        widths = m.addParameter(
+            domain=J, records=[(key, segment.width) for key, segment in segment_data]
         )
         slopes = m.addParameter(
-            domain=J, records=[(key, slope) for key, _, _, slope, _ in segment_data]
+            domain=J, records=[(key, segment.slope) for key, segment in segment_data]
         )
-        offsets = m.addParameter(
-            domain=J, records=[(key, offset) for key, _, _, _, offset in segment_data]
+        left_y = m.addParameter(
+            domain=J, records=[(key, segment.left.y) for key, segment in segment_data]
         )
         bin_var = m.addVariable(domain=J, type="binary")
-        segment_x = m.addVariable(domain=J)
-
-        set_segment_lowerbound = m.addEquation(domain=J)
-        set_segment_lowerbound[J] = lowerbounds * bin_var <= segment_x
-        equations.append(set_segment_lowerbound)
+        segment_distance = m.addVariable(domain=J, type="positive")
 
         set_segment_upperbound = m.addEquation(domain=J)
-        set_segment_upperbound[J] = upperbounds * bin_var >= segment_x
+        set_segment_upperbound[J] = segment_distance <= widths * bin_var
         equations.append(set_segment_upperbound)
 
         segment_selector_term = gp.Sum(J, bin_var)
-        x_term = gp.Sum(J, segment_x)
-        y_term = gp.Sum(J, segment_x * slopes) + gp.Sum(J, bin_var * offsets)
+        x_term = gp.Sum(J, lowerbounds * bin_var + segment_distance)
+        y_term = gp.Sum(J, left_y * bin_var + slopes * segment_distance)
 
+    # 2. Add the output variable and any rays
     out_y = m.addVariable()
 
     _set_pwl_output_bounds(
@@ -541,6 +511,7 @@ def _build_scalar_interval_formulation(
         x_term += active * ray.base.x + ray.direction * movement
         y_term += active * ray.base.y + ray.direction * ray.gradient * movement
 
+    # 3. Select one segment or ray and define x and y
     pick_one = m.addEquation()
     pick_one[...] = segment_selector_term + ray_selector_term == 1
     equations.append(pick_one)
@@ -564,6 +535,7 @@ def _build_indexed_interval_formulation(
     Build Interval equations for indexed inputs using normalized curve data.
     """
     m = input_x.container
+    # 1. Determine model inputs
     rows = data.rows
     input_domain = typing.cast("list[gp.Set]", list(input_x.domain))
     input_index = [*input_domain]
@@ -581,6 +553,7 @@ def _build_indexed_interval_formulation(
     x_term = gp.Number(0)
     y_term = gp.Number(0)
 
+    # 2. Make room for the segments
     # Formulation symbols are rectangular; active_segments removes padded slots
     # for rows with fewer segments.
     max_segments = max(len(row.segments) for row in rows)
@@ -594,50 +567,44 @@ def _build_indexed_interval_formulation(
         segment_index = [*input_domain, J]
         segment_data_index = [*curve_domain, J]
 
+        # 3. Create segment data and variables
         active_records = []
         lowerbound_records = []
-        upperbound_records = []
+        width_records = []
         slope_records = []
-        offset_records = []
+        left_y_records = []
         for row in rows:
             prefix = row.key
-            for slot, lower, upper, slope, offset in _get_interval_segment_data(row):
+            for index, segment in enumerate(row.segments):
+                slot = str(index)
                 active_records.append((*prefix, slot))
-                lowerbound_records.append((*prefix, slot, lower))
-                upperbound_records.append((*prefix, slot, upper))
-                slope_records.append((*prefix, slot, slope))
-                offset_records.append((*prefix, slot, offset))
+                lowerbound_records.append((*prefix, slot, segment.left.x))
+                width_records.append((*prefix, slot, segment.width))
+                slope_records.append((*prefix, slot, segment.slope))
+                left_y_records.append((*prefix, slot, segment.left.y))
 
         active_segments = m.addSet(domain=segment_data_domain, records=active_records)
         lowerbounds = m.addParameter(
             domain=segment_data_domain, records=lowerbound_records
         )
-        upperbounds = m.addParameter(
-            domain=segment_data_domain, records=upperbound_records
-        )
+        widths = m.addParameter(domain=segment_data_domain, records=width_records)
         slopes = m.addParameter(domain=segment_data_domain, records=slope_records)
-        offsets = m.addParameter(domain=segment_data_domain, records=offset_records)
+        left_y = m.addParameter(domain=segment_data_domain, records=left_y_records)
         bin_var = m.addVariable(domain=segment_domain, type="binary")
-        segment_x = m.addVariable(domain=segment_domain)
+        segment_distance = m.addVariable(domain=segment_domain, type="positive")
 
+        # 4. Generate segment equations
         segment_exists = active_segments[segment_data_index]
         segment_condition = _and_condition(input_condition, segment_exists)
         inactive_segments = _and_condition(input_condition, ~segment_exists)
         # Fix unused rectangular slots so they cannot affect the model.
         bin_var.fx[segment_index].where[inactive_segments] = 0
-        segment_x.fx[segment_index].where[inactive_segments] = 0
-
-        set_segment_lowerbound = m.addEquation(domain=segment_domain)
-        set_segment_lowerbound[segment_index].where[segment_condition] = (
-            lowerbounds[segment_data_index] * bin_var[segment_index]
-            <= segment_x[segment_index]
-        )
-        equations.append(set_segment_lowerbound)
+        segment_distance.fx[segment_index].where[inactive_segments] = 0
 
         set_segment_upperbound = m.addEquation(domain=segment_domain)
         set_segment_upperbound[segment_index].where[segment_condition] = (
-            upperbounds[segment_data_index] * bin_var[segment_index]
-            >= segment_x[segment_index]
+            segment_distance[segment_index]
+            <= widths[segment_data_index] * bin_var[segment_index]
         )
         equations.append(set_segment_upperbound)
 
@@ -647,17 +614,22 @@ def _build_indexed_interval_formulation(
         )
         x_term = gp.Sum(
             J,
-            active_segments[segment_data_index] * segment_x[segment_index],
+            active_segments[segment_data_index]
+            * (
+                lowerbounds[segment_data_index] * bin_var[segment_index]
+                + segment_distance[segment_index]
+            ),
         )
         y_term = gp.Sum(
             J,
             active_segments[segment_data_index]
             * (
-                segment_x[segment_index] * slopes[segment_data_index]
-                + bin_var[segment_index] * offsets[segment_data_index]
+                left_y[segment_data_index] * bin_var[segment_index]
+                + slopes[segment_data_index] * segment_distance[segment_index]
             ),
         )
 
+    # 5. Create y and add any rays
     out_y = m.addVariable(domain=input_domain)
     _set_pwl_output_bounds(
         out_y,
@@ -734,6 +706,7 @@ def _build_indexed_interval_formulation(
             ),
         )
 
+    # 6. Connect the expressions to the model
     pick_one = m.addEquation(domain=input_domain)
     _define(
         pick_one,
@@ -787,17 +760,19 @@ def pwl_interval_formulation(
     Here is the interval formulation:
 
     .. math::
-        \\lambda_i \\geq b_i * LB_i \\quad \\forall{i}
-
-        \\lambda_i \\leq b_i * UB_i \\quad \\forall{i}
+        0 \\leq \\lambda_i \\leq (UB_i - LB_i) b_i \\quad \\forall{i}
 
         \\sum_{i}{b_i} = 1
 
-        x = \\sum_{i}{\\lambda_i}
+        x = \\sum_{i}{(LB_i b_i + \\lambda_i)}
 
-        y = \\sum_{i}{(\\lambda_i * slope_i) + (b_i * offset_i) }
+        y = \\sum_{i}{(YL_i b_i + slope_i \\lambda_i)}
 
         b_i \\in \\{0, 1\\} \\quad \\forall{i}
+
+    Here ``lambda_i`` is the distance from segment i's left endpoint, and ``YL_i``
+    is the y-value at that endpoint. The variable bound supplies ``lambda_i >= 0``,
+    so each finite segment requires only its upper-bound equation.
 
     Repeated x-coordinates describe discontinuities, matching `None` values
     exclude the range between two chains, and a decrease in x starts an

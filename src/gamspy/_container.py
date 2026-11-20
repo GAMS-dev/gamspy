@@ -289,7 +289,9 @@ class Container:
         )
 
         self._debugging_level = debugging_level
-        self._workspace = Workspace(debugging_level, working_directory)
+        self._workspace = Workspace(
+            debugging_level, system_directory, working_directory
+        )
         self._working_directory = self._workspace.working_directory
         self._process_directory = tempfile.mkdtemp(dir=self.working_directory)
 
@@ -376,6 +378,9 @@ class Container:
             if matches:
                 error_message += f" Did you mean `{matches[0]}`?"
             raise KeyError(error_message) from e
+
+    def _ipython_key_completions_(self) -> list[str]:
+        return self.listSymbols()
 
     def __iter__(self) -> Iterator[tuple[str, SymbolType]]:
         return iter(self._data.items())
@@ -1796,9 +1801,9 @@ class Container:
 
                 if any(
                     isinstance(domobj, AnyContainerDomainSymbol)
-                    for domobj in symobj.domain  # ty: ignore[unresolved-attribute]
+                    for domobj in symobj.domain  # ty: ignore[missing-attribute]
                 ):
-                    link_domains.append((gamspy_name, symobj.domain_names))  # ty: ignore[unresolved-attribute]
+                    link_domains.append((gamspy_name, symobj.domain_names))  # ty: ignore[missing-attribute]
 
                 if isinstance(symobj, gt.Set):
                     symbol = gp.Set._constructor_bypass(

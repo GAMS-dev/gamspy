@@ -69,7 +69,7 @@ GAMS_STATUS = {
 def _read_output(process: subprocess.Popen, output: TextIO | None) -> None:
     if output is not None:
         while True:
-            data = process.stdout.readline()  # ty: ignore[unresolved-attribute]
+            data = process.stdout.readline()  # ty: ignore[missing-union-attribute]
             if not data:
                 raise FatalError(
                     "The GAMS process terminated unexpectedly with return code"
@@ -174,13 +174,13 @@ class SocketEngine(ExecutionEngine):
             env=env,
         )
 
-        port_info = process.stdout.readline().strip()  # ty: ignore[unresolved-attribute]
+        port_info = process.stdout.readline().strip()  # ty: ignore[missing-union-attribute]
 
         try:
             port = int(port_info.removeprefix("port: "))
         except ValueError as e:  # pragma: no cover
             raise ValidationError(
-                f"Error while reading the port! {port_info + process.stdout.read()}"  # ty: ignore[unresolved-attribute]
+                f"Error while reading the port! {port_info + process.stdout.read()}"  # ty: ignore[missing-union-attribute]
             ) from e
 
         def handler(signum: int, frame: FrameType | None) -> None:  # pragma: no cover

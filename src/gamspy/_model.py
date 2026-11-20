@@ -33,6 +33,7 @@ from gamspy._convert import (
     UnicodeConverter,
     get_convert_solver_options,
 )
+from gamspy._feasibility_relaxation import relax
 from gamspy._frozen_model import FrozenModel
 from gamspy._internals import ATTR_PREFIX, MODEL_ATTRIBUTE_MAP, DataSource
 from gamspy._miro import IS_MIRO_INIT
@@ -42,6 +43,7 @@ from gamspy._options import (
     EXECUTION_OPTIONS,
     INDICATOR_SOLVERS,
     MODEL_ATTR_OPTION_MAP,
+    MODEL_ATTR_RESET_VALUES,
     ConvertOptions,
     FreezeOptions,
     Options,
@@ -63,6 +65,7 @@ if TYPE_CHECKING:
     from gamspy._backend.backend import SolveHandle
     from gamspy._backend.engine import EngineClient
     from gamspy._backend.neos import NeosClient
+    from gamspy._feasibility_relaxation import FeasibilityRelaxation
     from gamspy._guss import GUSSScenarioDict
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
     from gamspy._types import SymbolType
@@ -1217,7 +1220,8 @@ class Model:
         for key, attr_name in MODEL_ATTR_OPTION_MAP.items():
             value = dumped.get(key)
             if value is None:
-                self.container._add_statement(f"{self.name}.{attr_name} = NA;")
+                reset = MODEL_ATTR_RESET_VALUES.get(key, "NA")
+                self.container._add_statement(f"{self.name}.{attr_name} = {reset};")
             else:
                 self.container._add_statement(
                     f"{self.name}.{attr_name} = {_format_model_attr_value(key, value)};"
@@ -1371,6 +1375,92 @@ class Model:
                     infeas_dict[variable.name] = infeas_rows
 
         return infeas_dict
+
+    def feasibilityRelaxation(
+        self,
+        equations: Sequence[Equation] | None = None,
+        weights: dict[Equation, int | float | Parameter] | None = None,
+        measure: Literal["sum", "squares", "count"] = "sum",
+        big_m: int | float | dict[Equation, int | float | Parameter] | None = None,
+    ) -> FeasibilityRelaxation:
+        """
+        Creates a relaxation of the model in which the given equations may be
+        violated. Each relaxed equation gets a positive slack variable over its
+        domain, or two for an equality, and the relaxed model minimizes the
+        weighted sum of the slacks.
+        The original model is not modified.
+
+        :meth:`FeasibilityRelaxation.solve <gamspy.FeasibilityRelaxation.solve>`
+        finds the best solution among the solutions with minimal violation, and
+        :meth:`FeasibilityRelaxation.violations <gamspy.FeasibilityRelaxation.violations>`
+        returns the violated rows.
+
+        Parameters
+        ----------
+        equations : Sequence[Equation], optional
+            Equations to relax. All equations of the model by default. Equations
+            that only define a free variable, e.g. ``cost == Sum(i, c[i] * x[i])``,
+            cannot cause infeasibility and should be left out; otherwise the
+            relaxation can violate them instead of the equations that actually
+            conflict.
+        weights : dict[Equation, int | float | Parameter], optional
+            Weight of the violation of each equation. A Parameter must have the
+            same domain as its equation. The default weight is 1.
+        measure : Literal["sum", "squares", "count"], optional
+            How the violation is measured. ``"sum"`` sums the slacks, ``"squares"``
+            sums their squares, which turns LP and MIP models into QCP and MIQCP
+            models, and ``"count"`` counts the violated equations with a binary
+            variable per equation, which turns continuous models into mixed
+            integer models. By default "sum".
+        big_m : int | float | dict[Equation, int | float | Parameter], optional
+            Only for ``count``. Upper bound on the violation of a row, i.e. on
+            its slack or on the sum of its two slacks. A number applies to every
+            relaxed equation, a dictionary to the given equations. A Parameter
+            must have the same domain as its equation. Without a big-M, the
+            binary variable of a row is linked to its slacks with SOS1
+            variables, which needs no bounds but is not supported by every
+            solver, e.g. BARON and KNITRO. With a big-M, the link is the linear
+            constraint ``slack <= big_m * violated``, which works with every
+            MIP and MINLP solver and usually gives a tighter relaxation. A
+            big-M that is smaller than the actual violation cuts off solutions
+            and overstates the count. By default None.
+
+        Returns
+        -------
+        FeasibilityRelaxation
+
+        Raises
+        ------
+        ValidationError
+            If an equation is not in the model, has no definition, is a native
+            indicator, or is of a type that cannot be relaxed, if ``count``
+            is used with a relaxed problem type such as RMIP, or if ``big_m``
+            is given for another measure.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, records=["seattle", "san-diego"])
+        >>> j = gp.Set(m, records=["new-york", "chicago", "topeka"])
+        >>> a = gp.Parameter(m, domain=i, records=[("seattle", 350), ("san-diego", 600)])
+        >>> b = gp.Parameter(m, domain=j, records=[("new-york", 400), ("chicago", 300), ("topeka", 300)])
+        >>> c = gp.Parameter(m, domain=[i, j], records=[("seattle", "new-york", 2.5), ("seattle", "chicago", 1.7), ("seattle", "topeka", 1.8), ("san-diego", "new-york", 2.5), ("san-diego", "chicago", 1.8), ("san-diego", "topeka", 1.4)])
+        >>> x = gp.Variable(m, domain=[i, j], type="positive")
+        >>> supply = gp.Equation(m, domain=i)
+        >>> supply[i] = gp.Sum(j, x[i, j]) <= a[i]
+        >>> demand = gp.Equation(m, domain=j)
+        >>> demand[j] = gp.Sum(i, x[i, j]) >= b[j]
+        >>> transport = gp.Model(m, equations=[supply, demand], problem="LP", sense="min", objective=gp.Sum((i, j), c[i, j] * x[i, j]))
+        >>> relax = transport.feasibilityRelaxation(equations=[demand])
+        >>> summary = relax.solve()
+        >>> relax.violation.toList()
+        [50.0]
+        >>> relax.violations()["demand"].values.tolist()
+        [['new-york', -50.0]]
+
+        """
+        return relax(self, equations, weights, measure, big_m)
 
     def convert(
         self,
@@ -2145,7 +2235,7 @@ class Model:
             if freeze_options is not None:
                 instance_options = freeze_options
 
-            summary = self._frozen_model.solve(  # ty: ignore[unresolved-attribute]
+            summary = self._frozen_model.solve(  # ty: ignore[missing-union-attribute]
                 solver, instance_options, solver_options, output
             )
             return summary

@@ -235,6 +235,32 @@ def test_indicator_subset(big_m):
         assert len(eq.records) == 4
 
 
+@pytest.mark.parametrize("big_m", [None, 100])
+def test_indicator_sum_over_subset(big_m):
+    # Sum(ij[i, j], ...) controls i and j, so the constraint is scalar
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["a", "b"])
+    j = gp.Set(m, name="j", records=["1", "2"])
+    ij = gp.Set(m, name="ij", domain=[i, j], records=[("a", "1"), ("b", "2")])
+    y = gp.Variable(m, name="y", domain=[i, j], type="positive")
+    b = gp.Variable(m, name="b", type="binary")
+    b.fx[...] = 1
+
+    res = indicator(b, 1, gp.Sum(ij[i, j], y[i, j]) <= 1, big_m=big_m)
+    for eq in res.equations_created.values():
+        assert eq.domain == []
+
+    model = gp.Model(
+        m,
+        equations=list(res.equations_created.values()),
+        problem="mip",
+        sense="max",
+        objective=gp.Sum(ij[i, j], y[i, j]),
+    )
+    model.solve()
+    assert math.isclose(model.objective_value, 1)
+
+
 @pytest.mark.parametrize("kwargs", [{}, {"big_m": 100}, {"native": True}])
 def test_indicator_subset_components(kwargs):
     m = gp.Container()
@@ -1289,6 +1315,8 @@ def test_pwl_restricted_solve(fct, kwargs):
 
     assert model.status == gp.ModelStatus.OptimalGlobal
     assert np.allclose(output_y.toDense(), [[0, 6], [0, 0]])
+    if fct is pwl_interval_formulation:
+        assert model.num_equations == 6
     for equation in eqs:
         assert set(equation.records[["i", "j"]].itertuples(index=False, name=None)) == {
             ("i0", "j1")
@@ -1696,12 +1724,37 @@ def test_pwl_scalar_interval_normalized_input():
     assert output_y.domain == input_x.domain
     assert output_y.lo.toDense() == 0
     assert output_y.up.toDense() == 25
-    assert len(equations) == 5
+    assert len(equations) == 4
 
     symbols_before = list(m.data)
     with pytest.raises(ValidationError, match="domain must exactly match"):
         pwl_interval_formulation(input_x, x_points, wrong_y)
     assert list(m.data) == symbols_before
+
+
+def test_pwl_interval_negative_segment_and_point():
+    m = gp.Container()
+    input_x = gp.Variable(m, "input_x")
+    output_y, equations = pwl_interval_formulation(
+        input_x, [-5, -3, None, 0], [10, 14, None, 3]
+    )
+    model = gp.Model(
+        m,
+        equations=equations,
+        problem="mip",
+        sense="min",
+        objective=output_y,
+    )
+
+    for x_value, expected_y in [(-4, 12), (0, 3)]:
+        input_x.fx = x_value
+        model.solve()
+
+        assert model.status == gp.ModelStatus.OptimalGlobal
+        assert math.isclose(output_y.toDense(), expected_y)
+
+    # Two segment upper bounds and three PWL equations.
+    assert model.num_equations == 5
 
 
 @pytest.mark.parametrize(
@@ -1779,7 +1832,7 @@ def test_pwl_indexed_interval_normalized_input():
     assert broadcast_y.domain == input_x.domain
     assert broadcast_y.lo.toDense().tolist() == [1, 1]
     assert broadcast_y.up.toDense().tolist() == [9, 9]
-    assert len(broadcast_equations) == 5
+    assert len(broadcast_equations) == 4
 
     na = gp.SpecialValues.NA
     x_points = gp.Parameter(
@@ -1800,7 +1853,7 @@ def test_pwl_indexed_interval_normalized_input():
     assert output_y.domain == input_x.domain
     assert output_y.lo.toDense().tolist() == [0, 1]
     assert output_y.up.toDense().tolist() == [6, 9]
-    assert len(equations) == 5
+    assert len(equations) == 4
 
     symbols_before = list(m.data)
     with pytest.raises(
