@@ -1,1 +1,0 @@
-Fix equation definitions with ``where`` on the equation itself, e.g. ``e.where[c > 0] = x >= 2``: they are now stored as the definition of the equation, and indexed equations get their domain in the generated GAMS code.

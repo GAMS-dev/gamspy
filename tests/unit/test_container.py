@@ -20,7 +20,6 @@ import pandas as pd
 import pytest
 
 import gamspy as gp
-import gamspy.utils as utils
 from gamspy import (
     Alias,
     Container,
@@ -605,7 +604,7 @@ def test_system_directory():
         )
 
         assert (
-            Path(utils._get_gamspy_base_directory().lower()).resolve()
+            Path(gamspy_base.directory.lower()).resolve()
             == Path(expected_path.lower()).resolve()
         )
     else:

@@ -600,24 +600,6 @@ def _filter_gams_string(raw_string: str) -> str:
     return "\n".join(filtered_lines)
 
 
-def _get_gamspy_base_directory() -> str:
-    """
-    Returns the gamspy_base directory.
-
-    Returns
-    -------
-    str
-        System directory
-    """
-    try:
-        import gamspy_base
-    except ModuleNotFoundError as e:  # pragma: no cover
-        e.msg = "You must first install gamspy_base to use this functionality"
-        raise e
-
-    return gamspy_base.directory
-
-
 def _get_license_path(system_directory: str) -> str:
     license_path = get_option("LICENSE_PATH")
     if license_path:

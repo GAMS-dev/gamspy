@@ -1,2 +1,0 @@
-Enhance the PWL Interval formulation by reducing the number of constraints it
-generates by using nonnegative distances from segment starts.

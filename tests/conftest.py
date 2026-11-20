@@ -13,7 +13,7 @@ from gamspy._execution import socket_engine
 
 @functools.cache
 def installed_solvers() -> frozenset[str]:
-    return frozenset(utils.getInstalledSolvers(utils._get_gamspy_base_directory()))
+    return frozenset(utils.getInstalledSolvers(gp.get_option("GAMS_SYSDIR")))
 
 
 def pytest_configure(config: pytest.Config) -> None:

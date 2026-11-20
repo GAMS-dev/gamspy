@@ -289,7 +289,9 @@ class Container:
         )
 
         self._debugging_level = debugging_level
-        self._workspace = Workspace(debugging_level, working_directory)
+        self._workspace = Workspace(
+            debugging_level, system_directory, working_directory
+        )
         self._working_directory = self._workspace.working_directory
         self._process_directory = tempfile.mkdtemp(dir=self.working_directory)
 

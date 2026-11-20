@@ -1,1 +1,0 @@
-Add ``Model.feasibilityRelaxation`` to relax equations with slack variables and find the minimal violation (sum, sum of squares or count) of an infeasible model.

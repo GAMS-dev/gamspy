@@ -24,7 +24,6 @@ from gams.core.gmd import (
     new_intp,
 )
 
-import gamspy.utils as utils
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -156,7 +155,7 @@ class Database:
         self.workspace = ws
         self.gmd = new_gmdHandle_tp()
 
-        ret = gmdCreateD(self.gmd, utils._get_gamspy_base_directory(), GMS_SSSIZE)
+        ret = gmdCreateD(self.gmd, ws.system_directory, GMS_SSSIZE)
         if not ret[0]:
             raise GamspyException(ret[1])
 

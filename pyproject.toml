@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "gamspy"
-version = "1.30.0"
+version = "1.30.1"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]

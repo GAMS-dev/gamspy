@@ -85,6 +85,7 @@ def install_license(
     """
     import json
 
+    import gamspy_base
     import requests
 
     import gamspy.utils as utils
@@ -100,7 +101,7 @@ def install_license(
             f"access code, or ensure the absolute path to your license file is correct and the file exists."
         )
 
-    gamspy_base_dir = utils._get_gamspy_base_directory()
+    gamspy_base_dir = gamspy_base.directory
     license_path = os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt")
     certificate_path = os.path.join(gamspy_base_dir, "gamslice.crt")
 
