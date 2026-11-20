@@ -895,6 +895,30 @@ def test_model_attribute_options(transport):
 
 
 @pytest.mark.unit
+def test_projection_tolerance():
+    m = Container()
+    x = Variable(m, "x", type="positive")
+    z = Variable(m, "z")
+    e = Equation(m, "e")
+    e[...] = x == 1e-3
+    f = Equation(m, "f")
+    f[...] = z == x
+    model = Model(m, "mdl", equations=[e, f], problem="LP", sense="min", objective=z)
+
+    model.solve()
+    assert x.toValue() == pytest.approx(1e-3)
+
+    model.solve(options=Options(projection_tolerance=1e-2))
+    assert x.toValue() == 0
+
+    model.solve()
+    assert x.toValue() == pytest.approx(1e-3)
+
+    with pytest.raises(exceptions.ValidationError):
+        Container(options=Options(projection_tolerance=1e-2))
+
+
+@pytest.mark.unit
 def test_scaling(transport, tmp_path):
     m = transport.container
     m = Container()

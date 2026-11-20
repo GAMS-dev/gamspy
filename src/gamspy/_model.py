@@ -43,6 +43,7 @@ from gamspy._options import (
     EXECUTION_OPTIONS,
     INDICATOR_SOLVERS,
     MODEL_ATTR_OPTION_MAP,
+    MODEL_ATTR_RESET_VALUES,
     ConvertOptions,
     FreezeOptions,
     Options,
@@ -1219,7 +1220,8 @@ class Model:
         for key, attr_name in MODEL_ATTR_OPTION_MAP.items():
             value = dumped.get(key)
             if value is None:
-                self.container._add_statement(f"{self.name}.{attr_name} = NA;")
+                reset = MODEL_ATTR_RESET_VALUES.get(key, "NA")
+                self.container._add_statement(f"{self.name}.{attr_name} = {reset};")
             else:
                 self.container._add_statement(
                     f"{self.name}.{attr_name} = {_format_model_attr_value(key, value)};"
