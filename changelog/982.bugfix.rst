@@ -1,0 +1,1 @@
+Fix solution levels and marginals of zero being read as EPS after a frozen solve.
