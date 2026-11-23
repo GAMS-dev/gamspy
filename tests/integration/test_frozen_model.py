@@ -1364,3 +1364,35 @@ def test_freeze_does_not_modify_container_options():
 
     assert m._options._extra_options == {}
     assert m._options.log_file is None
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("frozen", [False, True])
+def test_signed_zero_level(frozen):
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["a", "b", "c"])
+    x = gp.Variable(m, "x", type="Positive", domain=i)
+    z = gp.Variable(m, "z", domain=i)
+    cap = gp.Equation(m, "cap", definition=gp.Sum(i, x[i]) <= 10)
+    def_z = gp.Equation(m, "def_z", domain=i)
+    def_z[i] = x[i] == z[i]
+    model = gp.Model(
+        m,
+        equations=[cap, def_z],
+        problem="LP",
+        sense="max",
+        objective=x["a"] + 0,
+    )
+    if frozen:
+        model.freeze(modifiables=[])
+    model.solve(solver="cplex")
+
+    assert z.l[i].records["level"].tolist() == [10.0]
+
+    levels = z.records["level"].tolist()
+    assert levels == [10.0, 0.0, 0.0]
+    assert not any(math.copysign(1, v) < 0 for v in levels)
+
+    used = gp.Set(m, "used", domain=i)
+    used[i] = gp.Number(1).where[z.l[i]]
+    assert used.toList() == ["a"]

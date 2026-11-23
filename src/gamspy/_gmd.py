@@ -41,6 +41,12 @@ def get_uel_list(
     return uels
 
 
+def _map_eps(values: np.ndarray) -> None:
+    # Solvers can return -0.0, which GAMSPy would otherwise read as EPS.
+    values[values == 0] = 0.0
+    values[values == gmd.GMS_SV_EPS] = SpecialValues.EPS
+
+
 def get_records(
     gams2np: Gams2Numpy,
     load_from: object,
@@ -55,7 +61,7 @@ def get_records(
     specVals = gmd.doubleArray(gmd.GMS_SVIDX_MAX)
     specVals[gmd.GMS_SVIDX_UNDEF] = SpecialValues.UNDEF
     specVals[gmd.GMS_SVIDX_NA] = SpecialValues.NA
-    specVals[gmd.GMS_SVIDX_EPS] = SpecialValues.EPS
+    specVals[gmd.GMS_SVIDX_EPS] = gmd.GMS_SV_EPS
     specVals[gmd.GMS_SVIDX_PINF] = SpecialValues.POSINF
     specVals[gmd.GMS_SVIDX_MINF] = SpecialValues.NEGINF
 
@@ -115,7 +121,8 @@ def get_records(
                 ret = gmd.gmdGetScale(load_from, recptr)
                 scale = ret[1]
 
-            vals = [level, marginal, lower, upper, scale]
+            vals = np.array([level, marginal, lower, upper, scale])
+            _map_eps(vals)
 
             records_dict[md.name] = pd.DataFrame(
                 [vals[: len(attributes)]],
@@ -141,6 +148,9 @@ def get_records(
                 raise GmdException(
                     f"Could not properly read symbol {md.name} from GMD object. "
                 ) from err
+
+            if md.type != gmd.GMS_DT_SET:
+                _map_eps(arrvals)
 
             df = convert_to_categoricals_cat(arrkeys, arrvals, unique_uels)
             assert df is not None  # symbol has records, hence keys and/or values
