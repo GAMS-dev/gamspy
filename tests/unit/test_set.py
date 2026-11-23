@@ -816,14 +816,10 @@ def test_uels_on_axes(transport):
 def test_singleton():
     m = Container()
     s = Set(m, "s", is_singleton=True)
-    s2 = Set(m, "s2", is_singleton=True)
     assert s.getDeclaration() == "Singleton Set s(*) / /;"
 
     with pytest.raises(ValidationError):
         _ = Set(m, "s3", is_singleton=True, records=["i1", "i2"])
-
-    with pytest.raises(ValidationError):
-        _ = Set(m, "s4", domain=[s, s2], is_singleton=True)
 
     node = Set(m, "node", records=range(1, 11))
     T1 = Set(m, "T1", domain=node, is_singleton=True, records=["1"])
@@ -838,6 +834,12 @@ def test_singleton():
     assert s5.toList() == ["s1"]
     s5[s5].where[False] = True
     assert s5.records is None
+
+    # Singletons can also be multidimensional as long as they have only one record.
+    x = Set(m, "x", records=range(1, 3))
+    y = Set(m, "y", records=range(1, 3))
+    source = Set(m, "source", domain=[x, y], records=[("1", "1")])
+    assert source.toList() == [("1", "1")]
 
 
 def test_indexing():
