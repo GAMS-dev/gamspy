@@ -31,7 +31,6 @@ if TYPE_CHECKING:
     from gamspy._types import (
         DomainType,
         IndexType,
-        NormalizedDomainType,
         OperableType,
         SetRecordsType,
     )
@@ -591,11 +590,7 @@ class Set(operable.Operable, DataSymbol, SetMixin):
             prefix="s",
             is_miro=is_miro_input or is_miro_output,
         )
-        self._singleton_check(
-            is_singleton,
-            records,
-            self._normalize_domain(container, domain, default=self._default_domain),
-        )
+        self._singleton_check(records, is_singleton=is_singleton)
         self._is_singleton = is_singleton
         self._gams_type = GMS_DT_SET
         self._gams_subtype = 1 if is_singleton else 0
@@ -659,19 +654,10 @@ class Set(operable.Operable, DataSymbol, SetMixin):
         return id(self)
 
     def _singleton_check(
-        self,
-        is_singleton: bool,
-        records: SetRecordsType | None,
-        domain: NormalizedDomainType,
+        self, records: SetRecordsType | None, *, is_singleton: bool
     ) -> None:
-        if is_singleton:
-            if records is not None and len(records) != 1:
-                raise ValidationError("Singleton set records size must be one.")
-
-            if len(domain) != 1:
-                raise ValidationError(
-                    f"Length of the domain of the singleton set must be 1 but found {len(domain)}"
-                )
+        if is_singleton and records is not None and len(records) != 1:
+            raise ValidationError("Singleton set records size must be one.")
 
     @property
     def _attributes(self) -> list[str]:
