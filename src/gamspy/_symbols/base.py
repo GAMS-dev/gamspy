@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 import gamspy as gp
+import gamspy._algebra.condition as condition
 import gamspy.utils as utils
 from gamspy._algorithms import generate_unique_labels
 from gamspy._categoricals import (
@@ -70,6 +71,7 @@ if TYPE_CHECKING:
         DomainType,
         NormalizedDomainType,
         RecordsSourceType,
+        SymbolType,
         VarEquRecordsType,
     )
 
@@ -166,6 +168,10 @@ class BaseSymbol(metaclass=SymbolConstructor):
 
         name = validation.validate_name(name)
         return container, name.lower() if is_miro else name
+
+    @property
+    def where(self: SymbolType) -> condition.Condition:
+        return condition.Condition(self)
 
     def __bool__(self) -> bool:
         raise ValidationError("A symbol cannot be used as a truth value.")
@@ -592,7 +598,6 @@ class DataSymbol(BaseSymbol):
         is_miro_table: bool = False,
         validate: bool = True,
     ) -> None:
-        import gamspy._algebra.condition as condition
         import gamspy._validation as validation
 
         self._container = self._container_proxy(container)
@@ -615,7 +620,6 @@ class DataSymbol(BaseSymbol):
         ) = None
         self._should_load_from = DataSource.NONE
         self._should_unload_to_gams = False
-        self.where = condition.Condition(self)
         self._set_miro_flags(
             is_miro_input=is_miro_input,
             is_miro_output=is_miro_output,

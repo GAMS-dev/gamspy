@@ -40,7 +40,10 @@ class Number(operable.Operable):
 
         self._value: int | float | str = value
         self.domain: list = []
-        self.where = condition.Condition(self)
+
+    @property
+    def where(self) -> condition.Condition:
+        return condition.Condition(self)
 
     def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "=e=", other)

@@ -47,7 +47,6 @@ class ImplicitSymbol(ABC):
         self.container = self.parent.container
         self.name = name
         self.domain = domain
-        self.where = condition.Condition(self)
 
         if permutation is not None:
             permutation = list(permutation)
@@ -62,6 +61,10 @@ class ImplicitSymbol(ABC):
         self.parent_scalar_domains = parent_scalar_domains
 
         self.fix_domain_scalars(parent_scalar_domains)
+
+    @property
+    def where(self: ImplicitSymbolType) -> condition.Condition:
+        return condition.Condition(self)
 
     def _math_name(self: ImplicitSymbolType, notation: Notation) -> str:
         return self.parent._math_name(notation)

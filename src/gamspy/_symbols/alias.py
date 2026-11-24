@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any, cast
 
 from gams.core.gdx import GMS_DT_ALIAS
 
-import gamspy._algebra.condition as condition
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
@@ -77,7 +76,6 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         obj._container._data.update({name: obj})
 
         # gamspy attributes
-        obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._metadata = {}
         obj._assignment = None
@@ -118,7 +116,6 @@ class Alias(operable.Operable, BaseSymbol, SetMixin):
         self._container._data.update({name: self})
 
         # gamspy attributes
-        self.where = condition.Condition(self)
         self._container._add_statement(self)
 
     @property

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import gc
+
 import pandas as pd
 import pytest
 
 import gamspy as gp
 import gamspy.math as gamspy_math
 from gamspy import (
+    Card,
     Container,
+    Domain,
     Equation,
     Model,
     Number,
@@ -511,3 +515,25 @@ def test_shared_relation_is_not_mutated():
     nb[i] = rel
     assert nb.getDefinition() == "nb(i) .. x(i) =n= 0;"
     assert rel.gamsRepr() == "x(i) =e= 0"
+
+
+def test_expressions_are_not_cyclic():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    p = Parameter(m, "p", domain=i)
+    q = Parameter(m, "q", domain=i)
+
+    gc.collect()
+    gc.disable()
+    try:
+        for _ in range(10):
+            p[i] = q[i] * 2 + 1
+            _ = Sum(Domain(i).where[q[i]], gamspy_math.exp(q[i]) + Ord(i) + Card(i))
+            _ = Number(1).where[q[i] > 0]
+        assert gc.collect() == 0
+    finally:
+        gc.enable()
+
+    e = q[i] * 2
+    assert e.where.conditioning_on is e
+    m.close()

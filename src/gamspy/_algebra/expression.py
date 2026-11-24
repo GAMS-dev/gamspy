@@ -604,7 +604,9 @@ class Expression(operable.Operable):
         elif hasattr(right, "container") and right.container is not None:
             self.container = right.container  # ty: ignore[invalid-assignment]
 
-        self.where = condition.Condition(self)
+    @property
+    def where(self) -> condition.Condition:
+        return condition.Condition(self)
 
     @property
     def representation(self) -> str:
