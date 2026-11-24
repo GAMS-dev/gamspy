@@ -1,0 +1,1 @@
+Reuse the parameter file of a GAMS job when its content has not changed.

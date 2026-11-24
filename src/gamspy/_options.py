@@ -694,6 +694,10 @@ class Options(BaseModel):
         pf_file : str
         output : TextIO | None, optional
         """
+        with open(pf_file, "w", encoding="utf-8") as file:
+            file.write(self._get_pf_content(output))
+
+    def _get_pf_content(self, output: TextIO | None = None) -> str:
         all_options = {}
 
         # Extra options
@@ -707,11 +711,7 @@ class Options(BaseModel):
         user_options = self._get_gams_compatible_options(output)
         all_options.update(user_options)
 
-        # Generate pf file
-        with open(pf_file, "w", encoding="utf-8") as file:
-            file.write(
-                "\n".join([f'{key} = "{value}"' for key, value in all_options.items()])
-            )
+        return "\n".join([f'{key} = "{value}"' for key, value in all_options.items()])
 
 
 class FreezeOptions(BaseModel):

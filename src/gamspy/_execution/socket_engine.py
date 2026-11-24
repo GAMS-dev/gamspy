@@ -115,6 +115,8 @@ class SocketEngine(ExecutionEngine):
         self._container_ref = weakref.ref(container)
         self._socket: socket.socket | None = None
         self._process: subprocess.Popen | None = None
+        self._pf_job: str | None = None
+        self._pf_files: dict[str, str] = {}
 
     def __deepcopy__(self, memo: dict) -> SocketEngine:
         # A copied container shares the GAMS process of the original one.
@@ -257,16 +259,29 @@ class SocketEngine(ExecutionEngine):
         if is_waking_up and not self.is_running:
             self.start()
 
-        # Write pf file
-        pf_file = job_name + ".pf"
         hidden_options = self._prepare_hidden_options(job_name, model is not None)
         options._set_hidden_options(hidden_options)
-        options._export(pf_file, output)
+        pf_file = self._get_pf_file(job_name, options._get_pf_content(output))
 
         self.send_job(job_name, pf_file, output)
 
         if is_waking_up:
             container._restart_from = None
+
+    def _get_pf_file(self, job_name: str, content: str) -> str:
+        if job_name != self._pf_job:
+            self._pf_job = job_name
+            self._pf_files = {}
+
+        pf_file = self._pf_files.get(content)
+        if pf_file is None:
+            pf_file = f"{job_name}_{len(self._pf_files)}.pf"
+            with open(pf_file, "w", encoding="utf-8") as file:
+                file.write(content)
+
+            self._pf_files[content] = pf_file
+
+        return pf_file
 
     def send_job(
         self, job_name: str, pf_file: str, output: TextIO | None = None

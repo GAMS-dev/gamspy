@@ -201,8 +201,23 @@ def test_global_options(transport):
     )
     transport.solve()
 
-    with open(os.path.join(m.working_directory, m.gamsJobName() + ".pf")) as file:
+    with open(m.gamsJobName() + "_0.pf") as file:
         assert 'lp = "conopt"' in file.read()
+
+
+@pytest.mark.unit
+def test_pf_file_reuse():
+    m = Container()
+    p = Parameter(m, "p")
+    for n in range(5):
+        p[...] = n
+        m.addGamsCode(f"scalar q{n} / {n} /;")
+
+    assert len(list(Path(m.working_directory).glob("*.pf"))) == 2
+    assert p.toValue() == 4
+    assert m["q4"].toValue() == 4
+
+    m.close()
 
 
 @pytest.mark.unit
