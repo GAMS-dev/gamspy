@@ -76,6 +76,9 @@ if TYPE_CHECKING:
     )
 
 
+_declaration_counter = itertools.count()
+
+
 @dataclass(frozen=True, slots=True)
 class DomainViolation:
     symbol: DataSymbol
@@ -559,8 +562,27 @@ class BaseSymbol(metaclass=SymbolConstructor):
 class DataSymbol(BaseSymbol):
     """Base class for Set, Parameter, Variable, and Equation."""
 
-    _should_load_from: RecordsSourceType
     _default_domain: ClassVar[Literal["*"] | None] = None
+
+    @property
+    def _should_unload_to_gams(self) -> bool:
+        return self._unload_to_gams
+
+    @_should_unload_to_gams.setter
+    def _should_unload_to_gams(self, value: bool) -> None:
+        self._unload_to_gams = value
+        if value:
+            self._container._unload_candidates[self._declaration_order] = self
+
+    @property
+    def _should_load_from(self) -> RecordsSourceType:
+        return self._load_from
+
+    @_should_load_from.setter
+    def _should_load_from(self, value: RecordsSourceType) -> None:
+        self._load_from = value
+        if not isinstance(value, DataSource):
+            self._container._unload_candidates[self._declaration_order] = self
 
     @property
     @abstractmethod
@@ -601,6 +623,7 @@ class DataSymbol(BaseSymbol):
         import gamspy._validation as validation
 
         self._container = self._container_proxy(container)
+        self._declaration_order = next(_declaration_counter)
         self.name = name
         normalized_domain = self._normalize_domain(
             container, domain, default=self._default_domain

@@ -31,7 +31,6 @@ from gamspy._categoricals import codes_and_categories, union_categories
 from gamspy._config import get_option
 from gamspy._execution import create_execution_engine
 from gamspy._extrinsic import ExtrinsicLibrary
-from gamspy._frozen_model import FrozenModel
 from gamspy._internals import (
     ATTR_PREFIX,
     EQU_TYPE,
@@ -276,6 +275,7 @@ class Container:
         self._restart_from: str | None = None
 
         self._data: CasePreservingDict[SymbolType] = CasePreservingDict()
+        self._unload_candidates: dict[int, DataSymbol] = {}
 
         self._options = validation.validate_global_options(options).model_copy()
         if self._options.license is not None:
@@ -1483,29 +1483,18 @@ class Container:
 
     def _symbols_to_unload(self) -> list[str]:
         symbol_names: list[str] = []
-        seen: set[str] = set()
+        for order in sorted(self._unload_candidates):
+            symbol = self._unload_candidates[order]
+            if self._data.get(symbol.name) is symbol:
+                # GAMS still has the values from before the frozen solve.
+                if not isinstance(symbol._should_load_from, DataSource):
+                    symbol._load_records()
 
-        # Needed to avoid attribute lookup.
-        append = symbol_names.append
-        seen_add = seen.add
+                if symbol._should_unload_to_gams:
+                    symbol_names.append(symbol.name)
+                    continue
 
-        for name, symbol in self._data.items():
-            # GAMS still has the values from before the frozen solve.
-            if isinstance(symbol._should_load_from, FrozenModel):
-                cast("DataSymbol", symbol)._load_records()
-
-            if not symbol._should_unload_to_gams:
-                continue
-
-            if type(symbol) is gp.Alias:
-                alias_name = symbol._alias_with.name
-
-                if alias_name not in seen:
-                    append(alias_name)
-                    seen_add(alias_name)
-
-            append(name)
-            seen_add(name)
+            del self._unload_candidates[order]
 
         return symbol_names
 
