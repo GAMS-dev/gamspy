@@ -8,7 +8,6 @@ from gams.core import gdx
 from gams.core.gdx import GMS_DT_ALIAS
 
 import gamspy as gp
-import gamspy._algebra.condition as condition
 import gamspy._gdx as gdxio
 from gamspy._internals import DataSource
 from gamspy._symbols.base import BaseSymbol
@@ -72,7 +71,6 @@ class UniverseAlias(BaseSymbol):
         obj._container._data.update({name: obj})
 
         # gamspy attributes
-        obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
 
         return obj
@@ -94,9 +92,6 @@ class UniverseAlias(BaseSymbol):
         self._gams_type = gdx.GMS_DT_ALIAS
         self._gams_subtype = 0
         self._container._data.update({name: self})
-
-        # gamspy attributes
-        self.where = condition.Condition(self)
 
         self._container._add_statement(self)
 

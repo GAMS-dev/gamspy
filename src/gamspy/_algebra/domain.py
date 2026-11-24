@@ -48,7 +48,10 @@ class Domain:
         self.sets = sets
         self.container = self._find_container()
         self.domain = sets
-        self.where = condition.Condition(self)
+
+    @property
+    def where(self) -> condition.Condition:
+        return condition.Condition(self)
 
     def __repr__(self) -> str:
         return f"Domain(sets={self.sets})"

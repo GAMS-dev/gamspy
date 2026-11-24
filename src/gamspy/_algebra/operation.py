@@ -105,8 +105,9 @@ class Operation(operable.Operable):
         controlled_domain.extend(getattr(rhs, "controlled_domain", []))
         self.controlled_domain = list(set(controlled_domain))
 
-        # allow conditions
-        self.where = condition.Condition(self)
+    @property
+    def where(self) -> condition.Condition:
+        return condition.Condition(self)
 
     def __getitem__(self, indices: Sequence | str) -> Operation:
         domain = validation.validate_domain(self, indices)
@@ -851,7 +852,10 @@ class Ord(operable.Operable):
         self._symbol = symbol
         self.container = symbol.container
         self.domain: list[Set | Alias] = []
-        self.where = condition.Condition(self)
+
+    @property
+    def where(self) -> condition.Condition:
+        return condition.Condition(self)
 
     def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "eq", other)
@@ -963,7 +967,10 @@ class Card(operable.Operable):
         self._symbol = symbol
         self.container = symbol.container
         self.domain: list[Set | Alias] = []
-        self.where = condition.Condition(self)
+
+    @property
+    def where(self) -> condition.Condition:
+        return condition.Condition(self)
 
     def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "eq", other)

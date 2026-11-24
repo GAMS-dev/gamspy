@@ -79,7 +79,9 @@ class MathOp(operable.Operable):
 
         self.dimension = validation.get_dimension(self.domain)
 
-        self.where = condition.Condition(self)
+    @property
+    def where(self) -> condition.Condition:
+        return condition.Condition(self)
 
     def __eq__(self, other: OperableType) -> Expression:
         return expression.Expression(self, "=e=", other)
