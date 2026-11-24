@@ -24,7 +24,7 @@ repos:
     # Run the formatter.
     -   id: ruff-format
 -   repo: https://github.com/betterleaks/betterleaks
-    rev: v2.0.0-rc.11
+    rev: v2.0.0-rc.14
     hooks:
     -   id: betterleaks
         entry: betterleaks fs --config .betterleaks.toml --no-banner --redact
