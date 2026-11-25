@@ -76,7 +76,6 @@ if TYPE_CHECKING:
         VarEquRecordsType,
     )
 
-LOOPBACK = "127.0.0.1"
 IS_MIRO_INIT = int(os.getenv("MIRO", 0))
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
@@ -1497,10 +1496,6 @@ class Container:
             del self._unload_candidates[order]
 
         return symbol_names
-
-    def _should_unload_to_gams(self, value: bool = False) -> None:
-        for symbol in self._data.values():
-            symbol._should_unload_to_gams = value
 
     def _should_load_from(
         self, symbol_names: Iterable[str], source: DataSource

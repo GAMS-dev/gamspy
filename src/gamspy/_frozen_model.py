@@ -647,25 +647,6 @@ class FrozenModel:
 
         return will_be_modified
 
-    def _prepare_hidden_options(self) -> dict:
-        scrdir = self.container._process_directory
-        hidden_options = {
-            "input": self.gms_file,
-            "output": self.lst_file,
-            "optdir": self.container.working_directory,
-            "sysdir": self.container.system_directory,
-            "scrdir": scrdir,
-            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
-            "license": self.container._license_path,
-            "solvercntr": self.solver_control_file,
-        }
-        if self.container._network_license:
-            hidden_options["netlicense"] = os.path.join(
-                self.container._process_directory, "gamslice.dat"
-            )
-
-        return hidden_options
-
     def _get_columns_to_drop(self, attr: str) -> list[str]:
         attr_map = {
             "l": "level",

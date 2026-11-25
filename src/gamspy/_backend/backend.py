@@ -111,7 +111,6 @@ class Backend(ABC):
 
         self.job_name = self.get_job_name()
         self.gms_file = self.job_name + ".gms"
-        self.lst_file = self.job_name + ".lst"
         self.pf_file = self.job_name + ".pf"
         self.restart_file = self.job_name + ".g00"
         self.symbol_names: list[str] = []
