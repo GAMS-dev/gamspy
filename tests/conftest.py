@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import pytest
 
@@ -9,6 +9,9 @@ import gamspy as gp
 import gamspy.utils as utils
 from gamspy import Container
 from gamspy._execution import socket_engine
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 @functools.cache
@@ -20,6 +23,47 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers",
         "requires_solvers(*names): skip unless every named solver is installed.",
+    )
+
+
+SELECTION_MARKERS = frozenset(
+    {
+        "unit",
+        "integration",
+        "cli",
+        "doc",
+        "engine",
+        "neos",
+        "model_library",
+        "requires_license",
+    }
+)
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_make_collect_report(
+    collector: pytest.Collector,
+) -> Generator[None, pytest.CollectReport, pytest.CollectReport]:
+    report = yield
+    if not isinstance(collector, (pytest.Module, pytest.Class)) or not report.passed:
+        return report
+
+    unmarked = [
+        node.name
+        for node in report.result
+        if isinstance(node, pytest.Item)
+        and not SELECTION_MARKERS & {marker.name for marker in node.iter_markers()}
+    ]
+    if not unmarked:
+        return report
+
+    return pytest.CollectReport(
+        collector.nodeid,
+        "failed",
+        "These tests have no selection marker, so CI never runs them. Mark them "
+        f"with one of {', '.join(sorted(SELECTION_MARKERS))}:\n  "
+        + "\n  ".join(unmarked),
+        [],
     )
 
 
