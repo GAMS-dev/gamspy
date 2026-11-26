@@ -882,6 +882,7 @@ def test_modifiable_with_domain(transport):
     assert math.isclose(mymodel.objective_value, 32.36124699832342, rel_tol=1e-6)
 
 
+@pytest.mark.integration
 def test_drop_domain_violations():
     m = Container()
     i = Set(m, "i", records=["a", "b"])

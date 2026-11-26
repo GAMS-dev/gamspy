@@ -170,18 +170,18 @@ def teardown():
         shutil.rmtree("test")
 
 
-@pytest.mark.doc
-def test_docs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    src = Path(__file__).parent.parent / "src"
-    api_files = [str(file) for file in src.rglob("*.py")]
+SRC = Path(__file__).parent.parent / "src"
 
+
+@pytest.mark.doc
+@pytest.mark.parametrize(
+    "file",
+    sorted(SRC.rglob("*.py")),
+    ids=lambda file: file.relative_to(SRC).as_posix(),
+)
+def test_docs(file: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     # The examples write files to the cwd.
     monkeypatch.chdir(tmp_path)
-    for file in api_files:
-        results = doctest.testfile(
-            file,
-            verbose=True,
-            module_relative=False,
-        )
+    results = doctest.testfile(str(file), module_relative=False)
 
-        assert results.failed == 0
+    assert results.failed == 0
