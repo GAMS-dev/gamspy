@@ -127,11 +127,11 @@ wheels = [
 
 [[package]]
 name = "babel"
-version = "2.18.0"
+version = "2.19.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/7d/b2/51899539b6ceeeb420d40ed3cd4b7a40519404f9baf3d4ac99dc413a834b/babel-2.18.0.tar.gz", hash = "sha256:b80b99a14bd085fcacfa15c9165f651fbb3406e66cc603abf11c5750937c992d", size = 9959554, upload-time = "2026-02-01T12:30:56.078Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/32/44/744169ce3677a541439bc9506ef08bd85674e9d6e3895ebe5a87ff65fb7a/babel-2.19.0.tar.gz", hash = "sha256:fddd2cbbbac7c299af3c2880be23609c331bd94f0912baca6cb0abfe054dfc27", size = 10695455, upload-time = "2026-11-24T20:14:32.427Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/77/f5/21d2de20e8b8b0408f0681956ca2c69f1320a3848ac50e6e7f39c6159675/babel-2.18.0-py3-none-any.whl", hash = "sha256:e2b422b277c2b9a9630c1d7903c2a00d0830c409c59ac8cae9081c92f1aeba35", size = 10196845, upload-time = "2026-02-01T12:30:53.445Z" },
+    { url = "https://files.pythonhosted.org/packages/71/3b/ddf4b07be846bfa361683729b5948c9c61a87fbdf09e69540d8e586bb7c5/babel-2.19.0-py3-none-any.whl", hash = "sha256:6d49734aed1d595b2c065d012174df8c83964692f26fc461702281634dd7555b", size = 10983582, upload-time = "2026-11-24T20:14:30.163Z" },
 ]
 
 [[package]]
@@ -2383,15 +2383,15 @@ wheels = [
 
 [[package]]
 name = "plotly"
-version = "7.1.0"
+version = "7.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "narwhals" },
     { name = "packaging" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/49/c3/72b369f5ed7701b04ab0ea3dcf83e9bbce71c0b3bc6f07f87568550d09ea/plotly-7.1.0.tar.gz", hash = "sha256:f860166a4a3d78c69cb1f4a15f28a5c8283eade98a282a698f3bb853a449ace5", size = 6689315, upload-time = "2026-09-15T19:21:21.75Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/40/23/ed969530891a2fd44991f9d4c733ff349d87903b11d75366f1dee607f3ef/plotly-7.2.0.tar.gz", hash = "sha256:0c8299da0556ba9bf18d157f23982d189b627492a6c3cafba9d010b1b6ccb746", size = 6699266, upload-time = "2026-11-24T21:33:02.618Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/7d/905a3a3d51087515719058c94cfbda2ff0fc14417c20d557ae3e82d8b250/plotly-7.1.0-py3-none-any.whl", hash = "sha256:dbb7fa18afce40d0a8e80d1bf162eceb3faa0ce5a77fe741ad09a74cf78f53f3", size = 9692368, upload-time = "2026-09-15T19:21:18.331Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/43/86c04582164c54476d4dae5c053af82ba70b975f5babbf183ae6e51159b9/plotly-7.2.0-py3-none-any.whl", hash = "sha256:51ed86a5e71b0abfe4df9679a1da0564f9e7e93d5dc7cb35d433256b2cfce854", size = 9702562, upload-time = "2026-11-24T21:33:00.154Z" },
 ]
 
 [[package]]
