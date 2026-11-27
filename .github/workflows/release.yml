@@ -80,6 +80,21 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Read uv Version
+        id: uv
+        run: echo "version=$(sed -n 's/^  UV_VERSION: "\(.*\)"$/\1/p' ci/.toolchain.yml)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10
+        with:
+          version: ${{ steps.uv.outputs.version }}
+          enable-cache: false
+
+      - name: Generate SBOM
+        run: |
+          uv export --quiet --frozen --no-default-groups --format cyclonedx1.5 --preview-features sbom-export \
+            -o "gamspy-${GITHUB_REF_NAME#v}.cdx.json"
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -88,4 +103,6 @@ jobs:
           body_path: ${{ needs.build.outputs.notes }}
           draft: false
           prerelease: false
-          files: dist/*
+          files: |
+            dist/*
+            gamspy-*.cdx.json

@@ -1,0 +1,1 @@
+Attach a CycloneDX SBOM of the runtime dependencies to each GitHub release.
