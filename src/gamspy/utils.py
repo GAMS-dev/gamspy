@@ -496,12 +496,14 @@ def _get_unique_name(prefix: str | None = None) -> str:
 def _declaration_plumbing() -> tuple[frozenset[int], tuple[CodeType, ...]]:
     """Ids of every function that sits between a declaration and _get_name_from_stack."""
     import gamspy as gp
+    from gamspy._model import ModelConstructor
     from gamspy._symbols.base import BaseSymbol, SymbolConstructor
 
     plumbing = {
         _get_name_from_stack.__code__,
         gp.Container._get_symbol_name.__code__,
         SymbolConstructor.__call__.__code__,
+        ModelConstructor.__call__.__code__,
         BaseSymbol._resolve_container_and_name.__code__,
         gp.Model.__init__.__code__,
     }

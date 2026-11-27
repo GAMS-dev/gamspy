@@ -1302,6 +1302,41 @@ def test_models_with_same_name():
     assert df_magic_unique["Model Status"].tolist()[0] == "IntegerInfeasible"
 
 
+def test_model_redefinition():
+    m = Container()
+    x = Variable(m, "x", type="Positive")
+    y = Variable(m, "y", type="Positive")
+    e = Equation(m, "e", definition=x + y <= 10)
+
+    first = Model(
+        m, "mm", equations=[e], problem="LP", sense="max", objective=2 * x + y
+    )
+    second = Model(
+        m, "MM", equations=[e], problem="LP", sense="max", objective=x + 3 * y
+    )
+    assert first is second
+    assert first.name == "mm"
+    first.solve()
+    assert first.objective_value == 30
+
+    first.freeze(modifiables=[])
+    with pytest.raises(ValidationError):
+        Model(m, "mm", equations=[e], problem="LP", sense="max", objective=x + y)
+    first.unfreeze()
+
+    def build(objective):
+        model_ = Model(m, equations=[e], problem="LP", sense="max", objective=objective)
+        return model_
+
+    profit = build(2 * x + y)
+    volume = build(x + 3 * y)
+    assert profit is not volume
+    assert profit.name == "model_"
+    assert volume.name.endswith("gpauto")
+    profit.solve()
+    assert profit.objective_value == 20
+
+
 def test_models_with_many_equations():
     # Number of equations must be too many that the model declaration exceeds the 80000 line length limit of GAMS.
     m = Container()

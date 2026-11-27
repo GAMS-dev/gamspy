@@ -1,0 +1,1 @@
+Creating a model with the name of an existing model now redefines and returns that model, as symbols do, instead of creating a second model that shares its objective.
