@@ -1399,6 +1399,14 @@ class Container:
 
         return bool(lines[0][54] == "+" and lines[4][47] == "N")
 
+    def _get_model(self, name: str) -> Model | None:
+        name = name.casefold()
+        for model in self.models.values():
+            if model.name.casefold() == name:
+                return model
+
+        return None
+
     def _get_symbol_name(self, prefix: str) -> str:
         use_py_var_name = get_option("USE_PY_VAR_NAME")
         if use_py_var_name == "no":
@@ -1408,12 +1416,9 @@ class Container:
         elif use_py_var_name == "yes-or-autogenerate":
             try:
                 name = utils._get_name_from_stack()
-                # if a symbol with the same name exists, autogenerate.
-                try:
-                    _ = self._data[name]
+                # if a symbol or model with the same name exists, autogenerate.
+                if name in self._data or self._get_model(name) is not None:
                     name = prefix + utils._get_unique_name() + "gpauto"
-                except KeyError:
-                    ...
             except ValidationError:
                 name = prefix + utils._get_unique_name() + "gpauto"
         else:

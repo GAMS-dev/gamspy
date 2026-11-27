@@ -356,7 +356,32 @@ ERROR_STATUS = {
 }
 
 
-class Model:
+class ModelConstructor(type):
+    """Resolves Model(container, name) to an already-declared model."""
+
+    def __call__(cls, *args: Any, **kwargs: Any) -> Model:  # noqa: ANN401
+        container = args[0] if args else kwargs.get("container")
+        name = args[1] if len(args) > 1 else kwargs.get("name")
+
+        if isinstance(name, str):
+            if container is None:
+                container = gp._ctx_managers.get(
+                    (os.getpid(), threading.get_native_id())
+                )
+
+            existing = (
+                container._get_model(name)
+                if isinstance(container, gp.Container)
+                else None
+            )
+            if existing is not None:
+                existing._redefine(*args, **kwargs)
+                return existing
+
+        return type.__call__(cls, *args, **kwargs)
+
+
+class Model(metaclass=ModelConstructor):
     """
     Represents a collection of equations and variables to be solved as a mathematical optimization problem.
     https://gamspy.readthedocs.io/en/latest/user/basics/model.html
@@ -437,10 +462,6 @@ class Model:
 
         self._is_mpsge = False
         self._auto_id = "m" + utils._get_unique_name()
-        if equations is None:
-            equations = []
-
-        self.description = description
 
         if container is not None:
             self.container = container
@@ -460,43 +481,16 @@ class Model:
         else:
             self.name = self.container._get_symbol_name(prefix="m")
 
-        self._matches = matches
-        self.problem, self.sense = validation.validate_model(
-            equations, matches, problem, sense
+        self._init_definition(
+            description,
+            problem,
+            equations,
+            sense,
+            objective,
+            matches,
+            limited_variables,
+            external_module,
         )
-        self.equations: list[Equation] = list(equations)
-        self._init_indicators()
-        self._variable_names: list[str] | None = None
-        self._objective = objective
-        self._objective_variable = self._set_objective_variable(objective)
-        if (
-            self._objective_variable is not None
-            and self._objective_variable.type.lower() != "free"
-        ):
-            raise ValidationError(
-                f"Objective variable `{self._objective_variable}` must be a free variable"
-            )
-
-        if limited_variables is not None and not isinstance(
-            limited_variables, Sequence
-        ):
-            raise ValidationError(
-                f"`limited_variables must be an Iterable of ImplicitVariable objects but found {limited_variables}`"
-            )
-
-        self._limited_variables: Sequence[ImplicitVariable] | None = limited_variables
-
-        if not self.equations and not self._matches:
-            raise ValidationError("Model requires at least one equation.")
-
-        self._external_module_file: str | None = None
-        self._external_module: str | None = None
-
-        if external_module is not None:
-            self.external_module = external_module
-        else:
-            # To avoid adding it twice
-            self.container._add_statement(self)
 
         # allow freezing
         self._is_frozen: bool = False
@@ -537,16 +531,107 @@ class Model:
         self._solve_status: SolveStatus | None = None
         self._solver_version: float | None = None
 
-        self._default_solver = self.container._default_solvers[
-            str(self.problem).upper()
-        ].lower()
-
         self.container.models.update({self.name: self})
         self._attr_symbol_names = self._create_model_attributes()
         self.container._synch_with_gams()
         self._attr_gdx_file = os.path.join(
             self.container.working_directory, "_" + utils._get_unique_name() + ".gdx"
         )
+
+    def _init_definition(
+        self,
+        description: str,
+        problem: Problem | str,
+        equations: Sequence[Equation] | None,
+        sense: Sense | str,
+        objective: Variable | Expression | Operation | None,
+        matches: dict[
+            Equation | Sequence[Equation],
+            Variable | Sequence[Variable],
+        ]
+        | None,
+        limited_variables: Sequence[ImplicitVariable] | None,
+        external_module: str | None,
+    ) -> None:
+        if equations is None:
+            equations = []
+
+        self.description = description
+        self._matches = matches
+        self.problem, self.sense = validation.validate_model(
+            equations, matches, problem, sense
+        )
+        self.equations: list[Equation] = list(equations)
+        self._init_indicators()
+        self._variable_names: list[str] | None = None
+        self._objective = objective
+        self._objective_variable = self._set_objective_variable(objective)
+        if (
+            self._objective_variable is not None
+            and self._objective_variable.type.lower() != "free"
+        ):
+            raise ValidationError(
+                f"Objective variable `{self._objective_variable}` must be a free variable"
+            )
+
+        if limited_variables is not None and not isinstance(
+            limited_variables, Sequence
+        ):
+            raise ValidationError(
+                f"`limited_variables must be an Iterable of ImplicitVariable objects but found {limited_variables}`"
+            )
+
+        self._limited_variables: Sequence[ImplicitVariable] | None = limited_variables
+
+        if not self.equations and not self._matches:
+            raise ValidationError("Model requires at least one equation.")
+
+        self._external_module_file: str | None = None
+        self._external_module: str | None = None
+
+        if external_module is not None:
+            self.external_module = external_module
+        else:
+            # To avoid adding it twice
+            self.container._add_statement(self)
+
+        self._default_solver = self.container._default_solvers[
+            str(self.problem).upper()
+        ].lower()
+
+    def _redefine(
+        self,
+        container: Container | None = None,
+        name: str | None = None,
+        description: str = "",
+        problem: Problem | str = Problem.MIP,
+        equations: Sequence[Equation] | None = None,
+        sense: Sense | str = Sense.FEASIBILITY,
+        objective: Variable | Expression | Operation | None = None,
+        matches: dict[
+            Equation | Sequence[Equation],
+            Variable | Sequence[Variable],
+        ]
+        | None = None,
+        limited_variables: Sequence[ImplicitVariable] | None = None,
+        external_module: str | None = None,
+    ) -> None:
+        if self._is_frozen:
+            raise ValidationError(
+                f"Cannot redefine frozen model `{self.name}`. Call `unfreeze` first."
+            )
+
+        self._init_definition(
+            description,
+            problem,
+            equations,
+            sense,
+            objective,
+            matches,
+            limited_variables,
+            external_module,
+        )
+        self.container._synch_with_gams()
 
     def _serialize(self) -> dict:
         info: dict[str, Any] = {

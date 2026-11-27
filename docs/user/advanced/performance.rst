@@ -322,6 +322,9 @@ tree memory usage.
     from gamspy import Container, Options
     m = Container(options=Options(profile=1, profile_file="<file_path>", monitor_process_tree_memory=True))
 
+
+.. _setting_gamspy_configurations:
+
 Setting GAMSPy Configurations
 =============================
 GAMSPy allows setting package wide options via :meth:`gp.set_options <gamspy.set_options>`. For example, 
