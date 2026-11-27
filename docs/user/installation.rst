@@ -41,6 +41,9 @@ You can run the following command to install GAMSPy from PyPI::
 
     pip install gamspy
 
+Each `GitHub release <https://github.com/GAMS-dev/gamspy/releases>`_ includes a software bill of materials (SBOM)
+of its dependencies in CycloneDX format, named ``gamspy-<version>.cdx.json``.
+
 Licensing
 ---------
 GAMSPy comes with a free demo license which lets you generate and solve small models.
